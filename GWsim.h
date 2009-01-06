@@ -13,7 +13,7 @@
  * This code has been developed by G. Hobbs and D. Yardley with help from F. Jenet and K. J. Lee.
  */
 
-#include "toolkit.h"
+#include "T2toolkit.h"
 
 /* Some useful functions */
 long double matrixMult(long double m1[3][3],long double m2[3][3],long double out[3][3]);
