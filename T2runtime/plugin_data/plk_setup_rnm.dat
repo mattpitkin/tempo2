@@ -1,0 +1,18 @@
+# Set up for the defaults used by the plk plotting package
+#
+aspect 0.8
+fontsize 1.0
+fonttype 1
+linewidth 1
+menu 3
+freq 0 500 1 16
+freq 500 1000 2 16
+freq 1000 1700 3 16
+freq 1700 3300 4 16
+freq 3300 10000 5 16
+flag i PDFB2 3
+background black
+line white
+
+
+ 

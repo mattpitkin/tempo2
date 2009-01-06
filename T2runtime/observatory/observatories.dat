@@ -1,0 +1,41 @@
+# New format observatory information file.
+#
+# Values are x,y,z geocentric coordinates
+# The last column contains the old-style telescope ID code
+#
+   882589.65    -4924872.32     3943729.348      GBT                 gbt  
+-4752329.7000  2790505.9340     -3200483.7470    NARRABRI            atca
+  2390490.0     -5564764.0      1994727.0        ARECIBO             ao
+ -228310.702   4631922.905      4367064.059      NANSHAN             nanshan
+ -4460892.6     2682358.9       -3674756.0       DSS_43              tid43
+ -4554231.5     2816759.1       -3454036.3       PARKES              pks
+ 3822252.643   -153995.683      5086051.443      JODRELL             jb
+ -1601192.     -5041981.4       3554871.4        VLA                 vla
+ 4324165.81     165927.11       4670132.83       NANCAY              ncy
+ 4033949.5      486989.4        4900430.8        EFFELSBERG          eff
+ 3822252.643   -153995.683      5086051.443      JODRELLM4           jbm4
+ 881856.58     -4925311.86      3943459.70       GB300               gb300
+ 882872.57     -4924552.73      3944154.92       GB140               gb140
+ 882315.33     -4925191.41      3943414.05       GB853               gb853
+ 5327021.651    -1719555.576    3051967.932      LA_PALMA            lap
+ -3950077.96    2522377.31     -4311667.52       Hobart              hob
+ 5085442.780   2668263.483     -2768697.034      Hartebeesthoek      hart
+ 3828445.659  445223.600000  5064921.5677  	 WSRT 		     wsrt
+#
+####### From Jodrell obsys.dat file
+#
+ 383395.727    -173759.585      5077751.313      MKIII               j  
+ 3817176.557   -162921.170      5089462.046      TABLEY              k  
+ 3828714.504   -169458.987      5080647.749      DARNHALL            l  
+ 3859711.492   -201995.082      5056134.285      KNOCKIN             m  
+ 3923069.135   -146804.404      5009320.570      DEFFORD             n  
+       0.0           1.0              0.0        COE                 coe  
+#
+###### Telescope ID changed from the Jodrell obsys.dat file
+#
+ 3822473.365   -153692.318      5085851.303      JB_MKII             jbmk2
+ 3822294.825   -153862.275      5085987.071      JB_42ft             jb42
+#
+# New telescopes
+# 284543.5      -175324.040      2400.            LA_PALMA            p
+ 1719555.576   5327021.651      3051967.932      LA_PALMA            p
