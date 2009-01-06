@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "TKtoolkit.h"
+#include "T2toolkit.h"
 
 void sinefunc(double x,double afunc[],int ma,pulsar *psr,int ipos);
 void TKsortit(double *x,double *y,int n);
