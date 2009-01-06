@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <cpgplot.h>
 #include <time.h>
 #include "tempo2.h"
 #include "T2toolkit.h"
