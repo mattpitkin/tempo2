@@ -1,0 +1,73 @@
+AR ?= ar
+RANLIB ?= ranlib
+CXXFLAGS ?= -O 
+FFLAGS ?= -O
+UNAME = $(shell uname)
+
+# How to make a shared object library plugin
+ifeq ($(UNAME), Darwin)
+DSO = $(CXX) -undefined dynamic_lookup -bundle -o
+LDSO = -ldl 
+CXX := MACOSX_DEPLOYMENT_TARGET=10.3 $(CXX)
+else 
+ifeq ($(UNAME), SunOS)
+ DSO =  $(CXX)  -shared -fPIC -o
+ LDSO = -fPIC -ldl -lf2c
+ CXXFLAGS := $(CXXFLAGS) -fPIC
+else
+ DSO =  $(CXX)  -shared -o
+ LDSO = -fPIC -Wl,--export-dynamic -ldl 
+ CXXFLAGS := $(CXXFLAGS) -fPIC
+endif
+endif
+
+# How to compile and link against fortran code
+ifeq ($(FC), g77)
+#LF ?= -lg2c 
+LF ?= 
+FUNDERSCORE ?= -fno-second-underscore
+else
+ifeq ($(FC), gfortran)
+LF ?= -lgfortran 
+FUNDERSCORE ?= -fno-second-underscore
+endif
+endif
+
+# Check we know how to handle fortran
+ifeq ($(origin LF), undefined)
+ERROR = "ERROR: you must set variable LF or FC in Makefile.config!" 
+endif
+
+ifeq ($(origin FUNDERSCORE), undefined)
+ERROR = "ERROR: you must set variable FUNDERSCORE or FC in Makefile.config!" 
+endif
+
+# Setup longdouble emulation
+
+
+# This is the arch used in TEMPO2 to name its plugins
+ifeq ($(origin ARCH), undefined)
+ifneq (${strip ${LOGIN_ARCH}},)
+ARCH = $(LOGIN_ARCH)
+else 
+ifneq (${strip ${OSTYPE}},)
+ARCH = $(OSTYPE)
+else
+ARCH = $(shell uname)
+endif
+endif
+endif
+
+CXXFLAGS += -DTEMPO2_ARCH=\"$(ARCH)\"
+
+ifneq ($(origin LONGDOUBLE), undefined)
+CXXFLAGS += -DTEMPO2_USE_QD
+endif
+
+# handle errors
+ifneq ($(origin ERROR), undefined)
+error:
+	@echo $(ERROR)
+	@exit 1
+endif
+
