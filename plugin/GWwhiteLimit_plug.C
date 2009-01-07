@@ -80,6 +80,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int distNum=0;
   double maxAmp=-1;
   long double index=-2.0L/3.0L;
+  double scale;
   int p;
   int numberGW=1000;
   /* The value of function x at observation y */
@@ -135,6 +136,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-GSbackground")==0)
 	checkBackground=2;
     }
+
+  scale = pow(86400.0*365.25,alpha);
+  maxAmp *= scale;
 
   if (dist[0]==0)
     {
