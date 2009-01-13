@@ -6,8 +6,11 @@
 #include <stdio.h>
 #include <math.h>
 #include "T2toolkit.h"
+#include "TKfit.h"
 
-void sinefunc(double x,double afunc[],int ma,pulsar *psr,int ipos);
+double GLOBAL_OMEGA = 0;
+
+void sineFunc(double x,double *v,int ma);
 void TKsortit(double *x,double *y,int n);
 void TKaveragePts(double *x,double *y,int n,int width,double *meanX,double *meanY,int *nMean);
 void TKcmonot (int n, double x[], double y[], double yd[][4]);
@@ -20,6 +23,8 @@ void TK_fitSine(double *x,double *y,double *e,int n,int wErr,double *outX,double
 void TKlomb_d(double *x,double *y,int n,double ofac,double hifac,double *ox,double *oy,int *outN,double *var);
 int TK_fft(short int dir,long n,double *x,double *y);
 void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN);
+void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
+void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
 
 double globalOmega;
 
@@ -46,6 +51,7 @@ typedef struct complexVal {
  * specType = 1 => DFT
  *          = 2 => Lomb-Scargle periodogram
  *          = 3 => FFT 
+ *          = 4 => Weighted L-S periodogram
  * ofac = oversampling factor
  * output   = 0 => no text output
  *          = 1 => print sorted input data set, then stop
@@ -60,7 +66,7 @@ typedef struct complexVal {
  * NOTE: All arrays start from zero
  * ************************************************************** */
 
-double TKspectrum(double *x,double *y,int n,int averageTime,int smoothWidth,int smoothType,
+double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smoothWidth,int smoothType,
 		int fitSpline,int preWhite,int specType,int ofac,int specOut,double *outX,
 		double *outY,int *nout,int calcWhite,int output)
 {
@@ -324,6 +330,40 @@ double TKspectrum(double *x,double *y,int n,int averageTime,int smoothWidth,int 
 	nSpec--;
 	// End of checked version
       }
+    else if (specType==4) // Weighted Lomb-Scargle
+      {
+	TK_weightLS(smoothX,smoothY,e,nSmooth,specX,specY,&nSpec);
+	var=1;
+	for (i=0;i<nSpec;i++)
+	  {
+	    if (specOut==1) // PSD
+	      {
+		//		specY[i]*=(2.0*var*nSpec);
+		specY[i] = (specY[i]/pow(365.25*86400.0,2))*(tspan/365.25)/2.0; ///(double)nSpec;///(double)nSmooth/(double)nSmooth;
+	      }
+	    else if (specOut==2) // Amplitude
+	      specY[i]=sqrt(specY[i]);
+	    else if (specOut==3) // Power
+	      specY[i]=specY[i]; //*2.0*var/nSpec;
+	  }
+      }
+    else if (specType==5) // Fit sinusoids
+      {
+	TK_fitSinusoids(smoothX,smoothY,e,nSmooth,specX,specY,&nSpec);
+	var=1;
+	for (i=0;i<nSpec;i++)
+	  {
+	    if (specOut==1) // PSD
+	      {
+		//		specY[i]*=(2.0*var*nSpec);
+		specY[i] = (specY[i]/pow(365.25*86400.0,2))*(tspan/365.25)/2.0; ///(double)nSpec;///(double)nSmooth/(double)nSmooth;
+	      }
+	    else if (specOut==2) // Amplitude
+	      specY[i]=sqrt(specY[i]);
+	    else if (specOut==3) // Power
+	      specY[i]=specY[i]; //*2.0*var/nSpec;
+	  }
+      }
     // Post-darken if requested
     if (preWhite==1) 
       {
@@ -378,6 +418,109 @@ void TKfirstDifference(double *x,double *y,int n)
       else
 	y[i] = 0.0;
     }
+}
+
+void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN)
+{
+  double omega0,chisq;
+  int i,j;
+  double **cvm,p[2],e[2];
+  double recC[MAX_OBSN],recS[MAX_OBSN];
+  double outE[MAX_OBSN];
+  double pred;
+
+  cvm = (double **)malloc(sizeof(double *)*2);
+  for (i=0;i<2;i++) cvm[i] = (double *)malloc(sizeof(double)*2);
+
+  omega0 = 2.0*M_PI/TKrange_d(x,n);
+  *outN = n/2;
+
+  for (j=0;j<*outN;j++)
+    {
+      GLOBAL_OMEGA = omega0*(j+1);
+      TKleastSquares_svd(x,y,sig,n,p,e,2,cvm,&chisq,sineFunc,1);
+      outX[j] = GLOBAL_OMEGA/2.0/M_PI;
+      outY[j] = p[0]*p[0]+p[1]*p[1];
+      outE[j] = sqrt(4*p[0]*p[0]*e[0]*e[0]+4*p[1]*p[1]*e[1]*e[1]);
+      recC[j] = p[0];
+      recS[j] = p[1];
+    }
+  /*  for (i=0;i<n;i++)
+    {
+      printf("data: %g %g %g\n",x[i],y[i],sig[i]);
+      } */
+
+  /*  for (i=0;i<1000;i++)
+    {
+      pred=0.0;    
+      for (j=0;j<*outN;j++)
+	{
+	  GLOBAL_OMEGA = omega0*(j+1);
+	  pred += (recC[j]*cos(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0])+recS[j]*sin(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0]));
+	}
+      printf("series: %g %g\n",(x[n-1]-x[0])/1000.0*i+x[0],pred);
+      } */
+}
+
+void sineFunc(double x,double *v,int ma)
+{
+  v[0] = sin(GLOBAL_OMEGA*x);
+  v[1] = cos(GLOBAL_OMEGA*x);
+}
+
+/* Calculates a weighted Lomb-Scargle periodogram */
+void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN)
+{
+  long double s1,s2,s3,s4,s5;
+  double recA[MAX_OBSN],recB[MAX_OBSN];
+  double pred;
+  double omega=0.0;
+  double si,ci;
+  double a,b;
+  double omega0;
+  double var;
+  int i,j;
+  
+  omega0 = 2.0*M_PI/TKrange_d(x,n);
+  *outN = n/2;
+
+
+  //    for (i=0;i<n;i++)
+  //      sig[i]=1.0;
+
+  for (j=0;j<*outN;j++)
+    {
+      omega = omega0*(j+1);
+      s1 = s2 = s3 = s4 = s5 = 0.0;
+      for (i=0;i<n;i++)
+	{
+	  si = sin(omega*x[i]);
+	  ci = cos(omega*x[i]);
+	  
+	  s1 += (long double)(y[i]*si/sig[i]/sig[i]);
+	  s2 += (long double)(si*si/sig[i]/sig[i]);
+	  s3 += (long double)(si*ci/sig[i]/sig[i]);
+	  s4 += (long double)(y[i]*ci/sig[i]/sig[i]);
+	  s5 += (long double)ci*ci/sig[i]/sig[i];
+	}
+      b = (double)((s4-s1/s2)/(s5-s3/s2));
+      a = (double)((s1-b*s3)/s2);
+      recA[j] = a;
+      recB[j] = b;
+      outX[j] = omega/2.0/M_PI;
+      outY[j] = a*a+b*b;
+    }
+  /*  for (i=0;i<1000;i++)
+    {
+      pred=0.0;
+      for (j=0;j<*outN;j++)
+	{
+	  GLOBAL_OMEGA = omega0*(j+1);
+	  pred += (recB[j]*cos(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0])+recA[j]*sin(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0]));
+	}
+      printf("series2: %g %g\n",(x[n-1]-x[0])/1000.0*i+x[0],pred);
+      } */
+
 }
 
 /* Calculates the discrete Fourier transform of a data-set */
@@ -756,12 +899,16 @@ void TKlomb_d(double *x,double *y,int n,double ofac,double hifac,double *ox,doub
   double ctheta,stheta,theta,omega0;
   double cosTau,sinTau,st,ct;
   double cosTheta[n],sinTheta[n];
+  double scale;
   double y2;
 
   ybar  = TKmean_d(y,n);
   *var  = TKvariance_d(y,n);
 
-  freq0 = 1.0/(TKrange_d(x,n)*ofac);
+  // Use to get the L-S periodogram to give the same results as the DFT
+  //  scale = (double)n/(double)(n-1);
+  scale = 1;
+  freq0 = 1.0/(TKrange_d(x,n)*ofac*scale);
   aveX  = (TKfindMin_d(x,n)+TKfindMax_d(x,n))/2.0;
   *outN = (int)(0.5*ofac*hifac*n);
 
