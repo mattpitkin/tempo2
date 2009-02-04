@@ -208,7 +208,12 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
       if (psr[p].param[param_ephver].paramSet[0]==1)
 	{
 	  if (psr[p].param[param_ephver].val[0] < 5)
-	    tempo1 = 1;
+	    {
+	      printf("************************************************* \n");
+	      printf("Warning: you are running in tempo1 emulation mode \n");
+	      printf("************************************************* \n");
+	      tempo1 = 1;
+	    }
 	  else
 	    tempo1 = 0;
 	}

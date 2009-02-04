@@ -354,7 +354,6 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
   else if (i==param_dm)    /* Dispersion measure */
     {
       double yrs;
-      
       /* What about Doppler effect for the frequency -- change to barycentre?? */
       /* look at Blanford(?) paper */
       /* Should have a check to see if only one frequency exists in data
@@ -366,7 +365,6 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  yrs = (psr->obsn[ipos].sat - psr->param[param_pepoch].val[0])/365.25;
 	  afunc = 1.0/(DM_CONST*pow(psr->obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k);
 	}
-      
     }
   else if (i==param_fddc)    /* Frequency dependent term */
     afunc = 1.0/(pow(psr->obsn[ipos].freqSSB/1.0e6,psr->param[param_fddi].val[0]));

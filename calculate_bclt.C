@@ -26,7 +26,10 @@ void calculate_bclt(pulsar *psr,int npsr)
 	{
 	  if (debugFlag==1)printf("In tdis2 calculate_bclt with observation %d %d\n",i,psr[p].obsn[i].delayCorr);
 	  if (psr[p].obsn[i].delayCorr==0) /* No correction */
-	    psr[p].obsn[i].roemer = 0.0;
+	    {
+	      psr[p].obsn[i].freqSSB = 0.0; //psr[p].obsn[i].freq;
+	      psr[p].obsn[i].roemer = 0.0;
+	    }
 	  else
 	    {
 	      /* Calculate vector from SSB to observatory */

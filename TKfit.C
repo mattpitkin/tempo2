@@ -9,7 +9,6 @@ void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x
 double TKpythag(double a,double b);
 void TKbidiagonal(double **a,double *anorm,int ndata,int nfit,double **v,double *w,double **u,double *rv1);
 void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double **v,double *w,double **u);
-void TKfitPoly(double x,double *v,int m);
 
 void TKremovePoly_f(float *px,float *py,int n,int m)
 {
@@ -161,7 +160,7 @@ void TKleastSquares_svd_noErr(double *x,double *y,int n,double *p,int nf, void (
   v = (double **)malloc(nf*sizeof(double *));
   u = (double **)malloc(n*sizeof(double *));
   for (i=0;i<n;i++) 
-    {
+   {
       designMatrix[i] = (double *)malloc(nf*sizeof(double));
       u[i] = (double *)malloc(nf*sizeof(double));
     }
