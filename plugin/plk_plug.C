@@ -1008,7 +1008,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  {
 	    textOutput(psr,npsr,0,0,0,1,parFile[0]);
 	  }
-	else if (key==61) /* Add phase jump above the cursor */
+	/*	else if (key==61) // Add phase jump above the cursor 
 	  {
 	    for (i=0;i<count;i++)
 	      {
@@ -1018,7 +1018,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  }
 	      }
 	    callFit(psr,npsr);
-	  }
+	    }*/
 	else if (key=='b'){ /* bin the residuals */
 	  binResiduals(psr,npsr,x,y,count,id,&overN,overX,overY,overYe,xplot,yplot,
 		       yerr1,unitFlag,plotPhase);
