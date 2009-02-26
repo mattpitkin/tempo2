@@ -116,24 +116,11 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
 	  psr[p].fitChisq = chisq; 
 	  psr[p].fitNfree = psr[p].nFit-npol;
-	  
+	  //	  printf("Chisq = %g, reduced chisq = %g\n",(double)psr[p].fitChisq,(double)(psr[p].fitChisq/psr[p].fitNfree));
 	  /* Now update the parameters */
 	  if (debugFlag==1) printf("Updating the parameters\n");
 	  updateParameters(psr,p,val,error);
 	  if (debugFlag==1) printf("Completed updating the parameters\n");
-	  /* Update TZRMJD etc. */
-	  for (i=0;i<psr[p].nobs;i++)
-	    {
-	      if (psr[p].obsn[i].sat > psr[p].param[param_pepoch].val[0])
-		{
-		  psr[p].param[param_tzrmjd].val[0] = psr[p].obsn[i].sat-psr[p].obsn[i].residual/86400.0L;
-		  psr[p].param[param_tzrmjd].paramSet[0] = 1;
-		  psr[p].param[param_tzrfrq].val[0] = psr[p].obsn[i].freq;
-		  psr[p].param[param_tzrfrq].paramSet[0] = 1;
-		  strcpy(psr[p].tzrsite,psr[p].obsn[i].telID);
-		  break;
-		}
-	    }
 	}    
       /* Free the vectors and matrices */
       free(error);
@@ -162,7 +149,166 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 /* Fitting routine with input data covariance matrix */
 void doFitDCM(pulsar *psr,char *dcmFile,int npsr,int writeModel) 
 {
-  printf("REMOVED - DO NOT USE\n");
+  int i,j,k;
+  double **uinv;
+  double whiteres[MAX_OBSN],sum;
+  FILE *fin,*fout;
+  int p,npol,okay,ip[MAX_OBSN];
+  double *x,*y,*sig,*val,chisq;
+  double *error;
+  double tol = 1.0e-40;  /* Tolerence for singular value decomposition routine */
+  double newStart=-1.0,newFinish=-1.0;
+
+  if (!(fin = fopen(dcmFile,"r")))
+    {
+      printf("Unable to open inverse cholesky matrix: %s\n",dcmFile);
+      exit(1);
+    }
+  
+  uinv = (double **)malloc(sizeof(double *)*psr[0].nobs);
+  for (i=0;i<psr[0].nobs;i++)
+    uinv[i] = (double *)malloc(sizeof(double)*psr[0].nobs);
+
+  i=0;
+  j=0;
+  while (!feof(fin))
+    {
+      if (fscanf(fin,"%lf",&uinv[i][j])==1)
+	{
+	  i++;
+	  if (i==psr[0].nobs)
+	    {
+	      i=0;
+	      j++;
+	      if (j==psr[0].nobs+1)
+		{
+		  printf("The matrix file is the wrong size - too large\n");
+		  printf("N_obs = %d\n",psr[0].nobs);
+		  exit(1);
+		}
+	    }
+	}      
+    }
+  if (j!=psr[0].nobs && i!=0)
+    {
+      printf("The matrix file is the wrong size - too short\n");
+      printf("j = %d, i = %d, nobs = %d\n",j,i,psr[0].nobs);
+      exit(1);
+    }
+  fout = fopen("whitedata.dat","w");
+  for (i=0;i<psr[0].nobs;i++)
+    {
+      sum=0.0;
+      for (j=0;j<psr[0].nobs;j++)
+	sum+=uinv[j][i]*psr[0].obsn[j].residual;
+      whiteres[i] = sum;
+      fprintf(fout,"%g %g %g\n",(double)psr[0].obsn[i].sat,
+	      (double)psr[0].obsn[i].residual,whiteres[i]);
+    }
+  fclose(fout);
+  
+  for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
+    {
+      //      strcpy(psr[p].rajStrPost,psr[p].rajStrPre);
+      //      strcpy(psr[p].decjStrPost,psr[p].decjStrPre);
+
+      strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
+      strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
+      /* How many parameters are we fitting for */
+      npol = getNparams(psr[p]);
+      x     = (double *)malloc(psr[p].nobs*sizeof(double));
+      y     = (double *)malloc(psr[p].nobs*sizeof(double));
+      sig   = (double *)malloc(psr[p].nobs*sizeof(double));
+      val   = (double *)malloc(npol*sizeof(double));
+      error = (double *)malloc(npol*sizeof(double));
+      int count;
+      count=0;
+      for (i=0;i<psr[p].nobs;i++)
+	{	  
+	  psr[p].obsn[i].prefitResidual = psr[p].obsn[i].residual;
+	  if (psr[p].obsn[i].deleted==0)
+	    {
+	      okay=1;
+	      
+	      /* Check for START and FINISH flags */
+	      if (psr[p].param[param_start].paramSet[0]==1 && psr[p].param[param_start].fitFlag[0]==1 &&
+		  (psr[p].param[param_start].val[0] > psr[p].obsn[i].sat))
+		okay=0;
+	      if (psr[p].param[param_finish].paramSet[0]==1 && psr[p].param[param_finish].fitFlag[0]==1 &&
+		  psr[p].param[param_finish].val[0] < psr[p].obsn[i].sat)
+		okay=0;
+	      if (okay==1)
+		{
+		  x[count]   = (double)(psr[p].obsn[i].bbat-psr[p].param[param_pepoch].val[0]);
+		  if (count==0)
+		    {
+		      newStart = (double)psr[p].obsn[i].sat;
+		      newFinish = (double)psr[p].obsn[i].sat;
+		    }
+		  else
+		    {
+		      if (newStart > psr[p].obsn[i].sat)  newStart = (double)psr[p].obsn[i].sat;
+		      if (newFinish < psr[p].obsn[i].sat) newFinish = (double)psr[p].obsn[i].sat;
+		    } 
+		  y[count]   = (double)psr[p].obsn[i].prefitResidual;
+		  ip[count]  = i;
+		  if (psr[p].fitMode==0) sig[count] = 1.0; 
+		  else sig[count] = psr[p].obsn[i].toaErr*1e-6; /* Error in seconds */
+		  count++;
+		}
+	    }
+	}
+      
+
+      psr[p].nFit = count;
+      psr[p].param[param_start].val[0] = newStart-0.001; 
+      psr[p].param[param_finish].val[0] = newFinish+0.001;
+      psr[p].param[param_start].paramSet[0] = 1;
+      psr[p].param[param_finish].paramSet[0] = 1; 
+      /* Do the fit */
+      if (npol!=0) /* Are we actually  doing any fitting? */ 
+	{ 
+	  if (debugFlag==1) printf("Doing the fit\n");
+	  TKleastSquares_svd_psr_dcm(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
+				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip,uinv);
+	  //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
+	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
+	  psr[p].fitChisq = chisq; 
+	  psr[p].fitNfree = psr[p].nFit-npol;
+	  
+	  /* Now update the parameters */
+	  if (debugFlag==1) printf("Updating the parameters\n");
+	  updateParameters(psr,p,val,error);
+	  if (debugFlag==1) printf("Completed updating the parameters\n");
+	}    
+      /* Free the vectors and matrices */
+      free(error);
+      free(val);
+      free(sig);
+      free(y);      
+      free(x);
+      
+      if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0]==20)
+	psr[p].param[param_track].val[0]=40;
+
+      /* Update errors if using a bootstrap error analysis.
+       * See bootmc.f in tempo1.  Also description in Numerical Recipes in C for
+       * description of bootstrap techniques
+       */
+
+      if (psr[p].bootStrap > 0)
+	{
+	  printf("Calculating uncertainties on fitted parameters using a Monte-Carlo bootstrap method (%d)\n",psr[p].bootStrap);
+	  bootstrap(psr,p,npsr);
+	}
+    }
+
+
+
+  for (i=0;i<psr[0].nobs;i++)
+    free(uinv[i]);
+  free(uinv);
+  printf("TESTING - DO NOT USE\n");
 }
 
 
@@ -484,7 +630,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       else        afunc = sin(om*(floor(k/2.0)+1)*x); 
     }
   else if (i==param_dmassplanet)
-    afunc = dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
+    {
+      afunc = dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
+      printf("afunc = %.15g %g\n",(double)psr[0].obsn[ipos].sat,(double)afunc);
+    }
   else if (strcmp(psr->binaryModel,"BT")==0) /* Must be below other parameters */
     afunc = BTmodel(psr,0,ipos,i);
   else if (strcmp(psr->binaryModel,"BTJ")==0) 
