@@ -54,6 +54,43 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  fclose(fout);
 	}
       calcRMS(psr,p);
+
+      // Update TZRMJD
+      {
+	long double centrePos;
+	long double closestV,check;
+	int closestI=-1;
+	centrePos = (psr[p].param[param_start].val[0]+
+		     psr[p].param[param_finish].val[0])/2.0L;
+	
+	
+	for (i=0;i<psr[p].nobs;i++)
+	  {
+	    if (psr[p].obsn[i].deleted==0)
+	      {
+		check = fabs(psr[p].obsn[i].sat-centrePos);
+		if (closestI==-1 || (check < closestV))
+		  {
+		    closestV = check;
+		    closestI = i;
+		  }
+	      }
+	  }
+	if (closestI==-1)
+	  {
+	    printf("WARNING: Cannot calculate TZRMJD\n");
+	    psr[p].param[param_tzrmjd].paramSet[0]=0;
+	  }
+	else
+	  {
+	    psr[p].param[param_tzrmjd].val[0] = psr[p].obsn[closestI].sat-psr[p].obsn[closestI].residual/86400.0L;
+	    psr[p].param[param_tzrmjd].paramSet[0] = 1;
+	    psr[p].param[param_tzrfrq].val[0] = psr[p].obsn[closestI].freq;
+	    psr[p].param[param_tzrfrq].paramSet[0] = 1;
+	    strcpy(psr[p].tzrsite,psr[p].obsn[closestI].telID);
+	  }
+      }
+
       
       /*	  wrms_pre = sqrt((sumsq_pre/(double)count-sum_pre*sum_pre/pow(double(count),2))/(sumwt/(double)count)/(sumwt/double(count)))*1e6; */
       
@@ -169,26 +206,30 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    }
 	  printf("------------------------------------------------------------------------------\n");
 	}
-      printf("\nDerived parameters:\n\n");
-      longdouble p0,p1,age,bs,p0e,p1e;
-      longdouble f0,f1,f0e,f1e;
-      f0 = psr[0].param[param_f].val[0];
-      f1 = psr[0].param[param_f].val[1];
-      f0e = psr[0].param[param_f].err[0];
-      f1e = psr[0].param[param_f].err[1];
+      if (psr[0].param[param_f].paramSet[0]==1 && psr[0].param[param_f].paramSet[1]==1)
+	{
+	  longdouble p0,p1,age,bs,p0e,p1e;
+	  longdouble f0,f1,f0e,f1e;
 
-      p0 = (1.0/f0);
-      p0e = 1.0/f0/f0*f0e;
-      p1 = (-1.0/(f0*f0)*f1);
-      p1e = sqrt(pow(p0*p0*f1e,2)+pow(2*p0*p0*p0*f1*f0e,2));
-      age = p0/2.0/p1/60.0/60.0/24.0/365.0/1.0e6;
-      bs = (sqrt(-f1/pow(f0,3))*3.2e19);
+	  printf("\nDerived parameters:\n\n");
 
-      printf("P0 (s)      = %-25.15g %-13.5g\n",(double)p0,(double)p0e);
-      printf("P1          = %-25.15g %-13.5g\n",(double)p1,(double)p1e);
-      printf("tau_c (Myr) = %.5g\n",(double)age);
-      printf("bs (G)      = %.5g\n\n",(double)bs);
-      
+	  f0 = psr[0].param[param_f].val[0];
+	  f1 = psr[0].param[param_f].val[1];
+	  f0e = psr[0].param[param_f].err[0];
+	  f1e = psr[0].param[param_f].err[1];
+	  
+	  p0 = (1.0/f0);
+	  p0e = 1.0/f0/f0*f0e;
+	  p1 = (-1.0/(f0*f0)*f1);
+	  p1e = sqrt(pow(p0*p0*f1e,2)+pow(2*p0*p0*p0*f1*f0e,2));
+	  age = p0/2.0/p1/60.0/60.0/24.0/365.0/1.0e6;
+	  bs = (sqrt(-f1/pow(f0,3))*3.2e19);
+	  
+	  printf("P0 (s)      = %-25.15g %-13.5g\n",(double)p0,(double)p0e);
+	  printf("P1          = %-25.15g %-13.5g\n",(double)p1,(double)p1e);
+	  printf("tau_c (Myr) = %.5g\n",(double)age);
+	  printf("bs (G)      = %.5g\n\n",(double)bs);
+	}
       /* Binary parameters */
       if (psr[p].param[param_pb].paramSet[0]==1)
 	{
