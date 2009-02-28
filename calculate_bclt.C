@@ -19,15 +19,18 @@ void calculate_bclt(pulsar *psr,int npsr)
 
   for (p=0;p<npsr;p++)
     {
-      if (psr[p].correctTroposphere==1) compute_tropospheric_delays(&psr[p], 1);
-
+      if (psr[p].correctTroposphere==1) {
+	//	printf("Correcting troposphere\n");
+	compute_tropospheric_delays(&psr[p], 1);
+      }
 
       for (i=0;i<psr[p].nobs;i++)	
 	{
+	  if (psr[p].correctTroposphere==0) psr[0].obsn[i].troposphericDelay=0;
 	  if (debugFlag==1)printf("In tdis2 calculate_bclt with observation %d %d\n",i,psr[p].obsn[i].delayCorr);
 	  if (psr[p].obsn[i].delayCorr==0) /* No correction */
 	    {
-	      psr[p].obsn[i].freqSSB = 0.0; //psr[p].obsn[i].freq;
+	      psr[p].obsn[i].freqSSB = psr[p].obsn[i].freq;
 	      psr[p].obsn[i].roemer = 0.0;
 	    }
 	  else
@@ -36,8 +39,11 @@ void calculate_bclt(pulsar *psr,int npsr)
 	      /*	      for (j=0;j<3;j++)
 		rca[j] = psr[p].obsn[i].earthMoonBary_ssb[j] - psr[p].obsn[i].earthMoonBary_earth[j] + 
 		psr[p].obsn[i].observatory_earth[j]; */
+	      //	      printf("roemer: %g %g %g %g %g %g\n",psr[p].obsn[i].earth_ssb[0],psr[p].obsn[i].earth_ssb[1],psr[p].obsn[i].earth_ssb[2],psr[p].obsn[i].observatory_earth[0],psr[p].obsn[i].observatory_earth[1],psr[p].obsn[i].observatory_earth[2]);
+
 	      for (j=0;j<3;j++)
 		rca[j] = psr[p].obsn[i].earth_ssb[j] + psr[p].obsn[i].observatory_earth[j]; 
+
 	      /* Radial velocity */
 	      if (psr[p].param[param_pmrv].paramSet[0]==1)
 		pmrvrad = psr[p].param[param_pmrv].val[0]*(2*M_PI/360.0)/36000.0; /* In radians/century - CHECK 36000*/
@@ -64,7 +70,7 @@ void calculate_bclt(pulsar *psr,int npsr)
 		/* dt_pmtr = transverse velocity */
 		dt_pmtr = -pow((delt),2)*pmrvrad*pmtrans_rcos2;
 
-		//		printf("Calculating roemer using %g %g %g %g %g (delt = %g; dt_SSB = %g)\n",(double)rcos1,(double)dt_pm, (double)dt_pmtt,(double)dt_px,(double)dt_pmtr,(double)delt,(double)dt_SSB);
+		//		printf("Calculating roemer using %g %g %g %g %g (delt = %g; dt_SSB = %g)\n",(double)rcos1,(double)dt_pm, (double)dt_pmtt,(double)dt_px,(double)dt_pmtr,(double)delt,(double)dt_SSB);		
 		psr[p].obsn[i].roemer = rcos1 + dt_pm + dt_pmtt + dt_px + dt_pmtr;		
 		shapiro_delay(psr,npsr,p,i,delt,dt_SSB); /* Now calculate the Shapiro delay */
 		if (debugFlag==1)printf("In tdis2 calculate_bclt with observation %d %d calling dmdelays\n",i,psr[p].obsn[i].delayCorr);

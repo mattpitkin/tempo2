@@ -14,6 +14,7 @@ float  TKfindMin_f(float *x,int n);
 float  TKfindMedian_f(float *val,int count);
 float  TKfindRMS_f(float *x,int n);
 float  TKfindRMS_d(double *x,int n);
+float TKfindRMSweight_d(double *x,double *e,int n);
 float  TKfindMax_f(float *x,int n);
 float  TKmean_f(float *x,int n);
 

@@ -9,6 +9,8 @@ void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x
 double TKpythag(double a,double b);
 void TKbidiagonal(double **a,double *anorm,int ndata,int nfit,double **v,double *w,double **u,double *rv1);
 void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double **v,double *w,double **u);
+void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout);
+void multMatrixVec(double **idcm,double *b,int ndata,double *bout);
 
 void TKremovePoly_f(float *px,float *py,int n,int m)
 {
@@ -145,6 +147,141 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
   free(v); 
   free(u); free(designMatrix);
 }
+
+
+void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int),int weight,pulsar *psr,double tol, int *ip,double **uinv)
+{
+  double **designMatrix; //[n][nf];
+  double basisFunc[nf],b[n];
+  double **v,**u,**uout;
+  double w[nf],wt[nf],sum,wmax,*bout;
+  int    i,j,k;
+  designMatrix = (double **)malloc(n*sizeof(double *));
+  v = (double **)malloc(nf*sizeof(double *));
+  u = (double **)malloc(n*sizeof(double *));
+  uout = (double **)malloc(n*sizeof(double *)); // NOT CLEARED
+  bout = (double *)malloc(n*sizeof(double));    // NOT CLEARED
+
+  for (i=0;i<n;i++) 
+    {
+      if ((designMatrix[i] = (double *)malloc(nf*sizeof(double))) == NULL) {printf("OUT OF MEMORY\n"); exit(1);}
+      if ((u[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);}
+      if ((uout[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);}
+      if (weight==0) sig[i]=1.0;
+    }
+  for (i=0;i<nf;i++) v[i] = (double *)malloc(nf*sizeof(double));
+  /* This routine has been developed from Section 15 in Numerical Recipes */
+  
+  /* Determine the design matrix - eq 15.4.4 
+   * and the vector 'b' - eq 15.4.5 
+   */
+  for (i=0;i<n;i++)
+    {
+      fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
+      for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j]/sig[i];
+      b[i] = y[i]/sig[i];
+    }
+  // Take into account the data covariance matrix
+  multMatrix(uinv,designMatrix,n,nf,uout);  
+  for (i=0;i<n;i++)
+    {
+      for (j=0;j<nf;j++)
+	{
+	  //	  printf("%g %g\n",designMatrix[i][j],uout[i][j]);
+	  designMatrix[i][j] = uout[i][j];
+	}
+    }
+  multMatrixVec(uinv,b,n,bout);
+  for (i=0;i<n;i++)
+    b[i] = bout[i];
+  /* Now carry out the singular value decomposition */
+  TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
+  wmax = TKfindMax_d(w,nf);
+  for (i=0;i<nf;i++)
+    {
+      if (w[j] < tol*wmax) w[j]=0.0;
+    }
+
+  /* Back substitution */
+  TKbacksubstitution_svd(v, w, designMatrix, b, p, n, nf);
+  
+  /* Now form the covariance matrix */
+  for (i=0;i<nf;i++)
+    {
+      if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
+      else wt[i] = 0.0;     
+    }
+  for (i=0;i<nf;i++)
+    {
+      for (j=0;j<=i;j++)
+	{
+	  sum=0.0;
+	  for (k=0;k<nf;k++)
+	    sum+=v[i][k]*v[j][k]*wt[k];
+	  cvm[i][j] = cvm[j][i] = sum;
+	}
+      e[i] = sqrt(cvm[i][i]);
+    }
+  *chisq = 0.0;
+
+  for (i=0;i<n;i++)
+    {
+      fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
+      for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j];
+      b[i] = y[i];
+    }
+  multMatrix(uinv,designMatrix,n,nf,uout);  
+  for (i=0;i<n;i++)
+    {
+      for (j=0;j<nf;j++)
+	  designMatrix[i][j] = uout[i][j];
+    }
+  multMatrixVec(uinv,b,n,bout);
+  for (i=0;i<n;i++) b[i] = bout[i];
+  for (j=0;j<n;j++)
+    {
+      sum = 0.0;
+      for (k=0;k<nf;k++)
+	{
+	  sum+=p[k]*designMatrix[j][k];
+	  if (j==0)free(v[k]);
+	}
+      (*chisq) += pow((b[j]-sum)/sig[j],2);
+    }
+  for (j=0;j<n;j++)
+    {
+      free(designMatrix[j]); // Remove memory allocation
+      free(u[j]);
+    }
+
+
+  /*
+  for (j=0;j<n;j++)
+    {
+      fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
+
+      sum=0.0;
+      for (k=0;k<nf;k++)
+	{
+	  sum+=p[k]*basisFunc[k];
+	  if (j==0)free(v[k]);
+	}
+      (*chisq) += pow((y[j]-sum)/sig[j],2);
+
+      free(designMatrix[j]); // Remove memory allocation
+      free(u[j]);
+      
+      }*/
+  if (weight==0)
+    {
+      for (j=0;j<nf;j++)
+  	e[j] *= sqrt(*chisq/(n-nf));
+    }
+  
+  free(v); 
+  free(u); free(designMatrix);
+}
+
 
 
 void TKleastSquares_svd_noErr(double *x,double *y,int n,double *p,int nf, void (*fitFuncs)(double, double [], int))
@@ -601,4 +738,30 @@ double TKpythag(double a,double b)
       else ret = absb*sqrt(1.0+pow(absa/absb,2));
     }
   return ret;
+}
+
+void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
+{
+  int i,j,k;
+  
+  for (i=0;i<ndata;i++)
+    {
+      for (j=0;j<npol;j++)
+	{
+	  uout[i][j]=0.0;
+	  for (k=0;k<ndata;k++)
+	    uout[i][j]+=idcm[k][i]*u[k][j];
+	}
+    }
+}
+
+void multMatrixVec(double **idcm,double *b,int ndata,double *bout)
+{
+  int i,j;
+  for (i=0;i<ndata;i++)
+    {
+      bout[i] = 0.0;
+      for (j=0;j<ndata;j++)
+	bout[i]+=idcm[j][i]*b[j];
+    }
 }

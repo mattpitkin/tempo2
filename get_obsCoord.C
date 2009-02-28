@@ -94,7 +94,7 @@ get_obsCoord_IAU2000B(double observatory_trs[3],
 void get_obsCoord(pulsar *psr,int npsr)
 {
   double ph,eeq[3];
-  int i,j; 
+  int i,j,k; 
   double prn[3][3];
   double pc,oblq,toblq;
   double siteCoord[3];
@@ -109,92 +109,118 @@ void get_obsCoord(pulsar *psr,int npsr)
 	{ 
 	  if (psr[p].obsn[i].delayCorr!=0)
 	    {	     
-	      obs = getObservatory(psr[p].obsn[i].telID);
-	      // New way
-
-	      if (psr[p].t2cMethod == T2C_IAU2000B)
-	      {
-		double trs[3], zenith_trs[3];
-		trs[0]=obs->x;
-		trs[1]=obs->y;
-		trs[2]=obs->z;
-		zenith_trs[0]= obs->height_grs80 
-		  * cos(obs->longitude_grs80) * cos(obs->latitude_grs80);
-		zenith_trs[1]= obs->height_grs80 
-		  * sin(obs->longitude_grs80) * cos(obs->latitude_grs80);
-		zenith_trs[2] = obs->height_grs80*sin(obs->latitude_grs80);
-		long double utc = psr[p].obsn[i].sat;
-		if (psr[p].obsn[i].clockCorr!=0 && psr[p].obsn[i].clockCorr!=2)
-		  utc += getCorrection(psr[p].obsn+i, 
-				       psr[p].clockFromOverride,
-				       "UTC", psr[p].noWarnings)/SECDAY;
-		get_obsCoord_IAU2000B(trs, zenith_trs,
-				      psr[p].obsn[i].sat
-				      +getCorrectionTT(psr[p].obsn+i)/SECDAY,
-				      utc,
-				      psr[p].obsn[i].observatory_earth,
-				      psr[p].obsn[i].zenith,
-				      psr[p].obsn[i].siteVel);
-	      }
-	      else {
-		psr[p].obsn[i].zenith[0]=psr[p].obsn[i].zenith[1]=psr[p].obsn[i].zenith[2]=0.0; // Only calc'd by IAU code
-		//	      if (	psr[p].obsn[i].zenith[2]==0.0)
-	      erad = sqrt(obs->x*obs->x+obs->y*obs->y+obs->z*obs->z);//height(m)
-	      hlt  = asin(obs->z/erad); // latitude
-	      alng = atan2(-obs->y,obs->x); // longitude
-	      hrd  = erad/(2.99792458e8*499.004786); // height (AU)
-	      siteCoord[0] = hrd * cos(hlt) * 499.004786; // dist from axis (lt-sec)
-	      siteCoord[1] = siteCoord[0]*tan(hlt); // z (lt-sec)
-	      siteCoord[2] = alng; // longitude
-	      
-	      /* PC,PS equatorial and meridional components of nutations of longitude */      
-	      toblq = (psr[p].obsn[i].sat+2400000.5-2451545.0)/36525.0;
-	      oblq = (((1.813e-3*toblq-5.9e-4)*toblq-4.6815e1)*toblq +84381.448)/3600.0;
-	      
-	      pc = cos(oblq*M_PI/180.0+psr[p].obsn[i].nutations[1])*psr[p].obsn[i].nutations[0];
-	      
-	      /* TSID = sidereal time (lmst, timcalc -> obsite) */
-	      
-	      lmst(psr[p].obsn[i].sat+psr[p].obsn[i].correctionUT1/SECDAY
-		   ,0.0,&tsid,&sdd);
-	      tsid*=2.0*M_PI;
-	      
-	      /* Compute the local, true sidereal time */
-	      ph = tsid+pc-siteCoord[2];  
-	      /* Get X-Y-Z coordinates taking out earth rotation */
-	      eeq[0] = siteCoord[0]*cos(ph); 
-	      eeq[1] = siteCoord[0]*sin(ph);
-	      eeq[2] = siteCoord[1];
-	      
-	      /* Now obtain PRN -- the precession matrix */
-	      get_precessionMatrix(prn,(double)psr[p].obsn[i].sat
-				   +psr[p].obsn[i].correctionUT1/SECDAY
-				   ,psr[p].obsn[i].nutations[0],
-				   psr[p].obsn[i].nutations[1]);
-	      /* Calculate the position after precession/nutation*/
-	      for (j=0;j<3;j++)
-		psr[p].obsn[i].observatory_earth[j]=prn[j][0]*eeq[0]+prn[j][1]*eeq[1]+prn[j][2]*eeq[2]; 
-	      /* Rotate vector if we are working in ecliptic coordinates */
-	      if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].observatory_earth);
-
-	      /* Calculate observatory velocity w.r.t. geocentre (1950.0)!!!! <<<<<<< */
-	      speed = 2.0*M_PI*siteCoord[0]/(86400.0/1.00273);
-	      sitera = 0.0;
-	      if (speed>1.0e-10) sitera = atan2(psr[p].obsn[i].observatory_earth[1],
-						psr[p].obsn[i].observatory_earth[0]);
-	      psr[p].obsn[i].siteVel[0] = -sin(sitera)*speed;
-	      psr[p].obsn[i].siteVel[1] =  cos(sitera)*speed;
-	      psr[p].obsn[i].siteVel[2] =  0.0;
-	      if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].siteVel);
-
-	      /* Technically if using TDB these coordinates should be 
-		 transformed to that frame. In practise it doesn't matter,
-		 we're only talking about 0.3 ns, or 2.5e-14 in v/c */
-	      
-	      /* hack to transform for faked values of "K" */
-//  	      vectorscale(psr[p].obsn[i].observatory_earth, 1.15505);
-//  	      vectorscale(psr[p].obsn[i].siteVel, 1.15505);
-	      }
+	      if (strcmp(psr[p].obsn[i].telID,"STL")==0) // Satellite
+		{
+		  psr[p].obsn[i].siteVel[0] = 0.0;
+		  psr[p].obsn[i].siteVel[1] = 0.0;
+		  psr[p].obsn[i].siteVel[2] = 0.0;		  
+		  //		  printf("Setting observatory coordinates for TOA %d\n",i);
+		  // Now check flags to obtain the telescope coordinates for this time
+		  for (k=0;k<psr[p].obsn[i].nFlags;k++)
+		    {
+		      if (strcmp(psr[p].obsn[i].flagID[k],"-telx")==0){
+			sscanf(psr[p].obsn[i].flagVal[k],"%lf",&psr[p].obsn[i].observatory_earth[0]);
+			psr[p].obsn[i].observatory_earth[0]/=SPEED_LIGHT;
+		      }
+		      if (strcmp(psr[p].obsn[i].flagID[k],"-tely")==0){
+			sscanf(psr[p].obsn[i].flagVal[k],"%lf",&psr[p].obsn[i].observatory_earth[1]);
+			psr[p].obsn[i].observatory_earth[1]/=SPEED_LIGHT;
+		      }
+		      if (strcmp(psr[p].obsn[i].flagID[k],"-telz")==0){
+			sscanf(psr[p].obsn[i].flagVal[k],"%lf",&psr[p].obsn[i].observatory_earth[2]);		      
+			psr[p].obsn[i].observatory_earth[2]/=SPEED_LIGHT;
+		      }
+			
+		    }
+		}
+	      else
+		{
+		  obs = getObservatory(psr[p].obsn[i].telID);
+		  // New way
+		  if (psr[p].t2cMethod == T2C_IAU2000B)
+		    {
+		      double trs[3], zenith_trs[3];
+		      trs[0]=obs->x;
+		      trs[1]=obs->y;
+		      trs[2]=obs->z;
+		      zenith_trs[0]= obs->height_grs80 
+			* cos(obs->longitude_grs80) * cos(obs->latitude_grs80);
+		      zenith_trs[1]= obs->height_grs80 
+			* sin(obs->longitude_grs80) * cos(obs->latitude_grs80);
+		      zenith_trs[2] = obs->height_grs80*sin(obs->latitude_grs80);
+		      long double utc = psr[p].obsn[i].sat;
+		      if (psr[p].obsn[i].clockCorr!=0 && psr[p].obsn[i].clockCorr!=2)
+			utc += getCorrection(psr[p].obsn+i, 
+					     psr[p].clockFromOverride,
+					     "UTC", psr[p].noWarnings)/SECDAY;
+		      get_obsCoord_IAU2000B(trs, zenith_trs,
+					    psr[p].obsn[i].sat
+					    +getCorrectionTT(psr[p].obsn+i)/SECDAY,
+					    utc,
+					    psr[p].obsn[i].observatory_earth,
+					    psr[p].obsn[i].zenith,
+					    psr[p].obsn[i].siteVel);
+		    }
+		  else {
+		    psr[p].obsn[i].zenith[0]=psr[p].obsn[i].zenith[1]=psr[p].obsn[i].zenith[2]=0.0; // Only calc'd by IAU code
+		    //	      if (	psr[p].obsn[i].zenith[2]==0.0)
+		    erad = sqrt(obs->x*obs->x+obs->y*obs->y+obs->z*obs->z);//height(m)
+		    hlt  = asin(obs->z/erad); // latitude
+		    alng = atan2(-obs->y,obs->x); // longitude
+		    hrd  = erad/(2.99792458e8*499.004786); // height (AU)
+		    siteCoord[0] = hrd * cos(hlt) * 499.004786; // dist from axis (lt-sec)
+		    siteCoord[1] = siteCoord[0]*tan(hlt); // z (lt-sec)
+		    siteCoord[2] = alng; // longitude
+		    
+		    /* PC,PS equatorial and meridional components of nutations of longitude */      
+		    toblq = (psr[p].obsn[i].sat+2400000.5-2451545.0)/36525.0;
+		    oblq = (((1.813e-3*toblq-5.9e-4)*toblq-4.6815e1)*toblq +84381.448)/3600.0;
+		    
+		    pc = cos(oblq*M_PI/180.0+psr[p].obsn[i].nutations[1])*psr[p].obsn[i].nutations[0];
+		    
+		    /* TSID = sidereal time (lmst, timcalc -> obsite) */
+		    
+		    lmst(psr[p].obsn[i].sat+psr[p].obsn[i].correctionUT1/SECDAY
+			 ,0.0,&tsid,&sdd);
+		    tsid*=2.0*M_PI;
+		    
+		    /* Compute the local, true sidereal time */
+		    ph = tsid+pc-siteCoord[2];  
+		    /* Get X-Y-Z coordinates taking out earth rotation */
+		    eeq[0] = siteCoord[0]*cos(ph); 
+		    eeq[1] = siteCoord[0]*sin(ph);
+		    eeq[2] = siteCoord[1];
+		    
+		    /* Now obtain PRN -- the precession matrix */
+		    get_precessionMatrix(prn,(double)psr[p].obsn[i].sat
+					 +psr[p].obsn[i].correctionUT1/SECDAY
+					 ,psr[p].obsn[i].nutations[0],
+					 psr[p].obsn[i].nutations[1]);
+		    /* Calculate the position after precession/nutation*/
+		    for (j=0;j<3;j++)
+		      psr[p].obsn[i].observatory_earth[j]=prn[j][0]*eeq[0]+prn[j][1]*eeq[1]+prn[j][2]*eeq[2]; 
+		    /* Rotate vector if we are working in ecliptic coordinates */
+		    if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].observatory_earth);
+		    
+		    /* Calculate observatory velocity w.r.t. geocentre (1950.0)!!!! <<<<<<< */
+		    speed = 2.0*M_PI*siteCoord[0]/(86400.0/1.00273);
+		    sitera = 0.0;
+		    if (speed>1.0e-10) sitera = atan2(psr[p].obsn[i].observatory_earth[1],
+						      psr[p].obsn[i].observatory_earth[0]);
+		    psr[p].obsn[i].siteVel[0] = -sin(sitera)*speed;
+		    psr[p].obsn[i].siteVel[1] =  cos(sitera)*speed;
+		    psr[p].obsn[i].siteVel[2] =  0.0;
+		    if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].siteVel);
+		    
+		    /* Technically if using TDB these coordinates should be 
+		       transformed to that frame. In practise it doesn't matter,
+		       we're only talking about 0.3 ns, or 2.5e-14 in v/c */
+		    
+		    /* hack to transform for faked values of "K" */
+		    //  	      vectorscale(psr[p].obsn[i].observatory_earth, 1.15505);
+		    //  	      vectorscale(psr[p].obsn[i].siteVel, 1.15505);
+		  }
+		}
 	    }
 	  else if (i==0)
 	    printf("Delay correction turned off for psr %d\n", p);

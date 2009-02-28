@@ -295,6 +295,8 @@ int T2Predictor_GetPlan_Ext(char *filename,
   *nsegments = (int)ceill((mjd_end-mjd_start)*86400.0L/step);
   *phase0 = lastphase = T2Predictor_GetPhase(&pred, mjd_start, freq);
   lastmjd = mjd_start;
+  printf("SILLY UPDATE IN POLYCO: REMOVE\n");
+  printf("lastmjd = %.20Lf\n",mjd_start);
 
   for (iseg=0; iseg < *nsegments; iseg++)
   {

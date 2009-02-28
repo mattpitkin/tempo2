@@ -48,7 +48,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       voverc = dotproduct(pos,vobs);
       freqf = psr[p].obsn[i].freq*1.0e6*(1.0-voverc);   /* Converting frequency in to Hz */
       /* Transform freq due to Einstein delay ! */
-      if (psr[p].dilateFreq)
+      if (psr[p].dilateFreq && freqf > 0)
       	freqf /= psr[p].obsn[i].einsteinRate;
 
       if (debugFlag==1) printf("In dm_delays: Transforming frequency due to Einstein delay\n");      

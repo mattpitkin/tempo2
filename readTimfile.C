@@ -343,6 +343,11 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	      psr->obsn[nObs].clockCorr=0;  /* therefore don't do clock corrections */
 	      psr->obsn[nObs].delayCorr=0;
 	    }
+	  else if (strcmp(psr->obsn[nObs].telID,"STL")==0)
+	    {
+	      psr->obsn[nObs].clockCorr=0;  /* don't do clock corrections */
+	      psr->obsn[nObs].delayCorr=1;
+	    }
 	  else
 	    {
 	      psr->obsn[nObs].clockCorr=1;

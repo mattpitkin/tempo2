@@ -104,10 +104,6 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   int gval;
   if (str[0]=='#') /* Comment line */
     fgets(str,1000,fin);
-  else if (str[0]=='C') /* Comment line */
-    fgets(str,1000,fin);
-  else if (str[0]=='I') /* Comment line */
-    fgets(str,1000,fin);
   else if (strcasecmp(str,"PSR")==0 || strcasecmp(str,"PSRB")==0 || strcasecmp(str,"PSRJ")==0) /* Name of pulsar */
       fscanf(fin,"%s",psr->name);
   else if (strcasecmp(str,"CLK")==0)
@@ -157,6 +153,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       char val[100];
       fscanf(fin,"%s",val);
       psr->correctTroposphere=(val[0]=='1'||val[0]=='y'||val[0]=='Y');
+      printf("Setting correctTroposphere %d\n",psr->correctTroposphere);
     }
   else if (strcasecmp(str,"UNITS")==0)
     {
@@ -676,6 +673,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       //      readValue(psr,str,fin,&dummy,0);
     }
   /* Other allowed parameters that are unused */
+  else if (str[0]=='C') /* Comment line */
+    fgets(str,1000,fin);
+  else if (str[0]=='I') /* Comment line */
+    fgets(str,1000,fin);
   else 
     {
       displayMsg(1,"MISC1","Unknown parameter in par file: ",str,psr->noWarnings);

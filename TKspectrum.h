@@ -9,6 +9,20 @@
 #include "TKfit.h"
 
 double GLOBAL_OMEGA = 0;
+/* Global variables used in the fortran code for sigmaz*/
+int npt,nusewt,nxunits,ntunits,nformat,nwriteres,nbintype;
+int npt1last,npt2last,ncubic,ncubics,ntau,linfile,indx[90000],ndim;
+double data[90000],utjd[90000],taumin,sigmai[90000],permax,root2;
+double utjd1,utjd2,tmin,tmax,xmin,xmax,utjdlast,tausec,taumax,tauday;
+double prtl[5],utmean,secyear,taulog,addvar,tauyear,tauensure,tdiffmin;
+double utfirst,utlast;
+
+void readin(pulsar psr);
+void getprtj(int n);
+void indexx8(int n,double *arrin,int *indx);
+void getweights(int n, double *wt);
+void fit4(int *nfit,double *p4,double *cov4,int ndostats,double *chidf,double *avewt);
+void mat20(double sam[21][21],double a[21][21],int n,double *determ,int *nbad);
 
 void sineFunc(double x,double *v,int ma);
 void TKsortit(double *x,double *y,int n);
@@ -1035,3 +1049,615 @@ int TK_fft(short int dir,long n,double *x,double *y)
 }
 
 
+// Routines for sigmaz calculation
+/* Direct copy of the original Fortran */
+/* using identical fitting routines etc. */
+/* Note that all arrays start from 1 */
+//void calcSigmaz(pulsar *psr,int npsr,int time,int psrfile,double mintau,
+//		int nSel,int *selPsr,int weights,int style,int average,
+//		float *avX,float *avY,int *nav)
+void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
+		double *ret_e2,int *ret_nval,double mintau)
+{
+  int n,nbad,nfit,nread,idiag,niter,ntable,ios,nsigs,nuncor,ntot;
+  int ndostats,nptot,nuncorbins,ntries;
+  double x,szlog,sz,cov4,rootsz,p4,sumwt,sumwtuncor,error,scale,bias;
+  double utjd2nuncor,wt,dplus,dminus,errlog,chidf,avewt,scalelog;
+  double taulog1,addvsq,szbias,dp,dm,tabledata[101];
+  int endit;
+  int   j;
+
+  *ret_nval=0;
+  nxunits = 0;
+  nusewt = weights; 
+  tmin =-1e50;
+  tmax = 1.0e50;
+  xmin =-1.0e50;
+  xmax = 1.0e50;
+  root2 = sqrt(2.0);
+  secyear = 86400.0*365.25;
+  utfirst = 1.0e50;
+  utlast = -1.0e50;
+  npt1last = 0;
+  npt2last = 0;
+  utjd1 = 0.0;
+  ndim = 0;
+  if (nxunits >= 0) ndim=4;
+  if (nxunits <= -1 && nxunits >= -3) ndim=3;
+  if (nxunits <= -4 && nxunits >= -6) ndim=1;
+
+  int nobs = psr.nobs;
+  double t2times[MAX_OBSN],t2resid[MAX_OBSN],t2error[MAX_OBSN],t0;
+  int i;
+  scale = 2.0*sqrt(5.0);
+  scalelog = log10(scale);
+  for (n=1;n<=100;n++)
+    tabledata[n] = 0.0;
+  
+  readin(psr);
+  tausec = taumax;
+  tauday = tausec/86400.0;
+  ntau = 0;
+  ncubics=0;
+  if (nusewt >= 0)
+    {
+      tauyear = tauday/365.25;
+      utjd1 = utjd[indx[1]]-1.0e-2;
+      utjd2 = utjd[indx[npt]]+1.0e-2;
+      utmean = (utjd1+utjd2)/2.0;
+      for (niter=1;niter<=nusewt+1;niter++)
+	{
+	  fit4(&nfit,&p4,&cov4,ndostats,&chidf,&avewt);
+	  addvsq=addvar*addvar+(chidf-1.0)/avewt;
+	  if (addvsq > 0.0)
+	    addvar=sqrt(addvsq);
+	  else
+	    {
+	      if (nusewt != 0 && nusewt != -3) addvar = 0.0;
+	    }
+	}
+    }
+  // Should check nbintype
+  ndostats=0;
+
+  // 110 continue statement
+  do {
+    ntau++;
+    ncubic = 0;
+    tauday = tausec/86400.0;
+    tauyear = tauday/365.25;
+    taulog = log10(tausec);
+    sumwt = 0.0;
+    sz=0.0;
+    utjd2nuncor = 0.0;
+    sumwtuncor = 0.0;
+    nuncorbins = 0;
+    ntot = 0;
+    ntries = 0;
+    nptot = 0;
+    npt1last = 0;
+    npt2last = 0;
+    
+    if (nbintype==0) utjd1=utjd[indx[1]]-tausec;
+    if (nbintype==1) utjd1=utjd[indx[1]]-taumin;
+    if (nbintype==2) utjd1=utjd[indx[1]]-tausec;
+    endit=0;
+
+    do {
+      //      printf("utjd1 = %g\n",utjd1);
+      if (nbintype==0) utjd1+=tausec;
+      if (nbintype==1) utjd1+=taumin;
+      if (nbintype==2) utjd1+=tausec;
+      if (utjd1 < utjd[indx[npt]])
+	{
+	  utjd2=utjd1+tausec;
+	  utmean=(utjd1+utjd2)/2.0;
+	  if (utjd1 >= utjd2nuncor)
+	    {
+	      nuncor=1;
+	      utjd2nuncor=utjd2;
+	    }
+	  else
+	    {
+	      // Should check overlap
+	      nuncor=0;
+	    }
+	  ncubics++;		  
+	  fit4(&nfit,&p4,&cov4,ndostats,&chidf,&avewt);
+	  ntries++;
+	  if (nfit==1)
+	    {
+	      wt=1.0/cov4;
+	      sz=sz+wt*p4*p4;
+	      sumwt=sumwt+wt;
+	      ntot++;
+	      nptot=nptot+npt2last-npt1last+1;
+	      if (nuncor==1)
+		{
+		  sumwtuncor=sumwtuncor+wt;
+		  nuncorbins=nuncorbins+1;
+		}	     
+	      //	      printf("Here %g %g %d %d\n",(double)sumwtuncor,(double)wt,(int)nuncorbins,nuncor);
+	    }
+	}
+      else
+	endit=1;
+    } while (endit==0); // 130 loop
+    //    printf("Add or not (Exit): %d %g %g\n",ntot,sz,sumwt);
+    if (ntot==0 || sz <=0.0 || sumwt<=0.0)
+      {
+      }
+    else
+      {
+	rootsz = tausec*tausec*sqrt(sz/sumwt)/scale;
+	szlog = log10(rootsz);
+	errlog=0.0;
+	bias=0.0;
+	dp=0.0;
+	dm=0.0;
+	if (sumwtuncor > 1.0e-50)
+	  {
+	    error=nuncorbins/sumwtuncor;
+	    if (error > 0.0) errlog=2.0*taulog+0.5*log10(error)-scalelog;
+	    x=nuncorbins;
+	    bias=0.17/x;
+	    dm = 0.31/sqrt(x);
+	    if (nuncorbins > 1)
+	      dp=0.31/sqrt(x-1.0);
+	    else
+	      dp=0.52;
+	    
+	  }
+	szbias = szlog-bias;
+	dplus = szbias + dp;
+	dminus = szbias - dm;
+
+	ret_szbias[*ret_nval] = szbias;
+	ret_tau[*ret_nval]    = log10(tauyear);
+	ret_e1[*ret_nval]     = dp;
+	ret_e2[*ret_nval]     = -dm;
+	//	printf("Have %g %g %g %g\n",szbias,log10(tauyear),dp,-dm);
+
+	//	exit(1);
+	(*ret_nval)++;
+      }
+    if (nbintype==0) tausec=tausec/2.0;
+    if (nbintype==1) tausec=tausec-taumin;
+    if (nbintype==2) tausec=tausec+taumin;
+    //    exit(1);
+    //    printf("Exited (testing) with %d %g %g %g %g %d\n",ntot,tausec,tauensure,tausec/86400.0/365.25,mintau,*ret_nval);
+    //	fflush(stdout);
+  } while (ntot > 0 || (tausec >= tauensure && tauensure >= 0.0) || (tausec/86400.0/365.25 > mintau));
+  //  printf("Exited with %d %g %g %g %g %d\n",ntot,tausec,tauensure,tausec/86400.0/365.25,mintau,*ret_nval);
+  //	fflush(stdout);
+}
+
+
+
+/* WHAT AM I RETURNING IN AND OUT OF THIS FUNCTION? */
+void fit4(int *nfit,double *p4,double *cov4,int ndostats,double *chidf,double *avewt)
+{
+  int n,i,j,nbad,nok,nf,npt1,npt2,m,k;
+  static int npass=0;
+  static int ntaulast=-1;
+  double am[21][21],aminv[21][21],fvec[21],determ,y,ylast,x,ave,rms,alv,yf;
+  double res,sumwt,par[5],wt,chisqu,degfree,utave,err4;
+  static double scalefact=1.0;
+  static double scalecon=1.0;
+
+  npass++;
+  ncubic++;
+  ncubics++;
+  if (ndim > 1) scalefact = pow(86400.0,ndim-1);
+  alv = 0.0;
+  for (i=1;i<=ndim;i++)
+    {
+      fvec[i] = 0.0;
+      par[i] = 0.0;
+      for (j=1;j<=ndim;j++)
+	am[i][j]=0.0;
+    }
+  sumwt=0.0;
+  npt1=0;
+  npt2=0;
+  *nfit=0;
+  if (ndim != 4)
+    {
+      if (ntunits >= -2)
+	scalecon=3.0;
+      else
+	{
+	  if (ndim==3) scalecon = 3.0*tdiffmin;
+	  if (ndim==2) scalecon = 6.0*tdiffmin*tdiffmin;
+	  if (ndim==1) scalecon = 6.0*tdiffmin*tdiffmin*tdiffmin;
+	}
+    }
+  for (n=1;n<=npt;n++)
+    {
+      if (utjd[indx[n]] >= utjd1-1.0e-5)
+	{
+	  if (utjd[indx[n]]+(4-ndim)*tdiffmin > utjd2+1.0e-5) goto pos90;
+	  if (npt2 == 0) npt1=n;
+	  npt2=n;
+	}
+    }
+ pos90:
+  if (npt1 == 0 || npt2 == 0 || npt2-npt1+1 < ndim || npt2 == 0 || (npt1 == npt1last && npt2 == npt2last) 
+      || (utjd[indx[npt2]]+(4.0-ndim)*tdiffmin-utjd[indx[npt1]] < tausec/root2))
+    {
+      goto pos1000;
+    }
+  npt1last = npt1;
+  npt2last = npt2;
+  for (n=npt1;n<=npt2;n++)
+    {
+      getweights(n,&wt);
+      sumwt=sumwt+wt;
+      getprtj(n);
+      y = data[indx[n]];
+      for (i=1;i<=ndim;i++)
+	{
+	  fvec[i] = fvec[i] + y*prtl[i]*wt;
+	  for (j=1;j<=ndim;j++)
+	    {
+	      am[i][j]=am[i][j]+prtl[i]*prtl[j]*wt;
+	    }
+	}
+    }
+  mat20(am,aminv,ndim,&determ,&nbad);
+  if (nbad != 0.0)
+    {
+      goto pos1000;     
+    }
+  for (i=1;i<=ndim;i++)
+    {
+      for (j=1;j<=ndim;j++)
+	par[i]=par[i]+aminv[i][j]*fvec[j];
+    }
+  *nfit=1;
+  *p4=par[ndim]/scalefact;
+  *cov4=aminv[ndim][ndim]/scalefact/scalefact;
+  if (ndim!=4)
+    {
+      *p4=(*p4)/scalecon;
+      *cov4=(*cov4)/scalecon/scalecon;
+    }
+  utave=(utjd1/86400.0+utjd2/86400.0)/2.0;
+  err4=sqrt(*cov4);
+  if (ntau!=ntaulast) ntaulast=ntau;
+  ave=0.0;
+  nok=0;
+  sumwt=0.0;
+  chisqu=0.0;
+  for (n=npt1;n<=npt2;n++)
+    {
+      yf = 0.0;
+      getweights(n,&wt);
+      getprtj(n);
+      for (i=1;i<=ndim;i++)
+	yf=yf+prtl[i]*par[i];
+      res=data[indx[n]]-yf;
+      ave=ave+wt*res;
+      chisqu=chisqu+wt*res*res;
+      sumwt=sumwt+wt;
+      nok++;
+      if (nok>1) alv=alv+(res-ylast)*(res-ylast);
+      ylast=res;
+    }
+  // 401 Continue
+  if (nok > 1 && sumwt > 1.0e-50)
+    {
+      ave = ave/sumwt;
+      rms = chisqu/sumwt-ave*ave;
+      if (rms > 0.0) rms=sqrt(rms);
+      if (alv > 0.0) alv=sqrt(alv/2.0/(nok-1.0));
+      *avewt=sumwt/nok;
+      degfree=nok-ndim;
+      if (nok > 4)
+	*chidf = chisqu/degfree;
+      else
+	*chidf=1.0;
+    }
+ pos1000:
+  return;
+}
+
+void mat20(double sam[21][21],double a[21][21],int n,double *determ,int *nbad)
+{
+  int index[21][3],ipivot[21];
+  double pivot[21],amax,swap,x,t;
+  int i,j,k,l,l1,irow,icolum,jrow,jcolum;
+
+  *nbad=0;
+  for (i=1;i<=n;i++)
+    {
+      for (j=1;j<=n;j++)
+	a[i][j]=sam[i][j];
+    }
+  *determ=0.0;
+  for (j=1;j<=n;j++)
+    ipivot[j]=0;
+  for (i=1;i<=n;i++) // End 550
+    {
+      amax=0.0;
+      for (j=1;j<=n;j++) // End 105
+	{
+	  if (ipivot[j]-1 != 0) // CHECK THIS <<<
+	    {
+	      for (k=1;k<=n;k++)
+		{
+		  if (ipivot[k]-1 < 0) goto pos_mat80;
+		  if (ipivot[k]-1 == 0) goto pos_mat100;
+		  if (ipivot[k]-1 > 0) goto pos_mat750;
+		pos_mat80:
+		  if (fabs(amax)-fabs(a[j][k]) < 0)
+		    {
+		      irow=j;
+		      icolum=k;
+		      amax=a[j][k];
+		    }
+		pos_mat100:
+		  {
+		  }
+		} // 100
+	    }
+	} // 105
+      ipivot[icolum]=ipivot[icolum]+1;
+      if (irow-icolum != 0)
+	{
+	  for (l=1;l<=n;l++)
+	    {
+	      swap = a[irow][l];
+	      a[irow][l]=a[icolum][l];
+	      a[icolum][l]=swap;
+	    }
+	} // 260
+      index[i][1]=irow;
+      index[i][2]=icolum;
+      pivot[i]=a[icolum][icolum];
+      x=fabs(pivot[i]);
+      if (x<=1.0e-70 || x>=1e70)
+	{
+	  *nbad=1;
+	  return;
+	}
+      *determ=*determ+log10(fabs(pivot[i]));
+      a[icolum][icolum]=1.0;
+      for (l=1;l<=n;l++)
+	a[icolum][l]=a[icolum][l]/pivot[i];
+      for (l1=1;l1<=n;l1++)
+	{
+	  if (l1-icolum!=0)
+	    {
+	      t=a[l1][icolum];
+	      a[l1][icolum]=0.0;
+	      for (l=1;l<=n;l++)
+		a[l1][l]=a[l1][l]-a[icolum][l]*t;
+	    }
+	}
+    }// End 550
+
+  for (i=1;i<=n;i++)
+    {
+      l=n+1-i;
+      if ((index[l][1]-index[l][2])!=0.0)
+	{
+	  jrow=index[l][1];
+	  jcolum=index[l][2];
+	  for (k=1;k<=n;k++)
+	    {
+	      swap=a[k][jrow];
+	      a[k][jrow]=a[k][jcolum];
+	      a[k][jcolum]=swap;
+	    }
+	}
+    }
+ pos_mat750:
+  return;
+}
+
+void getprtj(int n)
+{
+  double x;
+  x = (utjd[indx[n]]-utmean)/86400.0;
+  prtl[1] = 1.0;
+  prtl[2] = x;
+  prtl[3] = x*x;
+  prtl[4] = x*x*x;
+}
+
+void getweights(int n, double *wt)
+{
+  if (nusewt == 0) *wt = 1.0/addvar/addvar;
+  if (nusewt == -1) *wt = 1.0/pow(sigmai[indx[n]],2);
+  if (nusewt == -2 || nusewt > 0) *wt = 1.0/(pow(sigmai[indx[n]],2)+pow(addvar,2));
+  if (nusewt == -3) *wt = 1.0/addvar/addvar;
+}
+
+void readin(pulsar psr)
+{
+  int nalv,nread,n;
+  static int idiag = 0;
+  double tlast,ave,rms,var,sumwt,alv,t,x,sig,wt,t1,xr,xi,tautest;
+  double xold,rootvar,permin;
+  static double unitfact = 1.0;
+  double mean=0.0;
+  int i;
+  int loop=0;
+
+  for (i=0;i<psr.nobs;i++)
+    mean+=psr.obsn[i].residual;
+  mean/=(double)psr.nobs;
+
+  npt = 0;
+  utjdlast=-1.0; 
+  ave=0.0;
+  rms=0.0;
+  var=0.0;
+  sumwt=0.0;
+  alv=0.0;
+  nalv=0;
+  tlast=0.0;
+  sig=1.0;
+  wt=1.0;
+
+  // Should check ntunits and nxunits - assume both are zero
+  ntunits=0;
+
+  tauensure = -1.0;
+  tauensure = tauensure*86400.0;
+  unitfact = 1.0e-6;
+
+  // 10 continue statement
+  int ic=0;
+  int breakit=0;
+
+  do {
+    do {
+      do {
+	// Assuming that nformat = 0
+	
+	if (nusewt == 0 || nusewt == -3)
+	  {
+	    t = (double)psr.obsn[ic].sat;
+	    x = (double)(psr.obsn[ic].residual-mean)/1e-6;
+	    if (ic>0) {
+	      if (psr.obsn[ic-1].sat > psr.obsn[ic].sat)
+		{
+		  printf("1: ERROR: The TOAs need to be time sorted, sorry! - sats %g and %g\n",(double)psr.obsn[ic-1].sat,(double)psr.obsn[ic].sat);
+		  //		  exit(1);
+		}
+	    }
+	    ic++;
+	    if (ic == psr.nobs) breakit=1;
+	  }
+	else
+	  {
+	    t = (double)psr.obsn[ic].sat;
+	    x = (double)(psr.obsn[ic].residual-mean)/1e-6;
+	    sig = (double)(psr.obsn[ic].toaErr);
+	    if (ic>0) {
+	      if (psr.obsn[ic-1].sat > psr.obsn[ic].sat)
+		{
+		  printf("2: ERROR: The TOAs need to be time sorted, sorry! sats: %.15g and %.15g\n",(double)psr.obsn[ic-1].sat,(double)psr.obsn[ic].sat);
+		  //		  exit(1);
+		}
+	    }
+	    ic++;
+	    if (ic == psr.nobs) breakit=1;
+	  }
+	nread++;
+      } while ((t < tmin || t > tmax) && breakit==0);
+      if (npt == 0) t1=t;
+      if (t < utfirst) utfirst=t;
+      if (t > utlast) utlast=t;
+      t=t-t1; // to avoid losing precision
+      if (ntunits==0) t=t*86400.0;
+    } while ((x < xmin || x > xmax) && breakit==0);
+    x = unitfact*x;
+    if (nusewt != 0 && nusewt != -3) sig = unitfact*sig;
+    npt++;
+    indx[npt] = npt;
+    utjd[indx[npt]]=t;
+    data[indx[npt]]=x;
+    sigmai[indx[npt]]=sig;
+    utjdlast = t;
+    wt = 1.0/sig/sig;
+    ave=ave+wt*x;
+    var=var+wt*x*x;
+    sumwt=sumwt+wt;
+    if (npt > 1)
+      {
+	nalv++;
+	alv = alv+pow(x-xold,2);
+      }
+  } while (breakit==0);
+  // Ave different because I have a better mean removal or something similar
+  if (npt <= 0) exit(1);
+  indexx8(npt,utjd,indx);
+  tdiffmin = utjd[indx[2]]-utjd[indx[1]];
+  for (n=1;n<=npt-1;n++)
+    {
+      if (tdiffmin > utjd[indx[n+1]]-utjd[indx[n]])
+	tdiffmin = utjd[indx[n+1]]-utjd[indx[n]];
+    }
+  ave=ave/sumwt;
+  var=var/sumwt;
+  rootvar=sqrt(var);
+  rms=var-ave*ave;
+  rms = sqrt(rms);
+  if (nalv > 0 && alv > 0.0) alv=sqrt(alv/2.0/nalv);
+  permax = utjd[indx[npt]]-utjd[indx[1]];
+  permin = permax/(npt-1.0);
+  taumin = permin;
+  taumax = permax;
+  if (tauensure > 0.0) {
+    taumax = tauensure;
+    //105 CONTINUE
+    loop=0;
+    do
+      {
+	if (taumax < permax)
+	  {
+	    loop=1;
+	    taumax=2.0*taumax;
+	  }
+      }while (loop==1);
+  }
+  // Should check nbintype
+  tautest = taumax;
+  do {
+    tautest=tautest/2.0;
+  } while (tautest > taumin);
+  taumin=tautest;
+
+  if (nusewt >= 0.0) addvar = rms;
+}
+
+
+// Check conversion from Fortran carefully
+void indexx8(int n,double *arrin,int *indx)
+{
+  //     from numerical recipes
+  double q;
+  int j,l,ir,i=0,indxt;
+
+  for (j=1;j<=n;j++)
+    indx[j] = j;
+  l = n/2+1;
+  ir = n;
+
+ pos10:
+  if (l > 1){
+    l--;
+    indxt = indx[l];
+    q=arrin[indxt];
+  } else {
+    indxt=indx[ir];
+    q = arrin[indxt];
+    indx[ir]=indx[1];
+    ir--;
+    if (ir == 1){
+      indx[1] = indxt;
+      return;
+    }
+  }
+  i=l;
+  j=l+l;
+ pos20:
+ if (j <= ir) {
+    if (j < ir) {
+      if (arrin[indx[j]] < arrin[indx[j+1]])j++;
+    }
+    if (q < arrin[indx[j]]){
+      indx[i] = indx[j];
+      i=j;
+      j=j+j;
+    } else {
+      j=ir+1;
+    }
+    goto pos20; // Sorry about this - copying the fortran!
+ }
+ indx[i]=indxt;
+ goto pos10;
+}

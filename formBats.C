@@ -15,7 +15,8 @@ void formBats(pulsar *psr,int npsr)
     {
       for (i=0;i<psr[p].nobs;i++)
 	{
-	  if (psr[p].obsn[i].clockCorr==0 || psr[p].obsn[i].delayCorr==0)
+	  //	  if (psr[p].obsn[i].clockCorr==0 || psr[p].obsn[i].delayCorr==0)
+	  if (psr[p].obsn[i].delayCorr==0)
 	    psr[p].obsn[i].bat = psr[p].obsn[i].sat;
 	  else
 	    {

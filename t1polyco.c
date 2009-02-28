@@ -13,6 +13,10 @@ long double T1Polyco_GetPhase(T1Polyco *t1p, long double mjd, long double freq)
 
   /* Evaluate polynomial in phase and frequency */
   dt = (mjd-t1p->mjd_mid)*1440;
+  printf("WARNIGN WARNGING: Silly update in polyco read\n");
+  printf("Have %.20Lg %.20Lg\n",mjd,t1p->mjd_mid);
+  printf("Diff = %.15Lg\n",mjd-t1p->mjd_mid);
+
   phase = t1p->reference_phase + dt*60*t1p->frequency_psr_0 + t1p->coeff[0];
   spin_freq = t1p->frequency_psr_0 + t1p->coeff[1]/60;
   arg = dt;
@@ -23,11 +27,9 @@ long double T1Polyco_GetPhase(T1Polyco *t1p, long double mjd, long double freq)
       spin_freq += (ic+1)*t1p->coeff[ic+1]*arg/60;
     arg *= dt;
   }
-
   /* compute dispersion phase delay in observatory frame */
   phase -= spin_freq * t1p->dm/2.41e-4L / (1.0L+t1p->doppler*1.0e-4L) * 
     ( 1.0L/(freq*freq) - 1.0L/(t1p->frequency_obs*t1p->frequency_obs));
-  
   return phase;
 }
 
@@ -158,7 +160,7 @@ int T1Polyco_Read(T1Polyco *t1p, FILE *f)
   t1p->dm = T1P_grabLongDouble(line, 51, 21);
   t1p->doppler = T1P_grabLongDouble(line, 73, 6);
   t1p->log10rms = T1P_grabLongDouble(line, 79, 7);
-
+  
   if (fgets(line, 128, f)!=line)
     return -1;
   t1p->reference_phase = T1P_grabLongDouble(line, 0, 20);

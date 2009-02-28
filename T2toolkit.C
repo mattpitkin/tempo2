@@ -116,8 +116,26 @@ float TKfindRMS_d(double *x,int n)
   mean = TKmean_d(x,n);
   for (i=0;i<n;i++)
     sdev += pow(x[i]-mean,2);
-  sdev/=(n-1);
+  sdev/=(double)(n-1);
   sdev = sqrt(sdev);
+  return sdev;
+}
+
+float TKfindRMSweight_d(double *x,double *e,int n)
+{
+  int i;
+  double sum=0.0,sumsq=0.0,sdev;
+  double wgt;
+  double sumwgt = 0.0;
+
+  for (i=0;i<n;i++)
+    {
+      wgt = 1.0/e[i]/e[i];
+      sum    += (wgt*x[i]);
+      sumsq  += (wgt*x[i]*x[i]);
+      sumwgt +=  wgt;
+    }
+  sdev = sqrt((sumsq-sum*sum/sumwgt)/sumwgt);
   return sdev;
 }
 

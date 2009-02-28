@@ -45,11 +45,14 @@ void tt2tb(pulsar *psr,int npsr)
   {
     for (i=0;i<psr[p].nobs;i++)
     {
-      if (psr[p].obsn[i].clockCorr==0)
+      if (psr[p].obsn[i].clockCorr==0 && strcmp(psr[p].obsn[i].telID,"STL")!=0)
 	psr[p].obsn[i].correctionTT_TB = 0.0;
       else
       {
-	mjd_tt = psr[p].obsn[i].sat + getCorrectionTT(psr[p].obsn+i)/SECDAY;
+	if (strcmp(psr[p].obsn[i].telID,"STL")==0)
+	  mjd_tt = psr[p].obsn[i].sat;
+	else
+	  mjd_tt = psr[p].obsn[i].sat + getCorrectionTT(psr[p].obsn+i)/SECDAY;
 	/* Evaluate the time ephemeris and its derivative */
 	if (psr[p].timeEphemeris == IF99_TIMEEPH)
 	  deltaT = IF_deltaT(mjd_tt);
@@ -75,7 +78,6 @@ void tt2tb(pulsar *psr,int npsr)
 	else
 	  obsTerm /= (double)IFTE_K;  // obs_earth was in SI
 
-
 	/* Compute Teph : Irwin & Fukushima (1999) eq 13*/	
 	/* Note, DeltaT(Teph0) ~ -2x10^-14 s so is neglected */
 	psr[p].obsn[i].correctionTT_Teph = IFTE_TEPH0 + obsTerm
@@ -83,13 +85,16 @@ void tt2tb(pulsar *psr,int npsr)
 
 	/* Compute TCB or TDB as requested */
 	if (psr[p].units == TDB_UNITS)
-	  psr[p].obsn[i].correctionTT_TB = 
-	    psr[p].obsn[i].correctionTT_Teph - (1? 0.0 : IFTE_TEPH0); 
+	  {
+	    psr[p].obsn[i].correctionTT_TB = 
+	      psr[p].obsn[i].correctionTT_Teph - (1? 0.0 : IFTE_TEPH0); 
+	  }
 	else
-	  psr[p].obsn[i].correctionTT_TB = 
-	    IFTE_KM1 * (double)(mjd_tt-IFTE_MJD0)*86400.0/* linear drift term */
-	    + IFTE_K * (psr[p].obsn[i].correctionTT_Teph-(longdouble)IFTE_TEPH0);
-
+	  {
+	    psr[p].obsn[i].correctionTT_TB = 
+	      IFTE_KM1 * (double)(mjd_tt-IFTE_MJD0)*86400.0/* linear drift term */
+	      + IFTE_K * (psr[p].obsn[i].correctionTT_Teph-(longdouble)IFTE_TEPH0);
+	  }
 
 	/* Compute dTB/dTT for correct frequency transfer if needed */
 	if (psr[p].dilateFreq==1)
