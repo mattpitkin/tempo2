@@ -32,6 +32,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
   int tempo1=0;
   int nojump=0;
   int nofit=0;
+  int modify=0;
+  char modifyFname[100];
   double simulate=0;
   
   if (debugFlag==1) printf("In preProcess\n");
@@ -55,6 +57,11 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	nojump=1;
       else if (strcmp(argv[i],"-select")==0)
 	sscanf(argv[++i],"%s",selectFname);
+      else if (strcmp(argv[i],"-modify")==0)
+	{
+	  modify=1;
+	  sscanf(argv[++i],"%s",modifyFname);
+	}
        else if (strcmp(argv[i],"-name")==0)
 	{
 	  setName=1;
@@ -477,7 +484,38 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    }
 	  fclose(fin);
 	}
-	  
+      
+      // Modify TOA flags if required
+      if (modify==1)
+	{
+	  FILE *fin;
+	  double mjd1,mjd2;
+	  char flag1[MAX_STRLEN],flag2[MAX_STRLEN],flag3[MAX_STRLEN];
+	  if (!(fin = fopen(modifyFname,"r")))
+	    {
+	      printf("Unable to open >%s< to modify the flags\n",modifyFname);
+	      exit(1);
+	    }
+	  while (!feof(fin))
+	    {
+	      if (fscanf(fin,"%s %s %lf %lf %s",flag1,flag2,&mjd1,&mjd2,flag3)==5)
+		{
+		  for (i=0;i<psr[p].nobs;i++)
+		    {
+		      for (j=0;j<psr[p].obsn[i].nFlags;j++)
+			{
+			  if (strcmp(psr[p].obsn[i].flagID[j],flag1)==0 &&
+			      strcmp(psr[p].obsn[i].flagVal[j],flag2)==0 &&
+			      (double)psr[p].obsn[i].sat > mjd1 &&
+			      (double)psr[p].obsn[i].sat < mjd2)
+			    strcpy(psr[p].obsn[i].flagVal[j],flag3);
+			}
+		    }
+		}
+	    }
+	  fclose(fin);
+	}
+      
       for (i=0;i<psr[p].nobs;i++)
 	{
 	  //psr[p].obsn[i].efac = 1.0;
@@ -496,6 +534,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    psr[p].obsn[i].observatory_earth[k] = 0.0;
 	    psr[p].obsn[i].earth_ssb[k] = 0.0;
 	  }
+
 
 	  /*	  psr[p].obsn[i].sat += psr[p].obsn[i].phaseOffset/psr[p].param[param_f0].val[0]; */
 	  for (k=0;k<psr[p].nToffset;k++) /* Calculate time offsets */
