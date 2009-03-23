@@ -24,14 +24,14 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   x = (double *)malloc(MAX_OBSN*sizeof(double));
   y = (double *)malloc(MAX_OBSN*sizeof(double));
   sig = (double *)malloc(MAX_OBSN*sizeof(double));
-
+  printf("HELLO\n");
   printf("About to undertake a global fit, number of pulsars = %d\n",npsr);
 
   // Form pre-fit residuals
   for (p=0;p<npsr;p++)
     {
       if (psr[p].fitMode==1) weightfit=1;
-      if (weightfit==1 && psr[p].fitMode==0)
+      if (weightfit==1 && psr[p].fitMode==0)  
 	printf("WARNING: A weighted fit is being carried out, but PSR %s does not have MODE 1 in the parameter file\n",psr[p].name);
       for (i=0;i<psr[p].nobs;i++)
 	{
@@ -244,7 +244,7 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,k);
 	      c++;
 	    }
-	}
+	} 
     }
   //  printf("Global fit = %g\n",afunc[0]);
   FITfuncs(x,afunc+n,new_ma-nglobal,&psr[p],ipos);
