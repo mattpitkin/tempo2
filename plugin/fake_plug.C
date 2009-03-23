@@ -26,7 +26,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   long iseed;
   int    site    = 7,p;
   int endit=0;
-  long idum = -983;
+  long idum = 0;
   int nday = -1;
   float ngap=-1.0;
   char parFile[MAX_PSR][MAX_FILELEN];
@@ -118,7 +118,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf(" \t -format parkes : sets the tim-file format to tempo. (Default: tempo2).\n");
       printf(" \t -group 7 21 : simulate observations in groups of 7 days, with 21 days between groups.\n");
       printf(" \t               There will be nobsd observations every ndobs days during these 7 days.\n");
-      printf("\n\n \t -idum xxx: specify random number seed (default = -983)\n");
+      printf("\n\n \t -idum xxx: specify random number seed (default = set from clock)\n");
       printf("\n The program will prompt you for the parameters not defined in the command line.\n");
       printf("\n\n Have a nice day!\n\n");
       printf("==========================================================================================\n");
@@ -159,6 +159,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   }
 
   printf("GIVE RMS = %d\n",giveRMS);
+  if (idum==0)
+    {
+      printf("Setting random number seed from the clock\n");      
+      idum = TKsetSeed();
+    }
+
+
   iseed = idum;
   psrNum = Npsr;
   if (timesFile==1)

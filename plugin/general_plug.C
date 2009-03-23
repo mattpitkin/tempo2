@@ -157,6 +157,18 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,in
 		printf("%s",disp);
 		pos+=strlen(disp);		
 	      }
+	    else if (strcasecmp(var,"prerms")==0)
+	      {
+		sprintf(disp,"%.3g",psr[0].rmsPre); 
+		printf("%s",disp);
+		pos+=strlen(disp);		
+	      }
+	    else if (strcasecmp(var,"postrms")==0)
+	      {
+		sprintf(disp,"%.3g",psr[0].rmsPost); 
+		printf("%s",disp);
+		pos+=strlen(disp);		
+	      }
 	    else if (strcasecmp(var,"tspan")==0)
 	      {
 		double start=55000,end=-1;

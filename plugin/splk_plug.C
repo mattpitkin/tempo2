@@ -118,7 +118,7 @@ void doPlot(pulsar *psr,int npsr)
   float widthPap=0.0,aspectPap=0.618;
 
   /* Obtain a graphical PGPLOT window */
-  cpgbeg(0,"/xs",2,npsr);
+  cpgbeg(0,"?",2,npsr);
   cpgpap(widthPap,aspectPap);
   cpgsch(fontSize);
   cpgask(0);

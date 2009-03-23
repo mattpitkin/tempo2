@@ -14,11 +14,13 @@ using namespace std;
 #define MAX_ID 50
 
 void drawOption(int on,float x,float y,char *str);
-void doPlugin(pulsar *psr,int npsr);
+void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN]);
 void drawMenu(int specType,int xaxis,int logv,int specOut);
 void checkMenu(float mx,float my,int *change,int *xaxis,int *logv,int *specType,int *specOut);
 void identify(float mx,float my,float px[MAX_PSR_VAL][MAX_OBSN_VAL],float py[MAX_PSR_VAL][MAX_OBSN_VAL],
 	      int *sn, int idV[MAX_ID],int idP[MAX_ID], int *iN,int npsr);
+void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN]);
+
 
 void help() /* Display help */
 {
@@ -78,12 +80,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else textOutput(psr,*npsr,0,0,0,0,"");  /* Display the output */
     }
 
-  doPlugin(psr,*npsr);
+  doPlugin(psr,*npsr,parFile,timFile);
 
   return 0;
 }
 
-void doPlugin(pulsar *psr,int npsr)
+void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN])
 {
   float px[MAX_PSR_VAL][MAX_OBSN_VAL],py[MAX_PSR_VAL][MAX_OBSN_VAL];
   double resx[MAX_OBSN],resy[MAX_OBSN],rese[MAX_OBSN];
@@ -111,16 +113,24 @@ void doPlugin(pulsar *psr,int npsr)
   int ofac=1;
   int specOut=1; // 1 = PSD, 2 = Amplitude, 3 = Power
   char ylabel[100];
+  char gr[100]="/xs";
+  int changeDevice=0;
 
   do {
-    cpgbeg(0,"/xs",1,1);
+    cpgbeg(0,gr,1,1);
     cpgsch(fontSize);
     cpgask(0);
     cpgeras();
-    
+    cpgslw(1);
     cpgsvp(0.0,1.0,0.8,1.0);
     cpgswin(0,1,0,1);
     drawMenu(specType,xaxis,logv,specOut);
+    if (changeDevice==1)
+      {
+	strcpy(gr,"/xs");
+	cpgslw(4);
+	changeDevice=0;
+      }
     cpgsvp(0.1,0.9,0.1,0.8);
     
     if (change==1)
@@ -135,12 +145,17 @@ void doPlugin(pulsar *psr,int npsr)
 		    resx[n] = (double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]);
 		    resy[n] = (double)psr[p].obsn[i].residual;
 		    rese[n] = (double)psr[p].obsn[i].toaErr*1.0e-6;
+		    //		    rese[n] = 1.0;
 		    //	  py[n] = 3*sin(2.0*M_PI/2041.34587909003*10*px[n]);
 		    n++;
 		  }
 	      }
 
-	    TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+	    if (specType==3)
+	      TKspectrum(resx,resy,rese,n,1,0,0,1,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+	    else
+	      TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+
 	    TKconvertFloat2(specX,specY,px[p],py[p],specN[p]);
 	    if (xaxis==1) // Convert x-axis to s^-1
 	      {
@@ -209,7 +224,8 @@ void doPlugin(pulsar *psr,int npsr)
       }
   
   
-    cpgswin(minx,maxx,miny,maxy+0.1*(maxy-miny));
+        cpgswin(minx,maxx,miny,maxy+0.1*(maxy-miny));
+    //    cpgswin(minx,maxx,-35,-28);
     if (logv==0)
       cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
     else if (logv==1)
@@ -262,6 +278,12 @@ void doPlugin(pulsar *psr,int npsr)
       zoom=0;
     else if (key=='h') // Help
       help();
+    else if (key=='g') // Change graphical device
+      {
+	printf("Graphical device: ");
+	scanf("%s",gr);
+	changeDevice=1;
+      }
     else if (key=='o') // New oversampling factor
       {
 	printf("Enter oversampling factor: ");
@@ -272,6 +294,8 @@ void doPlugin(pulsar *psr,int npsr)
       plotPoints*=-1;
     else if (key=='P') // Toggle plotting line
       plotLine*=-1;
+    else if (key=='m') // Model data
+      model(psr,parFile,timFile);
     else if (key=='l') // List points
       {
 	for (p=0;p<npsr;p++)
@@ -430,4 +454,237 @@ void checkMenu(float mx,float my,int *change,int *xaxis,int *logv,int *specType,
 	  else if (mouseX==2) *specOut=3;
 	}
     }
+}
+
+void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN])
+{
+  int i,j,k,p;
+  int n;
+  double resx[MAX_OBSN],resy[MAX_OBSN],rese[MAX_OBSN];
+  double specX[MAX_OBSN],specY[MAX_OBSN];
+  double storeRes[MAX_OBSN];
+  float px[MAX_OBSN],py[MAX_OBSN],fy[MAX_OBSN],fx[MAX_OBSN];
+  float minx,maxx,miny,maxy;
+  double tau;
+  double whiteLevel;
+  double meanActualWhiteLevel,meanActual;
+  double area1,area2;
+  int ofac=1,nv;
+  int specType=4;
+  int specOut=3;
+  int specN;
+  long idum=TKsetSeed();
+  int it,nit;
+
+  nit = 100;
+
+  n=0;
+  for (i=0;i<psr[0].nobs;i++)
+    {
+      if (psr[0].obsn[i].deleted==0)
+	{
+	  resx[n] = (double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
+	  resy[n] = (double)psr[0].obsn[i].residual;
+	  rese[n] = (double)psr[0].obsn[i].toaErr*1.0e-6;
+	  storeRes[n] = (double)psr[0].obsn[i].residual;
+	  n++;
+	}
+    }
+  
+  TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN,0,0);
+  TKconvertFloat2(specX,specY,px,py,specN);
+  meanActual=0;
+  nv=0;
+  for (i=0;i<specN;i++)
+    {
+      if (specX[i] > 1.0/tau)
+	{
+	  nv++;
+	  meanActual+=specY[i];
+	}
+      px[i]=log10(px[i]);
+      py[i]=log10(py[i]);
+    }
+  printf("Mean spectrum for f > 1/tau = %g\n",meanActual/(double)nv);
+
+  minx = TKfindMin_f(px,specN);
+  maxx = TKfindMax_f(px,specN);
+  miny = TKfindMin_f(py,specN);
+  maxy = TKfindMax_f(py,specN);
+  cpgend();
+  cpgbeg(0,"/cps",1,1);
+  cpgslw(4);
+  //  cpgeras();
+  cpgswin(minx,maxx,miny,maxy+0.1*(maxy-miny));  
+  cpgbox("BCNST1L",0.0,0,"BCNST1L",0.0,0);
+  cpglab("Frequency (d\\u-1\\d)","Power","");
+  cpgline(specN,px,py);
+
+  fx[0] = fx[1] = log10(1.0/365.25);
+  fy[0] = miny; fy[1] = maxy+0.1*(maxy-miny);
+  cpgsci(8); cpgsls(3); cpgline(2,fx,fy); cpgsls(1); cpgsci(1);
+
+  printf("Colours\n\n");
+  printf("white = power spectrum of post-fit timing residuals\n");
+
+  // Interpolate to split red and white noise
+  {
+    double interpX[MAX_OBSN],interpY[MAX_OBSN],interpE[MAX_OBSN],tx;
+    double specWX[MAX_OBSN],specWY[MAX_OBSN];
+    double white[MAX_OBSN];
+    double w,sw;
+    int specWN;
+    int nAwhite;
+
+    printf("Obtaining a good model of the white noise\n");
+
+    tau = 30.0;
+    // First interpolate onto the same grid as the actual data
+    for (i=0;i<psr[0].nobs;i++)
+      interpX[i] = (psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
+    for (j=0;j<psr[0].nobs;j++)
+      {
+	sw = 0.0;
+	interpY[j] = 0.0;
+	for (i=0;i<psr[0].nobs;i++)
+	  {
+	    tx = (double)(psr[0].obsn[i].sat - psr[0].param[param_pepoch].val[0]);
+	    w = 1.0/pow(psr[0].obsn[i].toaErr*1.0e-6,2)*exp(-fabs(tx-interpX[j])/tau);
+	    sw += w;
+	    interpY[j] += psr[0].obsn[i].residual*w;
+	  }
+	interpY[j]/=sw;
+	interpE[j] = psr[0].obsn[j].toaErr*1.0e-6; // Not using weights in the spectral analysis
+	white[j] = psr[0].obsn[j].residual-interpY[j];
+	//	printf("interp %g %g %g %g\n",interpX[j],interpY[j],(double)psr[0].obsn[j].residual,white[j]);
+      }
+    // Get a spectrum of this white noise
+    TKspectrum(interpX,white,interpE,psr[0].nobs,0,0,0,0,0,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
+    TKconvertFloat2(specWX,specWY,px,py,specWN);
+    for (i=0;i<specWN;i++)
+      {
+	px[i]=log10(px[i]);
+	py[i]=log10(py[i]);
+      }
+    cpgsci(2); cpgline(specWN,px,py); cpgsci(1);
+    fx[0]=fx[1]=log10(1.0/tau);
+    fy[0]=miny;fy[1]=maxy+0.1*(maxy-miny);
+    cpgsls(4); cpgsci(2); cpgline(2,fx,fy); cpgsci(1); cpgsls(1);
+
+    // Calculate mean actual white level
+    meanActualWhiteLevel = 0.0;
+    nAwhite=0;
+    for (i=0;i<specWN;i++)
+      {
+	if (specWX[i] > 1.0/tau)
+	  {
+	    meanActualWhiteLevel+=specWY[i];
+	    nAwhite++;
+	  }
+      }
+    meanActualWhiteLevel/=(double)nAwhite;
+    area1 = meanActualWhiteLevel;
+    printf("mean measured white level = %g\n",meanActualWhiteLevel);
+  }
+  
+  // Obtain white level
+  {
+    long double sat0[MAX_OBSN];
+    double avSpecY[MAX_OBSN];
+    int count;
+
+    for (i=0;i<psr[0].nobs;i++)
+      avSpecY[i]=0.0;
+      // Form ideal SATs
+
+    printf("Starting white\n");
+    for (j=0;j<5;j++)
+      {
+	psr[0].nJumps = 0;
+	for(i=0;i<MAX_PARAMS;i++){
+	  psr[0].param[i].nLinkTo = 0;
+	  psr[0].param[i].nLinkFrom = 0;
+	}
+	readParfile(psr,parFile,timFile,1); /* Load the parameters       */
+	formBatsAll(psr,1);         /* Form the barycentric arrival times */
+	formResiduals(psr,1,0);    /* Form the residuals                 */
+	for (i=0;i<psr[0].nobs;i++)
+	  psr[0].obsn[i].sat -= (long double)psr[0].obsn[i].residual/86400.0L;
+      }
+    printf("Getting sat0\n");
+    for (i=0;i<psr[0].nobs;i++)
+      sat0[i] = psr[0].obsn[i].sat;
+
+    for (it=0;it<nit;it++)
+      {
+	printf("iteration %d/%d\n",it+1,nit);
+	for (i=0;i<psr[0].nobs;i++)
+	  psr[0].obsn[i].sat = sat0[i] + (TKgaussDev(&idum)*psr[0].obsn[i].toaErr*1.0e-6)/SECDAY;
+	psr[0].nJumps = 0;
+	for(i=0;i<MAX_PARAMS;i++){
+	  psr[0].param[i].nLinkTo = 0;
+	  psr[0].param[i].nLinkFrom = 0;
+	}
+	readParfile(psr,parFile,timFile,1); /* Load the parameters       */
+	formBatsAll(psr,1);                 /* Form the barycentric arrival times */
+	formResiduals(psr,1,0);             /* Form the residuals                 */
+	doFit(psr,1,0);                     /* Do the fitting                     */
+	formBatsAll(psr,1);                 /* Form the barycentric arrival times */
+	formResiduals(psr,1,0);             /* Form the residuals                 */
+	n=0;
+	for (i=0;i<psr[0].nobs;i++)
+	  {
+	    if (psr[0].obsn[i].deleted==0)
+	      {
+		resx[n] = (double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
+		resy[n] = (double)psr[0].obsn[i].residual;
+		rese[n] = (double)psr[0].obsn[i].toaErr*1.0e-6;
+		n++;
+	      }
+	  }
+	
+	TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN,0,0);
+	for (i=0;i<specN;i++)
+	  avSpecY[i] += specY[i];
+      }
+    for (i=0;i<specN;i++)
+      avSpecY[i]/=(double)nit;
+    TKconvertFloat2(specX,avSpecY,px,py,specN);
+
+    for (i=0;i<specN;i++)
+      {
+	px[i]=log10(px[i]);
+	py[i]=log10(py[i]);
+      }
+    cpgsci(3);
+    cpgline(specN,px,py);
+
+    // Now form white model
+    count=0;
+    whiteLevel=0.0;
+    for (i=0;i<specN;i++)
+      {
+	if (specX[i] > 1.0/tau)
+	  {
+	    count++;
+	    whiteLevel+=(specY[i]);
+	  }
+      }
+    whiteLevel/=(double)(count);
+    area2 = whiteLevel;
+    printf("whiteLevel = %g\n",whiteLevel);
+    printf("EFAC = %g\n",sqrt(area1/area2));
+    for (i=0;i<specN;i++)
+      py[i] = log10(whiteLevel);
+    cpgsls(4);
+    cpgline(specN,px,py);
+    for (i=0;i<specN;i++) fy[i] = log10(pow(10,py[i])*3.67);
+    cpgline(specN,px,fy);
+    for (i=0;i<specN;i++) fy[i] = log10(pow(10,py[i])*0.025);
+    cpgline(specN,px,fy);
+    cpgsls(1);
+  }
+
+  cpgend();
+  exit(1);
 }
