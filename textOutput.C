@@ -46,10 +46,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	{
 	  fout = fopen("residuals.dat","w");
 	  for (i=0;i<psr[p].nobs;i++)
-	    fprintf(fout,"%s %s %s\n",
-		    print_longdouble(psr[p].obsn[i].bat-psr[p].param[param_pepoch].val[0]).c_str(),
-		    print_longdouble(psr[p].obsn[i].residual).c_str(),
-		    print_longdouble(psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f].val[0]).c_str());
+	    fprintf(fout,"%.10g %.10g %.10g\n",(double)(psr[p].obsn[i].bat-psr[p].param[param_pepoch].val[0]),
+		    (double)(psr[p].obsn[i].residual),(double)(psr[p].obsn[i].toaErr*1.0e-6));
+	  //	  for (i=0;i<psr[p].nobs;i++)
+	  //	    fprintf(fout,"%s %s %s\n",
+	  //		    print_longdouble(psr[p].obsn[i].bat-psr[p].param[param_pepoch].val[0]).c_str(),
+	  //		    print_longdouble(psr[p].obsn[i].residual).c_str(),
+	  //		    print_longdouble(psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f].val[0]).c_str());
 // 	    fprintf(fout,"%Lf %Lg %Lg\n",psr[p].obsn[i].bat-psr[p].param[param_pepoch].val,psr[p].obsn[i].residual,psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f0].val);
 	  fclose(fout);
 	}
@@ -160,6 +163,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		      printf("%-13.5g ", (double)getParameterValue(&psr[p],i,k)-(double)psr[p].param[i].prefit[k]);
 		    }
 		  if (psr[p].param[i].fitFlag[k]==1) printf("Y");
+		  else if (psr[p].param[i].fitFlag[k]==2) printf("G");
 		  else printf("N");
 
 
@@ -508,6 +512,18 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       // Glitch parameters
       if (psr[p].param[param_glep].paramSet[0]==1)
 	printGlitch(psr[p]);
+      if (psr[p].param[param_dmassplanet].paramSet[4]==1)
+	{
+	  long double diff,err;
+	  printf("M_Jupiter fit   = %.15Lg +/- %.15Lg (Solar masses)\n",psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L,psr[p].param[param_dmassplanet].err[4]);
+	  printf("M_Jupiter DE405 = %.15Lg (Solar masses)\n",0.00095479193842432214L);
+	  printf("M_Jupiter best  = 0.000954791915(11) (Solar masses)\n");
+	  diff = psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L-0.000954791915;
+	  err = sqrtl(powl(psr[p].param[param_dmassplanet].err[4],2)+powl(0.000000000011,2));
+								    
+	  printf("diff            = %.15Lg +/- %.15Lg (Solar masses)\n",diff,err);
+	}
+
       // Calculate time span
       {
 	double start,end;

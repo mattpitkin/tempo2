@@ -351,7 +351,6 @@ void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *
   double w[nf],wt[nf],sum,wmax;
   double tol = 1.0e-5;
   int    i,j,k;
-
   designMatrix = (double **)malloc(n*sizeof(double *));
   v = (double **)malloc(nf*sizeof(double *));
   u = (double **)malloc(n*sizeof(double *));
@@ -376,6 +375,7 @@ void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *
       b[i] = y[i]/sig[i];
     }
   /* Now carry out the singular value decomposition */
+
   TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
   wmax = TKfindMax_d(w,nf);
   for (i=0;i<nf;i++)
@@ -385,7 +385,6 @@ void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *
 
   /* Back substitution */
   TKbacksubstitution_svd(v, w, designMatrix, b, p, n, nf);
-  
   /* Now form the covariance matrix */
   for (i=0;i<nf;i++)
     {

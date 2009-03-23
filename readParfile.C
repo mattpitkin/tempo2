@@ -241,6 +241,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/DE414.1960.2020",getenv("TEMPO2"));
       else if (strcmp(psr->ephemeris,"INPOP06")==0)
 	sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/%s",getenv("TEMPO2"),psr->ephemeris);
+      else if (strcmp(psr->ephemeris,"DE421")==0)
+	sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/DE421.1950.2050",getenv("TEMPO2"));
       else
 	sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/%s.1950.2050",getenv("TEMPO2"),psr->ephemeris);
     }
@@ -421,7 +423,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       if (sscanf(str+11,"%d",&k)==1 && k >= 1 && k <= 9)
 	{
 	  readValue(psr,str,fin,&(psr->param[param_dmassplanet]),k-1);
-	  printf("Read change of %g\n",(double)psr->param[param_dmassplanet].val[0]);
+	  //	  printf("Read change of %g\n",(double)psr->param[param_dmassplanet].val[0]);
 	}
     }
   
@@ -1070,7 +1072,7 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
 
   if (nread==2) /* Have uncertainty as second value */
     {
-      if (strcasecmp(str2,"1")==0 || strcasecmp(str2,"0")==0) /* Have fit flag not error */
+      if (strcasecmp(str2,"1")==0 || strcasecmp(str2,"0")==0 || strcasecmp(str2,"2")==0) /* Have fit flag not error */
 	{
 	  sscanf(str2,"%d",&(parameter->fitFlag[arr]));
 	  parameter->err[arr] = 0.0;

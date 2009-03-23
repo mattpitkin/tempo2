@@ -148,7 +148,7 @@ typedef struct parameter {
   char **shortlabel;         /* Label about this parameter without units           */
   longdouble *val;           /* Value of parameter                                 */
   longdouble *err;           /* Uncertainty on parameter value                     */
-  int  *fitFlag;             /* = 1 if fitting required                            */
+  int  *fitFlag;             /* = 1 if fitting required, = 2 for global fit        */
   int  *paramSet;            /* = 1 if parameter has been set                      */
   longdouble *prefit;        /* Pre-fit value of the parameter                     */
   longdouble *prefitErr;     /* Pre-fit value of the uncertainty                   */

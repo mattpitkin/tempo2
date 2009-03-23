@@ -348,7 +348,6 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
   
   afunc[n++] = 1;  /* Always fit for an arbitrary offset */
   /* See what we are fitting for */
-
   for (i=0;i<MAX_PARAMS;i++)
     {
       for (k=0;k<psr->param[i].aSize;k++)
@@ -632,7 +631,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
   else if (i==param_dmassplanet)
     {
       afunc = dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
-      printf("afunc = %.15g %g\n",(double)psr[0].obsn[ipos].sat,(double)afunc);
+      //      printf("afunc = %.15g %g\n",(double)psr[0].obsn[ipos].sat,(double)afunc);
     }
   else if (strcmp(psr->binaryModel,"BT")==0) /* Must be below other parameters */
     afunc = BTmodel(psr,0,ipos,i);

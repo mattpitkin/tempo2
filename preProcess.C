@@ -17,6 +17,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
   FILE *fdmin;
   char newEpoch[100]="NONE";
   char selectFname[1000]="";
+  char globalFname[1000]="";
   char select1[100][100];
   char select2[100][100];
   double select3[100];
@@ -57,6 +58,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	nojump=1;
       else if (strcmp(argv[i],"-select")==0)
 	sscanf(argv[++i],"%s",selectFname);
+      else if (strcmp(argv[i],"-global")==0)
+	sscanf(argv[++i],"%s",globalFname);
       else if (strcmp(argv[i],"-modify")==0)
 	{
 	  modify=1;
@@ -788,4 +791,22 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    }
 	}
     }
+
+  // Now check for global parameters
+  if (strlen(globalFname) > 0)
+    {
+      FILE *fin;
+      char tpar[MAX_STRLEN][MAX_FILELEN];
+      char ttim[MAX_STRLEN][MAX_FILELEN];
+
+      //      fin = fopen(globalFname,"r");      
+      printf("Setting global parameters\n");
+      strcpy(tpar[0],globalFname);
+      for (p=0;p<npsr;p++)
+	{
+	  readParfile(psr+p,tpar,ttim,1);
+	}
+      //      fclose(fin);
+    }
+
 } 

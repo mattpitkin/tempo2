@@ -27,7 +27,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
   int timfile_num = 0;  /* Have we got a timfile? */
   int gotTim=0;
   *list = 0;  /* Don't list parameters */
-  *nGlobal=0; /* How many global parameters are we fitting? */
+  //  *nGlobal=0; /* How many global parameters are we fitting? */
 
   if (argc==2) /* Just have .tim file name */
     {
@@ -110,8 +110,6 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	    strcpy(psr[0].deleteFileName,argv[++i]);	  
 	  else if (strcmp(argv[i],"-model")==0)
 	    *writeModel = 1;
-	  else if (strcmp(argv[i],"-global")==0)
-	    *nGlobal=2;
 	  else if (strcmp(argv[i],"-newpar")==0)
 	    *newpar=1;
 	  else if (strcmp(argv[i],"-pre")==0) /* Don't iterate to form post-fit residuals */
