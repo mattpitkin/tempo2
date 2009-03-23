@@ -29,7 +29,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 
       printf("Calling fitting plugin: %s\n",psr[0].fitFunc);
       strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
-      sprintf(str,"%s/plugins/%s_%s_fitFunc_plug.so",getenv(TEMPO2_ENVIRON),
+      sprintf(str,"%s/plugins/%s_fitFunc_%s_plug.so",getenv(TEMPO2_ENVIRON),
 	      psr[0].fitFunc,tempo2MachineType);
       module = dlopen(str, RTLD_NOW); 
       if(!module)  {
