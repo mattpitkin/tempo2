@@ -2486,6 +2486,8 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
 	  for (k=0;k<psr[0].param[i].aSize;k++)	    
 	    psr[0].param[i].fitFlag[k]=0;
 	}
+      for (i=1;i<psr[0].nJumps;i++)
+	  psr[0].fitJump[i]=0;
     }
   else if (mouseX==2 && mouseY==0)
     {
