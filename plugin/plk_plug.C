@@ -399,6 +399,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   float mouseX,mouseY,mouseX2,mouseY2;
   char bkgrdColour[100],lineColour[100];
   float zoomX1=0.0,zoomX2=0.0,zoomY1=0.0,zoomY2=0.0;
+  float delX1=0.0, delX2=0.0, delY1=0.0,delY2=0.0;
   float aspect=1.0;
   int   fontType=1;
   int   lineWidth=1;
@@ -1027,7 +1028,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  plottingx = x[0]; 
 	}
 	else if (key=='h') help();
-	else if (key=='D') 
+	else if (key=='D') //view profile (same as middle button)
 	  {
 	    char str[1000];
 	    int closest;
@@ -1626,7 +1627,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    nline++;
 	  }
 	else if (key=='c') changeFitParameters(psr); /* Change fit parameters   */
-	else if (key=='V')
+	else if (key=='V') //define the user parameters
 	  {
 	    printf("Enter program (e.g. vap or vip) ");
 	    scanf("%s",userCMD);
@@ -1800,6 +1801,25 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      }
 	    else if (menu==3) menu=-1;
 	  }
+	else if (key=='Z') //delete points in a region selected by mouse
+	{
+	  cpgband(2,0,mouseX,mouseY,&mouseX2,&mouseY2,&key);
+	  delX1 = TKretMin_f(mouseX,mouseX2);
+	  delX2 = TKretMax_f(mouseX,mouseX2);
+	  delY1 = TKretMin_f(mouseY,mouseY2);
+	  delY2 = TKretMax_f(mouseY,mouseY2);
+	  printf("%f %f %f %f\n",delX1,delX2,delY1,delY2);
+
+	  for (i=0;i<psr[0].nobs;++i) {
+            if ((x[i]>delX1) &&
+	          (x[i]<delX2) &&
+	          (y[i]>delY1) &&
+	          (y[i]<delY2)) {
+         	    psr[0].obsn[id[i]].deleted = 1;
+	    }
+	  }
+	}
+
 	else printf("Unknown key press %c (%d)\n",key,(int)key);
       }
     if (graphics==1) graphics=2;
