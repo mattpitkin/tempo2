@@ -538,7 +538,11 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
   double current_equad;
   double interim_error;
 
-  fout = fopen(timname,"w");
+  if (!(fout = fopen(timname,"w")))
+    {
+      printf("Sorry, unable to write to file %s\n",timname);
+      return;
+    }
   if (strcmp(fileFormat,"tempo2")==0) fprintf(fout,"FORMAT 1\n");
   if (psr->fitMode==1) fprintf(fout,"MODE 1\n");    
   current_efac = psr[0].obsn[0].efac;
