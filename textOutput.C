@@ -192,7 +192,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       printf("---------------------------------------------------------------------------------------------------\n");
       /* JUMPS */
       for (i=1;i<=psr[p].nJumps;i++){
-	printf("Jump %d (%s): %.14g %.14g\n",i,psr[p].jumpStr[i],psr[p].jumpVal[i],psr[p].jumpValErr[i]);
+	{
+	  printf("Jump %d (%s): %.14g %.14g ",i,psr[p].jumpStr[i],psr[p].jumpVal[i],psr[p].jumpValErr[i]);
+	  if (psr[p].fitJump[i]==1) printf("Y\n");
+	  else printf("N\n");
+	}
       }
 
       /* Whitening */
@@ -565,12 +569,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  else
 	    strcpy(fname2,fname);
 
-	  fout2 = fopen(fname2,"w");
-	  fprintf(fout2,"%-15.15s%s\n","PSRJ",psr[p].name);
-	  for (i=0;i<MAX_PARAMS;i++)
+	  if (!(fout2 = fopen(fname2,"w")))
 	    {
-	      for (k=0;k<psr[p].param[i].aSize;k++)
+	      printf("Sorry, unable to write to file %s\n",fname2);
+	    }
+	  else
+	    {
+	      fprintf(fout2,"%-15.15s%s\n","PSRJ",psr[p].name);
+	      for (i=0;i<MAX_PARAMS;i++)
 		{
+		  for (k=0;k<psr[p].param[i].aSize;k++)
+		    {
 		  if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om &&
 		      (psr[p].tempo1==0 || (i!=param_dmepoch)))
 		    {
@@ -722,6 +731,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		fprintf(fout2,"PHASE %+d %.14g\n",psr[p].phaseJumpDir[i],psr[p].phaseJump[i]);
 	    }
 	  fclose(fout2);	 
+	    }
 	}
       /* printf("Precision: routine, precision, comment\n");
 	 for (i=0;i<psr[p].nStorePrecision;i++)
@@ -729,7 +739,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	 printf("%s\t%Lg\t%s\n",psr[p].storePrec[i].routine,psr[p].storePrec[i].minPrec,
 	 psr[p].storePrec[i].comment);
 	 } */
-    } 
+    }
+  
   if (nGlobal > 0)
     { 
       printf("Global Parameters:\n\n");
