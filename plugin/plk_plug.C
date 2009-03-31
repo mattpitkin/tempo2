@@ -197,8 +197,10 @@ void help() /* Display help */
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
   int i,gotTim=0;
+  int newpar = 0;
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
+  char newParFile[MAX_FILELEN];
   char gr[100]="/xs";
   double unitFlag=1.0;  /* plot in seconds */
   float locky1=0,locky2=0;
@@ -255,6 +257,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	unitFlag=1.0e-9;
       else if (strcmp(argv[i],"-dcm")==0)
 	strcpy(dcmFile,argv[++i]);
+      else if (strcmp(argv[i],"-newparS")==0)//this is just for use with calcDMe
+      {
+	      newpar = 1;
+	      strcpy(newParFile,argv[++i]);
+      }
       else if (strcmp(argv[i],"-period")==0)
 	unitFlag=-1; /* In units of pulse period */
       else if (strcmp(argv[i],"-f")==0)
@@ -318,6 +325,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   preProcess(psr,*npsr,argc,argv);
   if (debugFlag==1) printf("plk: calling callFit %d\n",psr[0].nobs);
   callFit(psr,*npsr);             /* Do all the fitting routines */
+  if (newpar==1)
+	    textOutput(psr,*npsr,0,0,0,1,newParFile);
   if (debugFlag==1) printf("plk: calling doPlot\n");
   doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,locky1,locky2,xplot,yplot,
 	 publish,argc,argv,menu,setupFile);  /* Do plot */

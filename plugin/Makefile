@@ -6,7 +6,7 @@ include ../Makefile.common
 #tempo2.C:thwart_annoying_dynamic_library_stuff()
 
 # Plugins involving no extra libraries
-PLUGIN_SRCS := general2_plug.C general_plug.C matrix_plug.C transform_plug.C fake_plug.C global_fitFunc_plug.C
+PLUGIN_SRCS := general2_plug.C general_plug.C matrix_plug.C transform_plug.C fake_plug.C global_fitFunc_plug.C calcDMe_plug.C
 
 # Plugins involving PGPLOT
 ifeq ($(origin LCPGPLOT), undefined)

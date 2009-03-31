@@ -236,14 +236,13 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
 
     //find freq1 and freq2 frequency data to use for calculating deltaDMs
     handleFreqPoints(psr, freqArray, freqOffset, dmObs, fitObs, impObs, &dmCount, &fitCount, &impCount, &nf, valID, freq1f, freq2f);
-    if (debugFlag == 1) {
+    if (debugFlag >= 1) {
         printf("found %d fitObs and %d dmObs\n", fitCount, dmCount);
         printf("found jumps:\n");
         for (i = 0; i < psr[0].nJumps; ++i) {
             printf("%s\n", psr[0].jumpStr[i]);
         }
     }
-    //include only jumps for data which is used of for fitting - final handling
 
     if (debugFlag == 1) printf("calcDMe: calling callFit %d\n", psr[0].nobs);
     //do the initial fit
@@ -607,21 +606,28 @@ void handleFreqPoints(pulsar *psr, double *freqArray, int *freqOffset, int *dmOb
             //that's needed for the jumps:
 	    //it goes through all observations and turns on jumps only at
 	    // used frequencies
+            found = 0;
             for (k = 0; k < psr[0].obsn[i].nFlags; ++k) {
-                found = 0;
                 if (strcmp(psr[0].obsn[i].flagID[k], psr[0].fjumpID) == 0) {
-                    for (l = 0; l<*nf; l++) {
+                    for (l = 0; l<*nf; ++l) {
 			strncpy(_tmp,"",sizeof(_tmp));
 			strcat(_tmp,psr[0].fjumpID);
 			strcat(_tmp," ");
 			strcat(_tmp,psr[0].obsn[i].flagVal[k]);
                         if (strcmp(_tmp,psr[0].jumpStr[l])==0) {
                             found = 1;
+			    psr[0].obsn[i].jump = l;
                             break;
                         }
                     }
                     if (found == 0) {
 			sprintf(psr[0].jumpStr[*nf], "%s %s",psr[0].fjumpID,psr[0].obsn[i].flagVal[k]);
+			psr[0].fitJump[*nf] = 1;
+			psr[0].obsn[i].jump = *nf;
+			if (debugFlag>=1) {
+				printf("found jump %d: %s in obs %d\n",*nf,psr[0].jumpStr[*nf],i);
+				printf("data file: %s flag(%d):%s\n",psr[0].obsn[i].fname,k,psr[0].obsn[i].flagVal[k]);
+			}
                         (*nf)++;
                     }
                 }
@@ -641,8 +647,12 @@ void handleFreqPoints(pulsar *psr, double *freqArray, int *freqOffset, int *dmOb
 	 (*impCount)++;
        }
      }
+     if (debugFlag>=1) {
+	   printf("flag1=%s flag2=%s filt1=%s filt2=%s\n",flag1,flag2,filt1,filt2);
+	   printf("fitCount=%d dmCount=%d impCount=%d nf=%d\n",*fitCount,*dmCount,*impCount,*nf);
+     } 
    }
-    psr[0].nJumps = (*nf) - 1;
+   psr[0].nJumps = (*nf) - 1;
 } //handleFreqPoints()
 
 //interpolation (spline) and smoothing (Hann):
@@ -740,7 +750,7 @@ void output(char *outFileName, int ascii, double dm0, int header, int outDM, dou
                 fwrite(&smoothY[i], sizeof (double), 1, outFile);
             }
         } else {
-            if (header == 1) fprintf(outFile, "%lf %d\n", dm0, outSmoothCount);
+            if (header == 1) fprintf(outFile, "#%lf %d %lf\n", dm0, outSmoothCount,findMean(smoothY,outSmoothCount));
             for (i = 0; i < outSmoothCount; ++i) {
                 fprintf(outFile, "%lf %lf\n", smoothX[i] - *meanMJDval, smoothY[i] + (double) (outDM - mean * outDM) * dm0 - *meanVal);
             }
@@ -768,8 +778,9 @@ void output(char *outFileName, int ascii, double dm0, int header, int outDM, dou
         outFile = fopen(tmp, "w");
         free(tmp);
 
+        if (header == 1) fprintf(outFile, "#%lf %d %lf\n", dm0, outInterpCount,findMean(outY,outInterpCount));
         for (i = 0; i < outInterpCount; ++i) {
-            fprintf(outFile, "%lf %lf\n", outX[i] - (double) (meanMJD * (*meanMJDval)), outY[i] - (double) ((outDM - mean * outDM) * dm0) - *meanVal);
+            fprintf(outFile, "%lf %lf\n", outX[i] - (double) (meanMJD * (*meanMJDval)), outY[i] + (double) ((outDM - mean * outDM) * dm0) - *meanVal);
         }
 
         fclose(outFile);
@@ -783,6 +794,7 @@ void output(char *outFileName, int ascii, double dm0, int header, int outDM, dou
         outFile = fopen(tmp, "w");
         free(tmp);
 
+        if (header == 1) fprintf(outFile, "#%lf %d\n", dm0, ddmCount);
         for (i = 0; i < ddmCount; ++i) {
             fprintf(outFile, "%Lf %Lf %Lf\n", ddmMJD[i] - (long double) (meanMJD * (*meanMJDval)), ddm[i] + (long double) ((outDM - mean * outDM) * dm0) - *meanVal, ddmErr[i]);
         }
