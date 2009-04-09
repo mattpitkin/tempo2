@@ -27,6 +27,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
   int v5;
   char name[100];
   char dmfile[100]="";
+  int dmfileHeader = 0;
   int setName=0;
   double val1,val2;
   double last=-1;
@@ -50,8 +51,12 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	strcpy(newEpoch,argv[++i]);
       else if (strcmp(argv[i],"-last")==0)
 	sscanf(argv[++i],"%lf",&last);
-      else if (strcmp(argv[i],"-setdm")==0)
+      else if (strcmp(argv[i],"-setdm")==0) 
 	sscanf(argv[++i],"%s",dmfile); // Should deal with multiple pulsars
+      else if (strcmp(argv[i],"-setdmH")==0) {
+	sscanf(argv[++i],"%s",dmfile); // Should deal with multiple pulsars
+	dmfileHeader = 1;
+      }
       else if (strcmp(argv[i],"-tempo1")==0)
 	tempo1=1;
       else if (strcmp(argv[i],"-nojump")==0)
@@ -460,6 +465,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  float tt;
 	  fdmin = fopen(dmfile,"r");
 	  ndm=0;
+	  //skip the header
+	  if (dmfileHeader==1) {
+		  fscanf(fdmin,"#%*f %*d %*f");
+	  }
 	  while (!feof(fdmin))
 	    {
 	      if (fscanf(fdmin,"%f %f",&tt,&dmvals[ndm])==2)

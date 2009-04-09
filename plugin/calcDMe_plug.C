@@ -134,7 +134,7 @@ void describe() /* display description*/ {
 
 /* Therefore this function is required in all plugins                       */
 extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr) {
-    int i;
+    int i,k;
     ;
     char parFile[MAX_PSR][MAX_FILELEN], timFile[MAX_PSR][MAX_FILELEN];
     char *outFileName;
@@ -239,7 +239,7 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
     if (debugFlag >= 1) {
         printf("found %d fitObs and %d dmObs\n", fitCount, dmCount);
         printf("found jumps:\n");
-        for (i = 0; i < psr[0].nJumps; ++i) {
+        for (i = 0; i <= psr[0].nJumps; ++i) {
             printf("%s\n", psr[0].jumpStr[i]);
         }
     }
@@ -250,6 +250,19 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
     // (otherwise jumps become all wrong
     psr[0].param[param_dm].fitFlag[0] = 0;
     callFit(psr, *npsr);
+  /* Convert all prefit values to postfit values */
+  for (i=0;i<MAX_PARAMS;i++)
+    {
+      for (k=0;k<psr->param[i].aSize;k++)
+        {
+          if (psr->param[i].paramSet[k]==1)
+            {
+              psr->param[i].prefit[k] = psr->param[i].val[k];
+              psr->param[i].prefitErr[k] = psr->param[i].prefitErr[k];
+            }
+        }
+    }
+
     //exit(0);
     //store initial dm0 and f0:
     dm0 = psr[0].param[param_dm].val[0];
@@ -277,8 +290,8 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
             ddmErr[ddmCount] = psr[0].param[param_dm].err[0];
             ddmMJD[ddmCount] = binStart;
             ddmCount++;
-            //reset dm and f0:
-            resetDMandF0(psr, dm0, dm0_err, f0_0, f0_0_err);
+            //reset dm and f0: not necessary, actually...
+//            resetDMandF0(psr, dm0, dm0_err, f0_0, f0_0_err);
         } else {
             printf("==============================\nNOT ENOUGH POINTS FOR FITTING IN THE BIN\n");
             printf("STARTING AT %Lf (%d freq1 and %d freq2 points)   \n==============================\n", binStart, bin_fitCount_inc, bin_dmCount_inc);
