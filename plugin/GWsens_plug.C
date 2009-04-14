@@ -82,6 +82,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
   int ndetected=0;
   int it,nit;
   gwSrc gw;
+  gwSrc *gw_background;
   long seed = TKsetSeed();
   long double kp[MAX_PSR][3],dist[MAX_PSR];
   double gwfreq;
@@ -95,6 +96,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
   long double **sat0;
   double freq0,freq1;
   int addSS=1; // = 1 to add single source, = 0 to not add single source
+  int addGWB=1; // = 1 to add GWB, = 0 otherwise
   int nfreq = 20;
   int ifreq;
   int finish;
@@ -103,8 +105,19 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
   char fname[100];
   FILE *f_result;
   FILE *fout;
+  int ngw=1000;
+  long double gwbA,alpha,flo,fhi;
+  double **gwbRes;
+
+  gw_background = (gwSrc *)malloc(sizeof(gwSrc)*ngw);
+  flo = 1.0L/(30*365.25*86400.0L);
+  fhi = 1.0L/(2.0*86400.0L);
+  gwbA = 1.0e-19L;
+  alpha = -2.0/3.0L;
+
 
   checkResY = (double **)malloc(MAX_PSR*sizeof(double *));
+  gwbRes = (double **)malloc(MAX_PSR*sizeof(double *));
   resY = (double **)malloc(MAX_PSR*sizeof(double *));
   resX = (double **)malloc(MAX_PSR*sizeof(double *));
   resE = (double **)malloc(MAX_PSR*sizeof(double *));
@@ -112,6 +125,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
   for (i=0;i<MAX_PSR;i++)
     {
       checkResY[i] = (double *)malloc(MAX_OBSN*sizeof(double));
+      gwbRes[i] = (double *)malloc(MAX_OBSN*sizeof(double));
       resY[i] = (double *)malloc(MAX_OBSN*sizeof(double));
       resX[i] = (double *)malloc(MAX_OBSN*sizeof(double));
       resE[i] = (double *)malloc(MAX_OBSN*sizeof(double));
@@ -123,6 +137,8 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
     {
       for (i=0;i<psr[p].nobs;i++)
 	{
+	  gwbRes[p][i]=0.0;      
+
 	  if (psr[p].obsn[i].deleted!=0)
 	    {
 	      printf("Must remove deleted points from the .tim file for psr %s\n",psr[p].name);
@@ -160,7 +176,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
 	sat0[p][i] = psr[p].obsn[i].sat;
     }
 
-  nit = 10000;
+  nit = 1000;
 
   f_result = fopen("sensitivity.dat","w");
 
@@ -176,12 +192,12 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
   freq1 = 1.0/(4*7*86400.0); // 4 weeks
   
   //  for (ifreq=0;ifreq<nfreq;ifreq++)
-  for (ifreq=0;ifreq<nfreq;ifreq++)
+  for (ifreq=10;ifreq<nfreq;ifreq++)
     {
       //      GWamp1 = 1.0e-11;
       gwfreq = pow(10,log10(freq0)+(log10(freq1)-log10(freq0))*ifreq/(double)nfreq);
       GWamp1 = 0.1*gwfreq;
-      GWamp2 = 1e-7*gwfreq;
+      GWamp2 = 1e-7*gwfreq;      
       totCount=0;
 
       printf("======================================================\n");
@@ -191,6 +207,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
 	finish=0;
 	ndetected=0;
 	GWamp = sqrt(GWamp1*GWamp2);
+	//		GWamp = 7.0e-13;
 	printf("GWamp = %Lg\n",GWamp);
 	for (it=0;it<nit;it++)
 	  {
@@ -204,8 +221,25 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
 	    //	resY[0][i] = TKgaussDev(&seed); //*1.0e-6;
 	    
 	    // Step 2.1: Add GWB
-	    if (it==0) printf("GWB not added yet\n");
-	    
+	    if (addGWB==1)
+	      {
+	        double mean;
+		GWbackground(gw_background,ngw,&seed,flo,fhi,gwbA,alpha,1);		
+		for (p=0;p<npsr;p++)
+		  {
+		    mean = 0.0;
+		    for (i=0;i<psr[p].nobs;i++)
+		      {
+			gwbRes[p][i] = 0.0;
+			for (k=0;k<ngw;k++)
+			  gwbRes[p][i]+=calculateResidualGW(kp[p],&gw_background[k],
+							 (psr[p].obsn[i].sat-toffset)*86400.0L,dist[p]);
+			mean+=gwbRes[p][i];
+		      }
+		    for (i=0;i<psr[p].nobs;i++)
+		      gwbRes[p][i]-=mean/(double)(psr[p].nobs);
+		  }
+	      }
 	    // Step 2.2: Add single source
 	    /* Simulate a GW with a random polarisation and random position */
 	    if (addSS==1)
@@ -255,7 +289,8 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
 			gwres = calculateResidualGW(kp[p],&gw,(long double)resX[p][i]*86400.0L,dist[p]);
 			//		if (doFitV==0)
 			//		  checkResY[0][i]=resY[0][i]+calculateResidualGW(kp,&gw,(long double)resX[0][i]*86400.0L,dist);
-			psr[p].obsn[i].sat = sat0[p][i]+((long double)(resY[p][i])+gwres)/86400.0L;
+			psr[p].obsn[i].sat = sat0[p][i]+((long double)(resY[p][i])+gwres+gwbRes[p][i])/86400.0L;
+			//			psr[p].obsn[i].sat = sat0[p][i]+(gwbRes[p][i])/86400.0L; 
 		    //		printf("gwres = %g %g\n",(double)resX[0][i],(double)gwres);
 		      }
 		  }
@@ -325,7 +360,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
     }
   // SHOULD FREE CHECKRESY
   fclose(f_result);
-
+  free(gw_background);
 }
 
 
@@ -371,7 +406,7 @@ int detectSource(pulsar *psr,int npsr,double **resX,
       } */
   if (time==1) printf("Not using spline: using cubic fit\n");
   {
-    int ncoeff=1;
+    int ncoeff=3;
     if (time==1) printf("ncoeff is hardcoded to %d\n",ncoeff);
     double params[ncoeff];
     double val[ncoeff];
