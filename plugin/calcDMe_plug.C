@@ -116,6 +116,9 @@ void help() /* Display help */ {
     printf("\n-splineout\n\n   this flag turns on output of dm variations before they are smoothed\n   the output file is same as set by -o but with '.int' extension\n   this file is always ascii\n");
     printf("\n-rawout\n\n   this flag turns on output of dm variations before they are interpolated\n   the output file is same as set by -o but with '.raw' extension\n   this file is always plain ascii\n");
     printf("   it will contain three columns: MJD deltaDM deltaDM_error, where deltaDM can be also DM (see -outDM)\n");
+    printf("\n Example of usage:  tempo2 -gr calcDMe -bs 50 -sw 100 -f J0437-4715.par J0437-4715.tim -outDM -header\n");
+    printf("   this will calculate dm variations based on 10 and 50cm data and output files suitable for use with \n");
+    printf("   tempo2 -setdmH option");
     exit(0);
 } //help()
 
@@ -130,7 +133,7 @@ void describe() /* display description*/ {
     printf("frequencies (see -freq1 and -freq2 in help). This DM variations are\n");
     printf("interpolated, resampled at 1 day period and smoothed at provided\n");
     printf("smoothing period (see -sw in help). The results are written into output\n");
-    printf("file (see -o in help) and can be used e.g. with plk plugin (-setdm option)\n");
+    printf("file (see -o in help) and can be used with tempo2 -setdm or -setdmH option)\n");
     printf("to improve timing residuals or timing parameters.\n");
     printf("Any suggestions which flags should be on by default are most welcome.\n\n");
     printf("calcDMe plugin for tempo2 Copyright (C) 2009 Stefan Oslowski, George Hobbs\n");
