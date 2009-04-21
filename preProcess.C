@@ -493,7 +493,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  ndm=0;
 	  //skip the header
 	  if (dmfileHeader==1) {
-		  fscanf(fdmin,"#%*f %*d %*f");
+		  fscanf(fdmin,"%*c%*f %*d %*f");
 	  }
 	  while (!feof(fdmin))
 	    {
