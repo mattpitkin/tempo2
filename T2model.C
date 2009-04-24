@@ -154,10 +154,10 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
 	printf("ERROR [T2] T0 or TASC needs to be set in the parameter file\n");
 	exit(1);
       }
-      if(debugFlag) printf("going to update Parameters\n");
+      if(debugFlag==1) printf("going to update Parameters\n");
       /* Update parameters with their time derivatives */
       updateParameters(edot,xdot,eps1dot,eps2dot,tt0,&ecc,&x,&eps1,&eps2);
-      if(debugFlag) printf("updated parameters\n");
+      if(debugFlag==1) printf("updated parameters\n");
 
       /* Do some checks */
       if (ecc < 0.0 || ecc > 1.0)
@@ -177,10 +177,10 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
       
       if (psr[p].param[param_ecc].paramSet[com]==1)
 	{
-if(debugFlag)	  printf("going to compute U\n");
+if(debugFlag==1)	  printf("going to compute U\n");
 	  /* Compute eccentric anomaly u by iterating Kepler's equation */	 
 	  computeU(phase,ecc,&u);
-if(debugFlag)	  printf("computed U\n");
+if(debugFlag==1)	  printf("computed U\n");
 	  /*  DD equations 17b and 17c */
 	  su=sin(u); cu=cos(u);
 	  onemecu=1.0-ecc*cu;
@@ -192,24 +192,24 @@ if(debugFlag)	  printf("computed U\n");
 	  omega=omz/rad2deg + omdot*ae;
 	  sw=sin(omega);
 	  cw=cos(omega);
-	  if(debugFlag) printf("In the middle of DD\n");
+	  if(debugFlag==1) printf("In the middle of DD\n");
  	  /* DD equations 26, 27, 57: */
 	  sqr1me2=sqrt(1-pow(ecc,2));
 	  cume=cu-ecc;
-	  if(debugFlag) printf("going to Kopeikin\n");
+	  if(debugFlag==1) printf("going to Kopeikin\n");
 	  /* Update parameters due to proper motion - Kopeikin 1996 */
 	  if (psr[p].param[param_kin].paramSet[com]==1 && psr[p].param[param_kom].paramSet[com]==1 &&
 	      (psr[p].param[param_pmra].paramSet[com]==1 || psr[p].param[param_pmdec].paramSet[com]==1))
 	    {
-	      if(debugFlag)	      printf("going to do KopeikinTerms\n");
+	      if(debugFlag==1)	      printf("going to do KopeikinTerms\n");
 	      KopeikinTerms(&psr[p],ipos,ki,pmra,sin_omega,pmdec,cos_omega,tt0,dpara,daop,si,&x,&DK011,&DK012,&DK021,&DK022,&DK031,&DK032,&DK041,&DK042,&DK013,&DK014,&DK023,&DK024,&DK033,&DK034,&DK043,&DK044);
-	      if(debugFlag)	      printf("did KopeikinTerms\n");
+	      if(debugFlag==1)	      printf("did KopeikinTerms\n");
 	      C = (longdouble)(cw*(cu-er)-sqrt(1.0-pow(eth,2.0))*sw*su);
 	      S = (longdouble)(sw*(cu-er)+cw*sqrt(1.0-pow(eth,2.0))*su);
 	      DAOP = (DK011+DK012)*C-(DK021+DK022)*S;
 	      DSR = (DK031+DK032)*C+(DK041+DK042)*S;
-	      if(debugFlag)printf("DAOP is %g and DSR is %g\n", (double)DAOP, (double)DSR);
-	      if(debugFlag)printf("DAOP is %g, DK011 and DK021 are %f and %f\n",(double)DAOP,(double)DK011,(double)DK021);
+	      if(debugFlag==1)printf("DAOP is %g and DSR is %g\n", (double)DAOP, (double)DSR);
+	      if(debugFlag==1)printf("DAOP is %g, DK011 and DK021 are %f and %f\n",(double)DAOP,(double)DK011,(double)DK021);
 	    }
 	  
 	  
@@ -237,7 +237,7 @@ if(debugFlag)	  printf("computed U\n");
 	  dre  = x*(sin(phase)-0.5*(eps1*cos(2.0*phase)-eps2*sin(2.0*phase)));
 	  drep = x*cos(phase);
 	  drepp=-x*sin(phase);
-	  if(debugFlag) printf("going to Kopeikin\n");
+	  if(debugFlag==1) printf("going to Kopeikin\n");
 	  /* Update parameters due to proper motion - Kopeikin 1996 */
 	  if (psr[p].param[param_kin].paramSet[com]==1 && psr[p].param[param_kom].paramSet[com]==1 &&
 	      (psr[p].param[param_pmra].paramSet[com]==1 || psr[p].param[param_pmdec].paramSet[com]==1))
@@ -537,7 +537,7 @@ void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,double
   double pxConv = 1.74532925199432958E-2/3600.0e3;//converts mas to rad
   double daopConv = 3.08568025e16;//pc in m
 
-  if(debugFlag)  printf("Going to get parameters\n");
+  if(debugFlag==1)  printf("Going to get parameters\n");
   *si      = getParameter(psr,param_sini,com);
   if (*si > 1.0)
     {
@@ -646,7 +646,7 @@ void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,d
   /* Equations 18 and 19 in Kopeikin 1995 */
 
     if(psr->param[param_daop].paramSet[0]==1){
-      if(debugFlag)printf("Using daop for par file for Kopeikin delays!\n");
+      if(debugFlag==1)printf("Using daop for par file for Kopeikin delays!\n");
       
       *DK011 = (longdouble)(-(*x)/daop/si*delta_i0*sin_omega);
       *DK012 = (longdouble)(-(*x)/daop/si*delta_j0*cos_omega);
@@ -680,7 +680,7 @@ void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,d
     *DK044 = (longdouble)(-(*x)*tt0/tani*pmdec*cos_omega);
     
     
-    if(debugFlag)printf("DK011 %g, DK021 %g, x %f, dpara %g, ypr %f and si %f and tani %f, xpr %f\n",(double)(*DK011),(double)(*DK021),(double)(*x),(double)(dpara),(double)(ypr),(double)(si),(double)(tani),(double)(xpr));
+    if(debugFlag==1)printf("DK011 %g, DK021 %g, x %f, dpara %g, ypr %f and si %f and tani %f, xpr %f\n",(double)(*DK011),(double)(*DK021),(double)(*x),(double)(dpara),(double)(ypr),(double)(si),(double)(tani),(double)(xpr));
 }  
 
 

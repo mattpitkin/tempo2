@@ -166,7 +166,7 @@ void ChebyModelSet_Construct(ChebyModelSet *cms, const pulsar *psr,
 {
   cms->nsegments = (int)ceil((mjd_end-mjd_start)/(segment_length-overlap));
 
-  if (debugFlag)
+  if (debugFlag==1)
     fprintf (stderr, "ChebyModelSet_Construct MJD start=%f end=%f \n"
                      "\t length=%f overlap=%f nsegments=%d\n", 
                      (double)mjd_start, (double)mjd_end,
@@ -176,21 +176,21 @@ void ChebyModelSet_Construct(ChebyModelSet *cms, const pulsar *psr,
 
   if (psr->param[param_tzrmjd].paramSet[0]==0)
   {
-    if (debugFlag)
+    if (debugFlag==1)
       printf("WARNING: tzrmjd not set.  Setting to %g\n",(double)mjd_start);
     psr->param[param_tzrmjd].paramSet[0]=1;
     psr->param[param_tzrmjd].val[0] = mjd_start;
   }
   if (psr->param[param_tzrfrq].paramSet[0]==0)
   {
-    if (debugFlag)
+    if (debugFlag==1)
       printf("WARNING: tzrfrq not set.  Setting to %g\n",(double)freq_start);
     psr->param[param_tzrfrq].paramSet[0]=1;
     psr->param[param_tzrfrq].val[0] = freq_start;
   }
   if (strlen(psr->tzrsite)<1)
   {
-    if (debugFlag)
+    if (debugFlag==1)
       printf("WARNING: tzrsite not set.  Setting to %s\n",sitename);
     strcpy(const_cast<char*>(psr->tzrsite),sitename);
   }

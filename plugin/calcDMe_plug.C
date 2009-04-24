@@ -1,28 +1,28 @@
 //  Copyright (C) 2006,2007,2008,2009, Stefan Oslowski, George Hobbs, Russel Edwards
 
 /*
-*    This file is part of TEMPO2. 
-* 
-*    TEMPO2 is free software: you can redistribute it and/or modify 
-*    it under the terms of the GNU General Public License as published by 
-*    the Free Software Foundation, either version 3 of the License, or 
-*    (at your option) any later version. 
-*    TEMPO2 is distributed in the hope that it will be useful, 
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-*    GNU General Public License for more details. 
-*    You should have received a copy of the GNU General Public License 
-*    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>. 
-*/
+ *    This file is part of TEMPO2.
+ *
+ *    TEMPO2 is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *    TEMPO2 is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *    You should have received a copy of the GNU General Public License
+ *    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 /*
-*    If you use TEMPO2 then please acknowledge it by citing 
-*    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2, 
-*    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
-*    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
-*    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
-*    timing model.
-*/
+ *    If you use TEMPO2 then please acknowledge it by citing
+ *    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2,
+ *    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
+ *    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
+ *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
+ *    timing model.
+ */
 
 /* This plugin was written by Stefan Oslowski (CAS, Swinburne) 
  * and George Hobbs (ATNF, CSIRO)
@@ -45,29 +45,90 @@
  * weighted interpolation perhaps
  */
 
+char parFile[23][MAX_FILELEN], timFile[23][MAX_FILELEN];
+char *outFileName;
+//xObs: fit - freqency used for fit, dm - frequency used to get the dm variations, imp -frequency to be improved
+int fitObs[MAX_OBSN_VAL], dmObs[MAX_OBSN_VAL], impObs[MAX_OBSN_VAL];
+//xCount: counts of observations of given type (see above)
+int fitCount = 0, dmCount = 0, impCount = 0;
+//auxilary array holding frequencies: (used only in init and setFreq*)
+//frequencies are: 0: fitFreq 1: dmFreq 2: fitFreqWidth 3:dmFreqWidth
+//4: fitFreqMin 5: fitFreqMax 6: dmFreqMin 7: dmFreqMax
+double freqArray[8];
+//control variable for setting frequencies above:
+int freqOffset[2]; //accepts values 0, 1, 2 and 3
+//if freqOffset[i] == 3, then its a flag identifying observations at given freq:
+char freq1f[MAX_STRLEN], freq2f[MAX_STRLEN];
+//DM after first callFit (which fits after choosing just 10cm data) and it's error
+long double dm0 = -1.0, dm0_err = -1.0;
+//same for F0:
+long double f0_0 = -1.0, f0_0_err = -1.0;
+//size of the bin:
+long double binSizeDays = 14;
+//variables needed to use only appropriate jumps
+int nf = 0;
+int valID[MAX_FLAGS];
+//should f0 be fitted? yes by default
+int f0fit = 1;
+//array holding ids of fitObs and dmObs in given 10day bi
+int binObs[MAX_OBSN_VAL][2];
+//counts of obs in bins and the last change
+//IMPORTANT: bin_fitCount must not equal bin_fitCount_inc at the beginning!!
+//(otherwise the fitting won't start)
+int bin_fitCount = 0, bin_dmCount = 0;
+int bin_fitCount_inc = -1, bin_dmCount_inc = -1;
+//starting point of bin
+long double binStart = 1e10;
+//arrays holding the calculated delta dm, its error and corresponding mjd
+long double ddm[MAX_OBSN_VAL], ddmMJD[MAX_OBSN_VAL], ddmErr[MAX_OBSN_VAL];
+int ddmCount = 0;
+//arrays for the daily ddm variations (both interpolated and smoothed)
+//we obtain them by interpolating ddm* and resampling daily and smoothing
+double outX[2 * MAX_OBSN_VAL], outY[2 * MAX_OBSN_VAL];
+int outInterpCount = -1, outSmoothCount = -1;
+//smoothing width:
+int smoothWidth = 100;
+//output as ASCII?
+int ascii = 1;
+//auxilary variable for output file name
+int gotOut = 0;
+//output header?
+int header = 0;
+//output full DM instead of its variations?
+int outDM = 0;
+//remove means from output?
+int mean = 0, meanMJD = 0;
+double meanMJDval = 0, meanVal = 0;
+//display results on screen? x/y labels, title
+int doDisplay = 0;
+char *xlab, *ylab, *title;
+//create a postscript?
+int hardcopy = 0;
+char *gr;
+//output spline or raw?
+int splineOut = 0, rawOut = 0;
 
 using namespace std; /* Is this required for a plugin ? Yes, for linux */
 
 char dcmFile[MAX_FILELEN];
 
 void callFit(pulsar *psr, int npsr);
-void get_binObs(pulsar *psr, int binObs[MAX_OBSN_VAL][2], int *bin_fitCount, int *bin_dmCount, long double *binStart, int *fitCount, int *dmCount, int *fitObs, int *dmObs, int *bin_fitCount_inc, int *bin_dmCount_inc, long double binSizeDays);
-void setFitParams(pulsar *psr, int f0fit);
+void get_binObs(pulsar *psr);
+void setFitParams(pulsar *psr);
 void setAllDeleted(pulsar *psr);
-void resetDMandF0(pulsar *psr, long double dm0, long double dm0_err, long double f0_0, long double f0_0_err);
-void findFirst(pulsar *psr, int *fitObs, long double *binStart, int fitCount);
-void interpolateSplineSmooth(int ddmCount, long double *ddmMJD, long double *ddm, double *outX, double *outY, int smoothWidth, int *outInterpCount, int *outSmoothCount);
-void init(pulsar *psr, int argc, char **argv, char timFile[1][500], char parFile[1][500], char *outFileName, long double *binSizeDays, int *smoothWidth, int *f0fit, int *ascii, int *gotOut, char *dcmFile, int freqOffset[2], double *freqArray, int *header, int *outDM, int *mean, int *meanMJD, int *display, int *hardcopy, int *splineOut, int *rawOut, char *freq1f, char *freq2f);
-void handleFreqPoints(pulsar *psr, double *freqArray, int *freqOffset, int *dmObs, int *fitObs, int *impObs, int *dmCount, int *fitCount, int *impCount, int *nf, int *valID, char *freq1f, char *freq2f);
+void resetDMandF0(pulsar *psr);
+void findFirst(pulsar *psr);
+void interpolateSplineSmooth();
+void init(pulsar *psr, int argc, char* argv[]);
+void handleFreqPoints(pulsar *psr);
 void describe();
 double findMean(double *x, int count);
 void display(char *gr, int publish, double *xx, double *yy, long double *ddmMJD, long double *ddm, long double *ddmErr, int outInterpCount, int outSmoothCount, int ddmCount, char *xlab, char *ylab, char *title, double meanMJDval, double meanVal);
 void output(char *outFileName, int ascii, double dm0, int header, int outDM, double *outX, double *outY, int outInterpCount, int outSmoothCount, int mean, int meanMJD, double *meanMJDval, double *meanVal, int splineOut, int rawOut, long double *ddmMJD, long double *ddm, long double *ddmErr, int ddmCount);
 
 void help() /* Display help */ {
-    char i;
     printf("\n\npress ENTER to continue\n");
-    scanf("%c", &i);
+    scanf("%*c");
     printf("\nOptions:\n");
     printf("===========\n");
     printf("\n-f par_file tim_file\n\n   provide par and tim file\n   (tim file can also be given as the last argument)\n");
@@ -146,70 +207,8 @@ void describe() /* display description*/ {
 
 /* Therefore this function is required in all plugins                       */
 extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr) {
-    int i,k;
-    ;
-    char parFile[MAX_PSR][MAX_FILELEN], timFile[MAX_PSR][MAX_FILELEN];
-    char *outFileName;
-    //xObs: fit - freqency used for fit, dm - frequency used to get the dm variations, imp -frequency to be improved
-    int fitObs[MAX_OBSN], dmObs[MAX_OBSN], impObs[MAX_OBSN];
-    //xCount: counts of observations of given type (see above)
-    int fitCount = 0, dmCount = 0, impCount = 0;
-    //auxilary array holding frequencies: (used only in init and setFreq*)
-    //frequencies are: 0: fitFreq 1: dmFreq 2: fitFreqWidth 3:dmFreqWidth
-    //4: fitFreqMin 5: fitFreqMax 6: dmFreqMin 7: dmFreqMax
-    double freqArray[8];
-    //control variable for setting frequencies above:
-    int freqOffset[2]; //accepts values 0, 1, 2 and 3
-    //if freqOffset[i] == 3, then its a flag identifying observations at given freq:
-    char freq1f[MAX_STRLEN], freq2f[MAX_STRLEN];
-    //DM after first callFit (which fits after choosing just 10cm data) and it's error
-    long double dm0 = -1.0, dm0_err = -1.0;
-    //same for F0:
-    long double f0_0 = -1.0, f0_0_err = -1.0;
-    //size of the bin:
-    long double binSizeDays = 14;
-    //variables needed to use only appropriate jumps
-    int nf = 0;
-    int valID[MAX_FLAGS];
-    //should f0 be fitted? yes by default
-    int f0fit = 1;
-    //array holding ids of fitObs and dmObs in given 10day bi
-    int binObs[MAX_OBSN_VAL][2];
-    //counts of obs in bins and the last change
-    //IMPORTANT: bin_fitCount must not equal bin_fitCount_inc at the beginning!!
-    //(otherwise the fitting won't start)
-    int bin_fitCount = 0, bin_dmCount = 0;
-    int bin_fitCount_inc = -1, bin_dmCount_inc = -1;
-    //starting point of bin
-    long double binStart = 1e10;
-    //arrays holding the calculated delta dm, its error and corresponding mjd
-    long double ddm[MAX_OBSN], ddmMJD[MAX_OBSN], ddmErr[MAX_OBSN];
-    int ddmCount = 0;
-    //arrays for the daily ddm variations (both interpolated and smoothed)
-    //we obtain them by interpolating ddm* and resampling daily and smoothing
-    double outX[2 * MAX_OBSN], outY[2 * MAX_OBSN];
-    int outInterpCount = -1, outSmoothCount = -1;
-    //smoothing width:
-    int smoothWidth = 100;
-    //output as ASCII?
-    int ascii = 1;
-    //auxilary variable for output file name
-    int gotOut = 0;
-    //output header?
-    int header = 0;
-    //output full DM instead of its variations?
-    int outDM = 0;
-    //remove means from output?
-    int mean = 0, meanMJD = 0;
-    double meanMJDval = 0, meanVal = 0;
-    //display results on screen? x/y labels, title
-    int doDisplay = 0;
-    char *xlab, *ylab, *title;
-    //create a postscript?
-    int hardcopy = 0;
-    char *gr;
-    //output spline or raw?
-    int splineOut = 0, rawOut = 0;
+    int i, k;
+    printf("veeery beg\n");
 
     //variables for displaying / hardcopying results:
     outFileName = (char*) malloc(500);
@@ -224,17 +223,22 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
     for (i = 0; i < 8; ++i) {
         freqArray[i] = -1;
     }
+    
     //handle command line arguments:
+    printf("First:debugflag=%d\n", debugFlag);
     if (debugFlag == 1) printf("calcDMe: calling init()\n");
-    init(psr, argc, argv, timFile, parFile, outFileName, &binSizeDays, &smoothWidth,
-            &f0fit, &ascii, &gotOut, dcmFile, freqOffset, freqArray, &header, &outDM,
-            &mean, &meanMJD, &doDisplay, &hardcopy, &splineOut, &rawOut, freq1f, freq2f);
+    init(psr, argc, argv);
+    printf("debugfluag=%d\n",debugFlag);
+    printf("parfile=%s timFile=%s",parFile[0],timFile[0]);
     if (debugFlag == 1) printf("calcDMe: calling readParfile\n");
     readParfile(psr, parFile, timFile, *npsr); /* Load the parameters       */
+    printf("debugfluag=%d\n",debugFlag);
     if (debugFlag == 1) printf("calcDMe: calling readTimfile\n");
     readTimfile(psr, timFile, *npsr); /* Load the arrival times    */
+    printf("debugfluag=%d\n",debugFlag);
     if (debugFlag == 1) printf("calcDMe: calling preProcess %d\n", psr[0].nobs);
     preProcess(psr, *npsr, argc, argv);
+    printf("debugfluag=%d\n",debugFlag);
 
     //set the output file name to default, if user didn't provide:
     if (debugFlag == 1) printf("checking if outFileName was set...\n");
@@ -247,7 +251,7 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
     if (debugFlag == 1) printf("outFileName = %s\n", outFileName);
 
     //find freq1 and freq2 frequency data to use for calculating deltaDMs
-    handleFreqPoints(psr, freqArray, freqOffset, dmObs, fitObs, impObs, &dmCount, &fitCount, &impCount, &nf, valID, freq1f, freq2f);
+    handleFreqPoints(psr);
     if (debugFlag >= 1) {
         printf("found %d fitObs and %d dmObs\n", fitCount, dmCount);
         printf("found jumps:\n");
@@ -262,15 +266,12 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
     // (otherwise jumps become all wrong
     psr[0].param[param_dm].fitFlag[0] = 0;
     callFit(psr, *npsr);
-  /* Convert all prefit values to postfit values */
-  for (i=0;i<MAX_PARAMS;i++)
-    {
-      for (k=0;k<psr->param[i].aSize;k++)
-        {
-          if (psr->param[i].paramSet[k]==1)
-            {
-              psr->param[i].prefit[k] = psr->param[i].val[k];
-              psr->param[i].prefitErr[k] = psr->param[i].prefitErr[k];
+    /* Convert all prefit values to postfit values */
+    for (i = 0; i < MAX_PARAMS; i++) {
+        for (k = 0; k < psr->param[i].aSize; k++) {
+            if (psr->param[i].paramSet[k] == 1) {
+                psr->param[i].prefit[k] = psr->param[i].val[k];
+                psr->param[i].prefitErr[k] = psr->param[i].prefitErr[k];
             }
         }
     }
@@ -283,17 +284,17 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
     f0_0_err = psr[0].param[param_f].err[0];
 
     //locate the first observation from the fitObs - that's the beginning of our first point
-    findFirst(psr, fitObs, &binStart, fitCount);
+    findFirst(psr);
     //mark all observations as deleted' and then choose the ones we want to use in 'get_binObs'
     setAllDeleted(psr);
     //now we have to fit for DM (and F0 possibly), also turn off jump-fit
-    setFitParams(psr, f0fit);
+    setFitParams(psr);
 
     //start the actual binning and fitting:
     while (fitCount != bin_fitCount) {
 
         //find all the points from fit- and dmObs within this first bin
-        get_binObs(psr, binObs, &bin_fitCount, &bin_dmCount, &binStart, &fitCount, &dmCount, fitObs, dmObs, &bin_fitCount_inc, &bin_dmCount_inc, binSizeDays);
+        get_binObs(psr);
         //ensure we've got enough points for fitting:
         if (bin_dmCount_inc > 0 && bin_fitCount_inc > 0 && (bin_fitCount_inc + bin_dmCount_inc) > 2 + f0fit) {
             //do the fit
@@ -303,7 +304,7 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
             ddmMJD[ddmCount] = binStart;
             ddmCount++;
             //reset dm and f0: not necessary, actually...
-//            resetDMandF0(psr, dm0, dm0_err, f0_0, f0_0_err);
+            //            resetDMandF0(psr);
         } else {
             printf("==============================\nNOT ENOUGH POINTS FOR FITTING IN THE BIN\n");
             printf("STARTING AT %Lf (%d freq1 and %d freq2 points)   \n==============================\n", binStart, bin_fitCount_inc, bin_dmCount_inc);
@@ -313,7 +314,7 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
     }
     //interpolate the delta DMs and smooth them afterwards
     if (debugFlag == 1) printf("calling interpolateSplineSmooth()\n");
-    interpolateSplineSmooth(ddmCount, ddmMJD, ddm, outX, outY, smoothWidth, &outInterpCount, &outSmoothCount);
+    interpolateSplineSmooth();
 
     //write output to a file:
     if (debugFlag == 1) printf("calling output()\n");
@@ -355,7 +356,7 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
 
 //handle plugin initilization
 
-void init(pulsar *psr, int argc, char **argv, char timFile[1][500], char parFile[1][500], char *outFileName, long double *binSizeDays, int *smoothWidth, int *f0fit, int *ascii, int *gotOut, char *dcmFile, int freqOffset[2], double *freqArray, int *header, int *outDM, int *mean, int *meanMJD, int *doDisplay, int *hardcopy, int *splineOut, int *rawOut, char *freq1f, char *freq2f) {
+void init(pulsar *psr, int argc, char* argv[]) {
     int i, k, gotTim = 0;
     strcpy(dcmFile, "NULL");
 
@@ -368,31 +369,32 @@ void init(pulsar *psr, int argc, char **argv, char timFile[1][500], char parFile
     describe();
 
 
+    printf ("check\n");
     //initialize freqOffset:
     freqOffset[0] = freqOffset[1] = 0;
     /* Obtain the .par and the .tim file from the command line */
     if (argc < 4) {
         printf("\n not enough arguments provided\n you have to provide at least .tim file\n displaying help:\n\n");
         help();
-    }
-    else if (argc == 4 && strcmp(argv[3], "-h") != 0) /* Only provided .tim name */ {
+    } else if (argc == 4 && strcmp(argv[3], "-h") != 0) /* Only provided .tim name */ {
         strcpy(timFile[0], argv[3]);
         strcpy(parFile[0], argv[3]);
         parFile[0][strlen(parFile[0]) - 3] = '\0';
         strcat(parFile[0], "par");
     } else if (argc == 4 && strcmp(argv[3], "-h") == 0) {
         help();
-    }
+    }    
     //handle the command line arguments:
     for (i = 1; i < argc; i++) {
+        printf ("check %d %s\n",i,argv[i]);
         if (strcmp(argv[i], "-bs") == 0) {
-            sscanf(argv[++i], "%Lf", binSizeDays);
+            sscanf(argv[++i], "%Lf", &binSizeDays);
         } else if (strcmp(argv[i], "-sw") == 0)
-            sscanf(argv[++i], "%d", smoothWidth);
+            sscanf(argv[++i], "%d", &smoothWidth);
         else if (strcmp(argv[i], "-noffit") == 0)
-            *f0fit = 0;
+            f0fit = 0;
         else if (strcmp(argv[i], "-binary") == 0)
-            *ascii = 0;
+            ascii = 0;
         else if (strcmp(argv[i], "-details") == 0)
             if (debugFlag == 0) {
                 debugFlag = 2;
@@ -401,43 +403,49 @@ void init(pulsar *psr, int argc, char **argv, char timFile[1][500], char parFile
         else if (strcmp(argv[i], "-o") == 0) {
             if (argv[++i][0] != '-') {
                 strcpy(outFileName, argv[i]);
-                *gotOut = 1;
+                gotOut = 1;
             } else {
                 printf("wrong usage, displaying help:\n\n\n");
                 help();
             }
         } else if (strcmp(argv[i], "-display") == 0) {
-            *doDisplay = 1;
+            doDisplay = 1;
         } else if (strcmp(argv[i], "-hardcopy") == 0) {
-            *hardcopy = 1;
-            *doDisplay = 1;
+            hardcopy = 1;
+            doDisplay = 1;
         } else if (strcmp(argv[i], "-header") == 0) {
-            *header = 1;
+            header = 1;
         } else if (strcmp(argv[i], "-outDM") == 0) {
-            *outDM = 1;
+            outDM = 1;
         } else if (strcmp(argv[i], "-mean") == 0) {
-            *mean = 1;
+            mean = 1;
         } else if (strcmp(argv[i], "-meanMJD") == 0) {
-            *meanMJD = 1;
+            meanMJD = 1;
         } else if (strcmp(argv[i], "-f") == 0) {
+            printf("parfile=%s flag=%s\n",argv[i+1],argv[i]);
             strcpy(parFile[0], argv[++i]);
+            printf("parFile=%s\n",parFile[0]);
             if (argv[i + 1][0] != '-') {
+                printf("parFile=%s\n",parFile[0]);
                 strcpy(timFile[0], argv[++i]);
+                printf("parFile=%s\n",parFile[0]);
                 gotTim = 1;
+                printf("parFile=%s\n",parFile[0]);
             }
+            printf("parFile=%s timFile=%s\n",parFile[0],timFile[0]);
         } else if (strcmp(argv[i], "-splineout") == 0) {
-            *splineOut = 1;
+            splineOut = 1;
         } else if (strcmp(argv[i], "-rawout") == 0) {
-            *rawOut = 1;
-        } else if (strcmp(argv[i],"-freq1f") == 0 ) {
-	  strncpy(freq1f,argv[++i],MAX_STRLEN);
-	  strcat(freq1f," ");
-	  freqOffset[0] = 3;
-	} else if (strcmp(argv[i],"-freq2f") == 0) {
-	  strncpy(freq2f,argv[++i],MAX_STRLEN);
-	  strcat(freq2f," ");
-	  freqOffset[1] = 3;
-	}else if (strcmp(argv[i], "-freq1") == 0) {
+            rawOut = 1;
+        } else if (strcmp(argv[i], "-freq1f") == 0) {
+            strncpy(freq1f, argv[++i], MAX_STRLEN);
+            strcat(freq1f, " ");
+            freqOffset[0] = 3;
+        } else if (strcmp(argv[i], "-freq2f") == 0) {
+            strncpy(freq2f, argv[++i], MAX_STRLEN);
+            strcat(freq2f, " ");
+            freqOffset[1] = 3;
+        } else if (strcmp(argv[i], "-freq1") == 0) {
             k = i + 1;
             if (strcmp(argv[k], "10cm") == 0) {
                 freqArray[0] = 3100.0;
@@ -492,17 +500,17 @@ void init(pulsar *psr, int argc, char **argv, char timFile[1][500], char parFile
     }
     //if -freq1f was provided, then -freq2f has to be provided as well
     //(or vice versa)
-    if (freqOffset[0] !=3 && freqOffset[1] == 3) {
-      printf("\n\n   ERROR: only -freq1f was provided, you must use also -freq2f!!!  \n\n");
-      exit(-1);
+    if (freqOffset[0] != 3 && freqOffset[1] == 3) {
+        printf("\n\n   ERROR: only -freq1f was provided, you must use also -freq2f!!!  \n\n");
+        exit(-1);
     }
-    if (freqOffset[1] !=3 && freqOffset[0] == 3) {
-      printf("\n\n   ERROR: only -freq2f was provided, you must use also -freq1f!!!  \n\n");
-      exit(-1);
+    if (freqOffset[1] != 3 && freqOffset[0] == 3) {
+        printf("\n\n   ERROR: only -freq2f was provided, you must use also -freq1f!!!  \n\n");
+        exit(-1);
     }
 } //init
 
-void handleFreqPoints(pulsar *psr, double *freqArray, int *freqOffset, int *dmObs, int *fitObs, int *impObs, int *dmCount, int *fitCount, int *impCount, int *nf, int *valID, char *freq1f, char *freq2f) {
+void handleFreqPoints(pulsar *psr) {
     int i, j, k, l, found, foundFlag;
     //which frequencies are to be used as 'fit' and 'dm' data
     double fitFreq, dmFreq;
@@ -558,131 +566,131 @@ void handleFreqPoints(pulsar *psr, double *freqArray, int *freqOffset, int *dmOb
         fitFreq = -1.0;
         fitFreqMin = fitFreqMax = dmFreqMin = dmFreqMax = -1.0;
     }
-    *nf = 0;
+    nf = 0;
     //identify observations at given freqs:
-   if (freqOffset[0] != 3 && freqOffset[1] != 3) {
-    for (i = 0; i < psr[0].nobs; ++i) {
-        if (!(psr[0].obsn[i].freq > fitFreqMin && psr[0].obsn[i].freq < fitFreqMax)) {
-            if (psr[0].obsn[i].freq > dmFreqMin && psr[0].obsn[i].freq < dmFreqMax) {
-                psr[0].obsn[i].deleted = -1;
-                dmObs[*dmCount] = i;
-                (*dmCount)++;
+    if (freqOffset[0] != 3 && freqOffset[1] != 3) {
+        for (i = 0; i < psr[0].nobs; ++i) {
+            if (!(psr[0].obsn[i].freq > fitFreqMin && psr[0].obsn[i].freq < fitFreqMax)) {
+                if (psr[0].obsn[i].freq > dmFreqMin && psr[0].obsn[i].freq < dmFreqMax) {
+                    psr[0].obsn[i].deleted = -1;
+                    dmObs[dmCount] = i;
+                    (dmCount)++;
+                } else {
+                    psr[0].obsn[i].deleted = 1;
+                    impObs[impCount] = i;
+                    (impCount)++;
+                }
             } else {
-                psr[0].obsn[i].deleted = 1;
-                impObs[*impCount] = i;
-                (*impCount)++;
-            }
-        } else {
-            fitObs[*fitCount] = i;
-            (*fitCount)++;
-            //that's needed for the jumps:
-	    //it goes through all observations and turns on jumps only at
-	    // used frequencies
-            for (k = 0; k < psr[0].obsn[i].nFlags; ++k) {
-                found = 0;
-                if (strcmp(psr[0].obsn[i].flagID[k], psr[0].fjumpID) == 0) {
-                    for (l = 0; l<*nf; l++) {
-			strncpy(_tmp,"",sizeof(_tmp));
-			strcat(_tmp,psr[0].fjumpID);
-			strcat(_tmp," ");
-			strcat(_tmp,psr[0].obsn[i].flagVal[k]);
-                        if (strcmp(_tmp,psr[0].jumpStr[l])==0) {
-                            found = 1;
-                            break;
+                fitObs[fitCount] = i;
+                (fitCount)++;
+                //that's needed for the jumps:
+                //it goes through all observations and turns on jumps only at
+                // used frequencies
+                for (k = 0; k < psr[0].obsn[i].nFlags; ++k) {
+                    found = 0;
+                    if (strcmp(psr[0].obsn[i].flagID[k], psr[0].fjumpID) == 0) {
+                        for (l = 0; l<nf; l++) {
+                            strncpy(_tmp, "", sizeof (_tmp));
+                            strcat(_tmp, psr[0].fjumpID);
+                            strcat(_tmp, " ");
+                            strcat(_tmp, psr[0].obsn[i].flagVal[k]);
+                            if (strcmp(_tmp, psr[0].jumpStr[l]) == 0) {
+                                found = 1;
+                                break;
+                            }
                         }
-                    }
-                    if (found == 0) {
-			sprintf(psr[0].jumpStr[*nf], "%s %s",psr[0].fjumpID,psr[0].obsn[i].flagVal[k]);
-                        (*nf)++;
+                        if (found == 0) {
+                            sprintf(psr[0].jumpStr[nf], "%s %s", psr[0].fjumpID, psr[0].obsn[i].flagVal[k]);
+                            (nf)++;
+                        }
                     }
                 }
             }
         }
     }
-   } 
-   else {
-     char flag1[100],filtS1[MAX_STRLEN],*filt1;
-     char flag2[100],filtS2[MAX_STRLEN],*filt2;
-     strcpy(filtS1,freq1f);
-     strcpy(filtS2,freq2f);
-     filt1 = strtok(filtS1," ");
-     if (filt1[0]=='-')
-       strcpy(flag1,filt1);
-     else {
-       printf("ERROR: wrong flag provided for -freq1f\n");
-       exit(-1);
-     }
-     filt1 = strtok(NULL," ");
+    else {
+        char flag1[100], filtS1[MAX_STRLEN], *filt1;
+        char flag2[100], filtS2[MAX_STRLEN], *filt2;
+        strcpy(filtS1, freq1f);
+        strcpy(filtS2, freq2f);
+        filt1 = strtok(filtS1, " ");
+        if (filt1[0] == '-')
+            strcpy(flag1, filt1);
+        else {
+            printf("ERROR: wrong flag provided for -freq1f\n");
+            exit(-1);
+        }
+        filt1 = strtok(NULL, " ");
 
-     filt2 = strtok(filtS2," ");
-     if (filt2[0]=='-')
-       strcpy(flag2,filt2);
-     else {
-       printf("ERROR: wrong flag provided for -freq2f\n");
-       exit(-1);
-     }
-     filt2 = strtok(NULL," ");
-     for (i=0;i<psr[0].nobs;++i) {
-       foundFlag = 0;
-       for (j=0;j<psr[0].obsn[i].nFlags;++j) {
-	 if (strcmp(psr[0].obsn[i].flagID[j],flag1)==0 && strcmp(psr[0].obsn[i].flagVal[j],filt1)==0) {
-	   fitObs[*fitCount] = i;
-	   (*fitCount)++;
-            //that's needed for the jumps:
-	    //it goes through all observations and turns on jumps only at
-	    // used frequencies
-            found = 0;
-            for (k = 0; k < psr[0].obsn[i].nFlags; ++k) {
-                if (strcmp(psr[0].obsn[i].flagID[k], psr[0].fjumpID) == 0) {
-                    for (l = 0; l<*nf; ++l) {
-			strncpy(_tmp,"",sizeof(_tmp));
-			strcat(_tmp,psr[0].fjumpID);
-			strcat(_tmp," ");
-			strcat(_tmp,psr[0].obsn[i].flagVal[k]);
-                        if (strcmp(_tmp,psr[0].jumpStr[l])==0) {
-                            found = 1;
-			    psr[0].obsn[i].jump = l;
-                            break;
+        filt2 = strtok(filtS2, " ");
+        if (filt2[0] == '-')
+            strcpy(flag2, filt2);
+        else {
+            printf("ERROR: wrong flag provided for -freq2f\n");
+            exit(-1);
+        }
+        filt2 = strtok(NULL, " ");
+        for (i = 0; i < psr[0].nobs; ++i) {
+            foundFlag = 0;
+            for (j = 0; j < psr[0].obsn[i].nFlags; ++j) {
+                if (strcmp(psr[0].obsn[i].flagID[j], flag1) == 0 && strcmp(psr[0].obsn[i].flagVal[j], filt1) == 0) {
+                    fitObs[fitCount] = i;
+                    (fitCount)++;
+                    //that's needed for the jumps:
+                    //it goes through all observations and turns on jumps only at
+                    // used frequencies
+                    found = 0;
+                    for (k = 0; k < psr[0].obsn[i].nFlags; ++k) {
+                        if (strcmp(psr[0].obsn[i].flagID[k], psr[0].fjumpID) == 0) {
+                            for (l = 0; l<nf; ++l) {
+                                strncpy(_tmp, "", sizeof (_tmp));
+                                strcat(_tmp, psr[0].fjumpID);
+                                strcat(_tmp, " ");
+                                strcat(_tmp, psr[0].obsn[i].flagVal[k]);
+                                if (strcmp(_tmp, psr[0].jumpStr[l]) == 0) {
+                                    found = 1;
+                                    psr[0].obsn[i].jump = l;
+                                    break;
+                                }
+                            }
+                            if (found == 0) {
+                                sprintf(psr[0].jumpStr[nf], "%s %s", psr[0].fjumpID, psr[0].obsn[i].flagVal[k]);
+                                psr[0].fitJump[nf] = 1;
+                                psr[0].obsn[i].jump = nf;
+                                if (debugFlag >= 1) {
+                                    printf("found jump %d: %s in obs %d\n", nf, psr[0].jumpStr[nf], i);
+                                    printf("data file: %s flag(%d):%s\n", psr[0].obsn[i].fname, k, psr[0].obsn[i].flagVal[k]);
+                                }
+                                (nf)++;
+                            }
                         }
                     }
-                    if (found == 0) {
-			sprintf(psr[0].jumpStr[*nf], "%s %s",psr[0].fjumpID,psr[0].obsn[i].flagVal[k]);
-			psr[0].fitJump[*nf] = 1;
-			psr[0].obsn[i].jump = *nf;
-			if (debugFlag>=1) {
-				printf("found jump %d: %s in obs %d\n",*nf,psr[0].jumpStr[*nf],i);
-				printf("data file: %s flag(%d):%s\n",psr[0].obsn[i].fname,k,psr[0].obsn[i].flagVal[k]);
-			}
-                        (*nf)++;
-                    }
+                    foundFlag = 1;
+                } else if (strcmp(psr[0].obsn[i].flagID[j], flag2) == 0 && strcmp(psr[0].obsn[i].flagVal[j], filt2) == 0) {
+                    psr[0].obsn[i].deleted = -1;
+                    dmObs[dmCount] = i;
+                    (dmCount)++;
+                    foundFlag = 1;
                 }
             }
-	    foundFlag = 1;
-	 }
-	 else if (strcmp(psr[0].obsn[i].flagID[j],flag2)==0 && strcmp(psr[0].obsn[i].flagVal[j],filt2)==0) {
-	   psr[0].obsn[i].deleted = -1;
-	   dmObs[*dmCount] = i;
-	   (*dmCount)++;
-	   foundFlag = 1;
-	 }
-       }
-       if (foundFlag == 0) {
-	 psr[0].obsn[i].deleted = 1;
-	 impObs[*impCount] = i;
-	 (*impCount)++;
-       }
-     }
-     if (debugFlag>=1) {
-	   printf("flag1=%s flag2=%s filt1=%s filt2=%s\n",flag1,flag2,filt1,filt2);
-	   printf("fitCount=%d dmCount=%d impCount=%d nf=%d\n",*fitCount,*dmCount,*impCount,*nf);
-     } 
-   }
-   psr[0].nJumps = (*nf) - 1;
+            if (foundFlag == 0) {
+                psr[0].obsn[i].deleted = 1;
+                impObs[impCount] = i;
+                (impCount)++;
+            }
+        }
+        if (debugFlag >= 1) {
+            printf("flag1=%s flag2=%s filt1=%s filt2=%s\n", flag1, flag2, filt1, filt2);
+            printf("fitCount=%d dmCount=%d impCount=%d nf=%d\n", fitCount, dmCount, impCount, nf);
+        }
+    }
+    psr[0].nJumps = (nf) - 1;
 } //handleFreqPoints()
 
 //interpolation (spline) and smoothing (Hann):
 //this function interpolates calculated deltaDMs using constrained spline, smooths it and resamples at 1/day frequency
-void interpolateSplineSmooth(int ddmCount, long double *ddmMJD, long double *ddm, double *outX, double *outY, int smoothWidth, int *outInterpCount, int *outSmoothCount) {
+
+void interpolateSplineSmooth() {
     //array needed by TKcmonot
     double yd[MAX_OBSN][4];
     //arrays to cast input onto doubles
@@ -725,13 +733,14 @@ void interpolateSplineSmooth(int ddmCount, long double *ddmMJD, long double *ddm
             outY[i + nInterp] = smoothY[i];
         }
     }
-    *outInterpCount = nInterp;
-    *outSmoothCount = nSmooth;
+    outInterpCount = nInterp;
+    outSmoothCount = nSmooth;
 
 } //interpolateSplineSmooth
 
 //This function writes output
 //TODO: I think there's sth wrong with -mean -outDM or sth
+
 void output(char *outFileName, int ascii, double dm0, int header, int outDM, double *outX, double *outY, int outInterpCount, int outSmoothCount, int mean, int meanMJD, double *meanMJDval, double *meanVal, int splineOut, int rawOut, long double *ddmMJD, long double *ddm, long double *ddmErr, int ddmCount) {
     int i;
     double smoothX[MAX_OBSN], smoothY[MAX_OBSN];
@@ -775,7 +784,7 @@ void output(char *outFileName, int ascii, double dm0, int header, int outDM, dou
                 fwrite(&smoothY[i], sizeof (double), 1, outFile);
             }
         } else {
-            if (header == 1) fprintf(outFile, "#%lf %d %lf\n", dm0, outSmoothCount,findMean(smoothY,outSmoothCount));
+            if (header == 1) fprintf(outFile, "#%lf %d %lf\n", dm0, outSmoothCount, findMean(smoothY, outSmoothCount));
             for (i = 0; i < outSmoothCount; ++i) {
                 fprintf(outFile, "%lf %lf\n", smoothX[i] - *meanMJDval, smoothY[i] + (double) (outDM - mean * outDM) * dm0 - *meanVal);
             }
@@ -803,7 +812,7 @@ void output(char *outFileName, int ascii, double dm0, int header, int outDM, dou
         outFile = fopen(tmp, "w");
         free(tmp);
 
-        if (header == 1) fprintf(outFile, "#%lf %d %lf\n", dm0, outInterpCount,findMean(outY,outInterpCount));
+        if (header == 1) fprintf(outFile, "#%lf %d %lf\n", dm0, outInterpCount, findMean(outY, outInterpCount));
         for (i = 0; i < outInterpCount; ++i) {
             fprintf(outFile, "%lf %lf\n", outX[i] - (double) (meanMJD * (*meanMJDval)), outY[i] + (double) ((outDM - mean * outDM) * dm0) - *meanVal);
         }
@@ -829,30 +838,32 @@ void output(char *outFileName, int ascii, double dm0, int header, int outDM, dou
 } //output
 
 //locate the first observation from the fitObs - that's the beginning of our first point
-void findFirst(pulsar *psr, int *fitObs, long double *binStart, int fitCount) {
+
+void findFirst(pulsar *psr) {
     int l, i;
     l = fitObs[0];
-    *binStart = psr[0].obsn[l].sat;
+    binStart = psr[0].obsn[l].sat;
     for (i = 1; i < fitCount; ++i) {
         l = fitObs[i];
-        if (psr[0].obsn[l].sat < *binStart) {
-            *binStart = psr[0].obsn[l].sat;
+        if (psr[0].obsn[l].sat < binStart) {
+            binStart = psr[0].obsn[l].sat;
         }
     }
 } //findFirst()
 
 //This function searches for data points in a given bin, coming from observations at freq1 and freq2
-void get_binObs(pulsar *psr, int binObs[MAX_OBSN_VAL][2], int* bin_fitCount, int* bin_dmCount, long double* binStart, int* fitCount, int* dmCount, int *fitObs, int *dmObs, int* bin_fitCount_inc, int* bin_dmCount_inc, long double binSizeDays) {
+
+void get_binObs(pulsar *psr) {
     int i, l;
-    *bin_fitCount_inc = 0;
-    *bin_dmCount_inc = 0;
+    bin_fitCount_inc = 0;
+    bin_dmCount_inc = 0;
     //auxilary variable for checking wheter a point was used before
     int wasUsed;
     //first the fitObs:
-    for (i = 0; i<*fitCount; ++i) {
+    for (i = 0; i<fitCount; ++i) {
         l = fitObs[i];
         psr[0].obsn[l].deleted = 1;
-        if (psr[0].obsn[l].sat >= *binStart && psr[0].obsn[l].sat < *binStart + binSizeDays) {
+        if (psr[0].obsn[l].sat >= binStart && psr[0].obsn[l].sat < binStart + binSizeDays) {
             //check if it wasn't used before
             wasUsed = 0;
             //if wasn't used, use it in the fit:
@@ -860,17 +871,17 @@ void get_binObs(pulsar *psr, int binObs[MAX_OBSN_VAL][2], int* bin_fitCount, int
                 psr[0].obsn[l].deleted = 1;
             } else {
                 psr[0].obsn[l].deleted = 0;
-                binObs[*bin_fitCount][0] = l;
-                (*bin_fitCount)++;
-                (*bin_fitCount_inc)++;
+                binObs[bin_fitCount][0] = l;
+                (bin_fitCount)++;
+                (bin_fitCount_inc)++;
             }
         }
     }
     //and now the dmObs:
-    for (i = 0; i<*dmCount; ++i) {
+    for (i = 0; i<dmCount; ++i) {
         l = dmObs[i];
         psr[0].obsn[l].deleted = 1;
-        if (psr[0].obsn[l].sat >= *binStart && psr[0].obsn[l].sat < *binStart + binSizeDays) {
+        if (psr[0].obsn[l].sat >= binStart && psr[0].obsn[l].sat < binStart + binSizeDays) {
             //check if it wasn't used before
             wasUsed = 0;
             //if wasn't used, use it in the fit:
@@ -878,9 +889,9 @@ void get_binObs(pulsar *psr, int binObs[MAX_OBSN_VAL][2], int* bin_fitCount, int
                 psr[0].obsn[l].deleted = -1;
             } else {
                 psr[0].obsn[l].deleted = 0;
-                binObs[*bin_dmCount][1] = l;
-                (*bin_dmCount)++;
-                (*bin_dmCount_inc)++;
+                binObs[bin_dmCount][1] = l;
+                (bin_dmCount)++;
+                (bin_dmCount_inc)++;
             }
         }
     }
@@ -889,7 +900,8 @@ void get_binObs(pulsar *psr, int binObs[MAX_OBSN_VAL][2], int* bin_fitCount, int
 // this function turns off fitting of everything
 // (including jumps and dm derivatives)
 // except for dm and f0
-void setFitParams(pulsar *psr, int f0fit) {
+
+void setFitParams(pulsar *psr) {
     int i, k;
     //turn all off:
     for (i = 0; i < MAX_PARAMS; ++i) {
@@ -912,6 +924,7 @@ void setFitParams(pulsar *psr, int f0fit) {
 } //setFitParams();
 
 // this function marks all observations as deleted:
+
 void setAllDeleted(pulsar *psr) {
     int i;
     for (i = 0; i < psr[0].nobs; i++) {
@@ -920,7 +933,8 @@ void setAllDeleted(pulsar *psr) {
 } //setAllDeleted()
 
 // this functions sets the dm and f0 values to the ones obtained from the first fit
-void resetDMandF0(pulsar *psr, long double dm0, long double dm0_err, long double f0_0, long double f0_0_err) {
+
+void resetDMandF0(pulsar *psr) {
     psr[0].param[param_dm].val[0] = dm0;
     psr[0].param[param_dm].err[0] = dm0_err;
     psr[0].param[param_f].val[0] = f0_0;
@@ -929,6 +943,7 @@ void resetDMandF0(pulsar *psr, long double dm0, long double dm0_err, long double
 
 /* This function calls all of the fitting routines.             */
 /* The function is looped twice, the first time for the pre-fit */
+
 /* residuals and the second time for the post-fit residuals     */
 void callFit(pulsar *psr, int npsr) {
     int iteration, i, p, it, k;
@@ -968,6 +983,7 @@ void callFit(pulsar *psr, int npsr) {
 } //callFit()
 
 //This function calculates the mean of data
+
 double findMean(double *x, int count) {
     int i = 0;
     double mean = 0;
@@ -980,6 +996,7 @@ double findMean(double *x, int count) {
 
 //this function generates plot of raw, interpolated and smoothed results
 //displays it either on screen (using /XS device) or saves it to a postscript file
+
 void display(char *gr, int publish, double *xx, double *yy, long double *ddmMJD, long double *ddm, long double *ddmErr, int outInterpCount, int outSmoothCount, int ddmCount, char *xlab, char *ylab, char *title, double meanMJDval, double meanVal) {
     int i;
     float fontSize = 1.0;
