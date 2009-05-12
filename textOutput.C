@@ -498,7 +498,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      long double eps1,eps2,tasc,err1,err2,err3;
 
 	      eps1 = psr[p].param[param_eps1].val[0];
-	      eps2 = psr[p].param[param_eps1].val[0];
+	      eps2 = psr[p].param[param_eps2].val[0];
 	      tasc = psr[p].param[param_tasc].val[0];
 	      pb   = psr[p].param[param_pb].val[0];
 	      err1 = psr[p].param[param_eps1].err[0];
