@@ -49,7 +49,7 @@ int setupParameterFileDefaults(pulsar *psr)
       return -1;
     }
   strcpy(psr->JPL_EPHEMERIS,getenv(TEMPO2_ENVIRON));
-  strcat(psr->ephemeris,"DE405");
+  strcpy(psr->ephemeris,"DE405");
   strcat(psr->JPL_EPHEMERIS,"/ephemeris/DE405.1950.2050");
   return 0;
 }
