@@ -164,6 +164,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		  /* Pre-fit value */
 		  if ((i == param_raj || i == param_decj) && psr[p].eclCoord==1)
 		    printf("%-25.15g ",(double)psr[p].param[i].prefit[k]*180.0/M_PI);
+      else if (i == param_sini && psr[p].param[param_sini].nLinkTo != 0)
+        printf("%-25.15g ",(double)sin(psr[p].param[param_kin].prefit[0]/180.0*M_PI));
 		  else
 		    printf("%-25.15g ",(double)psr[p].param[i].prefit[k]);
 		  
@@ -236,7 +238,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    {
 	      pwr = pow(psr[p].wave_cos[i],2)+pow(psr[p].wave_sine[i],2);
 	      perr = sqrt(pow(2*psr[p].wave_cos[i]*psr[p].wave_cos_err[i],2)+pow(2*psr[p].wave_sine[i]*psr[p].wave_sine_err[i],2));
-	      printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",i+1,(i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25,1.0/((i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25),psr[p].wave_cos[i],psr[p].wave_cos_err[i],psr[p].wave_sine[i],psr[p].wave_sine_err[i],pwr,perr);
+	      printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
+               i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
+               //(i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
+               (i+1)*psr[p].param[param_wave_om].val[0]*365.25,       // Wave frequency (yr^-1)
+               1.0/((i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25), // Wave period (yrs)
+               psr[p].wave_cos[i],       // Wave cosine amplitude
+               psr[p].wave_cos_err[i],   // Wave cosine amplitude uncertainty
+               psr[p].wave_sine[i],      // Wave sine amplitude
+               psr[p].wave_sine_err[i],  // Wave sine amplitude uncertainty
+               pwr,  // Wave power
+               perr); // Wave power uncertainty
 	    }
 	  printf("------------------------------------------------------------------------------\n");
 	}
@@ -309,38 +321,39 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      printf("Median companion mass          = %.4f solar masses\n",m2(fn,0.866025403,1.35));
 	      printf("Maximum companion mass         = %.4f solar masses\n",m2(fn,0.438371146,1.35)); */
 
-	      // Joris' mass calculation.
+	      // Joris' mass calculations.
 
 	      if(psr[p].param[param_sini].paramSet[0]*psr[p].param[param_m2].paramSet[0]*
-		 psr[p].param[param_a1].paramSet[0]*psr[p].param[param_pb].paramSet[0]==1){
-		longdouble mp[2];
-		double DAY2S = (24.0L*3600.0L);
-		mp[0] = -psr[p].param[param_m2].val[0]+
-		  sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
-		       pow(psr[p].param[param_m2].val[0]*psr[p].param[param_sini].val[0]/
-			   psr[p].param[param_a1].val[0],3.0));
-
-		longdouble Cte = sqrt(TSUN*pow(1/2.0L/M_PI,2.0));
-		mp[1] = sqrt(pow(psr[p].param[param_m2].err[0]*
-				 (-1.0+1.5*Cte*DAY2S*psr[p].param[param_pb].val[0]*
-				  pow(psr[p].param[param_sini].val[0]/
-				      psr[p].param[param_a1].val[0],1.5)*
-				  sqrt(psr[p].param[param_m2].val[0])),2.0)+
-			     pow(psr[p].param[param_pb].err[0]*Cte*
-				 pow(psr[p].param[param_m2].val[0]*
-				     psr[p].param[param_sini].val[0]/
-				     psr[p].param[param_a1].val[0],1.5),2.0)+
-			     pow(psr[p].param[param_sini].err[0]*1.5L*
-				 sqrt(psr[p].param[param_sini].val[0])*Cte*
-				 psr[p].param[param_pb].val[0]*
-				 pow(psr[p].param[param_m2].val[0]/
-				     psr[p].param[param_a1].val[0],1.5),2.0)+
-			     pow(psr[p].param[param_a1].err[0]*1.5/
-				 pow(psr[p].param[param_a1].val[0],2.5)*Cte*
-				 psr[p].param[param_pb].val[0]*
-				 pow(psr[p].param[param_m2].val[0]*
-				     psr[p].param[param_sini].val[0],1.5),2.0));
-								
+           psr[p].param[param_a1].paramSet[0]*psr[p].param[param_pb].paramSet[0]==1
+            && psr[p].param[param_sini].nLinkTo==0){
+          longdouble mp[2];
+          double DAY2S = (24.0L*3600.0L);
+          mp[0] = -psr[p].param[param_m2].val[0]+
+            sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
+                 pow(psr[p].param[param_m2].val[0]*psr[p].param[param_sini].val[0]/
+                     psr[p].param[param_a1].val[0],3.0));
+          
+          longdouble Cte = sqrt(TSUN*pow(1/2.0L/M_PI,2.0));
+          mp[1] = sqrt(pow(psr[p].param[param_m2].err[0]*
+                           (-1.0+1.5*Cte*DAY2S*psr[p].param[param_pb].val[0]*
+                            pow(psr[p].param[param_sini].val[0]/
+                                psr[p].param[param_a1].val[0],1.5)*
+                            sqrt(psr[p].param[param_m2].val[0])),2.0)+
+                       pow(psr[p].param[param_pb].err[0]*Cte*
+                           pow(psr[p].param[param_m2].val[0]*
+                               psr[p].param[param_sini].val[0]/
+                               psr[p].param[param_a1].val[0],1.5),2.0)+
+                       pow(psr[p].param[param_sini].err[0]*1.5L*
+                           sqrt(psr[p].param[param_sini].val[0])*Cte*
+                           psr[p].param[param_pb].val[0]*
+                           pow(psr[p].param[param_m2].val[0]/
+                               psr[p].param[param_a1].val[0],1.5),2.0)+
+                       pow(psr[p].param[param_a1].err[0]*1.5/
+                           pow(psr[p].param[param_a1].val[0],2.5)*Cte*
+                           psr[p].param[param_pb].val[0]*
+                           pow(psr[p].param[param_m2].val[0]*
+                               psr[p].param[param_sini].val[0],1.5),2.0));
+          
 
 		printf("Pulsar Mass (Shapiro Delay): %lg (+/- %lg) Msun.\n",(double)mp[0],(double)mp[1]);
 	      }
@@ -473,7 +486,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      printf("MTOT derived from sin i and m2 = %.14g\n",(double)amtot);
 	    }
 	  /* inclination angle derived from sini */
-	  if (si!=-2 || psr[p].param[param_sini].paramSet[0]==1)
+	  if ((si!=-2 || psr[p].param[param_sini].paramSet[0]==1)
+                && psr[p].param[param_sini].nLinkTo == 0) 
 	    {
 	      longdouble inc,inc_lo,inc_hi;
 	      if (si==-2)
@@ -505,7 +519,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      err2 = psr[p].param[param_eps2].err[0];
 	      err3 = psr[p].param[param_tasc].err[0];
 
-	      ecc = sqrt(eps1*eps1+eps2*eps2);
+	      ecc = sqrt(powl(eps1,2.0)+powl(eps2,2.0));
 	      om  = atan2(eps1,eps2)*180.0/M_PI;
 	      if (om<0) om+=360.0;
 
@@ -521,7 +535,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
 	      printf("\nConversion from ELL1 parameters: \n");
 	      printf("------------------------------------\n");
-	      printf("ECC = %.15g +/- %.15g\n",(double)ecc,(double)ecc_err);
+	      printf("ECC = %.15lg +/- %.15g\n",(double)ecc,(double)ecc_err);
 	      printf("OM  = %.15g +/- %.15g degrees\n",(double)om,(double)om_err);
 	      printf("T0  = %.15Lg +/- %.15g\n",t0,(double)t0_err);
 	      printf("------------------------------------\n");
@@ -537,7 +551,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  err2 = psr[p].param[param_pmdec].err[0];
 	  pmtot = sqrt(pow(val1,2)+pow(val2,2));
 	  epmtot = sqrt((pow(val1*err1,2)+pow(val2*err2,2))/(val1*val1 + val2*val2));
-	  printf("Total proper motion = %.5g +/- %.5g\n",pmtot,epmtot);
+	  printf("Total proper motion = %.5g +/- %.5g mas/yr\n",pmtot,epmtot);
 	}
       // Glitch parameters
       if (psr[p].param[param_glep].paramSet[0]==1)
