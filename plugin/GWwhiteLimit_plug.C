@@ -163,8 +163,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	checkBackground=2;
     }
 
-  scale = pow(86400.0*365.25,alpha);
+  scale = pow(86400.0*365.25,index);
   maxAmp *= scale;
+  printf("GW amplitude = %g\n",maxAmp);
 
   if (dist[0]==0)
     {
