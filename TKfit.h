@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -23,7 +23,6 @@
 *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
 *    timing model.
 */
-
 void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int),int weight,pulsar *psr,double tol, int *ip);
 void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int),int weight);
 void TKremovePoly_f(float *px,float *py,int n,int m);

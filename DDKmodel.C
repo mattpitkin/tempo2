@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards, Willem van Straten
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 

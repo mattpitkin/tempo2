@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -24,6 +24,7 @@
 *    timing model.
 */
 
+
 /* ************************************************************** */
 /* Routines to convert doubles to floats                          */
 /* ************************************************************** */
@@ -46,6 +47,7 @@ float  TKmean_f(float *x,int n);
 
 double TKvariance_d(double *x,int n);
 double TKrange_d(double *x,int n);
+float TKrange_f(float *x,int n);
 double TKfindMin_d(double *x,int n);
 double TKfindMax_d(double *x,int n);
 double TKmean_d(double *x,int n);

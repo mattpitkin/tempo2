@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -23,6 +23,7 @@
 *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
 *    timing model.
 */
+
 
 /* Set of routines that are commonly used in tempo2 and/or its plugins.
  * These routines are mainly stand-alone functions and exist for 
@@ -263,6 +264,11 @@ double TKvariance_d(double *x,int n)
 double TKrange_d(double *x,int n)
 {
   return (TKfindMax_d(x,n)-TKfindMin_d(x,n));
+}
+
+float TKrange_f(float *x,int n)
+{
+  return (TKfindMax_f(x,n)-TKfindMin_f(x,n));
 }
 
 

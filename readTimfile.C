@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -443,7 +443,11 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
   
 	  psr->obsn[nObs].jump = *jumpVal;
 	
-	  if (time!=0.0) psr->obsn[nObs].sat += time/60.0/60.0/24.0;
+	  if (time!=0.0) 
+	    {
+	      psr->obsn[nObs].sat += time/60.0/60.0/24.0;
+	      printf("psr %s adding time >%g<\n",psr->name,time);
+	    }
 	  if (efloor!=-1 && psr->obsn[nObs].toaErr < efloor) psr->obsn[nObs].toaErr = efloor;
 	  if (emax!=-1 && psr->obsn[nObs].toaErr > emax) psr->obsn[nObs].deleted = 1;
 	  if (emin!=-1 && psr->obsn[nObs].toaErr < emin) psr->obsn[nObs].deleted = 1;
@@ -467,7 +471,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
       else if (valid!=-2) // This means: if the line does contain information, but not an observation
 	{
 	  nread2 = sscanf(line,"%s",param1);
-	  if (skip==0)
+	  if (skip==0 && nread2 > 0)
 	    {
 	      if (strcasecmp(param1,"END")==0)
 		endit=1;	
@@ -521,6 +525,8 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 		  double dtime;
 		  sscanf(line,"%s %lf",param1,&dtime);
 		  time+=dtime;
+		  printf("Updating time: %g %g\n",dtime,time);
+
 		}
 	      else if (strcasecmp(param1,"MODE")==0) /* Fit with errors */
 		{

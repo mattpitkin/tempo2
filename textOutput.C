@@ -1,4 +1,4 @@
-//  Copyright (C) 2003,2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -559,13 +559,20 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       if (psr[p].param[param_dmassplanet].paramSet[4]==1)
 	{
 	  long double diff,err;
-	  printf("M_Jupiter fit   = %.15Lg +/- %.15Lg (Solar masses)\n",psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L,psr[p].param[param_dmassplanet].err[4]);
-	  printf("M_Jupiter DE405 = %.15Lg (Solar masses)\n",0.00095479193842432214L);
-	  printf("M_Jupiter best  = 0.000954791915(11) (Solar masses)\n");
-	  diff = psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L-0.000954791915;
-	  err = sqrtl(powl(psr[p].param[param_dmassplanet].err[4],2)+powl(0.000000000011,2));
+	  if (strstr(psr[p].JPL_EPHEMERIS,"DE405")!=NULL)
+	    {
+	      printf("M_Jupiter fit   = %.15Lg +/- %.15Lg (Solar masses)\n",psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L,psr[p].param[param_dmassplanet].err[4]);
+	      printf("M_Jupiter DE405 = %.15Lg (Solar masses)\n",0.00095479193842432214L);
+	      printf("M_Jupiter best  = 0.000954791915(11) (Solar masses)\n");
+	      diff = psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L-0.000954791915;
+	      err = sqrtl(powl(psr[p].param[param_dmassplanet].err[4],2)+powl(0.000000000011,2));
 								    
-	  printf("diff            = %.15Lg +/- %.15Lg (Solar masses)\n",diff,err);
+	      printf("diff            = %.15Lg +/- %.15Lg (Solar masses)\n",diff,err);
+	    }
+	  else if (strstr(psr[p].JPL_EPHEMERIS,"DE200")!=NULL)
+	    {
+	      printf("DE200 Jupiter mass not set\n");
+	    }
 	}
 
       // Calculate time span
@@ -753,7 +760,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      if (strcasecmp(str1,"FREQ")==0 || strcasecmp(str1,"MJD")==0)
 		fprintf(fout2,"JUMP %s %s %s %.14g 1\n",str1,str2,str3,psr[p].jumpVal[i]);
 	      else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
-		fprintf(fout2,"JUMP %s %s %.14g 1\n",str1,str2,psr[p].jumpVal[i]);
+		fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
 	    }	  
 
 	  /* Add whitening flags */
@@ -833,7 +840,7 @@ double calcRMS(pulsar *psr,int p)
   psr[p].rmsPre  = rms_pre;
   psr[p].rmsPost = rms_post;
   psr[p].param[param_tres].val[0] = rms_post;
-
+  psr[p].param[param_tres].paramSet[0] = 1;
   return sumwt;
 }
 

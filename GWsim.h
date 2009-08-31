@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -23,6 +23,7 @@
 *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
 *    timing model.
 */
+
 
 /*
  * Set of routines necessary for simulating gravitational wave sources on pulsar
@@ -49,9 +50,9 @@ long double dotProduct(long double *m1,long double *m2);
 /* Have a structure to define a gravitational wave source */
 typedef struct gwSrc
 {
-  long double theta_g;     /* Angle of source from "z"-direction (e.g. 90-declination) */
-  long double phi_g;       /* Azimuthal angle of source (e.g. right ascension)      */
-  long double omega_g;     /* Frequency of gravitational wave source (Hz)           */   
+  long double theta_g;     /* Angle of source from "z"-direction (e.g. 90-declination)             */
+  long double phi_g;       /* Azimuthal angle of source (e.g. right ascension)                     */
+  long double omega_g;     /* Frequency of gravitational wave source (Hz) in observer's rest frame */   
   long double phi_polar_g; /* Polarization angle of the gravitational wave source   w.r.t. the unit vector along te direction of increasing elevation*/
   long double phase_g;
   long double aplus_g;
@@ -66,7 +67,8 @@ typedef struct gwSrc
   long double theta_bin;  /* orbital phase, assume time stationary */
   //long double chirp_mass; /* chirp mass of binary = (m_1+m_2)*[(m_1*m_2)/(m_1+m_2)^2]^(3/5) */
   long double inc_bin;    /* orbital inclination angle w.r.t. plane of the sky*/
-  
+  long double dist_bin;   /* proper distance to the binary system */
+
   /* Derived parameters                                                             */
   long double h[3][3];     /* The gravitational wave strain                         */
   long double h_im[3][3];  /* same as h but with im amplitudes. Ideally would have h = h + i*h_im */
@@ -221,7 +223,7 @@ void GWbackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double 
 /* Calculate the pulsar timing residual induced by the gravitational wave */
 long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long double dist)
 {
-  long double cosMu;  		      
+  long double cosMu;
   long double psrVal1,psrVal2,psrVal1_im;
   long double earthVal1;
   long double tempVal[3];

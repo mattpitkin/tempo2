@@ -259,7 +259,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   for (i=0;i<n;i++)
     {
       for (j=0;j<nf;j++)
-	  designMatrix[i][j] = uout[i][j];
+	designMatrix[i][j] = uout[i][j];
     }
   multMatrixVec(uinv,b,n,bout);
   for (i=0;i<n;i++) b[i] = bout[i];

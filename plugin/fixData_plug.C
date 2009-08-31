@@ -1,3 +1,28 @@
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards, David Champion
+
+/*
+*    This file is part of TEMPO2.
+*
+*    TEMPO2 is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*    TEMPO2 is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*    GNU General Public License for more details.
+*    You should have received a copy of the GNU General Public License
+*    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/*
+*    If you use TEMPO2 then please acknowledge it by citing
+*    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2,
+*    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
+*    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
+*    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
+*    timing model.
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -19,6 +44,8 @@ int nit = 1;
 long double gwamp = 0;
 long double alpha = 1;
 char plotout[20]="/xs";
+int plotoutSet = 0;
+int script = 0;
 int dayGap=1;
 
 void help() /* Display help */
@@ -35,6 +62,7 @@ void help() /* Display help */
   printf("\t-gwamp <ldouble>  amplitude of GW noise source\n");
   printf("\t-alpha <ldouble>  power spectrum of noise (1=white)\n");
   printf("\t-plotout <grdev>  pgplot device for final plot\n");
+  printf("\t-script           useful when running noninteractively - does not show any plots\n");
 }
 
 
@@ -82,9 +110,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-alpha")==0)
 	sscanf(argv[++i],"%Lf",&alpha);
       else if (strcmp(argv[i],"-plotout")==0)
+      {
+	plotoutSet = 1;
 	strcpy(plotout,argv[++i]);
+      }
       else if (strcmp(argv[i],"-daygap")==0)
 	sscanf(argv[++i],"%d",&dayGap);
+      else if (strcmp(argv[i],"-script")==0)
+      {
+	script = 1;
+      }
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -164,7 +199,10 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
   TKspectrum(ix,iy,ie,psr[0].nobs,0,0,0,0,0,2,1,1,actSpecX,actSpecY,&specN,0,0);
   printf("Complete producing spectrum\n");
 
-  cpgbeg(0,"/xs",1,1);
+  if (script == 0) 
+    cpgbeg(0,"/xs",1,1);
+  else 
+    cpgbeg(0,"/null",1,1);
   cpgask(0);
   // Obtain idealised TOAs
   for (j=0;j<5;j++)
@@ -242,7 +280,11 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
       printf("%d Complete making spectrum\n",it);
     }
   cpgend();
-  cpgbeg(0,plotout,1,2);
+ 
+  if (script == 0 || plotoutSet == 1) 
+    cpgbeg(0,plotout,1,2);
+  else
+    cpgbeg(0,"/null",1,2);
   cpgsch(1.4);
   plotHistogram(rms,nit);
   fx[0] = fx[1] = (float)measuredRMS;
@@ -353,7 +395,10 @@ void doPlugin1(pulsar *psr,char *flag)
 	    }
 	}
     }
-  cpgbeg(0,"/xs",1,1);
+  if (script == 0) 
+    cpgbeg(0,"/xs",1,1);
+  else 
+    cpgbeg(0,"/null",1,1);
   cpgsch(1.4);
   cpgask(0);
   cpgenv(minx,maxx,0,nflag,0,-1);

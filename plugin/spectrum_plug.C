@@ -36,11 +36,12 @@
 #include <cpgplot.h>
 
 using namespace std;
+char dcmFile[MAX_FILELEN];
 
 #define MAX_ID 50
 
 void drawOption(int on,float x,float y,char *str);
-void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN]);
+void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN],int white,int filter);
 void drawMenu(int specType,int xaxis,int logv,int specOut);
 void checkMenu(float mx,float my,int *change,int *xaxis,int *logv,int *specType,int *specOut);
 void identify(float mx,float my,float px[MAX_PSR_VAL][MAX_OBSN_VAL],float py[MAX_PSR_VAL][MAX_OBSN_VAL],
@@ -71,7 +72,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
-  int i,n=0;
+  int i,n=0,white=0,filter=0;
   double px[MAX_OBSN],py[MAX_OBSN],pe[MAX_OBSN];
 
   *npsr = 0;  /* For a graphical interface that only shows results for one pulsar */
@@ -81,7 +82,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   printf("Version:             1.0\n");
   printf(" --- type 'h' for help information\n");
 
-
+  strcpy(dcmFile,"NULL");
 
   /* Obtain all parameters from the command line */
   for (i=2;i<argc;i++)
@@ -92,6 +93,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  strcpy(timFile[*npsr],argv[i+2]);
 	  (*npsr)++;
 	}
+      else if (strcmp(argv[i],"-dcm")==0)
+	strcpy(dcmFile,argv[++i]);
+      else if (strcmp(argv[i],"-white")==0)
+	sscanf(argv[++i],"%d",&white);
+      else if (strcmp(argv[i],"-fil")==0)
+	filter=1;
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -102,16 +109,22 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-      if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
+      if (i==0) 
+	{
+	  if (strcmp(dcmFile,"NULL")==0)
+	    doFit(psr,*npsr,0);
+	  else
+	    doFitDCM(psr,dcmFile,*npsr,0);
+	}
       else textOutput(psr,*npsr,0,0,0,0,"");  /* Display the output */
     }
 
-  doPlugin(psr,*npsr,parFile,timFile);
+  doPlugin(psr,*npsr,parFile,timFile,white,filter);
 
   return 0;
 }
 
-void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN])
+void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN],int white,int filter)
 {
   float px[MAX_PSR_VAL][MAX_OBSN_VAL],py[MAX_PSR_VAL][MAX_OBSN_VAL];
   double resx[MAX_OBSN],resy[MAX_OBSN],rese[MAX_OBSN];
@@ -176,12 +189,80 @@ void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char
 		    n++;
 		  }
 	      }
+	    if (filter==1)
+	      {
+		double smx[MAX_OBSN],smy[MAX_OBSN],sme[MAX_OBSN],top,bot,t;
+		double wx[MAX_OBSN],wy[MAX_OBSN],we[MAX_OBSN];
+		double ix[MAX_OBSN],iy[MAX_OBSN],ie[MAX_OBSN];
+		int intp=21;
+		int s=30;
+		int n2=0,j;
+		double yd[MAX_OBSN][4],h;
+		
+		// Smooth and interpolate
+		//		    for (i=0;i<n;i++)
+		//		      printf("orig %g %g\n",resx[i],resy[i]);
+		//		    exit(1);
+		/*		    do
+				    {
+				    sme[n2]=1.0;
+				    smx[n2]=resx[0]+n2*intp;
+				    top=0.0; bot=0.0;
+				    for (i=0;i<n;i++)
+				    {
+				    t = 1.0/rese[i]/rese[i]*exp(-fabs(smx[n2]-resx[i])/s);
+				    top+=t*resy[i];
+				    bot+=t;
+				    }
+				    smy[n2]=top/bot;
+				    n2++;
+				    } while (smx[n2-1] < resx[n-1]);*/
+		for (i=0;i<n;i++)
+		  {
+		    smx[i] = resx[i];
+		    sme[i] = 1.0;
+		    top=0.0; bot=0.0;
+		    for (j=0;j<n;j++)
+		      {
+			t = 1.0/rese[j]/rese[j]*exp(-fabs(smx[i]-resx[j])/s);
+			top+=t*resy[j];
+			bot+=t;
+		      }
+		    smy[i]=top/bot;
+		    wx[i] = resx[i];
+		    we[i] = rese[i];
+		    wy[i] = resy[i]-smy[i];
+		  }
+		for (i=0;i<n;i++) printf("smx %g %g %g %g\n",smx[i],smy[i],wy[i],we[i]);
+		// Now interpolate onto a regular grid
+		TKcmonot(n,smx,smy,yd);
+		
+		n2=0;
+		do {
+		  ie[n2]=1.0;
+		  ix[n2]=smx[0]+n2*intp;		      
+		  n2++;
+		} while (ix[n2-1] < resx[n-1]);
+		TKspline_interpolate(n,smx,smy,yd,ix,iy,n2);
+		for (i=0;i<n2;i++)
+		  printf("ix %g %g\n",ix[i],iy[i]);
+		
+		TKspectrum(ix,iy,ie,n2,0,0,0,0,white,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+
+	      }
 
 	    if (specType==3)
-	      TKspectrum(resx,resy,rese,n,1,0,0,1,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+	      {
+		TKspectrum(resx,resy,rese,n,1,0,0,1,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+	      }
 	    else
-	      TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
-
+	      {
+		printf("In here with %d\n",white);
+		if (white==0)
+		  TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+		else
+		  TKspectrum(resx,resy,rese,n,1,0,0,1,white,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+	      }
 	    TKconvertFloat2(specX,specY,px[p],py[p],specN[p]);
 	    if (xaxis==1) // Convert x-axis to s^-1
 	      {
@@ -253,13 +334,13 @@ void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char
         cpgswin(minx,maxx,miny,maxy+0.1*(maxy-miny));
     //    cpgswin(minx,maxx,-35,-28);
     if (logv==0)
-      cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
+      cpgbox("BCNST1G",0.0,0,"BCNST1G",0.0,0);
     else if (logv==1)
-      cpgbox("BCNST1L",0.0,0,"BCNST1",0.0,0);
+      cpgbox("BCNST1LG",0.0,0,"BCNST1G",0.0,0);
     else if (logv==2)
-      cpgbox("BCNST1",0.0,0,"BCNST1L",0.0,0);
+      cpgbox("BCNST1G",0.0,0,"BCNST1LG",0.0,0);
     else if (logv==3)
-      cpgbox("BCNST1L",0.0,0,"BCNST1L",0.0,0);
+      cpgbox("BCNST1LG",0.0,0,"BCNST1LG",0.0,0);
     
     if (specOut==1) strcpy(ylabel,"PSD");
     else if (specOut==2) strcpy(ylabel,"Amplitude");
@@ -491,12 +572,12 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
   double storeRes[MAX_OBSN];
   float px[MAX_OBSN],py[MAX_OBSN],fy[MAX_OBSN],fx[MAX_OBSN];
   float minx,maxx,miny,maxy;
-  double tau;
+  double tau=120;
   double whiteLevel;
   double meanActualWhiteLevel,meanActual;
   double area1,area2;
   int ofac=1,nv;
-  int specType=4;
+  int specType=2;
   int specOut=3;
   int specN;
   long idum=TKsetSeed();
@@ -536,6 +617,8 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
   minx = TKfindMin_f(px,specN);
   maxx = TKfindMax_f(px,specN);
   miny = TKfindMin_f(py,specN);
+  miny = -12;
+
   maxy = TKfindMax_f(py,specN);
   cpgend();
   cpgbeg(0,"/cps",1,1);
@@ -550,12 +633,21 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
   fy[0] = miny; fy[1] = maxy+0.1*(maxy-miny);
   cpgsci(8); cpgsls(3); cpgline(2,fx,fy); cpgsls(1); cpgsci(1);
 
+  // Draw slope of -2, -4 and -6
+  fx[0] = minx; fx[1] = maxx;
+  fy[0] = maxy; fy[1] = -2*fx[1]+(fy[0]-(-2*fx[0]));
+  cpgsls(4); cpgline(2,fx,fy); cpgsls(1);
+  fy[0] = maxy; fy[1] = -4*fx[1]+(fy[0]-(-4*fx[0]));
+  cpgsls(4); cpgline(2,fx,fy); cpgsls(1);
+  fy[0] = maxy; fy[1] = -6*fx[1]+(fy[0]-(-6*fx[0]));
+  cpgsls(4); cpgline(2,fx,fy); cpgsls(1);
+
   printf("Colours\n\n");
   printf("white = power spectrum of post-fit timing residuals\n");
 
   // Interpolate to split red and white noise
   {
-    double interpX[MAX_OBSN],interpY[MAX_OBSN],interpE[MAX_OBSN],tx;
+     double interpX[MAX_OBSN],interpY[MAX_OBSN],interpE[MAX_OBSN],tx;
     double specWX[MAX_OBSN],specWY[MAX_OBSN];
     double white[MAX_OBSN];
     double w,sw;
@@ -564,7 +656,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
 
     printf("Obtaining a good model of the white noise\n");
 
-    tau = 30.0;
+    //    tau = 30.0;
     // First interpolate onto the same grid as the actual data
     for (i=0;i<psr[0].nobs;i++)
       interpX[i] = (psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
@@ -584,6 +676,8 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
 	white[j] = psr[0].obsn[j].residual-interpY[j];
 	//	printf("interp %g %g %g %g\n",interpX[j],interpY[j],(double)psr[0].obsn[j].residual,white[j]);
       }
+
+    //    exit(1);
     // Get a spectrum of this white noise
     TKspectrum(interpX,white,interpE,psr[0].nobs,0,0,0,0,0,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
     TKconvertFloat2(specWX,specWY,px,py,specWN);
@@ -591,17 +685,21 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
       {
 	px[i]=log10(px[i]);
 	py[i]=log10(py[i]);
+	printf("Have %g %g\n",px[i],py[i]);
       }
     cpgsci(2); cpgline(specWN,px,py); cpgsci(1);
     fx[0]=fx[1]=log10(1.0/tau);
     fy[0]=miny;fy[1]=maxy+0.1*(maxy-miny);
     cpgsls(4); cpgsci(2); cpgline(2,fx,fy); cpgsci(1); cpgsls(1);
 
+
     // Calculate mean actual white level
     meanActualWhiteLevel = 0.0;
     nAwhite=0;
     for (i=0;i<specWN;i++)
       {
+	//	printf("have %g %g\n",specWX[i],1.0/tau);
+
 	if (specWX[i] > 1.0/tau)
 	  {
 	    meanActualWhiteLevel+=specWY[i];
@@ -610,11 +708,11 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
       }
     meanActualWhiteLevel/=(double)nAwhite;
     area1 = meanActualWhiteLevel;
-    printf("mean measured white level = %g\n",meanActualWhiteLevel);
+    printf("mean measured white level = %g %d\n",meanActualWhiteLevel,nAwhite);
   }
   
   // Obtain white level
-  {
+  /*  {
     long double sat0[MAX_OBSN];
     double avSpecY[MAX_OBSN];
     int count;
@@ -631,9 +729,9 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
 	  psr[0].param[i].nLinkTo = 0;
 	  psr[0].param[i].nLinkFrom = 0;
 	}
-	readParfile(psr,parFile,timFile,1); /* Load the parameters       */
-	formBatsAll(psr,1);         /* Form the barycentric arrival times */
-	formResiduals(psr,1,0);    /* Form the residuals                 */
+	readParfile(psr,parFile,timFile,1); 
+	formBatsAll(psr,1);         
+	formResiduals(psr,1,0);   
 	for (i=0;i<psr[0].nobs;i++)
 	  psr[0].obsn[i].sat -= (long double)psr[0].obsn[i].residual/86400.0L;
       }
@@ -651,12 +749,12 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
 	  psr[0].param[i].nLinkTo = 0;
 	  psr[0].param[i].nLinkFrom = 0;
 	}
-	readParfile(psr,parFile,timFile,1); /* Load the parameters       */
-	formBatsAll(psr,1);                 /* Form the barycentric arrival times */
-	formResiduals(psr,1,0);             /* Form the residuals                 */
-	doFit(psr,1,0);                     /* Do the fitting                     */
-	formBatsAll(psr,1);                 /* Form the barycentric arrival times */
-	formResiduals(psr,1,0);             /* Form the residuals                 */
+	readParfile(psr,parFile,timFile,1); 
+	formBatsAll(psr,1);                 
+	formResiduals(psr,1,0);             
+	doFit(psr,1,0);                     
+	formBatsAll(psr,1);                 
+	formResiduals(psr,1,0);             
 	n=0;
 	for (i=0;i<psr[0].nobs;i++)
 	  {
@@ -709,7 +807,64 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
     for (i=0;i<specN;i++) fy[i] = log10(pow(10,py[i])*0.025);
     cpgline(specN,px,fy);
     cpgsls(1);
-  }
+  }*/
+
+  // Now process the red component
+
+  // Resample onto daily grid
+  double start = (double)(psr[0].obsn[0].sat-psr[0].param[param_pepoch].val[0]);
+  int interpN=(int)((psr[0].obsn[psr[0].nobs-1].sat-psr[0].obsn[0].sat)+0.5);
+    double interpX[MAX_OBSN],interpY[MAX_OBSN],interpE[MAX_OBSN],tx;
+    double specWX[MAX_OBSN],specWY[MAX_OBSN];
+    double white[MAX_OBSN];
+    double w,sw;
+    int specWN;
+    int nAwhite;
+
+  for (i=0;i<interpN;i++)
+    interpX[i] = start+i;
+  for (j=0;j<interpN;j++)
+    {
+      sw = 0.0;
+      interpY[j] = 0.0;
+      for (i=0;i<psr[0].nobs;i++)
+	{
+	  tx = (double)(psr[0].obsn[i].sat - psr[0].param[param_pepoch].val[0]);
+	  w = 1.0/pow(psr[0].obsn[i].toaErr*1.0e-6,2)*exp(-fabs(tx-interpX[j])/tau);
+	  sw += w;
+	  interpY[j] += psr[0].obsn[i].residual*w;
+	}
+      interpY[j]/=sw;
+      interpE[j] = 0.0;
+      //      printf("interp %g %g %g %g\n",interpX[j],interpY[j]);
+    }
+    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,0,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
+    TKconvertFloat2(specWX,specWY,px,py,specWN);
+    for (i=0;i<specWN;i++)
+      {
+	px[i]=log10(px[i]);
+	py[i]=log10(py[i]);
+      }
+    cpgsci(3); cpgline(specWN,px,py); cpgsci(1);
+
+    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,1,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
+    TKconvertFloat2(specWX,specWY,px,py,specWN);
+    for (i=0;i<specWN;i++)
+      {
+	px[i]=log10(px[i]);
+	py[i]=log10(py[i]);
+      }
+    cpgsci(4); cpgline(specWN,px,py); cpgsci(1);
+
+    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,2,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
+    TKconvertFloat2(specWX,specWY,px,py,specWN);
+    for (i=0;i<specWN;i++)
+      {
+	px[i]=log10(px[i]);
+	py[i]=log10(py[i]);
+      }
+        cpgsci(5); cpgline(specWN,px,py); cpgsci(1);
+  
 
   cpgend();
   exit(1);

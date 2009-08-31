@@ -164,7 +164,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
       formBatsAll(psr,npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,npsr,0);    /* Form the residuals                 */
       for (p=0;p<npsr;p++)
-	{	      
+	{
 	  for (i=0;i<psr[p].nobs;i++)
 	    psr[p].obsn[i].sat -= (long double)psr[p].obsn[i].residual/86400.0L;
 	}
@@ -248,7 +248,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
 		gw.theta_g     = acos((TKranDev(&seed)-0.5)*2); //puts grav wave on sky.
 		gw.phi_g       = TKranDev(&seed)*2*M_PI;   
 		gw.phase_g     = TKranDev(&seed)*2*M_PI; 
-		
+		//!!!!!!temporary marker for finding this location in file		
 		gw.omega_g     = 2.0*M_PI*gwfreq; //((gwfreq - bin_width * (TKranDev(&seed) - 0.5))/86400.0); //somewhere in frequency bin
 		
 		gw.phi_bin = TKranDev(&seed)*2*M_PI;

@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -74,6 +74,10 @@ int main(int argc, char *argv[])
   FILE *alias;
   char **commandLine;
   clock_t startClock,endClock;
+
+  printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
+  printf("This is free software, and you are welcome to redistribute it\n");
+  printf("under conditions of GPL license.\n\n");
 
   startClock = clock();
 
@@ -403,9 +407,12 @@ int main(int argc, char *argv[])
 	{
 	  if (debugFlag==1) printf("iteration %d\n",iteration);
 	  if (debugFlag==1) printf("calling formBatsAll\n");
+	  printf("Formning bats\n");
 	  formBatsAll(psr,npsr);                /* Form Barycentric arrival times */
 	  if (debugFlag==1) printf("calling formResiduals\n");
+	  printf("Formning resids\n");
 	  formResiduals(psr,npsr,iteration);       /* Form residuals */
+	  printf("Done resid\n");
 	  if (listparms==1 && iteration==0)displayParameters(13,timFile,parFile,psr,npsr); /* List out all the parameters */  
 	  if (iteration==0)          /* Only fit to pre-fit residuals */
 	    {
@@ -415,7 +422,7 @@ int main(int argc, char *argv[])
 		doFit(psr,npsr,writeModel); /* Fit to the residuals to obtain updated parameters */
 	      else
 		doFitDCM(psr,dcmFile,npsr,writeModel);
-
+	      printf("Complete return\n");
 	      /* doFitGlobal(psr,npsr,&globalParameter,nGlobal,writeModel);*/ /* Fit to the residuals to obtain updated parameters  */
 	      if (debugFlag==1) printf("completed doFit\n");
 	    }
@@ -447,6 +454,8 @@ int main(int argc, char *argv[])
 	    }
 	  psr[0].noWarnings=2;
 	  if (onlypre==1) iteration=2;
+		textOutput(psr,npsr,globalParameter,nGlobal,outRes,newpar,"new.par"); /* Output results to the screen */
+	  printf("Next iteration\n");
 	}
     }
   endClock = clock();

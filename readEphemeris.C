@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -67,6 +67,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
     {
       /* Must convert MJD to JD */
       /*      printf("Ephemeris reading = %s\n",psr[p].JPL_EPHEMERIS); */
+      //      printf("Ephemeris being used = %s\n",psr[p].JPL_EPHEMERIS);
       ephem = jpl_init_ephemeris(psr[p].JPL_EPHEMERIS, nams, vals);
       
       if( !ephem)

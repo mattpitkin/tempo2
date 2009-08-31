@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include "tempo2.h"
 #include "T2toolkit.h"
 #include "TKfit.h"
 

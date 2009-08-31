@@ -46,7 +46,8 @@ char dcmFile[MAX_FILELEN];
 
 void overPlotN(int overN,float overX[], float overY[],float overYe[]);
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
-	    char timFile[][MAX_FILELEN],float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile);
+	    char timFile[][MAX_FILELEN],float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile,
+            int showChisq);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
 	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log);
 void drawAxisSel(float x,float y,char *str,int sel1,int sel2);
@@ -73,7 +74,7 @@ void drawMenu(pulsar *psr,float plotx1,float plotx2,float ploty1,float ploty2,in
 void drawMenu3(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot);
 void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat );
 void slaCalyd ( int iy, int im, int id, int *ny, int *nd, int *j );
-void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot,int jumpOffset);
+void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot,int jumpOffset,int iFlagColour, int nFlags);
 void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX1,int setZoomX2,
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,longdouble centreEpoch,
 	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics, char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset);
@@ -93,6 +94,7 @@ double FITWAVES_omega;
 int    FITWAVES_n;
 int    FITWAVES_harmonicStep;
 double FITWAVES_par[1000];
+char flagStore[100][100];
 
 void help() /* Display help */
 {
@@ -235,6 +237,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int   publish=0;
   int   menu=3;
   char  setupFile[100]="";
+  //display chisq?
+  int showChisq = 0;
 
   *npsr = 1;  /* This graphical interface will only show results for one pulsar */
 
@@ -299,6 +303,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      gotTim=1;
 	    }
 	}
+      else if (strcmp(argv[i],"-showchisq") == 0)
+      {
+	showChisq = 1;
+      }
       else if (strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0){
 	printf("\n TEMPO2 plk plugin\n");
 	printf("===================\n");
@@ -355,7 +363,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    textOutput(psr,*npsr,0,0,0,1,newParFile);
   if (debugFlag==1) printf("plk: calling doPlot\n");
   doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,locky1,locky2,xplot,yplot,
-	 publish,argc,argv,menu,setupFile);  /* Do plot */
+	 publish,argc,argv,menu,setupFile,showChisq);  /* Do plot */
   return 0;
 }  
 
@@ -421,7 +429,7 @@ void callFit(pulsar *psr,int npsr)
 
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float locky1,float locky2,int xplot,int yplot,
-	    int publish,int argc,char *argv[],int menu,char *setupFile)
+	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq)
 {
   int i,fitFlag=1,exitFlag=0,scale1=0,scale2=psr[0].nobs,count,ncount,j,k;
   longdouble centreEpoch;
@@ -497,7 +505,6 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   float *px,*py,*x,*y,*yerr1,*yerr2,*x2,*y2,*yerr1_2,*yerr2_2,*freq;
   float *overX,*overY,*overYe;
   int flagN=0;
-  char flagStore[100][100];
 
   for (i=0;i<100;i++)
     flagCol[i]= 1;
@@ -721,7 +728,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		    
 		    cpgsvp(0.0,1.0,0.0,0.2);
 		    cpgswin(0,1,0,1);
-		    drawMenu3_2(psr,plotx1,plotx2,ploty1,ploty2,menu,xplot,yplot,jumpOffset);
+		    drawMenu3_2(psr,plotx1,plotx2,ploty1,ploty2,menu,xplot,yplot,jumpOffset,iFlagColour,flagN);
 		    
 		    cpgsvp(0.3,0.9,0.3,0.8);
 		    cpgswin(plotx1,plotx2,ploty1,ploty2);
@@ -740,6 +747,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	}
 	if (yplot==2) sprintf(title,"%s (rms = %.3f \\gms) %s",psr[0].name,psr[0].rmsPost,fitType);
 	else sprintf(title,"%s (rms = %.3f \\gms) %s",psr[0].name,psr[0].rmsPre,fitType);
+	if (showChisq == 1)
+	  sprintf(title,"%s chisq=%.2f",title,psr[0].fitChisq/psr[0].fitNfree);
 	cpglab(xstr,ystr,title);
         if (publish==0)
 	  {
@@ -784,7 +793,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		py[1] = ploty2;
 		if (psr[0].phaseJumpDir[i]==0)
 		  cpgsci(8);
-		else
+		else 
 		  cpgsci(7);
 		cpgline(2,px,py);
 		sprintf(tstr,"%+d",psr[0].phaseJumpDir[i]);
@@ -1434,7 +1443,16 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    }
 	  else
 	    {
-	      for (i=0;i<count;i++)
+	      for (i=0;i<psr[0].nobs;i++)
+		{
+	if (psr[0].obsn[i].deleted == 0 &&
+		    (psr[0].param[param_start].paramSet[0]!=1 || psr[0].param[param_start].fitFlag[0]!=1 ||
+		     psr[0].param[param_start].val[0] < psr[0].obsn[i].bat) &&
+		    (psr[0].param[param_finish].paramSet[0]!=1 || psr[0].param[param_finish].fitFlag[0]!=1 ||
+		     psr[0].param[param_finish].val[0] > psr[0].obsn[i].bat))
+		    fprintf(outfile,"%12.5f %13.6g %12.5f\n",(double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[i].residual,(double)psr[0].obsn[i].toaErr);
+		}
+	      /*	      for (i=0;i<count;i++)
 		{
 		  if ((setZoomX1==0 || x[i]>zoomX1) &&
 		      (setZoomX2==0 || x[i]<zoomX2) &&
@@ -1449,8 +1467,6 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			}
 		      if (used==0)
 			{
-			  //			  fprintf(outfile,"%12.5f %13.6f %12.5f",x[i],y[i]*1000.0,
-			  //				  psr[0].obsn[id[i]].toaErr/1000.0); 
 			  fprintf(outfile,"%12.5f %13.6g %12.5f",x[i],y[i],
 				  psr[0].obsn[id[i]].toaErr); 
 
@@ -1463,8 +1479,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		      
 		      fprintf(outfile,"\n");
 		 }
-		} 
-	    }
+		 }*/ 
+		}
 	   fclose(outfile); 
 
 	}
@@ -2605,11 +2621,11 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
 	      c=0;
 	    }
 	}
-	  if (c==1)
+	  if (c==1 && mouseX < 10)
 	    {
 	      xj = (int)(mouseX/2);
 	      yj = (int)(mouseY-2);
-	      if (psr[0].fitJump[xj+(yj*5)+1]==1) 
+	      if (psr[0].fitJump[xj+(yj*5)+1+(*jumpOffset)]==1) 
 		{
 		  psr[0].fitJump[xj+(yj*5)+1+(*jumpOffset)]=0;
 		  psr[0].jumpValErr[xj+(yj*5)+1+(*jumpOffset)] = 0.0;
@@ -2806,7 +2822,7 @@ void drawMenu3(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,
   
 }
 
-void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot,int jumpOffset)
+void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot,int jumpOffset, int iFlagColour, int nFlags)
 {
   float x1,y1,x2,y2,xscale,yscale,x3,x4,y3,y4;
   float x0,y0,xscale2,yscale2;
@@ -2814,7 +2830,7 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
   char key;
   char jumps[100],dummy[100];
   float xpos,ypos;
-  int i;
+  int i,j;
 
   cpgrect(0,0.08,1.0,0.90-0.03);   cpgsci(0); cpgtext(0,0.9,"Quit"); cpgsci(1);
   cpgrect(0.1,0.18,1.0,0.90-0.03); cpgsci(0); cpgtext(0.1,0.90,"Clear"); cpgsci(1);
@@ -2832,6 +2848,22 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
       for (i=jumpOffset+1;i<=psr[0].nJumps;i++)
 	{
 	  sscanf(psr[0].jumpStr[i],"%s %s",dummy,jumps);
+	  if (iFlagColour == 1)
+	  {
+	    for (j=0;j<nFlags; j++)
+	      if (strcmp(jumps,flagStore[j])==0)
+	      {
+		cpgsci(j+1);
+		if (j>=14)
+		  cpgsci(j-12);
+		break;
+	      }
+	    cpgmove(xpos,ypos-0.03);
+	    cpgdraw(xpos+0.18,ypos-0.03);
+	    cpgdraw(xpos+0.18,ypos+0.15);
+	    cpgdraw(xpos,ypos+0.15);
+	    cpgdraw(xpos,ypos-0.03);
+	  }
 	  if (psr[0].fitJump[i]==1) cpgsci(3);
 	  else cpgsci(2);
 
@@ -2844,13 +2876,27 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
 	    }
 	}
       cpgsci(1);
+      //if ctrl-i was pressed, add the zeroth backend (the one we're using as reference for jumps)
+      //WARNING: if the psr[0].nJumps happens to be multiple of 15, this won't be displayed (FIX IT!)
+      if (iFlagColour == 1 && psr[0].nJumps - jumpOffset < 15) {
+        cpgtext(xpos,ypos,flagStore[0]);
+        cpgmove(xpos,ypos-0.03);
+        cpgdraw(xpos+0.18,ypos-0.03);
+        cpgdraw(xpos+0.18,ypos+0.15);
+        cpgdraw(xpos,ypos+0.15);
+        cpgdraw(xpos,ypos-0.03);
+      } 
     }
   if (psr[0].nJumps > 15)
     {
-      xpos = 0.98; ypos = 0.45;
-      cpgpt(1,&xpos,&ypos,30);
-      xpos = 0.98; ypos = 0.15;
-      cpgpt(1,&xpos,&ypos,31);
+      if (jumpOffset >= 5) {
+	xpos = 0.985; ypos = 0.45;
+	cpgpt(1,&xpos,&ypos,30);
+      }
+      if (psr[0].nJumps - jumpOffset > 15) {
+	xpos = 0.985; ypos = 0.15;
+	cpgpt(1,&xpos,&ypos,31);
+      }
     }
 }
 

@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -535,7 +535,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     }       
   else if (strcasecmp(str,"OM")==0)
     readValue(psr,str,fin,&(psr->param[param_om]),0);
-  else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') && 
+  /*  else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') && 
 	   (str[1]=='M' || str[1]=='m'))
     {
       int val;
@@ -544,7 +544,17 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	  if (val-1<psr->param[param_om].aSize)
 	    readValue(psr,str,fin,&(psr->param[param_om]),val);
 	}
-    }       
+	}*/       
+  else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') && 
+	   (str[1]=='M' || str[1]=='m'))
+    {
+      int val;
+      if (sscanf(str+3,"%d",&val)==1)
+	{
+	  if (val-1<psr->param[param_om].aSize)
+	    readValue(psr,str,fin,&(psr->param[param_om]),val-1);
+	}
+    }
   else if (strcasecmp(str,"PB")==0)
     {
       readValue(psr,str,fin,&(psr->param[param_pb]),0);

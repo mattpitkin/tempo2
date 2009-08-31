@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -23,6 +23,7 @@
 *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
 *    timing model.
 */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,7 +70,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	exit(1);
       }
       entry(psr,npsr,writeModel);
-      
+      printf("Returning\n");
       
       return;
     }
@@ -179,65 +180,94 @@ void doFitDCM(pulsar *psr,char *dcmFile,int npsr,int writeModel)
   double **uinv;
   double whiteres[MAX_OBSN],sum;
   FILE *fin,*fout;
+  char fname[100],temp[100];
   int p,npol,okay,ip[MAX_OBSN];
   double *x,*y,*sig,*val,chisq;
   double *error;
   double tol = 1.0e-40;  /* Tolerence for singular value decomposition routine */
   double newStart=-1.0,newFinish=-1.0;
+  long double meanRes=0.0;
 
-  if (!(fin = fopen(dcmFile,"r")))
-    {
-      printf("Unable to open inverse cholesky matrix: %s\n",dcmFile);
-      exit(1);
-    }
-  
-  uinv = (double **)malloc(sizeof(double *)*psr[0].nobs);
-  for (i=0;i<psr[0].nobs;i++)
-    uinv[i] = (double *)malloc(sizeof(double)*psr[0].nobs);
-
-  i=0;
-  j=0;
-  while (!feof(fin))
-    {
-      if (fscanf(fin,"%lf",&uinv[i][j])==1)
-	{
-	  i++;
-	  if (i==psr[0].nobs)
-	    {
-	      i=0;
-	      j++;
-	      if (j==psr[0].nobs+1)
-		{
-		  printf("The matrix file is the wrong size - too large\n");
-		  printf("N_obs = %d\n",psr[0].nobs);
-		  exit(1);
-		}
-	    }
-	}      
-    }
-  if (j!=psr[0].nobs && i!=0)
-    {
-      printf("The matrix file is the wrong size - too short\n");
-      printf("j = %d, i = %d, nobs = %d\n",j,i,psr[0].nobs);
-      exit(1);
-    }
-  fout = fopen("whitedata.dat","w");
-  for (i=0;i<psr[0].nobs;i++)
-    {
-      sum=0.0;
-      for (j=0;j<psr[0].nobs;j++)
-	sum+=uinv[j][i]*psr[0].obsn[j].residual;
-      whiteres[i] = sum;
-      fprintf(fout,"%g %g %g\n",(double)psr[0].obsn[i].sat,
-	      (double)psr[0].obsn[i].residual,whiteres[i]);
-    }
-  fclose(fout);
-  
+  printf("WARNING: Switching weighting off for the fit\n");
+  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
   for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
     {
+      psr[p].fitMode = 0;
+      for (i=0;i<psr[p].nobs;i++)
+	meanRes+=(long double)psr[p].obsn[i].residual;
+      meanRes/=(long double)psr[p].nobs;
+      for (i=0;i<psr[p].nobs;i++)
+	psr[p].obsn[i].residual-=meanRes;
+      printf("Outputing dcm file\n");
+      sprintf(fname,"dcm_original_%d.dat",p+1);
+      fout = fopen(fname,"w");
+      for (i=0;i<psr[p].nobs;i++)
+	fprintf(fout,"%g %g %g\n",(double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]),(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr);
+      fclose(fout);
+      printf("Done outputing dcm file\n");
+      strcpy(fname,dcmFile);
+      if (npsr>1)
+	{
+	  sprintf(temp,"%s_%d",fname,p+1);
+	  strcpy(fname,temp);
+	}
+      printf("Opening >%s<\n",fname);
+      if (!(fin = fopen(fname,"r")))
+	{
+	  printf("Unable to open inverse cholesky matrix: %s\n",fname);
+	  exit(1);
+	}
+      
+      uinv = (double **)malloc(sizeof(double *)*psr[p].nobs);
+      for (i=0;i<psr[p].nobs;i++)
+	uinv[i] = (double *)malloc(sizeof(double)*psr[p].nobs);
+      
+      i=0;
+      j=0;
+      while (!feof(fin))
+	{
+	  if (fscanf(fin,"%lf",&uinv[j][i])==1)
+	    {
+	      i++;
+	      if (i==psr[p].nobs)
+		{
+		  i=0;
+		  j++;
+		  if (j==psr[p].nobs+1)
+		    {
+		      printf("The matrix file is the wrong size - too large\n");
+		      printf("N_obs = %d\n",psr[p].nobs);
+		      exit(1);
+		    }
+		}
+	    }      
+	}
+      if (j!=psr[p].nobs && i!=0)
+	{
+	  printf("The matrix file is the wrong size - too short\n");
+	  printf("j = %d, i = %d, nobs = %d\n",j,i,psr[p].nobs);
+	  exit(1);
+	}
+      sprintf(fname,"whitedata_%d.dat",p+1);
+      fout = fopen(fname,"w");
+      for (i=0;i<psr[p].nobs;i++)
+	{
+	  sum=0.0;
+	  for (j=0;j<psr[p].nobs;j++)
+	    sum+=uinv[j][i]*psr[p].obsn[j].residual;
+	  printf("Have: %d %g %g %g\n",i,sum,uinv[0][i],(double)psr[p].obsn[i].residual);
+	  whiteres[i] = sum;
+	  //            fprintf(fout,"%g %g %g\n",(double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[i].residual,(double)psr[0].obsn[i].toaErr);
+	  fprintf(fout,"%g %g %g %g\n",(double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]),
+		  (double)psr[p].obsn[i].residual,whiteres[i],(double)psr[p].obsn[i].toaErr);
+	}
+      fclose(fout);
+      
+      //  for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
+      //    {
       //      strcpy(psr[p].rajStrPost,psr[p].rajStrPre);
       //      strcpy(psr[p].decjStrPost,psr[p].decjStrPre);
-
+      
       strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
       /* How many parameters are we fitting for */
@@ -299,6 +329,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,int npsr,int writeModel)
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip,uinv);
 	  //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
 	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
+	  printf("chisq = %g\n",chisq);
 	  psr[p].fitChisq = chisq; 
 	  psr[p].fitNfree = psr[p].nFit-npol;
 	  
@@ -327,14 +358,14 @@ void doFitDCM(pulsar *psr,char *dcmFile,int npsr,int writeModel)
 	  printf("Calculating uncertainties on fitted parameters using a Monte-Carlo bootstrap method (%d)\n",psr[p].bootStrap);
 	  bootstrap(psr,p,npsr);
 	}
-    }
+    
 
 
 
-  for (i=0;i<psr[0].nobs;i++)
+  for (i=0;i<psr[p].nobs;i++)
     free(uinv[i]);
   free(uinv);
-  printf("TESTING - DO NOT USE\n");
+    }
 }
 
 
