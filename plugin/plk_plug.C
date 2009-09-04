@@ -486,6 +486,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   int   bw=-1;
   int   out;
   int jumpOffset=0;
+  int okay;
 
   int  freqColourNum=0;
   float minFreqCol[100], maxFreqCol[100];
@@ -639,11 +640,18 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     count=0;
     for (i=0;i<psr[0].nobs;i++)
       {
-	if (psr[0].obsn[i].deleted == 0 &&
-	    (psr[0].param[param_start].paramSet[0]!=1 || psr[0].param[param_start].fitFlag[0]!=1 ||
-	      psr[0].param[param_start].val[0] < psr[0].obsn[i].bat) &&
-	    (psr[0].param[param_finish].paramSet[0]!=1 || psr[0].param[param_finish].fitFlag[0]!=1 ||
-	     psr[0].param[param_finish].val[0] > psr[0].obsn[i].bat))
+	okay=1;
+
+	if (psr[0].obsn[i].deleted!=0)
+	  okay=0;
+	if (psr[0].param[param_start].paramSet[0]==1 && psr[0].param[param_start].fitFlag[0]==1 &&
+	    (psr[0].param[param_start].val[0] > psr[0].obsn[i].sat))
+	  okay=0;
+	if (psr[0].param[param_finish].paramSet[0]==1 && psr[0].param[param_finish].fitFlag[0]==1 &&
+	    psr[0].param[param_finish].val[0] < psr[0].obsn[i].sat)
+		okay=0;
+
+	if (okay==1)
 	  { 
 	    freq[count]=(float)(psr[0].obsn[i].freq);
 	    id[count] = i;
