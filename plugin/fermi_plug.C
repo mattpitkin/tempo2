@@ -20,6 +20,11 @@ void clock_corrections_fermi(pulsar *psr,int npsr);
 void ephemeris_routines_fermi(pulsar *psr,int npsr);
 void formBatsAll_fermi(pulsar *psr,int npsr);
 
+void ephemeris_routines(pulsar *psr,int npsr);
+void clock_corrections(pulsar *psr,int npsr);
+void extra_delays(pulsar *psr,int npsr);
+void formBatsAll(pulsar *psr,int npsr);
+
 int min(int a, int b)
 {
 	if (a <= b)	return a;
@@ -63,8 +68,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             3 July 2009\n");
-	printf("Version:             4.1\n");
+	printf("Updated:             7 September 2009\n");
+	printf("Version:             4.2\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -82,8 +87,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	char FT2[MAX_FILELEN];
 	char output[MAX_FILELEN];
 	char output_pos_file[MAX_FILELEN];
-        char error_buffer[128];
-        char history[128];
+    char error_buffer[128];
+    char history[128];
 	int  par_file      = 0;
 	int  FT1_file	   = 0;
 	int  FT2_file	   = 0;
@@ -92,9 +97,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	int  output_file   = 0;
 	int  output_pos    = 0;
 	int  phase_replace = 0;
-
-	longdouble lasttime;
-	double lastpos[3];
 
 	double intpart;
 
@@ -119,7 +121,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	int max_rows = 10000;
 
 	/* ------------------------------------------------- //
-	// Satellite position definitions
+	// Time and satellite position definitions
 	// ------------------------------------------------- */
 
 	double time_MET_TT[max_rows], time_MJD_TT;
@@ -132,8 +134,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	double fract = 0.;
 	double length1, length2, length12, intlength;
-    	double vector12[3], vectprod_out[3];
+    double vector12[3], vectprod_out[3];
 	double inttheta, factor_cos, factor_sin;
+
+	longdouble lasttime, tzrmjd_bary;
+	double lastpos[3];
 
 	/* ------------------------------------------------- //
 	// cpgplot definitions
@@ -147,7 +152,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	// ------------------------------------------------- */
 
 	psr[0].correctTroposphere = 0;
-
 
 	/* ------------------------------------------------- //
 	// Command-line arguments
@@ -248,6 +252,39 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	if (output_pos)
 	{
 		output_posf = fopen(output_pos_file,"w+");
+	}
+	
+	/* ------------------------------------------------- //
+	// Barycentric TZRMJD
+	// ------------------------------------------------- */
+	
+	// A temporary file is created. It is first used to get the barycentered TZR
+	temp_tim = fopen(timFile[0],"w+");
+	fprintf(temp_tim,"FORMAT 1\n");
+	fprintf(temp_tim," fermi 0.0 %.12lf 0.00000 BAT\n",1.);
+	fclose(temp_tim);
+
+	// Load the arrival times
+	readParfile(psr,parFile,timFile,*npsr); 
+	readTimfile(psr,timFile,*npsr);
+	
+	if (psr->tzrsite[0] == '@')
+	{
+		tzrmjd_bary = psr->param[param_tzrmjd].val[0];
+	}
+	else
+	{
+		psr->obsn[0].sat = psr->param[param_tzrmjd].val[0];
+		psr->obsn[0].freq = psr->param[param_tzrfrq].val[0];
+		strcpy(psr->obsn[0].telID, psr->tzrsite); 
+		psr->obsn[0].deleted = 0;
+		psr->obsn[0].nFlags = 0;
+		psr->obsn[0].delayCorr = 1;
+		psr->obsn[0].clockCorr = 1;
+		
+		// Form barycentric TZR
+		formBatsAll(psr,*npsr);
+		tzrmjd_bary = psr->obsn[0].bat;
 	}
 
 	/* ------------------------------------------------- //
@@ -527,25 +564,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		/* ------------------------------------------------- //
 		// Stick in a fake obs to get the reference phase
 		// ------------------------------------------------- */
-		if (psr->tzrsite[0] == '@')
-		{
-			psr->obsn[0].sat = psr->param[param_tzrmjd].val[0];
-			psr->obsn[0].freq = psr->param[param_tzrfrq].val[0];
-			psr->obsn[0].deleted = 0;
-			psr->obsn[0].nFlags = 0;
-			psr->obsn[0].delayCorr = 0;
-			psr->obsn[0].clockCorr = 0;
-		}
-		else
-		{
-			psr->obsn[0].sat = psr->param[param_tzrmjd].val[0];
-			psr->obsn[0].freq = psr->param[param_tzrfrq].val[0];
-			strcpy(psr->obsn[0].telID, psr->tzrsite); 
-			psr->obsn[0].deleted = 0;
-			psr->obsn[0].nFlags = 0;
-			psr->obsn[0].delayCorr = 1;
-			psr->obsn[0].clockCorr = 1;
-		}
+		psr->obsn[0].sat = tzrmjd_bary;
+		psr->obsn[0].freq = 0.;
+		psr->obsn[0].deleted = 0;
+		psr->obsn[0].nFlags = 0;
+		psr->obsn[0].delayCorr = 0;
+		psr->obsn[0].clockCorr = 0;
 		
 		// ------------------------------------------------- //
 		// Form barycentric arrival times - step 1
@@ -647,29 +671,29 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		}
 	}
         
-        // ------------------------------------------------- //
+    // ------------------------------------------------- //
 	// Add a bit of history to the header
 	// ------------------------------------------------- //
-        if (phase_replace)
-        {
-                sprintf(history,"Pulse phases calculated with the TEMPO2 Fermi plugin using ephemeris %s",parFile[0]);
-                
-                if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
-                {
-                        status = 0;
-                        fits_movabs_hdu(ft1,2,NULL,&status);
-                        fits_write_history(ft1,history,&status);
-                        
-                        if (status != 0)
-                        {
-                                fits_get_errstatus(status,error_buffer);
-                                printf( "fits_insert_col: %s\n", error_buffer);
-                                exit(-1);
-                        }
-                }
-                
-                fits_close_file(ft1, &status);
-        }
+	if (phase_replace)
+	{
+	        sprintf(history,"Pulse phases calculated with the TEMPO2 Fermi plugin using ephemeris %s",parFile[0]);
+	        
+	        if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
+	        {
+	                status = 0;
+	                fits_movabs_hdu(ft1,2,NULL,&status);
+	                fits_write_history(ft1,history,&status);
+	                
+	                if (status != 0)
+	                {
+	                        fits_get_errstatus(status,error_buffer);
+	                        printf( "fits_insert_col: %s\n", error_buffer);
+	                        exit(-1);
+	                }
+	        }
+	        
+	        fits_close_file(ft1, &status);
+	}
 
 	if (output_file) fclose(outputf);
 	if (output_pos)  fclose(output_posf);
@@ -762,38 +786,72 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 void clock_corrections_fermi(pulsar *psr,int npsr)
 {
-//	toa2utc(psr,npsr);                      // UTC(Observatory) -> UTC(NIST) 
-//	tai2ut1(psr,npsr);                      // TAI -> UT1			 
-        tt2tb(psr,npsr);                        // Rough estimate of TT-TB (+-2.2 microsec) 
+	// toa2utc(psr,npsr);                      // UTC(Observatory) -> UTC(NIST) 
+	// tai2ut1(psr,npsr);                      // TAI -> UT1			 
+	tt2tb(psr,npsr);                        // Rough estimate of TT-TB (+-2.2 microsec) 
 }
 
 void ephemeris_routines_fermi(pulsar *psr,int npsr)
 {
-        vectorPulsar(psr,npsr);                 // Form a vector pointing at the pulsar 
-        readEphemeris(psr,npsr,0);              // Read the ephemeris 
-//	get_obsCoord(psr,npsr);                 // Get Coordinate of observatory relative to Earth's centre 
-        tt2tb(psr,npsr);                        // Observatory/time-dependent part of TT-TB 
-        readEphemeris(psr,npsr,0);              // Re-evaluate ephemeris with correct TB 
+	vectorPulsar(psr,npsr);                 // Form a vector pointing at the pulsar 
+	readEphemeris(psr,npsr,0);              // Read the ephemeris 
+	// get_obsCoord(psr,npsr);                 // Get Coordinate of observatory relative to Earth's centre 
+	tt2tb(psr,npsr);                        // Observatory/time-dependent part of TT-TB 
+	readEphemeris(psr,npsr,0);              // Re-evaluate ephemeris with correct TB 
 }
 
 void extra_delays_fermi(pulsar *psr,int npsr)
 {
-        calculate_bclt(psr,npsr);               // Calculate bclt
+	calculate_bclt(psr,npsr);               // Calculate bclt
 }
 
 void formBatsAll_fermi(pulsar *psr,int npsr)
 {
-        clock_corrections_fermi(psr,npsr);            	// Clock corrections  ... 
-
-//	printf("Reading ephemeris routines...\n");
-        ephemeris_routines_fermi(psr,npsr);           	// Ephemeris routines ... 
-
-//	printf("Reading extra delays...\n");
-        extra_delays_fermi(psr,npsr);                 	// Other time delays  ... 
-
-//	printf("Forming barycentric arrival times...\n");
-        formBats(psr,npsr);                     	// Form Barycentric arrival times 
-
-//	printf("Evaluating secular motion...\n");
+	clock_corrections_fermi(psr,npsr);            	// Clock corrections  ... 
+	
+	//	printf("Reading ephemeris routines...\n");
+	ephemeris_routines_fermi(psr,npsr);           	// Ephemeris routines ... 
+	
+	//	printf("Reading extra delays...\n");
+	extra_delays_fermi(psr,npsr);                 	// Other time delays  ... 
+	
+	//	printf("Forming barycentric arrival times...\n");
+	formBats(psr,npsr);                     	// Form Barycentric arrival times 
+	
+	//	printf("Evaluating secular motion...\n");
 	secularMotion(psr,npsr);
+}
+
+//
+
+void extra_delays(pulsar *psr,int npsr)
+{  
+	calculate_bclt(psr,npsr);
+}
+
+void clock_corrections(pulsar *psr,int npsr)
+{
+	toa2utc(psr,npsr);        	/* 1. UTC(Observatory) -> UTC(NIST) */
+	//   utc2tai(psr,npsr);     /* 2. UTC(NIST) -> TAI              */
+	tai2ut1(psr,npsr);        	/* 3. TAI -> UT1                    */
+	//   tai2tt(psr,npsr);      /* 4. TAI -> TT                     */
+	tt2tb(psr,npsr);          	/* 5. Rough estimate of TT-TB (+-2.2 microsec) */
+}
+
+void ephemeris_routines(pulsar *psr,int npsr)
+{ 
+	vectorPulsar(psr,npsr);   	/* 1. Form a vector pointing at the pulsar */
+	readEphemeris(psr,npsr,0);	/* 2. Read the ephemeris */
+	get_obsCoord(psr,npsr);   	/* 3. Get Coordinate of observatory relative to Earth's centre */
+	tt2tb(psr,npsr);          	/* Observatory/time-dependent part of TT-TB */
+	readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
+}
+
+void formBatsAll(pulsar *psr,int npsr)
+{
+	clock_corrections(psr,npsr);          /* Clock corrections  ... */  
+	ephemeris_routines(psr,npsr);         /* Ephemeris routines ... */
+	extra_delays(psr,npsr);               /* Other time delays  ... */
+	formBats(psr,npsr);                   /* Form Barycentric arrival times */
+	secularMotion(psr,npsr); 
 }
