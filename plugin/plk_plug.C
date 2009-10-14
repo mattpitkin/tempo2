@@ -47,7 +47,7 @@ char dcmFile[MAX_FILELEN];
 void overPlotN(int overN,float overX[], float overY[],float overYe[]);
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile,
-            int showChisq);
+            int showChisq,int nohead);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
 	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log);
 void drawAxisSel(float x,float y,char *str,int sel1,int sel2);
@@ -120,6 +120,7 @@ void help() /* Display help */
   printf("-          add negative phase jump\n");
   printf("BACKSPACE  remove all phase jumps\n");
   printf("ctrl-=     add period to residuals above cursor\n");
+  printf("/          re-read .par file\n");
 
   printf("\nPlot Selection\n"); /* Determines WHAT (X and Y axes) will be displayed */
   printf("==============\n");
@@ -236,6 +237,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int   yplot=1;
   int   publish=0;
   int   menu=3;
+  int   nohead=0;
   char  setupFile[100]="";
   //display chisq?
   int showChisq = 0;
@@ -285,6 +287,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	unitFlag=1.0e-6;
       else if (strcmp(argv[i],"-ns")==0)
 	unitFlag=1.0e-9;
+      else if (strcmp(argv[i],"-min")==0)
+	unitFlag=60.0;
+      else if (strcmp(argv[i],"-nohead")==0)
+	nohead=1;
       else if (strcmp(argv[i],"-dcm")==0)
 	strcpy(dcmFile,argv[++i]);
       else if (strcmp(argv[i],"-newparS")==0)//this is just for use with calcDMe
@@ -363,7 +369,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    textOutput(psr,*npsr,0,0,0,1,newParFile);
   if (debugFlag==1) printf("plk: calling doPlot\n");
   doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,locky1,locky2,xplot,yplot,
-	 publish,argc,argv,menu,setupFile,showChisq);  /* Do plot */
+	 publish,argc,argv,menu,setupFile,showChisq,nohead);  /* Do plot */
   return 0;
 }  
 
@@ -429,7 +435,7 @@ void callFit(pulsar *psr,int npsr)
 
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float locky1,float locky2,int xplot,int yplot,
-	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq)
+	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq,int nohead)
 {
   int i,fitFlag=1,exitFlag=0,scale1=0,scale2=psr[0].nobs,count,ncount,j,k;
   longdouble centreEpoch;
@@ -757,7 +763,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	else sprintf(title,"%s (rms = %.3f \\gms) %s",psr[0].name,psr[0].rmsPre,fitType);
 	if (showChisq == 1)
 	  sprintf(title,"%s chisq=%.2f",title,psr[0].fitChisq/psr[0].fitNfree);
-	cpglab(xstr,ystr,title);
+	if (nohead==0)
+	  cpglab(xstr,ystr,title);
+	else
+	  cpglab(xstr,ystr,"");
         if (publish==0)
 	  {
 	    cpgsch(0.5); 
@@ -1812,6 +1821,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		psr[0].obsn[k].bat-=removeFITWAVES*py/60.0/60.0/24.0;
 		/*	    psr[0].obsn[k].prefitResidual-=py; */
 	      }
+	  }
+	else if (key=='/') 
+	  {
+	    printf("Parameters reloaded from .par file\n");
+	    readParfile(psr,parFile,timFile,1); /* Load the parameters       */
+	    callFit(psr,1);
 	  }
 	else if (key=='k')   /* translate timing residuals to dm*/
 	  {
@@ -3449,6 +3464,7 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
       else if (unitFlag==1.0e-3) sprintf(str,"Prefit Residual (ms)");
       else if (unitFlag==1.0e-6) sprintf(str,"Prefit Residual (\\gms)");
       else if (unitFlag==1.0e-9) sprintf(str,"Prefit Residual (ns)");
+      else if (unitFlag==60) sprintf(str,"Prefit Residual (minutes)");
       else sprintf(str,"Prefit Residual (rotational period)");
       if (plotPhase==1)	sprintf(str,"Prefit Residual (phase)");
     }
@@ -3458,6 +3474,7 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
       else if (unitFlag==1.0e-3) sprintf(str,"Postfit Residual (ms)");
       else if (unitFlag==1.0e-6) sprintf(str,"Postfit Residual (\\gms)");
       else if (unitFlag==1.0e-9) sprintf(str,"Postfit Residual (ns)");
+      else if (unitFlag==60) sprintf(str,"Postfit Residual (minutes)");
       else sprintf(str,"Postfit Residual (rotational period)");
       if (plotPhase==1)	sprintf(str,"Postfit Residual (phase)");
     }
