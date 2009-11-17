@@ -153,7 +153,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  else if (i==argc-1 && gotTim==0) /* Must be .tim file name */
 	    {
 	      strcpy(timFile[timfile_num],argv[i]);	    
-	      printf("Have %s\n",timFile[timfile_num]);
+	      //printf("Have %s\n",timFile[timfile_num]);
 	      timfile_num++;
 	    }
 	}
