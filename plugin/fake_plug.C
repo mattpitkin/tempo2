@@ -85,7 +85,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Have >>%d<< observations per day\n",nday);
 		}
 		if (strcmp(argv[i],"-idum")==0){
-      argv(sscanf[i+1],"%d",&idum);
+      sscanf(argv[i+1],"%d",&idum);
       printf("Have idum >>%d<<\n",idum);
 		}
 		if(strcmp(argv[i],"-ha")==0){
