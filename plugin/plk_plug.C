@@ -359,6 +359,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     
   if (debugFlag==1) printf("plk: calling readTimfile\n");
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+  if (psr[0].nobs==0)
+    {
+      printf("Error: no arrival times loaded\n");
+      exit(1);
+    }
   if (unitFlag==-1) unitFlag = 1.0/psr[0].param[param_f].val[0]; /* Units of pulse period */
   if (debugFlag==1) printf("plk: calling preProcess %d\n",psr[0].nobs);
   
@@ -1430,9 +1435,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  (setZoomX2==0 || x[i]<zoomX2) &&
 		  (setZoomY1==0 || y[i]>zoomY1) &&
 		  (setZoomY2==0 || y[i]<zoomY2))
-		printf("%s %s\t%7.5g\t%.5g\t%.5g\n",psr[0].obsn[id[i]].fname,
-		       print_longdouble(psr[0].obsn[id[i]].sat).c_str(),x[i],y[i],
-		       (double)psr[0].obsn[id[i]].freq);
+		{
+		  printf("%s %s\t%7.5g\t%.5g\t%.5g ",psr[0].obsn[id[i]].fname,
+			 print_longdouble(psr[0].obsn[id[i]].sat).c_str(),x[i],y[i],
+			 (double)psr[0].obsn[id[i]].freq);
+		  for (j=0;j<psr[0].obsn[id[i]].nFlags;j++)
+		    printf("%s %s ",psr[0].obsn[id[i]].flagID[j],psr[0].obsn[id[i]].flagVal[j]);
+		  printf("\n");
+		}
 	    }
 	  printf("Mean residual = %f\n",mean);
 	}
