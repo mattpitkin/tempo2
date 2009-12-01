@@ -511,22 +511,6 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    }
 	  fclose(fdmin);
 	}
-      if (strlen(selectFname)>0)
-	{
-	  FILE *fin;
-	  if (!(fin = fopen(selectFname,"r")))
-	    {
-	      printf("Unable to open select file: >%s<\n",selectFname);
-	      exit(1);
-	    }
-	  while (!feof(fin))
-	    {
-	      if (fscanf(fin,"%s %s %lf %lf",select1[nSelect],select2[nSelect],
-			 &select3[nSelect],&select4[nSelect])==4)
-		nSelect++;
-	    }
-	  fclose(fin);
-	}
       
       // Modify TOA flags if required
       if (modify==1)
@@ -753,32 +737,167 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 		  psr[p].obsn[i].deleted=1;
 		}
 	    }
-	  // Check for select file
-	  if (strlen(selectFname) > 0)
+	}
+  // Check for select file
+      if (strlen(selectFname) > 0)
+	{
+	  int k,l;
+	  int okay=0,found=0;
+	  double low,high,tdiff;
+	  char str[100],str1[100],str2[100],str3[100],str4[100],str5[100];
+	  
+	  FILE *fin;
+	  if (!(fin = fopen(selectFname,"r")))
 	    {
-	      int k,l;
-	      int okay=0;
-	      for (k=0;k<nSelect;k++)
+	      printf("Unable to open select file: >%s<\n",selectFname);
+	      exit(1);
+	    }
+	  while (!feof(fin))
+	    {
+	      //		  if (fscanf(fin,"%s %s %lf %lf",select1[nSelect],select2[nSelect],
+	      //			     &select3[nSelect],&select4[nSelect])==4)
+	      //		    nSelect++;
+	      if (fscanf(fin,"%s",str)==1)
 		{
-		  if (okay==0)
+		  if (strcasecmp(str,"ONLY")==0)
 		    {
-		      for (l=0;l<psr[p].obsn[i].nFlags;l++)
+		      fscanf(fin,"%s",str1);
+		      if (strcasecmp(str1,"SIMUL")==0)
 			{
-			  if (strcmp(psr[p].obsn[i].flagID[l],select1[k])==0 &&
-			      strcmp(psr[p].obsn[i].flagVal[l],select2[k])==0 &&
-			      psr[p].obsn[i].sat > select3[k] && 
-			      psr[p].obsn[i].sat < select4[k])
+			  nread=fscanf(fin,"%s %s %s %lf",str2,str3,str4,&tdiff);
+			  if (nread==3) tdiff=60; // Default to 60 seconds
+			  for (i=0;i<psr[p].nobs;i++)
 			    {
-			      okay=1;
-			      break;
+			      found=0;
+			      for (l=0;l<psr[p].obsn[i].nFlags;l++)		      
+				{
+				  if (strcmp(psr[p].obsn[i].flagID[l],str2)==0 &&
+				      strcmp(psr[p].obsn[i].flagVal[l],str3)==0)
+				    {
+				      for (j=0;j<psr[p].nobs;j++)
+					{
+					  if (i!=j && strcmp(psr[p].obsn[j].flagID[l],str2)==0 &&
+					      strcmp(psr[p].obsn[j].flagVal[l],str4)==0 &&
+					      fabs(psr[p].obsn[i].sat - psr[p].obsn[j].sat)<=tdiff/SECDAY)
+					    {
+					      psr[p].obsn[j].deleted=-2;
+					      found=1;
+					      break;
+					    }
+					}
+				    }
+				}
+			      if (found==0 && psr[p].obsn[i].deleted!=-2)
+				psr[p].obsn[i].deleted=1;
+			      else if (psr[p].obsn[i].deleted==-2)
+				psr[p].obsn[i].deleted=0;
+			    }
+			  for (i=0;i<psr[p].nobs;i++)
+			    {
+			      if (psr[p].obsn[i].deleted==-2)
+				psr[p].obsn[i].deleted=0;
+			    }
+			}
+		    }
+		  else if (str[0]=='-') // Filter flags
+		    {
+		      fscanf(fin,"%s %lf %lf",str1,&low,&high);
+		      for (i=0;i<psr[p].nobs;i++)
+			{
+			  found=0;
+			  for (l=0;l<psr[p].obsn[i].nFlags;l++)		      
+			    {
+			      if (strcmp(psr[p].obsn[i].flagID[l],str)==0 &&
+				  strcmp(psr[p].obsn[i].flagVal[l],str1)==0)
+				{
+				  found=-1;
+				  if (psr[p].obsn[i].sat >= low && 
+				      psr[p].obsn[i].sat < high)
+				    {
+				      found=1;
+				      break;
+				    }		
+				}	     			      
+			    }
+			  if (found==-1)
+			    psr[p].obsn[i].deleted=1;
+			}
+		    }
+		  else if (strcasecmp(str,"FILTER")==0)
+		    {
+		      fscanf(fin,"%s",str);
+		      if (strcasecmp(str,"FREQ")==0)
+			{
+			  if (fscanf(fin,"%lf %lf",&low,&high)==2)
+			    {
+			      for (i=0;i<psr[p].nobs;i++)
+				{
+				  if (psr[p].obsn[i].freq >= low && psr[p].obsn[i].freq < high)
+				    psr[p].obsn[i].deleted=1;
+				}
+			    }
+			}
+		      else if (strcasecmp(str,"MJD")==0)
+			{
+			  if (fscanf(fin,"%lf %lf",&low,&high)==2)
+			    {
+			      for (i=0;i<psr[p].nobs;i++)
+				{
+				  if ((double)psr[p].obsn[i].sat >= low && (double)psr[p].obsn[i].sat < high)
+				    psr[p].obsn[i].deleted=1;
+				}
+			    }
+			}
+		      else if (strcasecmp(str,"TOAERR")==0)
+			{
+			  if (fscanf(fin,"%lf %lf",&low,&high)==2)
+			    {
+			      for (i=0;i<psr[p].nobs;i++)
+				{
+				  if ((double)psr[p].obsn[i].toaErr >= low && (double)psr[p].obsn[i].toaErr < high)
+				    psr[p].obsn[i].deleted=1;
+				}
+			    }
+			}
+		    }
+		  if (strcasecmp(str,"PASS")==0)
+		    {
+		      fscanf(fin,"%s",str1);
+		      if (strcasecmp(str1,"SIMUL")==0)
+			{
+			  nread=fscanf(fin,"%s %s %s %lf",str2,str3,str4,&tdiff);
+			  if (nread==3) tdiff=60; // Default to 60 seconds
+			  for (i=0;i<psr[p].nobs;i++)
+			    {
+			      found=0;
+			      for (l=0;l<psr[p].obsn[i].nFlags;l++)		      
+				{
+				  if (strcmp(psr[p].obsn[i].flagID[l],str2)==0 &&
+				      strcmp(psr[p].obsn[i].flagVal[l],str3)==0)
+				    {
+				      for (j=0;j<psr[p].nobs;j++)
+					{
+					  if (i!=j && strcmp(psr[p].obsn[j].flagID[l],str2)==0 &&
+					      strcmp(psr[p].obsn[j].flagVal[l],str4)==0 &&
+					      fabs(psr[p].obsn[i].sat - psr[p].obsn[j].sat)<=tdiff/SECDAY)
+					    {
+					      if (psr[p].obsn[i].toaErr > psr[p].obsn[j].toaErr)
+						psr[p].obsn[i].deleted=1;
+					      else
+						psr[p].obsn[j].deleted=1;
+					      break;
+					    }
+					}
+				    }
+				}
 			    }
 			}
 		    }
 		}
-	      if (okay==0)
-		psr[p].obsn[i].deleted=1;
 	    }
+	  fclose(fin);
 	}
+      
       //
       // Check fjump
       //
@@ -833,6 +952,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    }
 	}
     }
+
+
+
+
 
   // Now check for global parameters
   if (strlen(globalFname) > 0)
