@@ -337,7 +337,9 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
 	    else if (specOut==2) // Amplitude
 	      specY[i]=sqrt(specY[i]*2.0*var/nSpec);
 	    else if (specOut==3) // Power
-	      specY[i]=specY[i]*2.0*var/nSpec;
+	      {
+		specY[i]=specY[i]*2.0*var/nSpec;
+	      }
 	  }
 	// End of checked section
       }
@@ -438,7 +440,6 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
       outY[i] = specY[i];
     }
   *nout = nSpec;  
-
   return 0.0;
 }
 
