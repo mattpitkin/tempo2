@@ -27,6 +27,7 @@
 #include "tabulatedfunction.h"
 #include "tempo2.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 

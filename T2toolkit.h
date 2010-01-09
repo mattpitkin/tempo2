@@ -39,6 +39,7 @@ void TKconvertFloat2(double *x,double *y,float *ox,float *oy,int n);
 
 float  TKfindMin_f(float *x,int n);
 float  TKfindMedian_f(float *val,int count);
+double TKfindMedian_d(double *val,int count);
 float  TKfindRMS_f(float *x,int n);
 float  TKfindRMS_d(double *x,int n);
 float TKfindRMSweight_d(double *x,double *e,int n);

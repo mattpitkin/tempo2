@@ -271,13 +271,13 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 	  {
 	    if (psr[p].param[param_dmassplanet].paramSet[iplanet])
 	    {
-	      //	      printf("NEW PLANET DMASS: %g %g %g\n",(double)psr[p].param[param_dmassplanet].val[4],
-	      //		     (double)psr[p].obsn[i].earth_ssb[0],(double)(psr[p].param[param_dmassplanet].val[4] *
-	      //								  psr[p].obsn[i].planet_ssb[iplanet][0]));
-	      for (int icomp=0; icomp < 6; icomp++)
-		 psr[p].obsn[i].earth_ssb[icomp] -= 
-		   psr[p].param[param_dmassplanet].val[iplanet] *
-		   psr[p].obsn[i].planet_ssb[iplanet][icomp];
+	      	      printf("NEW PLANET DMASS: %g %g %g\n",(double)psr[p].param[param_dmassplanet].val[4],
+	      		     (double)psr[p].obsn[i].earth_ssb[0],(double)(psr[p].param[param_dmassplanet].val[4] *
+	      								  psr[p].obsn[i].planet_ssb[iplanet][0]));
+		      for (int icomp=0; icomp < 6; icomp++)
+			psr[p].obsn[i].earth_ssb[icomp] -= 
+			  psr[p].param[param_dmassplanet].val[iplanet] *
+			  psr[p].obsn[i].planet_ssb[iplanet][icomp];
 	    }
 	  }
 ;

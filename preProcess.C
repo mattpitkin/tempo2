@@ -25,6 +25,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "tempo2.h"
 #include <math.h>
 #include <string.h>

@@ -124,6 +124,24 @@ float TKfindMedian_f(float *val,int count)   /* Find median in x array */
 
 }
 
+double TKfindMedian_d(double *val,int count)   /* Find median in x array */
+{
+  int i;
+  double median = 0.0;
+  double newval[count];
+
+  for (i=0;i<count;i++)
+    newval[i]=val[i];
+  TKsort_d(newval,count);
+  if (count%2==0)
+    median = (newval[count/2-1]+newval[count/2])/2.0;
+  else
+    median = newval[(count-1)/2];
+
+  return median;
+
+}
+
 float TKfindRMS_f(float *x,int n)
 {
   int i;

@@ -764,8 +764,8 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		}
 	      else if (i==param_glph) /* Glitch phase */
 		{
-		  psr[p].param[i].val[k] -= val[j];  /* Why - sign ??? */
-		  psr[p].param[i].err[k]  = error[j];                        /* ERROR IS WRONG */
+		  psr[p].param[i].val[k] -= val[j];     
+		  psr[p].param[i].err[k]  = error[j];   
 		}
 	      else if (i==param_glf0d) /* Glitch */
 		{

@@ -38,6 +38,7 @@ void calculate_bclt(pulsar *psr,int npsr)
   double pmrvrad;
   double rr,pxConv;
   double rca[3];
+  int loop;
 
   if (debugFlag==1) printf("In calculate_bclt with number of psr = %d, nobs (psr[0]) = %d\n",npsr,psr[0].nobs);
 
@@ -78,7 +79,8 @@ void calculate_bclt(pulsar *psr,int npsr)
 		pmrvrad = 0.0;
 	      
 	      dt_SSB = 0.0;
-	      
+	      loop=0;
+
 	      do {
 		dt_SSB_old = dt_SSB;
 		
@@ -104,9 +106,12 @@ void calculate_bclt(pulsar *psr,int npsr)
 		dm_delays(psr,npsr,p,i,delt,dt_SSB);     /* Now calculate the dispersion measure delays */
 		dt_SSB = psr[p].obsn[i].roemer-(psr[p].obsn[i].tdis1+psr[p].obsn[i].tdis2)-
 		  (psr[p].obsn[i].shapiroDelaySun+psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter); 
-		//		printf("dt_SSB: %g %g %g %g %g \n",(double)psr[p].obsn[i].roemer,(double)psr[p].obsn[i].tdis1,(double)psr[p].obsn[i].tdis2,(double)psr[p].obsn[i].shapiroDelaySun,(double)psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter);
+		//		printf("dt_SSB: %g %g %g %g %g  \n",(double)psr[p].obsn[i].roemer,(double)psr[p].obsn[i].tdis1,(double)psr[p].obsn[i].tdis2,(double)psr[p].obsn[i].shapiroDelaySun,(double)psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter);
 		if (veryFast==1) break;
+		loop++;
 	      } while (fabs(dt_SSB-dt_SSB_old)>1.0e-10 && psr[p].obsn[i].deleted!=1);
+	      //	      printf("roemer %g %.15g %.15g %.15g %.15g %.15g %.15g %.15g %d\n",(double)psr[p].obsn[i].sat,(double)psr[p].obsn[i].roemer,(double)rcos1,(double)dt_pm,(double)dt_pmtt,(double)dt_px,(double)dt_pmtr,(double)rr,loop);
+	      //	      printf("roemer %g %.15g %.15g %.15g %.15g %.15g %.15g %.15g %.15g\n",(double)psr[p].obsn[i].sat,psr[p].posPulsar[0],psr[p].posPulsar[1],psr[p].posPulsar[2],rca[0],rca[1],rca[2],rr,(double)psr[p].obsn[i].roemer);
 	    }
 	}
     }

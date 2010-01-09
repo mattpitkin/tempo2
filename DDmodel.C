@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "tempo2.h"
-
+#include <stdlib.h>
 
 /* Timing model      */
 /* Based on bnrydd.f */

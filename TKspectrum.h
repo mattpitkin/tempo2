@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -31,7 +31,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "tempo2.h"
 #include "T2toolkit.h"
 #include "TKfit.h"
 
@@ -63,8 +62,8 @@ void TK_fitSine(double *x,double *y,double *e,int n,int wErr,double *outX,double
 
 void TKlomb_d(double *x,double *y,int n,double ofac,double hifac,double *ox,double *oy,int *outN,double *var);
 int TK_fft(short int dir,long n,double *x,double *y);
-void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN);
-void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
+void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
+void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
 
 double globalOmega;
@@ -94,6 +93,7 @@ typedef struct complexVal {
  *          = 3 => FFT 
  *          = 4 => Weighted L-S periodogram
  * ofac = oversampling factor
+ * hifac = the highest frequency to which we want to calculate, expressed as a multiple of the Nyquist frequency
  * output   = 0 => no text output
  *          = 1 => print sorted input data set, then stop
  *          = 2 => print averaged data points, then stop
@@ -108,13 +108,13 @@ typedef struct complexVal {
  * ************************************************************** */
 
 double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smoothWidth,int smoothType,
-		int fitSpline,int preWhite,int specType,int ofac,int specOut,double *outX,
-		double *outY,int *nout,int calcWhite,int output)
+		int fitSpline,int preWhite,int specType,double ofac,double hifac,int specOut,double *outX,
+		double *outY,int *nout,int calcWhite,int output, double *outY_re, double *outY_im)
 {
   double avPtsX[n],avPtsY[n];
-  double interpX[MAX_OBSN],interpY[MAX_OBSN];
-  double smoothX[MAX_OBSN],smoothY[MAX_OBSN];  
-  double specX[MAX_OBSN],specY[MAX_OBSN];
+  double interpX[n],interpY[n];
+  double smoothX[n],smoothY[n];  
+  double specX[(int)ceil(1 + ofac * hifac * MAX_OBSN / 2.0)],specY[(int)ceil(1 + ofac * hifac * MAX_OBSN / 2.0)];
   int splineDaily=0;
   double mean;
   int    i,j;
@@ -124,6 +124,7 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
   int    nSpec=0;
 
   // Step 1: Sort the data in increasing time order
+  //NB THIS SORTING CAN CHANGE THE ORDER OF SATS AND RESIDUALS!!!! Causes many strange problems
   TKsortit(x,y,n);
   
   if (output==1)
@@ -132,7 +133,6 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
 	printf("sortdata: %d %g %g\n",i,x[i],y[i]);
       exit(1);
     }
-
   // Step 2: Average the points within a given time of each other
   // CURRENTLY NOT USING ERROR BARS
   if (averageTime==0) // No averaging
@@ -170,36 +170,36 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
 
   // Step 4: Fit a spline to the data and obtain equally spaced sampling
   if (fitSpline==1)
-  {
-    double yd[MAX_OBSN][4],h;
-
-    TKcmonot(nAv,avPtsX,avPtsY,yd);
-    if (splineDaily==1)
-      {
-	nInterp=0;
-	do{
-	  interpX[nInterp] = avPtsX[0]+nInterp;
-	  nInterp++;
-	}while (interpX[nInterp-1]<avPtsX[nAv-1]);
-	nInterp--;
-      }
-    else
-      {
-	//	nInterp = nAv;
-	nInterp = 4096;
-	for (i=0;i<nInterp;i++)
-	  interpX[i] = avPtsX[0]+i*(avPtsX[nAv-1]-avPtsX[0])/(double)nInterp;
+    {
+      double yd[MAX_OBSN][4],h;
+      
+      TKcmonot(nAv,avPtsX,avPtsY,yd);
+      if (splineDaily==1)
+	{
+	  nInterp=0;
+	  do{
+	    interpX[nInterp] = avPtsX[0]+nInterp;
+	    nInterp++;
+	  }while (interpX[nInterp-1]<avPtsX[nAv-1]);
+	  nInterp--;
+	}
+      else
+	{
+	  //	nInterp = nAv;
+	  nInterp = 4096;
+	  for (i=0;i<nInterp;i++)
+	    interpX[i] = avPtsX[0]+i*(avPtsX[nAv-1]-avPtsX[0])/(double)nInterp;
 	  //	  interpX[i] = avPtsX[i];
-
-      }
-    TKspline_interpolate(nAv,avPtsX,avPtsY,yd,interpX,interpY,nInterp);
-    if (output==4)
-      {
-	for (i=0;i<nInterp;i++)
-	  printf("spline: %d %g %g\n",i,interpX[i],interpY[i]);
-	exit(1);
-      }
-  }
+	  
+	}
+      TKspline_interpolate(nAv,avPtsX,avPtsY,yd,interpX,interpY,nInterp);
+      if (output==4)
+	{
+	  for (i=0;i<nInterp;i++)
+	    printf("spline: %d %g %g\n",i,interpX[i],interpY[i]);
+	  exit(1);
+	}
+    }
   else
     {
       for (i=0;i<nAv;i++)
@@ -290,12 +290,11 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
   {
     int jmax;
     double prob,var,tspan;
-    
     tspan = TKrange_d(smoothX,nSmooth);
     
     if (specType==1) // DFT
       {
-	TK_dft(smoothX,smoothY,nSmooth,specX,specY,&nSpec);
+	TK_dft(smoothX,smoothY,nSmooth,specX,specY,&nSpec,outY_re, outY_im);
 	// The following code to form the PSD in units of yr^3 and 
 	// frequency in 1/days (required for the whitening/postdarkening)
 	// has been checked by G. Hobbs (30/10/08).
@@ -325,25 +324,29 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
 	//
 	// 05 Jan 09: G Hobbs: changed to use TKlomb_d instead of numerical recipes
 	// 05 Jan 09: G Hobbs: added PSD, amp and pow outputs (originally just PSD)
-	//
-	TKlomb_d(smoothX,smoothY,nSmooth,ofac,1,specX,specY,&nSpec,&var);
+	// 06 May 09: D Yardley: added "*ofac/hifac" in PSD calculation. Now should be consistent measured power regardless of oversampling.
+	// 06 May 09: D Yardley: added "*ofac*hifac" in power calculation. Now should be consistent measured power regardless of oversampling.
+	// 11 Aug 09: D Yardley: added specOut = 4 option for normalized power (important when adding power spectra together)
+
+	TKlomb_d(smoothX,smoothY,nSmooth,ofac,hifac,specX,specY,&nSpec,&var);
+
 	for (i=0;i<nSpec;i++)
 	  {
 	    if (specOut==1) // PSD
 	      {
-		specY[i]*=(2.0*var*nSpec);
+		specY[i]*=(2.0*var*nSpec*ofac/hifac);
 		specY[i] = (specY[i]/pow(365.25*86400.0,2))*2*(tspan/365.25)/(double)nSmooth/(double)nSmooth;
 	      }
 	    else if (specOut==2) // Amplitude
 	      specY[i]=sqrt(specY[i]*2.0*var/nSpec);
 	    else if (specOut==3) // Power
-	      {
-		specY[i]=specY[i]*2.0*var/nSpec;
-	      }
+	      specY[i]=specY[i]*2.0*var/nSpec*ofac*hifac;
+	    else if (specOut==4) // Power Normalised by variance.
+	      specY[i]=specY[i]*2.0/nSpec*ofac*hifac;
 	  }
 	// End of checked section
       }
-    else if (specType==3)
+    else if (specType==3)  //fast fourier transform
       {
 	double imag[nSmooth];
 
@@ -375,7 +378,7 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
       }
     else if (specType==4) // Weighted Lomb-Scargle
       {
-	TK_weightLS(smoothX,smoothY,e,nSmooth,specX,specY,&nSpec);
+	TK_weightLS(smoothX,smoothY,e,nSmooth,specX,specY,&nSpec,outY_re,outY_im);
 	var=1;
 	for (i=0;i<nSpec;i++)
 	  {
@@ -440,6 +443,7 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
       outY[i] = specY[i];
     }
   *nout = nSpec;  
+
   return 0.0;
 }
 
@@ -461,6 +465,8 @@ void TKfirstDifference(double *x,double *y,int n)
 	y[i] = 0.0;
     }
 }
+
+/* TK_fitSinusoids attempts to fit a bunch of harmonically related sinusoids to the data. */
 
 void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN)
 {
@@ -510,11 +516,12 @@ void sineFunc(double x,double *v,int ma)
   v[1] = cos(GLOBAL_OMEGA*x);
 }
 
-/* Calculates a weighted Lomb-Scargle periodogram */
-void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN)
+//GEORGE'S ALGORITHM!!!! I think mine is better.     Calculates a weighted Lomb-Scargle periodogram
+//void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN)
+void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im)
 {
   long double s1,s2,s3,s4,s5;
-  double recA[MAX_OBSN],recB[MAX_OBSN];
+  //double recA[MAX_OBSN],recB[MAX_OBSN];
   double pred;
   double omega=0.0;
   double si,ci;
@@ -523,16 +530,20 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
   double var;
   int i,j;
   
-  omega0 = 2.0*M_PI/TKrange_d(x,n);
-  *outN = n/2;
+  //omega0 = 2.0*M_PI/TKrange_d(x,n);
+  omega0 = 2.0L*M_PI/(TKrange_d(x,n) * (double)n / (double)(n-1));
+  *outN = n/2 - 1;
 
-
-  //    for (i=0;i<n;i++)
-  //      sig[i]=1.0;
+  
+  //USE THIS FOR AN UNWEIGHTED LEAST SQUARES FIT
+  //printf("IGNORING ERROR BARS --> unweighted LSq Fit in TK_weightLS, all input errors are now equal to 1.0 (even in your own code - this is a side effect!!!\n");
+  //for (i=0;i<n;i++)
+  //  sig[i]=1.0;
+  
 
   for (j=0;j<*outN;j++)
     {
-      omega = omega0*(j+1);
+      omega = omega0*(j+1);  //the DC term will be zero always since we explicitly removed a mean from the input data set in Step 3 above.
       s1 = s2 = s3 = s4 = s5 = 0.0;
       for (i=0;i<n;i++)
 	{
@@ -543,34 +554,39 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
 	  s2 += (long double)(si*si/sig[i]/sig[i]);
 	  s3 += (long double)(si*ci/sig[i]/sig[i]);
 	  s4 += (long double)(y[i]*ci/sig[i]/sig[i]);
-	  s5 += (long double)ci*ci/sig[i]/sig[i];
+	  s5 += (long double)ci*ci/sig[i]/sig[i];    //NB!!!!!!!!!!!!!!!! THIS IS NOT TYPECAST PROPERLY!!!! - DY
 	}
-      b = (double)((s4-s1/s2)/(s5-s3/s2));
-      a = (double)((s1-b*s3)/s2);
-      recA[j] = a;
-      recB[j] = b;
+      b = (double)((s4-s1/s2)/(s5-s3/s2));  //the real Fourier component (since it has y*cos) George's solution
+      a = (double)((s1-b*s3)/s2);           //the imaginary Fourier component (since it has y*sin) George
+      //recA[j] = a;
+      outY_im[j] = a;
+      //recB[j] = b;
+      outY_re[j] = b;
       outX[j] = omega/2.0/M_PI;
       outY[j] = a*a+b*b;
     }
-  /*  for (i=0;i<1000;i++)
-    {
-      pred=0.0;
-      for (j=0;j<*outN;j++)
-	{
-	  GLOBAL_OMEGA = omega0*(j+1);
-	  pred += (recB[j]*cos(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0])+recA[j]*sin(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0]));
-	}
-      printf("series2: %g %g\n",(x[n-1]-x[0])/1000.0*i+x[0],pred);
-      } */
 
+    //for (i=0;i<1000;i++)
+    //{
+    //  pred=0.0;
+    //  for (j=0;j<*outN;j++)
+    //{
+    //  GLOBAL_OMEGA = omega0*(j+1);
+    //  pred += (recB[j]*cos(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0])+recA[j]*sin(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0]));
+    //}
+    //printf("series2: %g %g\n",(x[n-1]-x[0])/1000.0*i+x[0],pred);
+    //}
 }
+
+
 
 /* Calculates the discrete Fourier transform of a data-set */
 /* Assumes that the x-values are in units of days and the  */
 /* y-values are in seconds                                 */
 /* This code was checked by G. Hobbs - 30/10/08            */
 /* DO NOT MODIFY WITHOUT LEAVING COMMENTS HERE             */
-void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN)
+/* 13th November: DY added capability for retrieval of imaginary part into main code */
+void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im)
 {
   complexVal spec[n];
   double xo;
@@ -599,8 +615,11 @@ void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN)
     }
   // Form spectrum
   for (i=0;i<n;i++)
-    outY[i] = (pow(spec[i].real,2)+pow(spec[i].imag,2));
-
+    {
+      outY_re[i] = spec[i].real;
+      outY_im[i] = spec[i].imag;
+      outY[i] = (pow(spec[i].real,2)+pow(spec[i].imag,2));
+    }
   *outN = n/2;
 }
 
@@ -799,7 +818,7 @@ Modified:  Dave Hale, Colorado School of Mines, 08/04/91
 {
   int i;
   double h1,h2,del1,del2,dmin,dmax,hsum,hsum3,w1,w2,drat1,drat2,divdf3;
-  
+
   /* copy ordinates into output array */
   for (i=0; i<n; i++)
     yd[i][0] = y[i];
@@ -834,7 +853,7 @@ Modified:  Dave Hale, Colorado School of Mines, 08/04/91
     dmax = 3.0*del1;
     if (ABS(yd[0][1])>ABS(dmax)) yd[0][1] = dmax;
   }
-  
+
   /* loop over interior points */
   for (i=1; i<n-1; i++) {
     
@@ -864,6 +883,7 @@ Modified:  Dave Hale, Colorado School of Mines, 08/04/91
       dmax = MAX(ABS(del1),ABS(del2));
       drat1 = del1/dmax;
       drat2 = del2/dmax;
+
       yd[i][1] = dmin/(w1*drat1+w2*drat2);
     }
   }
@@ -923,7 +943,6 @@ void TKspline_interpolate(int n,double *x,double *y,double yd[][4],double *inter
       else
 	interpY[i] = 0.0;
     }
-
 }
 
 void TKlomb_d(double *x,double *y,int n,double ofac,double hifac,double *ox,double *oy,int *outN,double *var)

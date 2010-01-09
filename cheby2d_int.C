@@ -29,6 +29,7 @@
 #include "tempo2pred.h"
 #include "tempo2pred_int.h"
 #include "tempo2.h"
+#include <stdlib.h>
 #include <math.h>
 #include <assert.h>
  
