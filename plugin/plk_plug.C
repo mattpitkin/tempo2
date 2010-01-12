@@ -703,6 +703,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
     /* Sort into ascending x order */
     sort(x,y,yerr1,yerr2,freq,id,count);  
+    if (origStart==-1)
+      origStart = x[0] + centreEpoch - 1;
+    if (origFinish==-1)
+      origFinish = x[count-1] + 1 + centreEpoch;
+
     /* Get scaling for graph */
     minx = x[0];
     maxx = x[count-1];
@@ -1865,6 +1870,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	else if (key=='u') /* Unzoom */
 	  {
 	    setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 = 0;
+	    psr[0].param[param_start].val[0] = origStart;
+	    psr[0].param[param_finish].val[0] = origFinish;
 	  }
 	else if (key==13) /* Toggle menu bar */
 	  {
@@ -2911,14 +2918,14 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
       cpgsci(1);
       //if ctrl-i was pressed, add the zeroth backend (the one we're using as reference for jumps)
       //WARNING: if the psr[0].nJumps happens to be multiple of 15, this won't be displayed (FIX IT!)
-      if (iFlagColour == 1 && psr[0].nJumps - jumpOffset < 15) {
-        cpgtext(xpos,ypos,flagStore[0]);
+      /*      if (iFlagColour == 1 && psr[0].nJumps - jumpOffset < 15) {
+	cpgtext(xpos,ypos,flagStore[0]);
         cpgmove(xpos,ypos-0.03);
         cpgdraw(xpos+0.18,ypos-0.03);
         cpgdraw(xpos+0.18,ypos+0.15);
         cpgdraw(xpos,ypos+0.15);
         cpgdraw(xpos,ypos-0.03);
-      } 
+	} */
     }
   if (psr[0].nJumps > 15)
     {
@@ -3110,7 +3117,7 @@ void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeM
 		      py[i] = (double)(afunc[2]*diff+(double)psr[0].offset);
 		      pyt[i] += (double)(afunc[2]*diff);		  
 		      if (removeMean==1) py[i]-=mean;
-		    }	      
+		    }
 		  npts = count;
 		}
 	      else  /* plot fitwaves curve */
@@ -3190,7 +3197,6 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
       if (setZoomX1 == 0) {
 	if (origStart==-1)
 	  {
-	    psr[0].param[param_start].paramSet[0]=0;
 	    psr[0].param[param_start].fitFlag[0]=0;
 	  }
 	else
@@ -3204,7 +3210,6 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
       if (setZoomX2 == 0) {
 	if (origFinish==-1)
 	  {
-	    psr[0].param[param_finish].paramSet[0]=0;
 	    psr[0].param[param_finish].fitFlag[0]=0;
 	  }
 	else
@@ -3247,11 +3252,11 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 	}
     }
   callFit(psr,npsr);
-  if (setZoomX1 == 1)
+  /*  if (setZoomX1 == 1)
     {
       if (origStart==-1)
 	{
-	  psr[0].param[param_start].paramSet[0]=0;
+	  //	  psr[0].param[param_start].paramSet[0]=0;
 	  psr[0].param[param_start].fitFlag[0]=0;
 	}
       else
@@ -3265,7 +3270,7 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
     {
       if (origFinish==-1)
 	{
-	  psr[0].param[param_finish].paramSet[0]=0;
+	  //	  psr[0].param[param_finish].paramSet[0]=0;
 	  psr[0].param[param_finish].fitFlag[0]=0;
 	}
       else
@@ -3274,7 +3279,8 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 	  psr[0].param[param_finish].val[0] = origFinish;
 	  psr[0].param[param_finish].fitFlag[0]=1;
 	}
-    }
+	}*/
+  printf("Leaving with %g %d\n",(double)origFinish,psr[0].param[param_finish].fitFlag[0]);
 }
 
 
