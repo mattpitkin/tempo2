@@ -30,6 +30,10 @@
 #include <math.h>
 #include <string.h>
 
+void useSelectFile(char *fname,pulsar *psr,int npsr);
+void processSimultaneous(char *line,pulsar *psr, int npsr);
+void processFlag(char *line,pulsar *psr,int npsr);
+
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 {
   int p,i,k,l,nread,yes,fitN=0,setN=0,j;
@@ -739,165 +743,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 		}
 	    }
 	}
-  // Check for select file
+      // Check for select file
       if (strlen(selectFname) > 0)
-	{
-	  int k,l;
-	  int okay=0,found=0;
-	  double low,high,tdiff;
-	  char str[100],str1[100],str2[100],str3[100],str4[100],str5[100];
-	  
-	  FILE *fin;
-	  if (!(fin = fopen(selectFname,"r")))
-	    {
-	      printf("Unable to open select file: >%s<\n",selectFname);
-	      exit(1);
-	    }
-	  while (!feof(fin))
-	    {
-	      //		  if (fscanf(fin,"%s %s %lf %lf",select1[nSelect],select2[nSelect],
-	      //			     &select3[nSelect],&select4[nSelect])==4)
-	      //		    nSelect++;
-	      if (fscanf(fin,"%s",str)==1)
-		{
-		  if (strcasecmp(str,"ONLY")==0)
-		    {
-		      fscanf(fin,"%s",str1);
-		      if (strcasecmp(str1,"SIMUL")==0)
-			{
-			  nread=fscanf(fin,"%s %s %s %lf",str2,str3,str4,&tdiff);
-			  if (nread==3) tdiff=60; // Default to 60 seconds
-			  for (i=0;i<psr[p].nobs;i++)
-			    {
-			      found=0;
-			      for (l=0;l<psr[p].obsn[i].nFlags;l++)		      
-				{
-				  if (strcmp(psr[p].obsn[i].flagID[l],str2)==0 &&
-				      strcmp(psr[p].obsn[i].flagVal[l],str3)==0)
-				    {
-				      for (j=0;j<psr[p].nobs;j++)
-					{
-					  if (i!=j && strcmp(psr[p].obsn[j].flagID[l],str2)==0 &&
-					      strcmp(psr[p].obsn[j].flagVal[l],str4)==0 &&
-					      fabs(psr[p].obsn[i].sat - psr[p].obsn[j].sat)<=tdiff/SECDAY)
-					    {
-					      psr[p].obsn[j].deleted=-2;
-					      found=1;
-					      break;
-					    }
-					}
-				    }
-				}
-			      if (found==0 && psr[p].obsn[i].deleted!=-2)
-				psr[p].obsn[i].deleted=1;
-			      else if (psr[p].obsn[i].deleted==-2)
-				psr[p].obsn[i].deleted=0;
-			    }
-			  for (i=0;i<psr[p].nobs;i++)
-			    {
-			      if (psr[p].obsn[i].deleted==-2)
-				psr[p].obsn[i].deleted=0;
-			    }
-			}
-		    }
-		  else if (str[0]=='-') // Filter flags
-		    {
-		      fscanf(fin,"%s %lf %lf",str1,&low,&high);
-		      for (i=0;i<psr[p].nobs;i++)
-			{
-			  found=0;
-			  for (l=0;l<psr[p].obsn[i].nFlags;l++)		      
-			    {
-			      if (strcmp(psr[p].obsn[i].flagID[l],str)==0 &&
-				  strcmp(psr[p].obsn[i].flagVal[l],str1)==0)
-				{
-				  found=-1;
-				  if (psr[p].obsn[i].sat >= low && 
-				      psr[p].obsn[i].sat < high)
-				    {
-				      found=1;
-				      break;
-				    }		
-				}	     			      
-			    }
-			  if (found==-1)
-			    psr[p].obsn[i].deleted=1;
-			}
-		    }
-		  else if (strcasecmp(str,"FILTER")==0)
-		    {
-		      fscanf(fin,"%s",str);
-		      if (strcasecmp(str,"FREQ")==0)
-			{
-			  if (fscanf(fin,"%lf %lf",&low,&high)==2)
-			    {
-			      for (i=0;i<psr[p].nobs;i++)
-				{
-				  if (psr[p].obsn[i].freq >= low && psr[p].obsn[i].freq < high)
-				    psr[p].obsn[i].deleted=1;
-				}
-			    }
-			}
-		      else if (strcasecmp(str,"MJD")==0)
-			{
-			  if (fscanf(fin,"%lf %lf",&low,&high)==2)
-			    {
-			      for (i=0;i<psr[p].nobs;i++)
-				{
-				  if ((double)psr[p].obsn[i].sat >= low && (double)psr[p].obsn[i].sat < high)
-				    psr[p].obsn[i].deleted=1;
-				}
-			    }
-			}
-		      else if (strcasecmp(str,"TOAERR")==0)
-			{
-			  if (fscanf(fin,"%lf %lf",&low,&high)==2)
-			    {
-			      for (i=0;i<psr[p].nobs;i++)
-				{
-				  if ((double)psr[p].obsn[i].toaErr >= low && (double)psr[p].obsn[i].toaErr < high)
-				    psr[p].obsn[i].deleted=1;
-				}
-			    }
-			}
-		    }
-		  if (strcasecmp(str,"PASS")==0)
-		    {
-		      fscanf(fin,"%s",str1);
-		      if (strcasecmp(str1,"SIMUL")==0)
-			{
-			  nread=fscanf(fin,"%s %s %s %lf",str2,str3,str4,&tdiff);
-			  if (nread==3) tdiff=60; // Default to 60 seconds
-			  for (i=0;i<psr[p].nobs;i++)
-			    {
-			      found=0;
-			      for (l=0;l<psr[p].obsn[i].nFlags;l++)		      
-				{
-				  if (strcmp(psr[p].obsn[i].flagID[l],str2)==0 &&
-				      strcmp(psr[p].obsn[i].flagVal[l],str3)==0)
-				    {
-				      for (j=0;j<psr[p].nobs;j++)
-					{
-					  if (i!=j && strcmp(psr[p].obsn[j].flagID[l],str2)==0 &&
-					      strcmp(psr[p].obsn[j].flagVal[l],str4)==0 &&
-					      fabs(psr[p].obsn[i].sat - psr[p].obsn[j].sat)<=tdiff/SECDAY)
-					    {
-					      if (psr[p].obsn[i].toaErr > psr[p].obsn[j].toaErr)
-						psr[p].obsn[i].deleted=1;
-					      else
-						psr[p].obsn[j].deleted=1;
-					      break;
-					    }
-					}
-				    }
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	  fclose(fin);
-	}
+	useSelectFile(selectFname,psr,npsr);
+
       
       //
       // Check fjump
@@ -976,3 +825,292 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
     }
 
 } 
+
+void useSelectFile(char *fname,pulsar *psr,int npsr)
+{
+  int i,j,k,p;
+  char line[1000];
+  char first[1000];
+  char second[1000];
+  double v1,v2,v3;
+  int nread;
+  FILE *fin;
+  
+  if (!(fin = fopen(fname,"r")))
+    {
+      printf("Unable to open select file: >%s<\n",fname);
+      exit(1);
+    }
+  while (!feof(fin))
+    {
+      fgets(line,1000,fin);
+      nread = sscanf(line,"%s %s",first,second);
+      if (nread==2)
+	{
+	  if (strcmp(first,"PASS")==0 && strcmp(second,"MJD")==0)
+	    {
+	      sscanf(line,"%s %s %lf %lf",first,second,&v1,&v2);
+	      for (p=0;p<npsr;p++)
+		{
+		  for (i=0;i<psr[p].nobs;i++)
+		    {
+		      if ((double)psr[p].obsn[i].sat < v1 ||
+			  (double)psr[p].obsn[i].sat > v2 &&
+			  psr[p].obsn[i].deleted==0)
+			psr[p].obsn[i].deleted=1;			
+		    }
+		}
+	    }
+	else if (strcmp(first,"REJECT")==0 && strcmp(second,"MJD")==0)
+	    {
+	      sscanf(line,"%s %s %lf %lf",first,second,&v1,&v2);
+	      for (p=0;p<npsr;p++)
+		{
+		  for (i=0;i<psr[p].nobs;i++)
+		    {
+		      if ((double)psr[p].obsn[i].sat >= v1 &&
+			  (double)psr[p].obsn[i].sat <= v2 &&
+			  psr[p].obsn[i].deleted==0)
+			psr[p].obsn[i].deleted=1;			
+		    }
+		}
+	    }
+	  else if (strcmp(first,"PASS")==0 && strcmp(second,"TOAERR")==0)
+	    {
+	      sscanf(line,"%s %s %lf %lf",first,second,&v1,&v2);
+	      for (p=0;p<npsr;p++)
+		{
+		  for (i=0;i<psr[p].nobs;i++)
+		    {
+		      if ((double)psr[p].obsn[i].toaErr < v1 ||
+			  (double)psr[p].obsn[i].toaErr > v2 &&
+			  psr[p].obsn[i].deleted==0)
+			psr[p].obsn[i].deleted=1;			
+		    }
+		}
+	    }
+	  else if (strcmp(first,"REJECT")==0 && strcmp(second,"FREQ")==0)
+	    {
+	      sscanf(line,"%s %s %lf %lf",first,second,&v1,&v2);
+	      for (p=0;p<npsr;p++)
+		{
+		  for (i=0;i<psr[p].nobs;i++)
+		    {
+		      if ((double)psr[p].obsn[i].freq >= v1 &&
+			  (double)psr[p].obsn[i].freq <= v2 &&
+			  psr[p].obsn[i].deleted==0)
+			psr[p].obsn[i].deleted=1;			
+		    }
+		}
+	    }
+	  else if (strcmp(first,"PASS")==0 && strcmp(second,"FREQ")==0)
+	    {
+	      sscanf(line,"%s %s %lf %lf",first,second,&v1,&v2);
+	      for (p=0;p<npsr;p++)
+		{
+		  for (i=0;i<psr[p].nobs;i++)
+		    {
+		      if ((double)psr[p].obsn[i].freq < v1 ||
+			  (double)psr[p].obsn[i].freq > v2 &&
+			  psr[p].obsn[i].deleted==0)
+			psr[p].obsn[i].deleted=1;			
+		    }
+		}
+	    }
+	  else if (strcmp(first,"REJECT")==0 && strcmp(second,"TOAERR")==0)
+	    {
+	      sscanf(line,"%s %s %lf %lf",first,second,&v1,&v2);
+	      for (p=0;p<npsr;p++)
+		{
+		  for (i=0;i<psr[p].nobs;i++)
+		    {
+		      if ((double)psr[p].obsn[i].toaErr >= v1 &&
+			  (double)psr[p].obsn[i].toaErr <= v2 &&
+			  psr[p].obsn[i].deleted==0)
+			psr[p].obsn[i].deleted=1;			
+		    }
+		}
+	    }
+	  else if (strcmp(first,"PROCESS")==0 && strcmp(second,"SIMUL")==0)
+	    processSimultaneous(line,psr,npsr);
+	  else if (strcmp(first,"PROCESS")==0 && second[0]=='-')
+	    processFlag(line,psr,npsr);
+	}      
+    }
+  
+
+
+	  fclose(fin);
+
+}
+
+// Function to process specified flags
+void processFlag(char *line,pulsar *psr,int npsr)
+{
+  char t1[100],flagID[100],flagV[100],s1[100],s2[100],s3[100],s4[100],s5[100],s6[100];
+  double v1,v2;
+  int p,i,j,k,found;
+
+  sscanf(line,"%s %s %s %s %lf %lf",t1,flagID,flagV,s1,&v1,&v2);
+  for (p=0;p<npsr;p++)
+    {
+      for (i=0;i<psr[p].nobs;i++)
+	{
+	  found=0;
+	  for (k=0;k<psr[p].obsn[i].nFlags;k++)
+	    {
+	      if (strcmp(psr[p].obsn[i].flagID[k],flagID)==0 &&
+		  strcmp(psr[p].obsn[i].flagVal[k],flagV)==0 &&
+		  psr[p].obsn[i].deleted==0)
+		{found=1; break;}
+	    }
+	  if (found==1) // Got a point to process
+	    {
+	      if (strcasecmp(s1,"mjdpass")==0 && ((double)psr[p].obsn[i].sat < v1 ||
+						  (double)psr[p].obsn[i].sat > v2))
+		psr[p].obsn[i].deleted=1;
+	      if (strcasecmp(s1,"mjdreject")==0 && ((double)psr[p].obsn[i].sat >= v1 &&
+						  (double)psr[p].obsn[i].sat <= v2))
+		psr[p].obsn[i].deleted=1;
+	      if (strcasecmp(s1,"errpass")==0 && ((double)psr[p].obsn[i].toaErr < v1 ||
+						  (double)psr[p].obsn[i].toaErr > v2))
+		psr[p].obsn[i].deleted=1;
+	      if (strcasecmp(s1,"errreject")==0 && ((double)psr[p].obsn[i].toaErr >= v1 &&
+						  (double)psr[p].obsn[i].toaErr <= v2))
+		psr[p].obsn[i].deleted=1;
+	      if (strcasecmp(s1,"freqpass")==0 && ((double)psr[p].obsn[i].freq < v1 ||
+						  (double)psr[p].obsn[i].freq > v2))
+		psr[p].obsn[i].deleted=1;
+	      if (strcasecmp(s1,"freqreject")==0 && ((double)psr[p].obsn[i].freq >= v1 &&
+						  (double)psr[p].obsn[i].freq <= v2))
+		psr[p].obsn[i].deleted=1;
+	    }
+	}
+    }
+  
+}
+
+//
+// Function to process simultaneous points
+//
+void processSimultaneous(char *line,pulsar *psr, int npsr)
+{
+  int i,j,k,p,nread;
+  int found1,found2,simul;
+  char s1[100],s2[100],s3[100],s4[100],t1[100],t2[100];
+  double tdiff;
+  nread = sscanf(line,"%s %s %s %s %s %s %lf",t1,t2,s1,s2,s3,s4,&tdiff);
+  if (nread!=6 && nread!=7)
+    {
+      printf("Problem in processing line: %s\n",line);
+      return;
+    }
+  if (nread==6)
+    tdiff=60;
+
+  if (strcmp(t1,"PROCESS")==0 && strcmp(t2,"SIMUL")==0 && strcasecmp(s4,"only")==0) // Only identify simultaneous points
+    {
+      for (p=0;p<npsr;p++)
+	{
+	  for (i=0;i<psr[p].nobs;i++)
+	    {
+	      simul=0;
+	      for (j=0;j<psr[p].nobs;j++)
+		{
+		  if (i!=j && (fabs(psr[p].obsn[i].sat - psr[p].obsn[j].sat)*SECDAY < tdiff))
+		    {
+		      found1=0;
+		      found2=0;
+		      for (k=0;k<psr[p].obsn[i].nFlags;k++)
+			{
+			  if (strcmp(psr[p].obsn[i].flagID[k],s1)==0 &&
+			      strcmp(psr[p].obsn[i].flagVal[k],s2)==0 &&
+			      psr[p].obsn[i].deleted==0)
+			    {found1=1; break;}
+			}
+		      for (k=0;k<psr[p].obsn[j].nFlags;k++)
+			{
+			  if (strcmp(psr[p].obsn[j].flagID[k],s1)==0 &&
+			      strcmp(psr[p].obsn[j].flagVal[k],s3)==0 &&
+			      psr[p].obsn[j].deleted==0)
+			    {found2=1; break;}
+			}
+		      if (found1==1 && found2==1)
+			{
+			  simul=1;
+			  break;
+			}
+
+		      for (k=0;k<psr[p].obsn[i].nFlags;k++)
+			{
+			  if (strcmp(psr[p].obsn[i].flagID[k],s1)==0 &&
+			      strcmp(psr[p].obsn[i].flagVal[k],s3)==0 &&
+			      psr[p].obsn[i].deleted==0)
+			    {found1=1; break;}
+			}
+		      for (k=0;k<psr[p].obsn[j].nFlags;k++)
+			{
+			  if (strcmp(psr[p].obsn[j].flagID[k],s1)==0 &&
+			      strcmp(psr[p].obsn[j].flagVal[k],s2)==0 &&
+			      psr[p].obsn[j].deleted==0)
+			    {found2=1; break;}
+			}
+		      if (found1==1 && found2==1)
+			{
+			  simul=1;
+			  break;
+			}
+
+		    }
+		}
+	      if (simul==0)
+		psr[p].obsn[i].deleted=1;
+	    }
+	}
+    }
+      else
+	{
+	  for (p=0;p<npsr;p++)
+	    {
+	  for (i=0;i<psr[p].nobs;i++)
+	    {
+	      for (j=0;j<psr[p].nobs;j++)
+		{
+		  if (i!=j && (fabs(psr[p].obsn[i].sat - psr[p].obsn[j].sat)*SECDAY < tdiff))
+		    {		    
+		      found1=0;
+		      found2=0;
+		      for (k=0;k<psr[p].obsn[i].nFlags;k++)
+			{
+			  if (strcmp(psr[p].obsn[i].flagID[k],s1)==0 &&
+			      strcmp(psr[p].obsn[i].flagVal[k],s2)==0 &&
+			      psr[p].obsn[i].deleted==0)
+			    {found1=1; break;}
+			}
+		      for (k=0;k<psr[p].obsn[j].nFlags;k++)
+			{
+			  if (strcmp(psr[p].obsn[j].flagID[k],s1)==0 &&
+			      strcmp(psr[p].obsn[j].flagVal[k],s3)==0 &&
+			      psr[p].obsn[j].deleted==0)
+			    {found2=1; break;}
+			}
+		      if (found1==1 && found2==1)
+			{
+			  if (strcasecmp(s4,"toaerr")==0)
+			    {
+			      if (psr[p].obsn[i].toaErr < psr[p].obsn[j].toaErr)
+				psr[p].obsn[j].deleted=1;
+			      else
+				psr[p].obsn[i].deleted=1;
+			    }
+			  else if (strcasecmp(s4,"1")==0)
+			    psr[p].obsn[j].deleted=1;
+			  else if (strcasecmp(s4,"2")==0)
+			    psr[p].obsn[i].deleted=1;
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
