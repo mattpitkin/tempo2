@@ -719,10 +719,6 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
       displayMsg(1,"MISC1","Unknown parameter in par file: ",str,psr->noWarnings);
     }
-
-
-  printf("Track 0 = %d %g\n",psr[0].param[param_track].paramSet[0],(double)psr[0].param[param_track].val[0]);
-  printf("Track 1 = %d %g\n",psr[1].param[param_track].paramSet[0],(double)psr[0].param[param_track].val[0]);
 }
 
 void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
