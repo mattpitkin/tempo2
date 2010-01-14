@@ -43,10 +43,11 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    longdouble phaseJ,phaseW;
    longdouble ftpd,fct,ff0,phaseint;
    longdouble torb,deltaT,dt00=0.0,phas1=0.0;
-   longdouble mean;
+   longdouble mean,ct00=0.0;
    int nmean;
    int ntpd,nf0;
    int i,p,k;
+   int time=0;
    int ntrk=0;
    int gotit=0;
 
@@ -216,30 +217,44 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /* residual = residual in phase */
 	   if (psr[p].obsn[i].deleted!=1)
 	     {
-	       dt00  = residual;
 	       gotit = 1;
 	     }
 
-
-	   /* CURRENTLY NOT CHECKING HOW MANY DAYS WE SHOULD TRACK OVER!! -- SHOULD CHANGE? */
-	   if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0]==1
-	       && gotit==1)
+	   if (psr[p].param[param_track].paramSet[0]==1
+	       && gotit==1 && time==1)
 	     {
 	       residual+=ntrk;
-	       if (fabs(residual-1.0-dt00) < fabs(residual-dt00))
+	       // Note that this requires that the points be in time order
+	       if (psr[p].obsn[i].bbat - ct00 < 0.0L)
 		 {
-		   residual-=1.0;
-		   ntrk-=1;
-		 } 
-	       else if (fabs(residual+1.0-dt00) < fabs(residual-dt00))
+		   printf("ERROR: Points must be in time order for tracking to work\n");
+		   printf("Observation %d (%s) has BBAT = %.5g\n",i,psr[p].obsn[i].fname,(double)psr[p].obsn[i].bbat);
+		   printf("Observation %d (%s) has BBAT = %.5g\n",i-1,psr[p].obsn[i-1].fname,(double)psr[p].obsn[i-1].bbat);
+		   printf("Difference = %Lg %Lg %Lg\n",psr[p].obsn[i].bbat, ct00,psr[p].obsn[i].bbat - ct00);
+		   //		   exit(1);
+		 }
+	       if (psr[p].obsn[i].bbat - ct00 < psr[p].param[param_track].val[0])
 		 {
-		   residual+=1.0;
-		   ntrk+=1;
-		 } 
+		   if (fabs(residual+1.0-dt00) < fabs(residual-dt00))
+		     {
+		       residual+=1.0;
+		       ntrk+=1;
+		     } 
+		   else if (fabs(residual-1.0-dt00) < fabs(residual-dt00))
+		     {
+		       residual-=1.0;
+		       ntrk-=1;
+		     } 
+		 }
 	     }
-	   else if (psr[p].param[param_track].paramSet[0]==1 && (psr[p].param[param_track].val[0]==2 ||
+	       dt00  = residual;
+	       ct00 = psr[p].obsn[i].bbat;
+
+	   if (gotit==1 && time==0)
+	     time=1;
+	   /*	   else if (psr[p].param[param_track].paramSet[0]==1 && (psr[p].param[param_track].val[0]==2 ||
 								 psr[p].param[param_track].val[0]==20)
-	       && gotit==1)
+		    && gotit==1)
 	     {
 	       residual+=ntrk;
 	       if (fabs(residual-1.0-lastResidual) < fabs(residual-lastResidual))
@@ -269,7 +284,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   int jumped=0;
 		   residual-=1.0;
 		   ntrk-=1;
-		   /* Consider further phase jumps */
 		   do {
 		     jumped=0;
 		     grad5 = (residual-1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);		   
@@ -287,7 +301,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   int jumped=0;
 		   residual+=1.0;
 		   ntrk+=1;
-		   /* Consider further phase jumps */
 		   do {
 		     jumped=0;
 		     grad5 = (residual+1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);		   
@@ -331,7 +344,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   //		   printf("In first with %g %g %g %g\n",(double)psr[p].obsn[i].sat,grad1,grad2,grad3);
 		   residual-=1.0;
 		   ntrk-=1;
-		   /* Consider further phase jumps */
 		   do {
 		     jumped=0;
 		     grad5 = (residual-1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);		   
@@ -345,7 +357,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 			 jumped=1;
 		       }
 		   }while (jumped==1);
-		 } 
+		 }
 	       else if (fabs(grad1-grad4) < fabs(grad1-grad2))
 		 {
 		   int jumped=0;
@@ -354,7 +366,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   ntrk+=1;
 		   //		   printf("In second with %g %g %g %g\n",(double)psr[p].obsn[i].sat,grad1,grad2,grad4);
 
-		   /* Consider further phase jumps */
 		   do {
 		     jumped=0;
 		     grad5 = (residual+1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);		   
@@ -373,7 +384,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   //		   printf("In this bit %g\n",(double)psr[p].obsn[i].sat);
 		   residual-=1.0;
 		   ntrk-=1;
-		   /* Consider further phase jumps */
 		   do {
 		     jumped=0;
 		     if (fabs(residual-1.0-lastResidual) < fabs(residual-lastResidual))
@@ -384,7 +394,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		       }
 		   }while (jumped==1);
 
-		 } 
+		 }
 	       else if (fabs(residual+1.0-lastResidual) < fabs(residual-lastResidual) && dir==1)
 		 {
 		   //		   printf("In third with %g %g %g %g\n",(double)psr[p].obsn[i].sat,grad1,grad2,grad3);
@@ -393,7 +403,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 
 		 } 
-	     }
+	     } */
 	   psr[p].obsn[i].residual = residual/psr[p].param[param_f].val[0];
 
 	   ppRes = priorResidual;
