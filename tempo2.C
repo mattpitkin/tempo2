@@ -407,12 +407,9 @@ int main(int argc, char *argv[])
 	{
 	  if (debugFlag==1) printf("iteration %d\n",iteration);
 	  if (debugFlag==1) printf("calling formBatsAll\n");
-	  printf("Formning bats\n");
 	  formBatsAll(psr,npsr);                /* Form Barycentric arrival times */
 	  if (debugFlag==1) printf("calling formResiduals\n");
-	  printf("Formning resids\n");
 	  formResiduals(psr,npsr,iteration);       /* Form residuals */
-	  printf("Done resid\n");
 	  if (listparms==1 && iteration==0)displayParameters(13,timFile,parFile,psr,npsr); /* List out all the parameters */  
 	  if (iteration==0)          /* Only fit to pre-fit residuals */
 	    {

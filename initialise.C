@@ -120,9 +120,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }
   
   allocateMemory(psr,0);
-  psr->param[param_track].paramSet[0]=1;
+  /*  psr->param[param_track].paramSet[0]=1;
   psr->param[param_track].val[0]=0.0;
-  psr->param[param_track].prefit[0]=0.0;
+  psr->param[param_track].prefit[0]=0.0;*/
   
   /* Spin-frequency parameters */
   for (j=0;j<psr->param[param_f].aSize;j++)

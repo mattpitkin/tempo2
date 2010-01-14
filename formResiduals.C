@@ -225,13 +225,14 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     {
 	       residual+=ntrk;
 	       // Note that this requires that the points be in time order
-	       if (psr[p].obsn[i].bbat - ct00 < 0.0L)
+	       if (psr[p].obsn[i].bbat - ct00 < 0.0L && fabs(psr[p].obsn[i].bbat-ct00) > 1)
 		 {
 		   printf("ERROR: Points must be in time order for tracking to work\n");
+		   printf("Pulsar = %s\n",psr[p].name);
 		   printf("Observation %d (%s) has BBAT = %.5g\n",i,psr[p].obsn[i].fname,(double)psr[p].obsn[i].bbat);
 		   printf("Observation %d (%s) has BBAT = %.5g\n",i-1,psr[p].obsn[i-1].fname,(double)psr[p].obsn[i-1].bbat);
 		   printf("Difference = %Lg %Lg %Lg\n",psr[p].obsn[i].bbat, ct00,psr[p].obsn[i].bbat - ct00);
-		   //		   exit(1);
+		   exit(1);
 		 }
 	       if (psr[p].obsn[i].bbat - ct00 < psr[p].param[param_track].val[0])
 		 {
