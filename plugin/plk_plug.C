@@ -814,7 +814,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    cpgqcs(4,&xch,&ych);
 	    for (i=0;i<psr[0].nPhaseJump;i++)
 	      {
-		px[0] = (float)(psr[0].phaseJump[i]-centreEpoch);
+		px[0] = (float)(psr[0].obsn[psr[0].phaseJumpID[i]].bat-centreEpoch);
 		px[1] = px[0];
 		py[0] = ploty1;
 		py[1] = ploty2;
@@ -1301,7 +1301,34 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  }
 	else if (key=='-' || key=='+') /*  phase jump */
 	  {
-	    psr[0].phaseJump[psr[0].nPhaseJump] = mouseX+centreEpoch;
+	    // Find closest point to the left
+	    int i,iclosest;
+	    float closest,x1,x2,x3,x4,y1,y2,y3,y4,xscale,yscale,xpos,ypos;
+	    
+	    cpgqvp(3,&x1,&x2,&y1,&y2);
+	    cpgqwin(&x3,&x4,&y3,&y4);
+	    xscale = (x2-x1)/(x4-x3);
+	    yscale = (y2-y1)/(y4-y3);
+	    mouseX = (mouseX-x3)*xscale;
+	    mouseY = (mouseY-y3)*yscale;
+	    iclosest=-1;
+	    for (i=0;i<count;i++)
+	      {
+		xpos = (x[i]-x3)*xscale;
+		ypos = (y[i]-y3)*yscale;
+		if (iclosest==-1 && xpos < mouseX)
+		  {
+		    iclosest=id[i];
+		    closest = pow(xpos-mouseX,2)+pow(ypos-mouseY,2);
+		  }
+		else if (pow(xpos-mouseX,2)+pow(ypos-mouseY,2)<closest && xpos < mouseX)
+		  {
+		    iclosest=id[i];
+		    closest = pow(xpos-mouseX,2)+pow(ypos-mouseY,2);
+		  }
+	      }
+	    psr[0].phaseJump[psr[0].nPhaseJump] = psr[0].obsn[id[iclosest]].sat+1.0/SECDAY;
+	    psr[0].phaseJumpID[psr[0].nPhaseJump] = iclosest;
 	    if (key=='-') psr[0].phaseJumpDir[psr[0].nPhaseJump] = -1;
 	    else psr[0].phaseJumpDir[psr[0].nPhaseJump] = 1;
 	    for (i=0;i<psr[0].nobs;i++)
@@ -1319,13 +1346,13 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		/*	    zoomY1 -= 1.0/psr[0].param[param_f0].val;
 			    zoomY2 += 1.0/psr[0].param[param_f0].val; */
 	      } 
-	if (key=='+') 
-	  {
-	    setZoomY1 = 0; setZoomY2 = 0;
-	    /*	    zoomY1 -= 1.0/psr[0].param[param_f0].val;
-		    zoomY2 += 1.0/psr[0].param[param_f0].val; */
-	  } 
-	psr[0].nPhaseJump++;
+	    if (key=='+') 
+	      {
+		setZoomY1 = 0; setZoomY2 = 0;
+		/*	    zoomY1 -= 1.0/psr[0].param[param_f0].val;
+			    zoomY2 += 1.0/psr[0].param[param_f0].val; */
+	      } 
+	    psr[0].nPhaseJump++;
 	  }
 	else if (key==8) // Backspace - remove all phase jumps
 	  {
