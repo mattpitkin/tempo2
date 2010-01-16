@@ -512,7 +512,8 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 		}
 	      else if (strcasecmp(param1,"PHASE")==0) /* Add phase jump                          */
 		{
-		  psr->phaseJump[psr->nPhaseJump] = psr->obsn[nObs-1].sat;		  
+		  psr->phaseJump[psr->nPhaseJump] = psr->obsn[nObs-1].sat+1.0/SECDAY;		  
+		  psr->phaseJumpID[psr->nPhaseJump] = nObs-1;
 		  sscanf(line,"%s %d",param1,&psr->phaseJumpDir[psr->nPhaseJump]);
 		  psr->nPhaseJump++;		  
 		}

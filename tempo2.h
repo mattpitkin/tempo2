@@ -273,8 +273,9 @@ typedef struct pulsar {
 
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
   double velPulsar[3];            /* 3-vector giving pulsar's velocity                          */  
-  double phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */
+  long double phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */
   int    phaseJumpDir[MAX_JUMPS]; /* Size and direction of phase jump                           */
+  int    phaseJumpID[MAX_JUMPS];  /* ID of closest point to the phase jump */
   int    nPhaseJump;              /* Number of phase jumps                                      */
   double ne_sw;                   /* Electron density at 1AU due to the solar wind              */
   int    nCompanion;              /* Number of binary companions                                */

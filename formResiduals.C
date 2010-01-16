@@ -220,7 +220,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       gotit = 1;
 	     }
 
-	   if (psr[p].param[param_track].paramSet[0]==1
+	   if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0] > 0
 	       && gotit==1 && time==1)
 	     {
 	       residual+=ntrk;
