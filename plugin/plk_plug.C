@@ -1321,10 +1321,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		    iclosest=id[i];
 		    closest = pow(xpos-mouseX,2)+pow(ypos-mouseY,2);
 		  }
-		else if (pow(xpos-mouseX,2)+pow(ypos-mouseY,2)<closest && xpos < mouseX)
+		else if (fabs(xpos-mouseX)<closest && xpos < mouseX)
 		  {
 		    iclosest=id[i];
-		    closest = pow(xpos-mouseX,2)+pow(ypos-mouseY,2);
+		    closest = fabs(xpos-mouseX);
 		  }
 	      }
 	    psr[0].phaseJump[psr[0].nPhaseJump] = psr[0].obsn[id[iclosest]].sat+1.0/SECDAY;
