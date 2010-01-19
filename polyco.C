@@ -388,6 +388,7 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
 	  fprintf(fout,"%25.17le",(double)coeff[i]);
 	  if ((i+1)%3==0) fprintf(fout,"\n");
 	}
+      if ((i%3)!=0) fprintf(fout,"\n");
       
       fprintf(fout2,"TEMPO2: POLYCO TEMPO1 emulation\n");
       if (psr->name[0]=='J') fprintf(fout2,"%-10.10s\n",(psr->name)+1);
