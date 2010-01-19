@@ -913,9 +913,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			col=1;
 		      }
 		    if (col+1 >= 15) col-=13;
-		    cpgsci(col+1);
+		    if (publish==0)
+		      {
+			cpgsci(col+1);
+			cpgpt(1,&x[i],&y[i],16);
+		      }
+		    else
+		      cpgpt(1,&x[i],&y[i],col-12);
 		    //		    cpgsci(7);
-		    cpgpt(1,&x[i],&y[i],16);
 		    if (plotErr==1 && (yplot==1 || yplot==2)) cpgerry(1,&x[i],&yerr1[i],&yerr2[i],1);
 		    if (plotErr==2 && (yplot==1 || yplot==2)) cpgerry(1,&x[i],&yerr1[i],&yerr2[i],0);
 
