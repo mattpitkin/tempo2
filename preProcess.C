@@ -29,10 +29,8 @@
 #include "tempo2.h"
 #include <math.h>
 #include <string.h>
+#include <dlfcn.h>
 
-void useSelectFile(char *fname,pulsar *psr,int npsr);
-void processSimultaneous(char *line,pulsar *psr, int npsr);
-void processFlag(char *line,pulsar *psr,int npsr);
 
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 {
@@ -47,6 +45,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
   char newEpoch[100]="NONE";
   char selectFname[1000]="";
   char globalFname[1000]="";
+  char selectPlugName[1000]="";
   char select1[100][100];
   char select2[100][100];
   char line[MAX_STRLEN];
@@ -93,6 +92,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	nojump=1;
       else if (strcmp(argv[i],"-select")==0)
 	sscanf(argv[++i],"%s",selectFname);
+      else if (strcmp(argv[i],"-splug")==0)
+	sscanf(argv[++i],"%s",selectPlugName);
       else if (strcmp(argv[i],"-global")==0)
 	sscanf(argv[++i],"%s",globalFname);
       else if (strcmp(argv[i],"-modify")==0)
@@ -744,9 +745,35 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    }
 	}
       // Check for select file
-      if (strlen(selectFname) > 0)
-	useSelectFile(selectFname,psr,npsr);
+      if (strlen(selectPlugName) > 0)
+	{
+	  char *(*entry)(int,char **,pulsar *,int *);
+	  void * module;
+	  char str[1000];
 
+	  sprintf(str,"%s/plugins/%s_splug.so",getenv(TEMPO2_ENVIRON),
+		  selectPlugName);
+	  printf("Looking for %s\n",str);
+	  module = dlopen(str, RTLD_NOW); 
+	  if(!module)  {
+	    fprintf(stderr, "[error]: dlopen() failed while resolving symbols.\n" );
+	    fprintf(stderr, "dlerror() = %s\n",dlerror());
+	    exit(1);
+	  }
+	  entry = (char*(*)(int,char **,pulsar *,int *))dlsym(module, "selectInterface");
+	  if( entry == NULL ) {
+	    dlclose(module);
+	    fprintf(stderr, "[error]: dlerror() failed while  retrieving address.\n" ); 
+	    fprintf(stderr, "dlerror() = %s\n",dlerror());
+	    exit(1);
+	  }
+	  entry(argc,argv,psr,&npsr);
+	}
+      else
+	{
+	  if (strlen(selectFname) > 0)
+	    useSelectFile(selectFname,psr,npsr);
+	}
       
       //
       // Check fjump
@@ -861,7 +888,7 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 		    }
 		}
 	    }
-	else if (strcmp(first,"REJECT")==0 && strcmp(second,"MJD")==0)
+	  else if (strcmp(first,"REJECT")==0 && strcmp(second,"MJD")==0)
 	    {
 	      sscanf(line,"%s %s %lf %lf",first,second,&v1,&v2);
 	      for (p=0;p<npsr;p++)
@@ -917,6 +944,57 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 		    }
 		}
 	    }
+	  else if (strcmp(first,"PASS")==0 && second[0]=='-')
+	    {
+	      char *pos;
+	      char *res;
+	      int nf=0;
+	      int found;
+	      char fi[20][100];
+	      strcpy(pos,line);
+	      strcpy(line,strtok(pos," "));
+	      strcpy(second,strtok(NULL," "));
+	      
+	      do
+		{
+		  res = strtok(NULL," ");
+		  if (res!=NULL)
+		    {
+		      strcpy(fi[nf++],res);
+		      if (fi[nf-1][strlen(fi[nf-1])-1] == '\n')
+			fi[nf-1][strlen(fi[nf-1])-1] = '\0';
+		      if (nf == 20) 
+			{
+			  printf("ERROR: too many flags in the select file\n");
+			  exit(1);
+			}
+		    }
+		} while (res != NULL);
+		//	      sscanf(line,"%s %s",first,second);
+		for (p=0;p<npsr;p++)
+		{
+		  for (i=0;i<psr[p].nobs;i++)
+		    {
+		      if (psr[p].obsn[i].deleted==0)
+			{
+			  found=0;
+			  for (j=0;j<psr[p].obsn[i].nFlags;j++)
+			    {
+			      if (strcmp(psr[p].obsn[i].flagID[j],second)==0)
+				{
+				  for (k=0;k<nf;k++)
+				    {
+				      if (strcmp(psr[p].obsn[i].flagVal[j],fi[k])==0)
+					{found=1; j=psr[p].obsn[i].nFlags; break;}
+				    }
+				}			       
+			    }
+			  if (found==0)
+			    psr[p].obsn[i].deleted=1;			
+			}
+		    }
+		}
+	    }
 	  else if (strcmp(first,"REJECT")==0 && strcmp(second,"TOAERR")==0)
 	    {
 	      sscanf(line,"%s %s %lf %lf",first,second,&v1,&v2);
@@ -937,11 +1015,7 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 	    processFlag(line,psr,npsr);
 	}      
     }
-  
-
-
-	  fclose(fin);
-
+  fclose(fin);
 }
 
 // Function to process specified flags

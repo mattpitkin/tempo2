@@ -185,6 +185,13 @@ int main(int argc, char *argv[])
 	  fclose(fout);
       }
   }
+
+  if (getenv(TEMPO2_ENVIRON)==NULL)
+    {
+      printf("Environment variable >%s< not set\n",TEMPO2_ENVIRON);
+      exit(1);
+    }
+
   /* If running from the command line ... */
   if (debugFlag==1) printf("Running initialise\n");
   initialise(psr,noWarnings); /* Initialise all */

@@ -44,8 +44,7 @@ int setupParameterFileDefaults(pulsar *psr)
   strcpy(psr->clock, "TT(TAI)");
   if (getenv(TEMPO2_ENVIRON)==NULL)
     {
-      sprintf (TEMPO2_ERROR,
-	       "ERROR: %s environment variable not set", TEMPO2_ENVIRON);
+      printf("Environment variable >%s< not set\n",TEMPO2_ENVIRON);
       return -1;
     }
   strcpy(psr->JPL_EPHEMERIS,getenv(TEMPO2_ENVIRON));
