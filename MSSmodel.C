@@ -120,7 +120,7 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   eth=ecc*(1.0+dth);
   /*  Compute eccentric anomaly u by iterating Kepler's equation.*/
   u=phase+ecc*sin(phase)*(1+ecc*cos(phase));
-  printf("params: %g %g %g %d\n",(double)tt0,(double)si,(double)am2,psr[p].param[param_om].paramSet[2]);
+  //  printf("params: %g %g %g %d\n",(double)tt0,(double)si,(double)am2,psr[p].param[param_om].paramSet[2]);
 
   do
     {
