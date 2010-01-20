@@ -42,8 +42,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    longdouble lastBat=0.0,priorBat=0.0,ppBat=0.0;
    longdouble phaseJ,phaseW;
    longdouble ftpd,fct,ff0,phaseint;
-   longdouble torb,deltaT,dt00=0.0,phas1=0.0;
+   longdouble torb,deltaT,dt00=0.0,dtm1=0.0,phas1=0.0;
    longdouble mean,ct00=0.0;
+   int dtm1s=0;
    int nmean;
    int ntpd,nf0;
    int i,p,k;
@@ -247,11 +248,43 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     } 
 		 }
 	     }
-	   if (psr[p].param[param_track].val < 0) // Do extra tracking
+	   
+	   if ((double)psr[p].param[param_track].val[0] < 0) // Do extra tracking
 	     {
-	     }
+	       if (dtm1s==0) printf("Attempting tracking via the gradient method\n");
 
+	       if (dtm1s>1 && fabs(psr[p].obsn[i].bat-lastBat) > 1 
+		 		   && fabs(lastBat-priorBat) > 1) // Have 3 points each separated by more than 1 day
+		 {
+		   double m1,m2,m3,m4,m5;
+		   m1 = (double)(lastResidual-priorResidual)/(lastBat-priorBat);
+		   m2 = (double)(residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
+		   m3 = (double)(residual-1-lastResidual)/(psr[p].obsn[i].bat-lastBat);
+		   m4 = (double)(residual+1-lastResidual)/(psr[p].obsn[i].bat-lastBat);
+		   printf("pos %d %g %g %g %g (%g) (%g) (%g)\n",i,m1,m2,m3,m4,fabs(m2-m1),fabs(m3-m1),fabs(m4-m1));
+
+		   if (fabs(m1-m2) < fabs(m1-m3) && fabs(m1-m2) < fabs(m1-m4))
+		     {
+		     }
+		   else if (fabs(m1-m3) < fabs(m1-m2) && fabs(m1-m3) < fabs(m1-m4))
+		     {
+		       printf("Updating neg\n");
+		       residual-=1.0;
+		       ntrk-=1;
+		     }
+		   else if (fabs(m1-m4) < fabs(m1-m2) && fabs(m1-m4) < fabs(m1-m3))
+		     {
+		       printf("Updating pos\n");
+		       residual+=1.0;
+		       ntrk+=1;
+		       } 
+		 }
+	     }
+	   
+	   dtm1s ++;
+	   dtm1 = dt00;
 	   dt00  = residual;
+
 	   ct00 = psr[p].obsn[i].bbat;
 	   
 	   if (gotit==1 && time==0)
