@@ -358,6 +358,7 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
   if (debugFlag == 1) printf("calling interpolateWeightedSmooth()\n");
   interpolateWeightedSmooth();
 //just a check, remove it:
+//TODO
 k=0;
 for (i=0;i<fitCount;i++)
 if (psr[0].obsn[fitObs[i]].sat < start_sessions[0] || psr[0].obsn[fitObs[i]].sat > finish_sessions[89])
@@ -415,7 +416,7 @@ void init(int argc, char* argv[]) {
   describe();
 
 
-  //initialize freqOffset:
+  //initialize freqOffset - this variables control in what way we identify points at given frequency, related to options -freq:
   freqOffset[0] = freqOffset[1] = 0;
   /* Obtain the .par and the .tim file from the command line */
   if (argc < 4) {
@@ -628,26 +629,53 @@ void handleFreqPoints(pulsar *psr) {
 	//that's needed for the jumps:
 	//it goes through all observations and turns on jumps only at
 	// used frequencies
-	for (k = 0; k < psr[0].obsn[i].nFlags; ++k) {
-	  found = 0;
-	  if (strcmp(psr[0].obsn[i].flagID[k], psr[0].fjumpID) == 0) {
-	    for (l = 0; l<nf; l++) {
-	      strncpy(_tmp, "", sizeof (_tmp));
-	      strcat(_tmp, psr[0].fjumpID);
-	      strcat(_tmp, " ");
-	      strcat(_tmp, psr[0].obsn[i].flagVal[k]);
-	      if (strcmp(_tmp, psr[0].jumpStr[l]) == 0) {
+	// TODO:
+	// it works only for the FJUMP -f, doesn't work with JUMP in the par file
+	if (strlen(psr[0].fjumpID)>0) { // this for the FJUMP case
+	  for (k = 0; k < psr[0].obsn[i].nFlags; ++k) {
+	    found = 0;
+	    if (strcmp(psr[0].obsn[i].flagID[k], psr[0].fjumpID) == 0) {
+	      for (l = 0; l<nf; l++) {
+		strncpy(_tmp, "", sizeof (_tmp));
+		strcat(_tmp, psr[0].fjumpID);
+		strcat(_tmp, " ");
+		strcat(_tmp, psr[0].obsn[i].flagVal[k]);
+		if (strcmp(_tmp, psr[0].jumpStr[l]) == 0) {
+		  psr[0].obsn[i].jump = l;
+		  found = 1;
+		  break;
+		}
+	      }
+	      if (found == 0) {
+		sprintf(psr[0].jumpStr[nf], "%s %s", psr[0].fjumpID, psr[0].obsn[i].flagVal[k]);
+		psr[0].obsn[i].jump = nf;
+		(nf)++;
+	      }
+	    }
+	  }
+	} else // this if for the case were we have JUMP flag, not FJUMP -f
+	{
+	  // TODO:
+	  // implement it :) base it on readParFile()
+	  // psr->nJumps should be set already by readParfile, need to set nf:
+	  // and preProcess around 669 (CHECK JUMPS)
+	  nf = psr[0].nJumps+1;
+	  for (k=0; k < psr[0].obsn[i].nFlags; ++k)
+	  {
+	    strncpy(_tmp, "", sizeof (_tmp));
+	    strcat(_tmp, psr[0].obsn[i].flagID[k]);
+	    strcat(_tmp, " ");
+	    strcat(_tmp, psr[0].obsn[i].flagVal[k]);
+	    for (l = 0; l < nf; l++)
+	    {
+	      if (strcmp(_tmp, psr[0].jumpStr[l]) == 0) 
+	      {
 		psr[0].obsn[i].jump = l;
-		found = 1;
 		break;
 	      }
 	    }
-	    if (found == 0) {
-	      sprintf(psr[0].jumpStr[nf], "%s %s", psr[0].fjumpID, psr[0].obsn[i].flagVal[k]);
-	      psr[0].obsn[i].jump = nf;
-	      (nf)++;
-	    }
 	  }
+
 	}
       }
     }
