@@ -220,8 +220,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       gotit = 1;
 	     }
 
-	   if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0] > 0
-	       && gotit==1 && time==1)
+	   if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0] != 0 && gotit==1 && time==1)
 	     {
 	       residual+=ntrk;
 	       // Note that this requires that the points be in time order
@@ -234,7 +233,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   printf("Difference = %Lg %Lg %Lg\n",psr[p].obsn[i].bbat, ct00,psr[p].obsn[i].bbat - ct00);
 		   exit(1);
 		 }
-	       if (psr[p].obsn[i].bbat - ct00 < psr[p].param[param_track].val[0])
+	       if (psr[p].obsn[i].bbat - ct00 < fabs(psr[p].param[param_track].val[0]))
 		 {
 		   if (fabs(residual+1.0-dt00) < fabs(residual-dt00))
 		     {
@@ -248,163 +247,15 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     } 
 		 }
 	     }
-	       dt00  = residual;
-	       ct00 = psr[p].obsn[i].bbat;
+	   if (psr[p].param[param_track].val < 0) // Do extra tracking
+	     {
+	     }
 
+	   dt00  = residual;
+	   ct00 = psr[p].obsn[i].bbat;
+	   
 	   if (gotit==1 && time==0)
 	     time=1;
-	   /*	   else if (psr[p].param[param_track].paramSet[0]==1 && (psr[p].param[param_track].val[0]==2 ||
-								 psr[p].param[param_track].val[0]==20)
-		    && gotit==1)
-	     {
-	       residual+=ntrk;
-	       if (fabs(residual-1.0-lastResidual) < fabs(residual-lastResidual))
-		 {
-		   residual-=1.0;
-		   ntrk-=1;
-		 } 
-	       else if (fabs(residual+1.0-lastResidual) < fabs(residual-lastResidual))
-		 {
-		   residual+=1.0;
-		   ntrk+=1;
-		 } 
-	     }
-	   else if (psr[p].param[param_track].paramSet[0]==1 && (psr[p].param[param_track].val[0]==3 
-								 || psr[p].param[param_track].val[0]==30) 
-		    && gotit==1) // Base tracking on gradient 
-	     {
-	       double grad1,grad2,grad3,grad4,grad5;
-	       residual+=ntrk;
-	       grad1 = (lastResidual-priorResidual)/(lastBat-priorBat);
-	       grad2 = (residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-	       grad3 = (residual-1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-	       grad4 = (residual+1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-
-	       if (fabs(grad1-grad3) < fabs(grad1-grad2))
-		 {
-		   int jumped=0;
-		   residual-=1.0;
-		   ntrk-=1;
-		   do {
-		     jumped=0;
-		     grad5 = (residual-1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);		   
-		     grad2 = (residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-		     if (fabs(grad1-grad5) < fabs(grad1-grad2))
-		       {
-			 residual-=1.0;
-			 ntrk-=1;
-			 jumped=1;
-		       }
-		   }while (jumped==1);
-		 } 
-	       else if (fabs(grad1-grad4) < fabs(grad1-grad2))
-		 {
-		   int jumped=0;
-		   residual+=1.0;
-		   ntrk+=1;
-		   do {
-		     jumped=0;
-		     grad5 = (residual+1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);		   
-		     grad2 = (residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-		     if (fabs(grad1-grad5) < fabs(grad1-grad2))
-		       {
-			 residual+=1.0;
-			 ntrk+=1;
-			 jumped=1;
-		       }
-		   }while (jumped==1);
-		 }	     
-	     }
-	   else if (psr[p].param[param_track].paramSet[0]==1 && (psr[p].param[param_track].val[0]==4 ||
-								 psr[p].param[param_track].val[0]==40) 
-		    && gotit==1 && ppBat!=0.0) // Combination of the above tracking
-	     {
-	       double grad1,grad2,grad3,grad4,grad5,s,sxx,sx,sy,sxy,delta,syy;
-	       int dir=0,l;
-
-	       s=3;
-	       sx = lastBat+priorBat+ppBat;
-	       sy = lastResidual+priorResidual+ppRes;
-	       sxx = pow(lastBat,2)+pow(priorBat,2)+pow(ppBat,2);
-	       syy = pow(lastResidual,2)+pow(priorResidual,2)+pow(ppRes,2);
-	       sxy = lastBat*lastResidual+priorBat*priorResidual+ppBat*ppRes;
-	       delta = s*sxx-sx*sx;
-
-	       residual+=ntrk;
-	       //	       grad1 = (lastResidual-priorResidual)/(lastBat-priorBat);
-	       grad1 = (s*sxy-sx*sy)/delta;
-	       //	       printf("Grad = %g %g\n",grad1,(double)((lastResidual-priorResidual)/(lastBat-priorBat)));
-	       grad2 = (residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-	       grad3 = (residual-1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-	       grad4 = (residual+1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-
-	       if (fabs(grad1-grad3) < fabs(grad1-grad2))
-		 {
-		   int jumped=0;
-		   dir = -1;
-		   //		   printf("In first with %g %g %g %g\n",(double)psr[p].obsn[i].sat,grad1,grad2,grad3);
-		   residual-=1.0;
-		   ntrk-=1;
-		   do {
-		     jumped=0;
-		     grad5 = (residual-1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);		   
-		     grad2 = (residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-		     //		     printf("Looping with %g %g %g %g\n",(double)psr[p].obsn[i].sat,grad1,grad2,grad5);
-
-		     if (fabs(grad1-grad5) < fabs(grad1-grad2))
-		       {
-			 residual-=1.0;
-			 ntrk-=1;
-			 jumped=1;
-		       }
-		   }while (jumped==1);
-		 }
-	       else if (fabs(grad1-grad4) < fabs(grad1-grad2))
-		 {
-		   int jumped=0;
-		   dir = 1;
-		   residual+=1.0;
-		   ntrk+=1;
-		   //		   printf("In second with %g %g %g %g\n",(double)psr[p].obsn[i].sat,grad1,grad2,grad4);
-
-		   do {
-		     jumped=0;
-		     grad5 = (residual+1.0-lastResidual)/(psr[p].obsn[i].bat-lastBat);		   
-		     grad2 = (residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-		     if (fabs(grad1-grad4) < fabs(grad1-grad2))
-		       {
-			 residual+=1.0;
-			 ntrk+=1;
-			 jumped=1;
-		       }
-		   }while (jumped==1);
-		 }
-	       if (fabs(residual-1.0-lastResidual) < fabs(residual-lastResidual) && dir==-1)
-		 {
-		   int jumped=0;
-		   //		   printf("In this bit %g\n",(double)psr[p].obsn[i].sat);
-		   residual-=1.0;
-		   ntrk-=1;
-		   do {
-		     jumped=0;
-		     if (fabs(residual-1.0-lastResidual) < fabs(residual-lastResidual))
-		     {
-			 residual-=1.0;
-			 ntrk-=1;
-			 jumped=1;
-		       }
-		   }while (jumped==1);
-
-		 }
-	       else if (fabs(residual+1.0-lastResidual) < fabs(residual-lastResidual) && dir==1)
-		 {
-		   //		   printf("In third with %g %g %g %g\n",(double)psr[p].obsn[i].sat,grad1,grad2,grad3);
-		   residual+=1.0;
-		   ntrk+=1;
-
-
-		 } 
-	     } */
 	   psr[p].obsn[i].residual = residual/psr[p].param[param_f].val[0];
 
 	   ppRes = priorResidual;
@@ -417,7 +268,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
  	   /* Check for phase offsets */
 	   for (k=0;k<psr[p].nPhaseJump;k++)
 	     {
-	       if (psr[p].obsn[i].sat > psr[p].phaseJump[k])
+	       //	       if (psr[p].obsn[i].sat > psr[p].phaseJump[k])
+	       //	       printf("Comparing with %g\n",(double)psr[p].obsn[psr[p].phaseJumpID[k]].sat);
+	       if (psr[p].obsn[i].sat > psr[p].obsn[psr[p].phaseJumpID[k]].sat)
 		 psr[p].obsn[i].residual += (double)psr[p].phaseJumpDir[k]/psr[p].param[param_f].val[0];
 	     }
 
@@ -439,206 +292,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     psr[p].obsn[i].residual-=mean;
 	 }
 
-       /* Now check residual based tracking from central position */
-       /* Note: this only works if the SAT's are in time order    */
-       if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0] < 0)
-	 residualTracking(&psr[p]);
      }
 }
-
-
-void residualTracking(pulsar *psr)
-{
-  int i1,i,j,k;
-  double grad1,grad2,grad3,grad4,grad5;
-  double lastResidual,priorResidual,lastBat,priorBat;
-  double residual,bat;
-  double p0 = 1.0/psr[0].param[param_f].val[0];
-  double trk=0;
-
-
-  i1 = (int)psr->param[param_track].val[0];
-  i1--;
-
-  printf("Starting 1\n");
-  bat           = (double)psr->obsn[i1].bat;
-  lastBat       = (double)psr->obsn[i1-1].bat;  
-  priorBat      = (double)psr->obsn[i1-2].bat;
-  residual      = (double)psr->obsn[i1].residual;
-  lastResidual  = (double)psr->obsn[i1-1].residual;
-  priorResidual = (double)psr->obsn[i1-2].residual;
-
-  printf("Starting\n");
-  
-  
-  for (i=i1;i<psr->nobs;i++)
-    {
-      psr->obsn[i].residual+=trk;
-
-      bat           = (double)psr->obsn[i].bat;
-      residual      = (double)psr->obsn[i].residual;
-
-      grad1 = (lastResidual-priorResidual)/(lastBat-priorBat);
-      grad2 = (residual-lastResidual)/(bat-lastBat);
-      grad3 = (residual-p0-lastResidual)/(bat-lastBat);
-      grad4 = (residual+p0-lastResidual)/(bat-lastBat);
-
-      if (fabs(grad1-grad3) < fabs(grad1-grad2))
-	{	
-	  int jumped=0;
-	  
-	  psr->obsn[i].residual-=p0;
-	  residual-=p0;	  
-	  trk-=p0;
-	  
-	  printf("NEG GRADIENT %d\n",i);
-	  
-	  do 
-	    {	      
-	      jumped=0;	      
-	      grad5 = (residual-p0-lastResidual)/(psr->obsn[i].bat-lastBat);
-	      grad2 = (residual-lastResidual)/(psr->obsn[i].bat-lastBat);
-	      if (fabs(grad1-grad5) < fabs(grad1-grad2))
-		{		  
-		  psr->obsn[i].residual-=p0;		  
-		  residual-=p0;	 
-		  trk-=p0;
-		  jumped=1;		  
-		  printf("NEGATIVE GRADIENT %d\n",i);
-		}	      
-	    } while (jumped==1);	  
-	}     
-      else if (fabs(grad1-grad4) < fabs(grad1-grad2))
-	{
-	  int jumped=0;
-	  
-	  psr->obsn[i].residual+=p0;		  
-	  residual+=p0;
-	  trk+=p0;
-	  
-	  do {
-	    jumped=0;
-	      grad5 = (residual+p0-lastResidual)/(psr->obsn[i].bat-lastBat);
-	      grad2 = (residual-lastResidual)/(psr->obsn[i].bat-lastBat);
-	      if (fabs(grad1-grad5) < fabs(grad1-grad2))
-		{		  
-		  psr->obsn[i].residual+=p0;		  
-		  residual+=p0;	 
-		  trk+=p0;
-		  jumped=1;		  
-		  printf("POS GRADIENT %d\n",i);
-		}	      
-	    } while (jumped==1);	  
-	    
-	  
-      
-	  
-	  printf("POSITIVE GRADIENT %d\n",i);
-	}
-      
-      priorBat      = lastBat;      
-      lastBat       = bat;
-           
-      priorResidual = lastResidual;      
-      lastResidual  = residual;
-      
-      
-    }
-
-  bat           = (double)psr->obsn[i1].bat;
-  lastBat       = (double)psr->obsn[i1+1].bat;  
-  priorBat      = (double)psr->obsn[i1+2].bat;
-  residual      = (double)psr->obsn[i1].residual;
-  lastResidual  = (double)psr->obsn[i1+1].residual;
-  priorResidual = (double)psr->obsn[i1+2].residual;
-  trk=0;
-  
-  for (i=i1;i>0;i--)
-    {
-       printf("I = %d\n",i);
-       
-       psr->obsn[i].residual+=trk;
-       bat           = (double)psr->obsn[i].bat;
-       residual      = (double)psr->obsn[i].residual;
-
-      grad1 = (lastResidual-priorResidual)/(lastBat-priorBat);
-      grad2 = (residual-lastResidual)/(bat-lastBat);
-      grad3 = (residual-p0-lastResidual)/(bat-lastBat); 
-      grad4 = (residual+p0-lastResidual)/(bat-lastBat);
-
-      if (fabs(grad1-grad4) < fabs(grad1-grad2))
- 	{	
- 	  int jumped=0;
-
-	  psr->obsn[i].residual+=p0;		  
- 	  residual+=p0;	  
-	  trk+=p0;
-	  
-	  printf("NEG GRADIENT %d\n",i);
-	  if (i==9) printf("Here with %g %g %g %g\n",grad1,grad2,grad3,grad4);
-	  
-	  do 
-	    {	      
-	      jumped=0;	      
-	      grad5 = (residual+p0-lastResidual)/(psr->obsn[i].bat-lastBat);
- 	      grad2 = (residual-lastResidual)/(psr->obsn[i].bat-lastBat);
-	      if (i==9) printf("Here2 with %g %g %g\n",grad1,grad2,grad5);
-	      if (fabs(grad1-grad5) < fabs(grad1-grad2))
-		{		   
-		  psr->obsn[i].residual+=p0;		  
- 		  residual+=p0;	 
- 		  trk+=p0;
- 		  jumped=1;		  
- 		  printf("NEGATIVE GRADIENT %d\n",i);
- 		}	      
- 	    } while (jumped==1);	  
-	}     
-       else if (fabs(grad1-grad3) < fabs(grad1-grad2))
- 	{
- 	  int jumped=0;
-
-	  psr->obsn[i].residual-=p0;		  	  
-	  residual-=p0;
- 	  trk-=p0;
-	  do {
- 	    jumped=0;
- 	      grad3 = (residual-p0-lastResidual)/(psr->obsn[i].bat-lastBat);
- 	      grad2 = (residual-lastResidual)/(psr->obsn[i].bat-lastBat);
-	       if (fabs(grad1-grad3) < fabs(grad1-grad2))
-		{		  
-		  psr->obsn[i].residual-=p0;		  	  
-		  residual-=p0;	 
-		  trk-=p0;
- 		  jumped=1;		  
- 		  printf("POS GRADIENT %d\n",i);
- 		}	      
-	    } while (jumped==1);	  
-	    
-	  
-      
-	  
- 	  printf("POSITIVE GRADIENT %d\n",i);
- 	}
-      
-      priorBat      = lastBat;      
-      lastBat       = bat;
-           
-      priorResidual = lastResidual;      
-      lastResidual  = residual;
-      
-      
-      }
-  
-  /* Check for phase offsets */
-  for (i=0;i<psr->nobs;i++)
-    {
-      for (k=0;k<psr->nPhaseJump;k++)
-	{
-	  if (psr->obsn[i].sat > psr->phaseJump[k])
-	    psr->obsn[i].residual += (double)psr->phaseJumpDir[k]/psr->param[param_f].val[0];
-	}
-    }
-  
-}
-
 

@@ -458,8 +458,8 @@ int main(int argc, char *argv[])
 	    }
 	  psr[0].noWarnings=2;
 	  if (onlypre==1) iteration=2;
-		textOutput(psr,npsr,globalParameter,nGlobal,outRes,newpar,"new.par"); /* Output results to the screen */
-	  printf("Next iteration\n");
+	  /*	  textOutput(psr,npsr,globalParameter,nGlobal,outRes,newpar,"new.par");*/ /* Output results to the screen */
+	  /*	  printf("Next iteration\n");*/
 	}
     }
   endClock = clock();
