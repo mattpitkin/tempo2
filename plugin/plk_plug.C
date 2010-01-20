@@ -1332,14 +1332,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		    closest = fabs(xpos-mouseX);
 		  }
 	      }
-	    psr[0].phaseJump[psr[0].nPhaseJump] = psr[0].obsn[id[iclosest]].sat+1.0/SECDAY;
+	    psr[0].phaseJump[psr[0].nPhaseJump] = psr[0].obsn[iclosest].sat+1.0/SECDAY;
 	    psr[0].phaseJumpID[psr[0].nPhaseJump] = iclosest;
+	    //	    printf("Have %s %d\n",psr[0].obsn[iclosest].fname,iclosest);
 	    if (key=='-') psr[0].phaseJumpDir[psr[0].nPhaseJump] = -1;
 	    else psr[0].phaseJumpDir[psr[0].nPhaseJump] = 1;
 	    for (i=0;i<psr[0].nobs;i++)
 	      {
 		k=psr[0].nPhaseJump;
-		if (psr[0].obsn[i].sat > psr[0].phaseJump[k])
+		if (psr[0].obsn[i].sat > psr[0].obsn[psr[0].phaseJumpID[k]].sat)
 		  {
 		    psr[0].obsn[i].residual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
 		    psr[0].obsn[i].prefitResidual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
