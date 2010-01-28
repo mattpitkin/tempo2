@@ -46,7 +46,7 @@ char dcmFile[MAX_FILELEN];
 
 void overPlotN(int overN,float overX[], float overY[],float overYe[]);
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
-	    char timFile[][MAX_FILELEN],float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile,
+	    char timFile[][MAX_FILELEN],float lockx1,float lockx2,float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile,
             int showChisq,int nohead);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
 	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log);
@@ -232,6 +232,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char newParFile[MAX_FILELEN];
   char gr[100]="/xs";
   double unitFlag=1.0;  /* plot in seconds */
+  float lockx1=0,lockx2=0;
   float locky1=0,locky2=0;
   int   xplot=3;
   int   yplot=1;
@@ -271,6 +272,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  sscanf(argv[++i],"%f",&locky1);
 	  sscanf(argv[++i],"%f",&locky2);
 	}
+      else if (strcmp(argv[i],"-lockx")==0)
+        {
+	  sscanf(argv[++i],"%f",&lockx1);
+	  sscanf(argv[++i],"%f",&lockx2);
+        }
       else if (strcmp(argv[i],"-setup")==0)
 	strcpy(setupFile,argv[++i]);
       else if (strcmp(argv[i],"-xplot")==0)
@@ -373,7 +379,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (newpar==1)
 	    textOutput(psr,*npsr,0,0,0,1,newParFile);
   if (debugFlag==1) printf("plk: calling doPlot\n");
-  doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,locky1,locky2,xplot,yplot,
+  doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,lockx1,lockx2,locky1,locky2,xplot,yplot,
 	 publish,argc,argv,menu,setupFile,showChisq,nohead);  /* Do plot */
   return 0;
 }  
@@ -439,7 +445,7 @@ void callFit(pulsar *psr,int npsr)
 
 
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FILELEN],
-	    char timFile[][MAX_FILELEN],float locky1,float locky2,int xplot,int yplot,
+	    char timFile[][MAX_FILELEN],float lockx1, float lockx2, float locky1, float locky2,int xplot,int yplot,
 	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq,int nohead)
 {
   int i,fitFlag=1,exitFlag=0,scale1=0,scale2=psr[0].nobs,count,ncount,j,k;
@@ -732,6 +738,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	ploty1 = locky1;
 	ploty2 = locky2;
       }
+
+    if (lockx1 != lockx2)
+    {
+      plotx1 = lockx1;
+      plotx2 = lockx2;
+    }
 
     /* Plot the residuals */
     if (noreplot==0)
