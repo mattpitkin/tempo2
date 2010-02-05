@@ -647,8 +647,14 @@ void * DLL_FUNC jpl_init_ephemeris( const char *ephemeris_filename,
           /* for ipt[0...11],  then the ephemeris version,  then the         */
           /* remaining ipt[12] data.  A little switching is required to get  */
           /* the correct order. */
-   for( i = 0; i < 3; i++)
-      rval->ipt[12][i] = rval->ipt[12][i + 1];
+
+          /* 2010-02-05 M.Keith Modified this so that it doesn't use array
+	   * incicies that are out of bounds, avoiding segfaults when
+	   * compiled with gcc -O2 */
+   rval->ipt[12][0] = rval->ipt[12][1];
+   rval->ipt[12][1] = rval->ipt[12][2];
+   rval->ipt[12][2] = rval->ephemeris_version;
+
    rval->ephemeris_version = de_version;
    rval->swap_bytes = ( rval->ncon < 0 || rval->ncon > 65536L);
    if( rval->swap_bytes)     /* byte order is wrong for current platform */
