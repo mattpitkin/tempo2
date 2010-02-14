@@ -1,10 +1,3 @@
-// The Makefile must be modified :
-// PLUGIN_SRCS += fermi_plug.C 
-// CXXFLAGS += -I/usr/local/include/
-// LDFLAGS += -L/usr/local/lib/ -lcfitsio
-
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,6 +5,7 @@
 #include "../tempo2.h"
 #include <cpgplot.h>
 #include <fitsio.h>
+#include <time.h>
 
 using namespace std;   		/* Is this required for a plugin ? Yes, for Linux */
 
@@ -25,9 +19,20 @@ void clock_corrections(pulsar *psr,int npsr);
 void extra_delays(pulsar *psr,int npsr);
 void formBatsAll(pulsar *psr,int npsr);
 
+static char random_letter(int is_cap);
+static char random_number();
+static void random_string(int length, char *str);
+float HTest(int Nphotons, float phases[]);
+
 int min(int a, int b)
 {
 	if (a <= b)	return a;
+	else		return b;
+}
+
+int max(int a, int b)
+{
+	if (a >= b)	return a;
 	else		return b;
 }
 
@@ -68,32 +73,41 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             7 September 2009\n");
-	printf("Version:             4.2\n");
+	printf("Updated:             24 January 2010\n");
+	printf("Version:             4.3\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
-	int i,j,k,event = 0,event2;
+	int i,j,k,l,event = 0,event2;
 
 	char parFile[1][MAX_FILELEN];
 	char timFile[1][MAX_FILELEN];
-	char gr[100]="/xs";			// default graphical output is x-window
+	char temptim[9];
+	char gr[100]="/xs";					// default graphical output is x-window
 
-	strcpy(timFile[0],"temp.tim");		// temporary file in which TOAs will be written
+	srand((unsigned)time(NULL));
+	temptim[8] = '\0';
+	random_string(8,temptim);
+	strcpy(timFile[0],temptim);
+	strcat(timFile[0],".tim");
 
-	int nbins = 20;				// default number of bins for the output phase histogram
+	int nbins  = 20;					// default number of bins for the output phase histogram
+	//int nbinsy = 20;					// default number of bins for the y-axis of the time vs phase plot		
 
 	char FT1[MAX_FILELEN];
 	char FT2[MAX_FILELEN];
 	char output[MAX_FILELEN];
 	char output_pos_file[MAX_FILELEN];
-    char error_buffer[128];
-    char history[128];
+	char phasecol[32];
+	strcpy(phasecol,"PULSE_PHASE");
+	
+    	char error_buffer[128];
+    	char history[128];
 	int  par_file      = 0;
 	int  FT1_file	   = 0;
 	int  FT2_file	   = 0;
 	
-	int  graph	   = 1;
+	int  graph	       = 1;
 	int  output_file   = 0;
 	int  output_pos    = 0;
 	int  phase_replace = 0;
@@ -134,7 +148,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	double fract = 0.;
 	double length1, length2, length12, intlength;
-    double vector12[3], vectprod_out[3];
+    	double vector12[3], vectprod_out[3];
 	double inttheta, factor_cos, factor_sin;
 
 	longdouble lasttime, tzrmjd_bary;
@@ -186,6 +200,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		{
 			sscanf(argv[i+1],"%d",&nbins);
 		}
+		//else if (strcmp(argv[i],"-ybins")==0)
+		//{
+		//	sscanf(argv[i+1],"%d",&nbinsy);
+		//}
 		else if (strcmp(argv[i],"-output")==0)
 		{
 			output_file = 1;
@@ -200,18 +218,24 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		{
 			phase_replace = 1;
 		}
+		else if (strcmp(argv[i],"-col")==0)
+		{
+			strcpy(phasecol,argv[i+1]);
+		}	
 		else if (strcmp(argv[i],"-h")==0)
 		{
 			printf("\n TEMPO2 fermi plugin\n");
 			printf("======================\n");
 			printf("\n USAGE: \n\t tempo2 -gr fermi -ft1 FT1.fits -ft2 FT2.fits -f par.par\n");
 			printf("\n Command line options:\n");
-			printf("\t -grdev XXX/YYY, where XXX/YYY is the graphical device of your choice (e.g. a.ps/cps). Default mode is Xwindow\n");
+			printf("\t -grdev XXX/YYY, where XXX/YYY is the graphical device of your choice (e.g. a.ps/cps). Default mode is XW\n");
 			printf("\t -graph 0: no output graph is drawn\n");
-			printf("\t -bins N: draws a N-bin histogram\n");
+			printf("\t -bins N: number of bins of the phase histogram\n");
+			//printf("\t -ybins N: number of time bins of the time vs phase plot\n");
 			printf("\t -output XXX: writes event times and phases in file XXX\n");
 			printf("\t -pos XXX: puts the satellite (X,Y,Z) positions as a function of time in file XXX\n");
-			printf("\t -phase: replaces phases in the FT1 by the ones calculated by TEMPO2\n");
+			printf("\t -phase: stores phases in the FT1 by the ones calculated by TEMPO2\n");
+			printf("\t -col XXX: phases will be stored in column XXX. Default is PULSE_PHASE\n");
 			printf("\t -h: this help.\n");
 			printf("===============================================");
 			printf("===============================================\n");
@@ -302,10 +326,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		if (phase_replace)
 		{
-                        fits_get_colname(ft1,CASESEN,"PULSE_PHASE",colname,&FT1_phase_col,&status);
+                        fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
                         if (status != 0)
                         {
-                                fits_insert_col(ft1,ncols_FT1 + 1,"PULSE_PHASE","1D", &status2);
+                                fits_insert_col(ft1,ncols_FT1 + 1,phasecol,"1D", &status2);
                                         
                                 if (status2 != 0)
                                 {
@@ -316,7 +340,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                         }
                         
                         status = 0;
-                        fits_get_colname(ft1,CASESEN,"PULSE_PHASE",colname,&FT1_phase_col,&status);
+                        fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
                 }
 	}
 
@@ -335,7 +359,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	nrows2 		= min(rows_left,max_rows);
 
 	float *phase;
-	float *phase2;
 	float *times;
         
 	if (graph == 0)
@@ -354,11 +377,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	else
 	{
 		phase  = (float *)calloc(nrows_FT1,sizeof(float));
-		phase2 = (float *)calloc(2*nrows_FT1,sizeof(float));
 		times  = (float *)calloc(nrows_FT1,sizeof(float));
 	}	
 	
-	float tmin   = 100000., tmax   = -1000.;
+	float tmin   = 100000., tmax   = -100000.;
 
 	/* ------------------------------------------------- //
 	// FT2 file
@@ -671,7 +693,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		}
 	}
         
-    // ------------------------------------------------- //
+    	// ------------------------------------------------- //
 	// Add a bit of history to the header
 	// ------------------------------------------------- //
 	if (phase_replace)
@@ -701,25 +723,137 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	// ------------------------------------------------- //
 	// Graphical output
 	// ------------------------------------------------- //	
-
 	if (graph != 0)
-	{
-		// Phase2 = Phase plotted on 2 rotations
+	{	
+		// ------------------------------------------------- //
+		// 1D histogram of phase
+		// ------------------------------------------------- //							
+		float bins[nbins*2];
+		float lc[nbins*2];
+		float errX[nbins*2],errY[nbins*2];
+		float binmax = -1000;
+		
+		for (i=0;i<nbins*2;i++)
+		{
+			bins[i] = ((float)i) / ((float)nbins);
+			lc[i] = 0.;
+		}
+		
 		for (i=0;i<nrows_FT1;i++)
 		{
-			phase2[i] 		= phase[i];
-			phase2[i+nrows_FT1] 	= phase[i]+1.;
+			for (j=0;j<nbins;j++)
+			{
+				if ((phase[i] >= (((float)j)/((float)nbins))) && (phase[i] < (((float)j+1.)/((float)nbins))))
+				{
+					lc[j]++;
+					lc[j+nbins]++;
+					break;
+				}
+			}
 		}
-	
+		
+		for (i=0;i<nbins;i++)
+		{
+			errX[i] = bins[i] + 0.5*(bins[1]-bins[0]);
+			errX[i+nbins] = errX[i] + 1.;
+			
+			errY[i] = sqrt(lc[i]);
+			errY[i+nbins] = errY[i];
+			
+			if (lc[i] > binmax)	binmax = lc[i];
+		}
+		
+		// ------------------------------------------------- //
+		// 2D histogram of time vs phase
+		// ------------------------------------------------- //
+		/*
+		float timephase[nbins*nbinsy];
+		float timephasemax = -1000.;
+		float tstep = (tmax - tmin) / ((float)nbinsy);
+		float tr[6];
+		
+		tr[0] = - 1./(2. * (float)nbins);
+		tr[1] = 1. / ((float)nbins);
+		tr[2] = 0.;
+		tr[3] = tmin - 0.5 * tstep;
+		tr[4] = 0.;
+		tr[5] = (tmax - tmin)/((float)nbinsy);
+		
+		for (i=0;i<nbins*nbinsy;i++)
+		{
+			timephase[i] = 0;
+		}	
+		
+		for (i=0;i<nrows_FT1;i++)
+		{
+			for (j=0;j<nbins;j++)
+			{
+				if ((phase[i] >= (((float)j)/((float)nbins))) && (phase[i] < (((float)j+1.)/((float)nbins))))
+				{
+					for (k=0;k<nbinsy;k++)
+					{
+						if ((times[i] >= tmin + (float)k * tstep) && (times[i] < tmin + ((float)k+1.) * tstep))
+						{
+							timephase[k*nbins + j]++;
+							break;
+						}
+					}
+					break;
+				}
+			}
+		}
+		
+		for (i=0;i<nbins*nbinsy;i++)
+		{
+			if (timephase[i] > timephasemax) timephasemax = timephase[i];
+		}
+		*/	
+		
+		// ------------------------------------------------- //
+		// H-test TS calculation
+		// ------------------------------------------------- //	
+		float Hbin[11], HTS[11], hmin = 1.e6, hmax = -1.e6;
+		int Nphot[11];
+		
+		Hbin[0] = tmin, HTS[0] = 0;
+		
+		for (i=1;i<11;i++)
+		{
+			Hbin[i]  = tmin + ((float)i) * (tmax - tmin) / 10.;
+			Nphot[i] = 0;
+			
+			for (j=0;j<nrows_FT1;j++) 
+			{
+				if (times[j] <= Hbin[i]) Nphot[i]++;
+			}
+			
+			float phases[Nphot[i]];
+			l = 0;
+			
+			for (j=0;j<nrows_FT1;j++) 
+			{
+				if (times[j] <= Hbin[i])
+				{
+					phases[l] = phase[j];
+					l++;
+				}
+			}
+			
+			HTS[i] = HTest(Nphot[i],phases);
+			
+			if (HTS[i] < hmin) hmin = HTS[i];
+			if (HTS[i] > hmax) hmax = HTS[i];
+		}
+			
 		float xmoy[2],ymoy[2];
 		xmoy[0] = 0., xmoy[1] = 2.;
 		ymoy[0] = (float)nrows_FT1/(float)nbins;
 		ymoy[1] = ymoy[0];
-	
-		// Initialization
-		cpgbeg(0,gr,1,1);
-		cpgsubp(2,1);
 		
+		// ------------------------------------------------- //
+		// Graphical output initialization
+		// ------------------------------------------------- //							
+		cpgbeg(0,gr,1,1);
 		cpgask(0);
 
 		// Invert foreground and background: black on white
@@ -727,35 +861,89 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		cpgscr(1,0,0,0);
 	
 		endit = 0;
-		fontsize = 1.;
+		fontsize = 0.75;
 		if (strstr(gr,"/xs") == NULL) endit = 1;
 	
 		// Plotting loop 
 		do
 		{
-			// First panel : phase histogram
-		
-			cpgsci(2);
-			cpghist(nrows_FT1*2,phase2,0.,2.,nbins*2,4);
-	
+			// ------------------------------------------------- //
+			// First panel: phase histogram
+			// ------------------------------------------------- //							
+			cpgsvp(0.05,0.5,0.55,0.975);
+			cpgswin(0.,2.,0.,1.1*binmax);
+			
 			cpgsci(1);
-			cpgsch(fontsize);		
-			cpglab("Phase","Number of events",psr[0].name);
-		
+			cpgsch(fontsize);	
+			cpgbox("ABCNTS",0.5,5,"ABCNTS",pow(10,int(log10(1.1*binmax))),5);
+			cpglab("Pulse phase","Number of events","");
+			
+			cpgsci(2);
+			cpgbin(nbins*2,bins,lc,0);
+			cpgerrb(6,nbins*2,errX,lc,errY,1.0);
+			
+			cpgsci(1);
 			cpgsls(2);
 			cpgline(2,xmoy,ymoy);
 			cpgsls(1);
-
-			// Second panel : time vs phase
-			cpgsci(2);
 			
-			cpgenv(0.,1.,tmin,tmax,0,0);
-			cpgpt(nrows_FT1,phase,times,2);
-	
+			// ------------------------------------------------- //
+			// Second panel: time vs phase
+			// ------------------------------------------------- //				
+			cpgsvp(0.6,0.95,0.1,0.975);
+			cpgswin(0.,1.,tmin,tmax);
+			
 			cpgsci(1);
-			cpgsch(fontsize);		
-			cpglab("Phase","Event time (MJD)",psr[0].name);
-				
+			
+			// Anti-rainbow palette
+			/*
+			float cl[10] = {0.0, 0.035, 0.045, 0.225, 0.4, 0.41, 0.6, 0.775, 0.985, 1.0};
+            		float cr[10] = {1.0, 1.0, 0.947, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0};
+            		float cg[10] = {1.0, 0.844, 0.8, 0.0, 0.946, 1.0, 1.0, 1.0, 0.0, 0.0};
+            		float cb[10] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.95, 0.0, 0.0, 0.0, 0.0};
+			*/			
+
+			/*
+			// Heat palette
+			float cl[5] = {0.0, 0.2, 0.4, 0.6, 1.0};
+			float cr[5] = {0.0, 0.5, 1.0, 1.0, 1.0};
+			float cg[5] = {0.0, 0.0, 0.5, 1.0, 1.0};
+			float cb[5] = {0.0, 0.0, 0.0, 0.3, 1.0};
+			*/
+			
+			/*											
+			cpgctab(cl,cr,cg,cb,10,1.,0.5);
+			cpgimag(timephase,nbins,nbinsy,1,nbins,1,nbinsy,0.,timephasemax,tr);
+			*/
+
+			cpgbox("ABCNTS",0.2,2,"ABCNTS",pow(10,int(log10(tmax-tmin))),10);
+			cpglab("Pulse phase","Event time (MJD)","");
+						
+
+			// Un-comment the following if you want points instead of binned-data
+			
+			cpgsci(2);
+			cpgslw(5);
+			cpgpt(nrows_FT1,phase,times,-1);
+			
+			
+			// ------------------------------------------------- //
+			// Third panel: H-test TS vs time
+			// ------------------------------------------------- //	
+			cpgsvp(0.05,0.5,0.1,0.45);
+			cpgswin(tmin,tmax,0,hmax + 0.1*(hmax-hmin));
+			
+			cpgsci(1);
+			cpgslw(1);
+			cpgbox("ABCNTS",pow(10,int(log10(tmax-tmin))),10,"ABCNTS",pow(10,int(log10(1.2*(hmax-hmin)))),5);
+			cpglab("Event time (MJD)","H-test TS","");
+			
+			cpgsci(2);
+			cpgslw(5);
+			cpgpt(11,Hbin,HTS,3);
+			cpgslw(1);
+			cpgline(11,Hbin,HTS);
+			
 			endit = 1;
 	
 		} while (endit == 0);
@@ -766,7 +954,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("Done with %s\n",psr[0].name);
 
 	// ------------------------------------------------- //
-	// Clean temporary temp
+	// Clean temporary tim file
 	// ------------------------------------------------- //	
 
 	char command[128];
@@ -854,4 +1042,99 @@ void formBatsAll(pulsar *psr,int npsr)
 	extra_delays(psr,npsr);               /* Other time delays  ... */
 	formBats(psr,npsr);                   /* Form Barycentric arrival times */
 	secularMotion(psr,npsr); 
+}
+
+static char random_letter(int is_cap)
+{
+   int letter = (int)(26 * (rand() / (RAND_MAX + 1.0)));
+   return((char)((is_cap == 1) ? (letter + 65) : (letter + 97)));
+}
+
+static char random_number()
+{
+   int number = (int)(10 * (rand() / (RAND_MAX + 1.0)));
+   return((char)(number + 48));
+}
+
+static void random_string(int length, char *str)
+{
+	int i;
+	int char_type;
+	
+	for(i = 0; i < length; i++)
+	{
+		char_type = (int)(3 * (rand() / (RAND_MAX + 1.0)));
+	
+		switch(char_type)
+		{
+			case 0:
+				str[i] = random_letter(0);
+				break;
+			case 1:
+				str[i] = random_letter(1);
+				break;
+			case 2:
+				str[i] = random_number();
+				break;
+			default:
+				str[i] = random_number();
+				break;
+		}
+	}  
+}
+
+float HTest(int Nphotons, float phases[])
+{
+        int i_,j_;
+        const int Nharm = 20;
+
+        float alpha_i[Nharm+1];
+        float beta_i[Nharm+1];
+        float z2[Nharm+1];
+
+        for (i_=0;i_<=Nharm;i_++)
+        {
+                alpha_i[i_]  = 0.;
+                beta_i[i_]   = 0.;
+                z2[i_]       = 0.;
+        }
+
+        for (i_=1;i_<=Nharm;i_++)
+        {
+                for (j_=0;j_<Nphotons;j_++)
+                {
+                        alpha_i[i_]  += cos(float(i_)*phases[j_]*2.*3.14159265359);
+                        beta_i[i_]   += sin(float(i_)*phases[j_]*2.*3.14159265359);
+                }
+
+                alpha_i[i_]  = alpha_i[i_] / float(Nphotons);
+                beta_i[i_]   = beta_i[i_]  / float(Nphotons);
+        }
+
+        for (i_=1;i_<=Nharm;i_++)
+        {
+                for (j_=1;j_<=i_;j_++)
+                {
+                        z2[i_]  += alpha_i[j_]*alpha_i[j_]+beta_i[j_]*beta_i[j_];
+                }
+
+                z2[i_] = 2.*Nphotons*z2[i_];
+        }
+
+        float h      = 0.;
+        float max_h  = 0.;
+        int harm_max = 0;
+
+        for (i_=1;i_<=Nharm;i_++)
+        {
+                h =z2[i_] -(4.*i_)+4.;
+
+                if (h > max_h)
+                {
+                        max_h    = h;
+                        harm_max = i_;
+                }
+        }
+
+        return max_h;
 }
