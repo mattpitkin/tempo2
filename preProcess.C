@@ -828,6 +828,25 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	      psr[p].fitJump[psr[p].nJumps]=1;
 	    }
 	}
+      
+      // Now link phase jumps to a particular site-arrival-time
+      for (i=0;i<psr[p].nPhaseJump;i++)
+	{
+	  if (psr[p].phaseJumpID[i] = -1)
+	    {
+	      // Find closest TOA
+	      if (i==0) printf("WARNING: Use of phase jumps => .tim file must be sorted in time order\n");
+	      for (k=1;k<psr[p].nobs;k++)
+		{
+		  if ((double)psr[p].obsn[k].sat > (double)psr[p].phaseJump[i])
+		    {
+		      psr[p].phaseJumpID[i]=k-1;
+		      break;
+		    }		  
+		}
+	    }
+	}
+
     }
 
 

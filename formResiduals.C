@@ -225,7 +225,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     {
 	       residual+=ntrk;
 	       // Note that this requires that the points be in time order
-	       if (psr[p].obsn[i].bbat - ct00 < 0.0L && fabs(psr[p].obsn[i].bbat-ct00) > 1)
+	       if (psr[p].obsn[i].bbat - ct00 < 0.0L && fabs(psr[p].obsn[i].bbat-ct00) > 1 && i > 0)
 		 {
 		   printf("ERROR: Points must be in time order for tracking to work\n");
 		   printf("Pulsar = %s\n",psr[p].name);

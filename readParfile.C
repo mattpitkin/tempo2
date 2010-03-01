@@ -470,7 +470,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   /* ---------------- */
  else if (strcasecmp(str,"PHASE")==0)
     {
-      fscanf(fin,"%d %lf",&psr->phaseJumpDir[psr->nPhaseJump],&psr->phaseJump[psr->nPhaseJump]);
+      fscanf(fin,"%d %Lf",&psr->phaseJumpDir[psr->nPhaseJump],&psr->phaseJump[psr->nPhaseJump]);
+      psr->phaseJumpID[psr->nPhaseJump]=-1;
       psr->nPhaseJump++;
     }  
 

@@ -775,7 +775,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  for (i=0;i<psr[p].nPhaseJump;i++)
 	    {
 	      if (psr[p].phaseJumpDir[i]!=0)
-		fprintf(fout2,"PHASE %+d %.14g\n",psr[p].phaseJumpDir[i],psr[p].phaseJump[i]);
+		fprintf(fout2,"PHASE %+d %.14g\n",psr[p].phaseJumpDir[i],(double)(psr[p].obsn[psr[p].phaseJumpID[i]].sat+1.0/SECDAY));
 	    }
 	  fclose(fout2);	 
 	    }
