@@ -395,10 +395,9 @@ int nInterp=0;
 	  //	  printf("Enter: sample time (e.g. 5 days) ");
 	  //	  scanf("%lf",&sampleTime);
 	  sampleTime = 1;
-	  printf("Enter: smooth time (days) [type]\n");
-	  printf("type = 'e' for exponential smoother, 'g' for Gaussian smoother\n");
+	  printf("Enter: smooth time (days) type\n");
+	  printf("type = 'e' for exponential smoother, 'g' for Gaussian smoother \n");
 	  printf("Example: 30 g\n");
-	  printf("Example: 50\n");
 	  printf("Value: ");
 	  nread = scanf("%lf %c",&smoothTime,&type);
 	  if (nread==2)
