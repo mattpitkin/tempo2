@@ -41,7 +41,7 @@
 
 /* using namespace std; */  /* Is this required for a plugin ? */
 
-void doPlot(pulsar *psr,int npsr);
+void doPlot(pulsar *psr,int npsr,int overlay);
 float findMin(float *x,pulsar *psr,int p,int i1,int i2);
 float findMax(float *x,pulsar *psr,int p,int i1,int i2);
 float findMean(float *x,pulsar *psr,int p,int i1,int i2);
@@ -58,6 +58,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
+  int overlay=0;
   FILE *pin;
   char str[1000];
 
@@ -81,6 +82,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      exit(1);
 	    } 
 	}
+      else if (strcmp(argv[i],"-overlay")==0)
+	overlay=1;
     }
 
 if (*npsr==0) /* Select all files */
@@ -106,7 +109,7 @@ if (*npsr==0) /* Select all files */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
   preProcess(psr,*npsr,argc,argv);
   callFit(psr,*npsr);             /* Do all the fitting routines */
-  doPlot(psr,*npsr);              /* Do plot */
+  doPlot(psr,*npsr,overlay);              /* Do plot */
 }
 
 /* This function calls all of the fitting routines.             */
@@ -130,7 +133,7 @@ void callFit(pulsar *psr,int npsr)
 }
 
 
-void doPlot(pulsar *psr,int npsr)
+void doPlot(pulsar *psr,int npsr,int overlay)
 {
   int i,j,fitFlag=1,exitFlag=0,scale1=0,scale2,count,p,xautoscale=1,k,graphics=1;
   int yautoscale=1,plotpre=1;
@@ -144,7 +147,10 @@ void doPlot(pulsar *psr,int npsr)
   float widthPap=0.0,aspectPap=0.618;
 
   /* Obtain a graphical PGPLOT window */
-  cpgbeg(0,"?",2,npsr);
+  if (overlay==1)
+    cpgbeg(0,"?",2,1);
+  else
+    cpgbeg(0,"?",2,npsr);
   cpgpap(widthPap,aspectPap);
   cpgsch(fontSize);
   cpgask(0);
@@ -241,8 +247,11 @@ void doPlot(pulsar *psr,int npsr)
 	      {
 		float xx[MAX_OBSN],yy[MAX_OBSN],yyerr1[MAX_OBSN],yyerr2[MAX_OBSN];
 		int num=0,colour;
-		cpgenv(plotx1,plotx2,ploty1,ploty2,0,0);
-		cpglab(xstr,ystr,psr[p].name);	    
+		if (overlay==0 || (overlay==1 && p==0))
+		  {
+		    cpgenv(plotx1,plotx2,ploty1,ploty2,0,0);
+		    cpglab(xstr,ystr,psr[p].name);	    
+		  }
 
 		for (colour=0;colour<5;colour++)
 		  {
@@ -263,6 +272,8 @@ void doPlot(pulsar *psr,int npsr)
 			  }
 		      }
 		    cpgsci(colour+1);
+		    if (overlay==1)
+		      cpgsci(p+1);
 		    cpgpt(num,xx,yy,16);
 		    cpgerry(num,xx,yyerr1,yyerr2,1);
 		  }
@@ -291,7 +302,10 @@ void doPlot(pulsar *psr,int npsr)
 	  if (plotpre==-1)
 	    {
 	      cpgend();
-	      cpgbeg(0,"/xs",1,npsr);
+	      if (overlay==1)
+		cpgbeg(0,"/xs",1,1);
+	      else
+		cpgbeg(0,"/xs",1,npsr);
 	      cpgpap(widthPap,aspectPap);
 	      cpgsch(fontSize);
 	      cpgask(0);	      
@@ -299,7 +313,10 @@ void doPlot(pulsar *psr,int npsr)
 	  else
 	    {
 	      cpgend();
-	      cpgbeg(0,"/xs",2,npsr);
+	      if (overlay==1)
+		cpgbeg(0,"/xs",2,1);
+	      else
+		cpgbeg(0,"/xs",2,npsr);
 	      cpgpap(widthPap,aspectPap);
 	      cpgsch(fontSize);
 	      cpgask(0);	      
@@ -332,7 +349,10 @@ void doPlot(pulsar *psr,int npsr)
 	    if (plotpre==-1)
 	      {
 		cpgend();
-		cpgbeg(0,"splk.ps/ps",1,npsr);
+		if (overlay==1)
+		  cpgbeg(0,"?",1,1);
+		else
+		  cpgbeg(0,"?",1,npsr);
 		cpgpap(widthPap,aspectPap);
 		cpgsch(fontSize);
 		cpgask(0);	      
@@ -340,7 +360,10 @@ void doPlot(pulsar *psr,int npsr)
 	    else
 	      {
 		cpgend();
-		cpgbeg(0,"?",2,npsr);
+		if (overlay==1)
+		  cpgbeg(0,"?",1,1);
+		else
+		  cpgbeg(0,"?",2,npsr);
 		cpgpap(widthPap,aspectPap);
 		cpgsch(fontSize);
 		cpgask(0);	      
@@ -470,7 +493,10 @@ void doPlot(pulsar *psr,int npsr)
 	if (plotpre==-1)
 	  {
 	    cpgend();
-	    cpgbeg(0,"/xs",1,npsr);
+	    if (overlay==1)
+	      cpgbeg(0,"/xs",1,1);
+	    else
+	      cpgbeg(0,"/xs",1,npsr);
 	    cpgpap(widthPap,aspectPap);
 	    cpgsch(fontSize);
 	    cpgask(0);	      
@@ -478,7 +504,10 @@ void doPlot(pulsar *psr,int npsr)
 	else
 	  {
 	    cpgend();
-	    cpgbeg(0,"/xs",2,npsr);
+	    if (overlay==1)
+	      cpgbeg(0,"/xs",2,1);
+	    else
+	      cpgbeg(0,"/xs",2,npsr);
 	    cpgpap(widthPap,aspectPap);
 	    cpgsch(fontSize);
 	    cpgask(0);	      

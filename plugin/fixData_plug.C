@@ -156,7 +156,7 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
   float rms[nit];
   double actSpecX[MAX_OBSN],actSpecY[MAX_OBSN];
   double specX[MAX_OBSN];
-  double ix[MAX_OBSN],iy[MAX_OBSN],ie[MAX_OBSN];
+  double ix[MAX_OBSN],iy[MAX_OBSN],ie[MAX_OBSN],outY_re[MAX_OBSN],outY_im[MAX_OBSN];
   double **specY;
   float fx[MAX_OBSN],fy[MAX_OBSN],t95[MAX_OBSN],t5[MAX_OBSN];
   int specN;
@@ -196,7 +196,7 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
       ie[i] = (double)psr[0].obsn[i].toaErr*1.0e-6;
     }
   printf("Producing spectrum\n");
-  TKspectrum(ix,iy,ie,psr[0].nobs,0,0,0,0,0,2,1,1,actSpecX,actSpecY,&specN,0,0);
+  TKspectrum(ix,iy,ie,psr[0].nobs,0,0,0,0,0,2,1,1,1,actSpecX,actSpecY,&specN,0,0,outY_re,outY_im);
   printf("Complete producing spectrum\n");
 
   if (script == 0) 
@@ -276,7 +276,7 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
 	  ie[i] = (double)psr[0].obsn[i].toaErr*1.0e-6;
 	}
       printf("Making spectrum\n");
-      TKspectrum(ix,iy,ie,psr[0].nobs,0,0,0,0,0,2,1,1,specX,specY[it],&specN,0,0);
+      TKspectrum(ix,iy,ie,psr[0].nobs,0,0,0,0,0,2,1,1,1,specX,specY[it],&specN,0,0,outY_re,outY_im);
       printf("%d Complete making spectrum\n",it);
     }
   cpgend();

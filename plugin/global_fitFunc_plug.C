@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <tempo2.h>
+#include <math.h>
 #include "TKfit.h"
 
 void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos);
@@ -51,7 +52,6 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   x = (double *)malloc(MAX_OBSN*sizeof(double));
   y = (double *)malloc(MAX_OBSN*sizeof(double));
   sig = (double *)malloc(MAX_OBSN*sizeof(double));
-  printf("HELLO\n");
   printf("About to undertake a global fit, number of pulsars = %d\n",npsr);
 
   // Form pre-fit residuals
@@ -73,13 +73,20 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	  if (psr[p].fitMode==0) sig[count] = 1.0;
 	  else sig[count] = psr[p].obsn[i].toaErr*1.0e-6;
 	  ip[count]=count;
+	  //	  printf("Have %g %g %g %d\n",x[count],y[count],sig[count],ip[count]);
 	  count++;
+	  if (count >= MAX_OBSN)
+	    {
+	      printf("Must increase max obsn\n");
+	      exit(1);
+	    }
 	}
     }
   for (p=0;p<npsr;p++)
     psr[p].nFit=count;
   printf("Total number of points = %d\n",count);
-
+  if (weightfit==1)printf("Doing a weighted fit\n");
+  else printf("Doing an unweighted fit\n");
   // Determine number of fit parameters
   npol=0;
   // Add global parameters
@@ -92,16 +99,31 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	  }
 	}
     }
+  if (psr[0].param[param_wave_om].fitFlag[0]==2)	  
+    {
+      npol+=psr[0].nWhite*2-1;
+      printf("Adding to npol %d (%d)\n",psr[0].nWhite*2-1,npol); 
+      for (p=1;p<npsr;p++)
+	psr[p].param[param_waveepoch].val[0] = psr[0].param[param_waveepoch].val[0];
+    }
+
+  if (psr[0].param[param_ifunc].fitFlag[0]==2)	  
+      npol+=psr[0].ifuncN-1;
+  printf("Adding %d global parameters\n",npol);
   for (p=0;p<npsr;p++)
     {
       npol++; // For the offset
+      printf("Adding fitting func for the pulsar offset %d (%d)\n",p,npol);
       for (i=0;i<MAX_PARAMS;i++)
 	{
 	  for (k=0;k<psr[p].param[i].aSize;k++)
 	    {
 	      if (psr[p].param[i].fitFlag[k]==1) {
 		if (i!=param_start && i!=param_finish)
-		  npol++;
+		  {
+		    npol++;
+		    printf("Adding fitting func %d/%d for pulsar %d (%d)\n",i,k,p,npol);
+		  }
 	      }
 	    }
 	}
@@ -110,11 +132,16 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       for (i=1;i<=psr[p].nJumps;i++)
 	{
 	  if (psr[p].fitJump[i]==1)
-	    npol++;
+	    {
+	      npol++;
+	      printf("Adding jump fit for pulsar %d (%d)\n",p,npol);
+	    }
 	}
       /* Add extra parameters for sinusoidal whitening */
       if (psr[p].param[param_wave_om].fitFlag[0]==1)
 	npol+=psr[p].nWhite*2-1;
+      if (psr[p].param[param_ifunc].fitFlag[0]==1)
+	npol+=psr[p].ifuncN-1;
     }
   val   = (double *)malloc(npol*sizeof(double));
   error = (double *)malloc(npol*sizeof(double));
@@ -123,8 +150,18 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     covar[i] = (double *)malloc(npol*sizeof(double));
 
   printf("Number of fit parameters = %d\n",npol);
+  for (i=0;i<npol;i++)
+    val[i]=0.0;
+  printf("Here 1\n");
   TKleastSquares_svd_psr(x,y,sig,count,val,error,npol,covar,&chisq,globalFITfuncs,weightfit,psr,tol,ip);
-
+  printf("Here 2\n");
+  for (i=0;i<npol;i++)
+    {
+      for (j=0;j<npol;j++)
+	psr[0].covar[i][j]=covar[i][j];
+    }
+  for (i=0;i<npol;i++)
+    printf("val %d = %g\n",i,val[i]);
   // now update the parameters
   offset=0;
   // update global parameters
@@ -134,12 +171,48 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	{
 	  if (psr[0].param[i].fitFlag[k] == 2)
 	    {
-	      for (p=0;p<npsr;p++)
-		{
-		  psr[p].param[i].val[k] += val[offset];
-		  psr[p].param[i].err[k] = error[offset];
+	      if (i==param_wave_om)
+		{		  
+		  for (j=0;j<psr[0].nWhite;j++)
+		    {
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].wave_cos[j] -= val[offset];
+			  psr[p].wave_cos_err[j] = error[offset];
+			}
+		      offset++;
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].wave_sine[j] -= val[offset];
+			  psr[p].wave_sine_err[j] = error[offset];
+			}
+		      offset++;		      
+		    }
 		}
-	      offset++;
+	      else if (i==param_ifunc)
+		{
+		  printf("Updating %d point\n",psr[0].ifuncN);
+		  for (j=0;j<psr[0].ifuncN;j++)
+		    {
+		      printf("Updating %g\n",val[offset]);
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].ifuncV[j]-=val[offset];
+			  psr[p].ifuncE[j]=error[offset];
+			}
+		      offset++;
+		    }
+		}
+	      else
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      printf("Fitting (1): %d %d %d %d %g\n",i,k,p,offset,val[offset]);
+		      psr[p].param[i].val[k] += val[offset];
+		      psr[p].param[i].err[k] = error[offset];
+		    }
+		  offset++;
+		}
 	    }
 	}
     }
@@ -165,9 +238,61 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       /* Add extra parameters for sinusoidal whitening */
       if (psr[p].param[param_wave_om].fitFlag[0]==1)
 	offset+=psr[p].nWhite*2-1;
+      if (psr[p].param[param_ifunc].fitFlag[0]==1)
+	offset+=psr[p].ifuncN-1;
       offset++; // For arbitrary phase
     }
+  printf("At this point\n");
+  if (psr[0].param[param_wave_om].fitFlag[0]==2)
+    {
+      double sx[MAX_OBSN],sy[MAX_OBSN],sy2[MAX_OBSN],sye[MAX_OBSN];
+      double xval;
+      double earliestTime,latestTime;
+      int npt;
 
+      FILE *fout,*fout2;
+      printf("Outputting wave.dat file\n");
+
+      fout = fopen("wave.dat","w");
+      fout2 = fopen("ept2tt.clk","w");
+      fprintf(fout2,"# TT(TAI) TT(EPT)\n# EPT derived using the pte plugin package\n#\n");
+
+      earliestTime = psr[0].obsn[i].sat;
+      latestTime = psr[0].obsn[psr[0].nobs-1].sat;
+      for (p=1;p<npsr;p++)
+	{
+	  if ((double)psr[p].obsn[i].sat < earliestTime) earliestTime = (double)psr[p].obsn[i].sat-1;
+	  if ((double)psr[p].obsn[psr[p].nobs-1].sat > latestTime) latestTime = (double)psr[p].obsn[psr[p].nobs-1].sat+1;
+	}
+      npt = (int)((latestTime-earliestTime)/14.0);
+
+      for (i=0;i<npt;i++)
+	{
+	  sx[i] = earliestTime+(i*14.0)-psr[0].param[param_waveepoch].val[0];
+	  sy[i] = 0.0;
+	  xval = sx[i];
+	  sye[i] = 0.0;
+	  for (j=0;j<psr[0].nWhite;j++)
+	    {
+	      sy[i]+=(psr[0].wave_cos[j]*cos((j+1)*psr[0].param[param_wave_om].val[0]*xval)+psr[0].wave_sine[j]*sin((j+1)*psr[0].param[param_wave_om].val[0]*xval));
+	      sye[i] += pow(psr[0].wave_cos_err[j]*cos((j+1)*psr[0].param[param_wave_om].val[0]*xval),2);
+	      sye[i] += pow(psr[0].wave_sine_err[j]*sin((j+1)*psr[0].param[param_wave_om].val[0]*xval),2);
+	    }
+	  sy2[i] = sy[i];
+	  sye[i] = sqrt(sye[i]);
+	}
+      TKremovePoly_d(sx,sy2,npt,3);
+      for (i=0;i<npt;i++)
+	{
+	  fprintf(fout,"%.5f %g %g %g\n",(double)earliestTime+14*i,(double)sy[i],(double)sy2[i],(double)sye[i]);
+	  fprintf(fout2,"%.5f %g\n",(double)earliestTime+14*i,(double)sy2[i]);
+	}
+      fclose(fout);
+      fclose(fout2);
+    }
+  
+  
+  
   free(x);
   free(y);
   free(sig);
@@ -190,6 +315,7 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
   int tot=0;
   int nglobal=0;
 
+  //  printf("Here with joe %g %d %d\n",x,ma,counter);
   for (i=0;i<ma;i++) afunc[i]=0.0;
 
   for (p=0;p<gnpsr;p++)
@@ -209,6 +335,12 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	    nglobal++;
 	}
     }
+  /* Add extra parameters for sinusoidal whitening */
+  if (psr[p].param[param_wave_om].fitFlag[0]==2)
+    nglobal+=psr[p].nWhite*2-1;
+  if (psr[p].param[param_ifunc].fitFlag[0]==2)
+    nglobal+=psr[p].ifuncN-1;
+
   new_ma+=nglobal;
   for (i=0;i<MAX_PARAMS;i++)
     {
@@ -229,6 +361,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
   /* Add extra parameters for sinusoidal whitening */
   if (psr[p].param[param_wave_om].fitFlag[0]==1)
     new_ma+=psr[p].nWhite*2-1;
+  if (psr[p].param[param_ifunc].fitFlag[0]==1)
+    new_ma+=psr[p].ifuncN-1;
 
   // Now calculate position in afunc array
   n=0;
@@ -257,6 +391,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
       /* Add extra parameters for sinusoidal whitening */
       if (psr[pp].param[param_wave_om].fitFlag[0]==1)
 	n+=psr[pp].nWhite*2-1;
+      if (psr[pp].param[param_ifunc].fitFlag[0]==1)
+	n+=psr[pp].ifuncN-1;
     }
 
   // Global fit
@@ -268,11 +404,32 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	  if (psr[p].param[i].fitFlag[k] == 2)  
 	    {
 	      //	      afunc[c] = dotproduct(psr[p].posPulsar,psr[p].obsn[ipos].planet_ssb[4]);
-	      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,k);
-	      c++;
+	      if (i==param_wave_om)
+		{
+		  for (j=0;j<psr[p].nWhite*2;j++)
+		    {
+		      // Note that a global fit to white data must be related to the same time
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x+(double)psr[p].param[param_pepoch].val[0] - (double)psr[0].param[param_waveepoch].val[0],i,j);
+		      c++;		      
+		    }
+		}
+	      else if (i==param_ifunc)
+		{
+		  for (j=0;j<psr[p].ifuncN;j++)
+		    {
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		      c++;
+		    }
+		}
+	      else
+		{
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,k);
+		  c++;
+		}
 	    }
 	} 
     }
+
   //  printf("Global fit = %g\n",afunc[0]);
   FITfuncs(x,afunc+n,new_ma-nglobal,&psr[p],ipos);
   //  printf("-----------------------------\n");

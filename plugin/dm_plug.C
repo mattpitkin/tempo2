@@ -115,9 +115,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   fin = fopen(timeList,"r");
   while (!feof(fin))
     {
-      nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
+      //      nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
+      nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],tname,tname);
       if (nread==3 || nread==4)
-	nStride++;
+	{
+	  strcpy(parFileName[nStride],parFile[0]);
+	  nStride++;
+	}
     }
   fclose(fin);
 
@@ -135,10 +139,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       psr[0].nJumps=0;
       readParfile(psr,parFile,timFile,1); /* Load the parameters       */
       readTimfile(psr,timFile,1); /* Load the arrival times    */
+      printf("Number of jumps = %d %g\n",psr[0].nJumps,(double)centreMJD);
       // Update the epoch in the par file for centreMJD
       strcpy(argv[argn],"-epoch");
       sprintf(argv[argn+1],"%.5f",(double)centreMJD);
       printf("Do the preprocessing\n");
+      psr[0].dmOffset=0;
       preProcess(psr,1,argc,argv);      
       printf("Done the preprocessing\n");
 
@@ -197,6 +203,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   psr[0].nJumps=0;
   readParfile(psr,parFile,timFile,1); /* Load the parameters       */
   readTimfile(psr,timFile,1); /* Load the arrival times    */
+      for (j=0;j<MAX_PARAMS;j++)
+	{
+	  for (k=0;k<psr[0].param[j].aSize;k++)
+	    psr[0].param[j].fitFlag[k] = 0;
+	}
+      for (j=0;j<psr[0].nJumps;j++)
+	psr[0].fitJump[j]=0;
+
   preProcess(psr,1,argc,argv);      
   for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
     {
@@ -221,6 +235,8 @@ void doPlot(double *epoch,double *dmVal,double *dmE,int *id,int n,pulsar *psr)
   float px[n],py[n],pe1[n],pe2[n];
   float ix[MAX_OBSN],iy[MAX_OBSN],iix[MAX_OBSN];
   float plotX[MAX_OBSN],plotY[MAX_OBSN],plotY1[MAX_OBSN],plotY2[MAX_OBSN],plotE[MAX_OBSN];
+  float dmx[2],dmy[2];
+  double dm0;
   int nplot=0;
   float minv,maxv;
 int nInterp=0;
@@ -229,10 +245,13 @@ int nInterp=0;
   float rx[MAX_OBSN],ry[MAX_OBSN],ry1[MAX_OBSN],ry2[MAX_OBSN];
   int plotType=1;
   float mx,my;
+  float first20,first50,first10;
   char key='a';
   
   int dmCurvePoly=1;
 
+
+  dm0 = (double)psr[0].param[param_dm].val[0];
   // Find earliest and latest point in the .tim file
   earliest = latest = (float)psr[0].obsn[0].sat;
 
@@ -246,8 +265,10 @@ int nInterp=0;
       if (earliest > (float)psr[0].obsn[i].sat) earliest = (float)psr[0].obsn[i].sat;
       if (latest < (float)psr[0].obsn[i].sat) latest = (float)psr[0].obsn[i].sat;
     }
-  earliest = epoch[0];
-  latest = epoch[n-1];
+  earliest-=0.5;
+  latest+=0.5;
+  //  earliest = epoch[0];
+  //  latest = epoch[n-1];
 
   cpgbeg(0,"/xs",1,1);
   cpgsch(1.4); cpgsfs(2);
@@ -301,6 +322,7 @@ int nInterp=0;
 	  plotY1[i] = plotY[i]-plotE[i];
 	  plotY2[i] = plotY[i]+plotE[i];
 	}
+      first50 = plotY[0];
       cpgsci(2); cpgsch(0.5); cpgpt(nplot,plotX,plotY,4); cpgsch(1.4); cpgerry(nplot,plotX,plotY1,plotY2,1); cpgsci(1);
 
       selectData(psr,rx,ry,800,1600,plotX,plotY,plotE,&nplot);
@@ -310,6 +332,7 @@ int nInterp=0;
 	  plotY1[i] = plotY[i]-plotE[i];
 	  plotY2[i] = plotY[i]+plotE[i];
 	}
+      first20 = plotY[0];
       cpgsci(3); cpgsch(0.5); cpgpt(nplot,plotX,plotY,4); cpgsch(1.4); cpgerry(nplot,plotX,plotY1,plotY2,1); cpgsci(1);
 
       selectData(psr,rx,ry,1600,5000,plotX,plotY,plotE,&nplot);
@@ -319,27 +342,33 @@ int nInterp=0;
 	  plotY1[i] = plotY[i]-plotE[i];
 	  plotY2[i] = plotY[i]+plotE[i];
 	}
+      first10 = plotY[0];
       cpgsci(4); cpgsch(0.5); cpgpt(nplot,plotX,plotY,4); cpgsch(1.4); cpgerry(nplot,plotX,plotY1,plotY2,1); cpgsci(1);
-
-
 
       // If available: overplot the DM curve
       if (nInterp > 0)
 	{
+	  float tt;
 	  float ty[nInterp];
 	  double freqf;
 	  double mean;
 
 	  freqf=1400e6;
 	  for (i=0;i<nInterp;i++)
-	      ty[i] = iy[i]/DM_CONST/1.0e-12/freqf/freqf*1.0e6;
+	    ty[i] = (iy[i]-dm0)/DM_CONST/1.0e-12/freqf/freqf*1.0e6;
 	  TKremovePoly_f(ix,ty,nInterp,dmCurvePoly);
+	  tt = ty[0];
+	  for (i=0;i<nInterp;i++)
+	    ty[i]=ty[i]-tt+first20;
 	  cpgsci(3); cpgline(nInterp,ix,ty); cpgsci(1);
 
 	  freqf=650e6; 
 	  for (i=0;i<nInterp;i++)
-	    ty[i] = iy[i]/DM_CONST/1.0e-12/freqf/freqf*1.0e6;
+	    ty[i] = (iy[i]-dm0)/DM_CONST/1.0e-12/freqf/freqf*1.0e6;
 	  TKremovePoly_f(ix,ty,nInterp,dmCurvePoly);
+	  tt = ty[0];
+	  for (i=0;i<nInterp;i++)
+	    ty[i]=ty[i]-tt+first50;
 	  cpgsci(2); cpgline(nInterp,ix,ty); cpgsci(1);
 	  
 	}
@@ -351,6 +380,11 @@ int nInterp=0;
       	     miny-(maxy-miny)*0.1,maxy+(maxy-miny)*0.1);
       cpgbox("BCNTS",0,0,"BCNTS",0,0);
       cpglab("Year","DM (cm\\u-3\\dpc)","");
+      dmx[0] = minx-(maxx-minx)*0.1;
+      dmx[1] = maxx+(maxx-minx)*0.1;
+      dmy[0] = dmy[1] = (float)psr[0].param[param_dm].val[0];
+      cpgsls(4); cpgline(2,dmx,dmy); cpgsls(1);
+
       cpgpt(n,px,py,4);
       cpgerry(n,px,pe1,pe2,1);
       if (nInterp>0)

@@ -72,7 +72,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
-  int i,n=0,white=0,filter=0;
+  int i,n=0,white=0,filter=0,res=0;
+  char resFile[MAX_FILELEN];
   double px[MAX_OBSN],py[MAX_OBSN],pe[MAX_OBSN];
 
   *npsr = 0;  /* For a graphical interface that only shows results for one pulsar */
@@ -99,6 +100,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%d",&white);
       else if (strcmp(argv[i],"-fil")==0)
 	filter=1;
+      else if (strcmp(argv[i],"-res")==0)
+	{
+	  res=1;
+	  strcpy(resFile,argv[++i]);
+	}
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -118,6 +124,22 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else textOutput(psr,*npsr,0,0,0,0,"");  /* Display the output */
     }
+
+  if (res==1) // Replace residuals with residual file
+    {
+      FILE *fin;
+      psr[0].nobs=0;
+      fin = fopen(resFile,"r");
+      while (!feof(fin))
+	{
+	  if (fscanf(fin,"%Lf %Lf %lf",&psr[0].obsn[psr[0].nobs].sat,
+		     &psr[0].obsn[psr[0].nobs].residual,
+		     &psr[0].obsn[psr[0].nobs].toaErr)==3)
+	    psr[0].nobs++;
+	}
+      fclose(fin);
+    }
+ 
 
   doPlugin(psr,*npsr,parFile,timFile,white,filter);
 
@@ -154,6 +176,7 @@ void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char
   char ylabel[100];
   char gr[100]="/xs";
   int changeDevice=0;
+  double outY_re[MAX_OBSN],outY_im[MAX_OBSN];
 
   do {
     cpgbeg(0,gr,1,1);
@@ -247,21 +270,21 @@ void doPlugin(pulsar *psr,int npsr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char
 		for (i=0;i<n2;i++)
 		  printf("ix %g %g\n",ix[i],iy[i]);
 		
-		TKspectrum(ix,iy,ie,n2,0,0,0,0,white,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+		TKspectrum(ix,iy,ie,n2,0,0,0,0,white,specType,ofac,1,specOut,specX,specY,&specN[p],0,0,outY_re,outY_im);
 
 	      }
 
 	    if (specType==3)
 	      {
-		TKspectrum(resx,resy,rese,n,1,0,0,1,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+		TKspectrum(resx,resy,rese,n,1,0,0,1,0,specType,ofac,1,specOut,specX,specY,&specN[p],0,0,outY_re,outY_im);
 	      }
 	    else
 	      {
 		printf("In here with %d\n",white);
 		if (white==0)
-		  TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+		  TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,1,specOut,specX,specY,&specN[p],0,0,outY_re,outY_im);
 		else
-		  TKspectrum(resx,resy,rese,n,1,0,0,1,white,specType,ofac,specOut,specX,specY,&specN[p],0,0);
+		  TKspectrum(resx,resy,rese,n,1,0,0,1,white,specType,ofac,1,specOut,specX,specY,&specN[p],0,0,outY_re,outY_im);
 	      }
 	    TKconvertFloat2(specX,specY,px[p],py[p],specN[p]);
 	    if (xaxis==1) // Convert x-axis to s^-1
@@ -582,7 +605,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
   int specN;
   long idum=TKsetSeed();
   int it,nit;
-
+  double outY_re[MAX_OBSN],outY_im[MAX_OBSN];
   nit = 100;
 
   n=0;
@@ -598,7 +621,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
 	}
     }
   
-  TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN,0,0);
+  TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,1,specOut,specX,specY,&specN,0,0,outY_re,outY_im);
   TKconvertFloat2(specX,specY,px,py,specN);
   meanActual=0;
   nv=0;
@@ -679,7 +702,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
 
     //    exit(1);
     // Get a spectrum of this white noise
-    TKspectrum(interpX,white,interpE,psr[0].nobs,0,0,0,0,0,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
+    TKspectrum(interpX,white,interpE,psr[0].nobs,0,0,0,0,0,specType,ofac,1,specOut,specWX,specWY,&specWN,0,0,outY_re,outY_im);    
     TKconvertFloat2(specWX,specWY,px,py,specWN);
     for (i=0;i<specWN;i++)
       {
@@ -767,7 +790,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
 	      }
 	  }
 	
-	TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,specOut,specX,specY,&specN,0,0);
+	TKspectrum(resx,resy,rese,n,0,0,0,0,0,specType,ofac,1,specOut,specX,specY,&specN,0,0,outY_re,outY_im);
 	for (i=0;i<specN;i++)
 	  avSpecY[i] += specY[i];
       }
@@ -838,7 +861,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
       interpE[j] = 0.0;
       //      printf("interp %g %g %g %g\n",interpX[j],interpY[j]);
     }
-    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,0,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
+    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,0,specType,ofac,1,specOut,specWX,specWY,&specWN,0,0,outY_re,outY_im);    
     TKconvertFloat2(specWX,specWY,px,py,specWN);
     for (i=0;i<specWN;i++)
       {
@@ -847,7 +870,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
       }
     cpgsci(3); cpgline(specWN,px,py); cpgsci(1);
 
-    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,1,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
+    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,1,specType,ofac,1,specOut,specWX,specWY,&specWN,0,0,outY_re,outY_im);    
     TKconvertFloat2(specWX,specWY,px,py,specWN);
     for (i=0;i<specWN;i++)
       {
@@ -856,7 +879,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
       }
     cpgsci(4); cpgline(specWN,px,py); cpgsci(1);
 
-    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,2,specType,ofac,specOut,specWX,specWY,&specWN,0,0);    
+    TKspectrum(interpX,interpY,interpE,interpN,0,0,0,0,2,specType,ofac,1,specOut,specWX,specWY,&specWN,0,0,outY_re,outY_im);    
     TKconvertFloat2(specWX,specWY,px,py,specWN);
     for (i=0;i<specWN;i++)
       {

@@ -248,8 +248,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   timeOffset = psr[0].param[param_pepoch].val[0];
   GWbackground(gw,ngw,&seed,flo,fhi,gwAmp,alpha,logspacing);
+
   for (i=0;i<ngw;i++)
-    setupGW(&gw[i]);
+    {
+      setupGW(&gw[i]);
+    }
 
   for (p=0;p<*npsr;p++)
     {

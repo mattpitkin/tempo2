@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -33,7 +33,7 @@
 
 /* using namespace std; */  /* Is this required for a plugin ? */
 
-void doPlot(pulsar *psr,int npsr);
+void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev);
 float findMin(float *x,pulsar *psr,int p,int i1,int i2);
 float findMax(float *x,pulsar *psr,int p,int i1,int i2);
 float findMean(float *x,pulsar *psr,int p,int i1,int i2);
@@ -50,7 +50,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
+  float scale[1000];
+  int nScale=0;
+  char grDev[100]="/vps";
   FILE *pin;
+  FILE *fin;
   char str[1000];
 
   *npsr = 0;  /* This graphical interface will only show results for one pulsar */
@@ -72,6 +76,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      printf("Error, npsr > MAX_PSR.  Must increase MAX_PSR\n");
 	      exit(1);
 	    } 
+	}
+      else if (strcmp(argv[i],"-g")==0)
+	strcpy(grDev,argv[++i]);
+      else if (strcmp(argv[i],"-scale")==0)
+	{
+	  sscanf(argv[i+1],"%f",&scale[nScale]);
+	  nScale++;
 	}
     }
 
@@ -98,7 +109,7 @@ if (*npsr==0) /* Select all files */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
   preProcess(psr,*npsr,argc,argv);
   callFit(psr,*npsr);             /* Do all the fitting routines */
-  doPlot(psr,*npsr);              /* Do plot */
+  doPlot(psr,*npsr,scale,nScale,grDev);              /* Do plot */
 }
 
 /* This function calls all of the fitting routines.             */
@@ -122,7 +133,7 @@ void callFit(pulsar *psr,int npsr)
 }
 
 
-void doPlot(pulsar *psr,int npsr)
+void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev)
 {
   int i,j,fitFlag=2,exitFlag=0,scale1=0,scale2,count[MAX_PSR],p,xautoscale=0,k,graphics=1;
   int yautoscale=0,plotpre=1;
@@ -130,15 +141,17 @@ void doPlot(pulsar *psr,int npsr)
   char xstr[1000],ystr[1000];
   float px[2],py[2],pye1[2],pye2[2];
   float x[MAX_PSR][MAX_OBSN],y[MAX_PSR][MAX_OBSN],yerr1[MAX_PSR][MAX_OBSN],yerr2[MAX_PSR][MAX_OBSN],tmax,tmin,tmaxy1,tminy1,tmaxy2,tminy2;
+  float sminy[MAX_PSR],smaxy[MAX_PSR];
   float minx[MAX_PSR],maxx[MAX_PSR],miny[MAX_PSR],maxy[MAX_PSR],plotx1,plotx2,ploty1,ploty2,mean;
   float mouseX,mouseY;
   float fontSize=1.4;
   char key;
-  float widthPap=0.0,aspectPap=0.618;
+  //  float widthPap=0.0,aspectPap=0.618;
+  float widthPap=0.0,aspectPap=1;
 
   /* Obtain a graphical PGPLOT window */
-  cpgbeg(0,"/ps",1,1);
-  cpgpap(widthPap,aspectPap);
+  cpgbeg(0,grDev,1,1);
+  //    cpgpap(widthPap,aspectPap);
   cpgsch(fontSize);
   cpgask(0);
 
@@ -154,11 +167,17 @@ void doPlot(pulsar *psr,int npsr)
       printf("points = %d\n",psr[p].nobs);
       for (i=0;i<psr[p].nobs;i++)
 	{	  
-	  if (psr[p].obsn[i].deleted == 0)
+	  if (psr[p].obsn[i].deleted == 0 &&
+	      (psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]!=1 ||
+	       psr[p].param[param_start].val[0] < psr[p].obsn[i].bat) &&
+	      (psr[p].param[param_finish].paramSet[0]!=1 || psr[p].param[param_finish].fitFlag[0]!=1 ||
+	       psr[p].param[param_finish].val[0] > psr[p].obsn[i].bat))
 	    {
 	      /* x[p][count[p]] = (double)(psr[p].obsn[i].bat-psr[0].param[param_pepoch].val[0]);	     	       */
 	      x[p][count[p]] = (double)(psr[p].obsn[i].bat-51000);	     	      
 	      y[p][count[p]] = (double)psr[p].obsn[i].residual*1.0e6;
+	      if (nScale>0)
+		y[p][count[p]] *= scale[p];
 	      count[p]++;
 	    }
 	}
@@ -187,7 +206,21 @@ void doPlot(pulsar *psr,int npsr)
 
       miny[p] = findMin(y[p],psr,p,scale1,count[p]);
       maxy[p] = findMax(y[p],psr,p,scale1,count[p]);
+      sminy[p] = miny[p]/1e6;
+      smaxy[p] = maxy[p]/1e6;
     }
+  for (p=0;p<npsr;p++)
+    {
+      for (i=0;i<count[p];i++)
+	{
+	  y[p][i] = (y[p][i]-miny[p])/(maxy[p]-miny[p]);
+	  yerr1[p][i] = (yerr1[p][i]-miny[p])/(maxy[p]-miny[p]);
+	  yerr2[p][i] = (yerr2[p][i]-miny[p])/(maxy[p]-miny[p]);
+	}
+      maxy[p] = 1.0;
+      miny[p] = 0.0;
+    }
+  
 
   tmin = findMinVal(minx,npsr);
   tmax = findMaxVal(maxx,npsr);
@@ -217,12 +250,15 @@ void doPlot(pulsar *psr,int npsr)
   cpgbox("ATNSBC",0.0,0,"",0.0,0);
   cpglab(xstr,"","");	    
 
+  char str[1000];
   for (p=0;p<npsr;p++)
     {
       float xx[MAX_OBSN],yy[MAX_OBSN],yyerr1[MAX_OBSN],yyerr2[MAX_OBSN];
       int num=0,colour;
       cpgsch(1);
       cpgtext(tmax+(tmax-tmin)*0.05,p+1,psr[p].name);
+      sprintf(str,"%.2f",(double)((smaxy[p]-sminy[p])*psr[p].param[param_f].val[0]));
+      cpgtext(tmax+(tmax-tmin)*0.05,p+1.5,str);
       cpgsch(1);
       
       cpgsls(4);

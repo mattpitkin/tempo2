@@ -74,6 +74,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   int  i,j,varN,file=-1,fileout=0,rad=0;
   double errMult=1;
 
+  printf("Starting general2 plugin\n");
 
   for (i=0;i<argc;i++)
     {
@@ -129,6 +130,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
     }
   else if (file==0) /* Read from string */
     parseLine(psr,cline,&errMult,null,format,dformat,&rad,fout);
+  printf("Finished general2 plugin\n");
 }
 
 void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,char *dformat,int *rad,FILE *fout)
