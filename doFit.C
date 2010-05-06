@@ -385,7 +385,6 @@ int getNparams(pulsar psr)
 	  }
 	}
     }
-  
   /* Add extra parameters for jumps */
   for (i=1;i<=psr.nJumps;i++)
     {
@@ -395,7 +394,8 @@ int getNparams(pulsar psr)
   /* Add extra parameters for sinusoidal whitening */
   if (psr.param[param_wave_om].fitFlag[0]==1)
     npol+=psr.nWhite*2-1;
-  
+  if (psr.param[param_ifunc].fitFlag[0]==1)
+      npol+=(psr.ifuncN-1);
   return npol;
 }
 
@@ -417,6 +417,11 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		  if (i==param_wave_om)
 		    {
 		      for (j=0;j<psr->nWhite*2;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		    }
+		  else if (i==param_ifunc)
+		    {
+		      for (j=0;j<psr->ifuncN;j++)
 			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 		    }
 		  else
@@ -508,7 +513,11 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	expf = 1.0;
       
       if (psr->obsn[ipos].bbat >= psr->param[param_glep].val[k])
-	afunc = psr->param[param_gltd].val[0]*SECDAY*1.0e-9*(1.0-expf)*1.0e9/psr->param[param_f].val[0];
+	{
+	  afunc = psr->param[param_gltd].val[k]*SECDAY*(1.0-expf)/psr->param[param_f].val[0]; ///psr->param[param_f].val[0];
+	  //	  printf("Glitch diff = %d %.10f %.10f %.10f\n",k+1,afunc,(double)tp,(double)tgl,(double)psr->param[param_gltd].val[0]);
+
+	}
       else
 	afunc = 0.0;
     }
@@ -516,26 +525,26 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     {
       longdouble dt1,expf,tp,tgl;
       
-      tp = (psr->obsn[ipos].bbat-psr->param[param_pepoch].val[0])*86400.0;
-      tgl = (psr->param[param_glep].val[k] - psr->param[param_pepoch].val[0])*86400.0;
+      tp = (psr->obsn[ipos].bbat-psr->param[param_pepoch].val[0])*86400.0L;
+      tgl = (psr->param[param_glep].val[k] - psr->param[param_pepoch].val[0])*86400.0L;
       
       dt1 = tp-tgl;
       
       if (psr->param[param_gltd].val[k]!=0.0)
-	expf = exp(-dt1/86400.0/psr->param[param_gltd].val[k]);
+	expf = exp(-dt1/86400.0L/psr->param[param_gltd].val[k]);
       else
 	expf = 1.0;
       
       if (psr->obsn[ipos].bbat >= psr->param[param_glep].val[k])
 	afunc = psr->param[param_glf0d].val[k]*
-	  (1.0-(1.0+dt1/1.0e9/(psr->param[param_gltd].val[0]*SECDAY*1.0e-9))*expf)/psr->param[param_f].val[0]*SECDAY;
+	  (1.0-(1.0+dt1/SECDAY/(psr->param[param_gltd].val[k]))*expf)/psr->param[param_f].val[0]*SECDAY;
       else
 	afunc = 0.0;
     }
   else if (i==param_glf0)
     {
-      if (psr->obsn[ipos].bbat >= psr->param[param_glep].val[k])
-	afunc = (psr->obsn[ipos].bbat-psr->param[param_glep].val[k])*86400.0/psr->param[param_f].val[0];
+      if (psr->obsn[ipos].bbat >= psr->param[param_glep].val[k])	
+	  afunc = (psr->obsn[ipos].bbat-psr->param[param_glep].val[k])*86400.0/psr->param[param_f].val[0];	
       else
 	afunc = 0.0;	      
     }
@@ -561,7 +570,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       /* Should have a check to see if only one frequency exists in data
 	 in which case fitting for DM does not make sense */
       if (k==0) 
-	afunc = 1.0/(DM_CONST*pow(psr->obsn[ipos].freqSSB/1.0e6,2));
+	afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
       else
 	{
 	  yrs = (psr->obsn[ipos].sat - psr->param[param_pepoch].val[0])/365.25;
@@ -685,6 +694,24 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x); 
       else        afunc = sin(om*(floor(k/2.0)+1)*x); 
     }
+  else if (i==param_ifunc) /* Whitening procedure using interpolated function */
+    {
+      double dt = (x + psr->param[param_pepoch].val[0]) - psr->ifuncT[k];
+      double tt = M_PI/(psr->ifuncT[1] - psr->ifuncT[0])*dt;
+      double t1;
+      double t2=0.0;
+      int l;
+
+      t1 = sin(tt)/tt;
+      /*      for (l=0;l<psr->ifuncN;l++)
+	      {
+	      dt = (x + (double)psr->param[param_pepoch].val[0]) - psr->ifuncT[l];
+	      tt = M_PI/(psr->ifuncT[1] - psr->ifuncT[0])*dt;
+	      t2+=sin(tt)/tt;
+	      }*/
+
+      afunc = t1;
+    }
   else if (i==param_dmassplanet)
     {
       afunc = dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
@@ -751,6 +778,9 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		{
 		  psr[p].param[i].val[k] += val[j];
 		  psr[p].param[i].err[k]  = error[j];
+		  // This is slow - should be a better approach
+		  if (i==param_dm)
+		    psr[p].dmOffset+=val[j];
 		}
 	      else if (i==param_dshk)
 		{
@@ -779,7 +809,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		}
 	      else if (i==param_glf0) /* Glitch permanent pulse frequency increment */
 		{
-		  psr[p].param[i].val[k] -= val[j]; //*psr[p].param[param_f].val[0];
+		  psr[p].param[i].val[k] -= val[j]; 
 		  psr[p].param[i].err[k]  = error[j];                        
 		}
 	      else if (i==param_glf1) /* Glitch permanent pulse frequency deriv. increment */
@@ -836,6 +866,17 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      psr[p].wave_sine_err[k] = error[j]; j++;	      
 		    }
 		  j--;
+		}		  
+	      else if (i==param_ifunc) 
+		{
+		  int k;
+		  for (k=0;k<psr->ifuncN;k++)
+		    {
+		      printf("val ret = %g\n",val[j]);
+		      psr[p].ifuncV[k] -= val[j];
+		      psr[p].ifuncE[k] = error[j];
+		      j++;
+		    }
 		}		  
 	      else if (i==param_start)
 		{

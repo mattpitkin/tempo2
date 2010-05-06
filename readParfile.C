@@ -308,6 +308,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_pmrv]),0);
   else if (strcasecmp(str,"POSEPOCH")==0)  /* Position Epoch */
     readValue(psr,str,fin,&(psr->param[param_posepoch]),0);
+  else if (strcasecmp(str,"WAVEEPOCH")==0)  /* Fitwaves Epoch */
+    readValue(psr,str,fin,&(psr->param[param_waveepoch]),0);
+  else if (strcasecmp(str,"SIFUNC")==0)  /* Set interpolation function */
+    readValue(psr,str,fin,&(psr->param[param_ifunc]),0);
   else if (strcasecmp(str,"PEPOCH")==0)    /* Period Epoch */
     readValue(psr,str,fin,&(psr->param[param_pepoch]),0);
   else if (strcasecmp(str,"EPHVER")==0)    /* Ephemeris version */
@@ -464,6 +468,17 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       sscanf(str+4,"%d",&number);
       fscanf(fin,"%lf %lf",&psr->wave_sine[number-1],&psr->wave_cos[number-1]);
       if (psr->nWhite < number) psr->nWhite = number;
+    }
+  else if (strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
+    {
+      int number;
+      printf("Setting IFUNC\n");
+      /* Obtain parameter number */
+      sscanf(str+5,"%d",&number);
+
+      fscanf(fin,"%lf %lf %lf",&psr->ifuncT[number-1],&psr->ifuncV[number-1],&psr->ifuncE[number-1]);
+      if (psr->ifuncN < number) psr->ifuncN = number;
+      printf("IFUNC n = %d\n",psr->ifuncN);
     }
   /* ---------------- */
   /* Phase jumps      */
@@ -729,10 +744,16 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
       printf("ERROR [PAR1]: Have not set a period epoch in %s\n",filename);
       exit(1);
     }
+  if (psr->param[param_waveepoch].paramSet[0] == 0)
+    {
+      copyParam(psr->param[param_pepoch],&(psr->param[param_waveepoch]));
+      strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
+      strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH"); 
+   }
   if (psr->param[param_posepoch].paramSet[0] == 0)
     {
       displayMsg(1,"PAR1","Have not set a position epoch. The period epoch will be used instead.",filename,psr->noWarnings);
-      copyParam(psr->param[param_pepoch],&(psr->param[param_posepoch]));
+       copyParam(psr->param[param_pepoch],&(psr->param[param_posepoch]));
       strcpy(psr->param[param_posepoch].label[0],"POSEPOCH (MJD)");
       strcpy(psr->param[param_posepoch].shortlabel[0],"POSEPOCH");
     }

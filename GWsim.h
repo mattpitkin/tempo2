@@ -214,6 +214,7 @@ void GWbackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double 
 	  gw[k].aplus_im_g = 0.0;
 	  gw[k].across_im_g = 0.0;
 	}
+      //      printf("omega = %g\n",(double)(1.0/(gw[k].omega_g/2.0/M_PI)/86400.0));
       setupGW(&gw[k]);
     }
 
@@ -243,18 +244,24 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
 	  tempVal[i] += gw->h[i][k]*kp[k];
 	  tempVal_im[i] += gw->h_im[i][k]*kp[k];
 	}
+      //      printf("tempVal[%d] = %g ",i,(double)tempVal[i]);
     }
+  //  printf("\n");
+  //  printf("kp = %g %g %g\n",(double)kp[0],(double)kp[1],(double)kp[2]);
+
 		
   cosMu = dotProduct(kp,gw->kg);   /* Angle between pulsar and GW source */
+  //  printf(" cosmu = %g\n",(double)cosMu);
   if ((1+cosMu)!=0) 
   {
     psrVal1    = 0.5L/(1.0+cosMu)*dotProduct(kp,tempVal); 
     psrVal1_im = 0.5L/(1.0+cosMu)*dotProduct(kp,tempVal_im);
+    //    printf("psrval1 = %g %g %g\n",(double)psrVal1,(double)(1+cosMu),(double)(1-cosMu));
   }
   else psrVal1 = 0.0L;
   
   geo      = psrVal1;
-  
+  //  printf("psrVal = %g %g\n",(double)psrVal1,(double)psrVal1_im);
   earthVal1 = psrVal1*sin(gw->phase_g+time*gw->omega_g) + 
     psrVal1_im*cos(gw->phase_g+time*gw->omega_g); // sin -> cos
   
@@ -263,7 +270,7 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
   else
     psrVal2 = psrVal1*sin(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g) + 
       psrVal1_im*cos(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g); 
-  
+
   residual = (earthVal1-psrVal2)/gw->omega_g; 
   //    printf("GWsim %g %g %g %g %g %g %g %g %g %g %g %g %g\n",(double)residual,(double)earthVal1,(double)psrVal2,(double)psrVal1,(double)cosMu,(double)psrVal1_im,(double)kp[0],(double)kp[1],(double)kp[2],(double)cosMu,(double)gw->h_im[0][0],(double)gw->h_im[0][1],(double)gw->h_im[1][0]);
   return residual;

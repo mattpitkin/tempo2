@@ -92,6 +92,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->units = SI_UNITS;
   psr->ne_sw  = NE_SW_DEFAULT; 
   psr->nWhite = 0;  /* No whitening by default */
+  psr->ifuncN = 0;  /* No interpolation functions by default */
   psr->timeEphemeris = IF99_TIMEEPH;
   psr->dilateFreq = 1;
   psr->planetShapiro = 1;
@@ -103,6 +104,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->deleteFileName,"NONE");
   strcpy(psr->tzrsite,"NULL");
   psr->calcShapiro=1;
+  psr->dmOffset = 0;
   psr->ipm = 1;
   psr->swm = 0;
   psr->nPhaseJump=0;
@@ -178,6 +180,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_pmdec].shortlabel[0],"PMDEC");
   strcpy(psr->param[param_posepoch].label[0],"POSEPOCH (MJD)");
   strcpy(psr->param[param_posepoch].shortlabel[0],"POSEPOCH");
+  strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
+  strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH");
+  strcpy(psr->param[param_ifunc].label[0],"IFUNC");
+  strcpy(psr->param[param_ifunc].shortlabel[0],"IFUNC");
   strcpy(psr->param[param_pepoch].label[0],"PEPOCH (MJD)");
   strcpy(psr->param[param_pepoch].shortlabel[0],"PEPOCH");
   strcpy(psr->param[param_dmepoch].label[0],"DMEPOCH (MJD)");
@@ -345,7 +351,7 @@ void allocateMemory(pulsar *psr, int realloc)
       else if (i==param_bpjep || i==param_bpjph || i==param_bpja1 || i==param_bpjec || i==param_bpjom
 	       || i==param_bpjpb)  psr->param[i].aSize = MAX_BPJ_JUMPS;
       else if (i==param_glep || i==param_glph || i==param_glf0 || i==param_glf1 || i==param_glf2 || 
-	       i==param_glf0d || i==param_gltd) psr->param[i].aSize = 5;
+	       i==param_glf0d || i==param_gltd) psr->param[i].aSize = 20;
       else if (i==param_dmassplanet)
 	psr->param[i].aSize = 9;
       else psr->param[i].aSize = 1;

@@ -44,6 +44,7 @@
 #define MAX_PARAMS           100   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
+#define MAX_IFUNC            100   /* Maximum number of parameters for interpolation function  */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_FLAGS            10    /* Maximum number of flags in .tim file/observation */
@@ -153,7 +154,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
-            param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet};
+            param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc};
 
 extern int MAX_PSR;
 extern int MAX_OBSN;
@@ -277,6 +278,7 @@ typedef struct pulsar {
   int    phaseJumpDir[MAX_JUMPS]; /* Size and direction of phase jump                           */
   int    phaseJumpID[MAX_JUMPS];  /* ID of closest point to the phase jump */
   int    nPhaseJump;              /* Number of phase jumps                                      */
+  double dmOffset;                /* Value to add to DM flags */
   double ne_sw;                   /* Electron density at 1AU due to the solar wind              */
   int    nCompanion;              /* Number of binary companions                                */
   int    eclCoord;                /* = 1 for ecliptic coords otherwise celestial coords         */
@@ -336,6 +338,9 @@ typedef struct pulsar {
   double wave_sine[MAX_WHITE], wave_sine_err[MAX_WHITE];
   double wave_cos[MAX_WHITE],  wave_cos_err[MAX_WHITE];
   int    nWhite;
+
+  double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC];
+  int    ifuncN;
 
   /* Which fit function are we using */
   char fitFunc[MAX_FILELEN];

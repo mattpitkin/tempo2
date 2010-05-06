@@ -102,11 +102,14 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       for (k=0;k<psr[p].obsn[i].nFlags;k++)
 	{
 	  if (strcmp(psr[p].obsn[i].flagID[k],"-dm")==0) /* Have DM correction */
+	    {
 	      sscanf(psr[p].obsn[i].flagVal[k],"%lf",&dmval);
+	      dmval+=psr[p].dmOffset;
+	    }
 	  if (strcmp(psr[p].obsn[i].flagID[k],"-dmo")==0) /* Have DM correction */
 	    {
 	      sscanf(psr[p].obsn[i].flagVal[k],"%lf",&dmval2);
-	      dmval+=dmval2;
+	      dmval+=(dmval2+psr[p].dmOffset);
 	    }
 	}
       if (debugFlag==1) printf("In dm_delays: Looked for flags\n");      

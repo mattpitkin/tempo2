@@ -56,6 +56,7 @@ void TKaveragePts(double *x,double *y,int n,int width,double *meanX,double *mean
 void TKcmonot (int n, double x[], double y[], double yd[][4]);
 void TKspline_interpolate(int n,double *x,double *y,double yd[][4],double *interpX,
 			  double *interpY,int nInterp);
+void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, double *interpX, double *interpY, int nInterp);
 void TKhann(double *x,double *y,int n,double *ox,double *oy,int *on,int width);
 void TKfirstDifference(double *x,double *y,int n);
 void TK_fitSine(double *x,double *y,double *e,int n,int wErr,double *outX,double *outY,int *outN);
@@ -1708,3 +1709,26 @@ void indexx8(int n,double *arrin,int *indx)
  indx[i]=indxt;
  goto pos10;
 }
+//Adapted from Stefan / George's plugin
+//interpolation (spline): this function interpolates a data set using constrained spline onto an input set of interpX and nInterp values
+void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, double *interpX, double *interpY, int nInterp)
+{
+    //array needed by TKcmonot
+    double yd[MAX_OBSN][4];
+
+    //auxilary 'i'
+    int i;
+
+    double tempX[MAX_OBSN];
+    int nTemp = nInterp;
+
+    for (i=0;i<nTemp;i++)
+      {
+	tempX[i] = interpX[i];
+      }
+
+    TKcmonot(inN, inX, inY, yd);
+
+    //only need to determine what interpY is
+    TKspline_interpolate(inN, inX, inY, yd, tempX, interpY, nTemp);
+} //interpolateSplineSmoothFixedXPts

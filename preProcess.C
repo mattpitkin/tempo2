@@ -396,6 +396,11 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  psr[p].param[param_dmepoch].val[0] = nMJD;
 	  psr[p].param[param_dmepoch].prefit[0] = nMJD;
 
+	  /* Should update wave epoch */
+	  if (psr[p].param[param_waveepoch].paramSet[0]==1)
+	    {
+	      printf("ERROR: Not updating the FITWAVES to new EPOCH\n");
+	    }
 
 	  /* Update binary parameters if necessary */
 	  if (psr[p].param[param_pb].paramSet[0]==1)  /* Binary pulsar */
@@ -1061,6 +1066,8 @@ void processFlag(char *line,pulsar *psr,int npsr)
 	    {
 	      if (strcasecmp(s1,"mjdpass")==0 && ((double)psr[p].obsn[i].sat < v1 ||
 						  (double)psr[p].obsn[i].sat > v2))
+		psr[p].obsn[i].deleted=1;
+	      if (strcasecmp(s1,"reject")==0)
 		psr[p].obsn[i].deleted=1;
 	      if (strcasecmp(s1,"mjdreject")==0 && ((double)psr[p].obsn[i].sat >= v1 &&
 						  (double)psr[p].obsn[i].sat <= v2))

@@ -60,6 +60,7 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
     {
 
       psr[p].nobs=0;
+      psr[p].dmOffset=0;
       /*      jumpVal=psr[p].nJumps;
       for (i=0;i<jumpVal;i++)
       psr[p].jumpVal[i]=0.0; */

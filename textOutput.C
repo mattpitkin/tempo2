@@ -29,6 +29,7 @@
 #include <math.h>
 #include <string.h>
 #include "tempo2.h"
+#include "TKfit.h"
 
 //#define TSUN (4.925490947e-6L) (Should be tempo2.h now).
 
@@ -231,6 +232,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       if (psr[p].param[param_wave_om].paramSet[0]==1)
 	{
 	  double perr,pwr;
+	  double xval,yval;
+	  int j;
+	  FILE *fout;
 	  printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","Freq","Period","Cosine amp","Sine amp","Power");
 	  printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","(yr^-1)","(yr)","(s)","(s)","(s^2)");
 	  printf("------------------------------------------------------------------------------\n");
@@ -252,6 +256,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    }
 	  printf("------------------------------------------------------------------------------\n");
 	}
+	  if (psr[p].param[param_ifunc].paramSet[0]==1)
+	    {
+	      printf("Interpolated function\n");
+	      for (i=0;i<psr[p].ifuncN;i++)
+		printf("%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
+	    }
+
       if (psr[0].param[param_f].paramSet[0]==1 && psr[0].param[param_f].paramSet[1]==1)
 	{
 	  longdouble p0,p1,age,bs,p0e,p1e;

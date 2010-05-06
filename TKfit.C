@@ -121,7 +121,9 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
       b[i] = y[i]/sig[i];
     }
   /* Now carry out the singular value decomposition */
+  printf("Decompositon\n");
   TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
+  printf("Complete decomposition\n");
   wmax = TKfindMax_d(w,nf);
   for (i=0;i<nf;i++)
     {
@@ -529,7 +531,7 @@ void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double 
 	    }
 	  if (its==30)
 	    {
-	      printf("No convergence in singular value decomposition after 30 iterations\n");
+	      printf("1. No convergence in singular value decomposition after 30 iterations\n");
 	      exit(1);
 	    }
 	  x = w[l];

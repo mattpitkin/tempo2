@@ -135,6 +135,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 			 1.0/6.0*psr[p].param[param_glf2].val[k]*dt1*dt1*dt1 +
 			 psr[p].param[param_glf0d].val[k]*
 			 psr[p].param[param_gltd].val[k]*86400.0*(1.0-expf);
+		       //		       printf("Glitch phase = %10f\n",(double)(psr[p].param[param_glph].val[k]+
+		       //			 psr[p].param[param_glf0].val[k]*dt1 + 
+		       //			 0.5*psr[p].param[param_glf1].val[k]*dt1*dt1 +
+		       //			 1.0/6.0*psr[p].param[param_glf2].val[k]*dt1*dt1*dt1 +
+		       //			 psr[p].param[param_glf0d].val[k]*
+		       //			      psr[p].param[param_gltd].val[k]*86400.0*(1.0-expf)));
 		     }
 		 }
 	     }
@@ -154,7 +160,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       double om;  /* Fundamental frequency */
 	       double dt;  /* Change in time from pepoch */
 
-	       dt = psr[p].obsn[i].bbat - psr[p].param[param_pepoch].val[0];
+	       dt = psr[p].obsn[i].bbat - psr[p].param[param_waveepoch].val[0] ;
 	       om = psr[p].param[param_wave_om].val[0];
 	       for (k=0;k<psr[p].nWhite;k++)
 		 {
@@ -162,6 +168,35 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     psr[p].wave_cos[k]*cos(om*(k+1)*dt)*psr[p].param[param_f].val[0];
 		 }
 	     }
+	   /* Add in extra phase due to interpolation */
+	   if (psr[p].param[param_ifunc].paramSet[0] == 1)
+	     {
+	       long double wi,t1,t2;
+	       long double dt,speriod,tt;
+	       t1=0.0L,t2=0.0L;
+	       speriod = (long double)(psr[p].ifuncT[1]-psr[p].ifuncT[0]); 
+	       //	       printf("ifuncN = %d\n",psr[p].ifuncN);
+	       for (k=0;k<psr[p].ifuncN;k++)
+	       //	       for (k=3;k<4;k++)
+		 {
+		   //		   printf("Have %g %g\n",psr[p].ifuncT[k],psr[p].ifuncV[k]);
+		   dt = psr[p].obsn[i].bbat - (long double)psr[p].ifuncT[k];
+		   wi=1;
+		   if (dt==0)
+		     {
+		       t1 += wi*(long double)psr[p].ifuncV[k];
+		     }
+		   else
+		     {
+		       tt = M_PI/speriod*(dt);
+		       t1 += wi*(long double)psr[p].ifuncV[k]*sinl(tt)/(tt);
+		       //		       t2 += wi*sinl(tt)/(tt);
+		     }
+		 }
+	       //	       printf("Setting %g %g\n",(double)psr[p].obsn[i].bbat,(double)(t1/t2));
+	       phaseW += (psr[p].param[param_f].val[0]*t1);
+	     }
+
 
 	   phase5 = phase2+phase3+phase4+phaseJ+phaseW;
 
