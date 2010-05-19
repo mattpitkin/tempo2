@@ -191,6 +191,11 @@ IFTE_init(const char *fname)
   /* Note: file is not closed as it is used by other routines */
 }
  
+void IFTE_close_file()
+{
+  fclose(ifte.f);
+}
+
 /* general purpose value-getter */
 void
 IFTE_get_Vals(double JDeph0, double JDeph1, int kind,

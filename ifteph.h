@@ -44,7 +44,7 @@ void IFTE_get_DeltaT_DeltaTDot(double Teph0, double Teph1,
 
 double IFTE_DeltaT(double Teph0, double Teph1);
 double IFTE_DeltaTDot(double Teph0, double Teph1);
-
+  void IFTE_close_file();
 void IFTE_get_vE_vEDot(double Teph0, double Teph1,
 				   double *ve, double *vEDot);
 void IFTE_get_vE(double Teph0, double Teph1, double *vE); 

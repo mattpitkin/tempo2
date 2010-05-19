@@ -165,6 +165,7 @@ void tt2tb(pulsar *psr,int npsr)
     }
   }
   first=0;
+  IFTE_close_file();
 }
 
 
