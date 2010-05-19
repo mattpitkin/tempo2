@@ -65,8 +65,11 @@ void tt2tb(pulsar *psr,int npsr)
   longdouble mjd_tt, mjd_teph;
   double deltaT=0.0, obsTerm, earthVel[3];
   double deltaTDot, obsTermDot, earthVelDot[3];
-  static int first=1;
-
+  int first=1;
+  printf("In tt2tb\n");
+  printf("Creating the file\n");
+  init_ifte();
+  printf("Initialisng the file\n");
   for (p=0;p<npsr;p++)
   {
     for (i=0;i<psr[p].nobs;i++)
@@ -81,10 +84,13 @@ void tt2tb(pulsar *psr,int npsr)
 	  mjd_tt = psr[p].obsn[i].sat + getCorrectionTT(psr[p].obsn+i)/SECDAY;
 	/* Evaluate the time ephemeris and its derivative */
 	if (psr[p].timeEphemeris == IF99_TIMEEPH)
-	  deltaT = IF_deltaT(mjd_tt);
+	  {
+	    deltaT = IF_deltaT(mjd_tt);
+	  }
 	if (psr[p].timeEphemeris == FB90_TIMEEPH)
-	  deltaT = FB_deltaT(mjd_tt) - IFTE_TEPH0; /* FB code returns Teph-TDB not TT-TDB */
-
+	  {
+	    deltaT = FB_deltaT(mjd_tt) - IFTE_TEPH0; /* FB code returns Teph-TDB not TT-TDB */
+	  }
 	/* Get term involving observatory position (if known) */
 
 	/*	for (k=0;k<3;k++)
@@ -94,7 +100,6 @@ void tt2tb(pulsar *psr,int npsr)
 		varray);   */
 	for (k=0;k<3;k++)
 	  earthVel[k] = psr[p].obsn[i].earth_ssb[k+3];
-	
 	obsTerm = dotproduct(earthVel, psr[p].obsn[i].observatory_earth)
 	  /  (1.0-IFTE_LC) ;
 	/* both vectors were meant to be defined in Ephemeris units ...
@@ -108,7 +113,6 @@ void tt2tb(pulsar *psr,int npsr)
 	/* Note, DeltaT(Teph0) ~ -2x10^-14 s so is neglected */
 	psr[p].obsn[i].correctionTT_Teph = IFTE_TEPH0 + obsTerm
 	  + deltaT / (1.0-IFTE_LC);
-
 	/* Compute TCB or TDB as requested */
 	if (psr[p].units == TDB_UNITS)
 	  {
@@ -121,11 +125,15 @@ void tt2tb(pulsar *psr,int npsr)
 	      IFTE_KM1 * (double)(mjd_tt-IFTE_MJD0)*86400.0/* linear drift term */
 	      + IFTE_K * (psr[p].obsn[i].correctionTT_Teph-(longdouble)IFTE_TEPH0);
 	  }
-
 	/* Compute dTB/dTT for correct frequency transfer if needed */
 	if (psr[p].dilateFreq==1)
 	{
-	  init_ifte();
+	  if (first==1)
+	    {
+	      //	      init_ifte();
+	      first=0;
+
+	    }
 	  mjd_teph = mjd_tt + psr[p].obsn[i].correctionTT_Teph/86400.0;
 	  deltaTDot = IFTE_DeltaTDot(2400000.0+(int)mjd_teph, 
 				     0.5+(mjd_teph-(int)mjd_teph));
@@ -164,27 +172,28 @@ void tt2tb(pulsar *psr,int npsr)
       }
     }
   }
-  first=0;
+  printf("Closing the file\n");
   IFTE_close_file();
 }
 
 
 void init_ifte()
 {
-  static int first=1;
-  if (first)
-  {
-    first = 0;
+  //  static int first=1;
+  //  if (first)
+  //  {
+  //    first = 0;
     char fname[1024];
+    printf("initifte the file\n");
     strcpy(fname,getenv(TEMPO2_ENVIRON));
     strcat(fname,IFTEPH_FILE);
     IFTE_init(fname);
-  } 
+    //  } 
 }
 
 double IF_deltaT(longdouble mjd_tt)
 {
-  init_ifte();
+  //  init_ifte();
   return IFTE_DeltaT(2400000.0+(int)mjd_tt, 0.5+(mjd_tt-(int)mjd_tt))*86400.0;
   /* Note, DeltaT(Teph0) ~ -2x10^-14 s so is neglected */
 }

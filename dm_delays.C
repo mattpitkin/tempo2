@@ -87,6 +87,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       
       longdouble arg = 1.0;
       // redwards changed to avoid using slow calls to pow
+      // Note this is not a Taylor Series - the Edwards paper says that it is!
       for (k=1;k<9;k++)
 	{
 	  arg *= yrs;

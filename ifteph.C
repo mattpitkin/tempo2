@@ -131,10 +131,11 @@ IFTE_init(const char *fname)
   int ncon;
   double double_in;
   /* open file */
-  if (time==1)
-    fclose(ifte.f);  
+  //  if (time==1 && ifte.f != NULL)
+  //    fclose(ifte.f);  
 
   time=1;
+  printf("Opening the file\n");
   f = fopen(fname, "r");
   if (!f)
   {
@@ -193,7 +194,8 @@ IFTE_init(const char *fname)
  
 void IFTE_close_file()
 {
-  fclose(ifte.f);
+  if (ifte.f != NULL)
+    fclose(ifte.f);
 }
 
 /* general purpose value-getter */
