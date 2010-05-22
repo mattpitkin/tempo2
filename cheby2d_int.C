@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <string.h>
  
 // struct to hold info needed to evaluate timing model during chebyshev
 // construction

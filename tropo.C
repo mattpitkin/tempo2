@@ -27,6 +27,7 @@
 // redwards code for computing tropospheric delays
 
 #include <math.h>
+#include <strings.h>
 #include "tempo2.h"
 #include <stdio.h>
 #include <stdlib.h>
