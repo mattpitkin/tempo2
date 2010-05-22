@@ -19,7 +19,7 @@
 # TEMPO2 modifications begin here ------------------------------
 include ../Makefile.config
 include ../Makefile.common
-FF = -c -O $(FUNDERSCORE)
+FF = -fPIC -c -O $(FUNDERSCORE)
 # TEMPO2 modifications end here --------------------------------
 # This suite of functions is only compilable by ANSI Fortran compilers -
 # give the name of your preferred Fortran compiler and compilation flags
