@@ -127,7 +127,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
   wmax = TKfindMax_d(w,nf);
   for (i=0;i<nf;i++)
     {
-      if (w[j] < tol*wmax) w[j]=0.0;
+      if (w[i] < tol*wmax) w[i]=0.0;
     }
 
   /* Back substitution */
