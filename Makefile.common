@@ -1,6 +1,6 @@
 AR ?= ar
 RANLIB ?= ranlib
-CXXFLAGS ?= -O 
+CXXFLAGS ?= -O
 FFLAGS ?= -O
 UNAME = $(shell uname)
 
@@ -20,6 +20,8 @@ else
  CXXFLAGS := $(CXXFLAGS) -fPIC
 endif
 endif
+
+CFLAGS = $(CXXFLAGS)
 
 # How to compile and link against fortran code
 ifeq ($(FC), g77)
