@@ -1,3 +1,5 @@
+// toto
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -73,8 +75,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             24 January 2010\n");
-	printf("Version:             4.3\n");
+	printf("Updated:             8 May 2010\n");
+	printf("Version:             5.0\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -83,7 +85,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	char parFile[1][MAX_FILELEN];
 	char timFile[1][MAX_FILELEN];
 	char temptim[9];
-	char gr[100]="/xs";					// default graphical output is x-window
+	char gr[256]="/xs";					// default graphical output is x-window
 
 	srand((unsigned)time(NULL));
 	temptim[8] = '\0';
@@ -92,7 +94,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	strcat(timFile[0],".tim");
 
 	int nbins  = 20;					// default number of bins for the output phase histogram
-	//int nbinsy = 20;					// default number of bins for the y-axis of the time vs phase plot		
+	int Hbins  = 20;					// default number of bins for the H-test vs time plot		
 
 	char FT1[MAX_FILELEN];
 	char FT2[MAX_FILELEN];
@@ -101,8 +103,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	char phasecol[32];
 	strcpy(phasecol,"PULSE_PHASE");
 	
-    	char error_buffer[128];
-    	char history[128];
+    char error_buffer[128];
+    char history[128];
 	int  par_file      = 0;
 	int  FT1_file	   = 0;
 	int  FT2_file	   = 0;
@@ -138,6 +140,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	// Time and satellite position definitions
 	// ------------------------------------------------- */
 
+	double temptime;
+	double minFT1time = 999999999., maxFT1time = 0.;
+	double minFT2time = 999999999., maxFT2time = 0.;
+	
 	double time_MET_TT[max_rows], time_MJD_TT;
 	double obs_earth[max_rows][3];
 
@@ -148,7 +154,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	double fract = 0.;
 	double length1, length2, length12, intlength;
-    	double vector12[3], vectprod_out[3];
+    double vector12[3], vectprod_out[3];
 	double inttheta, factor_cos, factor_sin;
 
 	longdouble lasttime, tzrmjd_bary;
@@ -160,6 +166,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	int endit;
 	float fontsize;
+	int linewidth = 1;
 
 	/* ------------------------------------------------- //
 	// Additional definitions
@@ -200,10 +207,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		{
 			sscanf(argv[i+1],"%d",&nbins);
 		}
-		//else if (strcmp(argv[i],"-ybins")==0)
-		//{
-		//	sscanf(argv[i+1],"%d",&nbinsy);
-		//}
+		else if (strcmp(argv[i],"-Hbins")==0)
+		{
+			sscanf(argv[i+1],"%d",&Hbins);
+		}
 		else if (strcmp(argv[i],"-output")==0)
 		{
 			output_file = 1;
@@ -231,7 +238,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			printf("\t -grdev XXX/YYY, where XXX/YYY is the graphical device of your choice (e.g. a.ps/cps). Default mode is XW\n");
 			printf("\t -graph 0: no output graph is drawn\n");
 			printf("\t -bins N: number of bins of the phase histogram\n");
-			//printf("\t -ybins N: number of time bins of the time vs phase plot\n");
+			printf("\t -Hbins N: number of time bins for the H-test vs time plot\n");
 			printf("\t -output XXX: writes event times and phases in file XXX\n");
 			printf("\t -pos XXX: puts the satellite (X,Y,Z) positions as a function of time in file XXX\n");
 			printf("\t -phase: stores phases in the FT1 by the ones calculated by TEMPO2\n");
@@ -241,7 +248,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			printf("===============================================\n");
 			exit(0);			
 		}
-    	}
+    }
+    
 	if (!FT1_file)
 	{
 		printf("No input FT1 file !\n");
@@ -277,6 +285,154 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 		output_posf = fopen(output_pos_file,"w+");
 	}
+
+
+
+
+
+	/* ------------------------------------------------- //
+	// FT1 file
+	// ------------------------------------------------- */
+
+  	if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
+    {
+		fits_movabs_hdu(ft1,2,NULL,&status);
+
+		fits_get_num_rows(ft1, &nrows_FT1, &status);
+		fits_get_num_cols(ft1, &ncols_FT1, &status);
+
+		fits_get_colname(ft1,CASESEN,"TIME",colname,&FT1_time_col,&status);
+		
+		//
+		
+		for (i=1;i<=nrows_FT1;i++)
+		{
+			fits_read_col_dbl(ft1,FT1_time_col,i,1,1,nulval,&temptime,&anynul,&status);
+			if (temptime < minFT1time) minFT1time = temptime;
+			if (temptime > maxFT1time) maxFT1time = temptime;
+		}
+		
+		//
+
+		if (phase_replace)
+		{
+            fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
+            
+            if (status != 0)
+            {
+                    fits_insert_col(ft1,ncols_FT1 + 1,phasecol,"1D", &status2);
+                            
+                    if (status2 != 0)
+                    {
+                            fits_get_errstatus( status2, error_buffer);
+                            printf( "fits_insert_col: %s\n", error_buffer);
+                            exit(-1);
+                    }
+            }
+                        
+			status = 0;
+			fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
+    	}
+	}
+	
+	if (open_status != 0)
+	{
+		printf("Can't find %s !\n",FT1);
+		exit(-1);
+	}
+
+	fits_close_file(ft1, &status);
+
+
+
+
+
+	/* ------------------------------------------------- //
+	// FT2 file
+	// ------------------------------------------------- */
+
+	if (!fits_open_file(&ft2,FT2, READONLY, &open_status))
+	{
+		fits_movabs_hdu(ft2,2,NULL,&status);
+
+		fits_get_num_rows(ft2, &nrows_FT2, &status);
+		fits_get_num_cols(ft2, &ncols_FT2, &status);
+
+		fits_get_colname(ft2,CASESEN,"START",colname,&FT2_time_col1,&status);
+		fits_get_colname(ft2,CASESEN,"STOP",colname,&FT2_time_col2,&status);
+		fits_get_colname(ft2,CASESEN,"SC_POSITION",colname,&FT2_pos_col,&status);
+		
+		for (i=1;i<=nrows_FT2;i++)
+		{
+			fits_read_col_dbl(ft2,FT2_time_col1,i,1,1,nulval,&temptime,&anynul,&status);
+			if (temptime < minFT2time) minFT2time = temptime;
+			if (temptime > maxFT2time) maxFT2time = temptime;
+		}
+	}
+
+	if (open_status != 0)
+	{
+		printf("Can't find %s !\n",FT2);
+		exit(-1);
+	}
+
+	fits_close_file(ft2, &status);
+	
+	printf("First photon date in FT1: %lf MET (s)\n",minFT1time);
+	printf(" Last photon date in FT1: %lf MET (s)\n\n",maxFT1time);
+	
+	printf("First START date in FT2:  %lf MET (s)\n",minFT2time);
+	printf(" Last START date in FT2:  %lf MET (s)\n\n",maxFT2time);
+	
+	if (minFT1time < minFT2time)
+	{
+		printf("Warning: no spacecraft data for date %lf MET. Check the FT2 file.\n",minFT1time);
+		printf("All photon phases before %lf MET will be set to -1.\n\n",minFT2time);
+	}
+	
+	if (maxFT1time > maxFT2time)
+	{
+		printf("Warning: no spacecraft data for date %lf MET. Check the FT2 file.\n",maxFT1time);
+		printf("All photon phases after %lf MET will be set to -1.\n\n",maxFT2time);
+	}
+	
+	
+	
+	
+	
+	// The FT1 file is cut into small tim files with # rows <= 10000
+
+	rows_status = 1;
+	rows_left	= nrows_FT1 - rows_status + 1;
+	nrows2 		= min(rows_left,max_rows);
+
+	float *phase;
+	float *times;
+        
+	if (graph == 0)
+	{
+		phase  = (float *)calloc(max_rows,sizeof(float));
+		times  = (float *)calloc(max_rows,sizeof(float));
+	}
+	else if (nrows_FT1 > 300000)		// To avoid core dumps
+	{
+		printf("WARNING: large FT1 file, turning off graphical output.\n");
+		graph = 0;
+		
+		phase  = (float *)calloc(max_rows,sizeof(float));
+		times  = (float *)calloc(max_rows,sizeof(float));
+	}
+	else
+	{
+		phase  = (float *)calloc(nrows_FT1,sizeof(float));
+		times  = (float *)calloc(nrows_FT1,sizeof(float));
+	}	
+	
+	float tmin   = 100000., tmax   = -100000.;
+	
+	
+	
+	
 	
 	/* ------------------------------------------------- //
 	// Barycentric TZRMJD
@@ -310,101 +466,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		formBatsAll(psr,*npsr);
 		tzrmjd_bary = psr->obsn[0].bat;
 	}
-
-	/* ------------------------------------------------- //
-	// FT1 file
-	// ------------------------------------------------- */
-
-  	if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
-    	{
-		fits_movabs_hdu(ft1,2,NULL,&status);
-
-          	fits_get_num_rows(ft1, &nrows_FT1, &status);
-          	fits_get_num_cols(ft1, &ncols_FT1, &status);
-
-		fits_get_colname(ft1,CASESEN,"TIME",colname,&FT1_time_col,&status);
-
-		if (phase_replace)
-		{
-                        fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
-                        if (status != 0)
-                        {
-                                fits_insert_col(ft1,ncols_FT1 + 1,phasecol,"1D", &status2);
-                                        
-                                if (status2 != 0)
-                                {
-                                        fits_get_errstatus( status2, error_buffer);
-                                        printf( "fits_insert_col: %s\n", error_buffer);
-                                        exit(-1);
-                                }
-                        }
-                        
-                        status = 0;
-                        fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
-                }
-	}
-
-	if (open_status != 0)
-	{
-		printf("Can't find %s !\n",FT1);
-		exit(-1);
-	}
-
-	fits_close_file(ft1, &status);
-
-	// The FT1 file is cut into small tim files with # rows <= 10000
-
-	rows_status 	= 1;
-	rows_left	= nrows_FT1 - rows_status + 1;
-	nrows2 		= min(rows_left,max_rows);
-
-	float *phase;
-	float *times;
-        
-	if (graph == 0)
-	{
-		phase  = (float *)calloc(max_rows,sizeof(float));
-		times  = (float *)calloc(max_rows,sizeof(float));
-	}
-	else if (nrows_FT1 > 300000)		// To avoid core dumps
-	{
-		printf("WARNING: large FT1 file, turning off graphical output.\n");
-		graph = 0;
-		
-		phase  = (float *)calloc(max_rows,sizeof(float));
-		times  = (float *)calloc(max_rows,sizeof(float));
-	}
-	else
-	{
-		phase  = (float *)calloc(nrows_FT1,sizeof(float));
-		times  = (float *)calloc(nrows_FT1,sizeof(float));
-	}	
 	
-	float tmin   = 100000., tmax   = -100000.;
-
-	/* ------------------------------------------------- //
-	// FT2 file
-	// ------------------------------------------------- */
-
-	if (!fits_open_file(&ft2,FT2, READONLY, &open_status))
-	{
-		fits_movabs_hdu(ft2,2,NULL,&status);
-
-		fits_get_num_rows(ft2, &nrows_FT2, &status);
-		fits_get_num_cols(ft2, &ncols_FT2, &status);
-
-		fits_get_colname(ft2,CASESEN,"START",colname,&FT2_time_col1,&status);
-		fits_get_colname(ft2,CASESEN,"STOP",colname,&FT2_time_col2,&status);
-		fits_get_colname(ft2,CASESEN,"SC_POSITION",colname,&FT2_pos_col,&status);
-	}
-
-	if (open_status != 0)
-	{
-		printf("Can't find %s !\n",FT2);
-		exit(-1);
-	}
-
-	fits_close_file(ft2, &status);
+	
+	
 
 	/* ------------------------------------------------- //
 	// Main loop
@@ -448,108 +512,122 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		readParfile(psr,parFile,timFile,*npsr); 
 		readTimfile(psr,timFile,*npsr);
 
+		
+		
+		
+		
+		
 		/* ------------------------------------------------- //
-		// Satellite positions as a function of time
+		// Satellite position as a function of time
 		// ------------------------------------------------- */
 		j = 1;
 
 		for (i=0;i<nrows2;i++)
 		{
-			if (!fits_open_file(&ft2,FT2, READONLY, &status))
+			if ((time_MET_TT[i] < minFT2time) || (time_MET_TT[i] > maxFT2time))
 			{
-				fits_movabs_hdu(ft2,2,NULL,&status);
-
-				if (time_MET_TT[i] < sctime1) j = 1;		// Important, if times in FT1 are not monotically increasing
-
-				for (;j<=nrows_FT2;j++)
+				for (k=0;k<3;k++)
 				{
-					fits_read_col_dbl(ft2,FT2_time_col1,j,1,1,nulval,&sctime2,&anynul,&status);
-
-					if (time_MET_TT[i] < sctime2) break;
+					obs_earth[i][k] = 0.;
 				}
-
-
-				fits_read_col_dbl(ft2,FT2_time_col1,j-1,1,1,nulval,&sctime1,&anynul,&status);
-
-				fits_read_col_dbl(ft2,FT2_pos_col,j-1,1,3,nulval,scposn1,&anynul,&status);
-				fits_read_col_dbl(ft2,FT2_pos_col,j,1,3,nulval,scposn2,&anynul,&status);
 			}
-
-			fits_close_file(ft2, &status);
-			
-			// Interpolation
-				
-			fract = (time_MET_TT[i] - sctime1) / (sctime2 - sctime1);
-
-			// linear interpolation for vector length
-			length1 = sqrt(inner_product(scposn1, scposn1));
-			length2 = sqrt(inner_product(scposn2, scposn2));
-			intlength = length1 + fract*(length2 - length1);
-
-			// Compute a base vector on the orbital plane (vector12)
-			outer_product(scposn1, scposn2, vectprod_out);
-			outer_product(vectprod_out, scposn1, vector12);
-			length12 = sqrt(inner_product(vector12, vector12));
-	    
-			// Check vectors scposn1 and scposn2
-			if ((length1 == 0.0) && (length2 == 0.0))
-			{
-				// both vectors are null 
-				for (k=0;k<3;k++)
-				{
-					intposn[k] = 0.0;
-				}
-			} 
-			else if (length1 == 0.0)
-			{
-				// scposn1 is null, but scposn2 is not
-				for (k=0;k<3;k++)
-				{
-					intposn[k] = scposn2[k] / length2 * intlength;
-				}
-			} 
-			else if ((length2 == 0.0) || (length12 == 0.0))
-			{
-				// left:  scposn2 is null, but scposn1 is not 
-				// right: either vector is not null, but they are parallel
-				for (k=0;k<3; k++)
-				{
-					intposn[k] = scposn1[k] / length1 * intlength;
-				}
-			} 
 			else
-			{ 
-				// both has a non-zero length, and they are not parallel
+			{
+				if (!fits_open_file(&ft2,FT2, READONLY, &status))
+				{
+					fits_movabs_hdu(ft2,2,NULL,&status);
+	
+					if (time_MET_TT[i] < sctime1) j = 1;		// Important, if times in FT1 are not monotonically increasing
+	
+					for (;j<=nrows_FT2;j++)
+					{
+						fits_read_col_dbl(ft2,FT2_time_col1,j,1,1,nulval,&sctime2,&anynul,&status);
+	
+						if (time_MET_TT[i] < sctime2) break;
+					}
+	
+					fits_read_col_dbl(ft2,FT2_time_col1,j-1,1,1,nulval,&sctime1,&anynul,&status);
+	
+					fits_read_col_dbl(ft2,FT2_pos_col,j-1,1,3,nulval,scposn1,&anynul,&status);
+					fits_read_col_dbl(ft2,FT2_pos_col,j,1,3,nulval,scposn2,&anynul,&status);
+				}
+	
+				fits_close_file(ft2, &status);
 				
-				// linear interpolation for orbital phase 
-				inttheta = fract * acos(inner_product(scposn1, scposn2) / length1 / length2);
-				factor_cos = cos(inttheta);
-				factor_sin = sin(inttheta);
-
+				// Interpolation
+				fract = (time_MET_TT[i] - sctime1) / (sctime2 - sctime1);
+	
+				// linear interpolation for vector length
+				length1 = sqrt(inner_product(scposn1, scposn1));
+				length2 = sqrt(inner_product(scposn2, scposn2));
+				intlength = length1 + fract*(length2 - length1);
+	
+				// Compute a base vector on the orbital plane (vector12)
+				outer_product(scposn1, scposn2, vectprod_out);
+				outer_product(vectprod_out, scposn1, vector12);
+				length12 = sqrt(inner_product(vector12, vector12));
+		    
+				// Check vectors scposn1 and scposn2
+				if ((length1 == 0.0) && (length2 == 0.0))
+				{
+					// both vectors are null 
+					for (k=0;k<3;k++)
+					{
+						intposn[k] = 0.0;
+					}
+				} 
+				else if (length1 == 0.0)
+				{
+					// scposn1 is null, but scposn2 is not
+					for (k=0;k<3;k++)
+					{
+						intposn[k] = scposn2[k] / length2 * intlength;
+					}
+				} 
+				else if ((length2 == 0.0) || (length12 == 0.0))
+				{
+					// left:  scposn2 is null, but scposn1 is not 
+					// right: either vector is not null, but they are parallel
+					for (k=0;k<3; k++)
+					{
+						intposn[k] = scposn1[k] / length1 * intlength;
+					}
+				} 
+				else
+				{ 
+					// both has a non-zero length, and they are not parallel
+					
+					// linear interpolation for orbital phase 
+					inttheta = fract * acos(inner_product(scposn1, scposn2) / length1 / length2);
+					factor_cos = cos(inttheta);
+					factor_sin = sin(inttheta);
+	
+					for (k=0;k<3;k++)
+					{
+						intposn[k] = intlength * (scposn1[k] / length1 * factor_cos + vector12[k] / length12 * factor_sin);
+					}
+				}
+	
 				for (k=0;k<3;k++)
 				{
-					intposn[k] = intlength * (scposn1[k] / length1 * factor_cos + vector12[k] / length12 * factor_sin);
+					obs_earth[i][k] = intposn[k] / SPEED_LIGHT;
 				}
-			}
-
-			for (k=0;k<3;k++)
-			{
-				obs_earth[i][k] = intposn[k] / SPEED_LIGHT;
-			}
-			
-			// Output TT time and observatory position
-			if (output_pos == 1)
-			{
-				fprintf(output_posf,"%.6lf\t",time_MET_TT[i]);
 				
-				for (k=0;k<3;k++)
+				// Output TT time and observatory position
+				if (output_pos == 1)
 				{
-					fprintf(output_posf,"%12.3f ",intposn[k]);
+					fprintf(output_posf,"%.6lf\t",time_MET_TT[i]);
+					
+					for (k=0;k<3;k++)
+					{
+						fprintf(output_posf,"%12.3f ",intposn[k]);
+					}
+					
+					fprintf(output_posf,"\n");
 				}
-				
-				fprintf(output_posf,"\n");
 			}
 		}
+
 
 		/* ------------------------------------------------- //
 		// Delays, corrections and positions
@@ -562,10 +640,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			psr->obsn[i].clockCorr = 1;	// Also make clock correction TT -> TDB
 
 			// Position replacements
-			for (k=0;k<3;k++) psr[0].obsn[i].observatory_earth[k] = obs_earth[i][k];
+			for (k=0;k<3;k++) 
+			{
+				psr[0].obsn[i].observatory_earth[k] = obs_earth[i][k];
+			}
 		}
-
-
 
 
 		/* ------------------------------------------------- //
@@ -582,6 +661,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 			for (k=0;k<3;k++) psr[0].obsn[i].observatory_earth[k] = psr[0].obsn[i-1].observatory_earth[k];
 		}
+
 	
 		/* ------------------------------------------------- //
 		// Stick in a fake obs to get the reference phase
@@ -604,18 +684,25 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		formResiduals(psr,*npsr,0.0);
 
 		for (i=1;i<nrows2;i++)
-		{	
-			phase[event] = modf(psr[0].obsn[i].phase,&intpart);			
-			if (phase[event] < 0.) phase[event]++;
-
-			times[event] = psr[0].obsn[i].bat;
-			if (times[event] > tmax) 	tmax = times[event];
-			if (times[event] < tmin)	tmin = times[event];
-			
+		{
+			if ((time_MET_TT[i-1] < minFT2time) || (time_MET_TT[i-1] > maxFT2time))
+			{
+				phase[event] = -1.;
+			}
+			else
+			{
+				phase[event] = modf(psr[0].obsn[i].phase,&intpart);			
+				if (phase[event] < 0.) phase[event]++;
+	
+				times[event] = psr[0].obsn[i].bat;
+				if (times[event] > tmax) 	tmax = times[event];
+				if (times[event] < tmin)	tmin = times[event];
+			}
+				
 			if (output_file)
 			{
 				if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
-				else		fprintf(outputf,"%d\t",event + 1);
+				else fprintf(outputf,"%d\t",event + 1);
 			
 				fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[i].bat,phase[event]);
 			}
@@ -639,17 +726,24 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		// ------------------------------------------------- //		
 		formResiduals(psr,*npsr,0.0);
 	
-		phase[event] = modf(psr[0].obsn[1].phase,&intpart);
-		if (phase[event] < 0.) phase[event]++;
-	
-		times[event] = psr[0].obsn[1].bat;		
-		if (times[event] > tmax) 	tmax = times[event];
-		if (times[event] < tmin)	tmin = times[event];
+		if ((time_MET_TT[psr[0].nobs-1] < minFT2time) || (time_MET_TT[psr[0].nobs-1] > maxFT2time))
+		{
+			phase[event] = -1.;
+		}
+		else
+		{
+			phase[event] = modf(psr[0].obsn[1].phase,&intpart);
+			if (phase[event] < 0.) phase[event]++;
+		
+			times[event] = psr[0].obsn[1].bat;		
+			if (times[event] > tmax) 	tmax = times[event];
+			if (times[event] < tmin)	tmin = times[event];
+		}
 
 		if (output_file)
 		{
 			if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
-			else		fprintf(outputf,"%d\t",event + 1);
+			else fprintf(outputf,"%d\t",event + 1);
 			
 			fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[1].bat,phase[event]);
 		}
@@ -666,7 +760,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				for (event2=rows_status;event2<rows_status+nrows2;event2++)
 				{
 					if (graph == 0)	i = event2 - rows_status;
-					else		i = event2 - 1;
+					else i = event2 - 1;
 				
 					fits_write_col_flt(ft1,FT1_phase_col,event2,1,1,&phase[i],&status);
 				}
@@ -674,7 +768,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 			fits_close_file(ft1, &status);		
 		}
-
 
 		/* ------------------------------------------------- //
 		// End of the loop
@@ -693,8 +786,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		}
 	}
         
-    	// ------------------------------------------------- //
-	// Add a bit of history to the header
+    // ------------------------------------------------- //
+	// Add a little bit of history to the header
 	// ------------------------------------------------- //
 	if (phase_replace)
 	{
@@ -763,68 +856,24 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			if (lc[i] > binmax)	binmax = lc[i];
 		}
 		
-		// ------------------------------------------------- //
-		// 2D histogram of time vs phase
-		// ------------------------------------------------- //
-		/*
-		float timephase[nbins*nbinsy];
-		float timephasemax = -1000.;
-		float tstep = (tmax - tmin) / ((float)nbinsy);
-		float tr[6];
-		
-		tr[0] = - 1./(2. * (float)nbins);
-		tr[1] = 1. / ((float)nbins);
-		tr[2] = 0.;
-		tr[3] = tmin - 0.5 * tstep;
-		tr[4] = 0.;
-		tr[5] = (tmax - tmin)/((float)nbinsy);
-		
-		for (i=0;i<nbins*nbinsy;i++)
-		{
-			timephase[i] = 0;
-		}	
-		
-		for (i=0;i<nrows_FT1;i++)
-		{
-			for (j=0;j<nbins;j++)
-			{
-				if ((phase[i] >= (((float)j)/((float)nbins))) && (phase[i] < (((float)j+1.)/((float)nbins))))
-				{
-					for (k=0;k<nbinsy;k++)
-					{
-						if ((times[i] >= tmin + (float)k * tstep) && (times[i] < tmin + ((float)k+1.) * tstep))
-						{
-							timephase[k*nbins + j]++;
-							break;
-						}
-					}
-					break;
-				}
-			}
-		}
-		
-		for (i=0;i<nbins*nbinsy;i++)
-		{
-			if (timephase[i] > timephasemax) timephasemax = timephase[i];
-		}
-		*/	
+		binmax += sqrt(binmax);
 		
 		// ------------------------------------------------- //
 		// H-test TS calculation
 		// ------------------------------------------------- //	
-		float Hbin[11], HTS[11], hmin = 1.e6, hmax = -1.e6;
-		int Nphot[11];
+		float Hbin[Hbins+1], HTS[Hbins+1], hmin = 1.e6, hmax = -1.e6;
+		int Nphot[Hbins+1];
 		
 		Hbin[0] = tmin, HTS[0] = 0;
 		
-		for (i=1;i<11;i++)
+		for (i=1;i<Hbins+1;i++)
 		{
-			Hbin[i]  = tmin + ((float)i) * (tmax - tmin) / 10.;
+			Hbin[i]  = tmin + ((float)i) * (tmax - tmin) / ((float)Hbins);
 			Nphot[i] = 0;
 			
 			for (j=0;j<nrows_FT1;j++) 
 			{
-				if (times[j] <= Hbin[i]) Nphot[i]++;
+				if ((times[j] <= Hbin[i]) && (phase[j] >= 0.)) Nphot[i]++;
 			}
 			
 			float phases[Nphot[i]];
@@ -832,7 +881,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			
 			for (j=0;j<nrows_FT1;j++) 
 			{
-				if (times[j] <= Hbin[i])
+				if ((times[j] <= Hbin[i]) && (phase[j] >= 0.))
 				{
 					phases[l] = phase[j];
 					l++;
@@ -847,7 +896,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			
 		float xmoy[2],ymoy[2];
 		xmoy[0] = 0., xmoy[1] = 2.;
-		ymoy[0] = (float)nrows_FT1/(float)nbins;
+		ymoy[0] = (float)l/(float)nbins;
 		ymoy[1] = ymoy[0];
 		
 		// ------------------------------------------------- //
@@ -862,7 +911,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	
 		endit = 0;
 		fontsize = 0.75;
-		if (strstr(gr,"/xs") == NULL) endit = 1;
+		if (strstr(gr,"/xs") == NULL)  endit = 1;
+		if (strstr(gr,"/ps") != NULL)  linewidth = 2;
+		if (strstr(gr,"/cps") != NULL) linewidth = 2;
 	
 		// Plotting loop 
 		do
@@ -874,8 +925,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			cpgswin(0.,2.,0.,1.1*binmax);
 			
 			cpgsci(1);
+			cpgslw(linewidth);
 			cpgsch(fontsize);	
-			cpgbox("ABCNTS",0.5,5,"ABCNTS",pow(10,int(log10(1.1*binmax))),5);
+			cpgbox("ABCNTS",0.5,5,"ABCNTS",pow(10,int(log10(binmax))),5);
 			cpglab("Pulse phase","Number of events","");
 			
 			cpgsci(2);
@@ -895,28 +947,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			
 			cpgsci(1);
 			
-			// Anti-rainbow palette
-			/*
-			float cl[10] = {0.0, 0.035, 0.045, 0.225, 0.4, 0.41, 0.6, 0.775, 0.985, 1.0};
-            		float cr[10] = {1.0, 1.0, 0.947, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0};
-            		float cg[10] = {1.0, 0.844, 0.8, 0.0, 0.946, 1.0, 1.0, 1.0, 0.0, 0.0};
-            		float cb[10] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.95, 0.0, 0.0, 0.0, 0.0};
-			*/			
-
-			/*
-			// Heat palette
-			float cl[5] = {0.0, 0.2, 0.4, 0.6, 1.0};
-			float cr[5] = {0.0, 0.5, 1.0, 1.0, 1.0};
-			float cg[5] = {0.0, 0.0, 0.5, 1.0, 1.0};
-			float cb[5] = {0.0, 0.0, 0.0, 0.3, 1.0};
-			*/
-			
-			/*											
-			cpgctab(cl,cr,cg,cb,10,1.,0.5);
-			cpgimag(timephase,nbins,nbinsy,1,nbins,1,nbinsy,0.,timephasemax,tr);
-			*/
-
-			cpgbox("ABCNTS",0.2,2,"ABCNTS",pow(10,int(log10(tmax-tmin))),10);
+			cpgbox("ABCNTS",0.5,5,"ABCNTS1",pow(10,int(log10(tmax-tmin))),10);
 			cpglab("Pulse phase","Event time (MJD)","");
 						
 
@@ -934,15 +965,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			cpgswin(tmin,tmax,0,hmax + 0.1*(hmax-hmin));
 			
 			cpgsci(1);
-			cpgslw(1);
-			cpgbox("ABCNTS",pow(10,int(log10(tmax-tmin))),10,"ABCNTS",pow(10,int(log10(1.2*(hmax-hmin)))),5);
+			cpgslw(linewidth);
+			cpgbox("ABCNTS1",pow(10,int(log10(tmax-tmin))),10,"ABCNTS",pow(10,int(log10(hmax-hmin))),5);
 			cpglab("Event time (MJD)","H-test TS","");
 			
 			cpgsci(2);
 			cpgslw(5);
-			cpgpt(11,Hbin,HTS,3);
+			cpgpt(Hbins+1,Hbin,HTS,3);
 			cpgslw(1);
-			cpgline(11,Hbin,HTS);
+			cpgline(Hbins+1,Hbin,HTS);
 			
 			endit = 1;
 	
