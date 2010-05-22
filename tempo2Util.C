@@ -287,6 +287,13 @@ void copyPSR(pulsar *p,int p1,int p2)
     }
   p[p2].eclCoord = p[p1].eclCoord;
   p[p2].nJumps = p[p1].nJumps;
+  for (i=0; i<=p[p2].nJumps; i++) 
+    {
+      p[p2].jumpVal[i] = p[p1].jumpVal[i];
+      p[p2].fitJump[i] = p[p1].fitJump[i];
+      p[p2].jumpValErr[i] = p[p1].jumpValErr[i];
+      strcpy(p[p2].jumpStr[i], p[p1].jumpStr[i]);
+    }
   p[p2].nFit = p[p1].nFit;
   p[p2].fitMode = p[p1].fitMode;
   p[p2].offset = p[p1].offset;
@@ -302,7 +309,9 @@ void copyPSR(pulsar *p,int p1,int p2)
   strcpy(p[p2].JPL_EPHEMERIS,p[p1].JPL_EPHEMERIS);
   strcpy(p[p2].ephemeris,p[p1].ephemeris);
 
-  allocateMemory(p+p2,1);
+  // Note, this causes memory leaks.  Tempo2 always allocates memory for
+  // MAX_PSR pulsars to start.
+  //allocateMemory(p+p2,1);
 }
 
 
