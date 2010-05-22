@@ -24,6 +24,7 @@
 *    timing model.
 */
 
+#include <stdio.h>
 #include "tempo2.h"
 //#include "tempo2Util.h"
 //#include "tempo2pred.h"
@@ -79,5 +80,15 @@ void formBatsAll(pulsar *psr,int npsr)
   if (debugFlag==1) printf("Reading extra delays\n");
   extra_delays(psr,npsr);               /* Other time delays  ... */
   formBats(psr,npsr);                   /* Form Barycentric arrival times */
+  secularMotion(psr,npsr); 
+}
+
+// Only recalculate that which is likely
+// to change if psr position has been altered.
+void updateBatsAll(pulsar *psr, int npsr)
+{
+  vectorPulsar(psr, npsr);
+  calculate_bclt(psr, npsr);
+  formBats(psr, npsr);
   secularMotion(psr,npsr); 
 }
