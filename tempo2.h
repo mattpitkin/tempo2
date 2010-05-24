@@ -47,6 +47,7 @@
 #define MAX_IFUNC            100   /* Maximum number of parameters for interpolation function  */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
+#define MAX_DMX              64    /* Max number of DM steps allowed */
 #define MAX_FLAGS            10    /* Maximum number of flags in .tim file/observation */
 #define MAX_CLK_CORR         10    /* Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /* Number of seconds in 1 day                 */
@@ -154,7 +155,8 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
-            param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc};
+            param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
+            param_dmx,param_dmxr1,param_dmxr2};
 
 extern int MAX_PSR;
 extern int MAX_OBSN;
@@ -296,6 +298,7 @@ typedef struct pulsar {
   double tOffset_t1[MAX_TOFFSET],tOffset_t2[MAX_TOFFSET];
   char   tOffsetSite[MAX_TOFFSET][100],tOffsetFlags[MAX_TOFFSET][1000];
   int    nToffset;
+  int    ndmx;                    /* Number of DM steps */
   double fitChisq;                /* Chisq value from the fit */
   int    fitNfree;                /* Number of degrees of freedom in fit */
   int    nFit;                    /* Number of points in the fit */
@@ -371,6 +374,7 @@ void recordPrecision(pulsar *psr,longdouble prec,char *routine,char *comment);
 void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr);
 void formBats(pulsar *psr,int npsr);
 void formBatsAll(pulsar *psr,int npsr);
+void updateBatsAll(pulsar *psr,int npsr);
 void formResiduals(pulsar *psr,int npsr,int removeMean);
 int  bootstrap(pulsar *psr,int p,int npsr);
 void doFit(pulsar *psr,int npsr,int writeModel);

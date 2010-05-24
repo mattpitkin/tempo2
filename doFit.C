@@ -577,6 +577,14 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  afunc = 1.0/(DM_CONST*pow(psr->obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k);
 	}
     }
+  else if (i==param_dmx)
+    {
+        if ((psr->obsn[ipos].sat > psr->param[param_dmxr1].val[k])
+                && (psr->obsn[ipos].sat < psr->param[param_dmxr2].val[k]))
+	  afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
+        else 
+          afunc = 0.0;
+    }
   else if (i==param_fddc)    /* Frequency dependent term */
     afunc = 1.0/(pow(psr->obsn[ipos].freqSSB/1.0e6,psr->param[param_fddi].val[0]));
   else if (i==param_fddi)    /* Frequency dependent index */
@@ -774,7 +782,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			psr[p].param[param_f].val[0];
 		    }
 		}
-	      else if (i==param_dm || i==param_px || i==param_fddc || i==param_fddi || i==param_dmassplanet)
+	      else if (i==param_dm || i==param_px || i==param_fddc || i==param_fddi || i==param_dmassplanet || i==param_dmx)
 		{
 		  psr[p].param[i].val[k] += val[j];
 		  psr[p].param[i].err[k]  = error[j];

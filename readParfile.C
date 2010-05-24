@@ -426,6 +426,38 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	  }
 	}
     }
+  else if (strncasecmp(str,"DMX_",4)==0)
+    {
+      int dmxidx;
+      if (sscanf(str+4,"%d",&dmxidx)==1)
+        {
+            //printf("got dmxidx=%d\n", dmxidx);
+          dmxidx--;
+          if (dmxidx<psr->param[param_dmx].aSize)
+            readValue(psr,str,fin,&(psr->param[param_dmx]),dmxidx);
+          if (psr->ndmx < dmxidx+1) psr->ndmx = dmxidx + 1;
+        }
+    }
+  else if (strncasecmp(str,"DMXR1_",6)==0)
+    {
+      int dmxidx;
+      if (sscanf(str+6,"%d",&dmxidx)==1)
+        {
+          dmxidx--;
+          if (dmxidx<psr->param[param_dmxr1].aSize)
+            readValue(psr,str,fin,&(psr->param[param_dmxr1]),dmxidx);
+        }
+    }
+  else if (strncasecmp(str,"DMXR2_",6)==0)
+    {
+      int dmxidx;
+      if (sscanf(str+6,"%d",&dmxidx)==1)
+        {
+          dmxidx--;
+          if (dmxidx<psr->param[param_dmxr2].aSize)
+            readValue(psr,str,fin,&(psr->param[param_dmxr2]),dmxidx);
+        }
+    }
   else if (strcasecmp(str,"DM")==0) /* Dispersion measure */
     readValue(psr,str,fin,&(psr->param[param_dm]),0);
   else if ((str[0]=='D' || str[0]=='d') &&  /* Higher DM derivatives */

@@ -115,6 +115,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->binaryModel,"NONE"); 
   psr->nJumps=0;
   psr->nToffset = 0;
+  psr->ndmx = 0;
   for (i=0;i<MAX_JUMPS;i++)
     {
       psr->jumpVal[i] = 0.0;
@@ -333,6 +334,25 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }       
 
   strcpy(psr->param[param_wave_om].label[0],"WAVE_OM"); strcpy(psr->param[param_wave_om].shortlabel[0],"WAVE_OM");
+
+  /* Piecewise-constant DM variation (DMX) */
+  for (k=0;k<psr->param[param_dmx].aSize;k++) 
+    {
+      sprintf(temp,"DMX_%04d (cm^-3 pc)",k+1);
+      strcpy(psr->param[param_dmx].label[k],temp);
+      sprintf(temp,"DMX_%04d",k+1);
+      strcpy(psr->param[param_dmx].shortlabel[k],temp);
+
+      sprintf(temp,"DMXR1_%04d (MJD)",k+1);
+      strcpy(psr->param[param_dmxr1].label[k],temp);
+      sprintf(temp,"DMXR1_%04d",k+1);
+      strcpy(psr->param[param_dmxr1].shortlabel[k],temp);
+
+      sprintf(temp,"DMXR2_%04d (MJD)",k+1);
+      strcpy(psr->param[param_dmxr2].label[k],temp);
+      sprintf(temp,"DMXR2_%04d",k+1);
+      strcpy(psr->param[param_dmxr2].shortlabel[k],temp);
+    }
 }
 
 
@@ -354,6 +374,8 @@ void allocateMemory(pulsar *psr, int realloc)
 	       i==param_glf0d || i==param_gltd) psr->param[i].aSize = 20;
       else if (i==param_dmassplanet)
 	psr->param[i].aSize = 9;
+      else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
+        psr->param[i].aSize = MAX_DMX;
       else psr->param[i].aSize = 1;
       
       psr->param[i].val       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));

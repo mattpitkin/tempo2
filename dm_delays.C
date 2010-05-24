@@ -98,6 +98,14 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       dmval = psr[p].param[param_dm].val[0]+dmDot;
       if (debugFlag==1) printf("In dm_delays: calculating dmval\n");      
       dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
+
+      /* Set using DMX ranges */
+      for (k=0; k<psr[p].ndmx; k++) 
+        {
+          if ((psr[p].obsn[i].sat > psr[p].param[param_dmxr1].val[k])
+                  && (psr[p].obsn[i].sat < psr[p].param[param_dmxr2].val[k]))
+            dmval += psr[p].param[param_dmx].val[k];
+        }
       
       /* Check for flag to set dm to exact value */
       for (k=0;k<psr[p].obsn[i].nFlags;k++)
