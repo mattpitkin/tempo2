@@ -1,28 +1,28 @@
 //  Copyright (C) 2004,2006,2007,2008,2009, George Hobbs, Russel Edwards
 
 /*
- *    This file is part of TEMPO2. 
- * 
- *    TEMPO2 is free software: you can redistribute it and/or modify 
- *    it under the terms of the GNU General Public License as published by 
- *    the Free Software Foundation, either version 3 of the License, or 
- *    (at your option) any later version. 
- *    TEMPO2 is distributed in the hope that it will be useful, 
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- *    GNU General Public License for more details. 
- *    You should have received a copy of the GNU General Public License 
- *    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>. 
- */
+*    This file is part of TEMPO2. 
+* 
+*    TEMPO2 is free software: you can redistribute it and/or modify 
+*    it under the terms of the GNU General Public License as published by 
+*    the Free Software Foundation, either version 3 of the License, or 
+*    (at your option) any later version. 
+*    TEMPO2 is distributed in the hope that it will be useful, 
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of 
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+*    GNU General Public License for more details. 
+*    You should have received a copy of the GNU General Public License 
+*    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>. 
+*/
 
 /*
- *    If you use TEMPO2 then please acknowledge it by citing 
- *    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2, 
- *    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
- *    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
- *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
- *    timing model.
- */
+*    If you use TEMPO2 then please acknowledge it by citing 
+*    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2, 
+*    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
+*    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
+*    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
+*    timing model.
+*/
 
 /* Fake: George Hobbs (Feb 19th 2004) based on fake.f from Simon Johnston     */
 /* Purpose is to produce an arrival time file that simulates a pulsar defined */
@@ -39,7 +39,6 @@ void callFit(pulsar *psr,int npsr);
 
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
-  int havePar=0;
   longdouble imjd=-1.0,fmjd=-1.0,ra,grms=0.0;
   longdouble toa,ha0,almst,amjd,hnobs,mjd,trmjd,tstep=0.0;
   longdouble times[MAX_OBSN];
@@ -80,15 +79,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       sscanf(argv[i+1],"%f",&ngap);
       printf("Have >>%f<< days between observations\n",ngap);
     }
-		if(strcmp(argv[i],"-nobsd")==0){
+    if(strcmp(argv[i],"-nobsd")==0){
       sscanf(argv[i+1],"%d",&nday);
       printf("Have >>%d<< observations per day\n",nday);
-		}
-		if (strcmp(argv[i],"-idum")==0){
-      sscanf(argv[i+1],"%d",&idum);
-      printf("Have idum >>%d<<\n",idum);
-		}
-		if(strcmp(argv[i],"-ha")==0){
+    }
+    if (strcmp(argv[i],"-idum")==0){
+	sscanf(argv[i+1],"%d",&idum);
+	printf("Have idum >>%d<<\n",idum);
+    }
+    if(strcmp(argv[i],"-ha")==0){
       sscanf(argv[i+1],"%lf",&hamax);
       printf("Have maximum absolute HA >>%lf<<\n",hamax);
     }
@@ -111,8 +110,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Have Gaussian noise rms >>%lf<<\n",(double)grms);
     }
     if(strcmp(argv[i],"-format")==0){
-      sscanf(argv[i+1],"%s",&formstr);
-      printf("Have output format >>%s<<\n",formstr);
+	sscanf(argv[i+1],"%s",&formstr);
+	printf("Have output format >>%s<<\n",formstr);
     }
     if (strcmp(argv[i],"-times")==0){
       timesFile=1;
@@ -121,11 +120,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
 
     if(strcmp(argv[i],"-group")==0){
-      bunching = 1;
-      sscanf(argv[i+1],"%Lf",&hillsize);
-      sscanf(argv[i+2],"%Lf",&gapsize);
-      printf("Will simulate runs of %lg observing days long and leave a gap of %lg days between runs.\n",
-             (double)hillsize,(double)gapsize);
+	bunching = 1;
+	sscanf(argv[i+1],"%Lf",&hillsize);
+	sscanf(argv[i+2],"%Lf",&gapsize);
+	printf("Will simulate runs of %lg observing days long and leave a gap of %lg days between runs.\n",
+	       (double)hillsize,(double)gapsize);
     }
     if(strcmp(argv[i],"-h")==0){
       printf("==========================================================================================\n");
@@ -154,16 +153,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     if(strcmp(argv[i],"-f")==0){
       Npsr=0;
       while(argv[i+Npsr+1][0]!='-'){
-        strcpy(parFile[Npsr],argv[i+Npsr+1]);
-        havePar = 1;
-        printf("Have parfile %d: >>%s<<.\n",Npsr+1,parFile[Npsr]);
-        Npsr++;
-        if(i+Npsr+1>=argc) break;
+	strcpy(parFile[Npsr],argv[i+Npsr+1]);
+	printf("Have parfile %d: >>%s<<.\n",Npsr+1,parFile[Npsr]);
+	Npsr++;
+	if(i+Npsr+1>=argc) break;
       }
       printf("Have %d parameter files.\n",Npsr);
     }
-  } // Finished reading command line arguments
-
+  }
   if (timesFile==1)
     {
       nday = 1;
@@ -173,18 +170,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       imjd = 1;
       fmjd = 1;
     }
-  if(havePar == 0){
-    printf("Enter your par file (either on the command line, preceded by \"-f\" or here and now:\n");
-    scanf("%s",parFile);
-    printf("Have par file %s\n",parFile);
-    Npsr++;
-  }
-  //printf("Simulate arrival times for parameter file %s\n",argv[3]);
-  //printf("----------------------------------------------------\n\n");
+  printf("Simulate arrival times for parameter file %s\n",argv[3]);
+  printf("----------------------------------------------------\n\n");
   if(ngap<0){    printf("Enter number of days between observations . "); scanf("%f",&ngap);}
   if(nday<0) {    printf("Enter number of observations/day .......... "); scanf("%d",&nday);}
   if(hamax<0 && nday!=1)  {  
-    printf("Enter max absolute HA...................... "); scanf("%lf", &hamax);}
+      printf("Enter max absolute HA...................... "); scanf("%lf", &hamax);}
   if(setrand!=1){ printf("Random HA coverage? (y/n) ................. "); scanf("%s",&random);}
   if(imjd<0)   {  printf("Enter initial MJD ......................... "); scanf("%Lf",&imjd);}
   if(fmjd<0)   {  printf("Enter final MJD ........................... "); scanf("%Lf",&fmjd);}
@@ -208,187 +199,190 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   hnobs = nday/2.0; 
   for(ii=0;ii<Npsr;ii++){
-    count = 0;
-    strcpy(parFile[0],parFile[ii]);
-    printf("SET: %d\n",psr[0].param[param_pb].val[0]);
-    psr[0].nJumps=0;
-    psr[0].fitMode=0;
-    psr[0].eclCoord=0;
-    psr[0].nits=1;
-    psr[0].clockFromOverride[0] = '\0';
-    psr[0].nCompanion = 0;
-    psr[0].bootStrap = 0;
-    psr[0].units = SI_UNITS;
-    psr[0].ne_sw  = NE_SW_DEFAULT; 
-    psr[0].nWhite = 0;  /* No whitening by default */
-    psr[0].timeEphemeris = IF99_TIMEEPH;
-    psr[0].dilateFreq = 1;
-    psr[0].planetShapiro = 1;
-    psr[0].correctTroposphere = 1;
-    psr[0].t2cMethod = T2C_IAU2000B;
-    psr[0].fixedFormat=0;
-    psr[0].nStorePrecision=0;
-    strcpy(psr[0].deleteFileName,"NONE");
-    strcpy(psr[0].tzrsite,"NULL");
-    psr[0].calcShapiro=1;
-    psr[0].ipm = 1;
-    psr[0].swm = 0;
-    psr[0].nPhaseJump=0;
+      count = 0;
+      strcpy(parFile[0],parFile[ii]);
+      printf("SET: %d\n",psr[0].param[param_pb].val[0]);
+      psr[0].nJumps=0;
+      psr[0].fitMode=0;
+      psr[0].eclCoord=0;
+  psr[0].nits=1;
+  psr[0].clockFromOverride[0] = '\0';
+  psr[0].nCompanion = 0;
+  psr[0].bootStrap = 0;
+  psr[0].units = SI_UNITS;
+  psr[0].ne_sw  = NE_SW_DEFAULT; 
+  psr[0].nWhite = 0;  /* No whitening by default */
+  psr[0].timeEphemeris = IF99_TIMEEPH;
+  psr[0].dilateFreq = 1;
+  psr[0].planetShapiro = 1;
+  psr[0].correctTroposphere = 1;
+  psr[0].t2cMethod = T2C_IAU2000B;
+  psr[0].fixedFormat=0;
+  psr[0].nStorePrecision=0;
+  strcpy(psr[0].deleteFileName,"NONE");
+  strcpy(psr[0].tzrsite,"NULL");
+  psr[0].calcShapiro=1;
+  psr[0].ipm = 1;
+  psr[0].swm = 0;
+  psr[0].nPhaseJump=0;
 
-    for (i=0;i<MAX_PARAMS;i++)
-      {
-        for (j=0;j<psr[0].param[i].aSize;j++)
-          {
-            psr[0].param[i].fitFlag[j] = 0;
-            psr[0].param[i].paramSet[j] = 0;
-            psr[0].param[i].err[j] = 0;
-            psr[0].param[i].val[j] = 0;
-          }
-      }
-    //      initialise(psr,0);              /* Initialise the structures */      
-    //      printf("SET AFTER 1: %d\n",psr[0].param[param_pb].val[0]);
-    readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
-    //      printf("SET AFTER 2: %d %s\n",psr[0].param[param_pb].val[0],psr[0].name);
-    ra = (double)psr[0].param[param_raj].val[0]/2.0/M_PI;
+      for (i=0;i<MAX_PARAMS;i++)
+	{
+	  for (j=0;j<psr[0].param[i].aSize;j++)
+	    {
+	      psr[0].param[i].fitFlag[j] = 0;
+	      psr[0].param[i].paramSet[j] = 0;
+	      psr[0].param[i].err[j] = 0;
+	      psr[0].param[i].val[j] = 0;
+	    }
+	}
+      //      initialise(psr,0);              /* Initialise the structures */      
+      //      printf("SET AFTER 1: %d\n",psr[0].param[param_pb].val[0]);
+      readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+      //      printf("SET AFTER 2: %d %s\n",psr[0].param[param_pb].val[0],psr[0].name);
+      ra = (double)psr[0].param[param_raj].val[0]/2.0/M_PI;
       
-    /* Code based on fake1.f to calculate the TOA at transit for each of these observations */
-    trmjd = imjd;
-    /* 47892.0 = 1990??? */
-    almst = fortran_mod((trmjd-47892.0)*solsid+0.276105324+obslong/360.0,(longdouble)1.0);
+      /* Code based on fake1.f to calculate the TOA at transit for each of these observations */
+      trmjd = imjd;
+      /* 47892.0 = 1990??? */
+      almst = fortran_mod((trmjd-47892.0)*solsid+0.276105324+obslong/360.0,(longdouble)1.0);
       
-    /* Hour angle at 00h UT */
-    ha0 = almst - ra;
-    /* Approximate transit time */
-    if (ha0 < 0.0) ha0+=1.0;
-    trmjd += 1.0-ha0;
+      /* Hour angle at 00h UT */
+      ha0 = almst - ra;
+      /* Approximate transit time */
+      if (ha0 < 0.0) ha0+=1.0;
+      trmjd += 1.0-ha0;
       
-    if (nday > 1)tstep = hamax/12.0/nday;  /* Was 0.4/nday */
-    amjd =  trmjd;
-    gapstartmjd = imjd+(hillsize)/solsid;
+      if (nday > 1)tstep = hamax/12.0/nday;  /* Was 0.4/nday */
+      amjd =  trmjd;
+      gapstartmjd = imjd+(hillsize)/solsid;
 
-    do {
-      for (j=0;j<nday;j++)
-        {
-          if (timesFile==1)
-            {
-              //        printf("IN HERE\n");
-              if (fscanf(fin,"%Lf",&mjd)==1)
-                {
-                  printf("Read %g\n",(double)mjd);
-                  endit=0;
-                }
-              else
-                endit=1;
-            }
-          else
-            {
-              if (random[0]=='y'||random[0]=='Y')
-                amjd=trmjd + (rand()/(longdouble)RAND_MAX - 0.5)*hamax/12.0;
-              else if (nday==1)
-                amjd=trmjd;
-              else
-                amjd=trmjd + ((j+1)-hnobs)*tstep;
-        
-              mjd=amjd;
-            }
-          psr[0].obsn[count].sat    = mjd;
-          strcpy(psr[0].obsn[count].fname,"w040206_070831.FT");
-          psr[0].obsn[count].freq   = freq;
-          if (giveRMS!=1) grms = psr[0].param[param_tres].val[0]/1e3;
-          //      else grms=0.0;
-          psr[0].obsn[count].toaErr = grms*1000.0;
-          psr[0].obsn[count].phaseOffset = 0.0;
-          strcpy(psr[0].obsn[count].telID, "7");
-          psr[0].obsn[count].deleted = 0;
-          psr[0].obsn[count].clockCorr=1;
-          psr[0].obsn[count].delayCorr=1;
-          psr[0].obsn[count].efac=1;
-          count++;
-          if (count>MAX_OBSN)
-            {
-              printf("Number of TOAs > MAX_OBSN.\n");
-              count--;
-            }
-        }
-      if((bunching == 1) && (trmjd >= (gapstartmjd-1))){
-        trmjd += gapsize/solsid;
-        gapstartmjd += (gapsize+hillsize)/solsid;
-      }
-      else{
-        trmjd+=ngap/solsid;
-      }
-    }while ((timesFile == 0 && amjd<fmjd) || (timesFile == 1 && endit==0));
-    if (timesFile==1)
-      fclose(fin);
+      do {
+	  for (j=0;j<nday;j++)
+	      {
+		if (timesFile==1)
+		  {
+		    //		    printf("IN HERE\n");
+		    if (fscanf(fin,"%Lf",&mjd)==1)
+		      {
+			printf("Read %g\n",(double)mjd);
+			endit=0;
+		      }
+		    else
+		      endit=1;
+		  }
+		else
+		  {
+		    if (random[0]=='y'||random[0]=='Y')
+		      amjd=trmjd + (rand()/(longdouble)RAND_MAX - 0.5)*hamax/12.0;
+		    else if (nday==1)
+		      amjd=trmjd;
+		    else
+		      amjd=trmjd + ((j+1)-hnobs)*tstep;
+		    
+		    mjd=amjd;
+		  }
+		if (endit==0)
+		  {
+		    psr[0].obsn[count].sat    = mjd;
+		    strcpy(psr[0].obsn[count].fname,"w040206_070831.FT");
+		    psr[0].obsn[count].freq   = freq;
+		    if (giveRMS!=1) grms = psr[0].param[param_tres].val[0]/1e3;
+		    //	    else grms=0.0;
+		    psr[0].obsn[count].toaErr = grms*1000.0;
+		    psr[0].obsn[count].phaseOffset = 0.0;
+		    strcpy(psr[0].obsn[count].telID, "7");
+		    psr[0].obsn[count].deleted = 0;
+		    psr[0].obsn[count].clockCorr=1;
+		    psr[0].obsn[count].delayCorr=1;
+		    psr[0].obsn[count].efac=1;
+		    count++;
+		    if (count>MAX_OBSN)
+		      {
+			printf("Number of TOAs > MAX_OBSN.\n");
+			count--;
+		      }
+		  }
+	      }
+	  if((bunching == 1) && (trmjd >= (gapstartmjd-1))){
+	    trmjd += gapsize/solsid;
+	    gapstartmjd += (gapsize+hillsize)/solsid;
+	  }
+	  else{
+	    trmjd+=ngap/solsid;
+	  }
+      }while ((timesFile == 0 && amjd<fmjd) || (timesFile == 1 && endit==0));
+      if (timesFile==1)
+    fclose(fin);
 
 
-    psr[0].nobs=count;
+      psr[0].nobs=count;
       
-    strcpy(str,parFile[0]);
-    str[strlen(str)-4]='\0';
-    strcat(str,".simulate");
-    strcpy(timFile[0],str);
+      strcpy(str,parFile[0]);
+      str[strlen(str)-4]='\0';
+      strcat(str,".simulate");
+      strcpy(timFile[0],str);
       
-    /* Now run the tempo2 code */
-    preProcess(psr,*npsr,argc,argv);
-    callFit(psr,*npsr);             /* Do all the fitting routines */
+      /* Now run the tempo2 code */
+      preProcess(psr,*npsr,argc,argv);
+      callFit(psr,*npsr);             /* Do all the fitting routines */
       
-    for (j=0;j<9;j++)
-      {
-        /* Now update the site arrival times depending upon the residuals */
-    
-        for (i=0;i<psr[0].nobs;i++)  
-          {
-            psr[0].obsn[i].sat -= psr[0].obsn[i].prefitResidual/SECDAY; 
-            psr->obsn[i].nFlags = 0;
-          } 
+      for (j=0;j<9;j++)
+	{
+	  /* Now update the site arrival times depending upon the residuals */
+	  
+	  for (i=0;i<psr[0].nobs;i++)  
+	    {
+	      psr[0].obsn[i].sat -= psr[0].obsn[i].prefitResidual/SECDAY; 
+	      psr->obsn[i].nFlags = 0;
+	    } 
 
-        writeTim(str,psr,"tempo2");
+	  writeTim(str,psr,"tempo2");
 
-        initialise(psr,0);
-        // Reset the jumps
-        psr[ii].nJumps = 0;
-        for(kk=0;kk<MAX_JUMPS;kk++){
-          psr[ii].jumpVal[kk] = 0.0;
-          psr[ii].jumpValErr[kk] = 0.0;
-        }
-        for(jj=0;jj<MAX_PARAMS;jj++){
-          psr[ii].param[jj].nLinkTo = 0;
-          psr[ii].param[jj].nLinkFrom = 0;
-        }
-        readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
-        readTimfile(psr,timFile,*npsr); 
-        preProcess(psr,1,argc,argv);
-        /* Now run the superTEMPO code again */
-        callFit(psr,*npsr);             /* Do all the fitting routines */
-      }
+	  initialise(psr,0);
+	  // Reset the jumps
+	  psr[ii].nJumps = 0;
+	  for(kk=0;kk<MAX_JUMPS;kk++){
+	      psr[ii].jumpVal[kk] = 0.0;
+	      psr[ii].jumpValErr[kk] = 0.0;
+	  }
+	  for(jj=0;jj<MAX_PARAMS;jj++){
+	      psr[ii].param[jj].nLinkTo = 0;
+	      psr[ii].param[jj].nLinkFrom = 0;
+	  }
+	  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+	  readTimfile(psr,timFile,*npsr); 
+	  preProcess(psr,1,argc,argv);
+	  /* Now run the superTEMPO code again */
+	  callFit(psr,*npsr);             /* Do all the fitting routines */
+	}
 
-    printf("Complete 10 iterations\n");
-    for (i=0;i<psr[0].nobs;i++)  
-      {
-        psr[0].obsn[i].sat -= psr[0].obsn[i].prefitResidual/SECDAY;  
-        psr->obsn[i].nFlags = 0;
-      }
+      printf("Complete 10 iterations\n");
+      for (i=0;i<psr[0].nobs;i++)  
+	{
+	  psr[0].obsn[i].sat -= psr[0].obsn[i].prefitResidual/SECDAY;  
+	  psr->obsn[i].nFlags = 0;
+	}
       
       
-    for (i=0;i<psr[0].nobs;i++)
-      { 
-        times[i] = (psr[0].obsn[i].sat-psr[0].param[param_posepoch].val[0]);
-      }
-    npts = psr[0].nobs;
+      for (i=0;i<psr[0].nobs;i++)
+	{ 
+	  times[i] = (psr[0].obsn[i].sat-psr[0].param[param_posepoch].val[0]);
+	}
+      npts = psr[0].nobs;
       
-    /* Add Gaussian noise */
-    if (giveRMS!=1) grms = psr[0].param[param_tres].val[0]/1e3;
-    if (grms>0.0)
-      {
-        printf("Adding Gaussian noise with rms = %f\n",(float)grms);
-        for (i=0;i<psr[0].nobs;i++)
-          psr[0].obsn[i].sat += TKgaussDev(&idum)*grms/1000.0/SECDAY;
-      }
+      /* Add Gaussian noise */
+      if (giveRMS!=1) grms = psr[0].param[param_tres].val[0]/1e3;
+      if (grms>0.0)
+	{
+	  printf("Adding Gaussian noise with rms = %f\n",(float)grms);
+	  for (i=0;i<psr[0].nobs;i++)
+	    psr[0].obsn[i].sat += TKgaussDev(&idum)*grms/1000.0/SECDAY;
+	}
       
-    printf("Output TOA file written to %s\n",str);
-    writeTim(str,psr,formstr);      
-  }
+      printf("Output TOA file written to %s\n",str);
+      writeTim(str,psr,formstr);      
+    }
 }
 
 /* This function calls all of the fitting routines.             */
