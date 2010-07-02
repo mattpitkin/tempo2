@@ -171,6 +171,7 @@ initialize_ClockCorrections(int dispWarnings)
 	     func.table.fileName, func.clockFrom, func.clockTo, func.badness);
   }
   clockCorrections_initialized = 1;
+  globfree(&g);
 }
 
 void

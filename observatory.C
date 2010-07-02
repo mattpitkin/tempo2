@@ -211,6 +211,7 @@ initObservatories()
       readObservatoryFile(*pfname);
     }
   }
+  globfree(&g);
   if (debugFlag==1) printf("Reading aliases file\n");
   /* and load aliases list */
   sprintf(fname, "%s/observatory/aliases", getenv(TEMPO2_ENVIRON));

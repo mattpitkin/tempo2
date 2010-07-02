@@ -414,6 +414,7 @@ int main(int argc, char *argv[])
 	{
 	  if (debugFlag==1) printf("iteration %d\n",iteration);
 	  if (debugFlag==1) printf("calling formBatsAll\n");
+	  printf("Calling formBats\n");
 	  formBatsAll(psr,npsr);                /* Form Barycentric arrival times */
 	  if (debugFlag==1) printf("calling formResiduals\n");
 	  formResiduals(psr,npsr,iteration);       /* Form residuals */

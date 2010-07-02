@@ -36,7 +36,7 @@ TabulatedFunction_load(TabulatedFunction *func,
 			     char *fileName)
 {
   FILE *f;
-  char line[1024], *c;
+  char line[1024]="", *c;
   TabulatedFunctionSample sample;
   int narg;
 

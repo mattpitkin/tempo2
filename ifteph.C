@@ -135,7 +135,6 @@ IFTE_init(const char *fname)
   //    fclose(ifte.f);  
 
   time=1;
-  printf("Opening the file\n");
   f = fopen(fname, "r");
   if (!f)
   {

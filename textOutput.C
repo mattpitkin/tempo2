@@ -638,7 +638,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		{
 		  for (k=0;k<psr[p].param[i].aSize;k++)
 		    {
-		  if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om &&
+		  if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om 
+		      && i!=param_waveepoch &&
 		      (psr[p].tempo1==0 || (i!=param_dmepoch)))
 		    {
 		      if (strcmp(psr[p].param[i].shortlabel[k],"PB")==0)
@@ -777,6 +778,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  /* Add whitening flags */
 	  if (psr[p].param[param_wave_om].paramSet[0]==1)
 	    {
+	      fprintf(fout2,"WAVEEPOCH %.14Lg\n",psr[p].param[param_waveepoch].val[0]);
 	      fprintf(fout2,"WAVE_OM %.14Lg 0\n",psr[p].param[param_wave_om].val[0]);
 	      for (i=0;i<psr[p].nWhite;i++)
 		fprintf(fout2,"WAVE%d %.14g %.14g\n",i+1,psr[p].wave_sine[i],psr[p].wave_cos[i]);
