@@ -66,10 +66,7 @@ void tt2tb(pulsar *psr,int npsr)
   double deltaT=0.0, obsTerm, earthVel[3];
   double deltaTDot, obsTermDot, earthVelDot[3];
   int first=1;
-  printf("In tt2tb\n");
-  printf("Creating the file\n");
   init_ifte();
-  printf("Initialisng the file\n");
   for (p=0;p<npsr;p++)
   {
     for (i=0;i<psr[p].nobs;i++)
@@ -172,7 +169,6 @@ void tt2tb(pulsar *psr,int npsr)
       }
     }
   }
-  printf("Closing the file\n");
   IFTE_close_file();
 }
 
@@ -184,7 +180,6 @@ void init_ifte()
   //  {
   //    first = 0;
     char fname[1024];
-    printf("initifte the file\n");
     strcpy(fname,getenv(TEMPO2_ENVIRON));
     strcat(fname,IFTEPH_FILE);
     IFTE_init(fname);

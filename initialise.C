@@ -39,7 +39,7 @@ void initialise(pulsar *psr,int noWarnings)
   int fullSetup = 1;
 
   for (p=0;p<MAX_PSR;p++)
-    if (psr[p].obsn == NULL)
+    //    if (psr[p].obsn == NULL)
       initialiseOne (psr+p, noWarnings, fullSetup);
 }
 
@@ -49,6 +49,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   int i,j,k;
   char temp[100];
 
+  psr->nobs = 0;
   psr->obsn = NULL;
   psr->covar = NULL;
 

@@ -41,7 +41,7 @@
 #define MAX_STOREPRECISION   50    /* How many routines in TEMPO2 store precision information */
 #define MAX_OBSN_VAL         10000 /* Maximum number of TOAs                           */ 
 #define MAX_SITE             100   /* Maximum number of observatory sites              */
-#define MAX_PARAMS           100   /* Maximum number of parameters                     */
+#define MAX_PARAMS           500   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
 #define MAX_IFUNC            100   /* Maximum number of parameters for interpolation function  */

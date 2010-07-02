@@ -781,6 +781,7 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
       copyParam(psr->param[param_pepoch],&(psr->param[param_waveepoch]));
       strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
       strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH"); 
+      printf("Setting waveepoch to %g\n",(double)psr->param[param_waveepoch].val[0]);
    }
   if (psr->param[param_posepoch].paramSet[0] == 0)
     {
@@ -1031,6 +1032,8 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
   for(j=0;j<elong.aSize;j++){
     free(elong.label[j]);
     free(elong.shortlabel[j]);
+    free(elat.label[j]);
+    free(elat.shortlabel[j]);
   }
 
   free(elong.val);  free(elong.err);  free(elong.prefit);  free(elong.prefitErr);
