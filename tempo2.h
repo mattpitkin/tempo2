@@ -392,7 +392,24 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void calculate_bclt(pulsar *psr,int npsr);
 void secularMotion(pulsar *psr,int npsr);
+
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[]);
+
+/* used by psrchive to initialize a single psr struct */
+void preProcessSimple (pulsar *psr);
+
+/* three stages of preProcess that interleave with preProcess (complicated) */
+
+void preProcessSimple1 (pulsar *psr, bool tempo1 = false, double thelast = -1);
+
+void preProcessSimple2 (pulsar *psr,
+			float startdmmjd = 0,
+			int ndm = 0,
+			float* dmvals = 0,
+			int trimonly = 0);
+
+void preProcessSimple3 (pulsar *psr);
+
 void useSelectFile(char *fname,pulsar *psr,int npsr);
 void processSimultaneous(char *line,pulsar *psr, int npsr);
 void processFlag(char *line,pulsar *psr,int npsr);

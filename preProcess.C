@@ -34,11 +34,11 @@
 
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 {
-  int p,i,k,l,nread,yes,fitN=0,setN=0,j;
+  int p,i,k,fitN=0,setN=0,j;
   char fitStr[10][100];
   char setStr[10][100];
   float dmvals[10000];
-  float startdmmjd;
+  float startdmmjd = 0;
   int ndm;
   longdouble setVal[10];
   FILE *fdmin;
@@ -53,12 +53,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
   double select3[100];
   double select4[100];
   int nSelect=0;
-  char str1[100],str2[100],str3[100],str4[100],str5[100];
   int v5;
   char name[100];
   char dmfile[100]="";
   int setName=0;
-  double val1,val2;
   double last=-1;
   int tempo1=0;
   int nojump=0;
@@ -234,72 +232,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 		}
 	    }
 	}
-      /* Check whitening */
-      if (psr[p].param[param_wave_om].paramSet[0] == 1 && psr[p].param[param_wave_om].val[0] == 0.0) /* Set fundamental frequency */
-	{  
-	  longdouble first=-1,last=-1;
-	  for (i=0;i<psr[p].nobs;i++)
-	    {
-	      if (psr[p].obsn[i].deleted==0 && first==-1) first=psr[p].obsn[i].sat;
-	      if (psr[p].obsn[i].deleted==0 && last==-1)  last=psr[p].obsn[i].sat;
-	      if (psr[p].obsn[i].deleted==0 && psr[p].obsn[i].sat < first) first = psr[p].obsn[i].sat;
-	      if (psr[p].obsn[i].deleted==0 && psr[p].obsn[i].sat > last)   last = psr[p].obsn[i].sat;
-	    }
-	  //	  printf("WHITE: %Lg %d\n",(last-first)/365.25,psr[p].nWhite);
-	  //	  psr[p].param[param_wave_om].val[0] = 2.0*M_PI/(last-first)/
-	  //	    (1.0+4.0/(double)((psr[p].nWhite+1)*2.0));
-	  psr[p].param[param_wave_om].val[0] = 2.0*M_PI/(last-first)/
-	    (1.0+4.0/(double)(psr[p].nWhite));
-	}
 
-      /* Set tempo emulation mode */
-      if (psr[p].param[param_ephver].paramSet[0]==1)
-	{
-	  if (psr[p].param[param_ephver].val[0] < 5)
-	    {
-	      printf("************************************************* \n");
-	      printf("Warning: you are running in tempo1 emulation mode \n");
-	      printf("************************************************* \n");
-	      tempo1 = 1;
-	    }
-	  else
-	    tempo1 = 0;
-	}
-      else if (tempo1 == 1)
-	{
-	  psr[p].param[param_ephver].paramSet[0]=1;
-	  psr[p].param[param_ephver].val[0]=2;
-	}
-      else 
-	{
-	  psr[p].param[param_ephver].paramSet[0]=1;
-	  psr[p].param[param_ephver].val[0]=5;
-	}
-      if (last>0) /* Define the start parameter based upon the last observation */
-	{
-	  psr[p].param[param_start].val[0] = psr[p].obsn[psr[p].nobs-1].sat-last;
-	  psr[p].param[param_start].fitFlag[0] = 1;
-	  psr[p].param[param_start].paramSet[0] = 1;
-	}
-
-      psr[p].tempo1 = 0;
-      if (tempo1 == 1)
-      {
-	psr[p].tempo1 = 1;
-	psr[p].units = TDB_UNITS;
-	psr[p].timeEphemeris = FB90_TIMEEPH;
-	psr[p].dilateFreq = 0;
-	psr[p].planetShapiro=0;
-	psr[p].t2cMethod = T2C_TEMPO;
-	psr[p].correctTroposphere = 0;
-	psr[p].ne_sw = 9.961;
-	ECLIPTIC_OBLIQUITY = 84381.412;
-      }
-      /* XXXX Hack!! -- removed - should use transform plugin*/
-      /* Problem, if a function is not called then the compiler does not include
-       * it in the library - so the plugin cannot find it */
-      if (psr[p].units==100) /* SI_UNITS)  */
-	transform_units(&psr[p], TDB_UNITS, SI_UNITS); 
+      preProcessSimple1 (psr + p, tempo1, last);
 
       /* Update period epoch if necessary */
       if (strcmp(newEpoch,"NONE")!=0)
@@ -498,6 +432,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	{printf("Warning: Cannot fit for dmepoch\n"); psr[p].param[param_dmepoch].fitFlag[0]=0;}
       if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].fitFlag[0]==1)
 	{printf("Warning: Cannot fit for track\n"); psr[p].param[param_track].fitFlag[0]=0;}
+
       if (strlen(dmfile)>0)
 	{
 	  float tt;
@@ -554,201 +489,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  fclose(fin);
 	}
       
-      for (i=0;i<psr[p].nobs;i++)
-	{
-	  //psr[p].obsn[i].efac = 1.0;
-	  //psr[p].obsn[i].equad = 0.0;
-	  /* Check whether any error = 0 */
-	  if (psr[p].fitMode==1 && psr[p].obsn[i].toaErr==0)
-	    {
-	      printf("Error: the uncertainty for TOA %d (MJD %f) is equal to zero\n ",i+1,(double)psr[p].obsn[i].sat);
-	      exit(1);
-	    }
+      preProcessSimple2 (psr + p, startdmmjd, ndm, dmvals, trimonly);
 
-	  for (k=0; k<6; k++) /* zero these vectors for first call to tt2tb */
-	  {
-	    psr[p].obsn[i].earthMoonBary_ssb[k] = 0.0;
-	    psr[p].obsn[i].earthMoonBary_earth[k] = 0.0;
-	    psr[p].obsn[i].observatory_earth[k] = 0.0;
-	    psr[p].obsn[i].earth_ssb[k] = 0.0;
-	  }
-
-
-	  /*	  psr[p].obsn[i].sat += psr[p].obsn[i].phaseOffset/psr[p].param[param_f0].val[0]; */
-	  for (k=0;k<psr[p].nToffset;k++) /* Calculate time offsets */
-	    {
-	      char offsetSite[256], obsSite[256];
-	      lookup_observatory_alias(psr[p].tOffsetSite[k], offsetSite);
-	      lookup_observatory_alias(psr[p].obsn[i].telID, obsSite);
-	      if ((psr[p].tOffset_f1[k]==0.0 || (psr[p].obsn[i].freq > psr[p].tOffset_f1[k])) &&
-		  (psr[p].tOffset_f2[k]==0.0 || (psr[p].obsn[i].freq < psr[p].tOffset_f2[k])) &&
-		  (psr[p].tOffset_t1[k]==0.0 || (psr[p].obsn[i].sat  > psr[p].tOffset_t1[k])) &&
-		  (psr[p].tOffset_t2[k]==0.0 || (psr[p].obsn[i].sat  < psr[p].tOffset_t2[k])) && 
-		  (strcmp(offsetSite,"0")==0 || 
- 		   strcmp(offsetSite,obsSite)==0))
-		 {
-		   int use=1;
-		   /* Check for flags */
-		   if (strlen(psr[p].tOffsetFlags[k])>0)
-		     {
-		       char *myStr,str1[1000],flagID[100];
-		       use=0;
-		       strcpy(str1,psr[p].tOffsetFlags[k]);
-		       myStr = strtok(str1," ");
-		       do {
-			 if (myStr[0]=='-' && (myStr[1]<48 || myStr[1]>57)) /* Look for flag */
-			   {
-			     strcpy(flagID,myStr);
-			     myStr = strtok(NULL," ");
-			     for (l=0;l<psr[p].obsn[i].nFlags;l++)
-			       {
-				 if (strcmp(flagID,psr[p].obsn[i].flagID[l])==0
-				     && strcmp(myStr,psr[p].obsn[i].flagVal[l])==0)
-				   {
-				     use=1;
-				     break;
-				   }
-			       }
-			   }
-		       } while ((myStr = strtok(NULL," "))!=NULL);
-		     }
-		   if (use==1) {psr[p].obsn[i].sat += psr[p].tOffset[k]/SECDAY;}
-		 }  
-	    }
-	  /* Check filtering */
-	  if (strlen(psr[p].filterStr)>0)
-	    {
-	      char flag[100],filtS[1000],*filt;
-	      strcpy(filtS,psr[p].filterStr);
-	      filt = strtok(filtS," ");
-	      strcpy(flag,filt);
-	      while (filt != NULL)
-		{
-		  if (filt[0]=='-') strcpy(flag,filt);
-		  else
-		    {
-		      for (j=0;j<psr[p].obsn[i].nFlags;j++)
-			{
-			  if (strcmp(psr[p].obsn[i].flagID[j],flag)==0 &&
-			      strcmp(psr[p].obsn[i].flagVal[j],filt)==0)
-			    psr[p].obsn[i].deleted=1;
-			}
-		    }
-		  filt = strtok(NULL," ");
-		}
-	    }
-
-	  /* Check filtering for 'pass' */
-	  if (strlen(psr[p].passStr)>0)
-	    {
-	      char flag[100],filtS[1000],*filt;
-	      int found;
-
-       	      strcpy(filtS,psr[p].passStr);
-	      filt = strtok(filtS," ");
-	      found=0;
-	      while ( filt != NULL && found==0)
-		{
-		  if (filt[0]=='-') // Have a flag
-		    strcpy(flag,filt);
-		  else
-		    {
-		      for (j=0;j<psr[p].obsn[i].nFlags;j++)
-			{
-			  if (strcmp(psr[p].obsn[i].flagID[j],flag)==0 &&
-			      strcmp(psr[p].obsn[i].flagVal[j],filt)==0)
-			    {
-			      found=1;
-			      break;
-			    }
-			}
-		    }
-		  filt = strtok(NULL," ");
-		}
-
-	      if (found==0)
-		psr[p].obsn[i].deleted=1;		 
-	    }
-
-	  /* CHECK JUMPS */	  
-	  for (k=1;k<=psr[p].nJumps;k++)
-	    {
-	      yes=0;
-
-	      /* Must parse jump string to determine whether this observation should jump or not */	      
-	      nread = sscanf(psr[p].jumpStr[k],"%s %s %s",str1,str2,str3);
-	      if (strcasecmp(str1,"MJD")==0 || strcasecmp(str1,"FREQ")==0)
-		{
-		  sscanf(str2,"%lf",&val1);
-		  sscanf(str3,"%lf",&val2);
-
-		  if (strcasecmp(str1,"MJD")==0) {
-		    if (psr[p].obsn[i].sat >= val1 && psr[p].obsn[i].sat < val2) {
-		      yes=1;
-		    }
-		  }
-		  else if (strcasecmp(str1,"FREQ")==0) {
-		    if (psr[p].obsn[i].freq >= val1 && psr[p].obsn[i].freq < val2) {
-		      yes=1;
-		    }
-		  }
-		}
-	      if (strcasecmp(str1,"NAME")==0 && strstr(psr[p].obsn[i].fname,str2)!=NULL)
-		yes=1;	
-	      if (strcasecmp(str1,"TEL")==0)
-	      {
-		char selectedSite[256], obsSite[256];
-
-		lookup_observatory_alias(str2, selectedSite);
-		lookup_observatory_alias(psr[p].obsn[i].telID, obsSite);
-		if (strcasecmp(selectedSite, obsSite)!=0)
-		  yes=1;	    
-	      }
-	      else if (str1[0]=='-')
-		{
-		  int jj;
-		  for (jj=0;jj<psr[p].obsn[i].nFlags;jj++)
-		    {
-		      if (strcmp(psr[p].obsn[i].flagID[jj],str1)==0 &&
-			  strcmp(psr[p].obsn[i].flagVal[jj],str2)==0)
-			yes=1;
-		    }
-		}
-	    
-	      if (yes==1) psr[p].obsn[i].jump=k;
-	    }
-	  // Check for time offset flags
-	  for (k=0;k<psr[p].obsn[i].nFlags;k++)
-	    {
-	      if (strcmp(psr[p].obsn[i].flagID[k],"-to")==0)
-		{
-		  long double v;
-		  sscanf(psr[p].obsn[i].flagVal[k],"%Lf",&v);
-		  psr[p].obsn[i].sat += v/SECDAY;
-		}
-	    }
-	  // Check for dm updates
-	  if (strlen(dmfile)>0)
-	    {
-	      //float dm; //not needed any more
-	      if ((int)(psr[p].obsn[i].sat-startdmmjd+0.5) > 0)
-		{
-		  if ((int)(psr[p].obsn[i].sat-startdmmjd+0.5) >= ndm)
-		    psr[p].obsn[i].deleted=1;
-		  else if (trimonly == 0) // set flags only if really correcting for dm, not only trimming the data
-		  {
-		    strcpy(psr[p].obsn[i].flagID[psr[p].obsn[i].nFlags],"-dm");
-		    sprintf(psr[p].obsn[i].flagVal[psr[p].obsn[i].nFlags],"%g",dmvals[(int)(psr[p].obsn[i].sat-startdmmjd+0.5)]);
-		    psr[p].obsn[i].nFlags++;
-		    //dm = dmvals[(int)(psr[p].obsn[i].sat-startdmmjd+0.5)];             
-		  }
-		}
-	      else
-		{
-		  psr[p].obsn[i].deleted=1;
-		}
-	    }
-	}
       // Check for select file
       if (strlen(selectPlugName) > 0)
 	{
@@ -780,83 +522,9 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    useSelectFile(selectFname,psr,npsr);
 	}
       
-      //
-      // Check fjump
-      //
-      if (strlen(psr[p].fjumpID)>0)
-	{
-	  char val[MAX_FLAGS][16];
-	  int  nval[MAX_FLAGS];
-	  int  nf=0;
-	  int  k,l;
-	  int found;
-	  // Find flag corresponding to longest data set
-	  for (i=0;i<psr[p].nobs;i++)
-	    {
-	      if (psr[p].obsn[i].deleted==0)
-		{
-		  for (k=0;k<psr[p].obsn[i].nFlags;k++)
-		    {
-		      if (strcmp(psr[p].obsn[i].flagID[k],psr[p].fjumpID)==0)
-			{
-			  found=0;
-			  for (l=0;l<nf;l++)
-			    {
-			      if (strcmp(psr[p].obsn[i].flagVal[k],val[l])==0)
-				{
-				  found=1;
-				  break;
-				}
-			    }
-			  if (found==0)
-			    {
-			      strcpy(val[nf],psr[p].obsn[i].flagVal[k]);
-			      nf++;
-			    }
-			}
-		    }
-		}
-	    }
-	  // Now create jumps
-	  for (l=1;l<nf;l++)
-	    {
-	      psr[p].nJumps++;
-	      sprintf(psr[p].jumpStr[psr[p].nJumps],"%s %s",psr[p].fjumpID,val[l]);
-	      for (i=0;i<psr[p].nobs;i++)
-		{
-		  for (k=0;k<psr[p].obsn[i].nFlags;k++)
-		    {
-		      if (strcmp(psr[p].obsn[i].flagVal[k],val[l])==0)
-			  psr[p].obsn[i].jump=psr[p].nJumps;
-		    }
-		}
-	      psr[p].fitJump[psr[p].nJumps]=1;
-	    }
-	}
-      
-      // Now link phase jumps to a particular site-arrival-time
-      for (i=0;i<psr[p].nPhaseJump;i++)
-	{
-	  if (psr[p].phaseJumpID[i] = -1)
-	    {
-	      // Find closest TOA
-	      if (i==0) printf("WARNING: Use of phase jumps => .tim file must be sorted in time order\n");
-	      for (k=1;k<psr[p].nobs;k++)
-		{
-		  if ((double)psr[p].obsn[k].sat > (double)psr[p].phaseJump[i])
-		    {
-		      psr[p].phaseJumpID[i]=k-1;
-		      break;
-		    }		  
-		}
-	    }
-	}
+      preProcessSimple3 (psr + p);
 
     }
-
-
-
-
 
   // Now check for global parameters
   if (strlen(globalFname) > 0)
