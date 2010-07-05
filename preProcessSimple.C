@@ -32,12 +32,12 @@
 
 void preProcessSimple (pulsar *psr)
 {
-  preProcessSimple1 (psr);
-  preProcessSimple2 (psr);
+  preProcessSimple1 (psr, 0, -1);
+  preProcessSimple2 (psr, 0, 0, 0, 0);
   preProcessSimple3 (psr);
 }
 
-void preProcessSimple1 (pulsar *psr, bool tempo1, double thelast)
+void preProcessSimple1 (pulsar *psr, int tempo1, double thelast)
 {  
   if (debugFlag==1) printf("In preProcessSimple1\n");
 

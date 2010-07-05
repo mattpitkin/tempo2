@@ -400,13 +400,13 @@ void preProcessSimple (pulsar *psr);
 
 /* three stages of preProcess that interleave with preProcess (complicated) */
 
-void preProcessSimple1 (pulsar *psr, bool tempo1 = false, double thelast = -1);
+void preProcessSimple1 (pulsar *psr, int tempo1, double thelast);
 
 void preProcessSimple2 (pulsar *psr,
-			float startdmmjd = 0,
-			int ndm = 0,
-			float* dmvals = 0,
-			int trimonly = 0);
+			float startdmmjd,
+			int ndm,
+			float* dmvals,
+			int trimonly);
 
 void preProcessSimple3 (pulsar *psr);
 
