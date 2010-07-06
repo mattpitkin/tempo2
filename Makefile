@@ -13,10 +13,10 @@ install sliminstall:
 	@echo "ERROR: TEMPO2 environment variable not set!"
 	exit 1
 else
-install: all sliminstall dirs
+install: all sliminstall
 	cd plugin && $(MAKE) install
 
-sliminstall:
+sliminstall: dirs
 	cp -p libtempo2pred.a libtempo2.a sofa/libsofa.a $(TEMPO2)/lib
 	cp -p tempo2.h tempo2pred.h tempo2pred_int.h $(TEMPO2)/include
 endif
