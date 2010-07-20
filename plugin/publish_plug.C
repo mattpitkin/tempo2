@@ -20,7 +20,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   double pval;
   double efac=1.0;
   char efacStr[500];
-
+  printf("Starting output plugin\n");
   for (i=0;i<argc;i++)
     {
       if (strcmp(argv[i],"-efac")==0)
@@ -28,7 +28,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
     }
 
   textOutput(psr,npsr,0,0,0,0,"");
-
+  printf("Finished text output\n");
   fout = fopen("table.tex","w");
   fprintf(fout,"\\documentclass{article}\n");
   fprintf(fout,"\\begin{document}\n");
@@ -38,6 +38,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   fprintf(fout,"\\hline\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Fit and data-set} \\\\\n");
   fprintf(fout,"\\hline\n");
+
   strcpy(name,psr[0].name); parseMinus(name);
   fprintf(fout,"Pulsar name\\dotfill & J%s \\\\ \n",name);
   fprintf(fout,"MJD range\\dotfill & %7.1Lf---%7.1Lf \\\\ \n",psr[0].param[param_start].val[0],
@@ -45,6 +46,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   fprintf(fout,"Number of TOAs\\dotfill & %d \\\\\n",psr[0].nFit);
   fprintf(fout,"Rms timing residual ($\\mu s$)\\dotfill & %.3Lg \\\\\n ",psr[0].param[param_tres].val[0]);
   fprintf(fout,"Weighted fit\\dotfill & ");
+
   if (psr[0].fitMode==1) 
     {
       fprintf(fout," Y \\\\ \n");
@@ -60,10 +62,17 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
       for (k=0;k<psr[0].param[i].aSize;k++)
 	{
 	  if (psr[0].param[i].paramSet[k]==1 && psr[0].param[i].fitFlag[k]==1)
-	    dispParameter(i,k,psr,fout,1,efac);
+	    {
+	      if (strcmp(psr[0].param[i].shortlabel[k],"WAVE_OM")!=0)
+		{
+		  printf("Disp parameter %s\n",psr[0].param[i].shortlabel[k]);
+		  dispParameter(i,k,psr,fout,1,efac);
+		  printf("Done disp\n");
+		}
+	    }
 	}
     }
-  
+
   fprintf(fout,"\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Set Quantities} \\\\ \n");
   fprintf(fout,"\\hline\n");
