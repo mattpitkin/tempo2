@@ -64,15 +64,36 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     
     if (psr->covar != NULL) {
       for(i=0;i<MAX_PARAMS;i++) {
-	psr->covar[i] = (double *)malloc(sizeof(double)*MAX_PARAMS);
-	if (psr->covar[i] == NULL) {
-	  fail = 1;
-	  break;
-	}
+        psr->covar[i] = (double *)malloc(sizeof(double)*MAX_PARAMS);
+        if (psr->covar[i] == NULL) {
+          fail = 1;
+          break;
+        }
       }
     }
   }
-
+  // Initialise the barycentre vectors:
+  //
+  // To the best of my knowledge, this only ever happens in
+  // preProcessSimple.C, which does not get called when running Tempo2
+  // through PSRchive. For reasons unknown to me, these uninitialised
+  // values most commonly end up being zero (as they should be) and
+  // are subsequently set later on, but once in a statistical while,
+  // they will go rogue, crashing everything. For my purposes,
+  // initialisation right here seems to do the trick, though a
+  // substantial reanalysis of the preprocess and initialise functions
+  // (and which bits belong where) is in order to make sure these
+  // "glitches" don't happen with any other parameters.
+  //
+  // JPWV, MPIfR, 22 July 2010.
+  for(int obsct = 0; obsct < MAX_OBSN; obsct++ ){
+    for (int vecct = 0; vecct < 6; vecct++ ){
+      psr->obsn[obsct].earthMoonBary_ssb[vecct] = 0.0;
+      psr->obsn[obsct].earthMoonBary_earth[vecct] = 0.0;
+      psr->obsn[obsct].observatory_earth[vecct] = 0.0;
+      psr->obsn[obsct].earth_ssb[vecct] = 0.0;
+    }
+  }
   if (fail)
     {
       printf("Not enough memory to allocate room for %d observations\n",MAX_OBSN);
