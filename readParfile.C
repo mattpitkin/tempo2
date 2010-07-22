@@ -778,10 +778,22 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
     }
   if (psr->param[param_waveepoch].paramSet[0] == 0)
     {
-      copyParam(psr->param[param_pepoch],&(psr->param[param_waveepoch]));
-      strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
-      strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH"); 
-      printf("Setting waveepoch to %g\n",(double)psr->param[param_waveepoch].val[0]);
+      // Do we need a value for waveepoch (and does waveepoch.paramSet
+      // need to be unity), even when we're not using waves for
+      // prewhitening?
+      //
+      // No we don't.
+      if(psr->param[param_wave_om].paramSet[0] == 1){
+        copyParam(psr->param[param_pepoch],&(psr->param[param_waveepoch]));
+        strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
+        strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH"); 
+        printf("Setting waveepoch to %g\n",(double)psr->param[param_waveepoch].val[0]);
+      }else{
+        // waveepoch isn't set, but neither is wave_om. Ergo: we're
+        // not using waves and don't need to set this epoch.
+        //
+        // Do nothing.
+      }
    }
   if (psr->param[param_posepoch].paramSet[0] == 0)
     {
