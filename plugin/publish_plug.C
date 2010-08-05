@@ -8,7 +8,8 @@
 
 void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac);
 int nint_derived(double x);
-int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,char *msg);
+int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,
+         int *le,char *msg);
 void parseMinus(char *str);
 void parseExp(char *str);
 
@@ -20,15 +21,15 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   double pval;
   double efac=1.0;
   char efacStr[500];
-  printf("Starting output plugin\n");
+  
   for (i=0;i<argc;i++)
     {
       if (strcmp(argv[i],"-efac")==0)
-	sscanf(argv[i+1],"%lf",&efac);
+        sscanf(argv[i+1],"%lf",&efac);
     }
-
-  textOutput(psr,npsr,0,0,0,0,"");
-  printf("Finished text output\n");
+  char format[20]="";
+  textOutput(psr,npsr,0,0,0,0,format);
+  
   fout = fopen("table.tex","w");
   fprintf(fout,"\\documentclass{article}\n");
   fprintf(fout,"\\begin{document}\n");
@@ -38,85 +39,151 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   fprintf(fout,"\\hline\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Fit and data-set} \\\\\n");
   fprintf(fout,"\\hline\n");
-
   strcpy(name,psr[0].name); parseMinus(name);
   fprintf(fout,"Pulsar name\\dotfill & J%s \\\\ \n",name);
-  fprintf(fout,"MJD range\\dotfill & %7.1Lf---%7.1Lf \\\\ \n",psr[0].param[param_start].val[0],
+  fprintf(fout,"MJD range\\dotfill & %7.1Lf---%7.1Lf \\\\ \n",
+          psr[0].param[param_start].val[0],
 	 psr[0].param[param_finish].val[0]);
   fprintf(fout,"Number of TOAs\\dotfill & %d \\\\\n",psr[0].nFit);
-  fprintf(fout,"Rms timing residual ($\\mu s$)\\dotfill & %.3Lg \\\\\n ",psr[0].param[param_tres].val[0]);
+  fprintf(fout,"Rms timing residual ($\\mu s$)\\dotfill & %.3Lg \\\\\n",
+          psr[0].param[param_tres].val[0]);
   fprintf(fout,"Weighted fit\\dotfill & ");
-
   if (psr[0].fitMode==1) 
     {
       fprintf(fout," Y \\\\ \n");
-      fprintf(fout,"Reduced $\\chi^2$ value \\dotfill & %.3f \\\\\n",psr[0].fitChisq/(double)psr[0].fitNfree);
+      fprintf(fout,"Reduced $\\chi^2$ value \\dotfill & %.3f \\\\\n",
+              psr[0].fitChisq/(double)psr[0].fitNfree);
     }
   else fprintf(fout," N \\\\ \n");
+
+  /* *******************
+     MEASURED Quantities
+     ******************* */
   fprintf(fout,"\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Measured Quantities} \\\\ \n");
   fprintf(fout,"\\hline\n");
-
+  
   for (i=0;i<MAX_PARAMS;i++)
     {
       for (k=0;k<psr[0].param[i].aSize;k++)
-	{
-	  if (psr[0].param[i].paramSet[k]==1 && psr[0].param[i].fitFlag[k]==1)
-	    {
-	      if (strcmp(psr[0].param[i].shortlabel[k],"WAVE_OM")!=0)
-		{
-		  printf("Disp parameter %s\n",psr[0].param[i].shortlabel[k]);
-		  dispParameter(i,k,psr,fout,1,efac);
-		  printf("Done disp\n");
-		}
-	    }
-	}
+        {
+          // Check if parameter is used and fitted for.  Also check if
+          // it isn't START and FINISH because these cause a buffer
+          // overflow as they don't have errors. Nevertheless, they
+          // _can_ be fitted (somehow), which means they would pass
+          // through this if-statement unless sorted out. The same
+          // goes for any epoch, but since they cannot be fitted
+          // anyway, this is no issue. (JPWV, 5.8.2010)
+          if (psr[0].param[i].paramSet[k]==1 && 
+              psr[0].param[i].fitFlag[k]==1 && 
+              i!=param_start && i!=param_finish){
+            dispParameter(i,k,psr,fout,1,efac);
+          }
+        }
     }
-
+  
+  /* **************
+     SET Quantities
+     ************** */
+  // All non-fitted parameters (except prewhitening terms)
   fprintf(fout,"\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Set Quantities} \\\\ \n");
   fprintf(fout,"\\hline\n");
-
+  
   for (i=0;i<MAX_PARAMS;i++)
     {
       for (k=0;k<psr[0].param[i].aSize;k++)
-	{
-	  if (i!=param_track && i!=param_tres && i!=param_tzrmjd && i!=param_tzrfrq
-	      && i!=param_start && i!=param_finish)
-	    {
-	      if (psr[0].param[i].paramSet[k]==1 && psr[0].param[i].fitFlag[k]==0)
-		dispParameter(i,k,psr,fout,0,efac);
-	    }
-	}
+        {
+          if (i!=param_track && i!=param_tres && 
+              i!=param_tzrmjd && i!=param_tzrfrq
+              && i!=param_start && i!=param_finish 
+              && i!=param_waveepoch && i!=param_wave_om
+              && i!=param_ephver)
+            {
+              if (psr[0].param[i].paramSet[k]==1 && 
+                  psr[0].param[i].fitFlag[k]==0)
+                dispParameter(i,k,psr,fout,0,efac);
+            }
+        }
     }
+   
+  /* ******************
+     PREWHITENING Terms 
+     ****************** */
+ if(psr[0].param[param_waveepoch].paramSet[0]==1){
+   fprintf(fout,"\\hline\n");
+   fprintf(fout,"\\multicolumn{2}{c}{Pre-whitening terms} \\\\ \n");
+   fprintf(fout,"\\hline\n");
 
+   // First waves reference epoch
+   fprintf(fout,"Reference epoch for fitwaves\\dotfill & %Lg \\\\ \n",
+           psr[0].param[param_waveepoch].val[0]);
+   // Then fundamental wave frequency
+   fprintf(fout,"Fundamental wave frequency, $\\omega_{\\rm pw}$ (yr$^{-1}$)\\dotfill");
+   fprintf(fout," & %Lg \\\\ \n",psr[0].param[param_wave_om].val[0]*365.25);
 
+   // Finally the amplitudes of the waves:
+   int lv,le;
+   char cval[500],cerr[500],msg[500],cval2[500],cerr2[500];
+   for(i=0;i<psr[0].nWhite;i++){
+     if(psr[0].wave_cos_err[i]!=0.0){
+       rnd8((double)psr[0].wave_cos[i],psr[0].wave_cos_err[i]*efac,
+            1,cval,&lv,cerr,&le,msg);
+       rnd8((double)psr[0].wave_sine[i],psr[0].wave_sine_err[i]*efac,
+            1,cval2,&lv,cerr2,&le,msg);
+       fprintf(fout,"Wave %d: $A_{\\rm cos, %d}$; $A_{\\rm sin, %d}$\\dotfill & %s(%s); %s(%s) \\\\ \n",i+1,i+1,i+1,cval,cerr,cval2,cerr2);
+     }else{
+       // No errors to be printed out.
+       fprintf(fout,"Wave %d: $A_{\\rm cos, %d}$; $A_{\\rm sin, %d}$\\dotfill & %lg; %lg \\\\ \n",i+1,i+1,i+1,psr[0].wave_cos[i],psr[0].wave_sine[i]);
+     }
+   }
+ }
 
+  /* ******************
+     DERIVED Quantities
+     ****************** */
   fprintf(fout,"\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Derived Quantities} \\\\\n");
   fprintf(fout,"\\hline\n"); 
   /* Characteristic age */
-  pval = (double)(-psr[0].param[param_f].val[0]/2.0/psr[0].param[param_f].val[1]/86400.0/365.25);
-  fprintf(fout,"$\\log_{10}$(Characteristic age, yr) \\dotfill & %.2f \\\\\n",log10(pval));
+  pval = (double)(-psr[0].param[param_f].val[0]/2.0
+                  /psr[0].param[param_f].val[1]/86400.0/365.25);
+  fprintf(fout,"$\\log_{10}$(Characteristic age, yr) \\dotfill & %.2f \\\\\n",
+          log10(pval));
+
   /* Surface magnetic field */
-  pval = (double)(sqrt(-psr[0].param[param_f].val[1]/pow(psr[0].param[param_f].val[0],3))*3.2e19);
+  pval = (double)(sqrt(-psr[0].param[param_f].val[1]/
+                       pow(psr[0].param[param_f].val[0],3))*3.2e19);
   fprintf(fout,"$\\log_{10}$(Surface magnetic field strength, G) \\dotfill & %.2f \\\\\n",log10(pval));
 
   fprintf(fout,"\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Assumptions} \\\\\n");
   fprintf(fout,"\\hline\n"); 
   fprintf(fout,"Clock correction procedure\\dotfill & %s \\\\\n",psr[0].clock);
-  fprintf(fout,"Solar system ephemeris model\\dotfill & %s \\\\\n",psr[0].ephemeris);
+  fprintf(fout,"Solar system ephemeris model\\dotfill & %s \\\\\n",
+          psr[0].ephemeris);
   fprintf(fout,"Binary model\\dotfill & %s \\\\\n",psr[0].binaryModel);
-  if (psr[0].calcShapiro==-1) fprintf(fout,"Solar system Shapiro delay \\dotfill & N \\\\\n");
-  if (psr[0].ipm!=1) fprintf(fout,"Interplanetary medium delay \\dotfill & N \\\\\n");
-  if (psr[0].units==TDB_UNITS) fprintf(fout,"TDB units (tempo1 mode)\\dotfill & Y \\\\\n");
-  if (psr[0].timeEphemeris==FB90_TIMEEPH) fprintf(fout,"FB90 time ephemeris (tempo1 mode)\\dotfill & Y \\\\\n");
-  if (psr[0].t2cMethod == T2C_TEMPO) fprintf(fout,"T2C (tempo1 mode)\\dotfill & Y \\\\\n");
-  if (psr[0].planetShapiro==0) fprintf(fout,"Shapiro delay due to planets\\dotfill & N \\\\\n");
-  if (psr[0].correctTroposphere==0) fprintf(fout,"Tropospheric delay\\dotfill & N \\\\\n");
-  if (psr[0].dilateFreq==0) fprintf(fout,"Dilate frequency\\dotfill & N \\\\\n");
-  if (psr[0].ne_sw!=NE_SW_DEFAULT) fprintf(fout,"Electron density at 1 AU (cm$^{-3}$)\\dotfill & %.2f \\\\ \n",psr[0].ne_sw);
+  
+  if (psr[0].calcShapiro==-1) 
+    fprintf(fout,"Solar system Shapiro delay \\dotfill & N \\\\\n");
+  if (psr[0].ipm!=1) 
+    fprintf(fout,"Interplanetary medium delay \\dotfill & N \\\\\n");
+  if (psr[0].units==TDB_UNITS) 
+    fprintf(fout,"TDB units (tempo1 mode)\\dotfill & Y \\\\\n");
+  if (psr[0].timeEphemeris==FB90_TIMEEPH) 
+    fprintf(fout,"FB90 time ephemeris (tempo1 mode)\\dotfill & Y \\\\\n");
+  if (psr[0].t2cMethod == T2C_TEMPO) 
+    fprintf(fout,"T2C (tempo1 mode)\\dotfill & Y \\\\\n");
+  if (psr[0].planetShapiro==0) 
+    fprintf(fout,"Shapiro delay due to planets\\dotfill & N \\\\\n");
+  if (psr[0].correctTroposphere==0) 
+    fprintf(fout,"Tropospheric delay\\dotfill & N \\\\\n");
+  if (psr[0].dilateFreq==0) 
+    fprintf(fout,"Dilate frequency\\dotfill & N \\\\\n");
+  if (psr[0].ne_sw!=NE_SW_DEFAULT) 
+    fprintf(fout,
+            "Electron density at 1 AU (cm$^{-3}$)\\dotfill & %.2f \\\\ \n",
+            psr[0].ne_sw);
   if (psr[0].units==TDB_UNITS) /* TEMPO1 mode */
     fprintf(fout,"Model version number\\dotfill & %.2f \\\\ \n",2.0);
   else
@@ -152,67 +219,67 @@ void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac)
     {
       strcpy(valStr,psr[0].rajStrPost);
       if (err==1)
-	{
-	  int dp,ierr,sym,k;
-	  double err;
-	  char disp[500];
-
-	  strcpy(disp,psr[0].rajStrPost);
-	  err = psr[0].param[i].err[0]*(efac);
-	  dp = nint_derived(log10(err*3600.0/M_PI*12.0));
-	  if (err*3600.0/M_PI*12.0/pow(10.0,(double)dp)<1.90)
-	    {
-	      if (dp < 0) dp --;
-	      else dp ++;
-	    }
-	  ierr = (int)(err*3600.0/M_PI*12.0/pow(10.0,(double)dp)+0.9999);
-	  for (k=0;k<strlen(disp);k++)
-	    {
-	      if (disp[k] == ':') sym++;
-	      if (disp[k] == '.' && dp < 0) {disp[k-dp+1]='\0'; break;}
-	    }
-	  sprintf(valStr,"%s(%d)",disp,ierr);
-	}
+        {
+          int dp,ierr,sym,k;
+          double err;
+          char disp[500];
+          
+          strcpy(disp,psr[0].rajStrPost);
+          err = psr[0].param[i].err[0]*(efac);
+          dp = nint_derived(log10(err*3600.0/M_PI*12.0));
+          if (err*3600.0/M_PI*12.0/pow(10.0,(double)dp)<1.90)
+            {
+              if (dp < 0) dp --;
+              else dp ++;
+            }
+          ierr = (int)(err*3600.0/M_PI*12.0/pow(10.0,(double)dp)+0.9999);
+          for (k=0;k<strlen(disp);k++)
+            {
+              if (disp[k] == ':') sym++;
+              if (disp[k] == '.' && dp < 0) {disp[k-dp+1]='\0'; break;}
+            }
+          sprintf(valStr,"%s(%d)",disp,ierr);
+        }
     }
   else if (i==param_decj)
     {
       strcpy(valStr,psr[0].decjStrPost);
       if (err==1)
-	{
-	  int dp,ierr,sym,k;
-	  double err;
-	  char disp[500];
-
-	  strcpy(disp,psr[0].decjStrPost);
-	  err = psr[0].param[i].err[0]*(efac);
-	  dp = nint_derived(log10(err*3600.0/M_PI*180.0));
-	  if (err*3600.0/M_PI*180.0/pow(10.0,(double)dp)<1.90)
-	    {
-	      if (dp < 0) dp --;
-	      else dp ++;
-	    }
-	  ierr = (int)(err*3600.0/M_PI*180.0/pow(10.0,(double)dp)+0.9999);
-	  for (k=0;k<strlen(disp);k++)
-	    {
-	      if (disp[k] == ':') sym++;
-	      if (disp[k] == '.' && dp < 0) {disp[k-dp+1]='\0'; break;}
-	    }
-	  sprintf(valStr,"%s(%d)",disp,ierr);
-	}
+        {
+          int dp,ierr,sym,k;
+          double err;
+          char disp[500];
+          
+          strcpy(disp,psr[0].decjStrPost);
+          err = psr[0].param[i].err[0]*(efac);
+          dp = nint_derived(log10(err*3600.0/M_PI*180.0));
+          if (err*3600.0/M_PI*180.0/pow(10.0,(double)dp)<1.90)
+            {
+              if (dp < 0) dp --;
+              else dp ++;
+            }
+          ierr = (int)(err*3600.0/M_PI*180.0/pow(10.0,(double)dp)+0.9999);
+          for (k=0;k<strlen(disp);k++)
+            {
+              if (disp[k] == ':') sym++;
+              if (disp[k] == '.' && dp < 0) {disp[k-dp+1]='\0'; break;}
+            }
+          sprintf(valStr,"%s(%d)",disp,ierr);
+        }
     }
   else
     {
       if (err==1)
-	{
-	  rnd8((double)psr[0].param[i].val[k],psr[0].param[i].err[k]*efac,1,cval,&lv,cerr,&le,msg);
-	  sprintf(valStr,"%s(%s)",cval,cerr);
-	}
+        {
+          rnd8((double)psr[0].param[i].val[k],psr[0].param[i].err[k]*efac,1,cval,&lv,cerr,&le,msg);
+          sprintf(valStr,"%s(%s)",cval,cerr);
+        }
       else
-	sprintf(valStr,"%Lg",psr[0].param[i].val[k]);
+        sprintf(valStr,"%Lg",psr[0].param[i].val[k]);
     }
   parseMinus(valStr);
   parseExp(valStr);
-
+  
   if (i==param_raj)
     strcpy(label,"Right ascension, $\\alpha$");
   else if (i==param_decj)
