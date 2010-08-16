@@ -1,4 +1,4 @@
-//  Copyright (C) 2004,2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2004,2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -339,7 +339,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	  writeTim(str,psr,"tempo2");
 
-	  initialise(psr,0);
+	  //	  initialise(&psr[ii],0);
 	  // Reset the jumps
 	  psr[ii].nJumps = 0;
 	  for(kk=0;kk<MAX_JUMPS;kk++){
