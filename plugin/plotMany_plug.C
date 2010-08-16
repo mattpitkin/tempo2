@@ -143,6 +143,7 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev)
   float x[MAX_PSR][MAX_OBSN],y[MAX_PSR][MAX_OBSN],yerr1[MAX_PSR][MAX_OBSN],yerr2[MAX_PSR][MAX_OBSN],tmax,tmin,tmaxy1,tminy1,tmaxy2,tminy2;
   float sminy[MAX_PSR],smaxy[MAX_PSR];
   float minx[MAX_PSR],maxx[MAX_PSR],miny[MAX_PSR],maxy[MAX_PSR],plotx1,plotx2,ploty1,ploty2,mean;
+  float fx[2],fy[2];
   float mouseX,mouseY;
   float fontSize=1.4;
   char key;
@@ -217,16 +218,16 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev)
 	  yerr1[p][i] = (yerr1[p][i]-miny[p])/(maxy[p]-miny[p]);
 	  yerr2[p][i] = (yerr2[p][i]-miny[p])/(maxy[p]-miny[p]);
 	}
-      maxy[p] = 1.0;
-      miny[p] = 0.0;
+      //      maxy[p] = 1.0;
+      //      miny[p] = 0.0;
     }
   
 
   tmin = findMinVal(minx,npsr);
   tmax = findMaxVal(maxx,npsr);
 
-  tminy2 = findMinVal(miny,npsr);
-  tmaxy2 = findMaxVal(maxy,npsr);
+  tminy2 = 0.0; //findMinVal(miny,npsr);
+  tmaxy2 = 1.0; //findMaxVal(maxy,npsr);
 
   plotx1 = tmin-(tmax-tmin)*0.1;
   plotx2 = tmax+(tmax-tmin)*0.3;
@@ -291,12 +292,27 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev)
 		  yy[num]=y[p][i];
 		  yyerr1[num]=yerr1[p][i];
 		  yyerr2[num]=yerr2[p][i];
+		  printf("plotting: %g\n",yy[num]);
+
 		  num++;
 		}
 	    }
 	  cpgsci(colour+1);
 	  cpgpt(num,xx,yy,16);
 	  cpgerry(num,xx,yyerr1,yyerr2,1);
+	  // Plot arrow giving one period
+	  fx[0] = fx[1] = tmin-(tmax-tmin)*0.05;
+	  //	  fy[0] = (p+1)+0.5-(float)(1.0/psr[p].param[param_f].val[0])/2.0/(ploty2-ploty1);
+	  //	  fy[1] = (p+1)+0.5+(float)(1.0/psr[p].param[param_f].val[0])/2.0/(ploty2-ploty1);
+
+	  //	  fy[0] = (-(float)(1.0/psr[p].param[param_f].val[0])/2.0/1.0e6 - miny[p])/(maxy[p]-miny[p])/(ploty2-ploty1) + (p+1)+0.5;
+	  //	  fy[1] = ((float)(1.0/psr[p].param[param_f].val[0])/2.0/1.0e6 - miny[p])/(maxy[p]-miny[p])/(ploty2-ploty1) + (p+1)+0.5;
+	  fy[0] = (p+1)+0.5+(float)(1.0/psr[p].param[param_f].val[0])/2.0/(maxy[p]-miny[p])*1e6;
+	  fy[1] = (p+1)+0.5-(float)(1.0/psr[p].param[param_f].val[0])/2.0/(maxy[p]-miny[p])*1e6;
+	  if (fy[0] > (p+1)+1) fy[0] = (p+1)+1;
+	  if (fy[1] < (p+1)) fy[1] = (p+1);
+	  
+	  cpgsls(1); cpgline(2,fx,fy); cpgsls(1);
 	}
       cpgsci(1);
     }
