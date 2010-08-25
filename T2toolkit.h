@@ -45,6 +45,7 @@ float  TKfindRMS_d(double *x,int n);
 float TKfindRMSweight_d(double *x,double *e,int n);
 float  TKfindMax_f(float *x,int n);
 float  TKmean_f(float *x,int n);
+double TKmean_d(double *x,int n);
 
 double TKvariance_d(double *x,int n);
 double TKrange_d(double *x,int n);
@@ -67,6 +68,7 @@ int TKretMin_i(int a,int b);
 void TKsort_f(float *val,int nobs);
 void TKsort_d(double *val,int nobs);
 void TKsort_2f(float *val,float *val2,int nobs);
+void TKsort_3d(double *val,double *val2,double *val3,int nobs);
 
 /* ************************************************************** */
 /* Routines that modify a data array                              */

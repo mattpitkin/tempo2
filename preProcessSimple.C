@@ -310,6 +310,12 @@ void preProcessSimple2 (pulsar *psr,
 		  strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dm");
 		  sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%g",dmvals[(int)(psr->obsn[i].sat-startdmmjd+0.5)]);
 		  psr->obsn[i].nFlags++;
+		  if (psr->obsn[i].nFlags >= MAX_FLAGS)
+		    {
+		      printf("Number of different flags in the .tim file > MAX_FLAGS (%d)\n",MAX_FLAGS);
+		      exit(1);
+		    }
+		  
 		  //dm = dmvals[(int)(psr->obsn[i].sat-startdmmjd+0.5)];             
 		}
 	    }
@@ -319,13 +325,13 @@ void preProcessSimple2 (pulsar *psr,
 	    }
 	}
     }
-
+  if (debugFlag==1) printf("Complete preProcessSimple2\n");
 }
 
 void preProcessSimple3 (pulsar *psr)
 {  
   int  i,j,k,l;
-      
+  if (debugFlag==1) printf("Start preProcessSimple3\n");      
   //
   // Check fjump
   //
@@ -357,6 +363,12 @@ void preProcessSimple3 (pulsar *psr)
 			{
 			  strcpy(val[nf],psr->obsn[i].flagVal[k]);
 			  nf++;
+			  if (nf >= MAX_FLAGS)
+			    {
+			      printf("preProcessSimple3: Number of different flags in the .tim file > MAX_FLAGS (%d)\n",MAX_FLAGS);
+			      exit(1);
+			    }
+			  
 			}
 		    }
 		}
@@ -396,5 +408,5 @@ void preProcessSimple3 (pulsar *psr)
 	    }
 	}
     }
-
+  if (debugFlag==1) printf("Complete preProcessSimple3\n");
 }

@@ -206,6 +206,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   doFit(psr,*npsr,0);
   formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
   formResiduals(psr,*npsr,0);           /* Form the residuals                 */
+  if (toas==1)
+    writeTim("singleGW.tim",psr,"tempo2");
   if (plotIt==1)
     doPlot(psr,*npsr,gw,gwRes,timeOffset,tspan);
   return 0;

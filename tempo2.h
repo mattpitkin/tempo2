@@ -27,7 +27,7 @@
 #ifndef __Tempo2_h
 #define __Tempo2_h
 #define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
-#define MAX_FREQ_DERIVATIVES 10    /* F0 -> Fn   where n=10                            */
+#define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
 #define MAX_PSR_VAL          23    /* Maximum number of pulsars                        */             
 #define MAX_COMPANIONS       4     /* Maximum number of binary companions              */
@@ -48,7 +48,7 @@
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_DMX              64    /* Max number of DM steps allowed */
-#define MAX_FLAGS            10    /* Maximum number of flags in .tim file/observation */
+#define MAX_FLAGS            50    /* Maximum number of flags in .tim file/observation */
 #define MAX_CLK_CORR         10    /* Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /* Number of seconds in 1 day                 */
 #define SPEED_LIGHT          299792458.0 /* Speed of light (m/s)                       */
@@ -156,7 +156,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
-            param_dmx,param_dmxr1,param_dmxr2};
+            param_dmx,param_dmxr1,param_dmxr2,param_dmval};
 
 extern int MAX_PSR;
 extern int MAX_OBSN;
@@ -274,6 +274,9 @@ typedef struct pulsar {
   char rajStrPost[100],decjStrPost[100]; /* String containing RAJ and DECJ  (postfit)           */
   char binaryModel[100];          /* Binary model e.g. BT/ELL1/BT2P etc.                        */
 
+  double dmvalsMJD[100]; 
+  double dmvalsDM[100];
+  double dmvalsDMe[100];
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
   double velPulsar[3];            /* 3-vector giving pulsar's velocity                          */  
   long double phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */
@@ -357,7 +360,7 @@ int zoom_graphics(float xcurs2,float ycurs2,int flag);
 void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *displayParams,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,int *polyco,
-	       char *polyco_args, int *newpar,int *onlypre,char *dcmFile);
+	       char *polyco_args, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile);
 void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,int nspan,int ncoeff,
 	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM);
 void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILELEN],int npsr);
@@ -378,7 +381,7 @@ void updateBatsAll(pulsar *psr,int npsr);
 void formResiduals(pulsar *psr,int npsr,int removeMean);
 int  bootstrap(pulsar *psr,int p,int npsr);
 void doFit(pulsar *psr,int npsr,int writeModel);
-void doFitDCM(pulsar *psr,char *dcmFile,int npsr,int writeModel);
+void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeModel);
 void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel); 
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
 void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname);

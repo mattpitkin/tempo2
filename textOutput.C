@@ -244,8 +244,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      perr = sqrt(pow(2*psr[p].wave_cos[i]*psr[p].wave_cos_err[i],2)+pow(2*psr[p].wave_sine[i]*psr[p].wave_sine_err[i],2));
 	      printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
                i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
-               //(i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
-               (i+1)*psr[p].param[param_wave_om].val[0]*365.25,       // Wave frequency (yr^-1)
+		     (i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
                1.0/((i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25), // Wave period (yrs)
                psr[p].wave_cos[i],       // Wave cosine amplitude
                psr[p].wave_cos_err[i],   // Wave cosine amplitude uncertainty
@@ -255,6 +254,12 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                perr); // Wave power uncertainty
 	    }
 	  printf("------------------------------------------------------------------------------\n");
+	}
+      if (psr[p].param[param_dmval].paramSet[0]==1)
+	{
+	  printf("\nDispersion measure values:\n\n");
+	  for (i=0;i<(int)psr[p].param[param_dmval].val[0];i++)
+	    printf("DMVAL%d\t %.15g %.15g %.15g\n",i+1,psr[p].dmvalsMJD[i],psr[p].dmvalsDM[i],psr[p].dmvalsDMe[i]);
 	}
 	  if (psr[p].param[param_ifunc].paramSet[0]==1)
 	    {
@@ -790,6 +795,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      if (psr[p].phaseJumpDir[i]!=0)
 		fprintf(fout2,"PHASE %+d %.14g\n",psr[p].phaseJumpDir[i],(double)(psr[p].obsn[psr[p].phaseJumpID[i]].sat+1.0/SECDAY));
 	    }
+	  // Add DM value parameters
+	  if (psr[p].param[param_dmval].paramSet[0]==1)
+	    {
+	      fprintf(fout2,"DMVAL %d %d\n",(int)psr[p].param[param_dmval].val[0],(int)psr[p].param[param_dmval].fitFlag[0]);
+	      for (i=0;i<(int)psr[p].param[param_dmval].val[0];i++)
+		fprintf(fout2,"DMVAL%d\t %.15g %.15g %.15g\n",i+1,psr[p].dmvalsMJD[i],psr[p].dmvalsDM[i],psr[p].dmvalsDMe[i]);
+	    }
+
 	  fclose(fout2);	 
 	    }
 	}

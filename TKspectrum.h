@@ -66,6 +66,7 @@ int TK_fft(short int dir,long n,double *x,double *y);
 void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
+void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 
 double globalOmega;
 
@@ -443,7 +444,7 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
       outX[i] = specX[i];
       outY[i] = specY[i];
     }
-  *nout = nSpec;  
+  *nout = nSpec-1;  
 
   return 0.0;
 }
@@ -481,7 +482,7 @@ void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *
   cvm = (double **)malloc(sizeof(double *)*2);
   for (i=0;i<2;i++) cvm[i] = (double *)malloc(sizeof(double)*2);
 
-  omega0 = 2.0*M_PI/TKrange_d(x,n);
+  omega0 = 2.0*M_PI/(TKrange_d(x,n)*(double)n/(double)(n-1));
   *outN = n/2;
 
   for (j=0;j<*outN;j++)
@@ -596,7 +597,7 @@ void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, doubl
   double f0;
   double range,t,f;
 
-  range = TKrange_d(x,n);
+  range = TKrange_d(x,n)*(double)n/(double)(n-1);
   nfreq = n/2;
 
   for (i=0;i<n;i++)
@@ -968,8 +969,8 @@ void TKlomb_d(double *x,double *y,int n,double ofac,double hifac,double *ox,doub
   *var  = TKvariance_d(y,n);
 
   // Use to get the L-S periodogram to give the same results as the DFT
-  //  scale = (double)n/(double)(n-1);
-  scale = 1;
+  scale = (double)n/(double)(n-1);
+  //  scale = 1;
   freq0 = 1.0/(TKrange_d(x,n)*ofac*scale);
   aveX  = (TKfindMin_d(x,n)+TKfindMax_d(x,n))/2.0;
   *outN = (int)(0.5*ofac*hifac*n);
@@ -1033,13 +1034,15 @@ int TK_fft(short int dir,long n,double *x,double *y)
    long i,i1,j,k,i2,l,l1,l2;
    double c1,c2,tx,ty,t1,t2,u1,u2,z;
    int m;
-
-   m = (int)(log(n)/log(2));
-   printf("m = %d\n",m);
+   
+   m = (int)(log(n)/log(2)+0.1);
+   printf("m = %d, n = %d %g %g %g %d\n",m,n,log(n),log(2),log(n)/log(2),(int)(log(n)/log(2)+0.1));
    /* Do the bit reversal */
    i2 = n >> 1;
    j = 0;
+   //   printf("Here\n");
    for (i=0;i<n-1;i++) {
+     //     printf("I = %d, n = %d\n",i,n);
       if (i < j) {
          tx = x[i];
          ty = y[i];
@@ -1050,12 +1053,13 @@ int TK_fft(short int dir,long n,double *x,double *y)
       }
       k = i2;
       while (k <= j) {
+	//	printf("k = %d %d\n",k,j);
          j -= k;
          k >>= 1;
       }
       j += k;
    }
-
+   //   printf("Here 2\n");
    /* Compute the FFT */
    c1 = -1.0; 
    c2 = 0.0;
@@ -1084,7 +1088,7 @@ int TK_fft(short int dir,long n,double *x,double *y)
          c2 = -c2;
       c1 = sqrt((1.0 + c1) / 2.0);
    }
-
+   printf("Here 3\n");
    /* Scaling for forward transform */
    if (dir == 1) {
       for (i=0;i<n;i++) {
@@ -1732,3 +1736,57 @@ void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, doubl
     //only need to determine what interpY is
     TKspline_interpolate(inN, inX, inY, yd, tempX, interpY, nTemp);
 } //interpolateSplineSmoothFixedXPts
+
+// Spectral analysis using covariance matrix
+// note: uinv array must start from 0, not 1
+int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY)
+{
+  int i,j,k;
+  int nfit=nres/2-1;
+  int nSpec;
+  double v[nfit];
+  double sig[nres];
+  double **newUinv;
+  double **cvm;
+  double chisq;
+  pulsar *psr;
+  int ip[nres];
+  double param[nfit],error[nfit];
+
+  cvm = (double **)malloc(sizeof(double *)*nfit);
+  for (i=0;i<nfit;i++)
+    cvm[i] = (double *)malloc(sizeof(double)*nfit);
+
+  // Should fit independently to all frequencies
+  for (i=0;i<nres;i++)
+    {
+      sig[i] = 1.0; // The errors are built into the uinv matrix
+      ip[i] = 0;
+    }
+  for (k=0;k<nfit;k++)
+    {
+      printf("%5.2g\%\r",(double)k/(double)nfit*100.0);
+      fflush(stdout);
+      GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
+      TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
+      v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[1],2)+pow(param[2],2))/pow(365.25*86400.0,2); 
+      specX[k] = GLOBAL_OMEGA/2.0/M_PI;
+      specY[k] = v[k];
+    }
+
+  for (i=0;i<nfit;i++)
+    free(cvm[i]);
+  free(cvm);
+  return nfit;
+}
+
+// Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
+// The psr and ival parameters are ignored
+void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
+{
+  int i;
+  v[0] = 1; // Fit for mean
+  v[1] = cos(GLOBAL_OMEGA*x);
+  v[2] = sin(GLOBAL_OMEGA*x);
+
+}

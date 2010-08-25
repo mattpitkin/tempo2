@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2.
@@ -279,6 +279,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    nMJD = parse_longdouble(newEpoch);
 
 	  dt = (nMJD - psr[p].param[param_pepoch].val[0])*86400.0;
+	  printf("dt = %g\n",(double)dt);
 	  psr[p].param[param_f].val[0] = psr[p].param[param_f].val[0]+
 	  psr[p].param[param_f].val[1]*dt + 0.5*psr[p].param[param_f].val[2]*dt*dt;
 	  psr[p].param[param_f].val[1] += psr[p].param[param_f].val[2]*dt;
@@ -296,7 +297,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 
 	  /* Update position epoch */
 	  dt = (nMJD - psr[p].param[param_posepoch].val[0])/365.25;
-
+	  printf("pos dt = %g\n",(double)dt);
 	  if (psr[p].param[param_pmra].paramSet[0]==1)
 	    {
 	      char retstr[1000];
@@ -337,7 +338,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    }
 
 	  /* Update binary parameters if necessary */
-	  if (psr[p].param[param_pb].paramSet[0]==1)  /* Binary pulsar */
+	  if (psr[p].param[param_pb].paramSet[0]==1 && 0 == 1)  /* Binary pulsar */
 	    {
 	      longdouble orbits,pb,tt0,pbdot,xpbdot,t0p,t0m=0.0;
 	      int        norbits;

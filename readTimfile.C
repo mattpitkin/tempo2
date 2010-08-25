@@ -260,6 +260,11 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 			      i+=strlen(line+i);
 			      strcpy(line,oldLine); 
 			      psr->obsn[nObs].nFlags++;
+			      if (psr->obsn[nObs].nFlags >= MAX_FLAGS)
+				{
+				  printf("Number of different flags in the .tim file > MAX_FLAGS (%d)\n",MAX_FLAGS);
+				  exit(1);
+				}
 			    }
 			}
 		    }
@@ -335,6 +340,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 			      strcpy(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-dmo");
 			      sprintf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%.10g",(double)(dmoffset)); 
 			      psr->obsn[nObs].nFlags++;
+
 			    }
 			}
 		      else if (strlen(line)>14 && line[14+add]=='.')  /* ITOA format */
@@ -459,6 +465,12 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	       strcpy(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-i");
 	       sprintf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%d",infoNum);
 	       psr->obsn[nObs].nFlags++;
+	       if (psr->obsn[nObs].nFlags >= MAX_FLAGS)
+		 {
+		   printf("Number of different flags in the .tim file > MAX_FLAGS (%d)\n",MAX_FLAGS);
+		   exit(1);
+		 }
+	       
 	    }
 	  if (skip==1) valid=0;
 	  

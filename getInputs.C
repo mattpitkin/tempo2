@@ -45,7 +45,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *list,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,
 	       int *polyco, char *polyco_args,
-	       int *newpar,int *onlypre,char *dcmFile)
+	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile)
 {
   int i;
   int gr=0;
@@ -116,6 +116,8 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	    gr=1;
 	  else if (strcmp(argv[i],"-dcm")==0)
 	    strcpy(dcmFile,argv[++i]);
+	  else if (strcmp(argv[i],"-dcf")==0)
+	    strcpy(covarFuncFile,argv[++i]);
 	  else if (strcmp(argv[i],"-filter")==0)
 	    {
 	      strcat(psr[0].filterStr,argv[++i]);

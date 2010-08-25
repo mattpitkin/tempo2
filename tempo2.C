@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
   char str[MAX_FILELEN];
   longdouble coeff[MAX_COEFF]; /* For polynomial coefficients in polyco */
   char dcmFile[MAX_FILELEN]="NULL";
+  char covarFuncFile[MAX_FILELEN]="NULL";
   int npsr;      /* The number of pulsars */
   int noWarnings=1;
   double globalParameter=0.0;
@@ -231,7 +232,7 @@ int main(int argc, char *argv[])
   /* Obtain command line arguments */
   if (debugFlag==1) printf("Running getInputs %d\n",psr[0].nits);
   getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
-	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile);
+	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile);
   if (debugFlag==1) printf("Completed getInputs\n");
 
   for (i=1;i<argc;i++)
@@ -423,10 +424,10 @@ int main(int argc, char *argv[])
 	    {
 	      if (debugFlag==1) printf("calling doFit\n");
 
-	      if (strcmp(dcmFile,"NULL")==0)
+	      if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
 		doFit(psr,npsr,writeModel); /* Fit to the residuals to obtain updated parameters */
 	      else
-		doFitDCM(psr,dcmFile,npsr,writeModel);
+		doFitDCM(psr,dcmFile,covarFuncFile,npsr,writeModel);
 	      printf("Complete return\n");
 	      /* doFitGlobal(psr,npsr,&globalParameter,nGlobal,writeModel);*/ /* Fit to the residuals to obtain updated parameters  */
 	      if (debugFlag==1) printf("completed doFit\n");

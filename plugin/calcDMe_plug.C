@@ -1098,6 +1098,8 @@ void resetDMandF0(pulsar *psr) {
 void callFit(pulsar *psr, int npsr) {
   int iteration, i, p, it, k;
   double globalParameter = 0.0;
+  static int call=0;
+  char str[100];
 
   for (it = 0; it < psr[0].nits; it++) {
     if (it > 0) /* Copy post-fit values to pre-fit values */ {
@@ -1121,13 +1123,29 @@ void callFit(pulsar *psr, int npsr) {
 	  doFit(psr, npsr, 0);
 	else
 	  doFitDCM(psr, dcmFile, npsr, 0);
-      } else if (debugFlag >= 1 || 1==1) textOutput(psr, npsr, globalParameter, 0, 0, 1, "fit.par");
+      } else if (debugFlag >= 1 || 1==1) 
+	{
+	  sprintf(str,"fit%d.par",call);
+	  textOutput(psr, npsr, globalParameter, 0, 0, 1, str);
+	}
+      /*      if (iteration==1)
+	{
+	  for (i=0;i<psr[0].nobs;i++)
+	    {
+	      if (psr[0].obsn[i].deleted==0)
+		printf("Out: %g\n",(double)psr[0].obsn[i].sat);
+	    }
+	    }*/
     }
   }
+  sprintf(str,"test%d",call);
+  writeTim(str,psr,"tempo2");
+  /*  exit(1);*/
   if (psr[0].nFit == 0) {
     printf("No timing residuals to plot.  Please check your TOA file and filter commands\n");
     exit(1);
   }
+  call++;
 } //callFit()
 
 //This function calculates the mean of data

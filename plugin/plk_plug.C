@@ -43,6 +43,7 @@
 using namespace std;   /* Is this required for a plugin ? Yes, for linux */
 
 char dcmFile[MAX_FILELEN];
+char covarFuncFile[MAX_FILELEN];
 
 void overPlotN(int overN,float overX[], float overY[],float overYe[]);
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
@@ -246,6 +247,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   *npsr = 1;  /* This graphical interface will only show results for one pulsar */
 
   strcpy(dcmFile,"NULL");
+  strcpy(covarFuncFile,"NULL");
 
 
   printf("Graphical Interface: plk emulator\n");
@@ -299,6 +301,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	nohead=1;
       else if (strcmp(argv[i],"-dcm")==0)
 	strcpy(dcmFile,argv[++i]);
+      else if (strcmp(argv[i],"-dcf")==0)
+	strcpy(covarFuncFile,argv[++i]);
       else if (strcmp(argv[i],"-newparS")==0)//this is just for use with calcDMe
       {
 	      newpar = 1;
@@ -428,10 +432,10 @@ void callFit(pulsar *psr,int npsr)
 	  /* Do the fitting */
 	  if (iteration==0) 
 	    {
-	      if (strcmp(dcmFile,"NULL")==0)
+	      if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
 		doFit(psr,npsr,0);
 	      else
-		doFitDCM(psr,dcmFile,npsr,0);
+		doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
 	    }
 	  else textOutput(psr,npsr,globalParameter,0,0,0,"");
 	}
@@ -1577,10 +1581,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		{
 		  printf("%12.5f %12.5f %12.5f %12.5f\n",x[i],y[i]*1000.0,psr[0].obsn[id[i]].toaErr/1000.0,
 			 (double)psr[0].obsn[id[i]].bat);
-		  fprintf(outfile,"%12.5f %13.6f %12.5f %20.15f %20.15f %s",x[i],y[i]*1000.0,
+		  fprintf(outfile,"%12.5f %13.6f %12.5f %20.15f %20.15f %12.5f %s",x[i],y[i]*1000.0,
 			  psr[0].obsn[id[i]].toaErr/1000.0, 
 				  (double)psr[0].obsn[id[i]].bat,(double)(psr[0].obsn[id[i]].bat-
-									  psr[0].param[param_pepoch].val[0]),psr[0].obsn[id[i]].fname); 
+									  psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[id[i]].freq,psr[0].obsn[id[i]].fname); 
 		  /*		  fprintf(outfile,"%g %g ",y[i],(double)psr[0].obsn[id[i]].residual-mean); */
 		  for (j=0;j<psr[0].obsn[id[i]].nFlags;j++)
 		    {
@@ -1771,7 +1775,33 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    int   nregion=0;
 	    char key2;
 	    float mx2,my2,mx1,my1;
-	    FILE *fout;
+	    char temp[1000];
+	    float fx[2],fy[2],fx2[2];
+	    FILE *fout,*fin;
+
+	    // Find already recorded regions
+	    if (!(fin = fopen("regions.dat","r")))
+	      {
+		printf("Creating new regions.dat file\n");
+	      }
+	    else
+	      {
+		while (!feof(fin))
+		  {
+		    if (fscanf(fin,"%f %f %s %s",&fx[0],&fx2[0],temp,temp)==4)
+		      {
+			fx[0] = fx[0] - (double)centreEpoch;
+			fx2[0] = fx2[0] - (double)centreEpoch;
+			fx[1] = fx[0];
+			fx2[1] = fx2[0];
+			fy[0] = ploty1; fy[1] = ploty2;
+			cpgsci(2); cpgline(2,fx,fy);
+			cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);
+		      }
+		      
+		  }
+		fclose(fin);
+	      }
 
 	    printf("Use left button to select regions\n");
 	    printf("Click right button to finish\n");
@@ -1782,13 +1812,21 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  cpgband(4,0,mx1,my1,&mx2,&my2,&key2);
 		  rx1[nregion] = (float)(mx1+centreEpoch);
 		  rx2[nregion] = (float)(mx2+centreEpoch);
+		  fx[0] = mx1;
+		  fx2[0] = mx2;
+		  fx[1] = fx[0];
+		  fx2[1] = fx2[0];
+		  fy[0] = ploty1; fy[1] = ploty2;
+		  cpgsci(2); cpgline(2,fx,fy);
+		  cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);
+
 		  nregion++;
 		}
 	    } while (key2 != 'X');
 	    printf("Goodbye\n");
 	    fout = fopen("regions.dat","a");
 	    for (i=0;i<nregion;i++)
-	      fprintf(fout,"%10.5g %10.5g %s %s\n",rx1[i],rx2[i],parFile[0],timFile[0]);
+	      fprintf(fout,"%10.5f %10.5f %s %s\n",rx1[i],rx2[i],parFile[0],timFile[0]);
 	    fclose(fout);
 	  }
 	else if (key=='r') {  /* RESET */

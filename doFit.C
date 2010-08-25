@@ -34,6 +34,7 @@
 #include "TKfit.h"
 
 int getNparams(pulsar psr);
+void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
 
 /* Main routines for fitting in TEMPO2               */
 void doFit(pulsar *psr,int npsr,int writeModel) 
@@ -174,7 +175,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 }
 
 /* Fitting routine with input data covariance matrix */
-void doFitDCM(pulsar *psr,char *dcmFile,int npsr,int writeModel) 
+void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeModel) 
 {
   int i,j,k;
   double **uinv;
@@ -190,79 +191,13 @@ void doFitDCM(pulsar *psr,char *dcmFile,int npsr,int writeModel)
 
   printf("WARNING: Switching weighting off for the fit\n");
   printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
+
+
+
   for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
     {
       psr[p].fitMode = 0;
-      for (i=0;i<psr[p].nobs;i++)
-	meanRes+=(long double)psr[p].obsn[i].residual;
-      meanRes/=(long double)psr[p].nobs;
-      for (i=0;i<psr[p].nobs;i++)
-	psr[p].obsn[i].residual-=meanRes;
-      printf("Outputing dcm file\n");
-      sprintf(fname,"dcm_original_%d.dat",p+1);
-      fout = fopen(fname,"w");
-      for (i=0;i<psr[p].nobs;i++)
-	fprintf(fout,"%g %g %g\n",(double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]),(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr);
-      fclose(fout);
-      printf("Done outputing dcm file\n");
-      strcpy(fname,dcmFile);
-      if (npsr>1)
-	{
-	  sprintf(temp,"%s_%d",fname,p+1);
-	  strcpy(fname,temp);
-	}
-      printf("Opening >%s<\n",fname);
-      if (!(fin = fopen(fname,"r")))
-	{
-	  printf("Unable to open inverse cholesky matrix: %s\n",fname);
-	  exit(1);
-	}
-      
-      uinv = (double **)malloc(sizeof(double *)*psr[p].nobs);
-      for (i=0;i<psr[p].nobs;i++)
-	uinv[i] = (double *)malloc(sizeof(double)*psr[p].nobs);
-      
-      i=0;
-      j=0;
-      while (!feof(fin))
-	{
-	  if (fscanf(fin,"%lf",&uinv[j][i])==1)
-	    {
-	      i++;
-	      if (i==psr[p].nobs)
-		{
-		  i=0;
-		  j++;
-		  if (j==psr[p].nobs+1)
-		    {
-		      printf("The matrix file is the wrong size - too large\n");
-		      printf("N_obs = %d\n",psr[p].nobs);
-		      exit(1);
-		    }
-		}
-	    }      
-	}
-      if (j!=psr[p].nobs && i!=0)
-	{
-	  printf("The matrix file is the wrong size - too short\n");
-	  printf("j = %d, i = %d, nobs = %d\n",j,i,psr[p].nobs);
-	  exit(1);
-	}
-      sprintf(fname,"whitedata_%d.dat",p+1);
-      fout = fopen(fname,"w");
-      for (i=0;i<psr[p].nobs;i++)
-	{
-	  sum=0.0;
-	  for (j=0;j<psr[p].nobs;j++)
-	    sum+=uinv[j][i]*psr[p].obsn[j].residual;
-	  printf("Have: %d %g %g %g\n",i,sum,uinv[0][i],(double)psr[p].obsn[i].residual);
-	  whiteres[i] = sum;
-	  //            fprintf(fout,"%g %g %g\n",(double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[i].residual,(double)psr[0].obsn[i].toaErr);
-	  fprintf(fout,"%g %g %g %g\n",(double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]),
-		  (double)psr[p].obsn[i].residual,whiteres[i],(double)psr[p].obsn[i].toaErr);
-	}
-      fclose(fout);
-      
+
       //  for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
       //    {
       //      strcpy(psr[p].rajStrPost,psr[p].rajStrPre);
@@ -308,19 +243,125 @@ void doFitDCM(pulsar *psr,char *dcmFile,int npsr,int writeModel)
 		    } 
 		  y[count]   = (double)psr[p].obsn[i].prefitResidual;
 		  ip[count]  = i;
-		  if (psr[p].fitMode==0) sig[count] = 1.0; 
-		  else sig[count] = psr[p].obsn[i].toaErr*1e-6; /* Error in seconds */
+		  sig[count] = psr[p].obsn[i].toaErr*1e-6; /* Error in seconds */
 		  count++;
 		}
 	    }
 	}
       
-
+      
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
       psr[p].param[param_finish].val[0] = newFinish+0.001;
       psr[p].param[param_start].paramSet[0] = 1;
       psr[p].param[param_finish].paramSet[0] = 1; 
+      
+      
+      for (i=0;i<psr[p].nobs;i++)
+	meanRes+=(long double)psr[p].obsn[i].residual;
+      meanRes/=(long double)psr[p].nobs;
+      for (i=0;i<psr[p].nobs;i++)
+	psr[p].obsn[i].residual-=meanRes;
+      uinv = (double **)malloc(sizeof(double *)*psr[p].nobs);
+
+      for (i=0;i<psr[p].nobs;i++)
+	uinv[i] = (double *)malloc(sizeof(double)*psr[p].nobs);
+      
+      // If we have the data covariance matrix on disk
+      if (strcmp(dcmFile,"NULL")!=0)
+	{
+	  printf("Outputing dcm file\n");
+	  sprintf(fname,"dcm_original_%d.dat",p+1);
+	  fout = fopen(fname,"w");
+	  for (i=0;i<psr[p].nobs;i++)
+	    fprintf(fout,"%g %g %g\n",(double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]),(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr);
+	  fclose(fout);
+	  printf("Done outputing dcm file\n");
+	  strcpy(fname,dcmFile);
+	  if (npsr>1)
+	    {
+	      sprintf(temp,"%s_%d",fname,p+1);
+	      strcpy(fname,temp);
+	    }
+	  printf("Opening >%s<\n",fname);
+	  if (!(fin = fopen(fname,"r")))
+	    {
+	      printf("Unable to open inverse cholesky matrix: %s\n",fname);
+	      exit(1);
+	    }
+	  i=0;
+	  j=0;
+	  while (!feof(fin))
+	    {
+	      if (fscanf(fin,"%lf",&uinv[j][i])==1)
+		{
+		  i++;
+		  if (i==psr[p].nobs)
+		    {
+		      i=0;
+		      j++;
+		      if (j==psr[p].nobs+1)
+			{
+			  printf("The matrix file is the wrong size - too large\n");
+			  printf("N_obs = %d\n",psr[p].nobs);
+			  exit(1);
+			}
+		    }
+		}      
+	    }
+	  if (j!=psr[p].nobs && i!=0)
+	    {
+	      printf("The matrix file is the wrong size - too short\n");
+	      printf("j = %d, i = %d, nobs = %d\n",j,i,psr[p].nobs);
+	      exit(1);
+	    }
+	}
+      else // Use data covariance function and calculate the covariance matrix
+	{
+	  int ndays = (int)(x[count-1]-x[0])+2;
+	  double covarFunc[ndays];
+	  double escaleFactor = 1.0;
+	  
+
+	  strcpy(fname,covarFuncFile);
+	  if (npsr>1)
+	    {
+	      sprintf(temp,"%s_%d",fname,p+1);
+	      strcpy(fname,temp);
+	    }
+	  printf("Opening >%s<\n",fname);
+	  if (!(fin = fopen(fname,"r")))
+	    {
+	      printf("Unable to open covariance function file: %s\n",fname);
+	      exit(1);
+	    }
+	  fscanf(fin,"%lf",&escaleFactor);
+	  for (i=0;i<ndays;i++)
+	    fscanf(fin,"%lf",&covarFunc[i]);
+	  fclose(fin);
+	  printf("Read covariance function\n");
+	  printf("WARNING: scaling all errors by: %g\n",escaleFactor);
+	  for (i=0;i<count;i++)
+	    sig[i]*=escaleFactor;
+
+	  // Form the data covariance matrix
+	  formCholeskyMatrix(covarFunc,x,y,sig,count,uinv);
+	}
+      sprintf(fname,"whitedata_%d.dat",p+1);
+      fout = fopen(fname,"w");
+      for (i=0;i<psr[p].nobs;i++)
+	{
+	  sum=0.0;
+	  for (j=0;j<psr[p].nobs;j++)
+	    sum+=uinv[j][i]*psr[p].obsn[j].residual;
+	  whiteres[i] = sum;
+	  //            fprintf(fout,"%g %g %g\n",(double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[i].residual,(double)psr[0].obsn[i].toaErr);
+	  fprintf(fout,"%g %g %g %g\n",(double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]),
+		  whiteres[i],(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr);
+	}
+      fclose(fout);
+          
+
       /* Do the fit */
       if (npol!=0) /* Are we actually  doing any fitting? */ 
 	{ 
@@ -380,7 +421,7 @@ int getNparams(pulsar psr)
       for (k=0;k<psr.param[i].aSize;k++)
 	{
 	  if (psr.param[i].fitFlag[k]==1) {
-	    if (i!=param_start && i!=param_finish)
+	    if (i!=param_start && i!=param_finish && i!=param_dmval)
 	      npol++;
 	  }
 	}
@@ -396,6 +437,11 @@ int getNparams(pulsar psr)
     npol+=psr.nWhite*2-1;
   if (psr.param[param_ifunc].fitFlag[0]==1)
       npol+=(psr.ifuncN-1);
+  /* Add extra parameters for DMVAL fitting */
+  if (psr.param[param_dmval].fitFlag[0]==1)
+    npol+=(int)psr.param[param_dmval].val[0]; 
+  
+  printf("npol = %d\n",npol);
   return npol;
 }
 
@@ -422,6 +468,11 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		  else if (i==param_ifunc)
 		    {
 		      for (j=0;j<psr->ifuncN;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		    }
+		  else if (i==param_dmval)
+		    {
+		      for (j=0;j<(int)psr->param[param_dmval].val[0];j++)
 			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 		    }
 		  else
@@ -720,6 +771,27 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 
       afunc = t1;
     }
+  else if (i==param_dmval)
+    {
+      double ti = (double)psr->obsn[ipos].sat;
+      double tm1 = (double)psr->dmvalsMJD[k-1];
+      double t0 = (double)psr->dmvalsMJD[k];
+      double t1 = (double)psr->dmvalsMJD[k+1];
+      double d0 = (double)psr->dmvalsDM[k];
+      double d1 = (double)psr->dmvalsDM[k+1];
+      if (ti >= t0 && ti < t1)
+	{
+	  afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));      
+	  afunc*=1.0-(1.0/(t1-t0))*(ti-t0);
+	}
+      else if (ti >= tm1 && ti < t0)
+	{
+	  afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));      
+	  afunc*=(1.0/(t0-tm1))*(ti-tm1);
+	}
+      else
+	afunc = 0;
+    }
   else if (i==param_dmassplanet)
     {
       afunc = dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
@@ -752,6 +824,9 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 void updateParameters(pulsar *psr,int p,double *val,double *error)
 {
   int i,j,k;
+  /*  for (i=0;i<20;i++)
+      printf("%d %g %g\n",i,val[i],error[i]); */
+
   if (debugFlag==1) printf("Updating parameters\n");
   psr[p].offset = val[0];
   j=1;
@@ -886,6 +961,17 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      j++;
 		    }
 		}		  
+	      else if (i==param_dmval)
+		{
+		  for (k=0;k<(int)psr->param[param_dmval].val[0];k++)
+		    {
+		      //		      printf("Updating %g by %g\n",psr[p].dmvalsDM[k],val[j]);
+		      psr[p].dmvalsDM[k] += val[j];
+		      psr[p].dmvalsDMe[k] = error[j];
+		      j++;
+		    }
+		  j--;
+		}
 	      else if (i==param_start)
 		{
 		}
@@ -934,4 +1020,112 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
       /*	      printf("Have jumps %g %g\n",(double)val[j],error[j][j]); */
     }
   if (debugFlag==1) printf("Complete updating parameters\n");
+}
+
+
+void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,double **uinv)
+{
+  double **m,**u,sum;
+  double *cholp;
+  int i,j,k,ix,iy;
+  double t0,cint,t;
+  int t1,t2;
+  int debug=1;
+
+  printf("Getting the covariance matrix in doFit\n");
+  m = (double **)malloc(sizeof(double *)*(np+1));
+  u= (double **)malloc(sizeof(double *)*(np+1));
+  cholp  = (double *)malloc(sizeof(double)*(np+1));  // Was ndays
+
+  for (i=0;i<np+1;i++)
+    {
+      m[i] = (double *)malloc(sizeof(double)*(np+1));
+      u[i] = (double *)malloc(sizeof(double)*(np+1));
+    }
+  
+  for (ix=0;ix<np;ix++)
+    {
+      for (iy=0;iy<np;iy++)
+	m[ix][iy] = fabs(resx[ix]-resx[iy]);
+    }
+  if (debug==1)
+    {
+      printf("First m = \n");
+      for (i=0;i<5;i++)
+	{ 
+	  for (j=0;j<5;j++) printf("%10g ",m[i][j]); 
+	  printf("\n");
+	}
+
+    }
+  // Insert the covariance which depends only on the time difference.
+  // Linearly interpolate between elements on the covariance function because
+  // valid covariance matrix must have decreasing off diagonal elements.
+  printf("Inserting into the covariance matrix\n");
+  for (ix=0;ix<np;ix++)
+    {
+      for (iy=0;iy<np;iy++)
+	{
+	  t0 = m[ix][iy];
+	  t1 = (int)floor(t0);
+	  t2 = t1+1;
+	  t  = t0-t1;
+	  cint = c[t1]*(1-t)+c[t2]*t; // Linear interpolation
+	  m[ix][iy] = cint;
+	}
+    }
+  printf("Multiplying by errors\n");
+  for (ix=0;ix<np;ix++)
+    m[ix][ix]+=rese[ix]*rese[ix];
+  if (debug==1)
+    {
+      printf("m = \n\n");
+      for (i=0;i<5;i++)
+	{ 
+	  for (j=0;j<5;j++) printf("%10g ",m[i][j]); 
+	  printf("\n");
+	}
+    }
+
+  // Do the Cholesky
+  TKcholDecomposition(m,np,cholp);
+  // Now calculate uinv
+  for (i=0;i<np;i++)
+    {
+      m[i][i] = 1.0/cholp[i];
+      uinv[i][i] = m[i][i];
+      for (j=0;j<i;j++)
+      	uinv[i][j] = 0.0;
+      for (j=i+1;j<np;j++)
+	{
+	  sum=0.0;
+	  for (k=i;k<j;k++) sum-=m[j][k]*m[k][i];
+	  m[j][i]=sum/cholp[j];
+	  uinv[i][j] = m[j][i];
+	}
+    } 
+
+  if (debug==1)
+    {
+      printf("uinv = \n\n");
+      for (i=0;i<5;i++)
+	{ 
+	  for (j=0;j<5;j++) printf("%10g ",uinv[i][j]); 
+	  printf("\n");
+	}
+    }
+
+  printf("Completed inverting the matrix\n");
+
+  // Should free memory not required
+  // (note: not freeing uinv)
+
+  for (i=0;i<np+1;i++)
+    {
+      free(m[i]);
+      free(u[i]);
+    }
+  free(m);
+  free(u);
+  free(cholp);
 }

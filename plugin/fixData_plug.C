@@ -526,8 +526,8 @@ void determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *err
 	}
     }
 
-      *errfac1 = sqrt(0.5*sf/(double)n/(verr/(double)nn));
-      //      printf("errfac1 = %d %d %g\n",n,nn,errfac1);
+  *errfac1 = sqrt(0.5*sf/(double)n/(verr/(double)nn));
+  //      printf("errfac1 = %d %d %g\n",n,nn,errfac1);
 }
 
 void plotHistogram(float *x,int count)

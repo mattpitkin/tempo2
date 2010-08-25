@@ -50,10 +50,11 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   char temp[100];
 
   psr->nobs = 0;
-  psr->obsn = NULL;
+  //  psr->obsn = NULL;
   psr->covar = NULL;
 
-  psr->obsn = (observation *)malloc(sizeof(observation)*MAX_OBSN);
+  //  if (psr->obsn == NULL)
+    psr->obsn = (observation *)malloc(sizeof(observation)*MAX_OBSN);
 
   if (psr->obsn == NULL)
     fail = 1;
@@ -101,7 +102,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
       printf("You can also decrease the number of pulsars being stored in memory using -npsr\n");
       printf("Note: 1 observation requires %f kBytes, you request %f MBytes\n",(double)sizeof(observation)/1024.0,(double)sizeof(observation)/1024.0/1024.0*MAX_OBSN);
       exit(1);
-    }  /* SHOULD ACTUALLY DEALLOCATE THIS MEMORY SOMEWHERE */
+    }  /* This memory gets deallocated by destroyOne */
 
 
   strcpy(psr->filterStr,"");
@@ -138,6 +139,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nJumps=0;
   psr->nToffset = 0;
   psr->ndmx = 0;
+  psr->jboFormat=0;
   for (i=0;i<MAX_JUMPS;i++)
     {
       psr->jumpVal[i] = 0.0;
@@ -356,6 +358,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }       
 
   strcpy(psr->param[param_wave_om].label[0],"WAVE_OM"); strcpy(psr->param[param_wave_om].shortlabel[0],"WAVE_OM");
+  strcpy(psr->param[param_dmval].label[0],"DMVAL"); strcpy(psr->param[param_dmval].shortlabel[0],"DMVAL");
 
   /* Piecewise-constant DM variation (DMX) */
   for (k=0;k<psr->param[param_dmx].aSize;k++) 
@@ -386,8 +389,8 @@ void allocateMemory(pulsar *psr, int realloc)
       psr->param[i].nLinkTo   = 0;
       psr->param[i].nLinkFrom = 0;      
 
-      if (i==param_dm)      psr->param[i].aSize = 10;
-      else if (i==param_f)  psr->param[i].aSize = 13;
+      if (i==param_dm)      psr->param[i].aSize = MAX_DM_DERIVATIVES;
+      else if (i==param_f)  psr->param[i].aSize = MAX_FREQ_DERIVATIVES;
       else if (i==param_pb || i==param_ecc || i==param_om || i==param_t0 || i==param_a1) 
 	psr->param[i].aSize = MAX_COMPANIONS;
       else if (i==param_bpjep || i==param_bpjph || i==param_bpja1 || i==param_bpjec || i==param_bpjom

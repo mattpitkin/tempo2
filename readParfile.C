@@ -501,6 +501,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       fscanf(fin,"%lf %lf",&psr->wave_sine[number-1],&psr->wave_cos[number-1]);
       if (psr->nWhite < number) psr->nWhite = number;
     }
+  else if (strcasecmp(str,"DMVAL")==0) 
+    readValue(psr,str,fin,&(psr->param[param_dmval]),0);
+  else if (strstr(str,"DMVAL")!=NULL || strstr(str,"dmval")!=NULL)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+5,"%d",&number);
+      fscanf(fin,"%lf %lf",&psr->dmvalsMJD[number-1],&psr->dmvalsDM[number-1]);
+      psr->dmvalsDMe[number-1] = 0;
+    }
   else if (strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
     {
       int number;

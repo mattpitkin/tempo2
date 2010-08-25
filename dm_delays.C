@@ -99,30 +99,60 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       if (debugFlag==1) printf("In dm_delays: calculating dmval\n");      
       dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
 
-      /* Set using DMX ranges */
-      for (k=0; k<psr[p].ndmx; k++) 
-        {
-          if ((psr[p].obsn[i].sat > psr[p].param[param_dmxr1].val[k])
-                  && (psr[p].obsn[i].sat < psr[p].param[param_dmxr2].val[k]))
-            dmval += psr[p].param[param_dmx].val[k];
-        }
-      
-      /* Check for flag to set dm to exact value */
-      for (k=0;k<psr[p].obsn[i].nFlags;k++)
+
+      /* Are we using DM values using DMVAL parameter? */
+      if (psr[p].param[param_dmval].paramSet[0] == 1)
 	{
-	  if (strcmp(psr[p].obsn[i].flagID[k],"-dm")==0) /* Have DM correction */
+	  double m,c;
+
+	  if ((double)psr[p].obsn[i].sat < psr[p].dmvalsMJD[0])
 	    {
-	      sscanf(psr[p].obsn[i].flagVal[k],"%lf",&dmval);
-	      dmval+=psr[p].dmOffset;
+	      printf("Error: Unable to continue. Using dmvals, but SAT is less than the first dmvalsMJD\n");
+	      exit(1);
 	    }
-	  if (strcmp(psr[p].obsn[i].flagID[k],"-dmo")==0) /* Have DM correction */
+	  if ((double)psr[p].obsn[i].sat > psr[p].dmvalsMJD[(int)psr[p].param[param_dmval].val[0]-1])
 	    {
-	      sscanf(psr[p].obsn[i].flagVal[k],"%lf",&dmval2);
-	      dmval+=(dmval2+psr[p].dmOffset);
+	      printf("Error: Unable to continue. Using dmvals, but SAT is after the last dmvalsMJD\n");
+	      exit(1);
+	    }
+	  for (k=0;k<(int)psr[p].param[param_dmval].val[0]-1;k++)
+	    {
+	      if ((double)psr[p].obsn[i].sat >= psr[p].dmvalsMJD[k] &&
+		  (double)psr[p].obsn[i].sat < psr[p].dmvalsMJD[k+1])
+		{
+		  // Do linear interpolation
+		  m = (psr[p].dmvalsDM[k]-psr[p].dmvalsDM[k+1])/(psr[p].dmvalsMJD[k]-psr[p].dmvalsMJD[k+1]);
+		  c = psr[p].dmvalsDM[k]-m*psr[p].dmvalsMJD[k];
+		  dmval = m*(double)psr[p].obsn[i].sat+c;
+		}
 	    }
 	}
-      if (debugFlag==1) printf("In dm_delays: Looked for flags\n");      
-
+      else
+	{
+	  /* Set using DMX ranges */
+	  for (k=0; k<psr[p].ndmx; k++) 
+	    {
+	      if ((psr[p].obsn[i].sat > psr[p].param[param_dmxr1].val[k])
+                  && (psr[p].obsn[i].sat < psr[p].param[param_dmxr2].val[k]))
+            dmval += psr[p].param[param_dmx].val[k];
+	    }
+	  
+	  /* Check for flag to set dm to exact value */
+	  for (k=0;k<psr[p].obsn[i].nFlags;k++)
+	    {
+	      if (strcmp(psr[p].obsn[i].flagID[k],"-dm")==0) /* Have DM correction */
+		{
+		  sscanf(psr[p].obsn[i].flagVal[k],"%lf",&dmval);
+		  dmval+=psr[p].dmOffset;
+		}
+	      if (strcmp(psr[p].obsn[i].flagID[k],"-dmo")==0) /* Have DM correction */
+		{
+		  sscanf(psr[p].obsn[i].flagVal[k],"%lf",&dmval2);
+		  dmval+=(dmval2+psr[p].dmOffset);
+		}
+	    }
+	  if (debugFlag==1) printf("In dm_delays: Looked for flags\n");      
+	}
       if (freqf<=1) /* Have infinitive frequency */
 	psr[p].obsn[i].tdis1 = 0.0;
       else

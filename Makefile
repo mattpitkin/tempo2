@@ -57,6 +57,6 @@ $(PRED_LIBRARY): $(PRED_LIB_OBJS)
 tempo2.o: tempo2.C
 
 tempo2: tempo2.o $(LIBRARY) sofa/libsofa.a
-	$(CXX) $(CXXFLAGS) -o tempo2 tempo2.o -L. -ltempo2 -Lsofa -lsofa $(LDFLAGS) $(LF) $(LDSO)
+	$(CXX) $(CXXFLAGS) -o tempo2 tempo2.o -L. -ltempo2 -Lsofa -lsofa $(LDFLAGS) $(LF) $(LDSO) -g
 
 

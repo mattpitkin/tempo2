@@ -205,6 +205,8 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
       fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
       for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j]/sig[i];
       b[i] = y[i]/sig[i];
+      //      for (j=0;j<nf;j++)
+      //      	printf("Designmatrix = %g %g %g\n",designMatrix[i][j],basisFunc[j],sig[i]);
     }
   // Take into account the data covariance matrix
   multMatrix(uinv,designMatrix,n,nf,uout);  
@@ -212,8 +214,8 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
     {
       for (j=0;j<nf;j++)
 	{
-	  //	  printf("%g %g\n",designMatrix[i][j],uout[i][j]);
 	  designMatrix[i][j] = uout[i][j];
+	  //	  printf("%g %g\n",designMatrix[i][j],uout[i][j]);
 	}
     }
   multMatrixVec(uinv,b,n,bout);
@@ -795,6 +797,38 @@ void multMatrixVec(double **idcm,double *b,int ndata,double *bout)
     {
       bout[i] = 0.0;
       for (j=0;j<ndata;j++)
-	bout[i]+=idcm[j][i]*b[j];
+		bout[i]+=idcm[j][i]*b[j];
+    }
+}
+
+void TKcholDecomposition(double **a, int n, double *p)
+{
+  int i,j,k;
+  long double sum;
+
+  for (i=0;i<n;i++)
+    {
+      for (j=i;j<n;j++)
+	{
+	  for (sum=a[i][j],k=i-1;k>=0;k--) sum-=a[i][k]*a[j][k]; 
+	  if (i==j)
+	    {
+	      if (sum <= 0.0)
+		{
+		  printf("Here with %d %d %g %Lg\n",i,j,a[i][j],sum);
+		  printf("Failed - the matrix is not positive definite\n");
+		  //		  for (k=i-1;k>=1;k--)
+		  //		    printf("a[%d][%d] = %g\n",j,k,a[j][k]);
+		  exit(1);
+		}
+	      //	      printf("at this point %d %g\n",i,sum);
+	      p[i] = sqrt(sum);
+	    }
+	  else
+	    {
+	      a[j][i] = (double)(sum/p[i]);
+	      //	      	      printf("modifying %d %d %Lg %g\n",j,i,sum,p[i]);
+	    }
+	}
     }
 }

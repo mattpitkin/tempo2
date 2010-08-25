@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -374,6 +374,24 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		    else if (strcasecmp(var,"earth_ssb3")==0) /* z from Earth to SSB */
 		      {
 			sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[2]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"sun_ssb1")==0) 
+		      {
+			sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[0]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"sun_ssb2")==0) 
+		      {
+			sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[1]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"sun_ssb3")==0) 
+		      {
+			sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[2]); 
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }

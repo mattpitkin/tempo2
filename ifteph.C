@@ -218,6 +218,8 @@ IFTE_get_Vals(double JDeph0, double JDeph1, int kind,
   int ncoeff = ifte.reclen/8;
   size_t nread;
 
+  //  printf("Starting ITFE_get_vals with JDeph0 = %g JDeph1 = %g kind = %d\n",JDeph0,JDeph1,kind);
+  
   whole0 = floor(JDeph0-0.5);
   frac0 = JDeph0-0.5-whole0;
   whole1 = floor(JDeph1);
@@ -239,12 +241,17 @@ IFTE_get_Vals(double JDeph0, double JDeph1, int kind,
 
   /* CALCULATE RECORD # AND RELATIVE TIME IN INTERVAL */
   irec = (int)floor((JDeph0-ifte.startJD)/ifte.stepJD)+2;
+  //  printf("Calc irec = %d %g %g %g\n",irec,JDeph0,ifte.startJD,ifte.stepJD);
   if (JDeph0 == ifte.endJD)
     irec--;
-
+  //  printf("Calc irec2 = %d %g %g %g\n",irec,JDeph0,ifte.startJD,ifte.stepJD);
   t[0] = (JDeph0-(ifte.startJD+ifte.stepJD*(irec-2))+JDeph1)/ifte.stepJD;
   t[1] = ifte.stepJD;
-
+  //  printf("In ifteph: tempo2 -- with ncoeff = %d\n",ncoeff);
+  //  printf("JDeph0 = %g, JDeph1 = %g, ifte.startJD = %g ifte.endJD = %g\n",JDeph0,JDeph1,
+  //	 ifte.startJD,ifte.endJD);
+  //  printf("irec = %d. ifte.irec = %d, ifte.reclen = %d\n",irec,ifte.irec,ifte.reclen);
+  //  printf("ifte.stepJD = %g\n",ifte.stepJD);
   /* READ CORRECT RECORD IF NOT IN CORE */
   if (irec != ifte.irec)
   {

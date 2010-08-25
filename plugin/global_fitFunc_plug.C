@@ -155,10 +155,16 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   printf("Here 1\n");
   TKleastSquares_svd_psr(x,y,sig,count,val,error,npol,covar,&chisq,globalFITfuncs,weightfit,psr,tol,ip);
   printf("Here 2\n");
+  if (npol > MAX_PARAMS)
+    {
+      printf("ERROR: nterms=%d > MAX_PARAMS=%d\n",npol,MAX_PARAMS);
+    }
   for (i=0;i<npol;i++)
     {
+      printf("i = %d\n",i);
       for (j=0;j<npol;j++)
 	psr[0].covar[i][j]=covar[i][j];
+      printf("Finished %d\n",npol);
     }
   for (i=0;i<npol;i++)
     printf("val %d = %g\n",i,val[i]);

@@ -56,7 +56,7 @@ void clock_corrections(pulsar *psr,int npsr)
   tai2ut1(psr,npsr);        /* 3. TAI -> UT1                    */
 //   tai2tt(psr,npsr);      /* 4. TAI -> TT                     */
   if (debugFlag==1) printf("Calling tt2tb\n");
-   tt2tb(psr,npsr);          /* 5. Rough estimate of TT-TB (+-2.2 microsec) */
+  tt2tb(psr,npsr);          /* 5. Rough estimate of TT-TB (+-2.2 microsec) */
   if (debugFlag==1) printf("Done clock corrections\n");
 }
 

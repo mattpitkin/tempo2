@@ -57,7 +57,9 @@ void help() /* Display help */
 {
   printf("--------------------------------------\n");
   printf("Command line inputs:\n\n");
+  printf("-addWhite add white noise based on the TOA error bar size\n");
   printf("-alpha GW spectral exponent (usually -0.666) \n");
+  printf("-clock simulate clock errors instead of a GWB\n");
   printf("-dist  pulsar distance in kpc\n");
   printf("-f     parfile.par timfile.tim:  input par and tim files\n");
   printf("-flo   lowest GW frequency to simulate (default = 0.01/Tspan) \n");
@@ -93,6 +95,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
+  FILE *fout;
   int i,j,k,p;
   double globalParameter;
   int setgwAmp=0,setAlpha=0;
@@ -107,13 +110,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   long double **gwRes;
   long double dist[MAX_PSR];
   long double mean;
+  int clock=0;
   int distNum=0;
   int logspacing=1;
   int ngw=0;
-  long seed=-431;
+  int addWhite=0;
+  long seed=TKsetSeed();
   int zeroResiduals=0;
   double scale;
-
+  char fname[100];
   gwSrc *gw;
 
   *npsr = 0;  /* For a graphical interface that only shows results for one pulsar */
@@ -141,6 +146,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  strcpy(parFile[*npsr],argv[i+1]); 
 	  strcpy(timFile[*npsr],argv[i+2]);	  
 	  (*npsr)++;
+	}
+      else if (strcmp(argv[i],"-clock")==0)
+	clock=1;
+      else if (strcmp(argv[i],"-addWhite")==0)
+	{
+	  printf("Using TOA error bars to add white noise\n");
+	  addWhite=1;
 	}
       else if (strcmp(argv[i],"-h")==0)
 	{
@@ -253,11 +265,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       setupGW(&gw[i]);
     }
-
+  if (clock==1)
+    fout = fopen("signal.dat","w");
   for (p=0;p<*npsr;p++)
     {
-      ra_p   = psr[p].param[param_raj].val[0];
-      dec_p  = psr[p].param[param_decj].val[0];
+      if (clock==0)
+	{
+	  ra_p   = psr[p].param[param_raj].val[0];
+	  dec_p  = psr[p].param[param_decj].val[0];
+	}
+      else
+	{
+	  ra_p   = psr[0].param[param_raj].val[0];
+	  dec_p  = psr[0].param[param_decj].val[0];
+	}
       setupPulsar_GWsim(ra_p,dec_p,kp);
       mean=0.0;
       for (i=0;i<psr[p].nobs;i++) 
@@ -271,18 +292,31 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       mean /= (long double)psr[p].nobs;
       for (i=0;i<psr[p].nobs;i++)
 	{
+	  if (clock==1)
+	    fprintf(fout,"%.10f %.10g\n",(double)psr[p].obsn[i].sat,(double)gwRes[p][i]);
 	  gwRes[p][i]-=mean;
 	  psr[p].obsn[i].sat += (gwRes[p][i]/(long double)SECDAY);
+	  if (addWhite==1)
+	    psr[p].obsn[i].sat += (long double)TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1.0e-6)/(long double)SECDAY;
 	}
     }
-  writeTim("test.tim",psr,"tempo2");
-  formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
-  formResiduals(psr,*npsr,1);           /* Form the residuals                 */
-  doFit(psr,*npsr,0);
-  formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
-  formResiduals(psr,*npsr,1);           /* Form the residuals                 */
+  if (clock==1)
+    fclose(fout);
+  for (p=0;p<*npsr;p++)
+    {
+      sprintf(fname,"%s.gwsim.tim",psr[p].name);
+      writeTim(fname,psr+p,"tempo2");
+    }
   if (plotIt==1)
-    doPlot(psr,*npsr,gw,gwRes,timeOffset,ngw,tspan,alpha,gwAmp);
+    {
+      formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
+      formResiduals(psr,*npsr,1);           /* Form the residuals                 */
+      doFit(psr,*npsr,0);
+      formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
+      formResiduals(psr,*npsr,1);           /* Form the residuals                 */
+      
+      doPlot(psr,*npsr,gw,gwRes,timeOffset,ngw,tspan,alpha,gwAmp);
+    }
   return 0;
 }
 

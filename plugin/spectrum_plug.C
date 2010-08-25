@@ -37,6 +37,7 @@
 
 using namespace std;
 char dcmFile[MAX_FILELEN];
+char covarFuncFile[MAX_FILELEN];
 
 #define MAX_ID 50
 
@@ -84,6 +85,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   printf(" --- type 'h' for help information\n");
 
   strcpy(dcmFile,"NULL");
+  strcpy(covarFuncFile,"NULL");
 
   /* Obtain all parameters from the command line */
   for (i=2;i<argc;i++)
@@ -96,6 +98,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-dcm")==0)
 	strcpy(dcmFile,argv[++i]);
+      else if (strcmp(argv[i],"-dcf")==0)
+	strcpy(covarFuncFile,argv[++i]);
       else if (strcmp(argv[i],"-white")==0)
 	sscanf(argv[++i],"%d",&white);
       else if (strcmp(argv[i],"-fil")==0)
@@ -117,10 +121,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
       if (i==0) 
 	{
-	  if (strcmp(dcmFile,"NULL")==0)
+	  if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
 	    doFit(psr,*npsr,0);
 	  else
-	    doFitDCM(psr,dcmFile,*npsr,0);
+	    doFitDCM(psr,dcmFile,covarFuncFile,*npsr,0);
 	}
       else textOutput(psr,*npsr,0,0,0,0,"");  /* Display the output */
     }

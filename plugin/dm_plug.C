@@ -186,7 +186,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  else textOutput(psr,1,globalParameter,0,0,0,"");  /* Display the output */
 	}
       printf("Done the fitting: nfit = %d\n",psr[0].nFit);
-      if (psr[0].nFit>3)
+      if (psr[0].nFit>2)
 	{
 	  epoch[n]=(double)centreMJD;
 	  dmVal[n]=(double)psr[0].param[param_dm].val[0];

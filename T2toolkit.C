@@ -361,6 +361,33 @@ void TKsort_2f(float *val,float *val2,int nobs)
     }while (changed==1);
 }
 
+void TKsort_3d(double *val,double *val2,double *val3,int nobs)
+{
+  int i,changed=0;
+  double store;
+
+  do 
+    {
+      changed=0;
+      for (i=0;i<nobs-1;i++)
+	{
+	  if (val[i] > val[i+1])
+	    {
+	      store=val3[i+1];
+	      val3[i+1]=val3[i];
+	      val3[i]=store;
+	      store=val2[i+1];
+	      val2[i+1]=val2[i];
+	      val2[i]=store;
+	      store=val[i+1];
+	      val[i+1]=val[i];
+	      val[i]=store;
+	      changed=1;
+	    }
+	}
+    }while (changed==1);
+}
+
 /* ************************************************************** */
 /* Routines that modify a data array                              */
 /* ************************************************************** */
