@@ -785,8 +785,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  cpgenv(plotx1,plotx2,ploty1,ploty2,0,-1);
 	  cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
 	}
-	if (yplot==2) sprintf(title,"%s (rms = %.3f \\gms) %s",psr[0].name,psr[0].rmsPost,fitType);
-	else sprintf(title,"%s (rms = %.3f \\gms) %s",psr[0].name,psr[0].rmsPre,fitType);
+	{
+	  char rmsStr[10];
+	  if (psr[0].fitMode==1) strcpy(rmsStr,"Wrms");
+	  else strcpy(rmsStr,"rms");
+
+	  if (yplot==2) sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPost,fitType);
+	  else sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPre,fitType);
+	}
 	if (showChisq == 1)
 	  sprintf(title,"%s chisq=%.2f",title,psr[0].fitChisq/psr[0].fitNfree);
 	if (nohead==0)
