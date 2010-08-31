@@ -133,7 +133,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nPhaseJump=0;
   psr->eclCoord=0;
   psr->noWarnings=noWarnings;
-  psr->fitMode = 0;  /* Don't fit with errors by default (MODE 0) */
+  psr->fitMode = 0;         /* Don't fit with errors by default (MODE 0) */
+  psr->rescaleErrChisq = 1; /* Rescale parameter errors by reduced chisq  */
   strcpy(psr->name,"NOT SET");
   strcpy(psr->binaryModel,"NONE"); 
   psr->nJumps=0;

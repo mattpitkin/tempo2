@@ -141,6 +141,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("pre/post = %g\n",psr[p].rmsPre/psr[p].rmsPost);
 	}
       printf("Number of points in fit = %d\n",psr[p].nFit);
+      if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
+	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
       printf("\n\n");
       printf("PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit\n");
       printf("---------------------------------------------------------------------------------------------------\n");
@@ -219,6 +221,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    }
 	}      
       printf("---------------------------------------------------------------------------------------------------\n");
+      if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
+	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
+
       /* JUMPS */
       for (i=1;i<=psr[p].nJumps;i++){
 	{

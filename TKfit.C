@@ -164,7 +164,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
       free(u[j]);
       
     }
-  if (weight==0)
+  if (weight==0 || (weight==1 && psr->rescaleErrChisq==1))
     {
       for (j=0;j<nf;j++)
 	e[j] *= sqrt(*chisq/(n-nf));
@@ -299,7 +299,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
       free(u[j]);
       
       }*/
-  if (weight==0)
+  if (weight==0 || (weight==1 && psr->rescaleErrChisq==1))
     {
       for (j=0;j<nf;j++)
   	e[j] *= sqrt(*chisq/(n-nf));

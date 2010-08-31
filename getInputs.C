@@ -47,7 +47,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       int *polyco, char *polyco_args,
 	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile)
 {
-  int i;
+  int i,p;
   int gr=0;
   int parfile_num = 0;  /* Have we got a parfile? */
   int timfile_num = 0;  /* Have we got a timfile? */
@@ -81,7 +81,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  printf("-residuals        Outputs the residuals\n");
 	  printf("-allInfo          Prints out clock, Earth orientation and similar information\n");
 	  printf("-reminder         Saves the command line to T2command.input for future reference.\n");
-	  
+	  printf("-norescale        Do not rescale parameter uncertainties by the sqrt(red. chisq)\n");
 	  printf("\n\n");
 	  printf("Available plugins\n");
 	  system("ls $TEMPO2/plugins/ | grep plug | sed s/\"_\"/\" \"/ | awk '{print \"  - \" $1}' | sort | uniq");
@@ -112,6 +112,11 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	    }
 	  else if (strcmp(argv[i],"-fitfunc")==0)
 	    strcpy(psr[0].fitFunc,argv[++i]);
+	  else if (strcasecmp(argv[i],"-norescale")==0)
+	    {
+	      for (p=0;p<MAX_PSR;p++)
+		psr[p].rescaleErrChisq=0;
+	    }
 	  else if (strcmp(argv[i],"-gr")==0)
 	    gr=1;
 	  else if (strcmp(argv[i],"-dcm")==0)

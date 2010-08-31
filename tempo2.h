@@ -306,6 +306,7 @@ typedef struct pulsar {
   int    fitNfree;                /* Number of degrees of freedom in fit */
   int    nFit;                    /* Number of points in the fit */
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
+  int    rescaleErrChisq;         /* = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
   double offset;                  /* Offset, always fitted for */
   double **covar; //[MAX_PARAMS][MAX_PARAMS];
 
