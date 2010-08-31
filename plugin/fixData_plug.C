@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards, David Champion
 
 /*
@@ -31,13 +35,14 @@
 #include <cpgplot.h>
 #include "T2toolkit.h"
 #include "TKspectrum.h"
+#include "TKfit.h"
 #include "tempo2.h"
 #include "GWsim.h"
 
 using namespace std;
 
-void doPlugin1(pulsar *psr,char *flag);
-void determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1);
+void doPlugin1(pulsar *psr,char *flag,int removeQuad);
+int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1);
 void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[]);
 void plotHistogram(float *x,int count);
 int nit = 1;
@@ -56,6 +61,7 @@ void help() /* Display help */
   printf("\t-flag <flag>      defines which flag identifies different backends\n");
   printf("\t-plot <plottype>  = 1 to caclulate EFACs, = 2 to check whiteness\n");
   printf("For use with plot type 1:\n");
+  printf("\t-removeQuad       remove quadratic from all the residuals with a given flag\n");
   printf("\t-daygap <int>     number of days to determine white level\n");
   printf("For use with plot type 2:\n");
   printf("\t-numits <int>     number if realisations for noise simulation\n");
@@ -75,6 +81,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char flag[10]="-f";
   int i;
   int plot=1;
+  int removeQuad=0;
   double globalParameter;
   //  int nit = 1;
   //  long double gwamp = 0;
@@ -96,6 +103,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-flag")==0)
 	strcpy(flag,argv[++i]);
+      else if (strcmp(argv[i],"-removeQuad")==0)
+	removeQuad=1;
       else if (strcmp(argv[i],"-plot")==0)
 	sscanf(argv[++i],"%d",&plot);
       else if (strcmp(argv[i],"-h")==0)
@@ -135,7 +144,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
 
   if (plot==1)
-    doPlugin1(psr,flag);
+    doPlugin1(psr,flag,removeQuad);
   else if (plot==2)
     doPlugin2(psr,parFile,timFile,argc,argv);
   else
@@ -330,12 +339,13 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
   free(specY);
 }
 
-void doPlugin1(pulsar *psr,char *flag)
+void doPlugin1(pulsar *psr,char *flag,int removeQuad)
 {
   int nflag=0;
   char flagV[MAX_JUMPS][100];
   double errfacs[MAX_JUMPS];
   float fx[MAX_OBSN],fy[MAX_OBSN],fe1[MAX_OBSN],fe2[MAX_OBSN],ye[MAX_OBSN],y[MAX_OBSN];
+  int id[MAX_OBSN];
   float yrange;
   float minx,miny;
   float maxx,maxy;
@@ -348,7 +358,7 @@ void doPlugin1(pulsar *psr,char *flag)
   char xlabel[100];
   char text[100];
   int nefacFlag=0;
-
+  int npts_sf;
 
   // Get range
   for (i=0;i<psr[0].nobs;i++)
@@ -406,8 +416,8 @@ void doPlugin1(pulsar *psr,char *flag)
   sprintf(xlabel,"MJD - %.2f",(float)psr[0].param[param_pepoch].val[0]);
   cpglab(xlabel,"","");
   printf("-----------------------------------------------------------------------\n");
-  printf("%-15s %5s %6s %5s\n","Data set","Npts","Span","EFAC");
-  printf("%-15s %5s %6s %5s\n","","","(d)","");
+  printf("%-15s %5s %6s %7s %5s\n","Data set","Npts","Span","Npts sf","EFAC");
+  printf("%-15s %5s %6s %7s %5s\n","","","(d)","","");
   printf("-----------------------------------------------------------------------\n");
 
   for (j=0;j<nflag;j++)
@@ -435,14 +445,27 @@ void doPlugin1(pulsar *psr,char *flag)
 	    {
 	      fx[n] = (float)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
 	      y[n] = (float)psr[0].obsn[i].residual;
-	      fy[n] = (float)psr[0].obsn[i].residual/yrange+0.5+j;
-	      fe1[n] = (float)(fy[n]-psr[0].obsn[i].toaErr*1.0e-6/yrange);
-	      fe2[n] = (float)(fy[n]+psr[0].obsn[i].toaErr*1.0e-6/yrange);
-	      ye[n] = psr[0].obsn[i].toaErr*1.0e-6;
+	      id[n] = i;
 	      n++;
 	    }
 	}
       cpgsci((j%2)+1);
+      for (i=0;i<n;i++)
+	fy[i] = (float)psr[0].obsn[id[i]].residual/yrange;
+
+      if (removeQuad==1)
+	{
+	  TKremovePoly_f(fx,fy,n,3);
+	  TKremovePoly_f(fx,y,n,3);
+	}
+      for (i=0;i<n;i++)
+	{
+	  fy[i] += (0.5+j);
+	  fe1[i] = (float)(fy[i]-psr[0].obsn[id[i]].toaErr*1.0e-6/yrange);
+	  fe2[i] = (float)(fy[i]+psr[0].obsn[id[i]].toaErr*1.0e-6/yrange);
+	  ye[i] = psr[0].obsn[id[i]].toaErr*1.0e-6;
+
+	}
       cpgpt(n,fx,fy,1);
       cpgerry(n,fx,fe1,fe2,1);
       cpgsch(0.8); cpgtext(minx+(maxx-minx)*0.05,j+0.8,flagV[j]); cpgsch(1.4);
@@ -450,9 +473,9 @@ void doPlugin1(pulsar *psr,char *flag)
       printf("%-15s %5d ",flagV[j],n);
       span = TKrange_f(fx,n);
       printf("%6d ",(int)span);
-      determine1dStructureFunction(fx,y,ye,n,&errfac);
+      npts_sf = determine1dStructureFunction(fx,y,ye,n,&errfac);
       errfacs[j] = errfac;
-      printf("%5.2f ",errfac);
+      printf("%7d %5.2f ",npts_sf,errfac);
       //      strcpy(efacFlagID[nefacFlag],flag);
       //      strcpy(efacFlag[nefacFlag],flagV[j]);
       //      efacFlagVal[nefacFlag]=errfac;
@@ -471,7 +494,7 @@ void doPlugin1(pulsar *psr,char *flag)
 
 }
 
-void determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1)
+int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1)
 {
   int i,p,j,n=0;
   double sf,verr,vsf;
@@ -528,6 +551,7 @@ void determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *err
 
   *errfac1 = sqrt(0.5*sf/(double)n/(verr/(double)nn));
   //      printf("errfac1 = %d %d %g\n",n,nn,errfac1);
+  return n;
 }
 
 void plotHistogram(float *x,int count)
