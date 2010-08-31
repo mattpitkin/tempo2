@@ -1,4 +1,8 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
+
 
 /*
 *    This file is part of TEMPO2.
@@ -499,7 +503,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  void * module;
 	  char str[1000];
 
-	  sprintf(str,"%s/plugins/%s_splug.so",getenv(TEMPO2_ENVIRON),
+	  sprintf(str,"%s/plugins/%s_splug.t2",getenv(TEMPO2_ENVIRON),
 		  selectPlugName);
 	  printf("Looking for %s\n",str);
 	  module = dlopen(str, RTLD_NOW); 
