@@ -330,6 +330,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("\n Command line options:\n");
 	printf("\t -grdev, followed by the graphics device of choise (e.g. 3/xs; TOAs.ps/cps)\n");
 	printf("\t -locky -1e-6 1e-6: lock the y axis to this range\n");
+	printf("\t -showchisq: show the chisq of the fit\n");
 	printf("\t -xplot 3 or -yplot 5: Determine the x and y axes\n");
 	printf("\t\t The arguments for this command are as follows:\n");
 	printf("\t\t  1\t prefit residuals\n");
