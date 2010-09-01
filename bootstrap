@@ -1,4 +1,6 @@
 #!/bin/sh
+set -e
+set -u
 
 # Make plugin lists
 cd plugin
@@ -12,3 +14,7 @@ cd ..
 \rm -rf ./autoconf
 cp -r autoconf.boot autoconf
 autoreconf --install --force
+
+echo "Ready to build with:"
+echo "./configure"
+echo "make && make install"
