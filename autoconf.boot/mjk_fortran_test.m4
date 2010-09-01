@@ -9,20 +9,20 @@ AC_DEFUN([MJK_FORTRAN_TEST],
 
   fortran_c_links=no
   AC_F77_FUNC(mktest)
-  echo -e "int main(int argc, char** argv){$mktest (); return 0;}" > conftest_c.c
-  echo -e '      SUBROUTINE mktest ()\n      write(*,*) "TEST"\n      END' > conftest_for.f
+  $ECHO -e "int main(int argc, char** argv){$mktest (); return 0;}" > conftest_c.c
+  $ECHO -e '      SUBROUTINE mktest ()\n      write(*,*) "TEST"\n      END' > conftest_for.f
 
-  echo "$F77 $FFLAGS conftest_for.f -c -o conftest_for.o" >&5
+  $ECHO "$F77 $FFLAGS conftest_for.f -c -o conftest_for.o" >&5
   $F77 $FFLAGS conftest_for.f -c -o conftest_for.o >&5
   ex=$?
   if test $ex -eq 0  ; then
-    echo "$CC conftest_c.c conftest_for.o $CFLAGS $LDFLAGS $LIBS $FLIBS -o conftest_cfor" >&5
+    $ECHO "$CC conftest_c.c conftest_for.o $CFLAGS $LDFLAGS $LIBS $FLIBS -o conftest_cfor" >&5
     $CC conftest_c.c conftest_for.o $CFLAGS $LDFLAGS $LIBS $FLIBS -o conftest_cfor >&5
     ex=$?
     if test $ex -eq 0  ; then
       fortran_c_links=yes
     else
-      echo "Failed program was:" >&5
+      $ECHO "Failed program was:" >&5
       cat conftest_c.c >&5
       cat conftest_for.f >&5
     fi
