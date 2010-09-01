@@ -44,7 +44,7 @@ AC_PROG_LIBTOOL
 
 
 AC_MSG_CHECKING([for \$TEMPO2])
-if test -n $TEMPO2 ; then
+if test -n "$TEMPO2" ; then
 	TEMPO2_DIR=$TEMPO2
 	AC_SUBST(TEMPO2_DIR)
 	have_tempo2_dir=yes
@@ -79,13 +79,13 @@ AC_MSG_RESULT($have_gsl)
 AM_CONDITIONAL(HAVE_GSL, [test x"$have_gsl" = xyes])
 
 AC_MSG_CHECKING([for LOGIN_ARCH variable])
-if test -n $LOGIN_ARCH ; then
+if test -n "$LOGIN_ARCH" ; then
 	t2arch=$LOGIN_ARCH
-	else if -n $OSTYPE ; then
+	else if test -n "$OSTYPE" ; then
 		AC_MSG_RESULT(no)
 		AC_MSG_CHECKING([for OSTYPE variable])
 		t2arch=$OSTYPE
-		else if -n $OSTYPE ; then
+		else if test -n $OSTYPE ; then
 		AC_MSG_RESULT(no)
 		AC_MSG_CHECKING([for uname])
 			t2arch=`uname`
