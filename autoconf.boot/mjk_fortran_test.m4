@@ -9,8 +9,10 @@ AC_DEFUN([MJK_FORTRAN_TEST],
 
   fortran_c_links=no
   AC_F77_FUNC(mktest)
-  $ECHO -e "int main(int argc, char** argv){$mktest (); return 0;}" > conftest_c.c
-  $ECHO -e '      SUBROUTINE mktest ()\n      write(*,*) "TEST"\n      END' > conftest_for.f
+  $ECHO "int main(int argc, char** argv){$mktest (); return 0;}" > conftest_c.c
+  $ECHO '      SUBROUTINE mktest ()' > conftest_for.f
+  $ECHO '      write(*,*) "TEST"' >> conftest_for.f
+  $ECHO '      END' >> conftest_for.f
 
   $ECHO "$F77 $FFLAGS conftest_for.f -c -o conftest_for.o" >&5
   $F77 $FFLAGS conftest_for.f -c -o conftest_for.o >&5
