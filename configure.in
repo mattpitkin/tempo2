@@ -64,6 +64,8 @@ fi
 LT_LIB_DLLOAD
 
 SWIN_LIB_PGPLOT
+SWIN_LIB_FFTW
+
 
 #GSL basic stuff
 #Better tests are in AX_PATH_GSL
@@ -110,12 +112,23 @@ AC_OUTPUT
 
 # User warnings
 if test X$have_pgplot != Xyes; then
-	AC_WARN("PGPLOT was not detected, plugins requiring pgplot will not be compiled")
+	AC_WARN(PGPLOT was not detected plugins requiring pgplot will not be compiled)
+else
+	AC_MSG_NOTICE(PGPLOT compile flags are "$PGPLOT_CFLAGS")
+	AC_MSG_NOTICE(PGPLOT linking flags are "$PGPLOT_LIBS")
 fi
 
 if test X$have_gsl != Xyes; then
-	AC_WARN("GNU Scientific Library was not found, plugins requiring GSL will not be compiled")
+	AC_WARN(GNU Scientific Library was not found, plugins requiring GSL will not be compiled)
+fi
+
+if test X$have_fftw3 != Xyes; then
+	AC_WARN(FFTW3 was not found, plugins requiring fftw will not be compiled)
 fi
 
 
 
+AC_MSG_NOTICE(Fortran compiler is $F77 $FFLAGS)
+AC_MSG_NOTICE(C compiler is $CC $CFLAGS)
+AC_MSG_NOTICE(C++ compiler is $CXX $CXXFLAGS)
+AC_MSG_NOTICE(Global linking flags are $LDFLAGS)

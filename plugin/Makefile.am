@@ -20,6 +20,9 @@ include build_settings/vanilla.am
 #
 if HAVE_PGPLOT
 include build_settings/pgplot.am
+if HAVE_FFTW3
+include build_settings/pgplot_fftw.am
+endif
 endif
 
 AM_CPPFLAGS = @PGPLOT_CFLAGS@
