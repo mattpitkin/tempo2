@@ -59,7 +59,11 @@ if test X$have_tempo2_dir != Xyes; then
 fi
 
 
+MJK_FORTRAN_TEST
 
+if test X$fortran_c_links != Xyes ; then
+	AC_MSG_ERROR(Your C and F77 compilers do not cross link (\$CC=$CC \$F77=$F77))
+fi
 
 LT_LIB_DLLOAD
 
