@@ -71,7 +71,6 @@
 #define MASYR2RADS  1.53628185e-16       /* Converts from mas/yr to rad/s              */
 #define MAX_MSG     50                   /* Maximum number of different warnings       */
 
-
 /* Path for the file containing dates when leap seconds should be added */
 #define LEAPSECOND_FILE "/clock/leap.sec"
 
@@ -164,6 +163,8 @@ extern double ECLIPTIC_OBLIQUITY;
 
 extern int debugFlag;   /* Global = 1 if debug mode is running */
 extern int veryFast;    /* Global to run the code fast */
+extern char tempo2MachineType[MAX_FILELEN];
+
 
 typedef struct storePrecision {
   longdouble minPrec;

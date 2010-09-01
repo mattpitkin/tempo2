@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
@@ -71,7 +74,7 @@ int main(int argc, char *argv[])
   char polyco_args[128];
   int newpar=0;
   int onlypre=0;
-  char tempo2MachineType[MAX_FILELEN]="";
+  //  char tempo2MachineType[MAX_FILELEN]="";
   FILE *alias;
   char **commandLine;
   clock_t startClock,endClock;
@@ -244,11 +247,11 @@ int main(int argc, char *argv[])
 	  void * module;
 	  if (strcmp(commandLine[i],"-gr")==0)
 	    {
-	      sprintf(str,"%s/plugins/%s_%s_plug.so",getenv(TEMPO2_ENVIRON),
+	      sprintf(str,"%s/plugins/%s_%s_plug.t2",getenv(TEMPO2_ENVIRON),
 		      commandLine[i+1],tempo2MachineType);
 	    }
 	  else
-	    sprintf(str,"./%s_%s_plug.so",commandLine[i+1],tempo2MachineType);
+	    sprintf(str,"./%s_%s_plug.t2",commandLine[i+1],tempo2MachineType);
 	  printf("Looking for %s\n",str);
 	  module = dlopen(str, RTLD_NOW); 
 	  if(!module)  {
@@ -440,10 +443,9 @@ int main(int argc, char *argv[])
 		{
 		  char *(*entry)(int,char **,pulsar *,int);
 		  void * module;
-		  sprintf(str,"%s/plugins/%s_%s_plug.so",getenv(TEMPO2_ENVIRON),
+		  sprintf(str,"%s/plugins/%s_%s_plug.t2",getenv(TEMPO2_ENVIRON),
 			  outputSO,tempo2MachineType);
 		  
-		  /*	      sprintf(str,"%s/%s_%s_plug.so",tempo2plug,outputSO,tempo2MachineType); */
 		  module = dlopen(str, RTLD_NOW); 
 		  if(!module)  {
 		    fprintf(stderr, "[error]: dlopen() failed while resolving symbols.\n" );

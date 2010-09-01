@@ -1,0 +1,121 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.57)
+AC_INIT([Tempo2],[1.01],[george.hobbs@csiro.au])
+
+AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
+AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
+
+if test -n "${CXXFLAGS}"; then
+	user_set_cxxflags=yes
+fi
+
+AC_CONFIG_AUX_DIR([config])
+#AC_CONFIG_SRCDIR([Makefile.am])
+
+# Enable large-file support
+AC_SYS_LARGEFILE
+
+# Determine the machine endian
+AC_C_BIGENDIAN
+
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_CXXCPP
+AC_PROG_CC
+AC_PROG_CPP
+AM_PROG_CC_C_O
+AC_PROG_F77
+AC_PROG_F77_C_O
+AC_F77_LIBRARY_LDFLAGS
+
+if test -n "${CXXFLAGS}"; then
+	user_set_cxxflags=yes
+fi
+AC_PROG_CXX
+if test X$user_set_cxxflags != Xyes; then
+	CXXFLAGS="-O2"
+fi
+
+
+AC_PROG_INSTALL
+AC_PROG_LIBTOOL
+
+
+AC_MSG_CHECKING([for \$TEMPO2])
+if test -n $TEMPO2 ; then
+	TEMPO2_DIR=$TEMPO2
+	AC_SUBST(TEMPO2_DIR)
+	have_tempo2_dir=yes
+else
+	have_tempo2_dir=no
+fi
+
+AC_MSG_RESULT($have_tempo2_dir)
+
+if test X$have_tempo2_dir != Xyes; then
+	AC_WARN("You must set the $TEMPO2 variable before configuring.")
+fi
+
+
+
+
+LT_LIB_DLLOAD
+
+SWIN_LIB_PGPLOT
+
+#GSL basic stuff
+#Better tests are in AX_PATH_GSL
+AC_CHECK_LIB([m],[cos])
+AC_CHECK_LIB([gslcblas],[cblas_dgemm])
+AC_CHECK_LIB([gsl],[gsl_blas_dgemm],have_gsl=yes, have_gsl=no)
+
+AC_MSG_CHECKING([for GSL])
+AC_MSG_RESULT($have_gsl)
+
+AM_CONDITIONAL(HAVE_GSL, [test x"$have_gsl" = xyes])
+
+AC_MSG_CHECKING([for LOGIN_ARCH variable])
+if test -n $LOGIN_ARCH ; then
+	t2arch=$LOGIN_ARCH
+	else if -n $OSTYPE ; then
+		AC_MSG_RESULT(no)
+		AC_MSG_CHECKING([for OSTYPE variable])
+		t2arch=$OSTYPE
+		else if -n $OSTYPE ; then
+		AC_MSG_RESULT(no)
+		AC_MSG_CHECKING([for uname])
+			t2arch=`uname`
+		fi
+	fi
+fi
+
+
+AC_MSG_RESULT($t2arch)
+
+AC_DEFINE_UNQUOTED([TEMPO2_ARCH], "$t2arch",["Tempo2 ARCH variable"])
+T2ARCH=$t2arch
+
+AC_SUBST(T2ARCH)
+
+
+AM_INIT_AUTOMAKE([foreign subdir-objects])
+
+AM_CONFIG_HEADER([config.h])
+AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile])
+
+AC_OUTPUT
+
+
+# User warnings
+if test X$have_pgplot != Xyes; then
+	AC_WARN("PGPLOT was not detected, plugins requiring pgplot will not be compiled")
+fi
+
+if test X$have_gsl != Xyes; then
+	AC_WARN("GNU Scientific Library was not found, plugins requiring GSL will not be compiled")
+fi
+
+
+

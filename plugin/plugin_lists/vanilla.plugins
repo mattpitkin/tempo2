@@ -6,3 +6,5 @@ matrix_plug.C
 transform_plug.C
 fake_plug.C
 publish_plug.C
+global_fitFunc_plug.C
+

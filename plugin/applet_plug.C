@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -60,10 +60,18 @@ int nint_derived(double x);
 int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,char *msg);
 void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,char *dformat,int *rad, FILE *fout);
 double fortranMod(double a,double p);
+void help() /* Display help */
+{
+	  /* This function should contain usage information about the plugin which should (in general) be accessed */
+	  /* by the user pressing 'h'                                                                              */
+}
 
-extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr) 
-{  
-  FILE *fin, *fout;
+
+/* The main function called from the TEMPO2 package is 'graphicalInterface' */
+/* Therefore this function is required in all plugins                       */
+extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
+{
+FILE *fin, *fout;
   char filename[100], filenameout[100];
   char line[500];
   char var[500],type[100],cline[1000];
@@ -71,10 +79,88 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   char format[500]="%.20Lg";
   char dformat[500]="%.20lg";
   char cval[500],cerr[500],msg[500];
-  int  i,j,varN,file=-1,fileout=0,rad=0;
+  char negative,header;
+  int  i,j,k,varN,file=-1,fileout=0,rad=0;
   double errMult=1;
+  double mjd;
 
-  printf("Starting general2 plugin\n");
+
+  char parFile[MAX_PSR][MAX_FILELEN];
+  char timFile[MAX_PSR][MAX_FILELEN];
+  double globalParameter;
+
+  *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
+
+  printf("Graphical Interface: name\n");
+  printf("Author:              author\n");
+  printf("Version:             version number\n");
+  printf(" --- type 'h' for help information\n");
+
+
+  /* Obtain the .par and the .tim file from the command line */
+  if (argc==4) /* Only provided .tim name */
+  {
+	  strcpy(timFile[0],argv[3]);
+	  strcpy(parFile[0],argv[3]);
+	  parFile[0][strlen(parFile[0])-3] = '\0';
+	  strcat(parFile[0],"par");
+  }
+
+  for (i=0;i<argc;i++)
+  {
+	  if (strcmp(argv[i],"-f")==0)
+	  {
+		  strcpy(parFile[0],argv[i+1]);
+		  strcpy(timFile[0],argv[i+2]);
+	  }
+  }
+
+  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+  readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+  preProcess(psr,*npsr,argc,argv);
+
+  for (i=0;i<argc;i++)
+  {
+	  if ((strcasecmp(argv[i],"-jp")==0) || (strcasecmp(argv[i],"-jn")==0)){
+		  negative = (strcasecmp(argv[i],"-jn")==0);
+		  psr[0].phaseJump[psr[0].nPhaseJump] = atof(argv[++i]);
+		  if (negative) psr[0].phaseJumpDir[psr[0].nPhaseJump] = -1;
+		  else psr[0].phaseJumpDir[psr[0].nPhaseJump] = 1;
+		  /*		  for (j=0;j<psr[0].nobs;j++)
+				  {
+				  k=psr[0].nPhaseJump;
+				  if (psr[0].obsn[j].sat > psr[0].phaseJump[k])
+				  {
+				  psr[0].obsn[j].residual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
+				  psr[0].obsn[j].prefitResidual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
+				  }
+				  }*/
+		  psr[0].nPhaseJump++;
+	  }
+
+	  if (strcasecmp(argv[i],"-start")==0){
+		  psr[0].param[param_start].val[0]=atof(argv[++i]);
+		  psr[0].param[param_start].paramSet[0]=1;
+		  psr[0].param[param_start].fitFlag[0]=1;
+	  }
+
+	  if (strcasecmp(argv[i],"-finish")==0){
+		  psr[0].param[param_finish].val[0]=atof(argv[++i]);
+		  psr[0].param[param_finish].paramSet[0]=1;
+		  psr[0].param[param_finish].fitFlag[0]=1;
+	  }
+  }
+  printf("Inserted %d phase jumps\n",psr[0].nPhaseJump);
+
+  header=0;
+
+  for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
+  {
+	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+	  formResiduals(psr,*npsr,1);    /* Form the residuals                 */
+	  if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
+	  else textOutput(psr,*npsr,0,0,0,1,"out.par");  /* Display the output */
+  }
 
   for (i=0;i<argc;i++)
     {
@@ -93,6 +179,11 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
 	  fileout=1;
 	  strcpy(filenameout,argv[i+1]);
 	}
+      if (strcasecmp(argv[i],"-head")==0)
+      {
+	      header=1;
+      }
+
    }
   if (file==-1)
     {
@@ -111,6 +202,12 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
     {
       fout = stdout;
     }  
+
+  
+  if(header){
+	  fprintf(fout,"HDR\tP0\t%llf\n",1.0/psr[0].param[param_f].val[0]);
+  }
+
   if (file==1) /* Read from file */
     {
       if (!(fin = fopen(filename,"r")))
@@ -130,7 +227,6 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
     }
   else if (file==0) /* Read from string */
     parseLine(psr,cline,&errMult,null,format,dformat,&rad,fout);
-  printf("Finished general2 plugin\n");
 }
 
 void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,char *dformat,int *rad,FILE *fout)
@@ -341,13 +437,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		      }
 		    else if (strcasecmp(var,"tt")==0) /* Correction to TT */
 		      {
-			sprintf(disp,dformat,getCorrectionTT(psr[0].obsn+varN)); 
-			fprintf(fout,"%s",disp);
-			pos+=strlen(disp);			
-		      }
-		    else if (strcasecmp(var,"Ttt")==0) /* TOA corrected to TT */
-		      {
-			sprintf(disp,format,psr[0].obsn[varN].sat+getCorrectionTT(psr[0].obsn+varN)/SECDAY); 
+			sprintf(disp,dformat,getCorrectionTT(psr[0].obsn+varN)/SECDAY); 
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }
@@ -380,24 +470,6 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		    else if (strcasecmp(var,"earth_ssb3")==0) /* z from Earth to SSB */
 		      {
 			sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[2]); 
-			fprintf(fout,"%s",disp);
-			pos+=strlen(disp);			
-		      }
-		    else if (strcasecmp(var,"sun_ssb1")==0) 
-		      {
-			sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[0]); 
-			fprintf(fout,"%s",disp);
-			pos+=strlen(disp);			
-		      }
-		    else if (strcasecmp(var,"sun_ssb2")==0) 
-		      {
-			sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[1]); 
-			fprintf(fout,"%s",disp);
-			pos+=strlen(disp);			
-		      }
-		    else if (strcasecmp(var,"sun_ssb3")==0) 
-		      {
-			sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[2]); 
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }

@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
@@ -32,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glob.h>
+#include <string.h>
 #include "tabulatedfunction.h"
 
 // Note, these have been tested & differ at the 10^-3.5 (absolute) level

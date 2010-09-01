@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
 
 /*

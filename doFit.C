@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
@@ -57,7 +60,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 
       printf("Calling fitting plugin: %s\n",psr[0].fitFunc);
       strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
-      sprintf(str,"%s/plugins/%s_fitFunc_%s_plug.so",getenv(TEMPO2_ENVIRON),
+      sprintf(str,"%s/plugins/%s_fitFunc_%s_plug.t2",getenv(TEMPO2_ENVIRON),
 	      psr[0].fitFunc,tempo2MachineType);
       module = dlopen(str, RTLD_NOW); 
       if(!module)  {

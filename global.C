@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
@@ -38,7 +41,7 @@ int MAX_OBSN  = MAX_OBSN_VAL;
 double ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
 int debugFlag = 0;
 int veryFast = 0;
-
+char tempo2MachineType[MAX_FILELEN] = "";
 
 void extra_delays(pulsar *psr,int npsr)
 {  

@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
@@ -28,6 +31,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include "tempo2.h"
 
 /* Routines to calculate the fitted parameter uncertainties using a Monte-Carlo bootstrap 
