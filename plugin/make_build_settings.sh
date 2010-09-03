@@ -18,7 +18,7 @@ done
 for lib in `grep -v -e '^#' $list` ; do
 	if [ -e $lib ] ; then
 		/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1_@T2ARCH@_\2_la_SOURCES=../tempo2.h '"$lib"':'
-		/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1_@T2ARCH@_\2_la_LIBADD=../libtempo2.la '"$libextra"':'
+		/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1_@T2ARCH@_\2_la_LIBADD=../libtempo2.la ../sofa/libsofa.la '"$libextra"':'
 		if [ -n "$incextra" ] ; then
 			/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1_@T2ARCH@_\2_la_INCLUDES='"$incextra"':'
 		fi

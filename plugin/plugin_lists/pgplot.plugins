@@ -4,7 +4,6 @@ plotMany_plug.C
 grTemplate_plug.C
 basic_plug.C
 delays_plug.C
-glast_plug.C
 dm_plug.C
 glitch_plug.C
 spectrum_plug.C

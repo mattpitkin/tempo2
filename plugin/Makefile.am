@@ -6,7 +6,6 @@ plugin_LTLIBRARIES=
 #
 ###
 LDFLAGS+= -shared -module -avoid-version -shrext .t2
-LDADD=../libtempo2.la
 INCLUDES=-I@top_srcdir@/
 
 #
