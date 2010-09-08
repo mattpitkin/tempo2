@@ -24,7 +24,7 @@ include build_settings/pgplot_fftw.am
 endif
 endif
 
-AM_CPPFLAGS = @PGPLOT_CFLAGS@
+AM_CPPFLAGS = @PGPLOT_CFLAGS@ @FFTW_CFLAGS@ 
 
 #
 # GSL plugins
