@@ -89,7 +89,7 @@ void fitExponential(double *resx,int nres,double *rawCovar,int *rawCovarNpts,dou
 void formCholeskyMatrix_pl(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
 void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,double **uinv,double *resx,
 				double *resy,double *rese,int nres,double *covarFunc);
-void outputCovarianceFunction(double *covFunc,int n,double errorScaleFactor);
+void outputCovarianceFunction(double *covFunc,int n,double errorScaleFactor,pulsar *psr);
 
 void help() /* Display help */
 {
@@ -225,7 +225,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   double ampFit[MAX_OBSN],chisqFit[MAX_OBSN],bestAmp,bestLag,bestChisq;
   int nGridFit;
   double errorScaleFactor = 1;
-
+  int tempTime=1;
   char dummy[100];
 
 
@@ -288,10 +288,13 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     removeMean(resx,resy,nres);
     fileOutput3("tresiduals.dat",resx,resy,rese,nres);
 
-    uinv= (double **)malloc(sizeof(double *)*(nres+1));
-    covFunc = (double *)malloc(sizeof(double)*((int)(resx[nres-1]-resx[0])+5));
-    for (i=0;i<nres+1;i++)uinv[i] = (double *)malloc(sizeof(double)*(nres+1));      
-
+    if (tempTime==1)
+      {
+	uinv= (double **)malloc(sizeof(double *)*(nres+1));
+	covFunc = (double *)malloc(sizeof(double)*((int)(resx[nres-1]-resx[0])+5));
+	for (i=0;i<nres+1;i++)uinv[i] = (double *)malloc(sizeof(double)*(nres+1));      
+	tempTime=2;
+      }
 
     // Step 1c: fit a cubic to the timing residuals
     cubicFit(resx,resy,rese,nres,cubicVal,cubicErr);
@@ -446,7 +449,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   // Spec 4d: get a spectrum of the whitened data
   nCholWspec = calculateSpectra(resx,cholWhiteY,rese,nres,0,0,2,
 				  cholWspecX,cholWspecY);
-
+  //  fileOutput2("cholWhiteSpec.dat",cholWspecX,cholWspecY,nCholWspec);
   // Step 4e: get covariance of white residuals
   calculateDailyCovariance(resx,cholWhiteY,rese,nres,whiteCovar,whiteCovarNpts,&zerolagWhiteCovar,0);
   // Step 4f: plot
@@ -487,7 +490,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     plot6(cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,highFreqSpecX,highFreqSpecY,nHighFreqSpec,makeps);
 
   // Step 6: output the covariance function
-  outputCovarianceFunction(covFunc,(int)(resx[nres-1]-resx[0])+2,errorScaleFactor);
+  outputCovarianceFunction(covFunc,(int)(resx[nres-1]-resx[0])+2,errorScaleFactor,psr);
   //    outputMatrix(uinv,nres);
   
   // Deallocate memory 
@@ -498,14 +501,17 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   free(covFunc);
 }
 
-void outputCovarianceFunction(double *covFunc,int n,double errorScaleFactor)
+void outputCovarianceFunction(double *covFunc,int n,double errorScaleFactor,pulsar* psr)
 {
   FILE *fout;
+  char fname[100];
   int i;
 
-  if (!(fout = fopen("covarFunc.dat","w")))
+  sprintf(fname,"covarFunc.dat_%s",psr[0].name);
+
+  if (!(fout = fopen(fname,"w")))
     {
-      printf("Unable to open output file: covarFunc.dat\n");
+      printf("Unable to open output file: %s\n",fname);
       exit(1);
     }
   fprintf(fout,"%.15g\n",errorScaleFactor);
@@ -688,7 +694,7 @@ void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpt
 
   if (makeps==1)
     {
-      cpgbeg(0,"spectralPlot3a.ps/ps",1,1);
+      cpgbeg(0,"spectralPlot3a.ps/vps",1,1);
       cpgsch(1.4);  cpgsfs(2);  cpgslw(2);
       cpgenv(minx,maxx,miny/1.5,maxy/1.5,0,10);
       cpglab("Lag (d)","Covariance","");
@@ -776,6 +782,9 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
   float fx2[nCholSpec],fy2[nCholSpec];
   float fx3[nHighFreqSpec],fy3[nHighFreqSpec];
   float minx,maxx,miny,maxy;
+  FILE *fout;
+
+  fout = fopen("cholWhiteSpec.dat","w");
   printf("In plot 6\n");
   for (i=0;i<nCholSpec;i++)
     {
@@ -786,7 +795,9 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
     {
       fx2[i] = log10(cholWspecX[i]*365.25);
       fy2[i] = log10(cholWspecY[i]*pow(365.25*86400,2));
+      fprintf(fout,"%g %g\n",cholWspecX[i],pow(10,fy2[i]));
     }
+  fclose(fout);
   for (i=0;i<nHighFreqSpec;i++)
     {
       fx3[i] = log10(highFreqSpecX[i]*365.25);
@@ -864,7 +875,7 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 
   if (makeps==1)
     {
-      cpgbeg(1,"spectralPlot6a.ps/ps",1,1);
+      cpgbeg(1,"spectralPlot6a.ps/vps",1,1);
       cpgsch(1.4); cpgsfs(2); cpgslw(2);
       // Plot the white data spectrum
       cpgenv(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
@@ -901,6 +912,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
   float fx2[nCholSpec],fy2[nCholSpec];
   float fx3[nCholWspec],fy3[nCholWspec];
   float minx,maxx,miny,maxy;
+  FILE *fout1,*fout2,*fout;
 
   // First do exactly the same as plot3
   cpgbeg(0,"/xs",1,1);
@@ -934,11 +946,14 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
       cpgsls(2); cpgsci(2); cpgline(nCholSpec,fx2,fy2); cpgsci(1); cpgsls(1);
     }
     //
+    fout = fopen("cholWhiteSpec.dat","w");
   for (i=0;i<nCholWspec;i++)
     {
       fx3[i] = log10(cholWspecX[i]*365.25);
       fy3[i] = log10(cholWspecY[i]*pow(365.25*86400,2));
+      fprintf(fout,"%g %g\n",cholWspecX[i],pow(10,fy3[i]));
     }
+  fclose(fout);
   //  minx = TKfindMin_f(fx3,nCholWspec);
   //  maxx = TKfindMax_f(fx3,nCholWspec);
   miny = TKfindMin_f(fy3,nCholWspec);
@@ -985,7 +1000,10 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
     {
       float nx1[MAX_OBSN],ny1[MAX_OBSN];
       float nx2[MAX_OBSN],ny2[MAX_OBSN];
-      cpgbeg(1,"spectralPlot5a.ps/ps",1,1);
+
+      fout1 = fopen("model1.dat","w");
+      fout2 = fopen("model2.dat","w");
+      cpgbeg(1,"spectralPlot5a.ps/vps",1,1);
       cpgsch(1.4); cpgsfs(2); cpgslw(2);
       // Plot the white data spectrum
       cpgenv(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
@@ -1007,7 +1025,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
       cpgend();
 	
       // Plot the high freq res. and Cholesky spectrum
-      cpgbeg(1,"spectralPlot5b.ps/ps",1,1);
+      cpgbeg(1,"spectralPlot5b.ps/vps",1,1);
       cpgsch(1.4); cpgsfs(2); cpgslw(2);
       miny = TKfindMin_f(fy2,nCholSpec);
       maxy = TKfindMax_f(fy2,nCholSpec);
@@ -1029,8 +1047,12 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	{
 	  fx2[i] = log10(cholSpecX[i]*365.25);
 	  //	  fy2[i] = nmodelScale-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
+
+	  fy2[i] = log10(nmodelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	  fprintf(fout2,"%g %g\n",cholSpecX[i],pow(10,fy2[i]));
+
 	  fy2[i] = log10(modelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
-	  //	  fy2[i] = log10(pow(10,nmodelScale)/365.25)-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
+	  fprintf(fout1,"%g %g\n",cholSpecX[i],pow(10,fy2[i]));
 	}
       cpgsls(2); cpgsci(2); cpgline(nCholSpec,fx2,fy2); cpgsci(1); cpgsls(1);
       fx[0] = fx[1] = 0;
@@ -1038,7 +1060,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
       cpgsls(4); cpgline(2,fx,fy); cpgsls(1);
 
       cpgend();
-      
+      fclose(fout1); fclose(fout2);
 
       //      plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,highFreqSpecX,highFreqSpecY,
       //	    nHighFreqSpec, modelAlpha, modelFc, modelNfit, modelScale,0);
@@ -1673,7 +1695,7 @@ void plot2(double *origSpecX,double *origSpecY,int nOrigSpec,double *smoothSpecX
   if (makeps==1) // For paper
     {
       float sx[MAX_OBSN],sy[MAX_OBSN];
-      cpgbeg(0,"spectralPlot2.ps/ps",1,1);
+      cpgbeg(0,"spectralPlot2.ps/vps",1,1);
       cpgsch(1.4); cpgsfs(2); cpgslw(2);
       cpgenv(minx,1,miny+1,maxy,0,10);
       cpglab("Frequency (yr\\u-1\\d)","log\\d10\\u[Power Spectral Density (yr\\u3\\d)]","");
@@ -1862,7 +1884,7 @@ void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,doub
   float minx,maxx,miny,maxy;
   int i,j,ncovar,np;
 
-  cpgbeg(0,"2/xs",1,1); cpgsch(1.4); cpgsfs(2); cpgslw(2);
+  cpgbeg(0,"/xs",1,1); cpgsch(1.4); cpgsfs(2); cpgslw(2);
   // Plot timing residuals
   for (i=0;i<nres;i++)
     {
