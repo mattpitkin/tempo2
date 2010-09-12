@@ -57,6 +57,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   // Form pre-fit residuals
   for (p=0;p<npsr;p++)
     {
+      printf("Fitmode = %d\n",psr[p].fitMode);
       if (psr[p].fitMode==1) weightfit=1;
       if (weightfit==1 && psr[p].fitMode==0)  
 	printf("WARNING: A weighted fit is being carried out, but PSR %s does not have MODE 1 in the parameter file\n",psr[p].name);
@@ -154,7 +155,9 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     val[i]=0.0;
   printf("Here 1\n");
   TKleastSquares_svd_psr(x,y,sig,count,val,error,npol,covar,&chisq,globalFITfuncs,weightfit,psr,tol,ip);
-  printf("Here 2\n");
+  for (i=0;i<npol;i++)
+    printf("covar diag = %g\n",covar[i][i]);
+  printf("Here 2, chisq = %g, red chisq = %g\n",chisq,chisq/(double)(count-npol));
   if (npol > MAX_PARAMS)
     {
       printf("ERROR: nterms=%d > MAX_PARAMS=%d\n",npol,MAX_PARAMS);
