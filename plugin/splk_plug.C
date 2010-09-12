@@ -53,6 +53,10 @@ double fortranMod(double a,double p);
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
 
+char dcmFile[MAX_FILELEN];
+char covarFuncFile[MAX_FILELEN];
+
+
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
   char parFile[MAX_PSR][MAX_FILELEN];
@@ -61,8 +65,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int overlay=0;
   FILE *pin;
   char str[1000];
-
   *npsr = 0;  /* This graphical interface will only show results for one pulsar */
+
+
+  strcpy(dcmFile,"NULL");
+  strcpy(covarFuncFile,"NULL");
 
   printf("Graphical Interface: plk emulator\n");
   printf("Author:              George Hobbs (21 Dec 2003)\n");
@@ -82,6 +89,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      exit(1);
 	    } 
 	}
+      else if (strcmp(argv[i],"-dcm")==0)
+	strcpy(dcmFile,argv[++i]);
+      else if (strcmp(argv[i],"-dcf")==0)
+	strcpy(covarFuncFile,argv[++i]);
       else if (strcmp(argv[i],"-overlay")==0)
 	overlay=1;
     }

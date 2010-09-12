@@ -624,7 +624,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  }
 	printf("Total time span = %.3f days = %.3f years\n",end-start,(end-start)/365.25);
       }
-     
+    
       if (newpar==1)  /* Write a new .par file */
 	{
 	  FILE *fout2;
@@ -638,8 +638,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      scanf("%s",fname2);
 	    }
 	  else
-	    strcpy(fname2,fname);
-
+	    {
+	      char fname3[1000];
+	      if (npsr > 1)
+		sprintf(fname2,"%s_%d",fname,p+1);
+	      else
+		strcpy(fname2,fname);
+	    }
 	  if (!(fout2 = fopen(fname2,"w")))
 	    {
 	      printf("Sorry, unable to write to file %s\n",fname2);

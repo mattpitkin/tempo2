@@ -195,6 +195,33 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   printf("WARNING: Switching weighting off for the fit\n");
   printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
 
+  if (strcmp(psr[0].fitFunc,"default")!=0)
+    {
+      char *(*entry)(pulsar *,int,int);
+      void * module;
+      char str[100];
+      char tempo2MachineType[MAX_FILELEN]="";
+
+      printf("Calling fitting plugin: %s\n",psr[0].fitFunc);
+      strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
+      sprintf(str,"%s/plugins/%s_fitFunc_%s_plug.t2",getenv(TEMPO2_ENVIRON),
+	      psr[0].fitFunc,tempo2MachineType);
+      module = dlopen(str, RTLD_NOW); 
+      if(!module)  {
+	fprintf(stderr, "[error]: dlopen() unable to open plugin: %s.\n",str);
+	exit(1);
+      }
+      entry = (char*(*)(pulsar *,int,int))dlsym(module, "pluginFitFunc");
+      if( entry == NULL ) {
+	dlclose(module);
+	fprintf(stderr, "[error]: dlerror() failed while retrieving address.\n" ); 
+	exit(1);
+      }
+      entry(psr,npsr,writeModel);
+      printf("Returning\n");
+      
+      return;
+    }
 
 
   for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
