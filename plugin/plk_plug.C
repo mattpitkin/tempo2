@@ -865,90 +865,92 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
       }
     noreplot=0;
     float x2[MAX_OBSN],y2[MAX_OBSN],yerr1_2[MAX_OBSN],yerr2_2[MAX_OBSN];
-
-    for (j=0;j<freqColourNum;j++)
+    if(plotPoints==1)
       {
-	ncount=0;
-	for (i=0;i<count;i++)
-	  {
-	    if (freq[i] > minFreqCol[j] && freq[i] <= maxFreqCol[j])
-	      {
-		x2[ncount] = x[i];
-		y2[ncount] = y[i];
-		yerr1_2[ncount] = yerr1[i];
-		yerr2_2[ncount] = yerr2[i];
-		ncount++;
-	      }
-	  }
-	cpgsci(freqCol[j]);
-	if (plotPoints==1)
-	  {
-	    cpgpt(ncount,x2,y2,freqStyle[j]);
-	    if (plotErr==1 && (yplot==1 || yplot==2)) cpgerry(ncount,x2,yerr1_2,yerr2_2,1);
-	    if (plotErr==2 && (yplot==1 || yplot==2)) cpgerry(ncount,x2,yerr1_2,yerr2_2,0);
-	  }
-	if (join==1)
-	  cpgline(ncount,x2,y2);
-      }
-    // Plot based on colours for flags 
-    if (flagColourNum>0)
-      {
-	for (i=0;i<count;i++)
-	  {
-	    for (k=0;k<psr[0].obsn[id[i]].nFlags;k++)
-	      {
-		for (j=0;j<flagColourNum;j++)
-		  {
-		    if (strcasecmp(psr[0].obsn[id[i]].flagID[k],flagIDstr[j])==0
-			&& strcasecmp(psr[0].obsn[id[i]].flagVal[k],flagIDval[j])==0)
-		      {
-			cpgsci(flagCol[j]);
-			cpgpt(1,&x[i],&y[i],flagStyle[j]);
-		      }
-		  }
-	      }
-	  }
-      }
-    
-    if (iFlagColour==1)
-      {
-	int found=0,col;
-	for (i=0;i<count;i++)
-	  {
-	    for (k=0;k<psr[0].obsn[id[i]].nFlags;k++)
-	      {
-		if (strcmp(psr[0].obsn[id[i]].flagID[k],flagColour)==0)
-		  {
-		    found=0;
-		    for (j=0;j<flagN;j++)
-		      {
-			if (strcmp(psr[0].obsn[id[i]].flagVal[k],flagStore[j])==0)
-			  {
-			    found=1;
-			    col=j;
-			    break;
-			  }
-		      }
-		    if (found==0)
-		      {
-			printf("WARNING: FLAG NOT FOUND\n");
-			col=1;
-		      }
-		    if (col+1 >= 15) col-=13;
-		    if (publish==0)
-		      {
-			cpgsci(col+1);
-			cpgpt(1,&x[i],&y[i],16);
-		      }
-		    else
-		      cpgpt(1,&x[i],&y[i],col-12);
-		    //		    cpgsci(7);
-		    if (plotErr==1 && (yplot==1 || yplot==2)) cpgerry(1,&x[i],&yerr1[i],&yerr2[i],1);
-		    if (plotErr==2 && (yplot==1 || yplot==2)) cpgerry(1,&x[i],&yerr1[i],&yerr2[i],0);
-
-		  }
-	      }	
-	  }
+        for (j=0;j<freqColourNum;j++)
+          {
+            ncount=0;
+            for (i=0;i<count;i++)
+              {
+                if (freq[i] > minFreqCol[j] && freq[i] <= maxFreqCol[j])
+                  {
+                    x2[ncount] = x[i];
+                    y2[ncount] = y[i];
+                    yerr1_2[ncount] = yerr1[i];
+                    yerr2_2[ncount] = yerr2[i];
+                    ncount++;
+                  }
+              }
+            cpgsci(freqCol[j]);
+            //if (plotPoints==1)
+            //  {
+            cpgpt(ncount,x2,y2,freqStyle[j]);
+            if (plotErr==1 && (yplot==1 || yplot==2)) cpgerry(ncount,x2,yerr1_2,yerr2_2,1);
+            if (plotErr==2 && (yplot==1 || yplot==2)) cpgerry(ncount,x2,yerr1_2,yerr2_2,0);
+            //  }
+            if (join==1)
+              cpgline(ncount,x2,y2);
+          }
+        // Plot based on colours for flags 
+        if (flagColourNum>0)
+          {
+            for (i=0;i<count;i++)
+              {
+                for (k=0;k<psr[0].obsn[id[i]].nFlags;k++)
+                  {
+                    for (j=0;j<flagColourNum;j++)
+                      {
+                        if (strcasecmp(psr[0].obsn[id[i]].flagID[k],flagIDstr[j])==0
+                            && strcasecmp(psr[0].obsn[id[i]].flagVal[k],flagIDval[j])==0)
+                          {
+                            cpgsci(flagCol[j]);
+                            cpgpt(1,&x[i],&y[i],flagStyle[j]);
+                          }
+                      }
+                  }
+              }
+          }
+        
+        if (iFlagColour==1)
+          {
+            int found=0,col;
+            for (i=0;i<count;i++)
+              {
+                for (k=0;k<psr[0].obsn[id[i]].nFlags;k++)
+                  {
+                    if (strcmp(psr[0].obsn[id[i]].flagID[k],flagColour)==0)
+                      {
+                        found=0;
+                        for (j=0;j<flagN;j++)
+                          {
+                            if (strcmp(psr[0].obsn[id[i]].flagVal[k],flagStore[j])==0)
+                              {
+                                found=1;
+                                col=j;
+                                break;
+                              }
+                          }
+                        if (found==0)
+                          {
+                            printf("WARNING: FLAG NOT FOUND\n");
+                            col=1;
+                          }
+                        if (col+1 >= 15) col-=13;
+                        if (publish==0)
+                          {
+                            cpgsci(col+1);
+                            cpgpt(1,&x[i],&y[i],16);
+                          }
+                        else
+                          cpgpt(1,&x[i],&y[i],col-12);
+                        //		    cpgsci(7);
+                        if (plotErr==1 && (yplot==1 || yplot==2)) cpgerry(1,&x[i],&yerr1[i],&yerr2[i],1);
+                        if (plotErr==2 && (yplot==1 || yplot==2)) cpgerry(1,&x[i],&yerr1[i],&yerr2[i],0);
+                        
+                      }
+                  }	
+              }
+          }
       }
     if (statistics==1)
       displayStatistics(x,y,count,plotx1,plotx2,ploty1,ploty2);
