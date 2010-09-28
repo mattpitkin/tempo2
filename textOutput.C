@@ -340,21 +340,30 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			      - 12.0*psr[p].covar[c1][c2]*SPEED_LIGHT/(a1*pb));
 	      printf(" +- %.12f solar masses \n",err);
 	      printf("Minimum, median and maximum companion mass: %.4f < %.4f < %.4f solar masses\n",
-		     m2(fn,1.0,1.35),m2(fn,0.866025403,1.35),m2(fn,0.438371146,1.35));
-	      /*	      printf("Minimum companion mass         = %.4f solar masses\n",m2(fn,1.0,1.35));
-	      printf("Median companion mass          = %.4f solar masses\n",m2(fn,0.866025403,1.35));
-	      printf("Maximum companion mass         = %.4f solar masses\n",m2(fn,0.438371146,1.35)); */
+		     m2(fn,1.0,1.35),m2(fn,0.866025403,1.35),m2(fn,0.4358898944,1.35));
+        // 90% confidence level is based on cos(i) = 0.9 -> sini = 0.4358898944
+
+        //m2(fn,1.0,1.35),m2(fn,0.866025403,1.35),m2(fn,0.438371146,1.35));
+	      /* printf("Minimum companion mass         
+                             = %.4f solar masses\n",m2(fn,1.0,1.35));
+	      printf("Median companion mass          
+                             = %.4f solar masses\n",m2(fn,0.866025403,1.35));
+	      printf("Maximum companion mass         
+                             = %.4f solar masses\n",m2(fn,0.438371146,1.35)); */
 
 	      // Joris' mass calculations.
 
-	      if(psr[p].param[param_sini].paramSet[0]*psr[p].param[param_m2].paramSet[0]*
-           psr[p].param[param_a1].paramSet[0]*psr[p].param[param_pb].paramSet[0]==1
-            && psr[p].param[param_sini].nLinkTo==0){
+	      if(psr[p].param[param_sini].paramSet[0]*
+           psr[p].param[param_m2].paramSet[0]*
+           psr[p].param[param_a1].paramSet[0]*
+           psr[p].param[param_pb].paramSet[0]==1
+           && psr[p].param[param_sini].nLinkTo==0){
           longdouble mp[2];
           double DAY2S = (24.0L*3600.0L);
           mp[0] = -psr[p].param[param_m2].val[0]+
             sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
-                 pow(psr[p].param[param_m2].val[0]*psr[p].param[param_sini].val[0]/
+                 pow(psr[p].param[param_m2].val[0]*
+                     psr[p].param[param_sini].val[0]/
                      psr[p].param[param_a1].val[0],3.0));
           
           longdouble Cte = sqrt(TSUN*pow(1/2.0L/M_PI,2.0));
@@ -363,58 +372,64 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                             pow(psr[p].param[param_sini].val[0]/
                                 psr[p].param[param_a1].val[0],1.5)*
                             sqrt(psr[p].param[param_m2].val[0])),2.0)+
-                       pow(psr[p].param[param_pb].err[0]*Cte*
+                       pow(psr[p].param[param_pb].err[0]*Cte*DAY2S*
                            pow(psr[p].param[param_m2].val[0]*
                                psr[p].param[param_sini].val[0]/
                                psr[p].param[param_a1].val[0],1.5),2.0)+
                        pow(psr[p].param[param_sini].err[0]*1.5L*
                            sqrt(psr[p].param[param_sini].val[0])*Cte*
-                           psr[p].param[param_pb].val[0]*
+                           psr[p].param[param_pb].val[0]*DAY2S*
                            pow(psr[p].param[param_m2].val[0]/
                                psr[p].param[param_a1].val[0],1.5),2.0)+
                        pow(psr[p].param[param_a1].err[0]*1.5/
                            pow(psr[p].param[param_a1].val[0],2.5)*Cte*
-                           psr[p].param[param_pb].val[0]*
+                           psr[p].param[param_pb].val[0]*DAY2S*
                            pow(psr[p].param[param_m2].val[0]*
                                psr[p].param[param_sini].val[0],1.5),2.0));
           
 
-		printf("Pulsar Mass (Shapiro Delay): %lg (+/- %lg) Msun.\n",(double)mp[0],(double)mp[1]);
+		printf("Pulsar Mass (Shapiro Delay): %lg (+/- %lg) Msun.\n",
+           (double)mp[0],(double)mp[1]);
 	      }
-	      if(psr[p].param[param_kin].paramSet[0]*psr[p].param[param_m2].paramSet[0]*
-		 psr[p].param[param_a1].paramSet[0]*psr[p].param[param_pb].paramSet[0]==1){
-		longdouble mp[2];
-		double DAY2S = (24.0L*3600.0L);
-		mp[0] = -psr[p].param[param_m2].val[0]+
-		  sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
-		       pow(psr[p].param[param_m2].val[0]*sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
-			   psr[p].param[param_a1].val[0],3.0));
-
-		longdouble Cte = sqrt(TSUN*pow(1/2.0L/M_PI,2.0));
-		mp[1] = sqrt(pow(psr[p].param[param_m2].err[0]*
-				 (-1.0+1.5*Cte*DAY2S*psr[p].param[param_pb].val[0]*
-				  pow(sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
-				      psr[p].param[param_a1].val[0],1.5)*
-				  sqrt(psr[p].param[param_m2].val[0])),2.0)+
-			     pow(psr[p].param[param_pb].err[0]*Cte*DAY2S*
-				 pow(psr[p].param[param_m2].val[0]*
-				     sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
-				     psr[p].param[param_a1].val[0],1.5),2.0)+
-			     pow(psr[p].param[param_kin].err[0]/180.0*M_PI*1.5L*
-				 cos(psr[p].param[param_kin].val[0]/180.0*M_PI)*
-				 sqrt(sin(psr[p].param[param_kin].val[0]/180.0*M_PI))*Cte*
-				 psr[p].param[param_pb].val[0]*DAY2S*
-				 pow(psr[p].param[param_m2].val[0]/
-				     psr[p].param[param_a1].val[0],1.5),2.0)+
-			     pow(psr[p].param[param_a1].err[0]*1.5/
-				 pow(psr[p].param[param_a1].val[0],2.5)*Cte*
-				 psr[p].param[param_pb].val[0]*DAY2S*
-				 pow(psr[p].param[param_m2].val[0]*
-				     sin(psr[p].param[param_kin].val[0]/180.0*M_PI),1.5),2.0));
-								
-
-		printf("Pulsar Mass (annual orbital parallax): %lg (+/- %lg) Msun.\n",
-		       (double)mp[0],(double)mp[1]);
+	      if(psr[p].param[param_kin].paramSet[0]*
+           psr[p].param[param_m2].paramSet[0]*
+           psr[p].param[param_a1].paramSet[0]*
+           psr[p].param[param_pb].paramSet[0]==1){
+          longdouble mp[2];
+          double DAY2S = (24.0L*3600.0L);
+          mp[0] = -psr[p].param[param_m2].val[0]+
+            sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
+                 pow(psr[p].param[param_m2].val[0]*
+                     sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
+                     psr[p].param[param_a1].val[0],3.0));
+          
+          longdouble Cte = sqrt(TSUN*pow(1/2.0L/M_PI,2.0));
+          mp[1] = sqrt(pow(psr[p].param[param_m2].err[0]*
+                           (-1.0+1.5*Cte*DAY2S*psr[p].param[param_pb].val[0]*
+                            pow(sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
+                                psr[p].param[param_a1].val[0],1.5)*
+                            sqrt(psr[p].param[param_m2].val[0])),2.0)+
+                       pow(psr[p].param[param_pb].err[0]*Cte*DAY2S*
+                           pow(psr[p].param[param_m2].val[0]*
+                               sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
+                               psr[p].param[param_a1].val[0],1.5),2.0)+
+                       pow(psr[p].param[param_kin].err[0]/180.0*M_PI*1.5L*
+                           cos(psr[p].param[param_kin].val[0]/180.0*M_PI)*
+                           sqrt(sin(psr[p].param[param_kin].val[0]
+                                    /180.0*M_PI))*Cte*
+                           psr[p].param[param_pb].val[0]*DAY2S*
+                           pow(psr[p].param[param_m2].val[0]/
+                               psr[p].param[param_a1].val[0],1.5),2.0)+
+                       pow(psr[p].param[param_a1].err[0]*1.5/
+                           pow(psr[p].param[param_a1].val[0],2.5)*Cte*
+                           psr[p].param[param_pb].val[0]*DAY2S*
+                           pow(psr[p].param[param_m2].val[0]*
+                               sin(psr[p].param[param_kin].val[0]
+                                   /180.0*M_PI),1.5),2.0));
+          
+          
+          printf("Pulsar Mass (annual orbital parallax): %lg (+/- %lg) Msun.\n",
+                 (double)mp[0],(double)mp[1]);
 	      }
 
 	      /* Joris' distance calculations */
