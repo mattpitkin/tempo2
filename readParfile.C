@@ -512,6 +512,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       /* Obtain parameter number */
       sscanf(str+5,"%d",&number);
       fscanf(fin,"%lf %lf",&psr->dmvalsMJD[number-1],&psr->dmvalsDM[number-1]);
+      psr->dmvalsOffset[number-1] = 0;
       psr->dmvalsDMe[number-1] = 0;
     }
   else if (strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)

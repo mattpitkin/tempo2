@@ -469,7 +469,7 @@ int getNparams(pulsar psr)
       npol+=(psr.ifuncN-1);
   /* Add extra parameters for DMVAL fitting */
   if (psr.param[param_dmval].fitFlag[0]==1)
-    npol+=(int)psr.param[param_dmval].val[0]; 
+    npol+=(int)(psr.param[param_dmval].val[0]*2); // *2 because we fit for the DM and constant offset
   
   printf("npol = %d\n",npol);
   return npol;
@@ -501,9 +501,24 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 		    }
 		  else if (i==param_dmval)
-		    {
+		    {		      
 		      for (j=0;j<(int)psr->param[param_dmval].val[0];j++)
-			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			{
+			  double ti = (double)psr->obsn[ipos].sat;
+			  double tm1 = (double)psr->dmvalsMJD[j-1];
+			  double t0 = (double)psr->dmvalsMJD[j];
+			  double t1 = (double)psr->dmvalsMJD[j+1];
+			  double d0 = (double)psr->dmvalsDM[j];
+			  double d1 = (double)psr->dmvalsDM[j+1];
+			  
+			  afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			  if (ti >= t0 && ti < t1)
+			    afunc[n++]=1.0-(1.0/(t1-t0))*(ti-t0);
+			  else if (ti >= tm1 && ti < t0)
+			    afunc[n++]=(1.0/(t0-tm1))*(ti-tm1);
+			  else
+			    afunc[n++] = 0;
+			}
 		    }
 		  else
 		    afunc[n++] = getParamDeriv(psr,ipos,x,i,k);
@@ -639,7 +654,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
   else if (i==param_glf2)
     {
       if (psr->obsn[ipos].bbat >= psr->param[param_glep].val[k])
-	afunc = 1.0/6.0*pow((psr->obsn[ipos].bbat-psr->param[param_glep].val[k])*86400.0,3)/psr->param[param_f].val[0];
+	{
+	  afunc = (double)(1.0L/6.0L*powl((psr->obsn[ipos].bbat-psr->param[param_glep].val[k])*86400.0L,3)/psr->param[param_f].val[0]);
+	  printf("Fit = %.15g\n",afunc);
+	}
       else
 	afunc = 0.0;	      
     }
@@ -998,6 +1016,8 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      //		      printf("Updating %g by %g\n",psr[p].dmvalsDM[k],val[j]);
 		      psr[p].dmvalsDM[k] += val[j];
 		      psr[p].dmvalsDMe[k] = error[j];
+		      j++;
+		      psr[p].dmvalsOffset[k] = error[j];
 		      j++;
 		    }
 		  j--;

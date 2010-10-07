@@ -278,6 +278,7 @@ typedef struct pulsar {
   double dmvalsMJD[100]; 
   double dmvalsDM[100];
   double dmvalsDMe[100];
+  double dmvalsOffset[100];
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
   double velPulsar[3];            /* 3-vector giving pulsar's velocity                          */  
   long double phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */

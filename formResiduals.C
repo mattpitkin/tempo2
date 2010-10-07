@@ -121,7 +121,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 {
 		   longdouble tp,dt1,expf,tgl;
 		   tp = (ntpd+ftpd)*86400.0;	
-		   tgl = (psr[p].param[param_glep].val[k] - psr[p].param[param_pepoch].val[0])*86400.0;
+		   tgl = (psr[p].param[param_glep].val[k] - psr[p].param[param_pepoch].val[0])*86400.0; // - psr[p].param[param_pepoch].val[0])*86400.0;
 		   /* Only has effect after the glitch epoch */
 		   if (tp >= tgl) 
 		     {
