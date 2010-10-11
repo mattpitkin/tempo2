@@ -502,6 +502,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  void * module;
 	  char str[1000];
 
+	  strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
 	  sprintf(str,"%s/plugins/%s_%s_splug.t2",getenv(TEMPO2_ENVIRON),
 		  selectPlugName,tempo2MachineType);
 	  printf("Looking for %s\n",str);
