@@ -471,7 +471,6 @@ int getNparams(pulsar psr)
   if (psr.param[param_dmval].fitFlag[0]==1)
     npol+=(int)(psr.param[param_dmval].val[0]*2); // *2 because we fit for the DM and constant offset
   
-  printf("npol = %d\n",npol);
   return npol;
 }
 
@@ -655,8 +654,8 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     {
       if (psr->obsn[ipos].bbat >= psr->param[param_glep].val[k])
 	{
-	  afunc = (double)(1.0L/6.0L*powl((psr->obsn[ipos].bbat-psr->param[param_glep].val[k])*86400.0L,3)/psr->param[param_f].val[0]);
-	  printf("Fit = %.15g\n",afunc);
+	  afunc = (double)(1.0L/6.0L*powl((psr->obsn[ipos].bbat-psr->param[param_glep].val[k])*86400.0L/1.0e9,3)/psr->param[param_f].val[0]);
+	  //	  printf("Fit = %.15g\n",afunc);
 	}
       else
 	afunc = 0.0;	      
@@ -950,8 +949,8 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		}
 	      else if (i==param_glf2) /* Glitch permanent pulse frequency second deriv. increment */
 		{
-		  psr[p].param[i].val[k] -= val[j]; //*psr[p].param[param_f].val[0]; 
-		  psr[p].param[i].err[k]  = error[j];                        
+		  psr[p].param[i].val[k] -= val[j]*1.0e-27; //*psr[p].param[param_f].val[0]; 
+		  psr[p].param[i].err[k]  = error[j]*1.0e-27;                        
 		}
 	      else if (i==param_raj)
 		{
