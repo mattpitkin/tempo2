@@ -353,6 +353,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       for(j=0;j<MAX_PARAMS;j++){
 	psr[0].param[j].nLinkTo = 0;
 	psr[0].param[j].nLinkFrom = 0;
+	for (k=0;k<psr[0].param[j].aSize;k++)
+	  {
+	    psr[0].param[j].paramSet[k] = 0;
+	    psr[0].param[j].fitFlag[k] = 0;
+	    psr[0].param[j].prefit[k] = 0.0;
+	    psr[0].param[j].val[k] = 0.0;
+	  }
       }
       readParfile(psr,parFile,timFile,1); /* Load the parameters       */
       readTimfile(psr,timFile,1); /* Load the arrival times    */
