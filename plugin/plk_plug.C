@@ -381,7 +381,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (debugFlag==1) printf("plk: calling callFit %d\n",psr[0].nobs);
   callFit(psr,*npsr);             /* Do all the fitting routines */
   if (newpar==1)
-	    textOutput(psr,*npsr,0,0,0,1,newParFile);
+    textOutput(psr,*npsr,0,0,0,1,newParFile);
   if (debugFlag==1) printf("plk: calling doPlot\n");
   doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,lockx1,lockx2,locky1,locky2,xplot,yplot,
 	 publish,argc,argv,menu,setupFile,showChisq,nohead);  /* Do plot */
@@ -397,7 +397,6 @@ void callFit(pulsar *psr,int npsr)
   int iteration,i,p,it,k;
   double globalParameter = 0.0;
   FILE *pin;
-
 
   //  printf("Have SAT = %g\n",(double)psr[0].obsn[106282].sat);
   //  exit(1);
@@ -427,7 +426,7 @@ void callFit(pulsar *psr,int npsr)
 	  formBatsAll(psr,npsr);
 	  
 	  /* Form residuals */
-	  formResiduals(psr,npsr,iteration);
+	  formResiduals(psr,npsr,0); // iteration);
 	  
 	  /* Do the fitting */
 	  if (iteration==0) 
@@ -1279,7 +1278,13 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    printf("Measure x = %.3g days\t y = %.3g\t gradient = %.3g\n",mouseX2-mouseX,mouseY2-mouseY,(mouseY2-mouseY)/(mouseX2-mouseX));
 	  }
 	else if (key=='M') /* Toggle removing mean */
-	  removeMean*=-1;
+	  {
+	    removeMean*=-1;
+	    if (removeMean==1)
+	      printf("Removing mean from timing residuals\n");
+	    else
+	      printf("Not removing mean from timing residuals\n");
+	  }
 	else if (key==9) /* ctrl-i - highlight points with colour */
 	  {
 	    if (iFlagColour==1)
@@ -1686,7 +1691,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	else if (key=='g') {  /* Change graphics device */
 	  cpgend();
 	  cpgbeg(0,"?",1,1);
-	  cpgpap(0,aspect);
+	    	  cpgpap(0,aspect);
+	  //	  	  cpgpap(0,0.4);
 	  cpgscf(fontType);
 	  cpgslw(lineWidth);
 	  //	  cpgscrn(0,bkgrdColour,&out);
@@ -3342,35 +3348,13 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 	    }
 	}
     }
-  callFit(psr,npsr);
-  /*  if (setZoomX1 == 1)
-    {
-      if (origStart==-1)
-	{
-	  //	  psr[0].param[param_start].paramSet[0]=0;
-	  psr[0].param[param_start].fitFlag[0]=0;
-	}
-      else
-	{
-	  psr[0].param[param_start].paramSet[0]=1;
-	  psr[0].param[param_start].val[0] = origStart;
-	  psr[0].param[param_start].fitFlag[0]=1;
-	}
-    }
-  if (setZoomX2 == 1)
-    {
-      if (origFinish==-1)
-	{
-	  //	  psr[0].param[param_finish].paramSet[0]=0;
-	  psr[0].param[param_finish].fitFlag[0]=0;
-	}
-      else
-	{
-	  psr[0].param[param_finish].paramSet[0]=1;
-	  psr[0].param[param_finish].val[0] = origFinish;
-	  psr[0].param[param_finish].fitFlag[0]=1;
-	}
-	}*/
+  //  callFit(psr,npsr);
+  doFit(psr,npsr,0);
+  formBatsAll(psr,npsr);	  
+  /* Form residuals */
+  formResiduals(psr,npsr,0); // iteration);
+  textOutput(psr,npsr,0,0,0,0,"");
+
   printf("Leaving with %g %d\n",(double)origFinish,psr[0].param[param_finish].fitFlag[0]);
 }
 
