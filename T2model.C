@@ -262,17 +262,26 @@ if(debugFlag==1)	  printf("computed U\n");
 	  printf("Require eccentricity set or EPS1/EPS2 parameters for companion %d\n",com+1);
 	  exit(1);
 	}
-      
       /* Shapiro delay */
       dlogbr=log(brace);
       ds=-2*m2*dlogbr;        /* Equation 26 */
+      //      printf("T2: %g %g %g %g %g %g %g\n",brace,phase,a0,b0,dlogbr,ds,m2);
 
       /* Now compute d2bar, the orbital time correction in DD equation 42. */
       /* Equation 52 */
-      d2bar=dre*(1-anhat*drep+allTerms*pow(anhat,2)*
-		 (pow(drep,2) + 0.5*dre*drepp - 0.5*ecc*su*dre*drep/onemecu))
-	+ allTerms*(ds+da+DAOP+DSR);
-
+      if (onemecu != 0.0)
+	{
+	  d2bar=dre*(1-anhat*drep+allTerms*pow(anhat,2)*
+		     (pow(drep,2) + 0.5*dre*drepp - 0.5*ecc*su*dre*drep/onemecu))
+	    + allTerms*(ds+da+DAOP+DSR);
+	}
+      else
+	{
+	  d2bar=dre*(1-anhat*drep+allTerms*pow(anhat,2)*
+		     (pow(drep,2) + 0.5*dre*drepp))
+	    + allTerms*(ds+da+DAOP+DSR);
+	}    
+      //      printf("T2a: %g %g %g %g %d %g %g %g %g %g %g %g %g\n",d2bar,dre,anhat,drep,allTerms,drepp,ecc,su,onemecu,ds,da,(double)DAOP,(double)DSR);
       torb-=d2bar;                                  /* Equation 42  */
 
       if (param==-1 && com == psr[p].nCompanion-1) return torb;
