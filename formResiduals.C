@@ -41,12 +41,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    longdouble residual;  /* Residual in phase */
    longdouble ddnprd;
    longdouble dphase;
-   longdouble nphase,phase5,phase2,phase3,phase4,lastResidual=0,priorResidual=0,ppRes=0;
+   longdouble nphase,phase5[MAX_OBSN],phase2,phase3,phase4,lastResidual=0,priorResidual=0,ppRes=0;
    longdouble lastBat=0.0,priorBat=0.0,ppBat=0.0;
    longdouble phaseJ,phaseW;
    longdouble ftpd,fct,ff0,phaseint;
    longdouble torb,deltaT,dt00=0.0,dtm1=0.0,phas1=0.0;
    longdouble mean,ct00=0.0;
+   int zeroID=0; // Observation number for point where the residual is set to zero
    int dtm1s=0;
    int nmean;
    int ntpd,nf0;
@@ -99,7 +100,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   phase2 = (nf0*ftpd+ntpd*ff0+ftpd*ff0); 
 	   phase2 *= 86400.0;
 	   /* redwards, all these calls to pow are slow & imprecise. changed */
-	   longdouble arg = deltaT*deltaT;
+	   longdouble arg = deltaT*deltaT;	   
 	   phase3 = 0.5*psr[p].param[param_f].val[1]*arg; 
 	   arg *= deltaT; if (psr[p].param[param_f].paramSet[2]==1) phase3 += (psr[p].param[param_f].val[2]/6.0L)*arg;
 	   arg *= deltaT; if (psr[p].param[param_f].paramSet[3]==1) phase3 += (psr[p].param[param_f].val[3]/24.0L)*arg;
@@ -201,7 +202,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     }
 
 
-	   phase5 = phase2+phase3+phase4+phaseJ+phaseW;
+	   phase5[i] = phase2+phase3+phase4+phaseJ+phaseW;
 
 	   if (psr[p].obsn[i].nFlags>0) /* Look for extra factor to add to residuals */
 	     {
@@ -214,7 +215,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     {
 		       sscanf(psr[p].obsn[i].flagVal[k],"%Lf",&extra);
 		       /* psr[p].obsn[i].residual+=extra; */
-		       phase5+=(extra*psr[p].param[param_f].val[0]);
+		       phase5[i]+=(extra*psr[p].param[param_f].val[0]);
 		     }
 		 }
 	     }
@@ -225,33 +226,54 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             */
 	   if (psr[p].param[param_iperharm].paramSet[0]==1)
 	     {  /* This code has been added for observations taken at the wrong rotational period */
-	       phase5 = fortran_mod(phase5,1.0/psr[p].param[param_iperharm].val[0]);
-	       if (phase5 >= 1.0/2.0/psr[p].param[param_iperharm].val[0])
+	       phase5[i] = fortran_mod(phase5[i],1.0/psr[p].param[param_iperharm].val[0]);
+	       if (phase5[i] >= 1.0/2.0/psr[p].param[param_iperharm].val[0])
 		 {
-		   while (phase5 >= 1.0/2.0/psr[p].param[param_iperharm].val[0])
-		     phase5 -= 1.0/psr[p].param[param_iperharm].val[0];
+		   while (phase5[i] >= 1.0/2.0/psr[p].param[param_iperharm].val[0])
+		     phase5[i] -= 1.0/psr[p].param[param_iperharm].val[0];
 		 }
-	       else if (phase5 < -1.0/2.0/psr[p].param[param_iperharm].val[0])
+	       else if (phase5[i] < -1.0/2.0/psr[p].param[param_iperharm].val[0])
 		 {
-		   while (phase5 < -1.0/2.0/psr[p].param[param_iperharm].val[0])
-		     phase5 += 1.0/psr[p].param[param_iperharm].val[0];
+		   while (phase5[i] < -1.0/2.0/psr[p].param[param_iperharm].val[0])
+		     phase5[i] += 1.0/psr[p].param[param_iperharm].val[0];
 		 }
-	       if (i==0) phas1  = phase5;
-	       phase5 = phase5-phas1; 	       
+	       //	       if (i==0) phas1  = phase5[i];
+	       phase5[i] = phase5[i]; // -phas1; 	       
 	     }
 	   else
 	     {
-	       if (i==0) phas1  = fortran_mod((phase5),1.0L); 
-	       phase5 = phase5-phas1; 
+	       // This is where the first residual is set to equal zero
+	       //	       if (i==0) phas1  = fortran_mod((phase5[i]),1.0L); 
+	       phase5[i] = phase5[i]; //-phas1; 
 	     }
-	   
+	 }
+       // Now calculate phas1 to set the first residual equal to zero
+       for (i=0;i<psr[p].nobs;i++)
+	 {
+	   if (psr[p].obsn[i].deleted==0 && 
+	       (psr[0].param[param_start].fitFlag[0]==0 || psr[0].obsn[i].sat > psr[0].param[param_start].val[0]) &&
+	       (psr[0].param[param_finish].fitFlag[0]==0 || psr[0].obsn[i].sat < psr[0].param[param_finish].val[0]))
+	     {
+	       if (psr[p].param[param_iperharm].paramSet[0]==1)
+		 phas1  = phase5[i];
+	       else
+		 phas1 = fortran_mod((phase5[i]),1.0L); 
+	       zeroID=i;
+	       printf("phas1 set to observation number %d\n",i);
+	       break;
+	     }
+	       
+	 }
+       for (i=0;i<psr[p].nobs;i++)
+	 {
 	   /* phase5 - nphase is also the fractional part of phase5
             * -- this is different to using fortran_mod() as above as the nearest integer
             *    to a negative or a positive number is calculated differently. 
 	    */
-	   nphase = (longdouble)fortran_nint(phase5);
+	   phase5[i] -= phas1;
+	   nphase = (longdouble)fortran_nint(phase5[i]);
 
-	   residual = phase5 - nphase + dphase+ddnprd;
+	   residual = phase5[i] - nphase + dphase+ddnprd;
 	   psr[p].obsn[i].nphase = nphase;
 	   /* residual = residual in phase */
 	   if (psr[p].obsn[i].deleted!=1)
@@ -349,7 +371,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /*	   psr[p].obsn[i].phase = nint(phase5)+phaseint; */
 	   /* dt in resid.f */
 	   /*	   psr[p].obsn[i].phase = phaseint+nphase+phase5-nphase+dphase+ddnprd; */	   
-	   psr[p].obsn[i].phase = phaseint+phase5;  
+	   psr[p].obsn[i].phase = phaseint+phase5[i];  
 	   if (psr[p].obsn[i].deleted!=1)
 	     {
 	       mean+=psr[p].obsn[i].residual;
