@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[1.01],[george.hobbs@csiro.au])
+AC_INIT([Tempo2],[1.10],[george.hobbs@csiro.au])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -69,7 +69,7 @@ LT_LIB_DLLOAD
 
 SWIN_LIB_PGPLOT
 SWIN_LIB_FFTW
-
+SWIN_LIB_CFITSIO
 
 #GSL basic stuff
 #Better tests are in AX_PATH_GSL

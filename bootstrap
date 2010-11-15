@@ -8,6 +8,7 @@ mkdir -p ./build_settings
 ./make_build_settings.sh ./plugin_lists/vanilla.plugins > ./build_settings/vanilla.am
 ./make_build_settings.sh ./plugin_lists/pgplot.plugins @PGPLOT_LIBS@ @PGPLOT_CFLAGS@ > ./build_settings/pgplot.am
 ./make_build_settings.sh ./plugin_lists/pgplot_fftw.plugins "@PGPLOT_LIBS@ @FFTW_LIBS@" "@PGPLOT_CFLAGS@ @FFTW_CFLAGS@" > ./build_settings/pgplot_fftw.am
+./make_build_settings.sh ./plugin_lists/pgplot_cfitsio.plugins "@PGPLOT_LIBS@ @CFITSIO_LIBS@" "@PGPLOT_CFLAGS@ @CFITSIO_CFLAGS@" > ./build_settings/pgplot_cfitsio.am
 ./make_build_settings.sh ./plugin_lists/gsl.plugins > ./build_settings/gsl.am
 cd ..
 

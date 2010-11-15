@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libsofa.la
 
-libsofa_la_FFLAGS=-fno-second-underscore
-libsofa_la_LDFLAGS=-static
+libsofa_la_FFLAGS=-fno-second-underscore -fPIC
+#libsofa_la_LDFLAGS=-static
 
 libsofa_la_SOURCES= a2af.for a2tf.for anp.for anpm.for bi00.for bp00.for bpn2xy.for c2i00a.for c2i00b.for c2ibpn.for c2ixy.for c2ixys.for c2s.for c2t00a.for c2t00b.for c2tceo.for c2teqx.for c2tpe.for c2txy.for cal2jd.for cp.for cpv.for cr.for d2tf.for dat.for dtdb.for ee00.for ee00a.for ee00b.for eect00.for epb.for epb2jd.for epj.for epj2jd.for epv00.for eqeq94.for era00.for fk52h.for fk5hip.for fk5hz.for gmst00.for gmst82.for gst00a.for gst00b.for gst94.for h2fk5.for hfk5z.for ir.for jd2cal.for jdcalf.for num00a.for num00b.for numat.for nut00a.for nut00b.for nut80.for nutm80.for obl80.for p2pv.for p2s.for pap.for pas.for pdp.for plan94.for pm.for pmat00.for pmat76.for pmp.for pn.for pn00.for pn00a.for pn00b.for pnm00a.for pnm00b.for pnm80.for pom00.for ppp.for ppsp.for pr00.for prec76.for pv2p.for pv2s.for pvdpv.for pvm.for pvmpv.for pvppv.for pvstar.for pvu.for pvup.for pvxpv.for pxp.for rm2v.for rv2m.for rx.for rxp.for rxpv.for rxr.for ry.for rz.for s00.for s00a.for s00b.for s2c.for s2p.for s2pv.for s2xpv.for sepp.for seps.for sp00.for starpm.for starpv.for sxp.for sxpv.for tr.for trxp.for trxpv.for xys00a.for xys00b.for zp.for zpv.for zr.for

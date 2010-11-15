@@ -18,10 +18,17 @@ include build_settings/vanilla.am
 # Now for plugins that need PGPLOT
 #
 if HAVE_PGPLOT
+
 include build_settings/pgplot.am
+
 if HAVE_FFTW3
 include build_settings/pgplot_fftw.am
 endif
+
+if HAVE_CFITSIO
+include build_settings/pgplot_cfitsio.am
+endif
+
 endif
 
 AM_CPPFLAGS = @PGPLOT_CFLAGS@ @FFTW_CFLAGS@ 
