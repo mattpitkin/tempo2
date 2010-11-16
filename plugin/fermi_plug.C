@@ -20,19 +20,19 @@ static void random_string(int length, char *str);
 float HTest(int Nphotons, float phases[]);
 
 // met2mjd: conversion of Mission Elapsed Time in TT to MJD
-double met2mjd(double met)
+longdouble met2mjd(double met)
 {
-	double mjd_ref = 51910.0007428703703703703;	
-	double mjd = mjd_ref + met / 86400.;
+	longdouble mjd_ref = 51910.0007428703703703703;
+	longdouble mjd = mjd_ref + met / 86400.;
 	
 	return mjd;
 }
 
 // mjd2met : conversion of MJD in TT to Mission Elapsed Time
-double mjd2met(double mjd)
+double mjd2met(longdouble mjd)
 {
-	double mjd_ref = 51910.0007428703703703703;
-	double met = 86400. * (mjd - mjd_ref);
+	longdouble mjd_ref = 51910.0007428703703703703;
+	double met = (double)(86400. * (mjd - mjd_ref));
 	
 	return met;
 }
@@ -56,8 +56,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             23 September 2010\n");
-	printf("Version:             5.2\n");
+	printf("Updated:             16 November 2010\n");
+	printf("Version:             5.3\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -74,8 +74,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	strcpy(timFile[0],temptim);
 	strcat(timFile[0],".tim");
 
-	int nbins  = 20;					// default number of bins for the output phase histogram
-	int Hbins  = 20;					// default number of bins for the H-test vs time plot		
+	int nbins  = 25;					// default number of bins for the output phase histogram
+	int Hbins  = 25;					// default number of bins for the H-test vs time plot		
 
 	char FT1[MAX_FILELEN];
 	char FT2[MAX_FILELEN];
@@ -96,6 +96,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	int  output_file   = 0;
 	int  output_pos    = 0;
 	int  phase_replace = 0;
+    int  phasecol_set  = 0;
 
 	double intpart;
 
@@ -117,7 +118,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	int FT1_time_col,FT1_phase_col,FT2_time_col1,FT2_time_col2,FT2_pos_col;
 	int nrows2, rows_status, rows_left;
-	int max_rows = 10000;
+	int max_rows = 5000;
 
 	/* ------------------------------------------------- //
 	// Time and satellite position definitions
@@ -127,7 +128,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	double minFT1time = 999999999., maxFT1time = 0.;
 	double minFT2time = 999999999., maxFT2time = 0.;
 	
-	double time_MET_TT[max_rows], time_MJD_TT;
+	double time_MET_TT[max_rows];
+	longdouble time_MJD_TT;
 	double obs_earth[max_rows][3];
 
 	double sctime1 = 0., sctime2 = 0.;
@@ -169,42 +171,51 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		{
 			par_file = 1;
 			strcpy(parFile[0],argv[i+1]); 
+			i++;
 		}
 		else if (strcmp(argv[i],"-ft1")==0)
 		{
 			FT1_file = 1;
 			strcpy(FT1,argv[i+1]);
+			i++;
 		}
 		else if (strcmp(argv[i],"-ft2")==0)
 		{
 			FT2_file = 1;
 			strcpy(FT2,argv[i+1]);
+			i++;
 		}
 		else if (strcmp(argv[i],"-graph")==0)
 		{
 			sscanf(argv[i+1],"%d",&graph);
+			i++;
 		}
-      		else if (strcmp(argv[i],"-grdev")==0)
+      	else if (strcmp(argv[i],"-grdev")==0)
 		{
 			strcpy(gr,argv[i+1]);
+			i++;
 		}
 		else if (strcmp(argv[i],"-bins")==0)
 		{
 			sscanf(argv[i+1],"%d",&nbins);
+			i++;
 		}
 		else if (strcmp(argv[i],"-Hbins")==0)
 		{
 			sscanf(argv[i+1],"%d",&Hbins);
+			i++;
 		}
 		else if (strcmp(argv[i],"-output")==0)
 		{
 			output_file = 1;
 			strcpy(output,argv[i+1]);
+			i++;
 		}
 		else if (strcmp(argv[i],"-pos")==0)
 		{
 			output_pos = 1;
 			strcpy(output_pos_file,argv[i+1]);
+			i++;
 		}
 		else if (strcmp(argv[i],"-phase")==0)
 		{
@@ -217,6 +228,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		else if (strcmp(argv[i],"-col")==0)
 		{
 			strcpy(phasecol,argv[i+1]);
+			phasecol_set = 1;
+			i++;
 		}	
 		else if (strcmp(argv[i],"-h")==0)
 		{
@@ -247,7 +260,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("\t tempo2 -gr fermi -ft1 FT1.fits -ft2 FT2.fits -f par.par\n");
 		printf("More options are available. If you need help, please type:\n");
 		printf("\t tempo2 -gr fermi -h\n");
-		exit(0);
+		exit(1);
 	}
 	if (!FT2_file)
 	{
@@ -256,7 +269,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("\t tempo2 -gr fermi -ft1 FT1.fits -ft2 FT2.fits -f par.par\n");
 		printf("More options are available. If you need help, please type:\n");
 		printf("\t tempo2 -gr fermi -h\n");		
-		exit(0);
+		exit(2);
 	}
 	if (!par_file)
 	{
@@ -265,7 +278,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("\t tempo2 -gr fermi -ft1 FT1.fits -ft2 FT2.fits -f par.par\n");
 		printf("More options are available. If you need help, please type:\n");
 		printf("\t tempo2 -gr fermi -h\n");
-		exit(0);
+		exit(3);
 	}
 	if (output_file)
 	{
@@ -277,7 +290,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
 	if (ophase)
 	{
-		if (strcmp(phasecol,"PULSE_PHASE") == 0) strcpy(phasecol,"ORBITAL_PHASE");
+		if (!phasecol_set) strcpy(phasecol,"ORBITAL_PHASE");
 	}
 
 	/* ------------------------------------------------- //
@@ -286,12 +299,34 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   	if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
     {
+        // Check that the input file has not been barycentered.
+        int kw_status;
+        char value[80];
+        char comment[80];
+        
+        kw_status = 0;
+        fits_read_key(ft1, TSTRING, "TIMESYS",(void*)value, comment, &kw_status);
+        
+        if (kw_status <= 0)
+        {
+            if (strcmp(value,"TT"))
+            {
+                fprintf(stderr,"Error: TIMESYS is %s rather than TT; input file seems to have been barycentered.\n", value);
+                exit(2);
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Warning: unable to determine whether data have been barycentered (plugin will give wrong results if they have).\n");
+        }
+        
+        // Load photon arrival times.
 		fits_movabs_hdu(ft1,2,NULL,&status);
 
 		fits_get_num_rows(ft1, &nrows_FT1, &status);
 		fits_get_num_cols(ft1, &ncols_FT1, &status);
 
-		fits_get_colname(ft1,CASESEN,"TIME",colname,&FT1_time_col,&status);
+		fits_get_colname(ft1,CASESEN,(char *)"TIME",colname,&FT1_time_col,&status);
 		
 		//
 		
@@ -310,7 +345,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             
             if (status != 0)
             {
-                    fits_insert_col(ft1,ncols_FT1 + 1,phasecol,"1D", &status2);
+                    fits_insert_col(ft1,ncols_FT1 + 1,phasecol,(char *)"1D", &status2);
                             
                     if (status2 != 0)
                     {
@@ -344,9 +379,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		fits_get_num_rows(ft2, &nrows_FT2, &status);
 		fits_get_num_cols(ft2, &ncols_FT2, &status);
 
-		fits_get_colname(ft2,CASESEN,"START",colname,&FT2_time_col1,&status);
-		fits_get_colname(ft2,CASESEN,"STOP",colname,&FT2_time_col2,&status);
-		fits_get_colname(ft2,CASESEN,"SC_POSITION",colname,&FT2_pos_col,&status);
+		fits_get_colname(ft2,CASESEN,(char *)"START",colname,&FT2_time_col1,&status);
+		fits_get_colname(ft2,CASESEN,(char *)"STOP",colname,&FT2_time_col2,&status);
+		fits_get_colname(ft2,CASESEN,(char *)"SC_POSITION",colname,&FT2_pos_col,&status);
 		
 		for (i=1;i<=nrows_FT2;i++)
 		{
@@ -490,7 +525,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		for (i=0;i<nrows2;i++)
 		{
 			time_MJD_TT = met2mjd(time_MET_TT[i]);		
-			fprintf(temp_tim," fermi 0.0 %.12lf 0.00000 BAT\n",time_MJD_TT);
+			fprintf(temp_tim," fermi 0.0 %.12Lf 0.00000 BAT\n",time_MJD_TT);
 		}
 
 		fclose(temp_tim);
