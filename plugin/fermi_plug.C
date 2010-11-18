@@ -118,7 +118,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	int FT1_time_col,FT1_phase_col,FT2_time_col1,FT2_time_col2,FT2_pos_col;
 	int nrows2, rows_status, rows_left;
-	int max_rows = 5000;
+	int max_rows = MAX_OBSN_VAL / 2;
 
 	/* ------------------------------------------------- //
 	// Time and satellite position definitions
@@ -418,7 +418,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
 	
 	
-	// The FT1 file is cut into small tim files with # rows <= 10000
+	// The FT1 file is cut into small tim files with # rows <= (MAX_OBSN_VAL / 2)
 
 	rows_status = 1;
 	rows_left	= nrows_FT1 - rows_status + 1;
