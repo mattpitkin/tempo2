@@ -58,7 +58,7 @@ float findMean(float *x,pulsar *psr,int i1,int i2);
 double findMeanD(float *x,pulsar *psr,int i1,int i2);
 void callFit(pulsar *psr,int npsr);
 void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,longdouble origStart,
-	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX);
+	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile);
 float deletePoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float mouseY);
 void displayStatistics(float *x,float *y,int count,float plotx1,float plotx2,float ploty1,float ploty2);
 int idPoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float mouseY);
@@ -1673,7 +1673,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  /* Need to update doFit.C to take notice of START and FINISH */
 	  /* for this to work properly                                 */
 	  
-	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot);
+	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile);
 	  setZoomY1 = 0;
 	  setZoomY2 = 0;
 	}
@@ -1684,7 +1684,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  scanf("%lf",&noiseAdd);
 	  for (i=0;i<psr[0].nobs;i++)
 	    psr[0].obsn[i].sat+=((noiseAdd*1e-6*TKgaussDev(&idum))/86400.0);
-	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot);
+	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile);
+
 	  setZoomY1 = 0;
 	  setZoomY2 = 0;
 	}
@@ -1969,6 +1970,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 = 0;
 	    psr[0].param[param_start].val[0] = origStart;
 	    psr[0].param[param_finish].val[0] = origFinish;
+	    psr[0].param[param_start].fitFlag[0] = 0;
+	    psr[0].param[param_finish].fitFlag[0] = 0;
 	  }
 	else if (key==13) /* Toggle menu bar */
 	  {
@@ -2587,7 +2590,8 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 	}
       if (mouseX==0 && mouseY==3) 
 	{
-	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,1,plotx);
+	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,1,plotx,dcmFile,covarFuncFile);
+
 	  /*     callFit(psr,1); */ /* MUST FIX FOR ZOOM MODES */
 	}
       if (mouseX==1 && mouseY==3) textOutput(psr,1,0,0,0,1,"");
@@ -3285,7 +3289,7 @@ void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeM
 }
 
 void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,longdouble origStart,
-	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX)
+	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile)
 {
   int i,k;
   
@@ -3349,7 +3353,10 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 	}
     }
   //  callFit(psr,npsr);
-  doFit(psr,npsr,0);
+  if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
+    doFit(psr,npsr,0);
+  else
+    doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
   formBatsAll(psr,npsr);	  
   /* Form residuals */
   formResiduals(psr,npsr,0); // iteration);
