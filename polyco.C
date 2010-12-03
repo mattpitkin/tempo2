@@ -109,6 +109,10 @@ void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,i
   psr[0].param[param_track].paramSet[0]=0;
   globalParameter=0; 
 
+  // Zap the output files so we can append days to them later
+  fclose(fopen("polyco_new.dat","w"));
+  fclose(fopen("newpolyco.dat","w"));
+
   for (afmjd=polyco_MJD1; afmjd <= polyco_MJD2; afmjd+=tsid)
     {
       /* Create some arrival times spread throughout the day */
@@ -276,8 +280,11 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
   struct tm *timePtr;
   time_t tm;
 
-  fout = fopen("polyco_new.dat","w");
-  fout2 = fopen("newpolyco.dat","w");
+  //  fout = fopen("polyco_new.dat","w");
+  //  fout2 = fopen("newpolyco.dat","w");
+
+  fout = fopen("polyco_new.dat","a");
+  fout2 = fopen("newpolyco.dat","a");
 
   /* Note: throughout we are ignoring the first 'TOA' */
   for (i=1;i<psr->nobs;i++)
@@ -291,7 +298,7 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
       tmidMJD = psr->obsn[iref].sat - (int)psr->obsn[iref].sat;
 
       tm = (time_t)((double)afmjd-40587.0)*SECDAY; /* Number of seconds since 01-Jan-70 */
-      timePtr = localtime(&tm);
+      timePtr = gmtime(&tm);
       strftime(date,100,"%d-%b-%y",timePtr);
       if (date[0]=='0') date[0]=' ';
       rphase = psr->obsn[iref].phase;
