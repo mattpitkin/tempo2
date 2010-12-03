@@ -259,7 +259,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       else
 		 phas1 = fortran_mod((phase5[i]),1.0L); 
 	       zeroID=i;
-	       printf("phas1 set to observation number %d\n",i);
+	       //	       printf("phas1 set to observation number %d\n",i);
 	       break;
 	     }
 	       
@@ -321,20 +321,20 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   m2 = (double)(residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
 		   m3 = (double)(residual-1-lastResidual)/(psr[p].obsn[i].bat-lastBat);
 		   m4 = (double)(residual+1-lastResidual)/(psr[p].obsn[i].bat-lastBat);
-		   printf("pos %d %g %g %g %g (%g) (%g) (%g)\n",i,m1,m2,m3,m4,fabs(m2-m1),fabs(m3-m1),fabs(m4-m1));
+		   //		   printf("pos %d %g %g %g %g (%g) (%g) (%g)\n",i,m1,m2,m3,m4,fabs(m2-m1),fabs(m3-m1),fabs(m4-m1));
 
 		   if (fabs(m1-m2) < fabs(m1-m3) && fabs(m1-m2) < fabs(m1-m4))
 		     {
 		     }
 		   else if (fabs(m1-m3) < fabs(m1-m2) && fabs(m1-m3) < fabs(m1-m4))
 		     {
-		       printf("Updating neg\n");
+		       //		       printf("Updating neg\n");
 		       residual-=1.0;
 		       ntrk-=1;
 		     }
 		   else if (fabs(m1-m4) < fabs(m1-m2) && fabs(m1-m4) < fabs(m1-m3))
 		     {
-		       printf("Updating pos\n");
+		       //		       printf("Updating pos\n");
 		       residual+=1.0;
 		       ntrk+=1;
 		       } 
@@ -366,6 +366,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       if (psr[p].obsn[i].sat > psr[p].obsn[psr[p].phaseJumpID[k]].sat)
 		 psr[p].obsn[i].residual += (double)psr[p].phaseJumpDir[k]/psr[p].param[param_f].val[0];
 	     }
+	   nf0  = (int)psr[p].param[param_f].val[0];
+	   ntpd = ((int)psr[p].obsn[i].bbat-(int)psr[p].param[param_pepoch].val[0]);
 
 	   phaseint = nf0*ntpd*86400.0;
 	   /*	   psr[p].obsn[i].phase = nint(phase5)+phaseint; */
