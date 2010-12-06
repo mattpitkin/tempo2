@@ -1142,16 +1142,16 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      {
 		int ichan=-1;
 		int isub=-1;
-		char options1[1000]="";
-		char options2[1000]="";
+		char options1[100]="";
+		char options2[100]="";
 		char options4[1000]="";
 		// Check flags to see if -chan, -sub are set
-		for (k=0;k<psr[0].obsn[id[closest]].nFlags;k++)
+		for (k=0;k<psr[0].obsn[closest].nFlags;k++)
 		  {
-		    if (strcmp(psr[0].obsn[id[closest]].flagID[k],"-chan")==0)
-		      sscanf(psr[0].obsn[id[closest]].flagVal[k],"%d",&ichan);
-		    if (strcmp(psr[0].obsn[id[closest]].flagID[k],"-sub")==0)
-		      sscanf(psr[0].obsn[id[closest]].flagVal[k],"%d",&isub);
+		    if (strcmp(psr[0].obsn[closest].flagID[k],"-chan")==0)
+		      sscanf(psr[0].obsn[closest].flagVal[k],"%d",&ichan);
+		    if (strcmp(psr[0].obsn[closest].flagID[k],"-sub")==0)
+		      sscanf(psr[0].obsn[closest].flagVal[k],"%d",&isub);
 		  }
 		if (ichan!=-1) sprintf(options1," -H %d ",ichan);
 		if (isub!=-1) sprintf(options2," -I %d ",isub);
