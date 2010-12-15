@@ -48,7 +48,7 @@ char covarFuncFile[MAX_FILELEN];
 void overPlotN(int overN,float overX[], float overY[],float overYe[]);
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float lockx1,float lockx2,float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile,
-            int showChisq,int nohead);
+            int showChisq,int nohead,char* flagColour);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
 	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log);
 void drawAxisSel(float x,float y,char *str,int sel1,int sel2);
@@ -243,6 +243,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char  setupFile[100]="";
   //display chisq?
   int showChisq = 0;
+  char flagColour[100];
+
+  strcpy(flagColour,"");
 
   *npsr = 1;  /* This graphical interface will only show results for one pulsar */
 
@@ -322,6 +325,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       {
 	showChisq = 1;
       }
+      else if (strcmp(argv[i],"-colour") == 0)
+      {
+	strcpy(flagColour,argv[++i]);
+      }
       else if (strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0){
 	printf("\n TEMPO2 plk plugin\n");
 	printf("===================\n");
@@ -382,9 +389,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   callFit(psr,*npsr);             /* Do all the fitting routines */
   if (newpar==1)
     textOutput(psr,*npsr,0,0,0,1,newParFile);
+
+  
+
+
   if (debugFlag==1) printf("plk: calling doPlot\n");
   doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,lockx1,lockx2,locky1,locky2,xplot,yplot,
-	 publish,argc,argv,menu,setupFile,showChisq,nohead);  /* Do plot */
+	 publish,argc,argv,menu,setupFile,showChisq,nohead,flagColour);  /* Do plot */
+  if (debugFlag==1) printf("plk: End\n");
   return 0;
 }  
 
@@ -449,7 +461,7 @@ void callFit(pulsar *psr,int npsr)
 
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float lockx1, float lockx2, float locky1, float locky2,int xplot,int yplot,
-	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq,int nohead)
+	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq,int nohead,char* flagColour)
 {
   int i,fitFlag=1,exitFlag=0,scale1=0,scale2=psr[0].nobs,count,ncount,j,k;
   longdouble centreEpoch;
@@ -481,7 +493,6 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   int   plotPoints=1;
   int   placeMarks=-1;
   int   plotErr=1;
-  char  flagColour[100]="";
   int   iFlagColour=0;
   char  key;
   float plottingx=-1e10;
@@ -647,6 +658,38 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
       if (min1 > psr[0].obsn[i].bat) min1 = psr[0].obsn[i].bat;
       if (max1 < psr[0].obsn[i].bat) max1 = psr[0].obsn[i].bat;
     }
+
+
+
+  if (strcmp(flagColour,"")!=0){
+	  int found=0;
+	  iFlagColour=1;
+	  flagN=0;
+	  for (i=0;i<psr[0].nobs;i++)
+	  {
+		  for (k=0;k<psr[0].obsn[i].nFlags;k++)
+		  {
+			  if (strcmp(psr[0].obsn[i].flagID[k],flagColour)==0)
+			  {
+				  found=0;
+				  for (j=0;j<flagN;j++)
+				  {
+					  if (strcmp(psr[0].obsn[i].flagVal[k],flagStore[j])==0)
+					  {
+						  found=1;
+						  break;
+					  }
+				  }
+				  if (found==0)
+				  {
+					  strcpy(flagStore[flagN],psr[0].obsn[i].flagVal[k]);
+					  flagN++;
+				  }			
+			  }
+		  }	
+	  }
+  }
+
 
   do {
     if(debugFlag) 
