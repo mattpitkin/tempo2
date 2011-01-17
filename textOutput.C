@@ -791,8 +791,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
 	  fprintf(fout2,"%-15.15s%s\n","EPHEM",psr[p].ephemeris);
 	  fprintf(fout2,"%-15.15s%s\n","NITS","1");
-	  fprintf(fout2,"%-15.15s%d\n","NTOA",psr[p].nobs);
-
+	  fprintf(fout2,"%-15.15s%d\n","NTOA",psr[p].nFit);
+	  fprintf(fout2,"%-15.15s%.4f %d\n","CHI2R",chisqr/(double)psr[p].fitNfree,psr[p].fitNfree);
 	  /*	  if (psr[p].tempo1 == 1)
 	    fprintf(fout2,"EPHVER         2\n");
 	  else
