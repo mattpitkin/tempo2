@@ -58,7 +58,7 @@ float findMean(float *x,pulsar *psr,int i1,int i2);
 double findMeanD(float *x,pulsar *psr,int i1,int i2);
 void callFit(pulsar *psr,int npsr);
 void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,longdouble origStart,
-	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile);
+	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile,int zoom);
 float deletePoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float mouseY);
 void displayStatistics(float *x,float *y,int count,float plotx1,float plotx2,float ploty1,float ploty2);
 int idPoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float mouseY);
@@ -78,7 +78,7 @@ void slaCalyd ( int iy, int im, int id, int *ny, int *nd, int *j );
 void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot,int jumpOffset,int iFlagColour, int nFlags);
 void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX1,int setZoomX2,
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,longdouble centreEpoch,
-	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics, char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset);
+	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics, char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset,int zoom);
 void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX1,int setZoomX2,
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,longdouble centreEpoch,
 	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics,char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset);
@@ -481,6 +481,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   char  userValStr[1000]="DPA";
   int   userValChange=1;
   int   setZoomX1=0,setZoomX2=0,setZoomY1=0,setZoomY2=0,graphics=0;
+  int   zoom=0;
   int   noreplot=0;
   int overPlotn = 0;
   int   overPlotS = -1;
@@ -1193,7 +1194,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  {
 		    if (strcmp(psr[0].obsn[closest].flagID[k],"-chan")==0)
 		      sscanf(psr[0].obsn[closest].flagVal[k],"%d",&ichan);
-		    if (strcmp(psr[0].obsn[closest].flagID[k],"-sub")==0)
+		    if (strcmp(psr[0].obsn[closest].flagID[k],"-sub")==0
+			|| strcmp(psr[0].obsn[closest].flagID[k],"-subint")==0)
 		      sscanf(psr[0].obsn[closest].flagVal[k],"%d",&isub);
 		  }
 		if (ichan!=-1) sprintf(options1," -H %d ",ichan);
@@ -1716,7 +1718,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  /* Need to update doFit.C to take notice of START and FINISH */
 	  /* for this to work properly                                 */
 	  
-	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile);
+	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile,zoom);
 	  setZoomY1 = 0;
 	  setZoomY2 = 0;
 	}
@@ -1727,7 +1729,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  scanf("%lf",&noiseAdd);
 	  for (i=0;i<psr[0].nobs;i++)
 	    psr[0].obsn[i].sat+=((noiseAdd*1e-6*TKgaussDev(&idum))/86400.0);
-	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile);
+	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile,zoom);
 
 	  setZoomY1 = 0;
 	  setZoomY2 = 0;
@@ -1805,7 +1807,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  }
 	      }
 	    if (menu>0 && mouseY > ploty2)
-	      checkMenu(psr,mouseX,mouseY,2,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset);
+	      checkMenu(psr,mouseX,mouseY,2,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom);
 	    else
 	      deletePoint(psr,x,y,id,count,mouseX,mouseY); /* Delete closest point */
 	  }
@@ -1941,10 +1943,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  }
 	      }
 	    if ((menu==1 || menu==2) && mouseY > ploty2)
-	      checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset);
+	      checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom);
 	    else if (menu==3 && (mouseY > ploty2 || mouseX < plotx1 || mouseY < ploty1))
 	      {
-		checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset);
+		checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom);
 	      }
 	    else
 	      idPoint(psr,x,y,id,count,mouseX,mouseY); /* Identify closest point */
@@ -1952,11 +1954,13 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	else if (key=='s')  /* Start zoom */
 	  {
 	    setZoomX1 = 1;
+	    zoom=1;
 	    zoomX1 = mouseX;
 	  }
 	else if (key=='f')  /* Finish zoom */
 	  {
 	    setZoomX2 = 1;
+	    zoom=1;
 	    zoomX2 = mouseX;
 	  }
 	else if (key==6)   /* ctrl-F: remove FITWAVES curve */
@@ -2003,6 +2007,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  {
 	    cpgband(2,0,mouseX,mouseY,&mouseX2,&mouseY2,&key);
 	    setZoomX1 = 1; setZoomX2 = 1; setZoomY1 = 1; setZoomY2 = 1;
+	    zoom=1;
 	    zoomX1 = TKretMin_f(mouseX,mouseX2);
 	    zoomX2 = TKretMax_f(mouseX,mouseX2);
 	    zoomY1 = TKretMin_f(mouseY,mouseY2);
@@ -2010,6 +2015,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  }
 	else if (key=='u') /* Unzoom */
 	  {
+	    zoom=0;
 	    setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 = 0;
 	    psr[0].param[param_start].val[0] = origStart;
 	    psr[0].param[param_finish].val[0] = origFinish;
@@ -2518,7 +2524,7 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,
 	       longdouble centreEpoch,int menu,int plotx,char parFile[][MAX_FILELEN],
 	       char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics,
-	       char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset) 
+	       char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset,int zoom) 
 {
   float x1,x2,y1,y2,x3,x4,y3,y4,x7,y7,xscale,yscale,xscale2,x0;
   float x5,x6,y5,y6;
@@ -2633,7 +2639,7 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 	}
       if (mouseX==0 && mouseY==3) 
 	{
-	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,1,plotx,dcmFile,covarFuncFile);
+	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,1,plotx,dcmFile,covarFuncFile,zoom);
 
 	  /*     callFit(psr,1); */ /* MUST FIX FOR ZOOM MODES */
 	}
@@ -3332,10 +3338,10 @@ void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeM
 }
 
 void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,longdouble origStart,
-	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile)
+	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile,int zoom)
 {
   int i,k;
-  
+  printf("Redoing the fit %d\n",zoom);
   if (fitFlag==1 || fitFlag==2)
     {
       if (setZoomX1 == 0) {
@@ -3363,7 +3369,6 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 	    psr[0].param[param_finish].fitFlag[0]=1;
 	  }
       }
-      
       if (setZoomX1 == 1) {
 	psr[0].param[param_start].paramSet[0]=1;
 	psr[0].param[param_start].fitFlag[0]=1;
@@ -3382,6 +3387,12 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 	  psr[0].param[param_finish].val[0] = zoomX2+centreEpoch;
 	psr[0].param[param_finish].prefit[0] = psr[0].param[param_finish].val[0];
       }
+      if (zoom==0)
+	{
+	  psr[0].param[param_start].fitFlag[0]=0;
+	  psr[0].param[param_finish].fitFlag[0]=0;
+	}
+
     }
   /* Convert all prefit values to postfit values */
   for (i=0;i<MAX_PARAMS;i++)
