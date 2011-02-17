@@ -1,4 +1,4 @@
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russel Edwards
+//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 
@@ -89,6 +89,7 @@ void newTim(pulsar *psr);
 void plotFITWAVES_spec();
 void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeMean,double mean,int count,int *id,
 		int fitFlag,float *x,float *y);
+double lmst2(double mjd,double olong,double *tsid,double *tsid_der);
 
 /* GLOBAL VARIABLES FOR FITWAVES */
 double FITWAVES_omega;
@@ -725,9 +726,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    bad = setPlot(y,count,psr,i,unitFlag,plotPhase,yplot,&userValChange,userCMD,userValStr,userX,
 		    centreEpoch,logy);
 
-	    if (yplot==1) /* Get pre-fit residual */
+	    if (yplot==1)                            /* Get pre-fit residual */
 	      strcpy(fitType,"pre-fit");
-	    else if (yplot==2) /* Post-fit residual */
+	    else if (yplot==2)                       /* Post-fit residual    */
 	      strcpy(fitType,"post-fit");
 	    errBar[count] = psr[0].obsn[i].toaErr;
 	    if (bad==0) count++;	    
@@ -2050,12 +2051,13 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  delY2 = TKretMax_f(mouseY,mouseY2);
 	  printf("%f %f %f %f\n",delX1,delX2,delY1,delY2);
 
-	  for (i=0;i<psr[0].nobs;++i) {
+	  for (i=0;i<count;++i) {
+	    //	    printf("Here with %d %f %f %d\n",i,x[i],y[i],id[i]);
             if ((x[i]>delX1) &&
-	          (x[i]<delX2) &&
-	          (y[i]>delY1) &&
-	          (y[i]<delY2)) {
-         	    psr[0].obsn[id[i]].deleted = 1;
+		(x[i]<delX2) &&
+		(y[i]>delY1) &&
+		(y[i]<delY2)) {
+		psr[0].obsn[id[i]].deleted = 1;
 	    }
 	  }
 	}
@@ -2714,6 +2716,9 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
       else if (mouseY==8)  *xplot=10;
       else if (mouseY==9)  *xplot=11;
       else if (mouseY==10) *xplot=12;
+      else if (mouseY==11) *xplot=13;
+      else if (mouseY==12) *xplot=14;
+      else if (mouseY==13) *xplot=15;
     }
   else if (mouseX==1)
     {
@@ -2728,6 +2733,9 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
       else if (mouseY==8)  *yplot=10;
       else if (mouseY==9)  *yplot=11;
       else if (mouseY==10) *yplot=12;
+      else if (mouseY==11) *yplot=13;
+      else if (mouseY==12) *yplot=14;
+      else if (mouseY==13) *yplot=15;
     }
 
   // Now check the bottom menu
@@ -3009,6 +3017,9 @@ void drawMenu3(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,
   drawAxisSel(0,0.52,"year",xplot==10,yplot==10);
   drawAxisSel(0,0.46,"elevation",xplot==11,yplot==11);
   drawAxisSel(0,0.40,"rounded MJD",xplot==12,yplot==12);
+  drawAxisSel(0,0.34,"sidereal time",xplot==13,yplot==13);
+  drawAxisSel(0,0.28,"hour angle",xplot==14,yplot==14);
+  drawAxisSel(0,0.22,"para. angle",xplot==15,yplot==15);
   
 }
 
@@ -3600,6 +3611,52 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
     {
       x[count] = (float)psr[0].obsn[iobs].bat;
     }
+  else if (plot==13 || plot==14 || plot==15) 
+    /* 13 = Sidereal time, 14 = hour angle, 15 = parallactic angle */
+    {
+      double tsid,sdd,erad,hlt,alng,hrd;
+      double toblq,oblq,pc,ph;
+      double siteCoord[3],ha;
+      observatory *obs;
+      //      printf("In here\n");
+      obs = getObservatory(psr[0].obsn[iobs].telID);
+      erad = sqrt(obs->x*obs->x+obs->y*obs->y+obs->z*obs->z);//height(m)
+      hlt  = asin(obs->z/erad); // latitude
+      alng = atan2(-obs->y,obs->x); // longitude
+      hrd  = erad/(2.99792458e8*499.004786); // height (AU)
+      siteCoord[0] = hrd * cos(hlt) * 499.004786; // dist from axis (lt-sec)
+      siteCoord[1] = siteCoord[0]*tan(hlt); // z (lt-sec)
+      siteCoord[2] = alng; // longitude
+
+      toblq = (psr[0].obsn[iobs].sat+2400000.5-2451545.0)/36525.0;
+      oblq = (((1.813e-3*toblq-5.9e-4)*toblq-4.6815e1)*toblq +84381.448)/3600.0;
+      
+      pc = cos(oblq*M_PI/180.0+psr[0].obsn[iobs].nutations[1])*psr[0].obsn[iobs].nutations[0];
+	
+      lmst2(psr[0].obsn[iobs].sat+psr[0].obsn[iobs].correctionUT1/SECDAY,0.0,&tsid,&sdd);
+      tsid*=2.0*M_PI;
+      /* Compute the local, true sidereal time */
+      ph = tsid+pc-siteCoord[2];  
+      ha = (fmod(ph,2*M_PI)-psr[0].param[param_raj].val[0])/M_PI*12;
+      if (plot==13)
+	x[count] = (float)fmod(ph/M_PI*12,24.0);
+      else if (plot==14)
+	x[count] = (float)(fmod(ha,12));
+      else if (plot==15)
+	{
+	  double cp,sqsz,cqsz,pa;
+	  double phi,dec;
+	  phi =  hlt;
+	  dec =  psr[0].param[param_decj].val[0];
+	  cp =   cos(phi);
+	  sqsz = cp*sin(ha*M_PI/12.0);
+	  cqsz = sin(phi)*cos(dec)-cp*sin(dec)*cos(ha*M_PI/12.0);
+	  if (sqsz==0 && cqsz==0) cqsz=1.0;
+	  pa=atan2(sqsz,cqsz);
+	  x[count] = (float)(pa*180.0/M_PI);
+	}
+      //      printf("Local sidereal time = %s %g %g %g %g %g\n",psr[0].obsn[iobs].fname,ph,tsid,pc,siteCoord[2],x[count]);
+    }
   if (log==1 && x[count]>0)
     x[count] = log10(x[count]);
   else if (log==1 && x[count]<0)
@@ -3640,6 +3697,9 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
   else if (plot==10)  sprintf(str,"Year");
   else if (plot==11)  sprintf(str,"Elevation (deg)");
   else if (plot==12)  sprintf(str,"MJD");
+  else if (plot==13)  sprintf(str,"Local sidereal time (hour)");
+  else if (plot==14)  sprintf(str,"Hour angle (hour)");
+  else if (plot==15)  sprintf(str,"Parallactic angle (deg)");
   
 }
 
@@ -3824,4 +3884,43 @@ void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat )
    i = n + j;
    *nd = 59 + (int) ( l -365L * i + ( ( 4L - n ) / 4L ) * ( 1L - j ) );
    *ny = (int) ( 4L * k + i ) - 4716;
+}
+
+// Get sidereal time
+double lmst2(double mjd,double olong,double *tsid,double *tsid_der)
+{
+  double xlst,sdd;
+  double gmst0;
+  double a = 24110.54841;
+  double b = 8640184.812866;
+  double c = 0.093104;
+  double d = -6.2e-6;
+  double bprime,cprime,dprime;
+  double tu0,fmjdu1,dtu,tu,seconds_per_jc,gst;
+  int nmjdu1;
+
+  nmjdu1 = (int)mjd;
+  fmjdu1 = mjd - nmjdu1;
+
+  tu0 = ((double)(nmjdu1-51545)+0.5)/3.6525e4;
+  dtu  =fmjdu1/3.6525e4;
+  tu = tu0+dtu;
+  gmst0 = (a + tu0*(b+tu0*(c+tu0*d)))/86400.0;
+  seconds_per_jc = 86400.0*36525.0;
+
+  bprime = 1.0 + b/seconds_per_jc;
+  cprime = 2.0 * c/seconds_per_jc;
+  dprime = 3.0 * d/seconds_per_jc;
+
+  sdd = bprime+tu*(cprime+tu*dprime);
+
+  gst = gmst0 + dtu*(seconds_per_jc + b + c*(tu+tu0) + d*(tu*tu+tu*tu0+tu0*tu0))/86400;
+  xlst = gst - olong/360.0;
+  xlst = fortran_mod(xlst,1.0);
+
+  if (xlst<0.0)xlst=xlst+1.0;
+
+  *tsid = xlst;
+  *tsid_der = sdd;
+  return 0.0;
 }
