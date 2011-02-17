@@ -430,9 +430,6 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  bootstrap(psr,p,npsr);
 	}
     
-
-
-
   for (i=0;i<psr[p].nobs;i++)
     free(uinv[i]);
   free(uinv);

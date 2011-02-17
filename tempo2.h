@@ -212,6 +212,7 @@ typedef struct observation {
   double      freq;               /* Frequency of observation (in MHz)                          */
   double      freqSSB;            /* Frequency of observation in barycentric frame (in Hz)      */
   double      toaErr;             /* Error on TOA (in us)                                       */
+  double      origErr;            /* Original error on TOA before DM correction (in us)                                       */
   double      phaseOffset;        /* Phase offset                                               */
   char        fname[MAX_FILELEN]; /* Name of data file giving TOA                               */
   char        telID[100];         /* Telescope ID                                               */

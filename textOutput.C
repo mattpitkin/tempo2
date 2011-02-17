@@ -39,6 +39,7 @@
 double m2(longdouble mf, longdouble sini, longdouble m1);
 void printGlitch(pulsar psr);
 double dglep(pulsar psr,int gn,double fph);
+void updateDMvals(pulsar *psr,int p);
 
 /* ******************************************** */
 /* textOutput                                   */
@@ -266,6 +267,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       if (psr[p].param[param_dmval].paramSet[0]==1)
 	{
 	  printf("\nDispersion measure values:\n\n");
+	  updateDMvals(psr,p);
 	  for (i=0;i<(int)psr[p].param[param_dmval].val[0];i++)
 	    printf("DMVAL%d\t %.15g %.15g %.15g\n",i+1,psr[p].dmvalsMJD[i],psr[p].dmvalsDM[i],psr[p].dmvalsDMe[i]);
 	}
@@ -672,7 +674,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		  for (k=0;k<psr[p].param[i].aSize;k++)
 		    {
 		  if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om 
-		      && i!=param_waveepoch &&
+		      && i!=param_waveepoch && i!=param_dmval &&
 		      (psr[p].tempo1==0 || (i!=param_dmepoch)))
 		    {
 		      if (strcmp(psr[p].param[i].shortlabel[k],"PB")==0)
@@ -987,4 +989,40 @@ double dglep(pulsar psr,int gn,double fph)
       }
   }while (fabs(dph) > plim);
   return t1/86400.0;
+}
+//
+// Function to determine the error in the DM estimations and apply this to the 
+// uncertainty on the TOAs
+//
+void updateDMvals(pulsar *psr,int p)
+{
+  int i,k;
+  double dm,dme,m,c;
+  printf("Updating DM vals\n");
+  for (i=0;i<psr[p].nobs;i++)
+    {
+      // Do linear interpolation
+      for (k=0;k<(int)psr[p].param[param_dmval].val[0]-1;k++)
+	{
+	  if ((double)psr[p].obsn[i].sat >= psr[p].dmvalsMJD[k] &&
+	      (double)psr[p].obsn[i].sat < psr[p].dmvalsMJD[k+1])
+	    {	      
+	      // Calculate DM
+	      m = (psr[p].dmvalsDM[k]-psr[p].dmvalsDM[k+1])/(psr[p].dmvalsMJD[k]-psr[p].dmvalsMJD[k+1]);
+	      c = psr[p].dmvalsDM[k]-m*psr[p].dmvalsMJD[k];
+	      dm = m*(double)psr[p].obsn[i].sat+c;
+	      strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dm");
+	      sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6f",dm);
+	      psr->obsn[i].nFlags++;
+	      // Calculate error in DM
+	      m = (psr[p].dmvalsDMe[k]-psr[p].dmvalsDMe[k+1])/(psr[p].dmvalsMJD[k]-psr[p].dmvalsMJD[k+1]);
+	      c = psr[p].dmvalsDMe[k]-m*psr[p].dmvalsMJD[k];
+	      dme = m*(double)psr[p].obsn[i].sat+c;
+	      strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dme");
+	      sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6g",dme);
+	      psr->obsn[i].nFlags++;
+	      break;
+	    }
+	}
+    }
 }

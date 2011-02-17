@@ -163,7 +163,6 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
   else
     {
       format=1;
-      
       while (!feof(fin))
 	{
 	  fscanf(fin,"%s",firstWord);
@@ -175,7 +174,6 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
       fclose(fin);
       fin = fopen(timname,"r");  /* Could use rewind instead */
     }
-
   if (format==2)
     {
       do {
@@ -184,7 +182,6 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
       format=1;
 
     }
-
   while (!feof(fin) && endit==0)
     {      
       valid=0;
@@ -260,6 +257,19 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 				  strcpy(strchr(line+i,' '),"");
 				}
 			      strcpy(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],line+i);
+			      // Check for DM changes
+			      if (strcmp(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-dme")==0)
+				{
+				  double dme,dm,toaErr,freq,toaCorr;
+				  sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%lf",&dme);
+				  sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags-1],"%lf",&dm);
+				  toaErr = psr->obsn[nObs].toaErr*1.0e-6;
+				  freq = psr->obsn[nObs].freq*1e6;
+
+				  toaCorr = dme/DM_CONST/1.0e-12/freq/freq;
+				  //				  printf("Have DM error %g %g %.5g %.5g %g\n",dm,dme,toaErr,freq,toaCorr);
+				  psr->obsn[nObs].toaErr = sqrt(pow(psr->obsn[nObs].toaErr,2)+pow(toaCorr*1e6,2));
+				}
 			      i+=strlen(line+i);
 			      strcpy(line,oldLine); 
 			      psr->obsn[nObs].nFlags++;
@@ -476,7 +486,8 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	       
 	    }
 	  if (skip==1) valid=0;
-	  
+	  psr->obsn[nObs].origErr = psr->obsn[nObs].toaErr;
+
 	  if (valid==1)(psr->nobs)++;
 	  if (psr->nobs > MAX_OBSN-2)
 	    {
@@ -617,7 +628,7 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
       if (strcmp(fileFormat,"tempo2")==0) 
 	{
 	  sscanf(psr->obsn[i].fname,"%s",name);
-	  interim_error = psr->obsn[i].toaErr/current_efac;
+	  interim_error = psr->obsn[i].origErr/current_efac;
 	  interim_error = sqrt(pow(interim_error,2.0)-(pow(current_equad,2.0)));
 	  fprintf(fout," %s %.8f %.17Lf %.5f %s ", name,psr->obsn[i].freq,
 		  // psr->obsn[i].sat, (psr->obsn[i].toaErr/current_efac),psr->obsn[i].telID);
@@ -642,7 +653,7 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 	    
 	  fprintf(fout," %-25.25s%8.3f  %.13Lf    0.00 %7.2f        %s",
 		  psr[0].obsn[i].fname,(double)psr[0].obsn[i].freq,
-		  psr[0].obsn[i].sat,(double)psr[0].obsn[i].toaErr,psr[0].obsn[i].telID);
+		  psr[0].obsn[i].sat,(double)psr[0].obsn[i].origErr,psr[0].obsn[i].telID);
 	  fprintf(fout,"\n");
 	}
 

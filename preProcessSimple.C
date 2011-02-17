@@ -56,9 +56,6 @@ void preProcessSimple1 (pulsar *psr, int tempo1, double thelast)
 	  if (psr->obsn[i].deleted==0 && psr->obsn[i].sat < first) first = psr->obsn[i].sat;
 	  if (psr->obsn[i].deleted==0 && psr->obsn[i].sat > last)   last = psr->obsn[i].sat;
 	}
-      //	  printf("WHITE: %Lg %d\n",(last-first)/365.25,psr->nWhite);
-      //	  psr->param[param_wave_om].val[0] = 2.0*M_PI/(last-first)/
-      //	    (1.0+4.0/(double)((psr->nWhite+1)*2.0));
       psr->param[param_wave_om].val[0] = 2.0*M_PI/(last-first)/
 	(1.0+4.0/(double)(psr->nWhite));
     }
@@ -140,8 +137,8 @@ void preProcessSimple2 (pulsar *psr,
 	  psr->obsn[i].earth_ssb[k] = 0.0;
 	}
 
-
-      /*	  psr->obsn[i].sat += psr->obsn[i].phaseOffset/psr->param[param_f0].val[0]; */
+      // Correctly taking note of the phase offset
+      psr->obsn[i].sat += ((psr->obsn[i].phaseOffset/psr->param[param_f].val[0])/SECDAY); 
       for (k=0;k<psr->nToffset;k++) /* Calculate time offsets */
 	{
 	  char offsetSite[256], obsSite[256];
@@ -210,7 +207,6 @@ void preProcessSimple2 (pulsar *psr,
 	{
 	  char flag[100],filtS[1000],*filt;
 	  int found;
-
 	  strcpy(filtS,psr->passStr);
 	  filt = strtok(filtS," ");
 	  found=0;

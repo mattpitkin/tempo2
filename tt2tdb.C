@@ -108,7 +108,7 @@ void tt2tb(pulsar *psr,int npsr)
 	  obsTerm /= (double)(IFTE_K*IFTE_K); // both were in SI 
 	else
 	  obsTerm /= (double)IFTE_K;  // obs_earth was in SI
-
+	//	printf("obsTerm = %g\n",(double)obsTerm);
 	/* Compute Teph : Irwin & Fukushima (1999) eq 13*/	
 	/* Note, DeltaT(Teph0) ~ -2x10^-14 s so is neglected */
 	psr[p].obsn[i].correctionTT_Teph = IFTE_TEPH0 + obsTerm
@@ -135,10 +135,6 @@ void tt2tb(pulsar *psr,int npsr)
 
 	    }
 	  mjd_teph = mjd_tt + psr[p].obsn[i].correctionTT_Teph/86400.0;
-
-	  // SOMETHING IS WRONG HERE WITH MJD_TEPH .... SHOULD PRINT OUT MJD_TT and CORRECTION TERMS ETC.
-	  // CURRENTLY DOING THE TEST WITH CLK UNCORR AND SO IT SHOULDN'T GET HERE AT ALL!! <<<<<<
-	  // CHANGED TELID = @
 
 	  deltaTDot = IFTE_DeltaTDot(2400000.0+(int)mjd_teph, 
 				     0.5+(mjd_teph-(int)mjd_teph));
