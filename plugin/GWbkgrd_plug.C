@@ -95,7 +95,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
-  FILE *fout;
+  FILE *fout,*fout2;
   int i,j,k,p;
   double globalParameter;
   int setgwAmp=0,setAlpha=0;
@@ -119,6 +119,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int zeroResiduals=0;
   double scale;
   char fname[100];
+  int outGW=0;
+  int identicalTimes=0;
   gwSrc *gw;
 
   *npsr = 0;  /* For a graphical interface that only shows results for one pulsar */
@@ -147,6 +149,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  strcpy(timFile[*npsr],argv[i+2]);	  
 	  (*npsr)++;
 	}
+      else if (strcmp(argv[i],"-identicalTimes")==0)
+	identicalTimes=1;
+      else if (strcmp(argv[i],"-outGW")==0)
+	outGW=1;
       else if (strcmp(argv[i],"-clock")==0)
 	clock=1;
       else if (strcmp(argv[i],"-addWhite")==0)
@@ -269,6 +275,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     fout = fopen("signal.dat","w");
   for (p=0;p<*npsr;p++)
     {
+      if (outGW==1)
+	{
+	  char str[128];
+	  sprintf(str,"%s.gw",psr[p].name);
+	  fout2 = fopen(str,"w");
+	}
+
       if (clock==0)
 	{
 	  ra_p   = psr[p].param[param_raj].val[0];
@@ -283,7 +296,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       mean=0.0;
       for (i=0;i<psr[p].nobs;i++) 
 	{
-	  time = (psr[p].obsn[i].sat - timeOffset)*SECDAY;
+	  if (identicalTimes==1)
+	    time = (psr[0].obsn[i].sat - timeOffset)*SECDAY;
+	  else
+	    time = (psr[p].obsn[i].sat - timeOffset)*SECDAY;
 	  gwRes[p][i] = 0.0;
 	  for (k=0;k<ngw;k++)
 	    gwRes[p][i]+=calculateResidualGW(kp,&gw[k],time,dist[p]);
@@ -294,6 +310,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  if (clock==1)
 	    fprintf(fout,"%.10f %.10g\n",(double)psr[p].obsn[i].sat,(double)gwRes[p][i]);
+	  if (outGW==1)
+	    {
+	      if (identicalTimes==1)
+		fprintf(fout2,"%.10f %.10g\n",(double)psr[0].obsn[i].sat,(double)gwRes[p][i]);
+	      else
+		fprintf(fout2,"%.10f %.10g\n",(double)psr[p].obsn[i].sat,(double)gwRes[p][i]);
+	    }
 	  gwRes[p][i]-=mean;
 	  psr[p].obsn[i].sat += (gwRes[p][i]/(long double)SECDAY);
 	  if (addWhite==1)
@@ -302,6 +325,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
   if (clock==1)
     fclose(fout);
+  if (outGW==2)
+    fclose(fout2);
   for (p=0;p<*npsr;p++)
     {
       sprintf(fname,"%s.gwsim.tim",psr[p].name);

@@ -33,7 +33,7 @@
 
 /* using namespace std; */  /* Is this required for a plugin ? */
 
-void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev);
+void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs);
 float findMin(float *x,pulsar *psr,int p,int i1,int i2);
 float findMax(float *x,pulsar *psr,int p,int i1,int i2);
 float findMean(float *x,pulsar *psr,int p,int i1,int i2);
@@ -50,6 +50,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
+  int plotUs=0;
   float scale[1000];
   int nScale=0;
   char grDev[100]="/vps";
@@ -84,6 +85,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  sscanf(argv[i+1],"%f",&scale[nScale]);
 	  nScale++;
 	}
+      else if (strcmp(argv[i],"-plotus")==0)
+	plotUs=1;
     }
 
 if (*npsr==0) /* Select all files */
@@ -109,7 +112,7 @@ if (*npsr==0) /* Select all files */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
   preProcess(psr,*npsr,argc,argv);
   callFit(psr,*npsr);             /* Do all the fitting routines */
-  doPlot(psr,*npsr,scale,nScale,grDev);              /* Do plot */
+  doPlot(psr,*npsr,scale,nScale,grDev,plotUs);              /* Do plot */
 }
 
 /* This function calls all of the fitting routines.             */
@@ -133,10 +136,11 @@ void callFit(pulsar *psr,int npsr)
 }
 
 
-void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev)
+void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs)
 {
   int i,j,fitFlag=2,exitFlag=0,scale1=0,scale2,count[MAX_PSR],p,xautoscale=0,k,graphics=1;
   int yautoscale=0,plotpre=1;
+  int ps,pe,pi;
   int time=0;
   char xstr[1000],ystr[1000];
   float px[2],py[2],pye1[2],pye2[2];
@@ -258,8 +262,16 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev)
       int num=0,colour;
       cpgsch(1);
       cpgtext(tmax+(tmax-tmin)*0.05,p+1,psr[p].name);
-      sprintf(str,"%.2f",(double)((smaxy[p]-sminy[p])*psr[p].param[param_f].val[0]));
-      cpgtext(tmax+(tmax-tmin)*0.05,p+1.5,str);
+      if (plotUs==0)
+	{
+	  sprintf(str,"%.2f",(double)((smaxy[p]-sminy[p])*psr[p].param[param_f].val[0]));
+	  cpgtext(tmax+(tmax-tmin)*0.05,p+1.5,str);
+	}
+      else
+	{
+	  sprintf(str,"%.2f",(double)((smaxy[p]-sminy[p])/1e-6));
+	  cpgtext(tmax+(tmax-tmin)*0.05,p+1.5,str);
+	}
       cpgsch(1);
       
       cpgsls(4);

@@ -290,6 +290,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		    if (giveRMS!=1) grms = psr[0].param[param_tres].val[0]/1e3;
 		    //	    else grms=0.0;
 		    psr[0].obsn[count].toaErr = grms*1000.0;
+		    psr[0].obsn[count].origErr = grms*1000.0;
 		    psr[0].obsn[count].phaseOffset = 0.0;
 		    strcpy(psr[0].obsn[count].telID, "7");
 		    psr[0].obsn[count].deleted = 0;
@@ -326,7 +327,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       /* Now run the tempo2 code */
       preProcess(psr,*npsr,argc,argv);
       callFit(psr,*npsr);             /* Do all the fitting routines */
-      
       for (j=0;j<9;j++)
 	{
 	  /* Now update the site arrival times depending upon the residuals */
@@ -336,9 +336,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      psr[0].obsn[i].sat -= psr[0].obsn[i].prefitResidual/SECDAY; 
 	      psr->obsn[i].nFlags = 0;
 	    } 
-
 	  writeTim(str,psr,"tempo2");
-
 	  //	  initialise(&psr[ii],0);
 	  // Reset the jumps
 	  psr[ii].nJumps = 0;

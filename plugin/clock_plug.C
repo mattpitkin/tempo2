@@ -63,6 +63,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int overlayInvert=1;
   int nstep=14;
   int simplePlot=0;
+  int harmTaper=0;
 
   *npsr = 0;  /* For a graphical interface that only shows results for one pulsar */
 
@@ -97,6 +98,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  sscanf(argv[++i],"%lf",&maxy);
 	  setmaxy=1;
 	}
+      else if (strcmp(argv[i],"-harmTaper")==0)
+	sscanf(argv[++i],"%d",&harmTaper);
        else if (strcmp(argv[i],"-miny")==0)
 	{
 	  sscanf(argv[++i],"%lf",&miny);
@@ -109,7 +112,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-simple")==0)
 	simplePlot=1;
     }
-
+  if (harmTaper==0)
+    {
+      printf("Must set a harmonic taper number using -harmTaper (make smaller than the number of waves being fit)\n");
+      exit(1);
+    }
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
   preProcess(psr,*npsr,argc,argv);
@@ -136,21 +143,28 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   // Show clock function
   double sx[MAX_OBSN],sy[MAX_OBSN],sy2[MAX_OBSN],sye[MAX_OBSN];
+  double taperY1[MAX_OBSN];
   double xval;
   double earliestTime,latestTime;
   float fx[MAX_OBSN],fy[MAX_OBSN],fye1[MAX_OBSN],fye2[MAX_OBSN];
+  float fyTaper[MAX_OBSN];
+  double taperVal;
   float ex[MAX_OBSN],ey[MAX_OBSN],ey1[MAX_OBSN],ey2[MAX_OBSN],ey0[MAX_OBSN];
   float ey2_1[MAX_OBSN],ey2_2[MAX_OBSN];
   float px[MAX_OBSN];
   int npt,j,p,k;
   int nptsClk=psr[0].nWhite*2;
-  float cvX[nptsClk],cvY[nptsClk],cvY1[nptsClk],cvY2[nptsClk];
+  float cvX[nptsClk],cvY[nptsClk],cvY1[nptsClk],cvY2[nptsClk],cvTime[nptsClk];
   FILE *fout_clkpts;
   FILE *fout_clkcurve;
+  FILE *fout_newclk;
+
 
   fout_clkpts = fopen("clock_pts.dat","w");
   fout_clkcurve = fopen("clock_curve.dat","w");
-
+  fout_newclk = fopen("tai2tt_ppta2010.clk","w");
+  fprintf(fout_newclk,"# TAI TT(PPTA2010)\n");
+  fprintf(fout_newclk,"# Obtained using the clock plugin\n");
   earliestTime = (double)psr[0].obsn[0].sat;
   latestTime = (double)psr[0].obsn[psr[0].nobs-1].sat;
   for (p=1;p<*npsr;p++)
@@ -175,6 +189,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sx[i] = earliestTime+(i*14.0);
 
       sy[i] = 0.0;
+      taperY1[i] = 0.0;
       xval = sx[i];
       sye[i] = 0.0;
       if (psr[0].param[param_wave_om].paramSet[0]==1)
@@ -184,6 +199,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      sy[i]+=(psr[0].wave_cos[j]*cos((j+1)*psr[0].param[param_wave_om].val[0]*xval)+psr[0].wave_sine[j]*sin((j+1)*psr[0].param[param_wave_om].val[0]*xval));
 	      sye[i] += pow(psr[0].wave_cos_err[j]*cos((j+1)*psr[0].param[param_wave_om].val[0]*xval),2);
 	      sye[i] += pow(psr[0].wave_sine_err[j]*sin((j+1)*psr[0].param[param_wave_om].val[0]*xval),2);
+	      taperVal = pow(1.0+pow((j+1)/(float)harmTaper,2),2);
+		taperY1[i] += (psr[0].wave_cos[j]/taperVal*cos((j+1)*psr[0].param[param_wave_om].val[0]*xval)+psr[0].wave_sine[j]/taperVal*sin((j+1)*psr[0].param[param_wave_om].val[0]*xval));
 	    }
 	  sy2[i] = sy[i];
 	  sye[i] = sqrt(sye[i]);
@@ -206,6 +223,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
     }
   TKremovePoly_d(sx,sy2,npt,3);
+  TKremovePoly_d(sx,taperY1,npt,3);
   for (i=0;i<npt;i++)
     {
       if (psr[0].param[param_wave_om].paramSet[0]==1)
@@ -215,10 +233,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
       fx[i] = (float)sx[i];
       fy[i] = (float)sy2[i];
+      fyTaper[i] = (float)taperY1[i];
       fye1[i] = (float)(sy2[i] - sye[i]);
       fye2[i] = (float)(sy2[i] + sye[i]);
       //      printf("fye = %g %g\n",fye1[i],fye2[i]);
-      fprintf(fout_clkcurve,"%g %g %g %g\n",px[i],sx[i],sy[i],sy2[i]);
+      fprintf(fout_clkcurve,"%g %g %g %g %g\n",px[i],sx[i],sy[i],sy2[i],sx[i]+(double)psr[0].param[param_waveepoch].val[0]);
+      fprintf(fout_newclk,"%g %.15f\n",sx[i]+(double)psr[0].param[param_waveepoch].val[0],(double)(32.184L+taperY1[i]));
     }
 
   // Calculate variances
@@ -358,16 +378,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       for (i=0;i<nptsClk;i++)
 	{
 	  t = earliestTime+i*(latestTime-earliestTime)/(double)nptsClk-psr[0].param[param_waveepoch].val[0]+(latestTime-earliestTime)/(double)nptsClk*0.5;
+	  cvTime[i] = (double)(t+psr[0].param[param_waveepoch].val[0]);
 	  cvX[i] = (float)mjd2year(t+psr[0].param[param_waveepoch].val[0]);
 	  cvY[i] = 0.0;
 	  for (j=0;j<psr[0].nWhite;j++)
 	    {
-	      cvY[i]+=(psr[0].wave_cos[j]*cos((j+1)*psr[0].param[param_wave_om].val[0]*t)+psr[0].wave_sine[j]*sin((j+1)*psr[0].param[param_wave_om].val[0]*t));
+	      taperVal = pow(1.0+pow((j+1)/(float)harmTaper,2),2);
+	      cvY[i]+=(psr[0].wave_cos[j]/taperVal*cos((j+1)*psr[0].param[param_wave_om].val[0]*t)+psr[0].wave_sine[j]/taperVal*sin((j+1)*psr[0].param[param_wave_om].val[0]*t));
 	    }
 	  for (j=0;j<nfit/2;j++)
 	    {
-	      matM[i][2*j] = cos((j+1)*psr[0].param[param_wave_om].val[0]*t);
-	      matM[i][2*j+1] = sin((j+1)*psr[0].param[param_wave_om].val[0]*t);
+	      taperVal = pow(1.0+pow((j+1)/(float)harmTaper,2),2);
+	      matM[i][2*j] = cos((j+1)*psr[0].param[param_wave_om].val[0]*t)/taperVal;
+	      matM[i][2*j+1] = sin((j+1)*psr[0].param[param_wave_om].val[0]*t)/taperVal;
 	    }
 	}
       TKremovePoly_f(cvX,cvY,nptsClk,3);
@@ -449,7 +472,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  printf("diag = %g, error = %g, y = %g\n",m2[i][i],sqrt(m2[i][i]),cvY[i]);
 	  cvY1[i] = cvY[i] - sqrt(m2[i][i]);
 	  cvY2[i] = cvY[i] + sqrt(m2[i][i]);
-	  fprintf(fout_clkpts,"%g %g %g\n",cvX[i],cvY[i],sqrt(m2[i][i]));
+	  fprintf(fout_clkpts,"%g %g %g %g\n",cvX[i],cvY[i],sqrt(m2[i][i]),cvTime[i]);
 	}
     }
   else
@@ -471,6 +494,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
   fclose(fout_clkpts);
   fclose(fout_clkcurve);
+  fclose(fout_newclk);
 
   cpgbeg(0,"?",1,1);
   cpgsfs(2);
@@ -509,9 +533,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		dspanX[0] = mjd2year(fx[i]+psr[0].param[param_waveepoch].val[0]);
 		dspanX[1] = mjd2year(fx[i+nstep]+psr[0].param[param_waveepoch].val[0]);
 		dspanY[0] = dspanY[1] = 0.05;
-		cpgsah(2,45,0.3);
-		cpgsch(0.5);cpgarro(dspanX[0],0.05,dspanX[1],0.05); cpgsch(1.4);
-		cpgsch(0.5);cpgarro(dspanX[1],0.05,dspanX[0],0.05); cpgsch(1.4);
+		//		cpgsah(2,45,0.3);
+		//		cpgsch(0.5);cpgarro(dspanX[0],0.05,dspanX[1],0.05); cpgsch(1.4);
+		//		cpgsch(0.5);cpgarro(dspanX[1],0.05,dspanX[0],0.05); cpgsch(1.4);
 	      }
 	  }
 	cpgsci(1);
@@ -528,12 +552,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   else
     {
       cpgenv(px[0],px[npt-1],miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,1);
-  cpglab("Year","Clock difference (sec)","");
+      cpglab("Year","Clock difference (sec)","");
     }
 
   cpgsch(1.4);
-  cpgsci(2);
-  cpgsls(4);cpgline(npt,px,fy);cpgsls(1);
+  //  cpgsci(2);
+  //      cpgsls(4);cpgline(npt,px,fy);cpgsls(1);
+  cpgsci(1); cpgsls(2);cpgline(npt,px,fyTaper);cpgsls(1);
   cpgsci(1);
   //  cpgsls(4);
   //  cpgline(npt,px,fye1);
@@ -544,7 +569,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   //  cpgslw(2);  cpgsci(3); cpgerry(ne,ex,ey2_1,ey2_2,1);cpgsci(1); cpgslw(1);
   
   // Covariance
-  cpgsci(7); cpgpt(nptsClk,cvX,cvY,4); cpgerry(nptsClk,cvX,cvY1,cvY2,1); cpgsci(1);
+  cpgsci(1); cpgpt(nptsClk,cvX,cvY,4); cpgerry(nptsClk,cvX,cvY1,cvY2,1); cpgsci(1);
+
   
   if (strcmp(overlay,"NULL")!=0)
     {
@@ -796,3 +822,4 @@ void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat )
    *nd = 59 + (int) ( l -365L * i + ( ( 4L - n ) / 4L ) * ( 1L - j ) );
    *ny = (int) ( 4L * k + i ) - 4716;
 }
+

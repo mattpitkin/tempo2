@@ -661,8 +661,9 @@ void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpt
   float fx2[10],fy2[10];
   float fx3[nGridFit],fy3[nGridFit],fy4[nGridFit];
   float fy5[dspan];
+  float fx6[dspan],fy6[dspan];
   float minx,maxx,miny,maxy;
-  int i;
+  int i,j,np,ncovar;
   int nc=0,nc2=0;
 
   for (i=1;i<dspan;i++)
@@ -689,22 +690,68 @@ void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpt
     }
   minx = TKfindMin_f(fx,nc);
   maxx = TKfindMax_f(fx,nc);
+
+
+  // WARNING REMOVE
+  zerolagRawCovar = 8.5e-11;
+
   miny = -2*fabs(zerolagRawCovar);//TKfindMin_f(fy,nc);
   maxy = 2*fabs(zerolagRawCovar);//TKfindMax_f(fy,nc);
 
   if (makeps==1)
     {
-      cpgbeg(0,"spectralPlot3a.ps/vps",1,1);
-      cpgsch(1.4);  cpgsfs(2);  cpgslw(2);
-      cpgenv(minx,maxx,miny/1.5,maxy/1.5,0,10);
+      int addi;
+      cpgbeg(0,"spectralPlot3a.ps/ps",1,1);
+      cpgsch(2);
+      cpgpap(0,0.400);
+      cpgsch(2);
+      cpgsfs(2);
+      cpgslw(2);
+      //      cpgsch(1.4);  cpgsfs(2);  cpgslw(2);
+      printf("MIN/MAX = %g %g %g %g\n",minx,maxx,miny,maxy);
+      cpgenv(minx,maxx,miny/1.3,maxy/1.3,0,10);
       cpglab("Lag (d)","Covariance","");
-      cpgpt(nc,fx,fy,20);
-      cpgsci(3); cpgsls(3); cpgline(nc,fx,fy5); cpgsci(1); cpgsls(1);
+      cpgtext(0.1,-1e-10,"(b)");
+      //      cpgpt(nc,fx,fy,1);
+
+      ncovar=0;
+      addi=1;
+      for (i=1;i<dspan;i+=addi)
+	{
+	  np = 0;
+	  fx6[ncovar] = 0.0;
+	  fy6[ncovar] = 0.0;
+	  printf("Have %d %d\n",i,addi);
+	  for (j=i;j<i+addi;j++)
+	    {
+	      if (rawCovarNpts[j] > 0)
+		{
+		  fx6[ncovar] += j*rawCovarNpts[j];
+		  fy6[ncovar] += (rawCovar[j]*rawCovarNpts[j]);
+		  np+=rawCovarNpts[j];
+		}
+	    }
+	  if (np>0)
+	    {
+	      fx6[ncovar]=log10(fx6[ncovar]/(double)np);
+	      fy6[ncovar]/=(double)np;
+	      ncovar++;
+	    }
+	  if (i==10 && addi==1) {i=0; addi=10;}
+	  if (i==100 && addi==10) {i=0; addi=100;}
+	  if (i==1000 && addi==100) {i=0; addi=1000;}
+	}
+      cpgsci(1); cpgpt(ncovar,fx6,fy6,5);   cpgsci(1);
+
+            cpgsci(1); cpgsls(1); cpgline(nc,fx,fy5); cpgsci(1); cpgsls(1);
+      fx2[0] = minx;
+      fx2[1] = maxx;
+      fy2[0] = 0;
+      fy2[1] = 0;
+      cpgsls(1); cpgline(2,fx2,fy2);
       fx2[0] = minx;
       fy2[0] = zerolagRawCovar;
-      cpgsch(2); cpgsci(2); cpgpt(1,fx2,fy2,15); cpgsch(1.4); cpgsci(1);
-      
-      
+       cpgsch(3); cpgsci(1); cpgpt(1,fx2,fy2,23); cpgsch(1.4); cpgsci(1);            
       cpgend();
     }
 
@@ -875,11 +922,14 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 
   if (makeps==1)
     {
-      cpgbeg(1,"spectralPlot6a.ps/vps",1,1);
-      cpgsch(1.4); cpgsfs(2); cpgslw(2);
+      cpgbeg(1,"spectralPlot6a.ps/ps",1,1);
+      cpgsch(2.0);
+      cpgpap(0,0.400);
+      cpgsch(2); cpgsfs(2); cpgslw(2);
       // Plot the white data spectrum
       cpgenv(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
-      cpglab("Frequency (yr\\u-1\\d)","log\\d10\\u[Power spectral density (yr)]","");
+      cpglab("Frequency (yr\\u-1\\d)","log\\d10\\u[Spectral density (yr)]","");
+      cpgtext(-1.1,-3,"(c)");
       cpgsci(7); cpgline(nCholWspec,fx2,fy2); 
       cpgpt(nCholWspec,fx2,fy2,20); cpgsci(1);
       
@@ -1003,11 +1053,15 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 
       fout1 = fopen("model1.dat","w");
       fout2 = fopen("model2.dat","w");
-      cpgbeg(1,"spectralPlot5a.ps/vps",1,1);
-      cpgsch(1.4); cpgsfs(2); cpgslw(2);
+      cpgbeg(1,"spectralPlot5a.ps/ps",1,1);
+      cpgsch(2.0);
+      cpgpap(0,0.400);
+      cpgsch(2); cpgsfs(2); cpgslw(2);
       // Plot the white data spectrum
-      cpgenv(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
+      cpgenv(-1.2,1,miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
+      //      cpgenv(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
       cpglab("Frequency (yr\\u-1\\d)","log\\d10\\u[Power spectral density (yr)]","");
+      cpgtext(-1.1,-0.2,"(c)");
       cpgsci(7); cpgline(nCholWspec,fx3,fy3); 
       cpgpt(nCholWspec,fx3,fy3,20); cpgsci(1);
       
@@ -1025,8 +1079,10 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
       cpgend();
 	
       // Plot the high freq res. and Cholesky spectrum
-      cpgbeg(1,"spectralPlot5b.ps/vps",1,1);
-      cpgsch(1.4); cpgsfs(2); cpgslw(2);
+      cpgbeg(1,"spectralPlot5b.ps/ps",1,1);
+      cpgsch(2.0);
+      cpgpap(0,0.400);
+      cpgsch(2); cpgsfs(2); cpgslw(2);
       miny = TKfindMin_f(fy2,nCholSpec);
       maxy = TKfindMax_f(fy2,nCholSpec);
       for (i=0;i<nHighFreqSpec;i++)
@@ -1037,10 +1093,12 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	  if (ny1[i] < miny) miny = ny1[i];
 	}
       // Also have fx1, fy1;
-      cpgenv(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
+      //      cpgenv(minx,maxx,miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
+      cpgenv(-1.2,1,miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny),0,10);
       cpglab("Frequency (yr\\u-1\\d)","log\\d10\\u[Power spectral density (yr\\u3\\d)]","");
-      cpgline(nHighFreqSpec,nx1,ny1);  cpgpt(nHighFreqSpec,nx1,ny1,16);
-      cpgsls(3); cpgline(nCholSpec,fx1,fy1); cpgsls(1);
+      cpgtext(-1.1,-19,"(d)");
+      cpgsls(4); cpgline(nHighFreqSpec,nx1,ny1); // cpgpt(nHighFreqSpec,nx1,ny1,16);
+      cpgsls(1); cpgline(nCholSpec,fx1,fy1); cpgsls(1);
       cpgline(nCholSpec,fx2,fy2);
       // old model
       for (i=0;i<nCholSpec;i++)
@@ -1695,14 +1753,20 @@ void plot2(double *origSpecX,double *origSpecY,int nOrigSpec,double *smoothSpecX
   if (makeps==1) // For paper
     {
       float sx[MAX_OBSN],sy[MAX_OBSN];
-      cpgbeg(0,"spectralPlot2.ps/vps",1,1);
-      cpgsch(1.4); cpgsfs(2); cpgslw(2);
-      cpgenv(minx,1,miny+1,maxy,0,10);
+      cpgbeg(0,"spectralPlot2.ps/ps",1,1);
+      cpgsch(2.0);
+      cpgpap(0,0.400);
+      cpgsch(2.0); cpgsfs(2); cpgslw(2);
+      //      cpgenv(minx,1,miny+1,maxy,0,10);
+      cpgenv(-1.2,1,miny+1,maxy,0,10);
       cpglab("Frequency (yr\\u-1\\d)","log\\d10\\u[Power Spectral Density (yr\\u3\\d)]","");
-      cpgline(nOrigSpec,fx1,fy1);
-      cpgsls(2);  cpgline(nHighFreqSpec,fx2,fy2);  cpgpt(nHighFreqSpec,fx2,fy2,20);  cpgsls(1);
-      cpgsls(4);  cpgline(nHighFreqSpec,fx3,fy3);    cpgsls(1);
-      cpgsci(7);  cpgline(nHighFreqSpec,fx5,fy5); cpgpt(nHighFreqSpec,fx5,fy5,16);cpgsci(1);
+      cpgtext(-1.1,-19,"(b)");
+      //      cpgline(nOrigSpec,fx1,fy1);
+      //      cpgsls(2);  cpgline(nHighFreqSpec,fx2,fy2);  cpgpt(nHighFreqSpec,fx2,fy2,20);  cpgsls(1);
+      //      cpgsls(2);  cpgline(nHighFreqSpec,fx2,fy2);  cpgsls(1);
+      cpgsls(1);  cpgline(nHighFreqSpec,fx3,fy3);    cpgsls(1);
+      //      cpgsci(7);  cpgline(nHighFreqSpec,fx5,fy5); cpgpt(nHighFreqSpec,fx5,fy5,16);cpgsci(1);
+      cpgsls(4);  cpgline(nHighFreqSpec,fx5,fy5); cpgsci(1);
       sx[0] = sx[1] = 0;
       sy[0] = miny; sy[1] = maxy;
       cpgsls(4); cpgline(2,sx,sy); cpgsls(1);
@@ -1710,8 +1774,8 @@ void plot2(double *origSpecX,double *origSpecY,int nOrigSpec,double *smoothSpecX
       for (i=0;i<nHighFreqSpec;i++)
 	{
 	  sx[i] = fx2[i];
-	  //	  sy[i] = log10(3.27306e-18*(1.0/pow((1.0+pow(smoothSpecX1[i]*365.25/0.2,2)),5.0/2.0)));
-	  sy[i] = log10(7.88532e-23*(1.0/pow((1.0+pow(smoothSpecX1[i]*365.25/0.04,2)),5.0/2.0)));
+	  	  sy[i] = log10(3.27306e-18*(1.0/pow((1.0+pow(smoothSpecX1[i]*365.25/0.2,2)),5.0/2.0)));
+		  // sy[i] = log10(7.88532e-23*(1.0/pow((1.0+pow(smoothSpecX1[i]*365.25/0.04,2)),5.0/2.0)));
 	}
       cpgslw(3); cpgline(nHighFreqSpec,sx,sy); cpgslw(2);
       cpgend();

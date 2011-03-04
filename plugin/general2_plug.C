@@ -263,6 +263,12 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);
 		      }
+		    if (strcasecmp(var,"einstein")==0) 
+		      {
+			sprintf(disp,dformat,(double)psr[0].obsn[varN].einsteinRate); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);
+		      }
 		    if (strcasecmp(var,"file")==0)
 		      {
 			sprintf(disp,"%s",psr[0].obsn[varN].fname); 
@@ -360,8 +366,8 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		    else if (strcasecmp(var,"earth_ssb")==0) /* Vector from Earth to SSB */
 		      {
 			sprintf(disp,dformat,sqrt(pow(psr[0].obsn[varN].earth_ssb[0],2)+
-						 pow(psr[0].obsn[varN].earth_ssb[0],2)+
-						 pow(psr[0].obsn[varN].earth_ssb[0],2))); 
+						 pow(psr[0].obsn[varN].earth_ssb[1],2)+
+						 pow(psr[0].obsn[varN].earth_ssb[2],2))); 
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }
@@ -380,6 +386,24 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		    else if (strcasecmp(var,"earth_ssb3")==0) /* z from Earth to SSB */
 		      {
 			sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[2]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"earth_ssb4")==0) /* vx from Earth to SSB //added by Emily */
+		      {
+			sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[3]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"earth_ssb5")==0) /* vy from Earth to SSB //added by Emily */
+		      {
+			sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[4]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"earth_ssb6")==0) /* vz from Earth to SSB //added by Emily */
+		      {
+			sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[5]); 
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }
@@ -468,6 +492,36 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		    else if (strcasecmp(var,"posPulsar")==0)
 		      {
 			sprintf(disp,"%f %f %f",psr[0].posPulsar[0],psr[0].posPulsar[1],psr[0].posPulsar[2]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"velPulsar")==0) //added by Emily
+		      {
+			sprintf(disp,"%f %f %f",psr[0].velPulsar[0],psr[0].velPulsar[1],psr[0].velPulsar[2]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"siteVel0")==0)
+		      {
+			sprintf(disp,"%f",psr[0].obsn[varN].siteVel[0]);
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"siteVel1")==0)
+		      {
+			sprintf(disp,"%f",psr[0].obsn[varN].siteVel[1]);
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"siteVel2")==0)
+		      {
+			sprintf(disp,"%f",psr[0].obsn[varN].siteVel[2]);
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"posTel")==0)
+		      {
+			sprintf(disp,"%f %f %f",psr[0].obsn[varN].observatory_earth[0],psr[0].obsn[varN].observatory_earth[1],psr[0].obsn[varN].observatory_earth[2]); 
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }

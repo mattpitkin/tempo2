@@ -239,6 +239,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   long double mjd1[MAX_TIMES],mjd2[MAX_TIMES];
   long double centreMJD;
   char parFileName[MAX_TIMES][MAX_STRLEN];
+  char timFileName[MAX_TIMES][MAX_STRLEN];
   double epoch[MAX_TIMES];
   double f0[MAX_TIMES];
   double f0e[MAX_TIMES];
@@ -326,7 +327,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
       if (nread==3 || nread==4)
-	nStride++;
+	{
+	  if (nread==4)
+	    strcpy(timFileName[nStride],tname);
+	  else
+	    strcpy(timFileName[nStride],timFile[0]);
+	  nStride++;
+	}
     }
   fclose(fin);
   printf("Have read %d strides\n",nStride);
@@ -348,6 +355,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Analysing %g\n",(double)centreMJD);
 
       strcpy(parFile[0],parFileName[i]);
+      strcpy(timFile[0],timFileName[i]);
 
       psr[0].nJumps=0;
       for(j=0;j<MAX_PARAMS;j++){

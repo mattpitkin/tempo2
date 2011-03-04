@@ -24,8 +24,6 @@
 *    timing model.
 */
 
-/* Template for a tempo2 plugin */
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -37,13 +35,9 @@ using namespace std;
 
 void help() /* Display help */
 {
-  /* This function should contain usage information about the plugin which should (in general) be accessed */
-  /* by the user pressing 'h'                                                                              */
 }
 
 
-/* The main function called from the TEMPO2 package is 'graphicalInterface' */
-/* Therefore this function is required in all plugins                       */
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
   char parFile[MAX_PSR][MAX_FILELEN];
