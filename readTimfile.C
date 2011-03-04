@@ -461,8 +461,9 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	  if (eset>-1)
 	    psr->obsn[nObs].toaErr = eset;
   
-	  psr->obsn[nObs].jump = *jumpVal;
-	
+	  psr->obsn[nObs].jump[0] = *jumpVal; // GH: Added jump[0]. Mar 2011
+	  psr->obsn[nObs].obsNjump = 1;
+
 	  if (time!=0.0) 
 	    {
 	      psr->obsn[nObs].sat += time/60.0/60.0/24.0;

@@ -281,7 +281,7 @@ void preProcessSimple2 (pulsar *psr,
 		}
 	    }
 	    
-	  if (yes==1) psr->obsn[i].jump=k;
+	  if (yes==1) {psr->obsn[i].jump[psr->obsn[i].obsNjump]=k; (psr->obsn[i].obsNjump)++;}
 	}
       // Check for time offset flags
       for (k=0;k<psr->obsn[i].nFlags;k++)
@@ -380,7 +380,7 @@ void preProcessSimple3 (pulsar *psr)
 	      for (k=0;k<psr->obsn[i].nFlags;k++)
 		{
 		  if (strcmp(psr->obsn[i].flagVal[k],val[l])==0)
-		    psr->obsn[i].jump=psr->nJumps;
+		    psr->obsn[i].jump[(psr->obsn[i].obsNjump)++]=psr->nJumps;
 		}
 	    }
 	  psr->fitJump[psr->nJumps]=1;

@@ -51,7 +51,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    int dtm1s=0;
    int nmean;
    int ntpd,nf0;
-   int i,p,k;
+   int i,p,k,l;
    int time=0;
    int ntrk=0;
    int gotit=0;
@@ -153,8 +153,11 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   phaseJ = 0.0;
 	   for (k=1;k<=psr[p].nJumps;k++)	    
 	     {
-	       if (psr[p].obsn[i].jump==k)
-		 phaseJ+=psr[p].jumpVal[k]*psr[p].param[param_f].val[0];
+	       for (l=0;l<psr[p].obsn[i].obsNjump;l++)
+		 {		
+		   if (psr[p].obsn[i].jump[l]==k)
+		     phaseJ+=psr[p].jumpVal[k]*psr[p].param[param_f].val[0];
+		 }
 	     }
 
 	   /* Add in extra phase due to whitening procedures */

@@ -1,7 +1,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-//  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
+//  Copyright (C) 2006,2007,2008,2009,2010,2011 George Hobbs, Russell Edwards
 
 /*
 *    This file is part of TEMPO2. 

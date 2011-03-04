@@ -260,7 +260,8 @@ typedef struct observation {
   char flagID[MAX_FLAGS][16];     /* Flags in .tim file                                         */
   char flagVal[MAX_FLAGS][16];
   int  nFlags;                   
-  int  jump;                      /* Jump region */
+  int  jump[MAX_FLAGS];           /* Jump region */
+  int  obsNjump;                  /* Number of jumps for this observation */
   double efac;                    /* Error multiplication factor                                */
   double equad;                   /* Value to add in quadrature                                 */
 } observation;

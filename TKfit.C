@@ -385,7 +385,6 @@ void TKleastSquares_svd(double *x,double *y,double *sig2,int n,double *p,double 
   designMatrix = (double **)malloc(n*sizeof(double *));
   v = (double **)malloc(nf*sizeof(double *));
   u = (double **)malloc(n*sizeof(double *));
-  printf("weight = %d\n",weight);
   for (i=0;i<n;i++) 
     {
       designMatrix[i] = (double *)malloc(nf*sizeof(double));
@@ -821,7 +820,7 @@ void TKcholDecomposition(double **a, int n, double *p)
 		  printf("Here with %d %d %g %Lg\n",i,j,a[i][j],sum);
 		  printf("Failed - the matrix is not positive definite\n");
 		  //		  for (k=i-1;k>=1;k--)
-		  //		    printf("a[%d][%d] = %g\n",j,k,a[j][k]);
+		  //	    printf("a[%d][%d] = %g\n",j,k,a[j][k]);
 		  exit(1);
 		}
 	      //	      printf("at this point %d %g\n",i,sum);

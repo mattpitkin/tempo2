@@ -279,7 +279,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	    }
 	}
       
-      
+      printf("Count = %d\n",count);
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
       psr[p].param[param_finish].val[0] = newFinish+0.001;
@@ -365,6 +365,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	      printf("Unable to open covariance function file: %s\n",fname);
 	      exit(1);
 	    }
+	  if (debugFlag==1) printf("ndays = %d\n",ndays);
 	  fscanf(fin,"%lf",&escaleFactor);
 	  for (i=0;i<ndays;i++)
 	    fscanf(fin,"%lf",&covarFunc[i]);
@@ -377,6 +378,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  // Form the data covariance matrix
 	  formCholeskyMatrix(covarFunc,x,y,sig,count,uinv);
 	}
+
       sprintf(fname,"whitedata_%d.dat",p+1);
       fout = fopen(fname,"w");
       for (i=0;i<psr[p].nobs;i++)
@@ -473,7 +475,7 @@ int getNparams(pulsar psr)
 
 void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 {
-  int i,n=0,k,j;
+  int i,n=0,k,j,l,found;
   
   afunc[n++] = 1;  /* Always fit for an arbitrary offset */
   /* See what we are fitting for */
@@ -527,10 +529,19 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
     {
       if (psr->fitJump[i]==1)
 	{
-	  if (psr->obsn[ipos].jump==i)
-	    afunc[n++] = 1.0;
-	  else
-	    afunc[n++] = 0.0;
+	  found = 0;
+	  for (l=0;l<psr->obsn[ipos].obsNjump;l++)
+	    {
+	      if (psr->obsn[ipos].jump[l]==i)
+		{
+		  found = 1;
+		  break;
+		}
+	      //	      else
+	      //		found = 0.0;
+	    }
+	  afunc[n++] = found;
+
 	}
     } 
   if (n!=ma) { 

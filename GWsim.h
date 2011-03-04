@@ -53,7 +53,7 @@ typedef struct gwSrc
   long double theta_g;     /* Angle of source from "z"-direction (e.g. 90-declination)             */
   long double phi_g;       /* Azimuthal angle of source (e.g. right ascension)                     */
   long double omega_g;     /* Frequency of gravitational wave source (Hz) in observer's rest frame */   
-  long double phi_polar_g; /* Polarization angle of the gravitational wave source   w.r.t. the unit vector along te direction of increasing elevation*/
+  long double phi_polar_g; /* Polarization angle of the gravitational wave source w.r.t. the unit vector along te direction of increasing elevation*/
   long double phase_g;
   long double aplus_g;
   long double aplus_im_g; /* imagainary part of plus polarization */
@@ -154,13 +154,25 @@ void setupGW(gwSrc *gw)
   for (i=0;i<3;i++)
     {
       for (j=0;j<3;j++)
-	trans[i][j] = convert[j][i];
+	{
+	  //	  printf("%g (%g, %g) ",(double)convert[j][i],(double)gw->h[j][i],(double)out[j][i]);
+	  trans[i][j] = convert[j][i];
+	}
+      //      printf("\n");
     }
   /* Pre-multiply "out" by transpose */
   /* why multiply here -- we have already rotated it???? */
   matrixMult(trans,out,gw->h);
   matrixMult(trans,out_im,gw->h_im);
-  matrixMult(trans,convert,out);
+  //  matrixMult(trans,convert,out);
+  /*  for (i=0;i<3;i++)
+    {
+      for (j=0;j<3;j++)
+	{
+	  printf("%g ",(double)gw->h[j][i]);
+	}
+      printf("\n");
+      }*/
 
 }
 
@@ -215,7 +227,7 @@ void GWbackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double 
 	  gw[k].across_im_g = 0.0;
 	}
       //      printf("omega = %g\n",(double)(1.0/(gw[k].omega_g/2.0/M_PI)/86400.0));
-      setupGW(&gw[k]);
+
     }
 
 }
@@ -241,7 +253,7 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
       tempVal_im[i] = 0.0;
       for (k=0;k<3;k++)
 	{
-	  tempVal[i] += gw->h[i][k]*kp[k];
+	  tempVal[i]    += gw->h[i][k]*kp[k];
 	  tempVal_im[i] += gw->h_im[i][k]*kp[k];
 	}
       //      printf("tempVal[%d] = %g ",i,(double)tempVal[i]);
@@ -254,22 +266,21 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
   //  printf(" cosmu = %g\n",(double)cosMu);
   if ((1+cosMu)!=0) 
   {
-    psrVal1    = 0.5L/(1.0+cosMu)*dotProduct(kp,tempVal); 
-    psrVal1_im = 0.5L/(1.0+cosMu)*dotProduct(kp,tempVal_im);
+    psrVal1    = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal); 
+    psrVal1_im = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal_im);
     //    printf("psrval1 = %g %g %g\n",(double)psrVal1,(double)(1+cosMu),(double)(1-cosMu));
   }
   else psrVal1 = 0.0L;
   
   geo      = psrVal1;
   //  printf("psrVal = %g %g\n",(double)psrVal1,(double)psrVal1_im);
-  earthVal1 = psrVal1*sin(gw->phase_g+time*gw->omega_g) + 
-    psrVal1_im*cos(gw->phase_g+time*gw->omega_g); // sin -> cos
-  
+  earthVal1 = psrVal1*sinl(gw->phase_g+time*gw->omega_g)+ 
+    psrVal1_im*cosl(gw->phase_g+time*gw->omega_g); // sin -> cos
   if (dist==0) /* No pulsar term */
-    psrVal2=0;
+    psrVal2=0.0L;
   else
-    psrVal2 = psrVal1*sin(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g) + 
-      psrVal1_im*cos(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g); 
+    psrVal2 = psrVal1*sinl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g) + 
+      psrVal1_im*cosl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g); 
 
   residual = (earthVal1-psrVal2)/gw->omega_g; 
   //    printf("GWsim %g %g %g %g %g %g %g %g %g %g %g %g %g\n",(double)residual,(double)earthVal1,(double)psrVal2,(double)psrVal1,(double)cosMu,(double)psrVal1_im,(double)kp[0],(double)kp[1],(double)kp[2],(double)cosMu,(double)gw->h_im[0][0],(double)gw->h_im[0][1],(double)gw->h_im[1][0]);
