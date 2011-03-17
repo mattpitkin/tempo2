@@ -77,8 +77,16 @@ AC_DEFUN([SWIN_LIB_PGPLOT],
   fi
 
   if test $have_pgplot = no; then
-# Blade libs
+    # Blade libs
     PGPLOT_LIBS="$PGPLOT_LIBS -L/usr/X11R6/lib -lX11 -lcpgplot -lpgplot -lpng"
+    LIBS="$ac_save_LIBS $PGPLOT_LIBS"
+    AC_TRY_LINK([#include <cpgplot.h>],[cpgopen(""); cpgend();],
+                have_pgplot=yes, have_pgplot=no)
+  fi
+
+  if test $have_pgplot = no; then
+    # fink installed:
+    PGPLOT_LIBS="$PGPLOT_LIBS $X_LIBS -lX11 -Wl,-framework -Wl,Foundation -lz -L/sw/lib -lpng -laquaterm"
     LIBS="$ac_save_LIBS $PGPLOT_LIBS"
     AC_TRY_LINK([#include <cpgplot.h>],[cpgopen(""); cpgend();],
                 have_pgplot=yes, have_pgplot=no)
