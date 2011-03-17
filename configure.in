@@ -42,6 +42,8 @@ fi
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
+# look for third-party packages in various places (or not)
+SWIN_LOCAL
 
 AC_MSG_CHECKING([for \$TEMPO2])
 if test -n "$TEMPO2" ; then
