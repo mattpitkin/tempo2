@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <errno.h>
 #include "../tempo2.h"
 #include <cpgplot.h>
 #include <fitsio.h>
@@ -56,8 +57,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             16 November 2010\n");
-	printf("Version:             5.3\n");
+	printf("Updated:             20 March 2011\n");
+	printf("Version:             5.4\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -65,15 +66,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	char parFile[1][MAX_FILELEN];
 	char timFile[1][MAX_FILELEN];
-	char temptim[9];
+	char tempchar[9];
+	char tempfits[14];
 	char gr[256]="/xs";					// default graphical output is x-window
 
 	srand((unsigned)time(NULL));
-	temptim[8] = '\0';
-	random_string(8,temptim);
-	strcpy(timFile[0],temptim);
+	tempchar[8] = '\0';
+	random_string(8,tempchar);
+	strcpy(timFile[0],tempchar);
 	strcat(timFile[0],".tim");
-
+	strcpy(tempfits,tempchar);
+	strcat(tempfits,".fits");
+	
 	int nbins  = 25;					// default number of bins for the output phase histogram
 	int Hbins  = 25;					// default number of bins for the H-test vs time plot		
 
@@ -87,16 +91,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	
     char error_buffer[128];
     char history[128];
-	int  par_file      = 0;
-	int  FT1_file	   = 0;
-	int  FT2_file	   = 0;
+	int  par_file        = 0;
+	int  FT1_file	     = 0;
+	int  FT2_file	     = 0;
 	
-	int  ophase        = 0;
-	int  graph	       = 1;
-	int  output_file   = 0;
-	int  output_pos    = 0;
-	int  phase_replace = 0;
-    int  phasecol_set  = 0;
+	int  ophase          = 0;
+	int  graph	         = 1;
+	int  output_file     = 0;
+	int  output_pos      = 0;
+	int  phase_replace   = 0;
+    int  phasecol_set    = 0;
+    int  phasecol_exists = 0;
 
 	double intpart;
 
@@ -107,9 +112,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	/* ------------------------------------------------- //
 	// fits file definitions
 	// ------------------------------------------------- */
-
-	fitsfile *ft1;
-	fitsfile *ft2;
 
 	char colname[FLEN_VALUE];
 	int open_status = 0, status = 0, status2 = 0, hdupos, ncols_FT1,ncols_FT2,anynul;
@@ -297,6 +299,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	// FT1 file
 	// ------------------------------------------------- */
 
+    fitsfile *ft1;
+	
   	if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
     {
         // Check that the input file has not been barycentered.
@@ -341,22 +345,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		if (phase_replace)
 		{
-            fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
+		    fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
             
-            if (status != 0)
+            if (status>0)
             {
-                    fits_insert_col(ft1,ncols_FT1 + 1,phasecol,(char *)"1D", &status2);
-                            
-                    if (status2 != 0)
-                    {
-                            fits_get_errstatus( status2, error_buffer);
-                            printf( "fits_insert_col: %s\n", error_buffer);
-                            exit(-1);
-                    }
+                phasecol_exists = 0;
             }
-                        
-			status = 0;
-			fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
+            else
+            {
+                phasecol_exists = 1;
+            }
     	}
 	}
 	
@@ -366,11 +364,85 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		exit(-1);
 	}
 
-	fits_close_file(ft1, &status);
+    fits_close_file(ft1, &status);
 
+    printf("First photon date in FT1: %lf MET (s)\n",minFT1time);
+	printf(" Last photon date in FT1: %lf MET (s)\n\n",maxFT1time);
+	
+	
+	
+	
+	// This part was adapted from A. Archibald's photons plugin
+	fitsfile *ft_out;
+    
+	if (phase_replace)
+    {
+        char FT_in_filter[MAX_FILELEN+20];
+        status = 0; 
+        int ii = 1;
+        
+        if (phasecol_exists)
+        {
+            printf("Replacing existing column %s.\n\n", phasecol);
+            strcpy(FT_in_filter, FT1);
+        } 
+        else 
+        {
+            printf("Adding new column %s.\n\n", phasecol);
+            sprintf(FT_in_filter, "%s[%d][col *;%s = 0.0]", FT1, 1, phasecol);
+        }
+        
+        if (!fits_open_file(&ft1, FT_in_filter, READONLY, &open_status))
+        {
+            // Record the column number for later
+            if (fits_movabs_hdu(ft1,2,NULL,&status) || fits_get_colname(ft1,CASEINSEN,phasecol,colname,&FT1_phase_col,&status))
+            {
+                fprintf(stderr, "Unable to find column %s even after trying to create it.\n", phasecol);
+                exit(-1);
+            }
+            
+            status = 0;
+            
+            if (!fits_create_file(&ft_out, tempfits,  &status))
+            {
+                // Copy all HDUs one-by-one. In the process, make room for more header comments
+                status = 0;
+                i      = 1;
+                
+                while (!fits_movabs_hdu(ft1, i++, NULL, &status)) fits_copy_hdu(ft1, ft_out, 5, &status);
+        
+                if (status==END_OF_FILE) status=0;
+                else printf("Error happened while transferring\n");
+        
+                fits_close_file(ft_out, &status);
+            }
+            
+            fits_close_file(ft1, &status);
+        }
+        
+        if (status != 0)
+        {
+            fits_report_error(stderr, status);
+            exit(-1);
+        }
+        
+        if (rename(tempfits,FT1))
+        {
+            if (errno != ENOENT)
+            {
+                perror("Problem renaming temporary fits file");
+                exit(-1);
+            }
+        }
+    }
+    
+    
 	/* ------------------------------------------------- //
 	// FT2 file
 	// ------------------------------------------------- */
+
+    fitsfile *ft2;
+    open_status = 0, status = 0;
 
 	if (!fits_open_file(&ft2,FT2, READONLY, &open_status))
 	{
@@ -398,9 +470,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
 
 	fits_close_file(ft2, &status);
-	
-	printf("First photon date in FT1: %lf MET (s)\n",minFT1time);
-	printf(" Last photon date in FT1: %lf MET (s)\n\n",maxFT1time);
 	
 	printf("First START date in FT2:  %lf MET (s)\n",minFT2time);
 	printf(" Last START date in FT2:  %lf MET (s)\n\n",maxFT2time);
@@ -739,7 +808,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
 				else fprintf(outputf,"%d\t",event + 1);
 			
-				fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[i].bat,phase[event]);
+				fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event]);
 			}
 	
 			event++;
@@ -797,7 +866,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
 			else fprintf(outputf,"%d\t",event + 1);
 			
-			fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[1].bat,phase[event]);
+			fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\n",psr[0].obsn[1].sat,psr[0].obsn[1].bat,phase[event]);
 		}
 
 		// ------------------------------------------------- //
