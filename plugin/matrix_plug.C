@@ -37,14 +37,28 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   int i,j,npol=0;
   int ip[1000],term[1000];
   //  double **error,**cpyError,**invErr,*col;
+  char p1[128],p2[128];
+  int  setParam=0;
   double cvm[MAX_PARAMS][MAX_PARAMS];
   double d,err,det;
   int k;
 
-  printf("\n\n Correlation matrix ... \n\n");
+  for (i=0;i<argc;i++)
+    {
+      if (strcmp(argv[i],"-p")==0)
+	{
+	  setParam=1;
+	  strcpy(p1,argv[++i]);
+	  strcpy(p2,argv[++i]);
+	}
+    }
 
-  printf("\t");
-
+  if (setParam==0)
+    {
+      printf("\n\n Correlation matrix ... \n\n");
+      
+      printf("\t");
+    }
   for (i=0;i<MAX_PARAMS;i++)
     {
       for (k=0;k<psr[0].param[i].aSize;k++)
@@ -53,7 +67,10 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
 	    {
 	      if (i!=param_start && i!=param_finish)
 		{
-		  printf("%-9.9s\t",psr[0].param[i].shortlabel[k]);
+		  if (setParam==0)
+		    {
+		      printf("%-9.9s\t",psr[0].param[i].shortlabel[k]);
+		    }
 		  ip[npol] = i;
 		  term[npol] = k;
 		  npol++;
@@ -61,95 +78,108 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
 	    }
 	}
     }
-
+  
   for (i=1;i<=npol;i++)
     {
       for (j=1;j<=npol;j++)
 	cvm[i-1][j-1]=psr[0].covar[i][j];
     }
-
+  
   printf("\n");
   for (i=0;i<npol;i++){
-      printf("%s\t",psr[0].param[ip[i]].shortlabel[term[i]]);
-      for (j=0;j<npol;j++){
-	  if (j<=i){
-	    printf("%+.8f\t",((cvm[i][j])/sqrt((cvm[j][j])*(cvm[i][i]))));  
-	  }	
-	}
-      printf("\n");
-    }
-
-  double **error;
-  double **cpyError;
-  double **invErr;
-  int indx[npol];
-  double col[npol];
-
-
-  error = (double **)malloc(npol*sizeof(double *));
-  cpyError = (double **)malloc(npol*sizeof(double *));
-  invErr = (double **)malloc(npol*sizeof(double *));
-  for (i=0;i<npol;i++)
-    {
-      error[i] = (double *)malloc(npol*sizeof(double));
-      cpyError[i] = (double *)malloc(npol*sizeof(double));
-      invErr[i] = (double *)malloc(npol*sizeof(double));
-    }
-
-   /* Determine the inverse matrix */
-  for (i=0;i<npol;i++){
+    if (setParam==0)
+      {
+	printf("%s\t",psr[0].param[ip[i]].shortlabel[term[i]]);
+      }
     for (j=0;j<npol;j++){
-      invErr[i][j]=(cvm[i][j]/sqrt((cvm[j][j])*(cvm[i][i])));
+      if (j<=i){
+	if (setParam==0)
+	  printf("%+.8f\t",((cvm[i][j])/sqrt((cvm[j][j])*(cvm[i][i]))));  
+	else if (strcmp(psr[0].param[ip[i]].shortlabel[term[i]],p1)==0 &&
+		 strcmp(psr[0].param[ip[j]].shortlabel[term[j]],p2)==0)
+	  printf("%+.8f\t",((cvm[i][j])/sqrt((cvm[j][j])*(cvm[i][i]))));  
+	else if (strcmp(psr[0].param[ip[j]].shortlabel[term[j]],p1)==0 &&
+		 strcmp(psr[0].param[ip[i]].shortlabel[term[i]],p2)==0)
+	  printf("%+.8f\t",((cvm[i][j])/sqrt((cvm[j][j])*(cvm[i][i]))));  
+      }	
     }
+    if (setParam==0)
+      printf("\n");
   }
-  
-   matinv(invErr,npol,&det);
-
-
-
-   /*   ludcmp(cpyError,npol,indx,&d);
-
-   for (j=1;j<=npol;j++)
-     {
-       for (i=1;i<=npol;i++) col[i]=0.0;
-       col[j]=1.0;
-       lubksb(cpyError,npol,indx,col);
-       for (i=1;i<=npol;i++){
-	 invErr[i][j]=col[i];
-       }
-       }	  */
-   printf("\n"); 
-   printf("gcor\t") ;
-   for (i=0;i<npol;i++) 
-     {
-       //              err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
-       //              printf("%+.8f\t",sqrt(fabs(1.0-1.0/(err*invErr[i][i]))));
-
-
-       //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
-       printf("%+.8f\t",sqrt(fabs(1.0-1.0/invErr[i][i])));
-     }    
-   printf("\n");
-   printf("dp\t"); /* See 1991ApJ 371 739,Ryba & Taylor */
-   for (i=0;i<npol;i++)
-     {
-       //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
-       //       printf("%+8.1f\t",-log10(1-fabs(sqrt(1.0-1.0/(err*invErr[i][i])))));
-
-       //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
-              printf("%+8.1f\t",-log10(1-fabs(sqrt(1.0-1.0/(invErr[i][i])))));
-     }    
-   printf("\n");
-  for (i=0;i<npol;i++)
+  if (setParam==1) printf("\n");
+  if (setParam==0)
     {
-      free(error[i]);
-      free(cpyError[i]);
-      free(invErr[i]);
+      double **error;
+      double **cpyError;
+      double **invErr;
+      int indx[npol];
+      double col[npol];
+      
+      
+      error = (double **)malloc(npol*sizeof(double *));
+      cpyError = (double **)malloc(npol*sizeof(double *));
+      invErr = (double **)malloc(npol*sizeof(double *));
+      for (i=0;i<npol;i++)
+	{
+	  error[i] = (double *)malloc(npol*sizeof(double));
+	  cpyError[i] = (double *)malloc(npol*sizeof(double));
+	  invErr[i] = (double *)malloc(npol*sizeof(double));
+	}
+      
+      /* Determine the inverse matrix */
+      for (i=0;i<npol;i++){
+	for (j=0;j<npol;j++){
+	  invErr[i][j]=(cvm[i][j]/sqrt((cvm[j][j])*(cvm[i][i])));
+	}
+      }
+      
+      matinv(invErr,npol,&det);
+      
+      
+      
+      /*   ludcmp(cpyError,npol,indx,&d);
+	   
+      for (j=1;j<=npol;j++)
+      {
+      for (i=1;i<=npol;i++) col[i]=0.0;
+      col[j]=1.0;
+      lubksb(cpyError,npol,indx,col);
+      for (i=1;i<=npol;i++){
+      invErr[i][j]=col[i];
+      }
+      }	  */
+      printf("\n"); 
+      printf("gcor\t") ;
+      for (i=0;i<npol;i++) 
+	{
+	  //              err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
+	  //              printf("%+.8f\t",sqrt(fabs(1.0-1.0/(err*invErr[i][i]))));
+	  
+	  
+	  //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
+	  printf("%+.8f\t",sqrt(fabs(1.0-1.0/invErr[i][i])));
+	}    
+      printf("\n");
+      printf("dp\t"); /* See 1991ApJ 371 739,Ryba & Taylor */
+      for (i=0;i<npol;i++)
+	{
+	  //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
+	  //       printf("%+8.1f\t",-log10(1-fabs(sqrt(1.0-1.0/(err*invErr[i][i])))));
+	  
+	  //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
+	  printf("%+8.1f\t",-log10(1-fabs(sqrt(1.0-1.0/(invErr[i][i])))));
+	}    
+      printf("\n");
+      for (i=0;i<npol;i++)
+	{
+	  free(error[i]);
+	  free(cpyError[i]);
+	  free(invErr[i]);
+	}
+      free(error);
+      free(cpyError);
+      free(invErr);
     }
-  free(error);
-  free(cpyError);
-  free(invErr);
-
  }
  /* Inverse square matrix routine copied from the original matinv.f in tempo1 */
  void matinv(double **array,int norder,double *det)
