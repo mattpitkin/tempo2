@@ -103,45 +103,39 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
 
 
-      /* Are we using DM values using DMVAL parameter? */
-      if (psr[p].param[param_dmval].paramSet[0] == 1)
+      /* Are we using DM values using DMMODEL parameter? */
+      if (psr[p].param[param_dmmodel].paramSet[0] == 1)
 	{
 	  double m,c;
-	  int cont=1;
+	  static int t=1;
+	 
+	  if (psr[p].param[param_dm].paramSet[0] == 1 && t==1)
+	    {
+	      printf("WARNING: Using DMMODEL value for dispersion measure instead of the DM parameter\n");
+	      t=0;
+	    }
 
-	  if ((double)psr[p].obsn[i].sat < psr[p].dmvalsMJD[0])
+	  if ((double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[0])
+	    dmval = (double)psr[p].param[param_dmmodel].val[0];
+	  else if ((double)psr[p].obsn[i].sat > psr[p].dmoffsMJD[psr[p].dmoffsNum-1])
+	    dmval = (double)psr[p].param[param_dmmodel].val[0]+psr[p].dmoffsDM[psr[p].dmoffsNum-1];
+	  else
 	    {
-	      printf("Error: Unable to continue. Using dmvals, but SAT is less than the first dmvalsMJD\n");
-	      psr[p].obsn[i].deleted=1;
-	      cont=0;
-	      //	      exit(1);
-	    }
-	  if ((double)psr[p].obsn[i].sat > psr[p].dmvalsMJD[(int)psr[p].param[param_dmval].val[0]-1])
-	    {
-	      psr[p].obsn[i].deleted=1;
-	      cont=0;
-	      printf("Error: Unable to continue. Using dmvals, but SAT is after the last dmvalsMJD\n");
-	      //	      exit(1);
-	    }
-	  if (cont==1)
-	    {
-	      for (k=0;k<(int)psr[p].param[param_dmval].val[0]-1;k++)
+	      for (k=0;k<psr[p].dmoffsNum;k++)
 		{
-		  if ((double)psr[p].obsn[i].sat >= psr[p].dmvalsMJD[k] &&
-		      (double)psr[p].obsn[i].sat < psr[p].dmvalsMJD[k+1])
+		  if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsMJD[k] &&
+		      (double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[k+1])
 		    {
 		      // Do linear interpolation
 		      // Note: this is also used at various points in the 
 		      // code (e.g., textOutput.C - if any changes are 
 		      // made here then these changes should be made throughout!
-		      m = (psr[p].dmvalsDM[k]-psr[p].dmvalsDM[k+1])/(psr[p].dmvalsMJD[k]-psr[p].dmvalsMJD[k+1]);
-		      c = psr[p].dmvalsDM[k]-m*psr[p].dmvalsMJD[k];
-		      dmval = m*(double)psr[p].obsn[i].sat+c;
+		      m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
+		      c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsMJD[k];
+		      dmval = m*(double)psr[p].obsn[i].sat+c + (double)psr[p].param[param_dmmodel].val[0];
 		    }
 		}
 	    }
-	  else
-	    dmval=(double)psr[p].param[param_dm].val[0];
 	}
       else
 	{

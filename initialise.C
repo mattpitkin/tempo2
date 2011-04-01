@@ -129,6 +129,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->fjumpID,"");
   strcpy(psr->deleteFileName,"NONE");
   strcpy(psr->tzrsite,"NULL");
+  psr->dmoffsNum = 0;
   psr->calcShapiro=1;
   psr->dmOffset = 0;
   psr->ipm = 1;
@@ -362,7 +363,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }       
 
   strcpy(psr->param[param_wave_om].label[0],"WAVE_OM"); strcpy(psr->param[param_wave_om].shortlabel[0],"WAVE_OM");
-  strcpy(psr->param[param_dmval].label[0],"DMVAL"); strcpy(psr->param[param_dmval].shortlabel[0],"DMVAL");
+  strcpy(psr->param[param_dmmodel].label[0],"DMMODEL"); strcpy(psr->param[param_dmmodel].shortlabel[0],"DMMODEL");
+  strcpy(psr->param[param_gwsingle].label[0],"GW_OMEGA"); strcpy(psr->param[param_gwsingle].shortlabel[0],"GW_OMEGA");
 
   /* Piecewise-constant DM variation (DMX) */
   for (k=0;k<psr->param[param_dmx].aSize;k++) 

@@ -450,7 +450,7 @@ int getNparams(pulsar psr)
       for (k=0;k<psr.param[i].aSize;k++)
 	{
 	  if (psr.param[i].fitFlag[k]==1) {
-	    if (i!=param_start && i!=param_finish && i!=param_dmval)
+	    if (i!=param_start && i!=param_finish && i!=param_dmmodel && i!=param_gwsingle)
 	      npol++;
 	  }
 	}
@@ -466,10 +466,13 @@ int getNparams(pulsar psr)
     npol+=psr.nWhite*2-1;
   if (psr.param[param_ifunc].fitFlag[0]==1)
       npol+=(psr.ifuncN-1);
-  /* Add extra parameters for DMVAL fitting */
-  if (psr.param[param_dmval].fitFlag[0]==1)
-    npol+=(int)(psr.param[param_dmval].val[0]*2); // *2 because we fit for the DM and constant offset
+  /* Add extra parameters for DMMODEL fitting */
+  if (psr.param[param_dmmodel].fitFlag[0]==1)
+    npol+=(int)((psr.dmoffsNum-1)*2); // *2 because we fit for the DM and constant offset
   
+  /* Add extra parameters for GW single source fitting */
+  if (psr.param[param_gwsingle].fitFlag[0]==1)
+    npol+=4; 
   return npol;
 }
 
@@ -498,16 +501,23 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		      for (j=0;j<psr->ifuncN;j++)
 			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 		    }
-		  else if (i==param_dmval)
+		  else if (i==param_gwsingle)
+		    {
+		      afunc[n++] = getParamDeriv(psr,ipos,x,i,0);
+		      afunc[n++] = getParamDeriv(psr,ipos,x,i,1);
+		      afunc[n++] = getParamDeriv(psr,ipos,x,i,2);
+		      afunc[n++] = getParamDeriv(psr,ipos,x,i,3);
+		    }
+		  else if (i==param_dmmodel)
 		    {		      
-		      for (j=0;j<(int)psr->param[param_dmval].val[0];j++)
+		      for (j=1;j<(int)psr->dmoffsNum;j++)
 			{
 			  double ti = (double)psr->obsn[ipos].sat;
-			  double tm1 = (double)psr->dmvalsMJD[j-1];
-			  double t0 = (double)psr->dmvalsMJD[j];
-			  double t1 = (double)psr->dmvalsMJD[j+1];
-			  double d0 = (double)psr->dmvalsDM[j];
-			  double d1 = (double)psr->dmvalsDM[j+1];
+			  double tm1 = (double)psr->dmoffsMJD[j-1];
+			  double t0 = (double)psr->dmoffsMJD[j];
+			  double t1 = (double)psr->dmoffsMJD[j+1];
+			  double d0 = (double)psr->dmoffsDM[j];
+			  double d1 = (double)psr->dmoffsDM[j+1];
 			  
 			  afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 			  if (ti >= t0 && ti < t1)
@@ -826,14 +836,46 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 
       afunc = t1;
     }
-  else if (i==param_dmval)
+  else if (i==param_gwsingle)
+    {
+      double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+      double res_e;
+      long double res;
+      double theta_p,theta_g,phi_p,phi_g;
+      long double time;
+      
+      time    = (psr->obsn[ipos].bbat - psr->gwsrc_epoch)*86400.0L;
+      theta_p = (double)psr->param[param_raj].val[0];
+      phi_p   = (double)psr->param[param_decj].val[0];
+      theta_g = M_PI/2.0-(psr->gwsrc_dec);
+      phi_g   = psr->gwsrc_ra;
+      omega_g = (double)psr->param[param_gwsingle].val[0];
+      
+      kp_theta = -sin(theta_p)*cos(theta_g)+cos(theta_p)*sin(theta_g)*cos(phi_g-phi_p);
+      kp_phi   = cos(theta_p)*sin(phi_g-phi_p);
+      kp_kg    = sin(theta_p)*sin(theta_g)+cos(theta_p)*cos(theta_g)*cos(phi_g-phi_p);
+      
+      p_plus   = kp_theta*kp_theta-kp_phi*kp_phi;  
+      p_cross  = 2*kp_theta*kp_phi;
+      gamma    = kp_kg;
+      
+      // Only considering real part and ignoring the pulsar term
+      //		      res_e = (p_plus*psr[p].gwsrc_aplus_r + p_cross*psr[p].gwsrc_across_r)*(sin(omega_g*time));
+      
+      //		      res   = 1.0L/(2.0L*omega_g*(1.0L+gamma))*res_e;
+      if (k==0) afunc = p_plus*sin(omega_g*time)/(2.0L*omega_g*(1.0L+gamma)); // aplus_re
+      else if (k==1) afunc = p_cross*sin(omega_g*time)/(2.0L*omega_g*(1.0L+gamma)); // across_re
+      else if (k==2) afunc = p_plus*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L+gamma)); // aplus_im
+      else if (k==3) afunc = p_cross*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L+gamma)); // across_im
+    }
+  else if (i==param_dmmodel)
     {
       double ti = (double)psr->obsn[ipos].sat;
-      double tm1 = (double)psr->dmvalsMJD[k-1];
-      double t0 = (double)psr->dmvalsMJD[k];
-      double t1 = (double)psr->dmvalsMJD[k+1];
-      double d0 = (double)psr->dmvalsDM[k];
-      double d1 = (double)psr->dmvalsDM[k+1];
+      double tm1 = (double)psr->dmoffsMJD[k-1];
+      double t0 = (double)psr->dmoffsMJD[k];
+      double t1 = (double)psr->dmoffsMJD[k+1];
+      double d0 = (double)psr->dmoffsDM[k];
+      double d1 = (double)psr->dmoffsDM[k+1];
       if (ti >= t0 && ti < t1)
 	{
 	  afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));      
@@ -879,8 +921,6 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 void updateParameters(pulsar *psr,int p,double *val,double *error)
 {
   int i,j,k;
-  /*  for (i=0;i<20;i++)
-      printf("%d %g %g\n",i,val[i],error[i]); */
 
   if (debugFlag==1) printf("Updating parameters\n");
   psr[p].offset = val[0];
@@ -1016,15 +1056,27 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      j++;
 		    }
 		}		  
-	      else if (i==param_dmval)
+	      else if (i==param_gwsingle)
 		{
-		  for (k=0;k<(int)psr->param[param_dmval].val[0];k++)
+		  printf("%d GW SINGLE -- in here %g %g %g %g\n",j,val[j],error[j],val[j+1],error[j+1]);
+		  psr[p].gwsrc_aplus_r -= val[j];
+		  j++;
+		  psr[p].gwsrc_across_r -= val[j];
+		  j++;
+		  psr[p].gwsrc_aplus_i -= val[j];
+		  j++;
+		  psr[p].gwsrc_across_i -= val[j];
+		  printf("Now have: %g %g\n",psr[p].gwsrc_aplus_r,psr[p].gwsrc_across_r);
+		}
+	      else if (i==param_dmmodel)
+		{
+		  for (k=1;k<psr[p].dmoffsNum;k++)
 		    {
 		      //		      printf("Updating %g by %g\n",psr[p].dmvalsDM[k],val[j]);
-		      psr[p].dmvalsDM[k] += val[j];
-		      psr[p].dmvalsDMe[k] = error[j];
+		      psr[p].dmoffsDM[k] += val[j];
+		      psr[p].dmoffsDMe[k] = error[j];
 		      j++;
-		      psr[p].dmvalsOffset[k] = error[j];
+		      psr[p].dmoffsOffset[k] = error[j];
 		      j++;
 		    }
 		  j--;

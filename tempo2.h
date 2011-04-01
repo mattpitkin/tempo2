@@ -155,7 +155,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
-            param_dmx,param_dmxr1,param_dmxr2,param_dmval};
+            param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle};
 
 extern int MAX_PSR;
 extern int MAX_OBSN;
@@ -277,10 +277,20 @@ typedef struct pulsar {
   char rajStrPost[100],decjStrPost[100]; /* String containing RAJ and DECJ  (postfit)           */
   char binaryModel[100];          /* Binary model e.g. BT/ELL1/BT2P etc.                        */
 
-  double dmvalsMJD[100]; 
-  double dmvalsDM[100];
-  double dmvalsDMe[100];
-  double dmvalsOffset[100];
+  int    dmoffsNum;
+  double dmoffsMJD[100]; 
+  double dmoffsDM[100];
+  double dmoffsDMe[100];
+  double dmoffsOffset[100];
+  
+  // Gravitational wave information
+  double gwsrc_ra;
+  double gwsrc_dec;
+  double gwsrc_aplus_r,gwsrc_aplus_i,gwsrc_across_r,gwsrc_across_i;
+  double gwsrc_aplus_r_e,gwsrc_aplus_i_e,gwsrc_across_r_e,gwsrc_across_i_e;
+  double gwsrc_epoch;
+
+  // General pulsar information
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
   double velPulsar[3];            /* 3-vector giving pulsar's velocity                          */  
   long double phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */

@@ -504,17 +504,30 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       fscanf(fin,"%lf %lf",&psr->wave_sine[number-1],&psr->wave_cos[number-1]);
       if (psr->nWhite < number) psr->nWhite = number;
     }
-  else if (strcasecmp(str,"DMVAL")==0) 
-    readValue(psr,str,fin,&(psr->param[param_dmval]),0);
-  else if (strstr(str,"DMVAL")!=NULL || strstr(str,"dmval")!=NULL)
+  else if (strcasecmp(str,"DMMODEL")==0) 
     {
-      int number;
-      /* Obtain parameter number */
-      sscanf(str+5,"%d",&number);
-      fscanf(fin,"%lf %lf",&psr->dmvalsMJD[number-1],&psr->dmvalsDM[number-1]);
-      psr->dmvalsOffset[number-1] = 0;
-      psr->dmvalsDMe[number-1] = 0;
+      readValue(psr,str,fin,&(psr->param[param_dmmodel]),0);
+      psr->dmoffsNum=0;
     }
+  //  else if (strstr(str,"DMVAL")!=NULL || strstr(str,"dmval")!=NULL)
+  else if (strcasecmp(str,"DMOFF")==0)
+    {
+      int number = psr->dmoffsNum;
+      fscanf(fin,"%lf %lf",&psr->dmoffsMJD[number],&psr->dmoffsDM[number]);
+      psr->dmoffsOffset[number] = 0;
+      psr->dmoffsDMe[number] = 0;
+      (psr->dmoffsNum)++;
+    }
+  else if (strcasecmp(str,"GW_SINGLE")==0) 
+    readValue(psr,str,fin,&(psr->param[param_gwsingle]),0);
+  else if (strcasecmp(str,"GW_POSITION")==0)
+    fscanf(fin,"%lf %lf",&psr->gwsrc_ra,&psr->gwsrc_dec);
+  else if (strcasecmp(str,"GW_APLUS")==0)
+    fscanf(fin,"%lf %lf",&psr->gwsrc_aplus_r,&psr->gwsrc_aplus_i);
+  else if (strcasecmp(str,"GW_ACROSS")==0)
+    fscanf(fin,"%lf %lf",&psr->gwsrc_across_r,&psr->gwsrc_across_i);
+  else if (strcasecmp(str,"GW_EPOCH")==0)
+    fscanf(fin,"%lf",&psr->gwsrc_epoch);
   else if (strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
     {
       int number;

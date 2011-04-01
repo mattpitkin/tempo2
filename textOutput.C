@@ -264,12 +264,21 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    }
 	  printf("------------------------------------------------------------------------------\n");
 	}
-      if (psr[p].param[param_dmval].paramSet[0]==1)
+	  if (psr[p].param[param_gwsingle].paramSet[0]==1)
+	    {
+	      printf("GW single source:\n");
+	      printf("Omega: %g\n",(double)psr[p].param[param_gwsingle].val[0]);
+	      printf("Aplus = %g (%g) %g (%g)\n",psr[p].gwsrc_aplus_r,psr[p].gwsrc_aplus_r_e,
+		     psr[p].gwsrc_aplus_i,psr[p].gwsrc_aplus_i_e);
+	      printf("Across = %g (%g) %g (%g)\n",psr[p].gwsrc_across_r,psr[p].gwsrc_across_r_e,
+		     psr[p].gwsrc_across_i,psr[p].gwsrc_across_i_e);
+	    }
+      if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	{
 	  printf("\nDispersion measure values:\n\n");
 	  updateDMvals(psr,p);
-	  for (i=0;i<(int)psr[p].param[param_dmval].val[0];i++)
-	    printf("DMVAL%d\t %.15g %.15g %.15g\n",i+1,psr[p].dmvalsMJD[i],psr[p].dmvalsDM[i],psr[p].dmvalsDMe[i]);
+	  for (i=0;i<(int)psr[p].dmoffsNum;i++)
+	    printf("DMOFF\t %.15g %.15g %.15g\n",psr[p].dmoffsMJD[i],psr[p].dmoffsDM[i],psr[p].dmoffsDMe[i]);
 	}
 	  if (psr[p].param[param_ifunc].paramSet[0]==1)
 	    {
@@ -674,7 +683,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		  for (k=0;k<psr[p].param[i].aSize;k++)
 		    {
 		  if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om 
-		      && i!=param_waveepoch && i!=param_dmval &&
+		      && i!=param_waveepoch && i!=param_dmmodel &&
 		      (psr[p].tempo1==0 || (i!=param_dmepoch)))
 		    {
 		      if (strcmp(psr[p].param[i].shortlabel[k],"PB")==0)
@@ -826,11 +835,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		fprintf(fout2,"PHASE %+d %.14g\n",psr[p].phaseJumpDir[i],(double)(psr[p].obsn[psr[p].phaseJumpID[i]].sat+1.0/SECDAY));
 	    }
 	  // Add DM value parameters
-	  if (psr[p].param[param_dmval].paramSet[0]==1)
+	  if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	    {
-	      fprintf(fout2,"DMVAL %d %d\n",(int)psr[p].param[param_dmval].val[0],(int)psr[p].param[param_dmval].fitFlag[0]);
-	      for (i=0;i<(int)psr[p].param[param_dmval].val[0];i++)
-		fprintf(fout2,"DMVAL%d\t %.15g %.15g %.15g\n",i+1,psr[p].dmvalsMJD[i],psr[p].dmvalsDM[i],psr[p].dmvalsDMe[i]);
+	      fprintf(fout2,"DMMODEL %.15Lg %d\n",psr[p].param[param_dmmodel].val[0],(int)psr[p].param[param_dmmodel].fitFlag[0]);
+	      for (i=0;i<psr[p].dmoffsNum;i++)
+		fprintf(fout2,"DMOFF\t %.15g %.15g %.15g\n",psr[p].dmoffsMJD[i],psr[p].dmoffsDM[i],psr[p].dmoffsDMe[i]);
 	    }
 
 	  fclose(fout2);	 
@@ -996,31 +1005,56 @@ double dglep(pulsar psr,int gn,double fph)
 //
 void updateDMvals(pulsar *psr,int p)
 {
-  int i,k;
+  int i,k,j;
   double dm,dme,m,c;
+  int iflag,jflag;
   printf("Updating DM vals\n");
   for (i=0;i<psr[p].nobs;i++)
     {
       // Do linear interpolation
-      for (k=0;k<(int)psr[p].param[param_dmval].val[0]-1;k++)
+      for (k=0;k<psr[p].dmoffsNum;k++)
 	{
-	  if ((double)psr[p].obsn[i].sat >= psr[p].dmvalsMJD[k] &&
-	      (double)psr[p].obsn[i].sat < psr[p].dmvalsMJD[k+1])
+	  if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsMJD[k] &&
+	      (double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[k+1])
 	    {	      
 	      // Calculate DM
-	      m = (psr[p].dmvalsDM[k]-psr[p].dmvalsDM[k+1])/(psr[p].dmvalsMJD[k]-psr[p].dmvalsMJD[k+1]);
-	      c = psr[p].dmvalsDM[k]-m*psr[p].dmvalsMJD[k];
-	      dm = m*(double)psr[p].obsn[i].sat+c;
-	      strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dm");
-	      sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6f",dm);
-	      psr->obsn[i].nFlags++;
+	      m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
+	      c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsMJD[k];
+	      dm = m*(double)psr[p].obsn[i].sat+c + (double)psr[p].param[param_dmmodel].val[0];
+	      iflag=jflag=-1;
+	      for (j=0;j<psr->obsn[i].nFlags;j++)
+		{
+		  if (strcmp(psr->obsn[i].flagID[j],"-dm")==0)
+		    iflag=j;
+		  else if (strcmp(psr->obsn[i].flagID[j],"-dme")==0)
+		    jflag=j;
+		}
+	      if (iflag==-1)
+		{
+		  strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dm");
+		  sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6f",dm);
+		  psr->obsn[i].nFlags++;
+		}
+	      else
+		{
+		  strcpy(psr->obsn[i].flagID[iflag],"-dm");
+		  sprintf(psr->obsn[i].flagVal[iflag],"%.6f",dm);
+		}
 	      // Calculate error in DM
-	      m = (psr[p].dmvalsDMe[k]-psr[p].dmvalsDMe[k+1])/(psr[p].dmvalsMJD[k]-psr[p].dmvalsMJD[k+1]);
-	      c = psr[p].dmvalsDMe[k]-m*psr[p].dmvalsMJD[k];
+	      m = (psr[p].dmoffsDMe[k]-psr[p].dmoffsDMe[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
+	      c = psr[p].dmoffsDMe[k]-m*psr[p].dmoffsMJD[k];
 	      dme = m*(double)psr[p].obsn[i].sat+c;
-	      strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dme");
-	      sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6g",dme);
-	      psr->obsn[i].nFlags++;
+	      if (jflag==-1)
+		{
+ 		  strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dme");
+		  sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6g",dme);
+		  psr->obsn[i].nFlags++;
+		}
+	      else
+		{
+ 		  strcpy(psr->obsn[i].flagID[jflag],"-dme");
+		  sprintf(psr->obsn[i].flagVal[jflag],"%.6g",dme);
+		}
 	      break;
 	    }
 	}

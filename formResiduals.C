@@ -175,6 +175,41 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     psr[p].wave_cos[k]*cos(om*(k+1)*dt)*psr[p].param[param_f].val[0];
 		 }
 	     }
+
+	   /* Add in extra phase due to gravitational wave signal */
+	   if (psr[p].param[param_gwsingle].paramSet[0]==1)
+	     {
+	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+	       double res_e,res_i;
+	       long double res;
+	       double theta_p,theta_g,phi_p,phi_g;
+	       long double time;
+
+	       time    = (psr[p].obsn[i].bbat - psr[p].gwsrc_epoch)*86400.0L;
+	       theta_p = (double)psr[p].param[param_raj].val[0];
+	       phi_p   = (double)psr[p].param[param_decj].val[0];
+	       theta_g = M_PI/2.0-(psr[p].gwsrc_dec);
+	       phi_g   = psr[p].gwsrc_ra;
+	       omega_g = (double)psr[p].param[param_gwsingle].val[0];
+
+	       kp_theta = -sin(theta_p)*cos(theta_g)+cos(theta_p)*sin(theta_g)*cos(phi_g-phi_p);
+	       kp_phi   = cos(theta_p)*sin(phi_g-phi_p);
+	       kp_kg    = sin(theta_p)*sin(theta_g)+cos(theta_p)*cos(theta_g)*cos(phi_g-phi_p);
+	       
+	       p_plus   = kp_theta*kp_theta-kp_phi*kp_phi;  
+	       p_cross  = 2*kp_theta*kp_phi;
+	       gamma    = kp_kg;
+	       
+	       // Only considering real part and ignoring the pulsar term
+	       //	       printf("Vals = %g %g %g\n",psr[p].gwsrc_aplus_r,psr[p].gwsrc_across_r,(double)time);
+	       res_e = (p_plus*psr[p].gwsrc_aplus_r + p_cross*psr[p].gwsrc_across_r)*(sin(omega_g*time));
+	       res_i = (p_plus*psr[p].gwsrc_aplus_i + p_cross*psr[p].gwsrc_across_i)*(cos(omega_g*time)-1);
+	       
+	       res   = 1.0L/(2.0L*omega_g*(1.0L+gamma))*(res_e+res_i);
+	       phaseW += res*psr[p].param[param_f].val[0];
+	       //	       printf("Res = %g\n",(double)res);
+	     }
+
 	   /* Add in extra phase due to interpolation */
 	   if (psr[p].param[param_ifunc].paramSet[0] == 1)
 	     {
