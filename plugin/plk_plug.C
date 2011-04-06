@@ -269,108 +269,108 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   for (i=1;i<argc;i++)
     {
       if (strcmp(argv[i],"-grdev")==0)
-	strcpy(gr,argv[++i]);
+        strcpy(gr,argv[++i]);
       else if (strcmp(argv[i],"-menu")==0)
-	sscanf(argv[i+1],"%d",&menu);
+        sscanf(argv[i+1],"%d",&menu);
       else if (strcmp(argv[i],"-locky")==0)
-	{
-	  sscanf(argv[++i],"%f",&locky1);
-	  sscanf(argv[++i],"%f",&locky2);
-	}
+        {
+          sscanf(argv[++i],"%f",&locky1);
+          sscanf(argv[++i],"%f",&locky2);
+        }
       else if (strcmp(argv[i],"-lockx")==0)
         {
-	  sscanf(argv[++i],"%f",&lockx1);
-	  sscanf(argv[++i],"%f",&lockx2);
+          sscanf(argv[++i],"%f",&lockx1);
+          sscanf(argv[++i],"%f",&lockx2);
         }
       else if (strcmp(argv[i],"-setup")==0)
-	strcpy(setupFile,argv[++i]);
+        strcpy(setupFile,argv[++i]);
       else if (strcmp(argv[i],"-xplot")==0)
-	sscanf(argv[++i],"%d",&xplot);
+        sscanf(argv[++i],"%d",&xplot);
       else if (strcmp(argv[i],"-yplot")==0)
-	sscanf(argv[++i],"%d",&yplot);
+        sscanf(argv[++i],"%d",&yplot);
       else if (strcmp(argv[i],"-publish")==0)
-	publish=1;
+        publish=1;
       else if (strcmp(argv[i],"-image")==0)
-	publish=2;
+        publish=2;
       else if (strcmp(argv[i],"-ms")==0)
-	unitFlag=1.0e-3;
+        unitFlag=1.0e-3;
       else if (strcmp(argv[i],"-us")==0)
-	unitFlag=1.0e-6;
+        unitFlag=1.0e-6;
       else if (strcmp(argv[i],"-ns")==0)
-	unitFlag=1.0e-9;
+        unitFlag=1.0e-9;
       else if (strcmp(argv[i],"-min")==0)
-	unitFlag=60.0;
+        unitFlag=60.0;
       else if (strcmp(argv[i],"-nohead")==0)
-	nohead=1;
+        nohead=1;
       else if (strcmp(argv[i],"-dcm")==0)
-	strcpy(dcmFile,argv[++i]);
+        strcpy(dcmFile,argv[++i]);
       else if (strcmp(argv[i],"-dcf")==0)
-	strcpy(covarFuncFile,argv[++i]);
+        strcpy(covarFuncFile,argv[++i]);
       else if (strcmp(argv[i],"-newparS")==0)//this is just for use with calcDMe
-      {
-	      newpar = 1;
-	      strcpy(newParFile,argv[++i]);
-      }
+        {
+          newpar = 1;
+          strcpy(newParFile,argv[++i]);
+        }
       else if (strcmp(argv[i],"-period")==0)
-	unitFlag=-1; /* In units of pulse period */
+        unitFlag=-1; /* In units of pulse period */
       else if (strcmp(argv[i],"-f")==0)
-	{
-	  strcpy(parFile[0],argv[++i]); 
-	  if (argv[i+1][0]!='-')
-	    {
-	      strcpy(timFile[0],argv[++i]);
-	      gotTim=1;
-	    }
-	}
+        {
+          strcpy(parFile[0],argv[++i]); 
+          if (argv[i+1][0]!='-')
+            {
+              strcpy(timFile[0],argv[++i]);
+              gotTim=1;
+            }
+        }
       else if (strcmp(argv[i],"-showchisq") == 0)
-      {
-	showChisq = 1;
-      }
+        {
+          showChisq = 1;
+        }
       else if (strcmp(argv[i],"-colour") == 0)
-      {
-	strcpy(flagColour,argv[++i]);
-      }
+        {
+          strcpy(flagColour,argv[++i]);
+        }
       else if (strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0){
-	printf("\n TEMPO2 plk plugin\n");
-	printf("===================\n");
-	printf("\nUSAGE: \n\t tempo2 -gr plk -f par.par tim.tim\n");
-	printf("\n Command line options:\n");
-	printf("\t -grdev, followed by the graphics device of choise (e.g. 3/xs; TOAs.ps/cps)\n");
-	printf("\t -locky -1e-6 1e-6: lock the y axis to this range\n");
-	printf("\t -showchisq: show the chisq of the fit\n");
-	printf("\t -xplot 3 or -yplot 5: Determine the x and y axes\n");
-	printf("\t\t The arguments for this command are as follows:\n");
-	printf("\t\t  1\t prefit residuals\n");
-	printf("\t\t  2\t postfit residuals\n");
-	printf("\t\t  3\t Modified Julian Date\n");
-	printf("\t\t  4\t Orbital phase\n");
-	printf("\t\t  5\t TOA number\n");
-	printf("\t\t  6\t Day of year\n");
-	printf("\t\t  7\t Frequency\n");
-	printf("\t\t  8\t TOA error\n");
-	printf("\t\t  9\t DPA (derived parallactic angle)\n");
-	printf("\t\t 10\t Year\n");
-	printf("\t\t 11\t Elevation\n");
-	printf("\t\t 12\t Round MJD values\n\n");
-	printf("\t -publish: publication style graphics (larger fontsize, no menu,...)\n");
-	printf("\t -image: graphics suitable for presentations (larger fontsize, no menu,...)\n");
-	printf("\t -ms or -us or -ns: specifies residual units (default is seconds)\n");
-	printf("\t -period: calculates residuals in pulse periods, instead of seconds.\n");
-	printf("\t -h or --help: this help. More help is available by pressing 'h' while running plk.\n");
-	printf("\t -epoch centre : automatically puts epochs such as:\n");
-	printf("\t\t PEPOCH (period determination epoch), \n");
-	printf("\t\t POSEPOCH (position determination epoch) and \n");
-	printf("\t\t DMEPOCH (DM determination epoch) \n");
-	printf("\t                 equal to the central MJD of the dataset.\n");
-	printf("\n\n===============================================");
-	printf("===============================================\n");
-	exit(0);
+        printf("\n TEMPO2 plk plugin\n");
+        printf("===================\n");
+        printf("\nUSAGE: \n\t tempo2 -gr plk -f par.par tim.tim\n");
+        printf("\n Command line options:\n");
+        printf("\t -grdev, followed by the graphics device of choise (e.g. 3/xs; TOAs.ps/cps)\n");
+        printf("\t -locky -1e-6 1e-6: lock the y axis to this range\n");
+        printf("\t -showchisq: show the chisq of the fit\n");
+        printf("\t -xplot 3 or -yplot 5: Determine the x and y axes\n");
+        printf("\t\t The arguments for this command are as follows:\n");
+        printf("\t\t  1\t prefit residuals\n");
+        printf("\t\t  2\t postfit residuals\n");
+        printf("\t\t  3\t Modified Julian Date\n");
+        printf("\t\t  4\t Orbital phase\n");
+        printf("\t\t  5\t TOA number\n");
+        printf("\t\t  6\t Day of year\n");
+        printf("\t\t  7\t Frequency\n");
+        printf("\t\t  8\t TOA error\n");
+        printf("\t\t  9\t DPA (derived parallactic angle)\n");
+        printf("\t\t 10\t Year\n");
+        printf("\t\t 11\t Elevation\n");
+        printf("\t\t 12\t Round MJD values\n\n");
+        printf("\t -publish: publication style graphics (larger fontsize, no menu,...)\n");
+        printf("\t -image: graphics suitable for presentations (larger fontsize, no menu,...)\n");
+        printf("\t -ms or -us or -ns: specifies residual units (default is seconds)\n");
+        printf("\t -period: calculates residuals in pulse periods, instead of seconds.\n");
+        printf("\t -h or --help: this help. More help is available by pressing 'h' while running plk.\n");
+        printf("\t -epoch centre : automatically puts epochs such as:\n");
+        printf("\t\t PEPOCH (period determination epoch), \n");
+        printf("\t\t POSEPOCH (position determination epoch) and \n");
+        printf("\t\t DMEPOCH (DM determination epoch) \n");
+        printf("\t                 equal to the central MJD of the dataset.\n");
+        printf("\n\n===============================================");
+        printf("===============================================\n");
+        exit(0);
       }
       else if (i==argc-1 && gotTim == 0)
-	{
-	  strcpy(timFile[0],argv[i]);
-	  gotTim=1;
-	}
+        {
+          strcpy(timFile[0],argv[i]);
+          gotTim=1;
+        }
     }
   if (debugFlag==1) printf("plk: calling readParfile\n");
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -390,10 +390,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   callFit(psr,*npsr);             /* Do all the fitting routines */
   if (newpar==1)
     textOutput(psr,*npsr,0,0,0,1,newParFile);
-
-  
-
-
   if (debugFlag==1) printf("plk: calling doPlot\n");
   doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,lockx1,lockx2,locky1,locky2,xplot,yplot,
 	 publish,argc,argv,menu,setupFile,showChisq,nohead,flagColour);  /* Do plot */
@@ -411,12 +407,6 @@ void callFit(pulsar *psr,int npsr)
   double globalParameter = 0.0;
   FILE *pin;
 
-  //  printf("Have SAT = %g\n",(double)psr[0].obsn[106282].sat);
-  //  exit(1);
-
-  //  for (i=0;i<psr[0].nobs;i++)
-  //    printf("val = %d %g\n",i,(double)psr[0].obsn[i].sat);
-  //  exit(1);
   for (it=0;it<psr[0].nits;it++)
     {
       if (it>0) /* Copy post-fit values to pre-fit values */
@@ -435,22 +425,22 @@ void callFit(pulsar *psr,int npsr)
 	    }
 	}
       for (iteration=0;iteration<2;iteration++)
-	{
-	  formBatsAll(psr,npsr);
-	  
-	  /* Form residuals */
-	  formResiduals(psr,npsr,0); // iteration);
-	  
-	  /* Do the fitting */
-	  if (iteration==0) 
-	    {
-	      if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
-		doFit(psr,npsr,0);
-	      else
-		doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
-	    }
-	  else textOutput(psr,npsr,globalParameter,0,0,0,"");
-	}
+        {
+          formBatsAll(psr,npsr);
+          
+          /* Form residuals */
+          formResiduals(psr,npsr,0); // iteration);
+          
+          /* Do the fitting */
+          if (iteration==0) 
+            {
+              if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
+                doFit(psr,npsr,0);
+              else
+                doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
+            }
+          else textOutput(psr,npsr,globalParameter,0,0,0,"");
+        }
     }
   if (psr[0].nFit==0)
     {
@@ -528,10 +518,6 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   int  flagColourNum=0;
   char flagIDstr[100][100],flagIDval[100][100];
   int  flagCol[100],flagStyle[100];
-
-  //float overX[MAX_OBSN],overY[MAX_OBSN],overYe[MAX_OBSN];
-  //float errBar[MAX_OBSN];
-  //float userX[MAX_OBSN];
 
   float *userX,*errBar;
   userX = (float *)malloc(sizeof(float)*MAX_OBSN);
@@ -816,39 +802,63 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		    
 		    cpgsvp(0.3,0.9,0.3,0.8);
 		    cpgswin(plotx1,plotx2,ploty1,ploty2);
-		    cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
+        //cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
 	      }
 	    else
 	      {
-		cpgsvp(0.1,0.9,0.1,0.8);
-		cpgswin(plotx1,plotx2,ploty1,ploty2);
-		cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
-	      }
+          cpgsvp(0.1,0.9,0.1,0.8);
+          cpgswin(plotx1,plotx2,ploty1,ploty2);
+          //cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
+        }
+      // Print period axis (right-hand y-axis)
+      if( yplot == 1 || yplot == 2 ){
+        cpgbox( "BCNST", 0.0, 0, "BNST1", 0.0, 0 );
+        cpgaxis( "N", plotx2, ploty1, plotx2, ploty2,
+                 ploty1*psr[0].param[param_f].val[0]*unitFlag,
+                 ploty2*psr[0].param[param_f].val[0]*unitFlag, 0.0, 0, 0.5, 0.0,
+                 0.5, 0.3, 0.0 );
+        cpgptxt( plotx2+(plotx2-plotx1)/15.0, (ploty2+ploty1)/2.0, 90.0, 
+                 0.5, "Residual in pulse periods" );
+      }else
+        cpgbox( "BCNST1", 0.0, 0, "BCNST1", 0.0, 0 );
 	  }
 	else{
 	  cpgenv(plotx1,plotx2,ploty1,ploty2,0,-1);
-	  cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
-	}
-	{
-	  char rmsStr[10];
-	  if (psr[0].fitMode==1) strcpy(rmsStr,"Wrms");
-	  else strcpy(rmsStr,"rms");
+    //cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
+    // Print period axis (right-hand y-axis )
+    if( yplot == 1 || yplot == 2 ){
+      cpgbox( "BCNST1", 0.0, 0, "BNST1", 0.0, 0 );
+        cpgaxis( "N", plotx2, ploty1, plotx2, ploty2,
+                 ploty1*psr[0].param[param_f].val[0]*unitFlag,
+                 ploty2*psr[0].param[param_f].val[0]*unitFlag, 0.0, 0, 0.5, 0.0,
+                 0.5, 0.3, 0.0 );
+        cpgptxt( plotx2+(plotx2-plotx1)/15.0, (ploty2+ploty1)/2.0, 90.0, 
+                 0.5, "Residual in pulse periods" );
+      }else
+        cpgbox( "BCNST1", 0.0, 0, "BCNST1", 0.0, 0 );
+  }
 
-	  if (yplot==2) sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPost,fitType);
-	  else sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPre,fitType);
-	}
+  char rmsStr[10];
+  if (psr[0].fitMode==1) strcpy(rmsStr,"Wrms");
+  else strcpy(rmsStr,"rms");
+  
+  if (yplot==2) sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPost,fitType);
+  else sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPre,fitType);
+  
 	if (showChisq == 1)
 	  sprintf(title,"%s chisq=%.2f",title,psr[0].fitChisq/psr[0].fitNfree);
 	if (nohead==0)
 	  cpglab(xstr,ystr,title);
 	else
 	  cpglab(xstr,ystr,"");
-        if (publish==0)
+
+  if (publish==0)
 	  {
 	    cpgsch(0.5); 
 	    cpgmtxt("B",6.5,0.92,0.0,"plk v.3.0 (G. Hobbs)"); 
 	    cpgsch(fontSize); 
 	  }
+
 	if (placeMarks==1)
 	  {
 	    i=0;
@@ -1421,18 +1431,18 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		    psr[0].obsn[i].prefitResidual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
 		  }
 	      }
-	    if (key=='-') 
-	      {
-		setZoomY1 = 0; setZoomY2 = 0;
-		/*	    zoomY1 -= 1.0/psr[0].param[param_f0].val;
-			    zoomY2 += 1.0/psr[0].param[param_f0].val; */
-	      } 
-	    if (key=='+') 
-	      {
-		setZoomY1 = 0; setZoomY2 = 0;
-		/*	    zoomY1 -= 1.0/psr[0].param[param_f0].val;
-			    zoomY2 += 1.0/psr[0].param[param_f0].val; */
-	      } 
+      //if (key=='-') 
+      //  {
+      setZoomY1 = 0; setZoomY2 = 0;
+      //    /*      zoomY1 -= 1.0/psr[0].param[param_f0].val;
+      //            zoomY2 += 1.0/psr[0].param[param_f0].val; */
+      //  } 
+      //if (key=='+') 
+      //  {
+      //    setZoomY1 = 0; setZoomY2 = 0;
+      //    /*      zoomY1 -= 1.0/psr[0].param[param_f0].val;
+      //            zoomY2 += 1.0/psr[0].param[param_f0].val; */
+      //  } 
 	    psr[0].nPhaseJump++;
 	  }
 	else if (key==8) // Backspace - remove all phase jumps
@@ -3530,7 +3540,8 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
 		{
 		  if (strcasecmp(userValStr,"snr")==0)
 		    {
-		      sprintf(str,"vap -r %s | awk '{print $2}' |tail -1",psr[0].obsn[iobs].fname);
+		      //sprintf(str,"vap -r %s | awk '{print $2}' |tail -1",psr[0].obsn[iobs].fname); OUTDATED
+          sprintf(str,"psrstat -Q -c snr -j FTp  %s | awk '{print $2}' |tail -1",psr[0].obsn[iobs].fname);
 		    }
 		  else
 		    sprintf(str,"%s -c %s %s | awk '{print $2}' |tail -1",userCMD,userValStr,psr[0].obsn[iobs].fname);
