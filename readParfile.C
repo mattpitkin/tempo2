@@ -495,7 +495,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   /* Whitening params  */
   /* ----------------- */ 
   else if (strcasecmp(str,"WAVE_OM")==0) /* Fundamental frequency */
-    readValue(psr,str,fin,&(psr->param[param_wave_om]),0);
+    {
+      readValue(psr,str,fin,&(psr->param[param_wave_om]),0);
+      psr->waveScale = 0;
+    }
+  else if (strcasecmp(str,"WAVE_SCALE")==0)
+    fscanf(fin,"%lf",&psr->waveScale);
   else if (strstr(str,"WAVE")!=NULL || strstr(str,"wave")!=NULL)
     {
       int number;
@@ -528,6 +533,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     fscanf(fin,"%lf %lf",&psr->gwsrc_across_r,&psr->gwsrc_across_i);
   else if (strcasecmp(str,"GW_EPOCH")==0)
     fscanf(fin,"%lf",&psr->gwsrc_epoch);
+  else if (strcasecmp(str,"GW_PSR_DIST")==0)
+    fscanf(fin,"%lf",&psr->gwsrc_psrdist);
   else if (strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
     {
       int number;

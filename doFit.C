@@ -463,7 +463,15 @@ int getNparams(pulsar psr)
     }
   /* Add extra parameters for sinusoidal whitening */
   if (psr.param[param_wave_om].fitFlag[0]==1)
-    npol+=psr.nWhite*2-1;
+    {
+      printf("waveScale at this point = %d\n",psr.waveScale);
+      if (psr.waveScale==1)
+	npol+=psr.nWhite*2-1;
+      else if (psr.waveScale==2)
+	npol+=psr.nWhite*4-1;
+      else
+	npol+=psr.nWhite*2-1;      
+    }
   if (psr.param[param_ifunc].fitFlag[0]==1)
       npol+=(psr.ifuncN-1);
   /* Add extra parameters for DMMODEL fitting */
@@ -493,8 +501,17 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		  if (debugFlag==1) printf("Fitting for %d (%s)\n",i,psr->param[i].label[k]);
 		  if (i==param_wave_om)
 		    {
-		      for (j=0;j<psr->nWhite*2;j++)
-			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		      if (psr->waveScale==2)
+			{
+			  // 			  for (j=0;j<psr->nWhite*2;j++) 			  
+			  for (j=0;j<psr->nWhite*4;j++)
+			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			}
+		      else
+			{
+ 			  for (j=0;j<psr->nWhite*2;j++)
+			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			}
 		    }
 		  else if (i==param_ifunc)
 		    {
@@ -815,8 +832,31 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
   else if (i==param_wave_om) /* Whitening procedure using sinusoids */
     {
       double      om    = psr->param[param_wave_om].val[0];
-      if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x); 
-      else        afunc = sin(om*(floor(k/2.0)+1)*x); 
+      if (psr->waveScale==0)
+	{
+	  if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x); 
+	  else        afunc = sin(om*(floor(k/2.0)+1)*x); 
+	}
+      else if (psr->waveScale==1)
+	{
+	  double freq = psr->obsn[ipos].freq;
+	  if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
+	  else afunc = sin(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
+	}
+      else if (psr->waveScale==2)
+	{
+	  double freq = psr->obsn[ipos].freq;
+	  if (k < psr->nWhite*2)
+	    {
+	      if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
+	      else afunc = sin(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
+	    }
+	  else
+	    {
+	      if ((k-(psr->nWhite*2))%2==0) afunc = cos(om*(floor((k-(psr->nWhite*2))/2.0)+1)*x);
+	      else afunc = sin(om*(floor((k-(psr->nWhite*2))/2.0)+1)*x);
+	    }
+	}
     }
   else if (i==param_ifunc) /* Whitening procedure using interpolated function */
     {
@@ -838,35 +878,70 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     }
   else if (i==param_gwsingle)
     {
-      double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
-      double res_e;
-      long double res;
+      double n1,n2,n3;
+      double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+      double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+      double cosTheta,omega_g;
+      long double resp,resc,res_r,res_i;
       double theta_p,theta_g,phi_p,phi_g;
+      double lambda_p,beta_p,lambda,beta;
       long double time;
       
       time    = (psr->obsn[ipos].bbat - psr->gwsrc_epoch)*86400.0L;
-      theta_p = (double)psr->param[param_raj].val[0];
-      phi_p   = (double)psr->param[param_decj].val[0];
-      theta_g = M_PI/2.0-(psr->gwsrc_dec);
-      phi_g   = psr->gwsrc_ra;
+      lambda_p = (double)psr->param[param_raj].val[0];
+      beta_p   = (double)psr->param[param_decj].val[0];
+      lambda   = psr->gwsrc_ra;
+      beta     = psr->gwsrc_dec;
+      // Pulsar vector
+      n1 = cosl(lambda_p)*cosl(beta_p);
+      n2 = sinl(lambda_p)*cosl(beta_p);
+      n3 = sinl(beta_p);
+      cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+	sinl(beta)*sinl(beta_p);
+
+      e11p = pow(sinl(lambda),2)-pow(cosl(lambda),2)*pow(sinl(beta),2);
+      e21p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+      e31p = cosl(lambda)*sinl(beta)*cosl(beta);
+      
+      e12p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+      e22p = pow(cosl(lambda),2)-pow(sinl(lambda),2)*pow(sinl(beta),2);
+      e32p = sinl(lambda)*sinl(beta)*cosl(beta);
+      
+      e13p = cosl(lambda)*sinl(beta)*cosl(beta);
+      e23p = sinl(lambda)*sinl(beta)*cosl(beta);
+      e33p = -powl(cosl(beta),2);
+
       omega_g = (double)psr->param[param_gwsingle].val[0];
+
+      resp = (n1*(n1*e11p+n2*e12p+n3*e13p)+
+	      n2*(n1*e21p+n2*e22p+n3*e23p)+
+	      n3*(n1*e31p+n2*e32p+n3*e33p));
+
+      e11c = sin(2*lambda)*sin(beta);
+      e21c = -cos(2*lambda)*sin(beta);
+      e31c = -sin(lambda)*cos(beta);
       
-      kp_theta = -sin(theta_p)*cos(theta_g)+cos(theta_p)*sin(theta_g)*cos(phi_g-phi_p);
-      kp_phi   = cos(theta_p)*sin(phi_g-phi_p);
-      kp_kg    = sin(theta_p)*sin(theta_g)+cos(theta_p)*cos(theta_g)*cos(phi_g-phi_p);
+      e12c = -cos(2*lambda)*sin(beta);
+      e22c = -sin(2*lambda)*sin(beta);
+      e32c = cos(lambda)*cos(beta);
       
-      p_plus   = kp_theta*kp_theta-kp_phi*kp_phi;  
-      p_cross  = 2*kp_theta*kp_phi;
-      gamma    = kp_kg;
-      
-      // Only considering real part and ignoring the pulsar term
-      //		      res_e = (p_plus*psr[p].gwsrc_aplus_r + p_cross*psr[p].gwsrc_across_r)*(sin(omega_g*time));
-      
-      //		      res   = 1.0L/(2.0L*omega_g*(1.0L+gamma))*res_e;
-      if (k==0) afunc = p_plus*sin(omega_g*time)/(2.0L*omega_g*(1.0L+gamma)); // aplus_re
-      else if (k==1) afunc = p_cross*sin(omega_g*time)/(2.0L*omega_g*(1.0L+gamma)); // across_re
-      else if (k==2) afunc = p_plus*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L+gamma)); // aplus_im
-      else if (k==3) afunc = p_cross*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L+gamma)); // across_im
+      e13c = -sin(lambda)*cos(beta);
+      e23c = cos(lambda)*cos(beta);
+      e33c  = 0;
+
+      resc = (n1*(n1*e11c+n2*e12c+n3*e13c)+
+	      n2*(n1*e21c+n2*e22c+n3*e23c)+
+	      n3*(n1*e31c+n2*e32c+n3*e33c));
+
+      if ((1.0L-cosTheta)==0)
+	afunc=0;
+      else
+	{
+	  if (k==0) afunc = resp*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_re
+	  else if (k==1) afunc = resc*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_re
+	  else if (k==2) afunc = resp*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	  else if (k==3) afunc = resc*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+	}
     }
   else if (i==param_dmmodel)
     {
@@ -1042,6 +1117,15 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      psr[p].wave_cos_err[k] = error[j]; j++;
 		      psr[p].wave_sine[k] -= val[j]; 
 		      psr[p].wave_sine_err[k] = error[j]; j++;	      
+		    }
+		  if (psr->waveScale==2) // Ignore the non-frequency derivative terms
+		    {
+		      for (k=0;k<psr->nWhite;k++)
+			{
+			  printf("Ignoring cos %g %g\n",val[j],error[j]); j++;
+			  printf("Ignoring sin %g %g\n",val[j],error[j]); j++;
+			}
+		      //		      j+=psr->nWhite*2; 
 		    }
 		  j--;
 		}		  

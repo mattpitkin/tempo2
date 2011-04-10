@@ -289,6 +289,7 @@ typedef struct pulsar {
   double gwsrc_aplus_r,gwsrc_aplus_i,gwsrc_across_r,gwsrc_across_i;
   double gwsrc_aplus_r_e,gwsrc_aplus_i_e,gwsrc_across_r_e,gwsrc_across_i_e;
   double gwsrc_epoch;
+  double gwsrc_psrdist;
 
   // General pulsar information
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
@@ -359,6 +360,7 @@ typedef struct pulsar {
   double wave_sine[MAX_WHITE], wave_sine_err[MAX_WHITE];
   double wave_cos[MAX_WHITE],  wave_cos_err[MAX_WHITE];
   int    nWhite;
+  double waveScale;
 
   double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC];
   int    ifuncN;
