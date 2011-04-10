@@ -31,6 +31,8 @@
 /* points and redo the fit.                                        */
 /* The plotting commands are the same as in the 'plk' package      */
 
+/* Version number is $Id$
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,7 +72,7 @@ void averagePts(float *x,float *y,int n,int width,float *meanX,float *meanY,int 
 void overPlotShapiro(pulsar *psr,float offset,longdouble centreEpoch);
 void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id, int *overN,
 		  float overX[], float overY[], float overYe[],int xplot,int yplot,
-		  float errBar[],double unitFlag,int plotPhase);
+		  float errBar[],double unitFlag,int plotPhase,double centreEpoch);
 void drawMenu(pulsar *psr,float plotx1,float plotx2,float ploty1,float ploty2,int menu);
 void drawMenu3(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot);
 void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat );
@@ -1177,7 +1179,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    }*/
 	else if (key=='b'){ /* bin the residuals */
 	  binResiduals(psr,npsr,x,y,count,id,&overN,overX,overY,overYe,xplot,yplot,
-		       yerr1,unitFlag,plotPhase);
+		       yerr1,unitFlag,plotPhase,(double)centreEpoch);
 	  overPlotn = 1;
 	  plottingx = x[0]; 
 	}
@@ -1901,7 +1903,6 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    fclose(fout);
 	  }
 	else if (key=='r') {  /* RESET */
-	  initialise(psr, 1);
 	  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
 	  readTimfile(psr,timFile,1); /* Load the arrival times    */
 	  preProcess(psr,1,argc,argv);
@@ -2150,10 +2151,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
 void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id,int *overN,
 		  float overX[], float overY[], float overYe[],int xplot,int yplot,
-		  float yerr1[],double unitFlag,int plotPhase){
+		  float yerr1[],double unitFlag,int plotPhase,double centreEpoch){
   float binSize, x1,x2, pos, overrms=0.0, err=0.0;
   int   j,num,tot=0,noerr=0;
   float errBar[count];
+
   printf("\nEnter positive width (current units) of each bin.\n");
   printf("Or enter -1 for specification of the number of bins.\n");
   printf("\t(Might be off by one due to rounding.)\n");
@@ -2240,6 +2242,7 @@ void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id,int *
       overrms += powf(overY[tot],2.0);
       //overYe[tot] = sqrt(overYe[tot])/(float)num;
       overYe[tot] = sqrt((float)num)/err;
+      printf("bin %d %.4f %g %g %g\n",tot+1,overX[tot]+centreEpoch,overX[tot],overY[tot],overYe[tot]);
       err = 0.0;
       tot++;
     }
