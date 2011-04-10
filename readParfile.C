@@ -907,7 +907,7 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
 void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILELEN],int npsr)
 {
   FILE *fin;
-  int nread,p,j;
+  int nread,p,j,k;
   char str[1000];
   parameter elong,elat;	
   int noread=0,endit;
@@ -959,7 +959,13 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
       elat.paramSet[0] = 0;
       elong.paramSet[0] = 0;
       psr[p].nPhaseJump = 0;
-      
+      for (k=0;k<MAX_PARAMS;k++)
+	{
+	  psr[p].param[k].nLinkTo = 0;
+	  psr[p].param[k].nLinkFrom = 0;
+	}
+      psr[p].nJumps=0;
+
       if (!(fin = fopen(parFile[p],"r")))
 	{
 	  /* Attempt to read fixed format header from tim file */

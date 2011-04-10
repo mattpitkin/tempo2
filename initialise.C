@@ -150,7 +150,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
       psr->jumpVal[i] = 0.0;
       psr->jumpValErr[i] = 0.0;
     }
-  
+  psr->nT2efac  = 0; // Number of T2EFACs
+  psr->nT2equad = 0; // Number of T2EQUADs
+  psr->T2globalEfac = 1; // A global multiplying factor
+
   allocateMemory(psr,0);
   /*  psr->param[param_track].paramSet[0]=1;
   psr->param[param_track].val[0]=0.0;

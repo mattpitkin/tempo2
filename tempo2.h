@@ -45,6 +45,8 @@
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
 #define MAX_IFUNC            100   /* Maximum number of parameters for interpolation function  */
+#define MAX_T2EFAC           50    /* Maximum number of T2EFACs allowed                */
+#define MAX_T2QUAD           50    /* Maximum number of T2EQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_DMX              64    /* Max number of DM steps allowed */
@@ -364,6 +366,15 @@ typedef struct pulsar {
 
   double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC];
   int    ifuncN;
+
+  // T2EFAC/T2EQUAD
+  int    nT2efac,nT2equad;
+  char   T2efacFlagID[MAX_T2EFAC][16],T2efacFlagVal[MAX_T2EFAC][16];
+  double T2efacVal[MAX_T2EFAC];
+  char   T2equadFlagID[MAX_T2EFAC][16],T2equadFlagVal[MAX_T2EFAC][16];
+  double T2equadVal[MAX_T2EFAC];
+  double T2globalEfac;
+  
 
   /* Which fit function are we using */
   char fitFunc[MAX_FILELEN];

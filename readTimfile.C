@@ -64,6 +64,9 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
 
       psr[p].nobs=0;
       psr[p].dmOffset=0;
+      psr[p].nT2efac = 0;
+      psr[p].nT2equad = 0;
+      psr[p].T2globalEfac = 1;
       /*      jumpVal=psr[p].nJumps;
       for (i=0;i<jumpVal;i++)
       psr[p].jumpVal[i]=0.0; */
@@ -116,34 +119,22 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
   int format,endit=0;
   int valid;
   int skip=0;
-  static double global_efac=1.0;
-  static double efac=1.0;
-  static double eset=-1.0;
-  static double emax=-1.0;  /* Maximum error used */
-  static double efloor=-1.0;
-  static double emin=-1.0;
-  static double equad = 0.0;
-  static double fmax=-1.0;
-  static double fmin=-1.0;
-  static double sigma=0.0;  /* Forced setting of TOA error */
-  static double time=0.0;
+
+  // NOTE: These were static -- now they are not!
+  double efac=1.0;
+  double eset=-1.0;
+  double emax=-1.0;  /* Maximum error used */
+  double efloor=-1.0;
+  double emin=-1.0;
+  double equad = 0.0;
+  double fmax=-1.0;
+  double fmin=-1.0;
+  double sigma=0.0;  /* Forced setting of TOA error */
+  double time=0.0;
   int    add=0;
   static int infoNum=-1;
   char oldLine[1000];
-  char global_efacFlag[100][1000];
-  char global_efacFlagID[100][1000];
-  double global_efacFlagVal[100];
-  int nglobal_efacFlag=0;
-  char efacFlag[100][1000];
-  char efacFlagID[100][1000];
-  double efacFlagVal[100];
-  int  nefacFlag=0;
 
-  char equadFlag[100][1000];
-  char equadFlagID[100][1000];
-  double equadFlagVal[100];
-  int  nequadFlag=0;
-  //  printf("Reading file %s %d %d\n",timname,nObs,psr[0].nobs);
   /* Attempt to open .tim file, exit if not possible */
   if (!(fin = fopen(timname,"r")))
     {
@@ -412,28 +403,14 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	  psr->obsn[nObs].toaErr = sqrt(pow(psr->obsn[nObs].toaErr,2)+equad*equad); 
 	  psr->obsn[nObs].equad = equad;
 
-	  for (i=0;i<nequadFlag;i++)
-	    {
-	      for (k=0;k<psr->obsn[nObs].nFlags;k++)
-		{
-		  if (strcmp(psr->obsn[nObs].flagID[k],equadFlagID[i])==0)
-		    {
-		      if (strcmp(psr->obsn[nObs].flagVal[k],equadFlag[i])==0){
-			psr->obsn[nObs].toaErr = 
-			  sqrt(pow(psr->obsn[nObs].toaErr,2)+pow(equadFlagVal[i],2));
-			psr->obsn[nObs].equad += equadFlagVal[i];
-		      }
-		    }
-		}
-	    }
 	  //printf("%lg  ",psr->obsn[nObs].equad);
 
 	  // Furthermore, I suspect that the "EQUAD on certain flags" should be put before the
 	  // efac adding, but well, who am I anyway?
 	  if (sigma!=0.0)
 	    psr->obsn[nObs].toaErr = sigma;
-	  psr->obsn[nObs].toaErr *= (efac*global_efac);
-	  psr->obsn[nObs].efac = (efac*global_efac);
+	  psr->obsn[nObs].toaErr *= (efac);
+	  psr->obsn[nObs].efac = (efac);
 	  /*	  for (i=0;i<nequadFlag;i++)
 	    {
 	      for (k=0;k<psr->obsn[nObs].nFlags;k++)
@@ -445,19 +422,6 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 		    }
 		}
 		}*/
-	  for (i=0;i<nefacFlag;i++)
-	    {
-	      for (k=0;k<psr->obsn[nObs].nFlags;k++)
-		{
-		  if (strcmp(psr->obsn[nObs].flagID[k],efacFlagID[i])==0)
-		    {
-		      if (strcmp(psr->obsn[nObs].flagVal[k],efacFlag[i])==0){
-			psr->obsn[nObs].toaErr *= efacFlagVal[i];
-			psr->obsn[nObs].efac *= efacFlagVal[i];
-		      }
-		    }
-		}
-	    }
 	  if (eset>-1)
 	    psr->obsn[nObs].toaErr = eset;
   
@@ -507,22 +471,24 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	      else if (strcasecmp(param1,"PROFILE_DIR")==0)
 		sscanf(line,"%s %s",param1,profileDir);
 	      else if (strcasecmp(param1,"GLOBAL_EFAC")==0)
-		sscanf(line,"%s %lf",param1,&global_efac);
+		sscanf(line,"%s %lf",param1,&psr->T2globalEfac);
 	      else if (strcasecmp(param1,"EFAC")==0)  /* Error multiplying factor */    
 		sscanf(line,"%s %lf",param1,&efac);
 	      else if (strcasecmp(param1,"EFLOOR")==0)  /* Minimum error                        */    
 		sscanf(line,"%s %lf",param1,&efloor);
 	      else if (strcasecmp(param1,"T2EFAC")==0) /* EFAC for given flag                    */
 		{
-		  sscanf(line,"%s %s %s %lf",param1,efacFlagID[nefacFlag],efacFlag[nefacFlag],
-			 &efacFlagVal[nefacFlag]);
-		  nefacFlag++;
+		  int nefacFlag = psr->nT2efac;
+		  sscanf(line,"%s %s %s %lf",param1,psr->T2efacFlagID[nefacFlag],psr->T2efacFlagVal[nefacFlag],
+			 &psr->T2efacVal[nefacFlag]);
+		  (psr->nT2efac)++;
 		}
 	      else if (strcasecmp(param1,"T2EQUAD")==0) /* EQUAD for given flag                  */
 		{
-		  sscanf(line,"%s %s %s %lf",param1,equadFlagID[nequadFlag],equadFlag[nequadFlag],
-			 &equadFlagVal[nequadFlag]);
-		  nequadFlag++;
+		  int nequadFlag = psr->nT2equad;
+		  sscanf(line,"%s %s %s %lf",param1,psr->T2equadFlagID[nequadFlag],psr->T2equadFlagVal[nequadFlag],
+			 &psr->T2equadVal[nequadFlag]);
+		  (psr->nT2equad)++;
 		}
 	      else if (strcasecmp(param1,"EMAX")==0)  /* Maximum error                           */
 		sscanf(line,"%s %lf",param1,&emax);
@@ -606,6 +572,17 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
     }
   if (strcmp(fileFormat,"tempo2")==0) fprintf(fout,"FORMAT 1\n");
   if (psr->fitMode==1) fprintf(fout,"MODE 1\n");    
+
+  // Print out the Tempo2 EFACs and EQUADs and GLOBAL_EFAC
+  if (psr[0].T2globalEfac != 1)
+    fprintf(fout,"GLOBAL_EFAC %.5g\n",psr[0].T2globalEfac);
+  // Now print out the EQUADS
+  for (i=0;i<psr[0].nT2equad;i++)
+    fprintf(fout,"T2EQUAD %s %s %.5g\n",psr[0].T2equadFlagID[i],psr[0].T2equadFlagVal[i],psr[0].T2equadVal[i]);
+  // Now print out the EFACs
+  for (i=0;i<psr[0].nT2efac;i++)
+    fprintf(fout,"T2EFAC %s %s %.5g\n",psr[0].T2efacFlagID[i],psr[0].T2efacFlagVal[i],psr[0].T2efacVal[i]);
+
   current_efac = psr[0].obsn[0].efac;
   current_equad = psr[0].obsn[0].equad;
   if(current_equad!=0.0)

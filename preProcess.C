@@ -461,7 +461,42 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	    }
 	  fclose(fdmin);
 	}
-      
+
+      // Check efacs and equads
+      if (psr->nT2efac > 0 || psr->nT2equad > 0 || psr->T2globalEfac!=1.0)
+	{
+	  double err;
+	  printf("Updating TOA errors using T2EFAC, T2EQUAD and T2GLOBALEFAC\n");
+	  for (i=0;i<psr[p].nobs;i++)
+	    {
+	      err = psr[p].obsn[i].toaErr;
+	      for (j=0;j<psr[p].obsn[i].nFlags;j++)
+		{
+		  // Check equad
+		  for (k=0;k<psr[p].nT2equad;k++)
+		    {
+		      if (strcmp(psr[p].obsn[i].flagID[j],psr[p].T2equadFlagID[k])==0)
+			{
+			  if (strcmp(psr[p].obsn[i].flagVal[j],psr[p].T2equadFlagVal[k])==0)
+			    err = (sqrt(pow(err,2)+pow(psr[p].T2equadVal[k],2)));
+			}
+		    }
+		  // Check efac
+		  for (k=0;k<psr[p].nT2efac;k++)
+		    {
+		      if (strcmp(psr[p].obsn[i].flagID[j],psr[p].T2efacFlagID[k])==0)
+			{
+			  if (strcmp(psr[p].obsn[i].flagVal[j],psr[p].T2efacFlagVal[k])==0)
+			    err *= psr[p].T2efacVal[k];
+			}
+		    }
+		}
+	      err *= psr[p].T2globalEfac;
+	      psr[p].obsn[i].toaErr = err;
+	    }
+	}
+
+
       // Modify TOA flags if required
       if (modify==1)
 	{
