@@ -31,8 +31,6 @@
 /* points and redo the fit.                                        */
 /* The plotting commands are the same as in the 'plk' package      */
 
-/* Version number is $Id$
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -258,6 +256,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   printf("Graphical Interface: plk emulator\n");
   printf("Authors:              George Hobbs, J. Verbiest (v4. 3 Aug 2007)\n");
   printf("Version:             4.1\n");
+  printf("CVS Version: $Id$\n");
   printf(" --- type 'h' for help information\n");
   /* Obtain the .par and the .tim file from the command line */
 
