@@ -257,7 +257,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: plk emulator\n");
   printf("Authors:              George Hobbs, J. Verbiest (v4. 3 Aug 2007)\n");
-  printf("Version:             4.0\n");
+  printf("Version:             4.1\n");
   printf(" --- type 'h' for help information\n");
   /* Obtain the .par and the .tim file from the command line */
 
