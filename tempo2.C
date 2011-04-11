@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
   FILE *alias;
   char **commandLine;
   clock_t startClock,endClock;
+  const char *CVS_verNum = "$Revision$";
 
   char plug_path[32][MAX_STRLEN];
   int plug_path_len=0;
@@ -85,6 +86,9 @@ int main(int argc, char *argv[])
   printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
   printf("This is free software, and you are welcome to redistribute it\n");
   printf("under conditions of GPL license.\n\n");
+
+  //
+  printf("Tempo2 version number: %s\n\n",CVS_verNum);
 
   startClock = clock();
 
