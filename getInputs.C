@@ -30,7 +30,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 #include "tempo2.h"
+
+
+void printplugs(char plug_path[][MAX_STRLEN], int plug_path_len);
 
 /* ******************************************** */
 /* getInputs                                    */
@@ -48,7 +52,8 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *list,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,
 	       int *polyco, char *polyco_args,
-	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile)
+	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,
+	       char plug_path[][MAX_STRLEN], int plug_path_len)
 {
   int i,p;
   int gr=0;
@@ -87,7 +92,8 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  printf("-norescale        Do not rescale parameter uncertainties by the sqrt(red. chisq)\n");
 	  printf("\n\n");
 	  printf("Available plugins\n");
-	  system("ls $TEMPO2/plugins/ | grep plug | sed s/\"_\"/\" \"/ | awk '{print \"  - \" $1}' | sort | uniq");
+	  printplugs(plug_path,plug_path_len);
+//	  system("ls $TEMPO2/plugins/ | grep plug | sed s/\"_\"/\" \"/ | awk '{print \"  - \" $1}' | sort | uniq");
 	  printf("-----------------\n");
 	  exit(1);
 	}	    
@@ -179,4 +185,60 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	}
       *npsr = parfile_num;
     }
+}
+
+
+
+
+
+
+
+
+
+
+void printplugs(char plug_path[][MAX_STRLEN], int plug_path_len){
+	char pname[MAX_STRLEN];
+	char matchstr[MAX_STRLEN];
+	char pname_list[MAX_STRLEN][MAX_STRLEN];
+	int np=0;
+	sprintf(matchstr,"%s_plug.t2",tempo2MachineType);
+	for (int i=0; i < plug_path_len; i++){
+		printf("in '%s'\n",plug_path[i]);
+		struct dirent *pent = NULL;
+		DIR* d = NULL;
+		d=opendir(plug_path[i]);
+		if(d==NULL){
+			printf("(dir not readable)\n");
+			continue;
+		}
+		while(pent = readdir(d)){
+			char* name=pent->d_name;
+			strcpy(pname,"");
+			int j=0;
+			char flag=' ';
+			int len=strlen(name);
+			while (j < len){
+				if (name[j]=='_'){
+					memcpy(pname,name,j);
+					pname[j]='\0';
+					break;
+				}
+				j++;
+			}
+			while (j < len){
+				if (strcmp(name+j,matchstr)==0){
+					for (int k=0; k < np; k++){
+						if(strcmp(pname_list[k],pname)==0){
+							flag='#';
+							break;
+						}
+					}
+					printf(" - %s%c\n",pname,flag);
+					strcpy(pname_list[np++],pname);
+					break;
+				}
+				j++;
+			}
+		}
+	}
 }

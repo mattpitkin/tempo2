@@ -79,6 +79,9 @@ int main(int argc, char *argv[])
   char **commandLine;
   clock_t startClock,endClock;
 
+  char plug_path[32][MAX_STRLEN];
+  int plug_path_len=0;
+
   printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
   printf("This is free software, and you are welcome to redistribute it\n");
   printf("under conditions of GPL license.\n\n");
@@ -196,6 +199,26 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
+/* get path to look for plugins */
+  if (getenv("TEMPO2_PLUG_PATH")!=NULL){
+	  char *p_path = (char*)malloc(MAX_STRLEN*32);
+	  strcpy(p_path,getenv("TEMPO2_PLUG_PATH"));
+	  int len= strlen(p_path);
+	  for (i=0; i < len; i++){
+		  if (p_path[i] == ':')p_path[i]='\0';
+	  }
+	  i=0;
+	  while(i < len){
+		strcpy(plug_path[plug_path_len++],p_path+i);
+		i+=strlen(p_path+i)+1;
+	  }
+	  free(p_path);
+  }
+
+  sprintf(plug_path[plug_path_len++],"%s/plugins/",getenv(TEMPO2_ENVIRON));
+
+
+
   /* If running from the command line ... */
   if (debugFlag==1) printf("Running initialise\n");
   initialise(psr,noWarnings); /* Initialise all */
@@ -235,7 +258,7 @@ int main(int argc, char *argv[])
   /* Obtain command line arguments */
   if (debugFlag==1) printf("Running getInputs %d\n",psr[0].nits);
   getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
-	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile);
+	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,plug_path,plug_path_len);
   if (debugFlag==1) printf("Completed getInputs\n");
 
   for (i=1;i<argc;i++)
@@ -245,15 +268,22 @@ int main(int argc, char *argv[])
 	{      
 	  char *(*entry)(int,char **,pulsar *,int *);
 	  void * module;
-	  if (strcmp(commandLine[i],"-gr")==0)
-	    {
-	      sprintf(str,"%s/plugins/%s_%s_plug.t2",getenv(TEMPO2_ENVIRON),
-		      commandLine[i+1],tempo2MachineType);
-	    }
-	  else
-	    sprintf(str,"./%s_%s_plug.t2",commandLine[i+1],tempo2MachineType);
-	  printf("Looking for %s\n",str);
-	  module = dlopen(str, RTLD_NOW); 
+
+	  if (strcmp(commandLine[i],"-gr2")==0){
+		  sprintf(str,"./%s_%s_plug.t2",commandLine[i+1],tempo2MachineType);
+		  printf("Looking for %s\n",str);
+		  module = dlopen(str, RTLD_NOW);
+	  } else{
+		  for (int iplug=0; iplug < plug_path_len; iplug++){
+			  sprintf(str,"%s/%s_%s_plug.t2",plug_path[iplug],
+					  commandLine[i+1],tempo2MachineType);
+			  printf("Looking for %s\n",str);
+			  module = dlopen(str, RTLD_NOW); 
+			  if(module==NULL){	  
+				  printf("dlerror() = %s\n",dlerror());
+			  } else break;
+		  }
+	  }
 	  if(!module)  {
 	    fprintf(stderr, "[error]: dlopen() failed while resolving symbols.\n" );
 	    fprintf(stderr, "dlerror() = %s\n",dlerror());

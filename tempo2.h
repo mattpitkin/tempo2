@@ -388,7 +388,8 @@ int zoom_graphics(float xcurs2,float ycurs2,int flag);
 void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *displayParams,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,int *polyco,
-	       char *polyco_args, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile);
+	       char *polyco_args, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,
+	       char plug_paths[][MAX_STRLEN], int plug_paths_len);
 void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,int nspan,int ncoeff,
 	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM);
 void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILELEN],int npsr);
