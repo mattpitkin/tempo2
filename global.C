@@ -48,6 +48,9 @@ char tempo2MachineType[MAX_FILELEN] = "";
 
 void extra_delays(pulsar *psr,int npsr)
 {  
+  const char *CVS_verNum = "$Revision$";
+  if (displayCVSversion == 1) CVSdisplayVersion("global.C","extra_delays()",CVS_verNum);
+
   calculate_bclt(psr,npsr);/* 3. Calculate bclt  */
   /*  shapiro_delay(psr,npsr); */ /* 1. Calculate the Shapiro delay */
   /* dm_delays(psr,npsr); */    /* 2. Extra dispersion measure delays */  
@@ -55,6 +58,9 @@ void extra_delays(pulsar *psr,int npsr)
 
 void clock_corrections(pulsar *psr,int npsr)
 {  
+  const char *CVS_verNum = "$Revision$";
+  if (displayCVSversion == 1) CVSdisplayVersion("global.C","clock_corrections()",CVS_verNum);
+
   if (debugFlag==1) printf("Calling toa2utc\n");
   toa2utc(psr,npsr);        /* 1. UTC(Observatory) -> UTC(NIST) */
   if (debugFlag==1) printf("Calling tai2ut1\n");
@@ -68,6 +74,9 @@ void clock_corrections(pulsar *psr,int npsr)
 
 void ephemeris_routines(pulsar *psr,int npsr)
 { 
+  const char *CVS_verNum = "$Revision$";
+  if (displayCVSversion == 1) CVSdisplayVersion("global.C","ephemeris_routines()",CVS_verNum);
+
   vectorPulsar(psr,npsr);   /* 1. Form a vector pointing at the pulsar */
   readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
   get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
@@ -77,6 +86,9 @@ void ephemeris_routines(pulsar *psr,int npsr)
 
 void formBatsAll(pulsar *psr,int npsr)
 {
+  const char *CVS_verNum = "$Revision$";
+  if (displayCVSversion == 1) CVSdisplayVersion("global.C","formBatsAll()",CVS_verNum);
+
   if (debugFlag==1) printf("Calling clock corrections\n");
   clock_corrections(psr,npsr);          /* Clock corrections  ... */  
   if (debugFlag==1) printf("Reading ephemeris routines\n");
@@ -91,6 +103,9 @@ void formBatsAll(pulsar *psr,int npsr)
 // to change if psr position has been altered.
 void updateBatsAll(pulsar *psr, int npsr)
 {
+  const char *CVS_verNum = "$Revision$";
+  if (displayCVSversion == 1) CVSdisplayVersion("global.C","updateBatsAll()",CVS_verNum);
+
   vectorPulsar(psr, npsr);
   calculate_bclt(psr, npsr);
   formBats(psr, npsr);

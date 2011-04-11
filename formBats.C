@@ -38,6 +38,9 @@ void formBats(pulsar *psr,int npsr)
   int i,p;
   //  double etatdm;
   double shapiroDelay;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("formBats.C","formBats()",CVS_verNum);
 
   if (debugFlag==1)printf("In formBats\n");
 
