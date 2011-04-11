@@ -44,6 +44,8 @@ int veryFast = 0;
 int displayCVSversion = 0;
 char tempo2MachineType[MAX_FILELEN] = "";
 
+#define MAX_FUNCTIONS 1024 /* Maximum functions in tempo2 */
+
 void extra_delays(pulsar *psr,int npsr)
 {  
   calculate_bclt(psr,npsr);/* 3. Calculate bclt  */
@@ -95,7 +97,27 @@ void updateBatsAll(pulsar *psr, int npsr)
   secularMotion(psr,npsr); 
 }
 
+
+// Display the version number if it hasn't already been displayed
 void CVSdisplayVersion(char *file,char *func,const char *verNum)
 {
-  printf("[TEMPO2 VERSION:] [%s] [%s] [%s]\n",file,func,verNum);
+  static char alreadyFunc[MAX_FUNCTIONS][64],alreadyFile[MAX_FUNCTIONS][64];
+  static int counter=0;
+  int i,have=0;
+  for (i=0;i<counter;i++)
+    {
+      if (strcmp(alreadyFunc[i],func)==0 &&
+	  strcmp(alreadyFile[i],file)==0)
+	{
+	  have=1;
+	  break;
+	}
+    }
+  if (have==0)
+    {
+      printf("[TEMPO2 VERSION:] [%s] [%s] [%s]\n",file,func,verNum);
+      strcpy(alreadyFunc[counter],func);
+      strcpy(alreadyFile[counter],file);
+      counter++;
+    }
 }
