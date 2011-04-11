@@ -131,7 +131,7 @@ void CVSdisplayVersion(char *file,char *func,const char *verNum)
   if (have==0)
     {
       if (counter==0) // First go display tempo2.h version
-	printf("TEMPO2 VERSION:] [tempo2.h] [] [%s]\n",TEMPO2_h_VER);
+	printf("[TEMPO2 VERSION:] [tempo2.h] [] [%s]\n",TEMPO2_h_VER);
       printf("[TEMPO2 VERSION:] [%s] [%s] [%s]\n",file,func,verNum);
       strcpy(alreadyFunc[counter],func);
       strcpy(alreadyFile[counter],file);
