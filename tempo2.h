@@ -166,6 +166,7 @@ extern double ECLIPTIC_OBLIQUITY;
 extern int debugFlag;   /* Global = 1 if debug mode is running */
 extern int veryFast;    /* Global to run the code fast */
 extern char tempo2MachineType[MAX_FILELEN];
+extern int displayCVSversion; /* Display CVS version */
 
 
 typedef struct storePrecision {
@@ -503,6 +504,7 @@ void updateDDS(pulsar *psr,double val,double err,int pos);
 double DDGRmodel(pulsar *psr,int p,int obs,int param);
 void updateDDGR(pulsar *psr,double val,double err,int pos);
 void displayMsg(int type,char *key,char *searchStr,char *variableStr,int noWarnings);
+void CVSdisplayVersion(char *file,char *func,const char *verNum);
 
 /* stuff for SI/TDB units */
 void transform_units(struct pulsar *psr, int from, int to);

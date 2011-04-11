@@ -88,8 +88,6 @@ int main(int argc, char *argv[])
   printf("under conditions of GPL license.\n\n");
 
   //
-  printf("Tempo2 version number: %s\n\n",CVS_verNum);
-
   startClock = clock();
 
   pulsar *psr;
@@ -104,7 +102,9 @@ int main(int argc, char *argv[])
     {
       if (strcasecmp(argv[i],"-npsr")==0)
 	sscanf(argv[i+1],"%d",&MAX_PSR);
-      if (strcasecmp(argv[i],"-nobs")==0)
+      else if (strcasecmp(argv[i],"-displayVersion")==0)
+	displayCVSversion = 1;
+      else if (strcasecmp(argv[i],"-nobs")==0)
 	sscanf(argv[i+1],"%d",&MAX_OBSN);
       else if (strcasecmp(argv[i],"-debug")==0)
 	debugFlag=1;
@@ -113,6 +113,8 @@ int main(int argc, char *argv[])
 
       strcpy(commandLine[i],argv[i]);
     }
+  if (displayCVSversion == 1) CVSdisplayVersion("tempo2.C","main()",CVS_verNum);
+
   if ((psr = (pulsar *)malloc(sizeof(pulsar)*MAX_PSR))==NULL)
     {
       printf("Not enough memory to allocate room for %d pulsars\n",MAX_PSR);

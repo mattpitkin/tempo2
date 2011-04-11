@@ -55,6 +55,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    int time=0;
    int ntrk=0;
    int gotit=0;
+   const char *CVS_verNum = "$Revision$";
+   
+   if (displayCVSversion == 1) CVSdisplayVersion("formResiduals.C","formResiduals()",CVS_verNum);
 
    for (p=0;p<npsr;p++)
      {

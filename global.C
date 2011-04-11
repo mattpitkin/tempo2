@@ -41,6 +41,7 @@ int MAX_OBSN  = MAX_OBSN_VAL;
 double ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
 int debugFlag = 0;
 int veryFast = 0;
+int displayCVSversion = 0;
 char tempo2MachineType[MAX_FILELEN] = "";
 
 void extra_delays(pulsar *psr,int npsr)
@@ -92,4 +93,9 @@ void updateBatsAll(pulsar *psr, int npsr)
   calculate_bclt(psr, npsr);
   formBats(psr, npsr);
   secularMotion(psr,npsr); 
+}
+
+void CVSdisplayVersion(char *file,char *func,const char *verNum)
+{
+  printf("[TEMPO2 VERSION:] [%s] [%s] [%s]\n",file,func,verNum);
 }

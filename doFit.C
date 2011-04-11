@@ -47,7 +47,9 @@ void doFit(pulsar *psr,int npsr,int writeModel)
   double *error;
   double tol = 1.0e-40;  /* Tolerence for singular value decomposition routine */
   double newStart=-1.0,newFinish=-1.0;
+  const char *CVS_verNum = "$Revision$";
 
+  if (displayCVSversion == 1) CVSdisplayVersion("doFit.C","doFit()",CVS_verNum);
   if (debugFlag==1) printf("Entering doFit\n");
   if (debugFlag==1) printf("Fitting with function: %s\n",psr[0].fitFunc);
 
@@ -839,13 +841,14 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
       else if (psr->waveScale==1)
 	{
-	  double freq = psr->obsn[ipos].freq;
+	  double freq = psr->obsn[ipos].freqSSB/1.0e6;
 	  if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
 	  else afunc = sin(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
 	}
       else if (psr->waveScale==2)
 	{
-	  double freq = psr->obsn[ipos].freq;
+	  double freq = psr->obsn[ipos].freqSSB/1.0e6;
+	  //	  printf("Have %d %d %d %d %g\n",k,psr->nWhite*2,k%2,(k-(psr->nWhite*2))%2,floor((k-(psr->nWhite*2))/2.0)+1);
 	  if (k < psr->nWhite*2)
 	    {
 	      if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
