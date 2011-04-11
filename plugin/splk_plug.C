@@ -73,7 +73,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: plk emulator\n");
   printf("Author:              George Hobbs (21 Dec 2003)\n");
-  printf("Version:             1.0\n");
+  printf("CVS Version:         $Revision $\n");
 
   /* Obtain the .par and the .tim file from the command line */
   for (i=1;i<argc;i++)
@@ -115,7 +115,7 @@ if (*npsr==0) /* Select all files */
       printf("Obtained files for %d pulsars\n",*npsr);
     }
 
-  initialise(psr,0);              /* Initialise the structures */
+//  initialise(psr,0);              /* Initialise the structures */
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
   preProcess(psr,*npsr,argc,argv);

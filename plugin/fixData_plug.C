@@ -91,7 +91,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: fixData\n");
   printf("Author:              G. Hobbs, D. Champion\n");
-  printf("Version:             1.0\n");
+  printf("CVS Version:         $Revision $\n");
 
   /* Obtain all parameters from the command line */
   for (i=2;i<argc;i++)
