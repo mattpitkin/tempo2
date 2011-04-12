@@ -646,6 +646,9 @@ getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings)
   char *currClock;
   ClockCorrectionFunction *func;
   double correction = 0.0;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("clkcorr.C","getCorrection()",CVS_verNum);
 
   if (clockFrom[0]=='\0')
     clockFrom = site->clock_name;

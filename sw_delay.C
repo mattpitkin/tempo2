@@ -86,6 +86,12 @@ float solarWindModel(pulsar psr,int iobs)
   ijump=1000;
   int npt=35; /*number of point with rots!=0*/
   float elsun,gst,sra,sdec;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("sw_delay.C","solarWindModel()",CVS_verNum);
+
+
+
   x[0][2]=0.0;
   x[1][2]=0.1262;
   x[2][2]=0.9920;

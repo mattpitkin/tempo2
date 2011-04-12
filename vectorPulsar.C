@@ -59,6 +59,9 @@ void vectorPulsar(pulsar *psr,int npsr)
   double ca,sa,cd,sd,convert,dec;
   double alpha,delta;
   int p;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("vectorPulsar.C","vectorPulsar()",CVS_verNum);
 
   for (p=0;p<npsr;p++)
     {

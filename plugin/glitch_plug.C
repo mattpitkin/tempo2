@@ -53,12 +53,12 @@ typedef struct glitchS {
 } glitchS;
 
 void defineGlitchVal(glitchS *glitch,int nglt);
-void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title);
+void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set);
 void plot1(double *epoch,double *f0,float *yerr1,float *yerr2,
-	   int n,double plotOffset,int combine,int pos,int nplot);          
+	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);          
 void plot8(double *epoch,double *f0,float *yerr1,float *yerr2,
-	   int n,double plotOffset,int combine,int pos,int nplot);          
-void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot);  
+	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);          
+void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);  
 void interactivePlot(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n);
 void fitFuncs(double x,double *p,int m);
 void changeFit(glitchS *glitch,int nglt);
@@ -67,13 +67,13 @@ void drawMenu(float minx,float maxx,float miny,float maxy,glitchS *glitch, int n
 void checkMenu(float minx,float maxx,float miny,float maxy,glitchS *glitch, int nglt,
 	       float mx,float my,int *fitf0,int *fitf1,char key);
 double nonlinearFunc( double t, const double *par,int obsNum );
-void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot);
-void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot);
-void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,int combine,int pos,int nplot);
-void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,int combine,int pos,int nplot);
-void plot7(double *plotResX,double *plotResY,double *plotResE,int nplotVal,double plotOffset,int combine,int pos,int nplot,double start,double end,double psrF0);
+void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
+void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
+void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
+void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
+void plot7(double *plotResX,double *plotResY,double *plotResE,int nplotVal,double plotOffset,int combine,int pos,int nplot,double start,double end,double psrF0,float yscale_min,float yscale_max,int yscale_set);
 void plot9(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,
-	   int combine,int pos,int nplot);
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
 
 
 // Global parameters for the fit
@@ -266,6 +266,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char title[100]="";
   char tname[100]="";
   int nread;
+  float yscale_min[100];
+  float yscale_max[100];
+  int   yscale_set[100];
+
+  for (i=0;i<100;i++)
+    yscale_set[i]=0;
 
   global_footer = 0.15;
   global_header = 0.1;
@@ -280,7 +286,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: glitch\n");
   printf("Author:              George Hobbs\n");
-  printf("Version:             v1.0\n");
+  printf("CVS Version:         $Revision $\n");
   printf(" --- type 'h' for help information\n");
 
 
@@ -319,6 +325,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	combine=1;
       else if (strcmp(argv[i],"-plotPar")==0)
 	strcpy(plotPar,argv[++i]);
+      else if (strcmp(argv[i],"-yscale")==0)
+	{
+	  int n;
+	  sscanf(argv[++i],"%d",&n);
+	  sscanf(argv[++i],"%f",&yscale_min[n]);
+	  sscanf(argv[++i],"%f",&yscale_max[n]);
+	  yscale_set[n] = 1;
+	}
     }
 
   // Read the list of strides
@@ -485,7 +499,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   // Do the plotting
   printf("Doing the plot\n");
   if (interactive==0)
-    doPlot(epoch,f0,f0e,f1,f1e,fitf1,nFit,id,n,gt,ngt,plotType,nplot,plotOffset,plotResX,plotResY,plotResE,nplotVal,combine,fontSize,title);
+    doPlot(epoch,f0,f0e,f1,f1e,fitf1,nFit,id,n,gt,ngt,plotType,nplot,plotOffset,plotResX,plotResY,plotResE,nplotVal,combine,fontSize,title,yscale_min,yscale_max,yscale_set);
   else
     interactivePlot(epoch,f0,f0e,nFit,id,n);
   printf("Done the plot\n");
@@ -493,7 +507,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title)
+void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set)
 {
   float yerr1[n],yerr2[n];
   float fx[2],fy[2];
@@ -508,34 +522,37 @@ void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf
     }
 
   cpgbeg(0,"?",1,1);
+  
   /*  if (combine==1)
     {
       cpgsubp(1,nplot);
       }*/
   cpgsch(fontSize);
-  cpgsfs(2);
+  printf("Here setting font\n");
+  cpgscf(2);
+  cpgslw(2);
 
   for (k=0;k<nplot;k++)
     {
       last=0;
       if (plotType[k]==1)
-	plot1(epoch,f0,yerr1,yerr2,n,plotOffset,combine,k,nplot);           
+	plot1(epoch,f0,yerr1,yerr2,n,plotOffset,combine,k,nplot,yscale_min[1],yscale_max[1],yscale_set[1]);           
       else if (plotType[k]==2)
-	plot2(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot);           
+	plot2(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[2],yscale_max[2],yscale_set[2]);           
       else if (plotType[k]==3)
-	plot3(epoch,f1,f1e,nFit,id,n,plotOffset,combine,k,nplot);
+	plot3(epoch,f1,f1e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[3],yscale_max[3],yscale_set[3]);
       else if (plotType[k]==4)
-	plot4(epoch,f0,f0e,nFit,id,n,plotOffset,gt,ngt,combine,k,nplot);           
+	plot4(epoch,f0,f0e,nFit,id,n,plotOffset,gt,ngt,combine,k,nplot,yscale_min[4],yscale_max[4],yscale_set[4]);           
       else if (plotType[k]==5)
-	plot5(epoch,f0,f0e,nFit,id,n,plotOffset,gt,ngt,combine,k,nplot);           
+	plot5(epoch,f0,f0e,nFit,id,n,plotOffset,gt,ngt,combine,k,nplot,yscale_min[5],yscale_max[5],yscale_set[5]);           
       else if (plotType[k]==6)
-	plot6(epoch,f1,f1e,nFit,id,n,plotOffset,combine,k,nplot);
+	plot6(epoch,f1,f1e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[6],yscale_max[6],yscale_set[6]);
       else if (plotType[k]==7)
-	plot7(plotResX,plotResY,plotResE,nplotVal,plotOffset,combine,k,nplot,epoch[0],epoch[n-1],f0[0]);
+	plot7(plotResX,plotResY,plotResE,nplotVal,plotOffset,combine,k,nplot,epoch[0],epoch[n-1],f0[0],yscale_min[7],yscale_max[7],yscale_set[7]);
       else if (plotType[k]==8)
-	plot8(epoch,f0,yerr1,yerr2,n,plotOffset,combine,k,nplot);           
+	plot8(epoch,f0,yerr1,yerr2,n,plotOffset,combine,k,nplot,yscale_min[8],yscale_max[8],yscale_set[8]);           
       else if (plotType[k]==9)
-	plot9(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot);           
+	plot9(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[9],yscale_max[9],yscale_set[9]);           
 
       for (i=0;i<ngt;i++)
 	{
@@ -549,7 +566,7 @@ void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf
   cpgend();
 }
 
-void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotOffset,int combine,int pos,int nplot,double start,double end,double psrF0)
+void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotOffset,int combine,int pos,int nplot,double start,double end,double psrF0,float yscale_min,float yscale_max,int yscale_set)
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -569,11 +586,19 @@ void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotO
     }
   minx = start-plotOffset;
   maxx = end-plotOffset;
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
-  
-  borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
+  if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;      
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
+      borderx = (maxx-minx)*0.1;
 
   if (combine==0)
     {
@@ -608,7 +633,7 @@ void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotO
 
 
 void plot1(double *epoch,double *f0,float *yerr1,float *yerr2,
-	   int n,double plotOffset,int combine,int pos,int nplot)           
+	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -628,11 +653,20 @@ void plot1(double *epoch,double *f0,float *yerr1,float *yerr2,
 
   minx = TKfindMin_f(fx,n);
   maxx = TKfindMax_f(fx,n);
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
+ if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
+ borderx = (maxx-minx)*0.1;
   
-  borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
 
   if (combine==0)
     {
@@ -660,7 +694,7 @@ void plot1(double *epoch,double *f0,float *yerr1,float *yerr2,
 }
 
 void plot8(double *epoch,double *f0,float *yerr1,float *yerr2,
-	   int n,double plotOffset,int combine,int pos,int nplot)           
+	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -682,11 +716,21 @@ void plot8(double *epoch,double *f0,float *yerr1,float *yerr2,
   
   minx = TKfindMin_f(fx,n);
   maxx = TKfindMax_f(fx,n);
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
-  
+
+  if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
   borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
+  
 
   if (combine==0)
     {
@@ -714,7 +758,7 @@ void plot8(double *epoch,double *f0,float *yerr1,float *yerr2,
 }
 
 void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,
-	   int combine,int pos,int nplot)           
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -743,11 +787,20 @@ void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 
   minx = TKfindMin_f(fx,n);
   maxx = TKfindMax_f(fx,n);
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
-  
+  if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
   borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
+  
 
 
   
@@ -795,7 +848,7 @@ void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 }
 
 void plot9(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,
-	   int combine,int pos,int nplot)           
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -824,11 +877,20 @@ void plot9(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 
   minx = TKfindMin_f(fx,n);
   maxx = TKfindMax_f(fx,n);
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
-  
+  if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
   borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
+      
 
 
   
@@ -865,7 +927,7 @@ void plot9(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 }
 
 void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,
-	   int combine,int pos,int nplot)
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -911,11 +973,21 @@ void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 
   minx = TKfindMin_f(fx,n);
   maxx = TKfindMax_f(fx,n);
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
-  
-  borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
+
+ if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
+ borderx = (maxx-minx)*0.1;
+      
   
 
   if (combine==0)
@@ -945,7 +1017,7 @@ void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 }
 
 void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,
-	   int combine,int pos,int nplot)
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -1032,11 +1104,20 @@ void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 
   minx = TKfindMin_f(fx,n);
   maxx = TKfindMax_f(fx,n);
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
+if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
+ borderx = (maxx-minx)*0.1;
   
-  borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
   
 
   if (combine==0)
@@ -1066,7 +1147,7 @@ void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 }
 
 
-void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot)           
+void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -1094,11 +1175,20 @@ void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double p
 
   minx = TKfindMin_f(fx,n);
   maxx = TKfindMax_f(fx,n);
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
+if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
+ borderx = (maxx-minx)*0.1;
   
-  borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
   
   if (combine==0)
     {
@@ -1124,7 +1214,7 @@ void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double p
   cpgerry(n,fx,yerr1,yerr2,1);
 }
 
-void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot)           
+void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
 {
   float minx,maxx,miny,maxy;
   float borderx,bordery;
@@ -1154,11 +1244,21 @@ void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double p
 
   minx = TKfindMin_f(fx,n);
   maxx = TKfindMax_f(fx,n);
-  miny = TKfindMin_f(fy,n);
-  maxy = TKfindMax_f(fy,n);
+
+if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n);
+      maxy = TKfindMax_f(fy,n);
+      bordery = (maxy-miny)*0.1;
+    }
+  else
+    {
+      miny = yscale_min;
+      maxy = yscale_max;
+      bordery = 0;
+    }
+ borderx = (maxx-minx)*0.1;
   
-  borderx = (maxx-minx)*0.1;
-  bordery = (maxy-miny)*0.1;
   
   if (combine==0)
     {

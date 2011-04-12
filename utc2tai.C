@@ -64,6 +64,9 @@ void utc2tai(pulsar *psr,int npsr)
   /*  double a1utcf; */
   FILE *fin;
   char fname[MAX_FILELEN];
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("utc2tai.C","utc2tai()",CVS_verNum);
   
   /* Read the leap second file and store in arrays */
   strcpy(fname,getenv(TEMPO2_ENVIRON));

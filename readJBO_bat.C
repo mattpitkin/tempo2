@@ -47,6 +47,9 @@ void readJBO_bat(char *fname,pulsar *psr,int p)
     double dbl[25];
     int ival[50];
   } buf;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("readJBO_bat.C","readJBO_bat()",CVS_verNum);
 
   open_file2(fname,&swap);
   printf("Attempting to read %s\n",fname);

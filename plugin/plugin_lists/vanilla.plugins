@@ -7,4 +7,7 @@ transform_plug.C
 fake_plug.C
 publish_plug.C
 global_fitFunc_plug.C
+ppta_splug.C
+simRedNoise_plug.C
+
 

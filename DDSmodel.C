@@ -50,6 +50,10 @@ double DDSmodel(pulsar *psr,int p,int ipos,int param)
   double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
   double csigma,ce,cx,comega,cgamma,cdth,cm2,csi=0.0;
   double shapmax,cshapmax,sdds;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("DDSmodel.C","DDSmodel()",CVS_verNum);
+
   dr = 0.0; /* WHAT SHOULD THESE BE SET TO? */
   dth = 0.0; 
 

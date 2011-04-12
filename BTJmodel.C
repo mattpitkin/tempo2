@@ -56,6 +56,9 @@ double BTJmodel(pulsar *psr,int p,int ipos,int param,int arr)
   double phase;
   double ep,dep,bige,tt,som,com;
   double alpha,beta,sbe,cbe,q,r,s,W;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("BTJmodel.C","BTJmodel()",CVS_verNum);
 
   tt0 = (psr[p].obsn[ipos].bbat - psr[p].param[param_t0].val[0])*SECDAY;
 

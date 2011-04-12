@@ -69,6 +69,9 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
   int trimonly = 0;
   char modifyFname[100];
   double simulate=0;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("preProcess.C","preProcess()",CVS_verNum);
   
   if (debugFlag==1) printf("In preProcess\n");
 

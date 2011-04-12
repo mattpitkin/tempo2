@@ -63,6 +63,10 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
   double one_au;
   int err_code;
   int i,p;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("readEphemeris.C","readEphemeris()",CVS_verNum);
+
   if (addEphemNoise!=0)
     printf("WARNING: Adding noise into ephemeris %d\n",addEphemNoise); 
 

@@ -54,6 +54,9 @@ int bootstrap(pulsar *psr,int p,int npsr)
   int il1,il2,ih1,ih2;
   double globalParam;
   long idum = -999;              /* Should be set be clock, or user */
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("bootstrap.C","bootstrap()",CVS_verNum);
 
   printf("Bootstrap1 = %d\n",psr[0].bootStrap);
   copyPSR(psr,p,npsr);           /* Have a copy of the pulsar */

@@ -37,6 +37,9 @@
 void initialise(pulsar *psr,int noWarnings)
 {
   int p;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("initialise.C","initialise()",CVS_verNum);
 
   // allocate space for covar arrays
   int fullSetup = 1;

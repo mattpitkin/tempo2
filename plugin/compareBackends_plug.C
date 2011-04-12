@@ -115,6 +115,7 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
   float minx,maxx;
   float miny,maxy;
   int it=0;
+  int xaxis=1;
 
   cpgbeg(0,"/xs",1,1);
   cpgask(0);
@@ -148,7 +149,8 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
 			    if (fabs(psr[0].obsn[i].sat - psr[0].obsn[j].sat) < maxTimeDiff/60.0/24.0)
 			      {
 				dres = psr[0].obsn[i].residual - psr[0].obsn[j].residual;
-				xval[it][n[it]] = (float)psr[0].obsn[i].sat;
+				if (xaxis==1)
+				  xval[it][n[it]] = (float)psr[0].obsn[i].sat;
 				yval[it][n[it]] = (float)dres;
 				ebar = sqrt(pow(psr[0].obsn[i].toaErr*1.0e-6,2)+pow(psr[0].obsn[j].toaErr*1.0e-6,2));
 				e1[it][n[it]] = yval[it][n[it]] - ebar;

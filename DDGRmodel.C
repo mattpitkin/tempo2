@@ -61,6 +61,9 @@ double DDGRmodel(pulsar *psr,int p,int ipos,int param)
   double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
   double fact1,fact2,fact3,fact4,fact5,fact6,fact7,fact8,denumm,denomm,darrdm,ck,dkdm,cdr;
   double ddrdm,cpbdot,dpbdm,csini,dsidm,an0,dgamdm,dthdm,ddrdm2;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("DDGRmodel.C","DDGRmodel()",CVS_verNum);
 
   t0 = psr[p].param[param_t0].val[0];
   ct = psr[p].obsn[ipos].bbat;    

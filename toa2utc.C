@@ -60,6 +60,9 @@ double convertTOA(double mjd,char *clks);
 void toa2utc(pulsar *psr,int npsr)
 {
   int i,p;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("toa2utc.C","toa2utc__1()",CVS_verNum);
 
   for (p=0;p<npsr;p++)
       for (i=0;i<psr[p].nobs;i++)
@@ -78,6 +81,9 @@ void toa2utc(pulsar *psr,int npsr)
 void toa2utc(pulsar *psr,int npsr)
 {
   int i,j,p,found=0;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("toa2utc.C","toa2utc__2()",CVS_verNum);
 
   for (p=0;p<npsr;p++)
     {

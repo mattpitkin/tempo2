@@ -65,6 +65,9 @@ get_obsCoord_IAU2000B(double observatory_trs[3],
   double ut1_jd1, ut1_jd2;
   double sprime=0.0;
   double one_on_c = 1.0/SPEED_LIGHT;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("get_obsCoord.C","get_obsCoord_IAU2000B()",CVS_verNum);
 
   // Get Earth orientation parameters
   get_EOP((double)utc_mjd, &xp, &yp, &dut1, &dut1dot, 1);
@@ -130,6 +133,9 @@ void get_obsCoord(pulsar *psr,int npsr)
   double erad,hlt,alng,hrd,tsid,sdd,speed,sitera;
   int p;
   observatory *obs;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("get_obsCoord.C","get_obsCoord()",CVS_verNum);
 
 
   for (p=0;p<npsr;p++)

@@ -49,7 +49,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: name\n");
   printf("Author:              author\n");
-  printf("Version:             version number\n");
+  printf("CVS Version:         $Revision $\n");
   printf(" --- type 'h' for help information\n");
 
 

@@ -51,6 +51,10 @@ double ut1red(double mjd,int warnings);
 void tai2ut1(pulsar *psr,int npsr)
 {
   int p,i;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("tai2ut1.C","tai2ut1()",CVS_verNum);
+
   for (p=0;p<npsr;p++)
     {
       if (psr[p].t2cMethod==T2C_TEMPO)

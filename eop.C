@@ -58,6 +58,9 @@ load_EOP(DynamicArray *EOPsamples)
   FILE *f;
   int iline,idummy;
   int format=0;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("eop.C","load_EOP()",CVS_verNum);
 
   // init array
   DynamicArray_init(EOPsamples, sizeof(EOPSample));

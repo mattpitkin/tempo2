@@ -244,7 +244,7 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
   long double geo;
   long double residual;
   long double deg2rad = M_PI/180.0L;
-  long double VC = 299792456.200L; /* This was in cm - how how this affected us */
+  long double VC = 299792456.200L;
   int i,k;
 
   for (i=0;i<3;i++)
@@ -263,7 +263,7 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
 
 		
   cosMu = dotProduct(kp,gw->kg);   /* Angle between pulsar and GW source */
-  //  printf(" cosmu = %g\n",(double)cosMu);
+  //    printf(" cosmu = %g\n",(double)cosMu);
   if ((1+cosMu)!=0) 
   {
     psrVal1    = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal); 

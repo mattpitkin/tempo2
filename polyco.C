@@ -102,6 +102,9 @@ void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,i
   longdouble tmin[800];
   double globalParameter,utc;
   int nsets;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("polyco.C","polyco()",CVS_verNum);
 
   binPhase[0]='\0';
 

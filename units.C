@@ -55,6 +55,10 @@ void xform_mjd(struct parameter *p,int arr, longdouble f)
 void
 transform_units(struct pulsar *psr, int from, int to)
 {
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("units.C","transform_units()",CVS_verNum);
+
   longdouble f = 
     (to == TDB_UNITS ? ((longdouble)1.0) : ((longdouble)IFTE_K))
      / (from == TDB_UNITS ? ((longdouble)1.0) : ((longdouble)IFTE_K)) ;

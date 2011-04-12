@@ -101,6 +101,9 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
   longdouble DAOP=0.0L, DSR=0.0L;
   double daop;// DAOP is the time delay due to annual orbital parallax. daop is the aop distance.
   torb = 0.0;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("T2model.C","T2model()",CVS_verNum);
 
   if (param==-1) 
     {

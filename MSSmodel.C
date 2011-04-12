@@ -56,6 +56,9 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
   int norbits;  
   double pb,eccentricity,a1,omega,omdot,xdot,am2,pbdot,tt0;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("MSSmodel.C","MSSmodel()",CVS_verNum);
 
   tt0 = (psr[p].obsn[obs].bbat - psr[p].param[param_t0].val[0])*SECDAY;
 

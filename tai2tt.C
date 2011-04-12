@@ -53,6 +53,10 @@
 void tai2tt(pulsar *psr,int npsr)
 {
   int i,p;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("tai2tt.C","tai2tt()",CVS_verNum);
+
   for (p=0;p<npsr;p++)
     {
       for (i=0;i<psr[p].nobs;i++)

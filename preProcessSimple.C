@@ -32,6 +32,10 @@
 
 void preProcessSimple (pulsar *psr)
 {
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("preProcessSimple.C","preProcessSimple()",CVS_verNum);
+
   preProcessSimple1 (psr, 0, -1);
   preProcessSimple2 (psr, 0, 0, 0, 0);
   preProcessSimple3 (psr);

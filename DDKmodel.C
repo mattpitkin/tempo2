@@ -57,6 +57,9 @@ double DDKmodel(pulsar *psr,int p,int ipos,int param)
   double ki_dot,sini,cosi,tani,delta_i0,delta_j0,asi;
   double cos_alpha,sin_alpha,cos_delta,sin_delta,xpr,ypr,dpara;
   double pxConv = 1.74532925199432958E-2/3600.0e3;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("DDKmodel.C","DDKmodel()",CVS_verNum);
 
   dr  = 0.0; /* WHAT SHOULD THESE BE SET TO? */
   dth = 0.0; 

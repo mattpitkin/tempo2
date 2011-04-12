@@ -37,6 +37,9 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 {
   double delay,ctheta,r,rsa[3],pospos;
   int j,k;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("shapiro_delay.C","shapiro_delay()",CVS_verNum);
   
   if (psr[p].obsn[i].delayCorr==0) /* No correction */
     {

@@ -48,6 +48,11 @@ long double DDmodel(pulsar *psr,int p,int ipos,int param)
   long double  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,anhat,su;
   long double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
   long double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("DDmodel.C","DDmodel()",CVS_verNum);
+
+
   dr = 0.0; /* WHAT SHOULD THESE BE SET TO? */
   dth = 0.0; 
 

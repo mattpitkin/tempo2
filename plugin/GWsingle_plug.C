@@ -177,7 +177,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   timeOffset = psr[0].param[param_pepoch].val[0];
 
   gw.phi_g       = gra*M_PI/12.0;
-  gw.theta_g     = (gdec*M_PI/180.0)+M_PI/2.0;
+  gw.theta_g     = M_PI/2.0-(gdec*M_PI/180.0);
   gw.omega_g     = omega;
   gw.phase_g     = 0;
   gw.aplus_g     = aplus;
@@ -207,7 +207,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
   formResiduals(psr,*npsr,0);           /* Form the residuals                 */
   if (toas==1)
-    writeTim("singleGW.tim",psr,"tempo2");
+    {
+      char fname[1000];
+      for (p=0;p<*npsr;p++)
+	{
+	  sprintf(fname,"%s.gw.tim",psr[p].name);
+	  writeTim(fname,psr+p,"tempo2");
+	}
+    }
   if (plotIt==1)
     doPlot(psr,*npsr,gw,gwRes,timeOffset,tspan);
   return 0;

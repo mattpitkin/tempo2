@@ -911,6 +911,9 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
   char str[1000];
   parameter elong,elat;	
   int noread=0,endit;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("readParfile.C","readParfile()",CVS_verNum);
 
   elong.aSize = 1;
   elong.val       = (longdouble *)malloc(elong.aSize*sizeof(longdouble));

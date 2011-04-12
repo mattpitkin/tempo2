@@ -42,6 +42,9 @@ void calculate_bclt(pulsar *psr,int npsr)
   double rr,pxConv;
   double rca[3];
   int loop;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("calculate_bclt.C","calculate_bclt()",CVS_verNum);
 
   if (debugFlag==1) printf("In calculate_bclt with number of psr = %d, nobs (psr[0]) = %d\n",npsr,psr[0].nobs);
 

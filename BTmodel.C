@@ -53,6 +53,9 @@ double BTmodel(pulsar *psr,int p,int ipos,int param)
   double phase;
   double ep,dep,bige,tt,som,com;
   double alpha,beta,sbe,cbe,q,r,s;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("BTmodel.C","BTmodel()",CVS_verNum);
 
 
   tt0 = (psr[p].obsn[ipos].bbat - psr[p].param[param_t0].val[0])*SECDAY;

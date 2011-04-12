@@ -110,6 +110,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 
   if (psr[0].param[param_ifunc].fitFlag[0]==2)	  
       npol+=psr[0].ifuncN-1;
+
+  if (psr[0].param[param_gwsingle].fitFlag[0]==2)
+    npol+=(4-1); 
+
   printf("Adding %d global parameters\n",npol);
   for (p=0;p<npsr;p++)
     {
@@ -143,6 +147,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	npol+=psr[p].nWhite*2-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	npol+=psr[p].ifuncN-1;
+      if (psr[p].param[param_gwsingle].fitFlag[0]==1)
+	npol+=(4-1);
     }
   val   = (double *)malloc(npol*sizeof(double));
   error = (double *)malloc(npol*sizeof(double));
@@ -170,7 +176,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       printf("Finished %d\n",npol);
     }
   for (i=0;i<npol;i++)
-    printf("val %d = %g\n",i,val[i]);
+    printf("val %d = %g %g\n",i,val[i],error[i]);
   // now update the parameters
   offset=0;
   // update global parameters
@@ -197,6 +203,21 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			}
 		      offset++;		      
 		    }
+		}
+	      else if (i==param_gwsingle)
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      psr[p].gwsrc_aplus_r -= val[offset];		      
+		      psr[p].gwsrc_across_r -= val[offset+1];		      
+		      psr[p].gwsrc_aplus_r_e = error[offset];		      
+		      psr[p].gwsrc_across_r_e = error[offset+1];		      
+		      psr[p].gwsrc_aplus_i -= val[offset+2];		      
+		      psr[p].gwsrc_across_i -= val[offset+3];		      
+		      psr[p].gwsrc_aplus_i_e = error[offset+2];		      
+		      psr[p].gwsrc_across_i_e = error[offset+3];		      
+		    }
+		  offset+=4;
 		}
 	      else if (i==param_ifunc)
 		{
@@ -249,6 +270,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	offset+=psr[p].nWhite*2-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	offset+=psr[p].ifuncN-1;
+      if (psr[p].param[param_gwsingle].fitFlag[0]==1)
+	offset+=4;
       offset++; // For arbitrary phase
     }
   printf("At this point\n");
@@ -349,6 +372,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     nglobal+=psr[p].nWhite*2-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==2)
     nglobal+=psr[p].ifuncN-1;
+  if (psr[p].param[param_gwsingle].fitFlag[0]==2)
+    nglobal+=(4-1);
 
   new_ma+=nglobal;
   for (i=0;i<MAX_PARAMS;i++)
@@ -372,6 +397,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     new_ma+=psr[p].nWhite*2-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==1)
     new_ma+=psr[p].ifuncN-1;
+  if (psr[p].param[param_gwsingle].fitFlag[0]==1)
+    new_ma+=4;
 
   // Now calculate position in afunc array
   n=0;
@@ -402,6 +429,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	n+=psr[pp].nWhite*2-1;
       if (psr[pp].param[param_ifunc].fitFlag[0]==1)
 	n+=psr[pp].ifuncN-1;
+      if (psr[pp].param[param_gwsingle].fitFlag[0]==1)
+	n+=4-1;
     }
 
   // Global fit
@@ -422,6 +451,17 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		      c++;		      
 		    }
 		}
+	      else if (i==param_gwsingle)
+		{
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,0);
+		  c++;
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,1);
+		  c++;
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,2);
+		  c++;
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,3);
+		  c++;
+		}
 	      else if (i==param_ifunc)
 		{
 		  for (j=0;j<psr[p].ifuncN;j++)
@@ -438,7 +478,7 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	    }
 	} 
     }
-
+  //  printf("Global fit n = %d, nglobal = %d\n",n,nglobal);
   //  printf("Global fit = %g\n",afunc[0]);
   FITfuncs(x,afunc+n,new_ma-nglobal,&psr[p],ipos);
   //  printf("-----------------------------\n");
