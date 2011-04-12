@@ -245,6 +245,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   //display chisq?
   int showChisq = 0;
   char flagColour[100];
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("plk_plug.C","plugin",CVS_verNum);
 
   strcpy(flagColour,"");
 
