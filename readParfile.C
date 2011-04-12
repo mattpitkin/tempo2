@@ -520,6 +520,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       int number = psr->dmoffsNum;
       fscanf(fin,"%lf %lf",&psr->dmoffsMJD[number],&psr->dmoffsDM[number]);
       psr->dmoffsOffset[number] = 0;
+      psr->dmoffsError[number] = 0;
       psr->dmoffsDMe[number] = 0;
       (psr->dmoffsNum)++;
     }

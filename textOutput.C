@@ -282,7 +282,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("\nDispersion measure values:\n\n");
 	  updateDMvals(psr,p);
 	  for (i=0;i<(int)psr[p].dmoffsNum;i++)
-	    printf("DMOFF\t %.15g %.15g %.15g\n",psr[p].dmoffsMJD[i],psr[p].dmoffsDM[i],psr[p].dmoffsDMe[i]);
+	    printf("DMOFF\t %.15g %.15g %.15g %.15g %.15g\n",psr[p].dmoffsMJD[i],psr[p].dmoffsDM[i],psr[p].dmoffsDMe[i],psr[p].dmoffsOffset[i],psr[p].dmoffsError[i]);
 	}
 	  if (psr[p].param[param_ifunc].paramSet[0]==1)
 	    {

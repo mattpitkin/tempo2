@@ -286,7 +286,8 @@ typedef struct pulsar {
   double dmoffsDM[100];
   double dmoffsDMe[100];
   double dmoffsOffset[100];
-  
+  double dmoffsError[100];
+
   // Gravitational wave information
   double gwsrc_ra;
   double gwsrc_dec;
