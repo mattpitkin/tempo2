@@ -28,6 +28,7 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include "tempo2.h"
 //#include "tempo2Util.h"
 //#include "tempo2pred.h"
