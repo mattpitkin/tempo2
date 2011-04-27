@@ -934,6 +934,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	if (output_file) fclose(outputf);
 	if (output_pos)  fclose(output_posf);
 
+
+
+
 	// ------------------------------------------------- //
 	// Graphical output
 	// ------------------------------------------------- //	
@@ -1020,6 +1023,23 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		ymoy[0] = (float)l/(float)nbins;
 		ymoy[1] = ymoy[0];
 		
+		printf("Max H-test TS = %f\n",hmax);
+
+		// ------------------------------------------------- //
+		// Output phase historgram information (mkeith Jan 2011)
+		// ------------------------------------------------- //
+
+		outputf=fopen("profile.hist","w");
+
+		for (i=0; i < nbins; i++){
+			fprintf(outputf,"%f %f %f\n",bins[i],lc[i],errY[i]);
+		}
+		fclose(outputf);
+
+
+			
+
+
 		// ------------------------------------------------- //
 		// Graphical output initialization
 		// ------------------------------------------------- //							
