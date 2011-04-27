@@ -1010,58 +1010,77 @@ double dglep(pulsar psr,int gn,double fph)
 //
 void updateDMvals(pulsar *psr,int p)
 {
-  int i,k,j;
-  double dm,dme,m,c;
-  int iflag,jflag;
-  printf("Updating DM vals\n");
-  for (i=0;i<psr[p].nobs;i++)
-    {
-      // Do linear interpolation
-      for (k=0;k<psr[p].dmoffsNum;k++)
-	{
-	  if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsMJD[k] &&
-	      (double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[k+1])
-	    {	      
-	      // Calculate DM
-	      m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
-	      c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsMJD[k];
-	      dm = m*(double)psr[p].obsn[i].sat+c + (double)psr[p].param[param_dmmodel].val[0];
-	      iflag=jflag=-1;
-	      for (j=0;j<psr->obsn[i].nFlags;j++)
+	int i,k,j;
+	double dm,dme,m,c;
+	int iflag,jflag;
+	printf("Updating DM vals\n");
+
+	if(psr[p].dmoffsNum > 0){
+		for (i=0;i<psr[p].nobs;i++)
 		{
-		  if (strcmp(psr->obsn[i].flagID[j],"-dm")==0)
-		    iflag=j;
-		  else if (strcmp(psr->obsn[i].flagID[j],"-dme")==0)
-		    jflag=j;
+			if ((double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[0]){
+				dm = psr[p].dmoffsDM[0] + (double)psr[p].param[param_dmmodel].val[0];
+				dme = psr[p].dmoffsDMe[0];
+
+			} else if ((double)psr[p].obsn[i].sat > psr[p].dmoffsMJD[psr[p].dmoffsNum-1]){
+				dm = psr[p].dmoffsDM[psr[p].dmoffsNum-1]+(double)psr[p].param[param_dmmodel].val[0];
+				dme = psr[p].dmoffsDMe[psr[p].dmoffsNum-1];
+			} else {
+				// Do linear interpolation
+				for (k=0;k<psr[p].dmoffsNum;k++)
+				{
+					if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsMJD[k] &&
+							(double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[k+1])
+					{	      
+						// Calculate DM
+						m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
+						c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsMJD[k];
+						dm = m*(double)psr[p].obsn[i].sat+c + (double)psr[p].param[param_dmmodel].val[0];
+
+
+						// Calculate error in DM
+//						if (k==0){
+//							dme = psr[p].dmoffsDMe[k+1];
+//						} else {
+							m = (psr[p].dmoffsDMe[k]-psr[p].dmoffsDMe[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
+							c = psr[p].dmoffsDMe[k]-m*psr[p].dmoffsMJD[k];
+							dme = m*(double)psr[p].obsn[i].sat+c;
+//						}
+						break;
+					}
+				}
+			}
+			iflag=jflag=-1;
+			for (j=0;j<psr->obsn[i].nFlags;j++)
+			{
+				if (strcmp(psr->obsn[i].flagID[j],"-dm")==0)
+					iflag=j;
+				else if (strcmp(psr->obsn[i].flagID[j],"-dme")==0)
+					jflag=j;
+			}
+			if (iflag==-1)
+			{
+				strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dm");
+				sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6f",dm);
+				psr->obsn[i].nFlags++;
+			}
+			else
+			{
+				strcpy(psr->obsn[i].flagID[iflag],"-dm");
+				sprintf(psr->obsn[i].flagVal[iflag],"%.6f",dm);
+			}
+			if (jflag==-1)
+			{
+				strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dme");
+				sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6g",dme);
+				psr->obsn[i].nFlags++;
+			}
+			else
+			{
+				strcpy(psr->obsn[i].flagID[jflag],"-dme");
+				sprintf(psr->obsn[i].flagVal[jflag],"%.6g",dme);
+			}
 		}
-	      if (iflag==-1)
-		{
-		  strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dm");
-		  sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6f",dm);
-		  psr->obsn[i].nFlags++;
-		}
-	      else
-		{
-		  strcpy(psr->obsn[i].flagID[iflag],"-dm");
-		  sprintf(psr->obsn[i].flagVal[iflag],"%.6f",dm);
-		}
-	      // Calculate error in DM
-	      m = (psr[p].dmoffsDMe[k]-psr[p].dmoffsDMe[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
-	      c = psr[p].dmoffsDMe[k]-m*psr[p].dmoffsMJD[k];
-	      dme = m*(double)psr[p].obsn[i].sat+c;
-	      if (jflag==-1)
-		{
- 		  strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dme");
-		  sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6g",dme);
-		  psr->obsn[i].nFlags++;
-		}
-	      else
-		{
- 		  strcpy(psr->obsn[i].flagID[jflag],"-dme");
-		  sprintf(psr->obsn[i].flagVal[jflag],"%.6g",dme);
-		}
-	      break;
-	    }
 	}
-    }
 }
+

@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
 	  }
 	  if(!module)  {
 	    fprintf(stderr, "[error]: dlopen() failed while resolving symbols.\n" );
-	    fprintf(stderr, "dlerror() = %s\n",dlerror());
+//	    fprintf(stderr, "dlerror() = %s\n",dlerror());
 	    return -1;
 	  }
 	  entry = (char*(*)(int,char **,pulsar *,int *))dlsym(module, "graphicalInterface");

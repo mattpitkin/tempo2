@@ -60,12 +60,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char str[MAX_FILELEN],str2[MAX_FILELEN];
   double hamax =-1.0;
   char random[100];
+  char read_f;
   FILE *fout,*fin;
   char addCubic[100]="n",temp[100];
   char formstr[50]="tempo2";
   char smooth[100]="n";
   int  psrNum,giveRMS=-1,setrand=-1,setred=-1,Npsr=0;
   int timesFile=0;
+  char fake_fname[100];
+  char have_outfile=0;
+  char outfile[100];
   char timesfname[100];
   int bunching=0; // flag on whether or not observations occur in groups
   // size of gap between observing runs, and length of observing runs.
@@ -73,6 +77,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   long double gapsize=21,hillsize=7,gapstartmjd;
   // Flag whether or not to ask for red noise variables.
   *npsr = 1;
+
+  strcpy(fake_fname,"fake.rf");
 
   for (i=0;i<argc;i++){
     if(strcmp(argv[i],"-ndobs")==0){
@@ -118,6 +124,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       sscanf(argv[i+1],"%s",&timesfname);
       printf("Timesfile = %s\n",timesfname);
     }
+    if (strcmp(argv[i],"-o")==0){
+      have_outfile=1;
+      sscanf(argv[i+1],"%s",&outfile);
+      printf("outfile = %s\n",outfile);
+    }
+
+    if (strcmp(argv[i],"-readtim")==0){
+      read_f=1;
+      printf("Read name,freq,mjd\n");
+    }
+
 
     if(strcmp(argv[i],"-group")==0){
 	bunching = 1;
@@ -262,7 +279,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      {
 		if (timesFile==1)
 		  {
-		    //		    printf("IN HERE\n");
+			  if (read_f){
+				  if (fscanf(fin,"%s %Lf %Lf\n",fake_fname,&freq,&mjd)==3)
+				  {
+					  printf("Read %g %f\n",(double)mjd, (double)freq);
+					  endit=0;
+				  }
+				  else
+					  endit=1;
+			  } else{
 		    if (fscanf(fin,"%Lf",&mjd)==1)
 		      {
 			printf("Read %g\n",(double)mjd);
@@ -270,6 +295,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		      }
 		    else
 		      endit=1;
+		    }
 		  }
 		else
 		  {
@@ -285,7 +311,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		if (endit==0)
 		  {
 		    psr[0].obsn[count].sat    = mjd;
-		    strcpy(psr[0].obsn[count].fname,"w040206_070831.FT");
+		    strcpy(psr[0].obsn[count].fname,fake_fname);
 		    psr[0].obsn[count].freq   = freq;
 		    if (giveRMS!=1) grms = psr[0].param[param_tres].val[0]/1e3;
 		    //	    else grms=0.0;
@@ -319,10 +345,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
       psr[0].nobs=count;
       
-      strcpy(str,parFile[0]);
-      str[strlen(str)-4]='\0';
-      strcat(str,".simulate");
-      strcpy(timFile[0],str);
+      if (have_outfile){
+	      strcpy(str,outfile);
+	      strcpy(timFile[0],outfile);
+      }else{
+	      strcpy(str,parFile[0]);
+	      str[strlen(str)-4]='\0';
+	      strcat(str,".simulate");
+	      strcpy(timFile[0],str);
+      }
       
       /* Now run the tempo2 code */
       preProcess(psr,*npsr,argc,argv);

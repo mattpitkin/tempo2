@@ -110,6 +110,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	{
 	  double m,c;
 	  static int t=1;
+	  dmval=0;
 	 
 	  if (psr[p].param[param_dm].paramSet[0] == 1 && t==1)
 	    {
@@ -118,12 +119,12 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	    }
 
 	  if ((double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[0])
-	    dmval = (double)psr[p].param[param_dmmodel].val[0];
+	    dmval = (double)psr[p].param[param_dmmodel].val[0] + psr[p].dmoffsDM[0];
 	  else if ((double)psr[p].obsn[i].sat > psr[p].dmoffsMJD[psr[p].dmoffsNum-1])
 	    dmval = (double)psr[p].param[param_dmmodel].val[0]+psr[p].dmoffsDM[psr[p].dmoffsNum-1];
 	  else
 	    {
-	      for (k=0;k<psr[p].dmoffsNum;k++)
+	      for (k=0;k<psr[p].dmoffsNum-1;k++)
 		{
 		  if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsMJD[k] &&
 		      (double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[k+1])
@@ -135,9 +136,11 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 		      m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
 		      c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsMJD[k];
 		      dmval = m*(double)psr[p].obsn[i].sat+c + (double)psr[p].param[param_dmmodel].val[0];
+		      break;
 		    }
 		}
 	    }
+		if(i==0)  fprintf(stderr,"DM ERR SAT=%lf\t%lf\n",(double)psr[p].obsn[i].sat,(double)dmval);
 	}
       else
 	{
@@ -201,8 +204,11 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       /* psr[p].obsn[i].tdis = (psr[p].param[param_dm].val/2.41e-16 +
 	 2.0e14*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/2.0)/freqf/freqf; */
       /* printf("Dispersion delay = %g\n",(double)(psr[p].obsn[i].tdis1+psr[p].obsn[i].tdis2));  */
+
+	if(i==0)	fprintf(stderr,"DM VVV SAT=%lf\t%lf\n",(double)psr[p].obsn[i].sat,(double)dmval);
     }
   if (debugFlag==1) 
       printf("Exiting dm_delays with pulsar %d; number of obs = %d\n",p,psr[p].nobs);
+
 }
 

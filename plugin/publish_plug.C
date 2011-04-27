@@ -394,7 +394,7 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
     {
       vv=rval*pow(10.0,(double)ixv); /* Scale for mantissa */
       ee=ee*pow(10.0,(double)ixe);   /* scale error */
-      if (ixv<-ilim || ixv>ilim) /* Use exponent notation */
+      if (ixv<-ilim || ixv>3) /* Use exponent notation */
 	{
 	  if (ise<1) /* If err > 0.2, print val as fn.1 and scale error */
 	    {

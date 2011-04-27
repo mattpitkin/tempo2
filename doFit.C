@@ -531,11 +531,13 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		    {		      
 		    double dmf = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
 
-		      for (j=1;j<(int)psr->dmoffsNum;j++)
+		      for (j=0;j<(int)psr->dmoffsNum;j++)
 			{
 			  // This is for the actual frequency-dep fit
-			  afunc[n++] = dmf*getParamDeriv(psr,ipos,x,i,j);
-			  afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			  if(j!=0){
+				  afunc[n++] = dmf*getParamDeriv(psr,ipos,x,i,j);
+				  afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			  }
 			}
 		    }
 		  else
@@ -939,6 +941,38 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     }
   else if (i==param_dmmodel)
     {
+      double sat = (double)psr->obsn[ipos].sat;
+      double yoffs[100];
+      for (int ioff =0;ioff<psr->dmoffsNum;ioff++){
+	      if (ioff==k){
+		      yoffs[ioff]=1;
+	      } else {
+		      yoffs[ioff]=0;//-1.0/(double)(psr->dmoffsNum-1);
+	      }
+      }
+
+      if (sat < (double)psr->dmoffsMJD[0]){
+	      // we are before the first jump
+	      // so our gradient is just the zeroth offset.
+	      afunc = yoffs[0];
+      } else if(sat > (double)psr->dmoffsMJD[(int)psr->dmoffsNum-1]){
+	      afunc = yoffs[(int)psr->dmoffsNum-1];
+      } else{
+	      // find the pair we are between...
+	      for (int ioff =0;ioff<psr->dmoffsNum;ioff++){
+		      if(sat >= psr->dmoffsMJD[ioff] && sat < psr->dmoffsMJD[ioff+1]){
+			      double x1 = psr->dmoffsMJD[ioff];
+			      double x2 = psr->dmoffsMJD[ioff+1];
+			      double x = (sat-x1)/(x2-x1);
+			      double y1=yoffs[ioff];
+			      double y2=yoffs[ioff+1];
+			      afunc = (y2-y1)*x + y1;
+			      break;
+		      }
+	      }
+      }
+      
+/*
       double ti = (double)psr->obsn[ipos].sat;
       double tm1 = (double)psr->dmoffsMJD[k-1];
       double t0 = (double)psr->dmoffsMJD[k];
@@ -953,6 +987,8 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
       else
 	afunc = 0;
+	*/
+//      if(fabs(af2-afunc) > 1e-2)printf("XX %lf\t%lf\t%lf\n",sat,af2,afunc);
     }
   else if (i==param_dmassplanet)
     {
@@ -1144,15 +1180,19 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		}
 	      else if (i==param_dmmodel)
 		{
-		  for (k=1;k<psr[p].dmoffsNum;k++)
+		  for (k=0;k<psr[p].dmoffsNum;k++)
 		    {
 		      //		      printf("Updating %g by %g\n",psr[p].dmvalsDM[k],val[j]);
-		      psr[p].dmoffsDM[k] += val[j];
-		      psr[p].dmoffsDMe[k] = error[j];
-		      j++;
-		      psr[p].dmoffsOffset[k] = val[j];
-		      psr[p].dmoffsError[k] =  error[j];
-		      j++;
+		      //
+		      if(k!=0){
+		              psr[p].dmoffsDM[k] += val[j];
+		              psr[p].dmoffsDMe[k] = error[j];
+		              j++;
+
+			      psr[p].dmoffsOffset[k] = val[j];
+			      psr[p].dmoffsError[k] =  error[j];
+			      j++;
+		      }
 		    }
 		  j--;
 		}
