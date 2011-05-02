@@ -478,7 +478,7 @@ int getNparams(pulsar psr)
       npol+=(psr.ifuncN-1);
   /* Add extra parameters for DMMODEL fitting */
   if (psr.param[param_dmmodel].fitFlag[0]==1)
-    npol+=(int)((psr.dmoffsNum-1)*2); // *2 because we fit for the DM and constant offset
+    npol+=(int)((psr.dmoffsNum)*2)-1; // *2 because we fit for the DM and constant offset
   
   /* Add extra parameters for GW single source fitting */
   if (psr.param[param_gwsingle].fitFlag[0]==1)
@@ -534,8 +534,8 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		      for (j=0;j<(int)psr->dmoffsNum;j++)
 			{
 			  // This is for the actual frequency-dep fit
+			  afunc[n++] = dmf*getParamDeriv(psr,ipos,x,i,j);
 			  if(j!=0){
-				  afunc[n++] = dmf*getParamDeriv(psr,ipos,x,i,j);
 				  afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 			  }
 			}
@@ -1184,11 +1184,11 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		    {
 		      //		      printf("Updating %g by %g\n",psr[p].dmvalsDM[k],val[j]);
 		      //
-		      if(k!=0){
-		              psr[p].dmoffsDM[k] += val[j];
-		              psr[p].dmoffsDMe[k] = error[j];
-		              j++;
+		      psr[p].dmoffsDM[k] += val[j];
+		      psr[p].dmoffsDMe[k] = error[j];
+		      j++;
 
+		      if(k!=0){
 			      psr[p].dmoffsOffset[k] = val[j];
 			      psr[p].dmoffsError[k] =  error[j];
 			      j++;
