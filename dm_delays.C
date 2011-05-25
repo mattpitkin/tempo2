@@ -140,7 +140,6 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 		    }
 		}
 	    }
-		if(i==0)  fprintf(stderr,"DM ERR SAT=%lf\t%lf\n",(double)psr[p].obsn[i].sat,(double)dmval);
 	}
       else
 	{
