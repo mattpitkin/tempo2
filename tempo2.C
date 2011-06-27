@@ -479,10 +479,15 @@ int main(int argc, char *argv[])
 		{
 		  char *(*entry)(int,char **,pulsar *,int);
 		  void * module;
-		  sprintf(str,"%s/plugins/%s_%s_plug.t2",getenv(TEMPO2_ENVIRON),
-			  outputSO,tempo2MachineType);
-		  
-		  module = dlopen(str, RTLD_NOW); 
+		  for (int iplug=0; iplug < plug_path_len; iplug++){
+			  sprintf(str,"%s/%s_%s_plug.t2",plug_path[iplug],
+					  outputSO,tempo2MachineType);
+			  printf("Looking for %s\n",str);
+			  module = dlopen(str, RTLD_NOW); 
+			  if(module==NULL){	  
+				  printf("dlerror() = %s\n",dlerror());
+			  } else break;
+		  }
 		  if(!module)  {
 		    fprintf(stderr, "[error]: dlopen() failed while resolving symbols.\n" );
 		    return -1;
