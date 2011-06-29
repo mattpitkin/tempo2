@@ -3260,32 +3260,43 @@ void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeM
 		       */
 		      xval = (double)(psr[0].obsn[id[i]].bat - psr[0].param[param_pepoch].val[0]);
 		      if (fitFlag==1){ // X-axis = MJD
-			px[i] = xval-(double)(centreEpoch - psr[0].param[param_pepoch].val[0]);
+            px[i] = xval-(double)(centreEpoch - psr[0].param[param_pepoch].val[0]);
 		      }
 		      else if (fitFlag==3) // X-axis = Binary Phase
-			{
-			  double pbdot=0.0;
-			  double tpb = (psr[0].obsn[id[i]].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
-			  double phase;
+            {
+              double pbdot=0.0;
+              double tpb;
+              if( psr[0].param[param_t0].paramSet[0] ){
+                tpb = ( psr[0].obsn[id[i]].bat - psr[0].param[param_t0].val[0])
+                  / ( psr[0].param[param_pb].val[0] );
+              }else if( psr[0].param[param_tasc].paramSet[0] ){
+                tpb = ( psr[0].obsn[id[i]].bat - psr[0].param[param_tasc].val[0] )
+                  / ( psr[0].param[param_pb].val[0] );
+              }else{
+                printf( "ERROR: Neither Tasc not T0 set...\n");
+                tpb = ( psr[0].obsn[id[i]].bat - psr[0].param[param_t0].val[0] )
+                  / ( psr[0].param[param_pb].val[0] );
+              }
+              double phase;
 			  
-			  if (psr[0].param[param_pb].paramSet[0]==0)
-			    {
-			      printf("This is not a binary pulsar\n");
-			      px[i] = 0.0;
-			    }
-			  else
-			    {
-			      if (psr[0].param[param_pbdot].paramSet[0] == 1)
-				pbdot = psr[0].param[param_pbdot].val[0];
+              if (psr[0].param[param_pb].paramSet[0]==0)
+                {
+                  printf("This is not a binary pulsar\n");
+                  px[i] = 0.0;
+                }
+              else
+                {
+                  if (psr[0].param[param_pbdot].paramSet[0] == 1)
+                    pbdot = psr[0].param[param_pbdot].val[0];
 			      
-			      /* Add 1000000 to make sure that the number is positive?) */
-			      phase = fortranMod(tpb+1000000.0,1.0);
-			      if (phase < 0.0) phase+=1.0; 
-			      px[i] = (float)phase;
-			    }
-			}
+                  /* Add 1000000 to make sure that the number is positive?) */
+                  phase = fortranMod(tpb-0.5*pbdot*tpb*tpb+1000000.0,1.0);
+                  if (phase < 0.0) phase+=1.0; 
+                  px[i] = (float)phase;
+                }
+            }
 		      else if(fitFlag==7){ // X-axis = Day of Year
-			px[i] = (float)fmod((float)(double)psr[0].obsn[id[i]].bat,365.25);
+            px[i] = (float)fmod((float)(double)psr[0].obsn[id[i]].bat,365.25);
 		      }
 		      pxt[i] = px[i];
 		      FITfuncs(xval,afunc,2,&psr[1],id[i]); 
@@ -3504,25 +3515,36 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
   else if (plot==4)       /* Orbital phase */
     {
       double pbdot=0.0;
-      double tpb = (psr[0].obsn[iobs].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
+      double tpb;
+      if( psr[0].param[param_t0].paramSet[0] ){
+        tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] )
+          / ( psr[0].param[param_pb].val[0] );
+      }else if( psr[0].param[param_tasc].paramSet[0] ){
+        tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_tasc].val[0] )
+          / ( psr[0].param[param_pb].val[0] );
+      }else{
+        printf( "ERROR: Neither T0 nor tasc set...\n" );
+        tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] )
+          / ( psr[0].param[param_pb].val[0] );
+      }
       double phase;
       if (psr[0].param[param_pb].paramSet[0]==0)
-	{
-	  printf("WARNING: This is not a binary pulsar\n");
-	  x[count]=0.0;
-	}
+        {
+          printf("WARNING: This is not a binary pulsar\n");
+          x[count]=0.0;
+        }
       else
-	{
-	  if (psr[0].param[param_pbdot].paramSet[0] == 1)
-	    pbdot = psr[0].param[param_pbdot].val[0];
-	  
-	  /*		phase = 2.0*M_PI*fortranMod(tpb-0.5*pbdot*tpb*tpb,1.0); */
-	  
-	  /* Add 1000000 to make sure that the number is positive?) */
-	  phase = fortranMod(tpb+1000000.0,1.0);
-	  if (phase < 0.0) phase+=1.0; 
-	  x[count] = (float)phase;
-	}
+        {
+          if (psr[0].param[param_pbdot].paramSet[0] == 1)
+            pbdot = psr[0].param[param_pbdot].val[0];
+          
+          /*		phase = 2.0*M_PI*fortranMod(tpb-0.5*pbdot*tpb*tpb,1.0); */
+          
+          /* Add 1000000 to make sure that the number is positive?) */
+          phase = fortranMod(tpb+1000000.0,1.0);
+          if (phase < 0.0) phase+=1.0; 
+          x[count] = (float)phase;
+        }
     }
   else if (plot==5)  /* TOA number */
     x[count] = (float)iobs;
