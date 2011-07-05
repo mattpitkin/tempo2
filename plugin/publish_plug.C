@@ -45,13 +45,13 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
           psr[0].param[param_start].val[0],
 	 psr[0].param[param_finish].val[0]);
   fprintf(fout,"Number of TOAs\\dotfill & %d \\\\\n",psr[0].nFit);
-  fprintf(fout,"Rms timing residual ($\\mu s$)\\dotfill & %.3Lg \\\\\n",
+  fprintf(fout,"Rms timing residual ($\\mu s$)\\dotfill & %.1Lf \\\\\n",
           psr[0].param[param_tres].val[0]);
   fprintf(fout,"Weighted fit\\dotfill & ");
   if (psr[0].fitMode==1) 
     {
       fprintf(fout," Y \\\\ \n");
-      fprintf(fout,"Reduced $\\chi^2$ value \\dotfill & %.3f \\\\\n",
+      fprintf(fout,"Reduced $\\chi^2$ value \\dotfill & %.1f \\\\\n",
               psr[0].fitChisq/(double)psr[0].fitNfree);
     }
   else fprintf(fout," N \\\\ \n");
