@@ -1111,7 +1111,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			
 			cpgsci(1);
 			cpgslw(linewidth);
-			cpgbox("ABCNTS1",pow(10,int(log10(tmax-tmin))),10,"ABCNTS",pow(10,int(log10(hmax-hmin))),5);
+			cpgbox("ABCNTS1",2*pow(10,int(log10(tmax-tmin))),10,"ABCNTS",pow(10,int(log10(hmax-hmin))),5);
 			cpglab("Event time (MJD)","H-test TS","");
 			
 			cpgsci(2);

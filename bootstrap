@@ -19,3 +19,6 @@ autoreconf --install --force
 echo "Ready to build with:"
 echo "./configure"
 echo "make && make install"
+echo ""
+echo "Then build tempo2 plugins with:"
+echo "make plugins && make plugins-install"

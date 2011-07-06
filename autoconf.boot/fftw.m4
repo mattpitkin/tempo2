@@ -17,7 +17,7 @@ AC_DEFUN([SWIN_LIB_FFTW],
       SWIN_PACKAGE_FIND([fftw3],[libfftw3.*])
       SWIN_PACKAGE_TRY_LINK([fftw3],[#include <fftw3.h>],
                             [fftw_plan_dft_1d(0,0,0,FFTW_FORWARD,FFTW_ESTIMATE);],
-                            [-lfftw3])
+                            [-lfftw3 -lm])
     fi
 
   else

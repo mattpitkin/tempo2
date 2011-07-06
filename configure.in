@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[1.11],[george.hobbs@csiro.au])
+AC_INIT([Tempo2],[2011.7],[george.hobbs@csiro.au])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -60,6 +60,20 @@ if test X$have_tempo2_dir != Xyes; then
 	AC_WARN("You must set the $TEMPO2 variable before configuring.")
 fi
 
+AC_ARG_WITH([tempo2-plug-dir],
+              AC_HELP_STRING([--with-tempo2-plug-dir=DIR],
+                             [Specify DIR to install plugins]))
+
+
+AC_MSG_CHECKING([for plugin install path])
+if test -z "$with_tempo2_plug_dir" ; then
+	TEMPO2_PLUG_INSTALL=$TEMPO2/plugins
+else
+	TEMPO2_PLUG_INSTALL=$with_tempo2_plug_dir
+fi
+
+AC_SUBST(TEMPO2_PLUG_INSTALL)
+AC_MSG_RESULT($TEMPO2_PLUG_INSTALL)
 
 MJK_FORTRAN_TEST
 
@@ -111,7 +125,7 @@ AC_SUBST(T2ARCH)
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 AM_CONFIG_HEADER([config.h])
-AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile])
+AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile unsupported_plugins/Makefile])
 
 AC_OUTPUT
 
@@ -138,3 +152,5 @@ AC_MSG_NOTICE(Fortran compiler is $F77 $FFLAGS)
 AC_MSG_NOTICE(C compiler is $CC $CFLAGS)
 AC_MSG_NOTICE(C++ compiler is $CXX $CXXFLAGS)
 AC_MSG_NOTICE(Global linking flags are $LDFLAGS)
+
+AC_MSG_NOTICE(NOTICE: plugins now built with 'make plugins && make plugins-install')

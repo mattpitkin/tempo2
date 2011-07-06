@@ -1,5 +1,4 @@
-plugindir=@TEMPO2_DIR@/plugins
-plugin_LTLIBRARIES=
+plugindir=@TEMPO2_PLUG_INSTALL@
 ###
 #
 # This sets the includes and options that are needed to build nice modules with libtool
@@ -7,6 +6,13 @@ plugin_LTLIBRARIES=
 ###
 LDFLAGS+= -shared -module -avoid-version -shrext .t2
 INCLUDES=-I@top_srcdir@/
+
+##
+# These values are set by the includes below, so don't change them from being blank!
+##
+PLUGINSTALLS=
+PLUGINS=
+plugin_LTLIBRARIES=
 
 #
 # Plugins that need no extra libs!
@@ -40,4 +46,9 @@ if HAVE_GSL
 include build_settings/gsl.am
 endif
 
+
+.PHONY: $(PLUGINS) $(PLUGINSTALLS) plugins plugins-install
+
+plugins: $(PLUGINS)
+plugins-install: $(PLUGINSTALLS)
 

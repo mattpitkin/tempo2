@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I autoconf
 
-SUBDIRS=sofa . plugin
+SUBDIRS=sofa . #plugin
 
 bin_PROGRAMS=tempo2
 lib_LTLIBRARIES=libtempo2.la libtempo2pred.la
@@ -31,9 +31,42 @@ tempo2_LDADD = libtempo2.la sofa/libsofa.la @FLIBS@ $(LIBADD_DLOPEN)
 
 
 # Specify to include the T2runtime in distributions
-EXTRA_DIST = T2runtime
+EXTRA_DIST = T2runtime unsupported_plugins
+
+DIST_SUBDIRS=plugin
+
+	
 
 # This clears out any CVS files that might get in our distribution
 dist-hook:
 	rm -rf `find $(distdir)/T2runtime -name CVS`
+	rm -rf $(distdir)/T2runtime/plugins/*`
+	rm -rf $(distdir)/unsupported_plugins/built_plugins/*
+	rm -rf `find $(distdir)/unsupported_plugins/ -name CVS`
+	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
 
+
+
+plugins-install:
+	$(MAKE) -C plugin plugins-install
+
+plugins:
+	$(MAKE) -C plugin
+
+
+unsupported:
+	$(MAKE) -C unsupported_plugins
+	
+unsupported-install: unsupported
+	$(MAKE) -C unsupported_plugins install
+
+.PHONY: plugins-install plugins unsupported_plugins
+
+install-data-hook:
+	@echo ""
+	@echo ""
+	@echo "*** NOTICE ***"
+	@echo "Plugins are no longer installed by default"
+	@echo "Use: 'make plugins-install' to install them"
+	@echo ""
+	@echo ""

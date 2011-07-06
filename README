@@ -43,6 +43,10 @@ use --prefix to set the path you want to install the binaries and libraries
 Make and install...
  $ make && make install
 
+You will probably want to build the default plugins (plk, etc). Do this with:
+ $ make plugins && make plugins-install
+
+
 And you're done.
 
 3. Requirements
