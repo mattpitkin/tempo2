@@ -47,10 +47,10 @@ dist-hook:
 
 
 
-plugins-install:
+plugins-install: all
 	$(MAKE) -C plugin plugins-install
 
-plugins:
+plugins: all
 	$(MAKE) -C plugin
 
 
