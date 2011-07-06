@@ -40,7 +40,7 @@ DIST_SUBDIRS=plugin
 # This clears out any CVS files that might get in our distribution
 dist-hook:
 	rm -rf `find $(distdir)/T2runtime -name CVS`
-	rm -rf $(distdir)/T2runtime/plugins/*`
+	rm -rf $(distdir)/T2runtime/plugins/*
 	rm -rf $(distdir)/unsupported_plugins/built_plugins/*
 	rm -rf `find $(distdir)/unsupported_plugins/ -name CVS`
 	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
