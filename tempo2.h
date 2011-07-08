@@ -50,6 +50,7 @@
 #define MAX_T2QUAD           50    /* Maximum number of T2EQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
+#define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX              64    /* Max number of DM steps allowed */
 #define MAX_FLAGS            50    /* Maximum number of flags in .tim file/observation */
 #define MAX_CLK_CORR         10    /* Maximum number of steps in the correction to TT  */ 
@@ -158,7 +159,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
-            param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle};
+            param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om};
 
 extern int MAX_PSR;
 extern int MAX_OBSN;
@@ -277,9 +278,9 @@ typedef struct pulsar {
   /*                                                                 */
   int  fixedFormat;              /* = 0 for separate .par and .tim files, > 0 indicates number of lines to skip */
   parameter param[MAX_PARAMS];
-  char rajStrPre[100],decjStrPre[100]; /* String containing RAJ and DECJ  (prefit)              */
+  char rajStrPre[100],decjStrPre[100];   /* String containing RAJ and DECJ  (prefit)              */
   char rajStrPost[100],decjStrPost[100]; /* String containing RAJ and DECJ  (postfit)           */
-  char binaryModel[100];          /* Binary model e.g. BT/ELL1/BT2P etc.                        */
+  char binaryModel[100];                 /* Binary model e.g. BT/ELL1/BT2P etc.                        */
 
   int    dmoffsNum;
   double dmoffsMJD[100]; 
@@ -288,11 +289,13 @@ typedef struct pulsar {
   double dmoffsOffset[100];
   double dmoffsError[100];
 
-  // Gravitational wave information
+  // Single source gravitational wave information
   double gwsrc_ra;
   double gwsrc_dec;
-  double gwsrc_aplus_r,gwsrc_aplus_i,gwsrc_across_r,gwsrc_across_i;
-  double gwsrc_aplus_r_e,gwsrc_aplus_i_e,gwsrc_across_r_e,gwsrc_across_i_e;
+  double gwsrc_aplus_r,gwsrc_aplus_i;
+  double gwsrc_across_r,gwsrc_across_i;
+  double gwsrc_aplus_r_e,gwsrc_aplus_i_e;
+  double gwsrc_across_r_e,gwsrc_across_i_e;
   double gwsrc_epoch;
   double gwsrc_psrdist;
 
@@ -367,6 +370,15 @@ typedef struct pulsar {
   int    nWhite;
   double waveScale;
 
+  // Quadrapolar function
+  double quad_aplus_r[MAX_QUAD],quad_aplus_r_e[MAX_QUAD];
+  double quad_aplus_i[MAX_QUAD],quad_aplus_i_e[MAX_QUAD];
+  double quad_across_r[MAX_QUAD],quad_across_r_e[MAX_QUAD];
+  double quad_across_i[MAX_QUAD],quad_across_i_e[MAX_QUAD];
+  double quadEpoch;
+  double quadRA,quadDEC;
+  int    nQuad;
+
   double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC];
   int    ifuncN;
 
@@ -396,6 +408,8 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,int nspan,int ncoeff,
 	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM);
 void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILELEN],int npsr);
+void readParfileGlobal(pulsar *psr,int npsr,char tpar[MAX_STRLEN][MAX_FILELEN],
+		       char ttim[MAX_STRLEN][MAX_FILELEN]);
 int readSimpleParfile(FILE *fin,pulsar *p);
 int setupParameterFileDefaults(pulsar *p);
 void displayParameters(int pos,char timeFile[][MAX_FILELEN],char parFile[][MAX_FILELEN],pulsar *psr,int npsr);

@@ -127,6 +127,28 @@ int readSimpleParfile (FILE *fin, pulsar *p)
   return 0;
 }
 
+void readParfileGlobal(pulsar *psr,int npsr,char tpar[MAX_STRLEN][MAX_FILELEN],
+		       char ttim[MAX_STRLEN][MAX_FILELEN])
+{
+  FILE *fin;
+  char str[MAX_STRLEN];
+  parameter elong,elat;
+  int nread,p;
+
+  for (p=0;p<npsr;p++)
+    {
+      fin = fopen(tpar[0],"r");
+      while (!feof(fin))
+	{
+	  // Read in a line from the parameter file
+	  nread = fscanf(fin,"%s",str);
+	  if (nread==1)
+	    checkLine(psr+p,str,fin,&elong,&elat);
+	}
+      fclose(fin);
+    }
+}
+
 void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat)
 {
   int gval;
@@ -508,6 +530,26 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       sscanf(str+4,"%d",&number);
       fscanf(fin,"%lf %lf",&psr->wave_sine[number-1],&psr->wave_cos[number-1]);
       if (psr->nWhite < number) psr->nWhite = number;
+    }
+  /* ------------------- */
+  /* Quad polar function */
+  /* ------------------- */ 
+  else if (strcasecmp(str,"QUAD_OM")==0) /* Fundamental frequency */
+    readValue(psr,str,fin,&(psr->param[param_quad_om]),0);
+  else if (strcasecmp(str,"QUAD_POS")==0) // Position of quadrupole
+    fscanf(fin,"%lf %lf",&psr->quadRA,&psr->quadDEC);
+  else if (strcasecmp(str,"QUAD_EPOCH")==0) // Epoch for quad function
+    fscanf(fin,"%lf",&psr->quadEpoch);
+  else if (strstr(str,"QUAD")!=NULL || strstr(str,"quad")!=NULL)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+4,"%d",&number);
+      fscanf(fin,"%lf %lf %lf %lf",&psr->quad_aplus_r[number-1],
+	     &psr->quad_aplus_i[number-1],
+	     &psr->quad_across_r[number-1],
+	     &psr->quad_across_i[number-1]);
+      if (psr->nQuad < number) psr->nQuad = number;
     }
   else if (strcasecmp(str,"DMMODEL")==0) 
     {

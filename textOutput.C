@@ -268,15 +268,28 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    }
 	  printf("------------------------------------------------------------------------------\n");
 	}
-	  if (psr[p].param[param_gwsingle].paramSet[0]==1)
+      if (psr[p].param[param_gwsingle].paramSet[0]==1)
+	{
+	  printf("GW single source:\n");
+	  printf("Omega: %g\n",(double)psr[p].param[param_gwsingle].val[0]);
+	  printf("Aplus = %g (%g) %g (%g)\n",psr[p].gwsrc_aplus_r,psr[p].gwsrc_aplus_r_e,
+		 psr[p].gwsrc_aplus_i,psr[p].gwsrc_aplus_i_e);
+	  printf("Across = %g (%g) %g (%g)\n",psr[p].gwsrc_across_r,psr[p].gwsrc_across_r_e,
+		 psr[p].gwsrc_across_i,psr[p].gwsrc_across_i_e);
+	}
+      if (psr[p].param[param_quad_om].paramSet[0]==1)
+	{
+	  int j;
+	  for (j=0;j<psr[p].nQuad;j++)
 	    {
-	      printf("GW single source:\n");
-	      printf("Omega: %g\n",(double)psr[p].param[param_gwsingle].val[0]);
-	      printf("Aplus = %g (%g) %g (%g)\n",psr[p].gwsrc_aplus_r,psr[p].gwsrc_aplus_r_e,
-		     psr[p].gwsrc_aplus_i,psr[p].gwsrc_aplus_i_e);
-	      printf("Across = %g (%g) %g (%g)\n",psr[p].gwsrc_across_r,psr[p].gwsrc_across_r_e,
-		     psr[p].gwsrc_across_i,psr[p].gwsrc_across_i_e);
+	      printf("QUAD%d %g %g %g %g %g %g %g %g %g %g\n",j+1,(double)(psr[p].param[param_quad_om].val[0])*(j+1),
+		     (double)(psr[p].param[param_quad_om].val[0]*(j+1)/2.0/M_PI),(double)psr[p].quad_aplus_r[j],
+		     (double)psr[p].quad_aplus_i[j],(double)psr[p].quad_across_r[j],
+		     (double)psr[p].quad_across_i[j],(double)psr[p].quad_aplus_r_e[j],(double)psr[p].quad_aplus_i_e[j],
+		     (double)psr[p].quad_across_r_e[j],(double)psr[p].quad_across_i_e[j]);
 	    }
+	}
+	  
       if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	{
 	  printf("\nDispersion measure values:\n\n");

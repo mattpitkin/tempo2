@@ -66,6 +66,7 @@ chebyModelFunc(long double *x, long double *y,
   // set up a bunch of observations in the psr struct
   psr->nobs = nx*ny+1;
   psr->param[param_track].paramSet[0] = 0;
+  psr->T2globalEfac = 1;
   for (iy=0; iy < ny; iy++)
     for (ix=0; ix < nx; ix++)
     {
@@ -75,9 +76,11 @@ chebyModelFunc(long double *x, long double *y,
        (y[iy]+1.0L)*0.5L*(info->model->freq_end-info->model->freq_start);
       psr->obsn[iobs].deleted = 0;
       psr->obsn[iobs].nFlags = 0;
+      psr->obsn[iobs].efac = 1;
       psr->obsn[iobs].delayCorr = 1;
       psr->obsn[iobs].clockCorr = 1;
       psr->obsn[iobs].phaseOffset = 0.0;
+      strcpy(psr->obsn[iobs].fname,"predictor");
       strcpy(psr->obsn[iobs].telID, info->model->sitename);
       if (strcmp(psr->obsn[iobs].telID,"@")==0 || strcasecmp(psr->obsn[iobs].telID,"bat")==0)
 	{
@@ -90,7 +93,8 @@ chebyModelFunc(long double *x, long double *y,
   // stick in a fake obs to get the reference phase
   psr->obsn[0].sat = psr->param[param_tzrmjd].val[0];
   psr->obsn[0].freq = psr->param[param_tzrfrq].val[0];
-
+  psr->obsn[0].efac = 1;
+  strcpy(psr->obsn[0].fname,"reference");  
   strcpy(psr->obsn[0].telID,  info->model->sitename);//XXX!!!
   psr->obsn[0].deleted = 0;
   psr->obsn[0].nFlags = 0;
@@ -103,7 +107,7 @@ chebyModelFunc(long double *x, long double *y,
       psr->obsn[0].clockCorr=0;  /* therefore don't do clock corrections */
       psr->obsn[0].delayCorr=0;
     }
-
+  writeTim("pred.tim",psr,"tempo2");
   // Compute the phase for each observation
   formBatsAll(psr, 1);
   formResiduals(psr, 1, 0.0);

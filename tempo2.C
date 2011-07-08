@@ -49,6 +49,7 @@
 #include "tempo2pred.h"
 #include "tempo2pred_int.h"
 #include <dlfcn.h>
+// #include "T2toolkit.h"
 
 void ephemeris_routines(pulsar *psr,int npsr);
 void clock_corrections(pulsar *psr,int npsr);
@@ -205,22 +206,22 @@ int main(int argc, char *argv[])
       exit(1);
     }
 
-/* get path to look for plugins */
+  /* get path to look for plugins */
   if (getenv("TEMPO2_PLUG_PATH")!=NULL){
-	  char *p_path = (char*)malloc(MAX_STRLEN*32);
-	  strcpy(p_path,getenv("TEMPO2_PLUG_PATH"));
-	  int len= strlen(p_path);
-	  for (i=0; i < len; i++){
-		  if (p_path[i] == ':')p_path[i]='\0';
-	  }
-	  i=0;
-	  while(i < len){
-		strcpy(plug_path[plug_path_len++],p_path+i);
-		i+=strlen(p_path+i)+1;
-	  }
-	  free(p_path);
+    char *p_path = (char*)malloc(MAX_STRLEN*32);
+    strcpy(p_path,getenv("TEMPO2_PLUG_PATH"));
+    int len= strlen(p_path);
+    for (i=0; i < len; i++){
+      if (p_path[i] == ':')p_path[i]='\0';
+    }
+    i=0;
+    while(i < len){
+      strcpy(plug_path[plug_path_len++],p_path+i);
+      i+=strlen(p_path+i)+1;
+    }
+    free(p_path);
   }
-
+  
   sprintf(plug_path[plug_path_len++],"%s/plugins/",getenv(TEMPO2_ENVIRON));
 
 
@@ -450,14 +451,35 @@ int main(int argc, char *argv[])
 		}
 	    }
 	}
+      //      long seed = TKsetSeed();
       for (iteration=0;iteration<2;iteration++) /* Do pre- and post- fit analysis */
 	{
 	  if (debugFlag==1) printf("iteration %d\n",iteration);
 	  if (debugFlag==1) printf("calling formBatsAll\n");
-	  printf("Calling formBats\n");
+	  //	  printf("Calling formBats\n");
 	  formBatsAll(psr,npsr);                /* Form Barycentric arrival times */
 	  if (debugFlag==1) printf("calling formResiduals\n");
-	  formResiduals(psr,npsr,iteration);       /* Form residuals */
+	  formResiduals(psr,npsr,1);       /* Form residuals */
+	  // 
+	  //	  printf("WARNING: SIMULATING GAUSSIAN NOISE\n");
+	  //	  {
+	  //	    FILE *fin;
+	  //	    fin = fopen("tempRes.dat","r");
+	  //	    for (i=0;i<psr[0].nobs;i++)
+	  //	      {
+	  //		fscanf(fin,"%Lf %Lf",&psr[0].obsn[i].sat,&psr[0].obsn[i].residual);
+	  //		printf("Res0 = %g\n",(double)psr[0].obsn[0].residual);
+	  //		psr[0].obsn[i].bat = psr[0].obsn[i].bbat = psr[0].obsn[i].sat;
+	  //		psr[0].obsn[i].bbat+=psr[0].param[param_pepoch].val[0];
+	  //		psr[0].obsn[i].toaErr = 1.0e6;
+		//		      psr[0].obsn[i].sat  = i;
+		//	  	      psr[0].obsn[i].bat  = i; // psr[0].obsn[0].sat+i*14;
+		//	  	      psr[0].obsn[i].bbat = psr[0].obsn[i].bat;
+		//	  	      psr[0].obsn[i].residual = TKgaussDev(&seed);
+		//		      fprintf(fout,"%.15f %.15f\n",(double)psr[0].obsn[i].sat,(double)psr[0].obsn[i].residual);
+	  //	      }
+	  //	    fclose(fin);
+	  //	  }
 	  if (listparms==1 && iteration==0)displayParameters(13,timFile,parFile,psr,npsr); /* List out all the parameters */  
 	  if (iteration==0)          /* Only fit to pre-fit residuals */
 	    {

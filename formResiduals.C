@@ -61,7 +61,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
    for (p=0;p<npsr;p++)
      {
-       mean = 0.0;
+       mean = 0.0L;
        nmean = 0;
 
        for (i=0;i<psr[p].nobs;i++)
@@ -188,6 +188,96 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	     }
 	 
+	   // Add in extra phase due to quadrupolar signal 
+	   if (psr[p].param[param_quad_om].paramSet[0] == 1)
+	     {
+	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+	       //	       double res_e,res_i;
+	       long double resp,resc,res_r,res_i;
+	       double theta_p,theta_g,phi_p,phi_g;
+	       double lambda_p,beta_p,lambda,beta;
+	       long double time;
+	       double n1,n2,n3;
+	       double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+	       double cosTheta;
+
+	       double om;  /* Fundamental frequency */
+	       double dt;  /* Change in time from pepoch */
+
+	       dt = (psr[p].obsn[i].bbat - psr[p].quadEpoch)*86400.0;
+	       om = psr[p].param[param_quad_om].val[0];
+
+	       lambda_p = (double)psr[p].param[param_raj].val[0];
+	       beta_p   = (double)psr[p].param[param_decj].val[0];
+	       lambda   = psr[p].quadRA;
+	       beta     = psr[p].quadDEC;
+
+	       // Pulsar vector
+	       n1 = cosl(lambda_p)*cosl(beta_p);
+	       n2 = sinl(lambda_p)*cosl(beta_p);
+	       n3 = sinl(beta_p);
+	       cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+		 sinl(beta)*sinl(beta_p);
+
+	       // From KJ's paper
+	       // Gravitational wave matrix
+	       e11p = pow(sinl(lambda),2)-pow(cosl(lambda),2)*pow(sinl(beta),2);
+	       e21p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+	       e31p = cosl(lambda)*sinl(beta)*cosl(beta);
+
+	       e12p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+	       e22p = pow(cosl(lambda),2)-pow(sinl(lambda),2)*pow(sinl(beta),2);
+	       e32p = sinl(lambda)*sinl(beta)*cosl(beta);
+	       
+	       e13p = cosl(lambda)*sinl(beta)*cosl(beta);
+	       e23p = sinl(lambda)*sinl(beta)*cosl(beta);
+	       e33p = -powl(cosl(beta),2);
+
+	       resp = (n1*(n1*e11p+n2*e12p+n3*e13p)+
+		       n2*(n1*e21p+n2*e22p+n3*e23p)+
+		       n3*(n1*e31p+n2*e32p+n3*e33p));
+	       //	       printf("resp = %Lg\n",resp);
+
+	       // Determine cross term
+	       e11c = sin(2*lambda)*sin(beta);
+	       e21c = -cos(2*lambda)*sin(beta);
+	       e31c = -sin(lambda)*cos(beta);
+
+	       e12c = -cos(2*lambda)*sin(beta);
+	       e22c = -sin(2*lambda)*sin(beta);
+	       e32c = cos(lambda)*cos(beta);
+	       
+	       e13c = -sin(lambda)*cos(beta);
+	       e23c = cos(lambda)*cos(beta);
+	       e33c  = 0;
+
+	       resc = (n1*(n1*e11c+n2*e12c+n3*e13c)+
+		       n2*(n1*e21c+n2*e22c+n3*e23c)+
+		       n3*(n1*e31c+n2*e32c+n3*e33c));
+
+	       for (k=0;k<psr[p].nQuad;k++)
+		 {
+		   omega_g = (double)psr[p].param[param_quad_om].val[0]*(k+1);		   
+ 		   res_r = (psr[p].quad_aplus_r[k]*resp+psr[p].quad_across_r[k]*resc)*sin(omega_g*dt);
+		   //		   res_i = (psr[p].quad_aplus_i[k]*resp+psr[p].quad_across_i[k]*resc)*(cos(omega_g*dt)-1);
+		   res_i = (psr[p].quad_aplus_i[k]*resp+psr[p].quad_across_i[k]*resc)*(cos(omega_g*dt));
+		   if ((1-cosTheta)==0.0)
+		     {
+		       res_r = 0.0;
+		       res_i = 0.0;
+		     }
+		   else
+		     {
+		       res_r = 1.0L/(2.0L*omega_g*(1.0L-cosTheta))*(res_r); 
+		       res_i = 1.0L/(2.0L*omega_g*(1.0L-cosTheta))*(res_i); 
+		     }
+		   phaseW += (res_r+res_i)*psr[p].param[param_f].val[0];
+		   
+		 }
+	     } 
+	   
+
 	   /* Add in extra phase due to gravitational wave signal */
 	   if (psr[p].param[param_gwsingle].paramSet[0]==1)
 	     {
@@ -289,11 +379,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		       n3*(n1*e31c+n2*e32c+n3*e33c));
 
 	       res_r = (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sin(omega_g*time);
-	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time)-1);
+	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time));
+	       //	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time)-1);
 	       if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term
 		 {
 		   res_r += (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sin(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g);
-		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)-1);
+		   //		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)-1);
+		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g));
 		 }
 
 	       if ((1-cosTheta)==0.0)

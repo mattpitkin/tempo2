@@ -117,6 +117,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
   /* Determine the design matrix - eq 15.4.4 
    * and the vector 'b' - eq 15.4.5 
    */
+  //  printf("Set b\n");
   for (i=0;i<n;i++)
     {
       fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
@@ -124,16 +125,18 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
       b[i] = y[i]/sig[i];
     }
   /* Now carry out the singular value decomposition */
+  //  printf("Decomposition\n");
   TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
+  //  printf("Weights\n");
   wmax = TKfindMax_d(w,nf);
   for (i=0;i<nf;i++)
     {
       if (w[i] < tol*wmax) w[i]=0.0;
     }
-
+  //  printf("Back substitution\n");
   /* Back substitution */
   TKbacksubstitution_svd(v, w, designMatrix, b, p, n, nf);
-  
+  //  printf("Wts\n");
   /* Now form the covariance matrix */
   for (i=0;i<nf;i++)
     {
@@ -151,6 +154,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
 	}
       e[i] = sqrt(cvm[i][i]);
     }
+  //  printf("chisq\n");
   *chisq = 0.0;
   for (j=0;j<n;j++)
     {
@@ -172,6 +176,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
       for (j=0;j<nf;j++)
 	e[j] *= sqrt(*chisq/(n-nf));
     }
+  //  printf("Done\n");
   free(v); 
   free(u); free(designMatrix);
 }

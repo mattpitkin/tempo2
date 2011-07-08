@@ -121,6 +121,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->units = SI_UNITS;
   psr->ne_sw  = NE_SW_DEFAULT; 
   psr->nWhite = 0;  /* No whitening by default */
+  psr->nQuad  = 0;  /* No quadrupolar function */
   psr->ifuncN = 0;  /* No interpolation functions by default */
   psr->timeEphemeris = IF99_TIMEEPH;
   psr->dilateFreq = 1;
@@ -369,6 +370,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }       
 
   strcpy(psr->param[param_wave_om].label[0],"WAVE_OM"); strcpy(psr->param[param_wave_om].shortlabel[0],"WAVE_OM");
+  strcpy(psr->param[param_quad_om].label[0],"QUAD_OM"); strcpy(psr->param[param_quad_om].shortlabel[0],"QUAD_OM");
   strcpy(psr->param[param_dmmodel].label[0],"DMMODEL"); strcpy(psr->param[param_dmmodel].shortlabel[0],"DMMODEL");
   strcpy(psr->param[param_gwsingle].label[0],"GW_OMEGA"); strcpy(psr->param[param_gwsingle].shortlabel[0],"GW_OMEGA");
 

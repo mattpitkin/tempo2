@@ -62,8 +62,11 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 
       printf("Calling fitting plugin: %s\n",psr[0].fitFunc);
       strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
-      sprintf(str,"%s/plugins/%s_fitFunc_%s_plug.t2",getenv(TEMPO2_ENVIRON),
-	      psr[0].fitFunc,tempo2MachineType);
+      //      sprintf(str,"%s/plugins/%s_fitFunc_%s_plug.t2",getenv(TEMPO2_ENVIRON),
+      //	      psr[0].fitFunc,tempo2MachineType);
+      printf("WARNING: CURRENTLY GETTING FITFUN FROM TEMPO2_PLUG_PATH\n");
+      sprintf(str,"%s/%s_fitFunc_%s_plug.t2",getenv("TEMPO2_PLUG_PATH"),
+      	      psr[0].fitFunc,tempo2MachineType);
       module = dlopen(str, RTLD_NOW); 
       if(!module)  {
 	fprintf(stderr, "[error]: dlopen() unable to open plugin: %s.\n",str);
@@ -132,7 +135,6 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 		}
 	    }
 	}
-      
 
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
@@ -147,6 +149,16 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip);
 	  //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
 	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
+	  //
+	  // Display the covariance matrix 
+	  //	  for (i=0;i<npol;i++)
+	  //	    {
+	  //	      for (j=0;j<npol;j++)
+	  //		printf("%+.4f ",psr[0].covar[i][j]/sqrt((psr[0].covar[j][j]*psr[0].covar[i][i])));
+	  //	      printf("\n");
+	  //	    }
+
+
 	  psr[p].fitChisq = chisq; 
 	  psr[p].fitNfree = psr[p].nFit-npol;
 	  //	  printf("Chisq = %g, reduced chisq = %g\n",(double)psr[p].fitChisq,(double)(psr[p].fitChisq/psr[p].fitNfree));
@@ -474,6 +486,8 @@ int getNparams(pulsar psr)
       else
 	npol+=psr.nWhite*2-1;      
     }
+  if (psr.param[param_quad_om].fitFlag[0]==1)
+    npol+=(psr.nQuad*4)-1;
   if (psr.param[param_ifunc].fitFlag[0]==1)
       npol+=(psr.ifuncN-1);
   /* Add extra parameters for DMMODEL fitting */
@@ -514,6 +528,11 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
  			  for (j=0;j<psr->nWhite*2;j++)
 			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 			}
+		    }
+		  else if (i==param_quad_om)
+		    {
+		      for (j=0;j<psr->nQuad*4;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 		    }
 		  else if (i==param_ifunc)
 		    {
@@ -831,6 +850,8 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	{
 	  if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x); 
 	  else        afunc = sin(om*(floor(k/2.0)+1)*x); 
+	  //	  printf("Value = %d %f %f %f %g\n",k,floor(k/2.0)+1,x,om,afunc);
+
 	}
       else if (psr->waveScale==1)
 	{
@@ -871,6 +892,83 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	      }*/
 
       afunc = t1;
+    }
+  else if (i==param_quad_om)
+    {
+      double n1,n2,n3;
+      double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+      double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+      double cosTheta,omega_g;
+      long double resp,resc,res_r,res_i;
+      double theta_p,theta_g,phi_p,phi_g;
+      double lambda_p,beta_p,lambda,beta;
+      long double time;
+      time    = (psr->obsn[ipos].bbat - psr->quadEpoch)*86400.0L;
+      lambda_p = (double)psr->param[param_raj].val[0];
+      beta_p   = (double)psr->param[param_decj].val[0];
+      lambda   = psr->quadRA;
+      beta     = psr->quadDEC;
+      // Pulsar vector
+      n1 = cosl(lambda_p)*cosl(beta_p);
+      n2 = sinl(lambda_p)*cosl(beta_p);
+      n3 = sinl(beta_p);
+      cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+	sinl(beta)*sinl(beta_p);
+
+      e11p = pow(sinl(lambda),2)-pow(cosl(lambda),2)*pow(sinl(beta),2);
+      e21p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+      e31p = cosl(lambda)*sinl(beta)*cosl(beta);
+      
+      e12p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+      e22p = pow(cosl(lambda),2)-pow(sinl(lambda),2)*pow(sinl(beta),2);
+      e32p = sinl(lambda)*sinl(beta)*cosl(beta);
+      
+      e13p = cosl(lambda)*sinl(beta)*cosl(beta);
+      e23p = sinl(lambda)*sinl(beta)*cosl(beta);
+      e33p = -powl(cosl(beta),2);
+
+      resp = (n1*(n1*e11p+n2*e12p+n3*e13p)+
+	      n2*(n1*e21p+n2*e22p+n3*e23p)+
+	      n3*(n1*e31p+n2*e32p+n3*e33p));
+
+      e11c = sin(2*lambda)*sin(beta);
+      e21c = -cos(2*lambda)*sin(beta);
+      e31c = -sin(lambda)*cos(beta);
+      
+      e12c = -cos(2*lambda)*sin(beta);
+      e22c = -sin(2*lambda)*sin(beta);
+      e32c = cos(lambda)*cos(beta);
+      
+      e13c = -sin(lambda)*cos(beta);
+      e23c = cos(lambda)*cos(beta);
+      e33c  = 0;
+
+      resc = (n1*(n1*e11c+n2*e12c+n3*e13c)+
+	      n2*(n1*e21c+n2*e22c+n3*e23c)+
+	      n3*(n1*e31c+n2*e32c+n3*e33c));
+
+      omega_g = (double)psr->param[param_quad_om].val[0]*((int)(k/4.0)+1);
+
+      //            printf("In fitting with k = %d %d\n",k,k%4);
+      if ((1.0L-cosTheta)==0)
+	afunc=0;
+      else
+	{
+	  if (k%4==0)      afunc = resp*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_re
+	  else if (k%4==1) afunc = resp*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	  else if (k%4==2) afunc = resc*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_re
+	  else if (k%4==3) afunc = resc*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+	  //	  if (k%4==0)      afunc = resp*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_re
+	  // else if (k%4==1) afunc = resp*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	  //else if (k%4==2) afunc = resc*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_re
+	  //else if (k%4==3) afunc = resc*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+
+
+	  //	  printf("Here with %d %d %g %g %g %g %g %g %g\n",k,k%4,afunc,sin(omega_g*time),cos(omega_g*time),(double)(omega_g*time),(double)resp,(double)resc,(double)cosTheta);
+	  //	  else if (k%4==2) afunc = resp*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	  // else if (k%4==3) afunc = resc*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+	}
+      //      printf("Returning: %g %g %g\n",(double)afunc,(double)omega_g,(double)time);
     }
   else if (i==param_gwsingle)
     {
@@ -933,10 +1031,13 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	afunc=0;
       else
 	{
-	  if (k==0) afunc = resp*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_re
+	  if (k==0)      afunc = resp*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_re
 	  else if (k==1) afunc = resc*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_re
-	  else if (k==2) afunc = resp*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-	  else if (k==3) afunc = resc*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+	  else if (k==2) afunc = resp*(cos(omega_g*time))/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	  else if (k==3) afunc = resc*(cos(omega_g*time))/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+
+	  //	  else if (k==2) afunc = resp*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	  //	  else if (k==3) afunc = resc*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
 	}
     }
   else if (i==param_dmmodel)
