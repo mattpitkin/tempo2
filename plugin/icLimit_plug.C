@@ -85,13 +85,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   gwAmp   = 1e-15; // Default value
   gwAlpha = -2.0/3.0; // Default value
+  nit     = 1; // Default value
 
   if (displayCVSversion == 1) CVSdisplayVersion("icLimit.C","plugin",CVS_verNum);
 
   *npsr = 0;  
 
   printf("Graphical Interface: icLimit\n");
-  printf("Author:              R. Shannon, G. Hobbs\n");
+  printf("Author:              R. Shannon, G. Hobbs, M. Keith\n");
   printf("CVS Version:         $Revision$\n");
   printf(" --- type 'h' for help information\n");
 
@@ -111,6 +112,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%lf",&gwAmp);
       else if (strcmp(argv[i],"-gwalpha")==0)
 	sscanf(argv[++i],"%lf",&gwAlpha);
+      else if (strcmp(argv[i],"-nit")==0)
+	sscanf(argv[++i],"%d",&nit);
     }
 
 
@@ -152,8 +155,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   fhi = 1.0/(long double)SECDAY;
   timeOffset = psr[0].param[param_pepoch].val[0];
 
-
-  nit = 1;
   ndetect = 0;
   for (it=0;it < nit; it++)
     {
@@ -239,7 +240,6 @@ double getStatPS(pulsar *psr,int npsr,double gwAmp,double gwAlpha,int it,char *c
       ndays = (int)(psr[p].obsn[psr[p].nobs-1].sat - psr[p].obsn[0].sat)+2;
       if (it==-1) // Using real data
 	{
-	  // Be careful if only 1 pulsar
 	  if (npsr>1)
 	    sprintf(fname,"%s_%d",covarFuncFile,p+1);
 	  else
