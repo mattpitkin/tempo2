@@ -4,7 +4,7 @@ AC_DEFUN([SWIN_LIB_FFTW],
 [
   AC_PROVIDE([SWIN_LIB_FFTW])
 
-  SWIN_PACKAGE_OPTIONS([fftw])
+  SWIN_PACKAGE_OPTIONS([fftw3])
 
   AC_MSG_CHECKING([for double-precision FFTW-3 library])
 
