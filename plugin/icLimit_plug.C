@@ -240,12 +240,11 @@ double getStatPS(pulsar *psr,int npsr,double gwAmp,double gwAlpha,int it,char *c
       if (it==-1) // Using real data
 	{
 	  // Be careful if only 1 pulsar
-	  sprintf(fname,"%s_%d",covarFuncFile,p+1);
-	  //      if (npsr>1)
-	  //	{
-	  //	  sprintf(temp,"%s_%d",fname,p+1);
-	  //	  strcpy(fname,temp);
-	  //	}
+	  if (npsr>1)
+	    sprintf(fname,"%s_%d",covarFuncFile,p+1);
+	  else
+	    strcpy(fname,covarFuncFile);
+
 	  printf("Opening >%s<\n",fname);
 	  if (!(fin = fopen(fname,"r")))
 	    {
