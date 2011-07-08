@@ -32,8 +32,9 @@ for lib in `grep -v -e '^#' $list` ; do
 		fi
 		plugname=`/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1:'`
 		plugtype=`/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\2:'`
-		/bin/echo -e "$plugname-install: ${plugname}_@T2ARCH@_${plugtype}.la\n	\$(INSTALL) .libs/${plugname}_@T2ARCH@_${plugtype}.t2 \$(plugindir)"
-		/bin/echo -e "$plugname: ${plugname}_@T2ARCH@_${plugtype}.la"
+		/bin/echo "$plugname-install: ${plugname}_@T2ARCH@_${plugtype}.la"
+		/bin/echo "	\$(INSTALL) .libs/${plugname}_@T2ARCH@_${plugtype}.t2 \$(plugindir)"
+		/bin/echo "$plugname: ${plugname}_@T2ARCH@_${plugtype}.la"
 	fi
 done
 
