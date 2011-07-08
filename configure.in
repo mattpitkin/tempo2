@@ -129,28 +129,36 @@ AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile unsupported_plugins/Make
 
 AC_OUTPUT
 
-
-# User warnings
-if test X$have_pgplot != Xyes; then
-	AC_WARN(PGPLOT was not detected plugins requiring pgplot will not be compiled)
-else
-	AC_MSG_NOTICE(PGPLOT compile flags are "$PGPLOT_CFLAGS")
-	AC_MSG_NOTICE(PGPLOT linking flags are "$PGPLOT_LIBS")
-fi
-
-if test X$have_gsl != Xyes; then
-	AC_WARN(GNU Scientific Library was not found, plugins requiring GSL will not be compiled)
-fi
-
-if test X$have_fftw3 != Xyes; then
-	AC_WARN(FFTW3 was not found, plugins requiring fftw will not be compiled)
-fi
-
-
-
 AC_MSG_NOTICE(Fortran compiler is $F77 $FFLAGS)
 AC_MSG_NOTICE(C compiler is $CC $CFLAGS)
 AC_MSG_NOTICE(C++ compiler is $CXX $CXXFLAGS)
 AC_MSG_NOTICE(Global linking flags are $LDFLAGS)
 
-AC_MSG_NOTICE(NOTICE: plugins now built with 'make plugins && make plugins-install')
+
+# User warnings
+if test X$have_pgplot != Xyes; then
+	AC_MSG_NOTICE(Plugins: PGPLOT was not detected - plugins requiring pgplot will not be compiled)
+else
+	AC_MSG_NOTICE(PGPLOT compile flags are "$PGPLOT_CFLAGS")
+	AC_MSG_NOTICE(PGPLOT linking flags are "$PGPLOT_LIBS")
+fi
+
+#
+# This message is disabled whilst there are no GSL plugins.
+#
+#if test X$have_gsl != Xyes; then
+#	AC_MSG_NOTICE(NOTE: GNU Scientific Library was not found, plugins requiring GSL will not be compiled)
+#fi
+
+if test X$have_fftw3 != Xyes; then
+	AC_MSG_NOTICE(Plugins: FFTW3 was not found - plugins requiring fftw will not be compiled)
+fi
+if test X$have_cfitsio != Xyes; then
+	AC_MSG_NOTICE(Plugins: cfitsio was not found - plugins requiring cfitsio will not be compiled)
+fi
+
+
+
+
+echo ""
+echo "NOTICE: plugins now built with 'make plugins && make plugins-install'"
