@@ -268,9 +268,9 @@ double getStatPS(pulsar *psr,int npsr,double gwAmp,double gwAlpha,int it,char *c
 	}
       if (it != -1) // Create a sensible covariance function for simulated data -- get sensible gwAmp
 	{
-	  fitVar = 1.0; // What should this be?
-	  //	  fc = 1.0/(x[psr[p].nobs-1]-x[0])*365.25;
-	  fc = 0.3; // CHANGE THIS
+	  fitVar = TKvariance_d(y,psr[p].nobs); // Check this
+	  fc = 1.0/(x[psr[p].nobs-1]-x[0])*365.25; // Check this
+	  //	  fc = 0.3; // CHANGE THIS
 	  //	  gwAmp = 1.0e-30;
 	  printf("fc = %g\n",fc);
 	  calculateGWCholesky((3.0-2.0*gwAlpha)/2.0,fc,gwAmp,fitVar,uinv,covarFunc,
