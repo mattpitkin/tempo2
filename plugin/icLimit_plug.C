@@ -57,8 +57,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double realStatistic;
   double simStatistic;
   const char *CVS_verNum = "$Revision$";
-  double gwAmp,gwAlpha;
+  double gwAmp,gwAlpha,aHigh,aLow;
   double whiteNoise;
+  int getLimit=0;
 
   // For GW simulation
   long seed = TKsetSeed();
@@ -79,13 +80,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int it,nit;
   int ndetect;
   char covarFuncFile[128];
+  int endit=0,timeThrough=0;
+  int fast=0;
 
-  
   char fname[128];
+  FILE *fout;
+  
+  fout = fopen("icLimit_result.dat","w");
 
   gwAmp   = 1e-15; // Default value
   gwAlpha = -2.0/3.0; // Default value
   nit     = 1; // Default value
+  ngw = 1000;
 
   if (displayCVSversion == 1) CVSdisplayVersion("icLimit.C","plugin",CVS_verNum);
 
@@ -112,13 +118,25 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%lf",&gwAmp);
       else if (strcmp(argv[i],"-gwalpha")==0)
 	sscanf(argv[++i],"%lf",&gwAlpha);
+      else if (strcmp(argv[i],"-ahigh")==0)
+	sscanf(argv[++i],"%lf",&aHigh);
+      else if (strcmp(argv[i],"-alow")==0)
+	sscanf(argv[++i],"%lf",&aLow);
       else if (strcmp(argv[i],"-nit")==0)
 	sscanf(argv[++i],"%d",&nit);
+      else if (strcmp(argv[i],"-ngw")==0)
+	sscanf(argv[++i],"%d",&ngw);
+      else if (strcmp(argv[i],"-getlimit")==0)
+	getLimit=1;
+      else if (strcmp(argv[i],"-fast")==0)
+	fast=1;
     }
 
 
   scale = pow(86400.0*365.25,gwAlpha);
   gwAmp *= scale;
+  aLow *= scale;
+  aHigh *= scale;
 
 
 
@@ -143,67 +161,103 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	satIdeal[p][i] = psr[p].obsn[i].sat-psr[p].obsn[i].residual/86400.0L;
     }
 
-  ngw = 1000;
   if ((gw = (gwSrc *)malloc(sizeof(gwSrc)*ngw))==NULL)
     {
       printf("Unable to allocate memory for %d GW sources\n",ngw);
       exit(1);
     }
   tspan=getTspan(psr,*npsr)*SECDAY; // Gets data span for all pulsars
+  //
   // Should choose something sensible for these
+  //
   flo=0.01/tspan;
   fhi = 1.0/(long double)SECDAY;
   timeOffset = psr[0].param[param_pepoch].val[0];
 
-  ndetect = 0;
-  for (it=0;it < nit; it++)
+  do {
+    ndetect = 0;
+    if (getLimit==1)
+      {
+	//	gwAmp = (aHigh + aLow)/2.0;
+	gwAmp = pow(10,(log10(aHigh) + log10(aLow))/2.0);
+	printf("Searching amplitude = %g, attempt number = %d\n",gwAmp/(double)scale,timeThrough+1);
+      }
+    for (it=0;it < nit; it++)
+      {
+	GWbackground(gw,ngw,&seed,flo,fhi,gwAmp,gwAlpha,1);
+	for (i=0;i<ngw;i++) setupGW(&gw[i]);
+
+	for (p=0;p<*npsr;p++)
+	  {
+	    // Should do this properly - should do a random selection for each realisation
+	    dist[p] = 1e19;
+	    
+	    setupPulsar_GWsim(psr[p].param[param_raj].val[0],psr[p].param[param_decj].val[0],kp);
+	    mean = 0.0;
+	    for (i=0;i<psr[p].nobs;i++)
+	      {
+		time = (psr[p].obsn[i].sat - timeOffset)*SECDAY;
+		gwRes[i] = 0.0;
+		for (j=0;j<ngw;j++)
+		  gwRes[i] += calculateResidualGW(kp,&gw[j],time,dist[p]);
+		mean += gwRes[i];
+	      }
+	    for (i=0;i<psr[p].nobs;i++)
+	      {
+		whiteNoise = TKgaussDev(&seed)*psr[p].obsn[i].toaErr*1.0e-6;
+		psr[p].obsn[i].sat = satIdeal[p][i] + (gwRes[i]-mean/(long double)psr[p].nobs + whiteNoise)/86400.0L;
+	      }
+	    //	    sprintf(fname,"psr%s.sim.tim.%d",psr[p].name,it);
+	    //	    writeTim(fname,psr+p,"tempo2");
+	  }
+	// Do some fitting
+	
+	//
+	// Must re-set the parameter values to their postfit value for the real data
+	//
+	for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
+	  {
+	    if (fast==1)  // Can speed up by not re-calculating clocks etc.
+	      {
+		vectorPulsar(psr,*npsr);   
+		calculate_bclt(psr,*npsr); 
+		formBats(psr,*npsr);       		
+	      }
+	    else
+	      formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+	    formResiduals(psr,*npsr,1);    /* Form the residuals                 */
+	    if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
+	  }
+	// Must re-set the parameter values to their initial value
+	//	printf("Simulation ...\n");
+	simStatistic = getStatPS(psr,*npsr,gwAmp,gwAlpha,it,covarFuncFile);
+	if (simStatistic > realStatistic) ndetect++;
+	if ((it+1)%100==0) printf("Detected = %d, iteration = %d, %g percent, %g\n",ndetect,it+1,(double)100*ndetect/(double)(it+1),(double)gwAmp/(double)scale);
+      }
+    printf("Detected = %d, %d, %g percent, %g\n",ndetect,it,(double)100*ndetect/(double)(it),(double)gwAmp/(double)scale);
+    timeThrough++;
+    if (getLimit==1)
+      {
+	if (100*ndetect/(double)it > 96)
+	  aHigh = gwAmp;
+	else if (100*ndetect/(double)it < 94)
+	  aLow = gwAmp;
+	else
+	  endit=1;
+
+	if (timeThrough==10) endit=1; // Break if not converging
+      }
+
+  } while (getLimit==1 && endit==0);
+  if (getLimit==1)
     {
-      GWbackground(gw,ngw,&seed,flo,fhi,gwAmp,gwAlpha,1);
-      for (i=0;i<ngw;i++)
-	setupGW(&gw[i]);
-      for (p=0;p<*npsr;p++)
-	{
-	  // Should do this properly - should do a random selection for each realisation
-	  dist[p] = 1e19;
-	  
-	  setupPulsar_GWsim(psr[p].param[param_raj].val[0],psr[p].param[param_decj].val[0],kp);
-	  mean = 0.0;
-	  for (i=0;i<psr[p].nobs;i++)
-	    {
-	      time = (psr[p].obsn[i].sat - timeOffset)*SECDAY;
-	      gwRes[i] = 0.0;
-	      for (j=0;j<ngw;j++)
-		gwRes[i] += calculateResidualGW(kp,&gw[j],time,dist[p]);
-	      mean += gwRes[i];
-	    }
-	  for (i=0;i<psr[p].nobs;i++)
-	    {
-	      whiteNoise = TKgaussDev(&seed)*psr[p].obsn[i].toaErr*1.0e-6;
-	      psr[p].obsn[i].sat = satIdeal[p][i] + (gwRes[i]-mean/(long double)psr[p].nobs + whiteNoise)/86400.0L;
-	    }
-	  sprintf(fname,"psr%s.sim.tim.%d",psr[p].name,it);
-	  writeTim(fname,psr+p,"tempo2");
-	}
-      // Do some fitting
-      
-      //
-      // Must re-set the parameter values to their postfit value for the real data
-      //
-      for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
-	{
-	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-	  formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-	  if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
-	}
-      // Must re-set the parameter values to their initial value
-      printf("Simulation ...\n");
-      simStatistic = getStatPS(psr,*npsr,gwAmp,gwAlpha,it,covarFuncFile);
-      if (simStatistic > realStatistic) ndetect++;
-      printf("Detected = %d, %d, %g percent\n",ndetect,it+1,(double)100*ndetect/(double)(it+1));
+      if (timeThrough==10) printf("Result = NO CONVERGENCE\n");
+      else printf("Result = %g\n",gwAmp/(double)scale);
+      if (timeThrough==10) fprintf(fout,"Result = NO CONVERGENCE\n");
+      else fprintf(fout,"Result = %g ntrial = %d\n",gwAmp/(double)scale,timeThrough);
     }
-
   free(gw);
-
+  fclose(fout);
   return 0;
 }
 
@@ -228,7 +282,10 @@ double getStatPS(pulsar *psr,int npsr,double gwAmp,double gwAlpha,int it,char *c
 
   specType = 2; // Unweighted Lomb-Scargle
   specOut  = 1; // Power spectral density
-
+  
+  //
+  // Should allocate this to the correct size required
+  //
   uinv = (double **)malloc(sizeof(double *)*(MAX_OBSN));
   for (i=0;i<MAX_OBSN;i++)
     uinv[i] = (double *)malloc(sizeof(double)*MAX_OBSN);
@@ -276,15 +333,19 @@ double getStatPS(pulsar *psr,int npsr,double gwAmp,double gwAlpha,int it,char *c
 	{
 	  fitVar = TKvariance_d(y,psr[p].nobs); // Check this
 	  fc = 1.0/(x[psr[p].nobs-1]-x[0])*365.25; // Check this
-	  //	  fc = 0.3; // CHANGE THIS
-	  //	  gwAmp = 1.0e-30;
-	  printf("fc = %g\n",fc);
+	  //
+	  // Don't need to keep calculating this.  Only need to do so when the gwamp changes
+	  //
 	  calculateGWCholesky((3.0-2.0*gwAlpha)/2.0,fc,gwAmp,fitVar,uinv,covarFunc,
 			      x,y,e,psr[p].nobs);
-	    }
+	}
       // Form the data covariance matrix
+      //
+      // Really only need to do this when the gwamp changes
       formCholeskyMatrixPlugin(covarFunc,x,y,e,psr[p].nobs,uinv);
-      nSpec = calcSpectra(uinv,x,y,psr[p].nobs,specX,specY);
+      nSpec = calcSpectra(uinv,x,y,psr[p].nobs,specX,specY,10);  // 10 = number of frequency channels
+
+
       //      TKspectrum(x,y,e,psr[p].nobs,0,0,0,0,0,specType,1,1,specOut,specX,specY,&nSpec,0,0,outY_re,outY_im);
       //      sprintf(fname,"psr%s.spec.%d",psr[p].name,it);
       //      fout = fopen(fname,"w");
@@ -299,15 +360,17 @@ double getStatPS(pulsar *psr,int npsr,double gwAmp,double gwAlpha,int it,char *c
 	  // Should use the correct units for gwAmp
 	  // Should think about corner frequency or fitting
 	  signal = gwAmpYr*gwAmpYr/12.0/M_PI/M_PI*pow(specX[i]*365.25,2*gwAlpha-3.0);
+	  //
 	  // Must calculate this properly
 	  noise  = 5e-31;
+	  //
 	  s_indv += (specY[i]*signal*signal/(signal*signal+noise*noise));
 	  //	  printf("individual statistic%d = %d %d %g %g %g %g %g %g\n",it,p,i,signal*signal/(signal*signal+noise*noise),signal,specX[i],specY[i],s_indv,specY[i]*signal*signal/(signal*signal+noise*noise));
 	}
-      printf("statistic for pulsar %d = %g\n",p,s_indv);
+      //      printf("statistic for pulsar %d = %g\n",p,s_indv);
       statistic += s_indv;
     }
-  printf("Total statistic = %g\n",statistic);
+  //  printf("Total statistic = %g\n",statistic);
 
   for (i=0;i<MAX_OBSN;i++)
     free(uinv[i]);
@@ -347,9 +410,9 @@ void formCholeskyMatrixPlugin(double *c,double *resx,double *resy,double *rese,i
   int i,j,k,ix,iy;
   double t0,cint,t;
   int t1,t2;
-  int debug=1;
+  int debug=0;
 
-  printf("Getting the covariance matrix in doFit\n");
+  //  printf("Getting the covariance matrix in doFit\n");
   m = (double **)malloc(sizeof(double *)*(np+1));
   u= (double **)malloc(sizeof(double *)*(np+1));
   cholp  = (double *)malloc(sizeof(double)*(np+1));  // Was ndays
@@ -378,7 +441,7 @@ void formCholeskyMatrixPlugin(double *c,double *resx,double *resy,double *rese,i
   // Insert the covariance which depends only on the time difference.
   // Linearly interpolate between elements on the covariance function because
   // valid covariance matrix must have decreasing off diagonal elements.
-  printf("Inserting into the covariance matrix\n");
+  //  printf("Inserting into the covariance matrix\n");
   for (ix=0;ix<np;ix++)
     {
       for (iy=0;iy<np;iy++)
@@ -391,7 +454,7 @@ void formCholeskyMatrixPlugin(double *c,double *resx,double *resy,double *rese,i
 	  m[ix][iy] = cint;
 	}
     }
-  printf("Multiplying by errors\n");
+  //  printf("Multiplying by errors\n");
   for (ix=0;ix<np;ix++)
     m[ix][ix]+=rese[ix]*rese[ix];
   if (debug==1)
@@ -430,9 +493,10 @@ void formCholeskyMatrixPlugin(double *c,double *resx,double *resy,double *rese,i
 	  for (j=0;j<5;j++) printf("%10g ",uinv[i][j]); 
 	  printf("\n");
 	}
+      printf("Completed inverting the matrix\n");
     }
 
-  printf("Completed inverting the matrix\n");
+
 
   // Should free memory not required
   // (note: not freeing uinv)
@@ -460,7 +524,7 @@ void calculateGWCholesky(double modelAlpha,double modelFc,double modelScale,doub
   double weightVarHighFreqRes,weightMeanHighFreqRes;
   double mean,escale,actVar,tt,tl,bl,tl2,bl2;
   int ndays;
-  int debug=1;
+  int debug=0;
   double varScaleFactor = 0.6;
 
   ndays = (int)(ceil(resx[np-1])-floor(resx[0])+1)+2; // Add two extra days for interpolation
@@ -470,7 +534,7 @@ void calculateGWCholesky(double modelAlpha,double modelFc,double modelScale,doub
   opf = (double *)malloc(sizeof(double)*ndays*2); // Periodic spectrum model
   pe = (double *)malloc(sizeof(double)*ndays*2); // Periodic spectrum model
 
-  printf("Number of days = %d\n",ndays);
+  //  printf("Number of days = %d\n",ndays);
 
   // Get rms of normalised high freq residuals
   /*  mean=0.0;
@@ -542,7 +606,7 @@ void calculateGWCholesky(double modelAlpha,double modelFc,double modelScale,doub
 	fprintf(fout,"%d %g\n",i,pf[i]);
       fclose(fout);     
     }
-  printf("Obtaining covariance function from analytic model\n");
+  //  printf("Obtaining covariance function from analytic model\n");
   {
     fftw_complex* output;
     fftw_plan transform_plan;
@@ -554,18 +618,18 @@ void calculateGWCholesky(double modelAlpha,double modelFc,double modelScale,doub
     for (i=0;i<=j/2;i++) 
       {
 	covFunc[i] = opf[2*i];
-	printf("covFunc: %g %g\n",opf[2*i],opf[2*i+1]);
+	//	printf("covFunc: %g %g\n",opf[2*i],opf[2*i+1]);
       }
   }
   // Rescale
-  printf("Rescaling %d\n",j/2);
+  //  printf("Rescaling %d\n",j/2);
   //  for (i=0;i<np/2;i++)
   //  fy2[i] = nmodelScale-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
   actVar = pow(10,modelScale);
   tt = covFunc[0];
-  printf("actvar = %g, weightVarRes = %g, weightVarHighFreqRes = %g, scale = %g, fitVar = %g, tt = %g\n",actVar*pow(86400.0*365.25,2),weightVarRes,weightVarHighFreqRes,weightVarRes-weightVarHighFreqRes,fitVar,tt);
+  //  printf("actvar = %g, weightVarRes = %g, weightVarHighFreqRes = %g, scale = %g, fitVar = %g, tt = %g\n",actVar*pow(86400.0*365.25,2),weightVarRes,weightVarHighFreqRes,weightVarRes-weightVarHighFreqRes,fitVar,tt);
 
-  printf("WARNING: varScaleFactor = %g (used to deal with quadratic removal)\n",varScaleFactor);
+  //  printf("WARNING: varScaleFactor = %g (used to deal with quadratic removal)\n",varScaleFactor);
   for (i=0;i<=j/2;i++)
     covFunc[i] = covFunc[i]*fitVar*varScaleFactor/tt;
 
