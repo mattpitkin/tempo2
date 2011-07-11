@@ -2,6 +2,7 @@
 ACLOCAL_AMFLAGS = -I autoconf
 
 SUBDIRS=sofa . #plugin
+DIST_SUBDIRS=sofa plugin unsupported_plugins
 
 bin_PROGRAMS=tempo2
 lib_LTLIBRARIES=libtempo2.la libtempo2pred.la
@@ -31,10 +32,7 @@ tempo2_LDADD = libtempo2.la sofa/libsofa.la @FLIBS@ $(LIBADD_DLOPEN)
 
 
 # Specify to include the T2runtime in distributions
-EXTRA_DIST = T2runtime unsupported_plugins
-
-DIST_SUBDIRS=plugin
-
+EXTRA_DIST = T2runtime
 	
 
 # This clears out any CVS files that might get in our distribution
