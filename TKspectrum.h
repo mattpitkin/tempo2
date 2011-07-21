@@ -1739,11 +1739,17 @@ void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, doubl
 
 // Spectral analysis using covariance matrix
 // note: uinv array must start from 0, not 1
-int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY)
+// NEW FEATURE:
+// set nfit < 0 to automatically set it to nres/2-1
+int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit)
 {
   int i,j,k;
-  int nfit=nres/2-1;
+  //  int nfit=nres/2-1;
   int nSpec;
+
+  if (nfit < 0)
+    nfit=nres/2-1;
+
   double v[nfit];
   double sig[nres];
   double **newUinv;
@@ -1753,9 +1759,9 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
   int ip[nres];
   double param[nfit],error[nfit];
 
-  cvm = (double **)malloc(sizeof(double *)*nfit);
+  cvm = (double **)alloca(sizeof(double *)*nfit);
   for (i=0;i<nfit;i++)
-    cvm[i] = (double *)malloc(sizeof(double)*nfit);
+    cvm[i] = (double *)alloca(sizeof(double)*nfit);
 
   // Should fit independently to all frequencies
   for (i=0;i<nres;i++)
@@ -1765,8 +1771,8 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
     }
   for (k=0;k<nfit;k++)
     {
-      printf("%5.2g\%\r",(double)k/(double)nfit*100.0);
-      fflush(stdout);
+      //      printf("%5.2g\%\r",(double)k/(double)nfit*100.0);
+      //      fflush(stdout);
       GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
       TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
       v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[1],2)+pow(param[2],2))/pow(365.25*86400.0,2); 
@@ -1774,9 +1780,10 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
       specY[k] = v[k];
     }
 
-  for (i=0;i<nfit;i++)
-    free(cvm[i]);
-  free(cvm);
+  //  for (i=0;i<nfit;i++)
+  //    free(cvm[i]);
+  //  free(cvm);
+  //  printf("Complete spectra\n");
   return nfit;
 }
 

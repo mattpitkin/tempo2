@@ -206,8 +206,8 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   double newStart=-1.0,newFinish=-1.0;
   long double meanRes=0.0;
 
-  printf("WARNING: Switching weighting off for the fit\n");
-  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
+  //  printf("WARNING: Switching weighting off for the fit\n");
+  //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
 
   if (strcmp(psr[0].fitFunc,"default")!=0)
     {
@@ -293,7 +293,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	    }
 	}
       
-      printf("Count = %d\n",count);
+      //      printf("Count = %d\n",count);
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
       psr[p].param[param_finish].val[0] = newFinish+0.001;
@@ -327,7 +327,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	      sprintf(temp,"%s_%d",fname,p+1);
 	      strcpy(fname,temp);
 	    }
-	  printf("Opening >%s<\n",fname);
+	  //	  printf("Opening >%s<\n",fname);
 	  if (!(fin = fopen(fname,"r")))
 	    {
 	      printf("Unable to open inverse cholesky matrix: %s\n",fname);
@@ -373,7 +373,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	      sprintf(temp,"%s_%d",fname,p+1);
 	      strcpy(fname,temp);
 	    }
-	  printf("Opening >%s<\n",fname);
+	  //	  printf("Opening >%s<\n",fname);
 	  if (!(fin = fopen(fname,"r")))
 	    {
 	      printf("Unable to open covariance function file: %s\n",fname);
@@ -384,8 +384,8 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  for (i=0;i<ndays;i++)
 	    fscanf(fin,"%lf",&covarFunc[i]);
 	  fclose(fin);
-	  printf("Read covariance function\n");
-	  printf("WARNING: scaling all errors by: %g\n",escaleFactor);
+	  //	  printf("Read covariance function\n");
+	  //	  printf("WARNING: scaling all errors by: %g\n",escaleFactor);
 	  for (i=0;i<count;i++)
 	    sig[i]*=escaleFactor;
 
@@ -416,7 +416,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip,uinv);
 	  //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
 	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
-	  printf("chisq = %g\n",chisq);
+	  //	  printf("chisq = %g\n",chisq);
 	  psr[p].fitChisq = chisq; 
 	  psr[p].fitNfree = psr[p].nFit-npol;
 	  
@@ -1355,9 +1355,9 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
   int i,j,k,ix,iy;
   double t0,cint,t;
   int t1,t2;
-  int debug=1;
+  int debug=0;
 
-  printf("Getting the covariance matrix in doFit\n");
+  //  printf("Getting the covariance matrix in doFit\n");
   m = (double **)malloc(sizeof(double *)*(np+1));
   u= (double **)malloc(sizeof(double *)*(np+1));
   cholp  = (double *)malloc(sizeof(double)*(np+1));  // Was ndays
@@ -1386,7 +1386,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
   // Insert the covariance which depends only on the time difference.
   // Linearly interpolate between elements on the covariance function because
   // valid covariance matrix must have decreasing off diagonal elements.
-  printf("Inserting into the covariance matrix\n");
+  //  printf("Inserting into the covariance matrix\n");
   for (ix=0;ix<np;ix++)
     {
       for (iy=0;iy<np;iy++)
@@ -1399,7 +1399,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 	  m[ix][iy] = cint;
 	}
     }
-  printf("Multiplying by errors\n");
+  //  printf("Multiplying by errors\n");
   for (ix=0;ix<np;ix++)
     m[ix][ix]+=rese[ix]*rese[ix];
   if (debug==1)
@@ -1440,7 +1440,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 	}
     }
 
-  printf("Completed inverting the matrix\n");
+  //  printf("Completed inverting the matrix\n");
 
   // Should free memory not required
   // (note: not freeing uinv)

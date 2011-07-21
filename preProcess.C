@@ -539,12 +539,41 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  char *(*entry)(int,char **,pulsar *,int *);
 	  void * module;
 	  char str[1000];
+  char plug_path[32][MAX_STRLEN];
+  int plug_path_len=0;
 
-	  strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
-	  sprintf(str,"%s/plugins/%s_%s_splug.t2",getenv(TEMPO2_ENVIRON),
-		  selectPlugName,tempo2MachineType);
-	  printf("Looking for %s\n",str);
-	  module = dlopen(str, RTLD_NOW); 
+	  if (getenv("TEMPO2_PLUG_PATH")!=NULL){
+	    char *p_path = (char*)malloc(MAX_STRLEN*32);
+	    strcpy(p_path,getenv("TEMPO2_PLUG_PATH"));
+	    int len= strlen(p_path);
+	    for (i=0; i < len; i++){
+	      if (p_path[i] == ':')p_path[i]='\0';
+	    }
+	    i=0;
+	    while(i < len){
+	      strcpy(plug_path[plug_path_len++],p_path+i);
+	      i+=strlen(p_path+i)+1;
+	    }
+	    free(p_path);
+	  }
+	  
+	  sprintf(plug_path[plug_path_len++],"%s/plugins/",getenv(TEMPO2_ENVIRON));
+
+	  for (int iplug=0; iplug < plug_path_len; iplug++){
+	    sprintf(str,"%s/%s_%s_splug.t2",plug_path[iplug],
+		    selectPlugName,tempo2MachineType);
+	    printf("Looking for %s\n",str);
+	    module = dlopen(str, RTLD_NOW); 
+	    if(module==NULL){	  
+	      printf("dlerror() = %s\n",dlerror());
+	    } else break;
+	  }
+	  
+	  //	  strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
+	  //	  sprintf(str,"%s/plugins/%s_%s_splugt2",getenv(TEMPO2_ENVIRON),
+	  //		  selectPlugName,tempo2MachineType);
+	  //	  printf("Looking for %s\n",str);
+	  //	  module = dlopen(str, RTLD_NOW); 
 	  if(!module)  {
 	    fprintf(stderr, "[error]: dlopen() failed while resolving symbols.\n" );
 	    fprintf(stderr, "dlerror() = %s\n",dlerror());

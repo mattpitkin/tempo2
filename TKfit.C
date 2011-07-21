@@ -192,14 +192,14 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   designMatrix = (double **)malloc(n*sizeof(double *));
   v = (double **)malloc(nf*sizeof(double *));
   u = (double **)malloc(n*sizeof(double *));
-  uout = (double **)malloc(n*sizeof(double *)); // NOT CLEARED
-  bout = (double *)malloc(n*sizeof(double));    // NOT CLEARED
+  uout = (double **)alloca(n*sizeof(double *)); // NOT CLEARED
+  bout = (double *)alloca(n*sizeof(double));    // NOT CLEARED
 
   for (i=0;i<n;i++) 
     {
       if ((designMatrix[i] = (double *)malloc(nf*sizeof(double))) == NULL) {printf("OUT OF MEMORY\n"); exit(1);}
       if ((u[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);}
-      if ((uout[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);}
+      if ((uout[i] = (double *)alloca(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);}
       if (weight==0) sig[i]=1.0;
     }
   for (i=0;i<nf;i++) v[i] = (double *)malloc(nf*sizeof(double));
@@ -445,6 +445,100 @@ void TKleastSquares_svd(double *x,double *y,double *sig2,int n,double *p,double 
   for (j=0;j<n;j++)
     {
       fitFuncs(x[j],basisFunc,nf);
+      sum=0.0;
+      for (k=0;k<nf;k++)
+	{
+	  sum+=p[k]*basisFunc[k];
+	  if (j==0) free(v[k]);
+	}
+      (*chisq) += pow((y[j]-sum)/sig[j],2);
+
+      free(designMatrix[j]); // Remove memory allocation
+      free(u[j]);
+    }
+ 
+  if (weight==0)
+    {
+      for (j=0;j<nf;j++)
+	e[j] *= sqrt(*chisq/(n-nf));
+    }
+
+  //printf("at end of memory allocation in TKfit.C0.5\n");
+  //free(v);     //TRY TO UNCOMMENT THIS LINE AT SOME POINT!! Hmm actually maybe it's not necessary...
+  //printf("at end of memory allocation in TKfit.C1\n");
+  free(u); 
+  //printf("at end of memory allocation in TKfit.C1.5\n");
+  free(designMatrix);
+  //printf("at end of memory allocation in TKfit.C2\n");
+}
+
+void TKleastSquares_svd_passN(double *x,double *y,double *sig2,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,int),int weight)
+{
+  double **designMatrix; //[n][nf];
+  double basisFunc[nf],b[n];
+  double sig[n];
+  double **v,**u;
+  double w[nf],wt[nf],sum,wmax;
+  double tol = 1.0e-5;
+  int    i,j,k;
+  designMatrix = (double **)malloc(n*sizeof(double *));
+  v = (double **)malloc(nf*sizeof(double *));
+  u = (double **)malloc(n*sizeof(double *));
+  for (i=0;i<n;i++) 
+    {
+      designMatrix[i] = (double *)malloc(nf*sizeof(double));
+      u[i] = (double *)malloc(nf*sizeof(double));
+      if (weight==0) sig[i]=1.0;
+      else sig[i] = sig2[i];  //to avoid side effect of setting all errors on the INPUT time series to 1.
+    }
+  for (i=0;i<nf;i++) v[i] = (double *)malloc(nf*sizeof(double));
+
+  /* This routine has been developed from Section 15 in Numerical Recipes */
+  
+  /* Determine the design matrix - eq 15.4.4 
+   * and the vector 'b' - eq 15.4.5 
+   */
+  for (i=0;i<n;i++)
+    {
+      //      fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
+      fitFuncs(x[i],basisFunc,nf,i);
+      for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j]/sig[i];
+      b[i] = y[i]/sig[i];
+    }
+  /* Now carry out the singular value decomposition */
+
+  TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
+  wmax = TKfindMax_d(w,nf);
+  for (i=0;i<nf;i++)
+    {
+      if (w[j] < tol*wmax) w[j]=0.0;
+    }
+
+  /* Back substitution */
+  TKbacksubstitution_svd(v, w, designMatrix, b, p, n, nf);
+  
+  /* Now form the covariance matrix, giving the covariance between each of the fitted parameters */
+  for (i=0;i<nf;i++)
+    {
+      if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
+      else wt[i] = 0.0;     
+    }
+  for (i=0;i<nf;i++)
+    {
+      for (j=0;j<=i;j++)
+	{
+	  sum=0.0;
+	  for (k=0;k<nf;k++)
+	    sum+=v[i][k]*v[j][k]*wt[k];
+	  cvm[i][j] = sum;
+	  cvm[j][i] = sum;
+	}
+      e[i] = sqrt(cvm[i][i]); // this gives the standard deviation (i.e. error) in the estimate of the i-th parameter
+    }
+  *chisq = 0.0;
+  for (j=0;j<n;j++)
+    {
+      fitFuncs(x[j],basisFunc,nf,j);
       sum=0.0;
       for (k=0;k<nf;k++)
 	{
@@ -828,14 +922,10 @@ void TKcholDecomposition(double **a, int n, double *p)
 		  //	    printf("a[%d][%d] = %g\n",j,k,a[j][k]);
 		  exit(1);
 		}
-	      //	      printf("at this point %d %g\n",i,sum);
 	      p[i] = sqrt(sum);
 	    }
 	  else
-	    {
-	      a[j][i] = (double)(sum/p[i]);
-	      //	      	      printf("modifying %d %d %Lg %g\n",j,i,sum,p[i]);
-	    }
+	    a[j][i] = (double)(sum/p[i]);
 	}
     }
 }
