@@ -42,6 +42,12 @@ fi
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
+
+
+if test $can_build_shared == no ; then
+	AC_WARN("Libtool cannot build shared libraries - ")
+fi
+
 # look for third-party packages in various places (or not)
 SWIN_LOCAL
 
@@ -158,7 +164,16 @@ if test X$have_cfitsio != Xyes; then
 fi
 
 
+if test $can_build_shared == no ; then
+	echo ""
+	AC_WARN("Libtool cannot build shared libraries - no plugins can be built!")
+	echo ""
+else
+	echo ""
+	echo "NOTICE: plugins now built with 'make plugins && make plugins-install'"
+fi
 
 
-echo ""
-echo "NOTICE: plugins now built with 'make plugins && make plugins-install'"
+
+
+
