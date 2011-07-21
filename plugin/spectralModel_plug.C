@@ -97,6 +97,7 @@ void help() /* Display help */
   /* by the user pressing 'h'                                                                              */
 }
 
+char skipstep2=0; // test to skip step 2 added by MJK 2011-07.
 
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
@@ -149,6 +150,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%d",&ipw);
       else if (strcmp(argv[i],"-nfit")==0)
 	sscanf(argv[++i],"%d",&inpt);
+      else if (strcmp(argv[i],"-skipstep2")==0)
+	skipstep2=1;
       else if (strcmp(argv[i],"-makeps")==0)
 	makeps=1;
     }
@@ -269,7 +272,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	      uinv[i][j]=0.0;
 	  }
       }
-    nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY);
+    nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY,-1);
     fileOutput2("spec6.dat",origSpecX,origSpecY,nOrigSpec);
     exit(1);
     } */
@@ -317,6 +320,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     }
   } while (cont==1);
 
+
+  if(!skipstep2){
   // Step 2:
 
   // Put errors into uinv matrix
@@ -333,7 +338,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
   // Step 2a: Obtain spectra of original residuals without any prewhitening
   //  nOrigSpec = calculateSpectra(resx,resy,rese,nres,1,0,1,origSpecX,origSpecY);
-  nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY);
+  nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY,-1);
   fileOutput2("origSpectra.dat",origSpecX,origSpecY,nOrigSpec);
 
   // Step 2b: interpolate the smooth curve
@@ -359,7 +364,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 				  smoothSpecX0,smoothSpecY0);
   fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
 
-  //  nSmoothSpec0 = calcSpectra(uinvI,interpX,interpY,nInterp,smoothSpecX0,smoothSpecY0);
+  //  nSmoothSpec0 = calcSpectra(uinvI,interpX,interpY,nInterp,smoothSpecX0,smoothSpecY0,-1);
   printf("Done calculating spectra\n");
   fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
   // TESTING
@@ -387,7 +392,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   }
   //  nHighFreqSpec = calculateSpectra(resx,highFreqRes,rese,nres,1,0,1,highFreqSpecX,
   //				   highFreqSpecY);
-  nHighFreqSpec = calcSpectra(uinv,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY);
+  nHighFreqSpec = calcSpectra(uinv,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
   fileOutput2("highfreqspec.dat",highFreqSpecX,highFreqSpecY,nHighFreqSpec);
 
   // Step 2g: make the plot
@@ -395,6 +400,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	smoothSpecX1,smoothSpecY1,nSmoothSpec1,smoothSpecX1,smoothSpecY2,nSmoothSpec2,
 	highFreqSpecX,highFreqSpecY,nHighFreqSpec,makeps);
 
+
+  }
   // Step 3: select a prewhitening
   if (ipw==-1){
     printf("Select prewhitening required (0,1,2) (type -1 to obtain covariance function from the data) ");
@@ -473,7 +480,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     
     }*/
 
-  nCholSpec = calcSpectra(uinv,resx,resy,nres,cholSpecX,cholSpecY);
+  nCholSpec = calcSpectra(uinv,resx,resy,nres,cholSpecX,cholSpecY,-1);
   fileOutput2("cholSpectra.dat",cholSpecX,cholSpecY,nCholSpec);
 
   // Step 5b: refit the model
