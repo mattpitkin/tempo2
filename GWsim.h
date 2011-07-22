@@ -295,3 +295,46 @@ void setupPulsar_GWsim(long double ra_p,long double dec_p,long double *kp)
   kp[1] = cos(dec_p)*sin(ra_p);
   kp[2] = sin(dec_p);
 }
+
+
+
+int GWbackground_read(gwSrc *gw, FILE *file, int ireal){
+	char key[13];
+	int nreal;
+	int ngw,id,igw,i;
+	const unsigned int gwsize = 9*sizeof(long double);
+
+	for (i=0;i<=ireal;i++){
+		fread(&id,sizeof(int),1,file);
+		printf("%d\n",id);
+		if(id==ireal)break;
+		fread(&ngw,sizeof(int),1,file);
+		fseek(file,ngw*gwsize,SEEK_CUR);
+		if(feof(file)){
+			fprintf(stderr,"Could not read enough file to find realiation required\n");
+			return -1;
+		}
+	}
+
+	fread(&ngw,sizeof(int),1,file);
+
+	printf("Reading %d GW sources from real %d (%d)\n",ngw,id,ireal);
+	
+	for (igw=0;igw<ngw;igw++){
+		fread(&(gw[igw]),gwsize,1,file);
+	}
+
+	return ngw;
+}
+
+
+void GWbackground_write(gwSrc *gw, FILE *file,int ngw, int ireal){
+	int igw;
+	const unsigned int gwsize = 9*sizeof(long double);
+	fwrite(&ireal,sizeof(int),1,file);
+	fwrite(&ngw,sizeof(int),1,file);
+	for (igw=0;igw<ngw;igw++){
+		fwrite(&(gw[igw]),gwsize,1,file);
+	}
+	fflush(file);
+}
