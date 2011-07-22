@@ -36,6 +36,9 @@
 #include "tempo2.h"
 #include "TKfit.h"
 
+//#define DMOFF_NO_CM 1
+
+
 int getNparams(pulsar psr);
 void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
 
@@ -62,11 +65,17 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 
       printf("Calling fitting plugin: %s\n",psr[0].fitFunc);
       strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
-      //      sprintf(str,"%s/plugins/%s_fitFunc_%s_plug.t2",getenv(TEMPO2_ENVIRON),
-      //	      psr[0].fitFunc,tempo2MachineType);
-      printf("WARNING: CURRENTLY GETTING FITFUN FROM TEMPO2_PLUG_PATH\n");
-      sprintf(str,"%s/%s_fitFunc_%s_plug.t2",getenv("TEMPO2_PLUG_PATH"),
-      	      psr[0].fitFunc,tempo2MachineType);
+
+      for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
+	      sprintf(str,"%s/%s_fitFunc_%s_plug.t2",tempo2_plug_path[iplug],
+			      psr[0].fitFunc,tempo2MachineType);
+	      printf("Looking for %s\n",str);
+	      module = dlopen(str, RTLD_NOW); 
+	      if(module==NULL){	  
+		      printf("dlerror() = %s\n",dlerror());
+	      } else break;
+      }
+
       module = dlopen(str, RTLD_NOW); 
       if(!module)  {
 	fprintf(stderr, "[error]: dlopen() unable to open plugin: %s.\n",str);
@@ -88,6 +97,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
     {
       //      strcpy(psr[p].rajStrPost,psr[p].rajStrPre);
       //      strcpy(psr[p].decjStrPost,psr[p].decjStrPre);
+
 
       strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
@@ -218,8 +228,17 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 
       printf("Calling fitting plugin: %s\n",psr[0].fitFunc);
       strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
-      sprintf(str,"%s/plugins/%s_fitFunc_%s_plug.t2",getenv(TEMPO2_ENVIRON),
-	      psr[0].fitFunc,tempo2MachineType);
+
+      for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
+	      sprintf(str,"%s/%s_fitFunc_%s_plug.t2",tempo2_plug_path[iplug],
+			      psr[0].fitFunc,tempo2MachineType);
+	      printf("Looking for %s\n",str);
+	      module = dlopen(str, RTLD_NOW); 
+	      if(module==NULL){	  
+		      printf("dlerror() = %s\n",dlerror());
+	      } else break;
+      }
+
       module = dlopen(str, RTLD_NOW); 
       if(!module)  {
 	fprintf(stderr, "[error]: dlopen() unable to open plugin: %s.\n",str);
@@ -492,8 +511,12 @@ int getNparams(pulsar psr)
       npol+=(psr.ifuncN-1);
   /* Add extra parameters for DMMODEL fitting */
   if (psr.param[param_dmmodel].fitFlag[0]==1)
+#ifdef DMOFF_NO_CM
+    npol+=(int)((psr.dmoffsNum)); // Without the CM signal. Only use this for proving that this mode doesn't work!
+  fprintf(stderr,"**WARNING - compiled without CM fit in DMOFF... bad results will follow!!!\n");
+#else
     npol+=(int)((psr.dmoffsNum)*2)-1; // *2 because we fit for the DM and constant offset
-  
+#endif
   /* Add extra parameters for GW single source fitting */
   if (psr.param[param_gwsingle].fitFlag[0]==1)
     npol+=4; 
@@ -554,9 +577,11 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 			{
 			  // This is for the actual frequency-dep fit
 			  afunc[n++] = dmf*getParamDeriv(psr,ipos,x,i,j);
+#ifndef DMOFF_NO_CM
 			  if(j!=0){
 				  afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 			  }
+#endif
 			}
 		    }
 		  else
@@ -1289,11 +1314,13 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      psr[p].dmoffsDMe[k] = error[j];
 		      j++;
 
+#ifndef DMOFF_NO_CM
 		      if(k!=0){
 			      psr[p].dmoffsOffset[k] = val[j];
 			      psr[p].dmoffsError[k] =  error[j];
 			      j++;
 		      }
+#endif
 		    }
 		  j--;
 		}

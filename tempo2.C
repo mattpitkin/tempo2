@@ -55,6 +55,7 @@ void ephemeris_routines(pulsar *psr,int npsr);
 void clock_corrections(pulsar *psr,int npsr);
 void extra_delays(pulsar *psr,int npsr);
 
+
 int main(int argc, char *argv[])
 {
   int iteration; 
@@ -65,8 +66,6 @@ int main(int argc, char *argv[])
   char outputSO[MAX_FILELEN];
   char str[MAX_FILELEN];
   longdouble coeff[MAX_COEFF]; /* For polynomial coefficients in polyco */
-  char dcmFile[MAX_FILELEN]="NULL";
-  char covarFuncFile[MAX_FILELEN]="NULL";
   int npsr;      /* The number of pulsars */
   int noWarnings=1;
   double globalParameter=0.0;
@@ -81,8 +80,6 @@ int main(int argc, char *argv[])
   clock_t startClock,endClock;
   const char *CVS_verNum = "$Revision$";
 
-  char plug_path[32][MAX_STRLEN];
-  int plug_path_len=0;
 
   printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
   printf("This is free software, and you are welcome to redistribute it\n");
@@ -216,13 +213,13 @@ int main(int argc, char *argv[])
     }
     i=0;
     while(i < len){
-      strcpy(plug_path[plug_path_len++],p_path+i);
+      strcpy(tempo2_plug_path[tempo2_plug_path_len++],p_path+i);
       i+=strlen(p_path+i)+1;
     }
     free(p_path);
   }
   
-  sprintf(plug_path[plug_path_len++],"%s/plugins/",getenv(TEMPO2_ENVIRON));
+  sprintf(tempo2_plug_path[tempo2_plug_path_len++],"%s/plugins/",getenv(TEMPO2_ENVIRON));
 
 
 
@@ -265,7 +262,7 @@ int main(int argc, char *argv[])
   /* Obtain command line arguments */
   if (debugFlag==1) printf("Running getInputs %d\n",psr[0].nits);
   getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
-	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,plug_path,plug_path_len);
+	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,tempo2_plug_path,tempo2_plug_path_len);
   if (debugFlag==1) printf("Completed getInputs\n");
 
   for (i=1;i<argc;i++)
@@ -281,8 +278,8 @@ int main(int argc, char *argv[])
 		  printf("Looking for %s\n",str);
 		  module = dlopen(str, RTLD_NOW);
 	  } else{
-		  for (int iplug=0; iplug < plug_path_len; iplug++){
-			  sprintf(str,"%s/%s_%s_plug.t2",plug_path[iplug],
+		  for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
+			  sprintf(str,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
 					  commandLine[i+1],tempo2MachineType);
 			  printf("Looking for %s\n",str);
 			  module = dlopen(str, RTLD_NOW); 
@@ -501,8 +498,8 @@ int main(int argc, char *argv[])
 		{
 		  char *(*entry)(int,char **,pulsar *,int);
 		  void * module;
-		  for (int iplug=0; iplug < plug_path_len; iplug++){
-			  sprintf(str,"%s/%s_%s_plug.t2",plug_path[iplug],
+		  for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
+			  sprintf(str,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
 					  outputSO,tempo2MachineType);
 			  printf("Looking for %s\n",str);
 			  module = dlopen(str, RTLD_NOW); 

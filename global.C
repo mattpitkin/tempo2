@@ -45,6 +45,11 @@ int veryFast = 0;
 int displayCVSversion = 0;
 char tempo2MachineType[MAX_FILELEN] = "";
 
+char dcmFile[MAX_FILELEN]="NULL";
+char covarFuncFile[MAX_FILELEN]="NULL";
+char tempo2_plug_path[32][MAX_STRLEN];
+int tempo2_plug_path_len=0;
+
 #define MAX_FUNCTIONS 1024 /* Maximum functions in tempo2 */
 
 void extra_delays(pulsar *psr,int npsr)

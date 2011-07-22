@@ -170,6 +170,10 @@ extern int veryFast;    /* Global to run the code fast */
 extern char tempo2MachineType[MAX_FILELEN];
 extern int displayCVSversion; /* Display CVS version */
 
+extern char dcmFile[MAX_FILELEN];
+extern char covarFuncFile[MAX_FILELEN];;
+extern char tempo2_plug_path[32][MAX_STRLEN];
+extern int tempo2_plug_path_len;
 
 typedef struct storePrecision {
   longdouble minPrec;
