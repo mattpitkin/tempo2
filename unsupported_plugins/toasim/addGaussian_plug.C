@@ -75,7 +75,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	for (i=2;i<argc;i++)
 	{
 
-		if (strcmp(argv[i],"-n")==0){
+		if (strcmp(argv[i],"-nreal")==0){
 			nit=atoi(argv[++i]);
 		}
 		if (strcmp(argv[i],"-f")==0)

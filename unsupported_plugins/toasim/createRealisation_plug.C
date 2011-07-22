@@ -45,6 +45,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i,nit,j,p;
   char fname[MAX_CORR][MAX_FILELEN];
+  int  ireal[MAX_CORR];
+  char fname_pertf[MAX_FILELEN];
   char nname[MAX_FILELEN];
   double globalParameter;
   long double result;
@@ -54,6 +56,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int64_t offsets[MAX_OBSN]; // Will change to doubles - should use malloc
   double offset[MAX_OBSN];
   int ncorr=0;
+  char mode=0;
   
   *npsr = 0;
   nit = 1;
@@ -70,9 +73,29 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  strcpy(timFile[*npsr],argv[++i]);
 	  (*npsr)++;
 	}
+      else if (strcmp(argv[i],"-pertf")==0)
+        {
+	   strcpy(fname_pertf,argv[++i]);
+	   if(file = fopen(fname_pertf,"r")){
+		while(!feof(file)){
+			fscanf(file,"%s %d\n",fname[ncorr],ireal+ncorr);
+			ncorr++;
+			printf("%s %d\n",fname[ncorr],ireal[ncorr]);
+		}
+	   }else{
+		   fprintf(stderr,"Could not open pert file '%s'\n",fname_pertf);
+	   }
+        }
+      else if (strcmp(argv[i],"-corn")==0)
+        {
+	  strcpy(fname[ncorr],argv[++i]);
+	  ireal[ncorr]=atoi(argv[++i]);
+	  ncorr++;
+	}
       else if (strcmp(argv[i],"-corr")==0)
 	{
 	  strcpy(fname[ncorr],argv[++i]);
+	  ireal[ncorr]=0;
 	  ncorr++;
 	}
     }
@@ -94,7 +117,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  file = fopen(fname[j],"r");
 	  read_header = toasim_read_header(file);
-	  toasim_corrections_t *read_corr= toasim_read_corrections(read_header,0,file);
+	  if(strcmp(read_header->timfile_name,timFile[p])!=0){
+		  fprintf(stderr,"\n\n*****************\nWARNING: .tim file name mismatch '%s' != '%s'\n*****************\n\n",read_header->timfile_name,timFile[p]);
+	  }
+	  toasim_corrections_t *read_corr= toasim_read_corrections(read_header,ireal[j],file);
 	  for (i=0;i<psr[p].nobs;i++)
 	    {
 	      if (j==0)

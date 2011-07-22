@@ -66,6 +66,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int distNum=0;
   int logspacing=1;
   int ngw=1000;
+  char readGW=0;
+  char writeGW=0;
+  char gwFileName[MAX_FILELEN];
+  FILE *gwFile;
 
 
 
@@ -96,7 +100,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   /* Obtain all parameters from the command line */
   for (i=2;i<argc;i++)
     {
-      if (strcmp(argv[i],"-f")==0)
+	    if (strcmp(argv[i],"-nreal")==0){
+		    nit=atoi(argv[++i]);
+	    }
+
+	    else if (strcmp(argv[i],"-f")==0)
 	{
 	  strcpy(parFile[*npsr],argv[++i]); 
 	  strcpy(timFile[*npsr],argv[++i]);
@@ -120,6 +128,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%Lf",&fhi);
       else if (strcmp(argv[i],"-seed")==0)
 	sscanf(argv[++i],"%d",&seed);
+      else if (strcmp(argv[i],"-readGW")==0){
+	sscanf(argv[++i],"%s",&gwFileName);
+	readGW=1;
+      } else if (strcmp(argv[i],"-writeGW")==0){
+	sscanf(argv[++i],"%s",&gwFileName);
+	writeGW=1;
+      }
+
     }
   scale = pow(86400.0*365.25,alpha);
   gwAmp *= scale;
@@ -134,6 +150,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Unable to allocate memory for %d GW sources\n",ngw);
       exit(1);
     }
+
+  if(readGW){
+	  gwFile = fopen(gwFileName,"r");
+  }
+  if(writeGW){
+	  gwFile=fopen(gwFileName,"w");
+  }
 
   // Now read in all the .tim files
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -164,6 +187,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       header = toasim_init_header();
       strcpy(header->short_desc,"addGWB");
       strcpy(header->invocation,argv[0]);
+      strcpy(header->timfile_name,timFile[p]);
       header->idealised_toas="NA"; // What should this be
       header->gparam_desc=""; // Global parameters
       header->gparam_vals="";
@@ -180,7 +204,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
       for (j=0;j<nit;j++)
 	{
-	  GWbackground(gw,ngw,&seed,flo,fhi,gwAmp,alpha,logspacing);
+		if(readGW){
+			ngw=GWbackground_read(gw,gwFile,j);
+			if(ngw<1)exit(1);
+		} else {
+			GWbackground(gw,ngw,&seed,flo,fhi,gwAmp,alpha,logspacing);
+			if(writeGW){
+				GWbackground_write(gw,gwFile,ngw,j);
+			}
+		}
 	  for (i=0;i<ngw;i++)
 	    setupGW(&gw[i]);
 	  
@@ -206,6 +238,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       fclose(file);
     }
+  if (writeGW || readGW){
+	  fclose(gwFile);
+  }
   return 0;
 }
 
