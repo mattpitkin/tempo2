@@ -76,6 +76,7 @@ if test -z "$with_tempo2_plug_dir" ; then
 	TEMPO2_PLUG_INSTALL=$TEMPO2/plugins
 else
 	TEMPO2_PLUG_INSTALL=$with_tempo2_plug_dir
+	AC_DEFINE_UNQUOTED([TEMPO2_CONFIGURE_PLUG], "$with_tempo2_plug_dir",["Tempo2 plugin path"])
 fi
 
 AC_SUBST(TEMPO2_PLUG_INSTALL)

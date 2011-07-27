@@ -218,7 +218,10 @@ int main(int argc, char *argv[])
     }
     free(p_path);
   }
-  
+#ifdef TEMPO2_CONFIGURE_PLUG  
+  // If tempo2 was compiled with a non-standard plugin path, add it to the default search path
+  strcpy(tempo2_plug_path[tempo2_plug_path_len++],TEMPO2_CONFIGURE_PLUG);
+#endif
   sprintf(tempo2_plug_path[tempo2_plug_path_len++],"%s/plugins/",getenv(TEMPO2_ENVIRON));
 
 
