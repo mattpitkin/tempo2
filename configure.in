@@ -93,10 +93,20 @@ SWIN_LIB_PGPLOT
 SWIN_LIB_FFTW
 SWIN_LIB_CFITSIO
 
+
+
+AX_OPENMP([have_openmp=yes],[have_openmp=no])
+if test X$have_openmp == Xyes; then
+	CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
+	CXXFLAGS="$CXXFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
+fi
+
+
+
 #GSL basic stuff
 #Better tests are in AX_PATH_GSL
 AC_CHECK_LIB([m],[cos])
-AC_CHECK_LIB([gslcblas],[cblas_dgemm])
+#AC_CHECK_LIB([gslcblas],[cblas_dgemm])
 AC_CHECK_LIB([gsl],[gsl_blas_dgemm],have_gsl=yes, have_gsl=no)
 
 AC_MSG_CHECKING([for GSL])
