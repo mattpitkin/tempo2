@@ -209,9 +209,9 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   /* Determine the design matrix - eq 15.4.4 
    * and the vector 'b' - eq 15.4.5 
    */
-#pragma omp parallel for private (i,j)
   for (i=0;i<n;i++)
     {
+	    // fitFuncs is not threadsafe!
       fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
       for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j]/sig[i];
       b[i] = y[i]/sig[i];
@@ -220,7 +220,6 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
     }
   // Take into account the data covariance matrix
   multMatrix(uinv,designMatrix,n,nf,uout);  
-#pragma omp parallel for private (i,j)
   for (i=0;i<n;i++)
     {
       for (j=0;j<nf;j++)
@@ -252,7 +251,6 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
     }
   for (i=0;i<nf;i++)
     {
-#pragma omp parallel for private (j,k,sum)
       for (j=0;j<=i;j++)
 	{
 	  sum=0.0;
@@ -264,22 +262,20 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
     }
   *chisq = 0.0;
 
-#pragma omp parallel for private (i,j)
   for (i=0;i<n;i++)
     {
+	    // fitFuncs is not threadsafe!
       fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
       for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j];
       b[i] = y[i];
     }
   multMatrix(uinv,designMatrix,n,nf,uout);  
-#pragma omp parallel for private (i,j)
   for (i=0;i<n;i++)
     {
       for (j=0;j<nf;j++)
 	  designMatrix[i][j] = uout[i][j];
     }
   multMatrixVec(uinv,b,n,bout);
-#pragma omp parallel for private (i)
   for (i=0;i<n;i++) b[i] = bout[i];
   for (j=0;j<n;j++)
     {
@@ -884,6 +880,20 @@ double TKpythag(double a,double b)
   return ret;
 }
 
+
+//
+// This call would allow us to use the "cblas" matrix multiplication code.
+// It requires that you allocate your memory in one chunk (fortran style).
+// So we can't use it yet.
+//
+// I couldn't get it to work exactly right, but I'm sure that the parameters
+// given here do in fact get the BLAS call right for this function.
+//
+// MJK 2011-07-27
+//
+//void multMatrix_BLAS(double **idcm,double **u,int ndata,int npol,double **uout){
+//	cblas_dgemm(CblasRowMajor,CblasTrans,CblasNoTrans,ndata,npol,ndata,1,*idcm,ndata,*u,npol,0,*uout,npol);
+//}
 void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
 {
   int i,j,k;
