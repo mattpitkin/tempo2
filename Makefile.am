@@ -29,8 +29,6 @@ libtempo2pred_la_include_HEADERS = tempo2pred.h tempo2pred_int.h
 
 tempo2_SOURCES = $(headers) tempo2.C 
 tempo2_LDADD = libtempo2.la sofa/libsofa.la @FLIBS@ $(LIBADD_DLOPEN)
-# This static flag ensures that tempo2 is linked to the correct libtempo2
-tempo2_LDFLAGS=-static
 
 
 # Specify to include the T2runtime in distributions
