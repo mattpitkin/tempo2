@@ -195,6 +195,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   uout = (double **)alloca(n*sizeof(double *)); // NOT CLEARED
   bout = (double *)alloca(n*sizeof(double));    // NOT CLEARED
 
+
   for (i=0;i<n;i++) 
     {
       if ((designMatrix[i] = (double *)malloc(nf*sizeof(double))) == NULL) {printf("OUT OF MEMORY\n"); exit(1);}
@@ -208,6 +209,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   /* Determine the design matrix - eq 15.4.4 
    * and the vector 'b' - eq 15.4.5 
    */
+#pragma omp parallel for private (i,j)
   for (i=0;i<n;i++)
     {
       fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
@@ -218,6 +220,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
     }
   // Take into account the data covariance matrix
   multMatrix(uinv,designMatrix,n,nf,uout);  
+#pragma omp parallel for private (i,j)
   for (i=0;i<n;i++)
     {
       for (j=0;j<nf;j++)
@@ -232,6 +235,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   /* Now carry out the singular value decomposition */
   TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
   wmax = TKfindMax_d(w,nf);
+
   for (i=0;i<nf;i++)
     {
       if (w[j] < tol*wmax) w[j]=0.0;
@@ -248,6 +252,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
     }
   for (i=0;i<nf;i++)
     {
+#pragma omp parallel for private (j,k,sum)
       for (j=0;j<=i;j++)
 	{
 	  sum=0.0;
@@ -259,6 +264,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
     }
   *chisq = 0.0;
 
+#pragma omp parallel for private (i,j)
   for (i=0;i<n;i++)
     {
       fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
@@ -266,12 +272,14 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
       b[i] = y[i];
     }
   multMatrix(uinv,designMatrix,n,nf,uout);  
+#pragma omp parallel for private (i,j)
   for (i=0;i<n;i++)
     {
       for (j=0;j<nf;j++)
 	  designMatrix[i][j] = uout[i][j];
     }
   multMatrixVec(uinv,b,n,bout);
+#pragma omp parallel for private (i)
   for (i=0;i<n;i++) b[i] = bout[i];
   for (j=0;j<n;j++)
     {
@@ -880,6 +888,7 @@ void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
 {
   int i,j,k;
   
+#pragma omp parallel for private (i,j,k)
   for (i=0;i<ndata;i++)
     {
       for (j=0;j<npol;j++)
@@ -894,6 +903,7 @@ void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
 void multMatrixVec(double **idcm,double *b,int ndata,double *bout)
 {
   int i,j;
+#pragma omp parallel for private (i,j)
   for (i=0;i<ndata;i++)
     {
       bout[i] = 0.0;
