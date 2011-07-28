@@ -31,6 +31,8 @@
 #include <math.h>
 #include "TKfit.h"
 
+void updateDMvals(pulsar *psr,int p);
+
 
 extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel) 
 {
@@ -44,6 +46,9 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		if (psr[p].param[param_dmmodel].fitFlag[0]==1){
 			flags[p]=1;
 			count++;
+			for(i=0; i < psr[p].nobs; i++){
+				psr[p].obsn[i].toaErr=psr[p].obsn[i].origErr;
+			}
 		} else flags[p]=0;
 	}
 	strcpy(psr[0].fitFunc,"default");
@@ -55,6 +60,32 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
                 doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
 	if(count){
 		//	textOutput(psr,npsr,0.0,0,0,0,"");
+		for (p=0; p < npsr; p++){
+			if (psr[p].param[param_dmmodel].fitFlag[0]==1){
+				updateDMvals(psr,p);
+				double os=0;
+				double ds=0;
+				double ns=0;
+				for(i=0; i < psr[p].nobs; i++){
+					for (int j=0;j<psr[p].obsn[i].nFlags;j++)
+					{
+						if (strcmp(psr[p].obsn[i].flagID[j],"-dme")==0){
+							double dme = atof(psr[p].obsn[i].flagVal[j]);
+							psr[p].obsn[i].toaDMErr = 1e6*dme/DM_CONST/psr[p].obsn[i].freq/psr[p].obsn[i].freq;
+							psr[p].obsn[i].toaErr = sqrt(pow(psr[p].obsn[i].origErr,2)+pow(psr[p].obsn[i].toaDMErr,2));
+							ds+=psr[p].obsn[i].toaDMErr;
+							os+=psr[p].obsn[i].origErr;
+							ns+=psr[p].obsn[i].toaErr;
+						}
+					}
+				}
+				printf("Mean orig  TOA error = %f\n",os/(double)psr[p].nobs);
+				printf("Mean DM    TOA error = %f\n",ds/(double)psr[p].nobs);
+				printf("Mean total TOA error = %f\n",ns/(double)psr[p].nobs);
+			}
+		}
+
+
 		formBatsAll(psr,npsr);
 		formResiduals(psr,npsr,0);
 

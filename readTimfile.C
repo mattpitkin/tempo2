@@ -224,6 +224,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 		  psr->obsn[nObs].phaseOffset = 0.0;
 		  /* Read the rest of the line */		  
 		  psr->obsn[nObs].nFlags = 0;
+		  psr->obsn[nObs].toaDMErr = 0;
     
 		  /*		  strcpy(psr->obsn[nObs].flagID[0],"FLAGID");
 				  strcpy(psr->obsn[nObs].flagVal[0],"FLAGVAL"); */
@@ -263,7 +264,8 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 
 				  toaCorr = dme/DM_CONST/1.0e-12/freq/freq;
 				  //				  printf("Have DM error %g %g %.5g %.5g %g\n",dm,dme,toaErr,freq,toaCorr);
-				  psr->obsn[nObs].toaErr = sqrt(pow(psr->obsn[nObs].toaErr,2)+pow(toaCorr*1e6,2));
+				  psr->obsn[nObs].toaDMErr = toaCorr*1e6;
+//				  psr->obsn[nObs].toaErr = sqrt(pow(psr->obsn[nObs].toaErr,2)+pow(toaCorr*1e6,2));
 				}
 			      i+=strlen(line+i);
 			      strcpy(line,oldLine); 
@@ -456,6 +458,8 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	    }
 	  if (skip==1) valid=0;
 	  psr->obsn[nObs].origErr = psr->obsn[nObs].toaErr;
+	  // add the DM error after the EFACs etc.
+	  psr->obsn[nObs].toaErr = sqrt(pow(psr->obsn[nObs].toaErr,2) + pow(psr->obsn[nObs].toaDMErr,2));
 
 	  if (valid==1)(psr->nobs)++;
 	  if (psr->nobs > MAX_OBSN-2)
