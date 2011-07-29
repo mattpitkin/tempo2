@@ -39,6 +39,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	int p,i,k;
 	int count=0;
 	char flags[MAX_PSR];
+	char Jflags[MAX_PSR][MAX_JUMPS];
 	observation* preobs[MAX_PSR];
 	printf("TEST\n");
 
@@ -49,6 +50,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			for(i=0; i < psr[p].nobs; i++){
 				psr[p].obsn[i].toaErr=psr[p].obsn[i].origErr;
 			}
+			
 		} else flags[p]=0;
 	}
 	strcpy(psr[0].fitFunc,"default");
@@ -58,33 +60,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		doFit(psr,npsr,writeModel);
 	else
                 doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
-	if(count){
-		//	textOutput(psr,npsr,0.0,0,0,0,"");
-		for (p=0; p < npsr; p++){
-			if (psr[p].param[param_dmmodel].fitFlag[0]==1){
-				updateDMvals(psr,p);
-				double os=0;
-				double ds=0;
-				double ns=0;
-				for(i=0; i < psr[p].nobs; i++){
-					for (int j=0;j<psr[p].obsn[i].nFlags;j++)
-					{
-						if (strcmp(psr[p].obsn[i].flagID[j],"-dme")==0){
-							double dme = atof(psr[p].obsn[i].flagVal[j]);
-							psr[p].obsn[i].toaDMErr = 1e6*dme/DM_CONST/psr[p].obsn[i].freq/psr[p].obsn[i].freq;
-							psr[p].obsn[i].toaErr = sqrt(pow(psr[p].obsn[i].origErr,2)+pow(psr[p].obsn[i].toaDMErr,2));
-							ds+=psr[p].obsn[i].toaDMErr;
-							os+=psr[p].obsn[i].origErr;
-							ns+=psr[p].obsn[i].toaErr;
-						}
-					}
-				}
-				printf("Mean orig  TOA error = %f\n",os/(double)psr[p].nobs);
-				printf("Mean DM    TOA error = %f\n",ds/(double)psr[p].nobs);
-				printf("Mean total TOA error = %f\n",ns/(double)psr[p].nobs);
-			}
-		}
 
+
+
+	if(count){
 
 		formBatsAll(psr,npsr);
 		formResiduals(psr,npsr,0);
@@ -94,6 +73,50 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		for (p=0; p < npsr; p++){
 			preobs[p] = (observation*)malloc(sizeof(observation)*psr[p].nobs);
 			memcpy(preobs[p],psr[p].obsn,sizeof(observation)*psr[p].nobs);
+			double sum=0;
+			for(i=0; i < psr[p].dmoffsNum; i++){
+				sum+=psr[p].dmoffsDM[i];
+			}
+			sum/= (double)psr[p].dmoffsNum;
+			for(i=0; i < psr[p].dmoffsNum; i++){
+				psr[p].dmoffsDM[i]-=sum;
+			}
+			psr[p].param[param_dmmodel].val[0]+=(long double)sum;
+		}
+		for (p=0; p < npsr; p++){
+			for(i=0; i < psr[p].nJumps; i++){
+				Jflags[p][i]=psr[p].fitJump[i];
+				psr[p].fitJump[i]=0;
+			}
+		}
+		printf("TWO\n");
+		if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
+			doFit(psr,npsr,writeModel);
+		else
+			doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
+
+
+		formBatsAll(psr,npsr);
+		formResiduals(psr,npsr,0);
+
+		//	textOutput(psr,npsr,0.0,0,0,0,"");
+		for (p=0; p < npsr; p++){
+			if (psr[p].param[param_dmmodel].fitFlag[0]==1){
+				updateDMvals(psr,p);
+				double os=0;
+				double ds=0;
+				double ns=0;
+				for(i=0; i < psr[p].nobs; i++){
+					ds+=psr[p].obsn[i].toaDMErr;
+					os+=psr[p].obsn[i].origErr;
+					ns+=psr[p].obsn[i].toaErr;
+				}
+				printf("Mean orig  TOA error = %f\n",os/(double)psr[p].nobs);
+				printf("Mean DM    TOA error = %f\n",ds/(double)psr[p].nobs);
+				printf("Mean total TOA error = %f\n",ns/(double)psr[p].nobs);
+			}
+		}
+		for (p=0; p < npsr; p++){
 			psr[p].param[param_dmmodel].fitFlag[0]=0;
 			double sum=0;
 			for(i=0; i < psr[p].dmoffsNum; i++){
@@ -106,18 +129,27 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			psr[p].param[param_dmmodel].val[0]+=(long double)sum;
 		}
 
-		printf("TWO\n");
+
+
+
+		printf("THREE\n");
 		if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
 			doFit(psr,npsr,writeModel);
 		else
 			doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
 
 
-		textOutput(psr,npsr,0.0,0,0,0,"");
+
+//		textOutput(psr,npsr,0.0,0,0,0,"");
 		for (p=0; p < npsr; p++){
 			psr[p].param[param_dmmodel].fitFlag[0]=flags[p];
 			memcpy(psr[p].obsn,preobs[p],sizeof(observation)*psr[p].nobs);
+			updateDMvals(psr,p);
 			free(preobs[p]);
+			for(i=0; i < psr[p].nJumps; i++){
+				psr[p].fitJump[i]=Jflags[p][i];
+			}
+
 		}
 	}
 	strcpy(psr[0].fitFunc,"dmmodel");
