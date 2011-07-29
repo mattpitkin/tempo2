@@ -896,30 +896,41 @@ double TKpythag(double a,double b)
 //}
 void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
 {
-  int i,j,k;
-  
-#pragma omp parallel for private (i,j,k)
-  for (i=0;i<ndata;i++)
-    {
-      for (j=0;j<npol;j++)
+	int i,j,k;
+#pragma omp parallel for private (i,j)
+	for (j=0;j<npol;j++)
 	{
-	  uout[i][j]=0.0;
-	  for (k=0;k<ndata;k++)
-	    uout[i][j]+=idcm[k][i]*u[k][j];
+		for (i=0;i<ndata;i++)
+		{
+			uout[i][j]=0.0;
+		}
 	}
-    }
+	// we loop over k,i,j for faster memory access.
+#pragma omp parallel for private (i,j,k)
+	for (k=0;k<ndata;k++) {
+		for (j=0;j<npol;j++){
+			for (i=0;i<ndata;i++){
+				uout[i][j]+=idcm[k][i]*u[k][j];
+			}
+		}
+	}
 }
 
 void multMatrixVec(double **idcm,double *b,int ndata,double *bout)
 {
-  int i,j;
+	int i,j;
+#pragma omp parallel for private (i)
+	for (i=0;i<ndata;i++)
+	{
+		bout[i] = 0.0;
+	}
+
 #pragma omp parallel for private (i,j)
-  for (i=0;i<ndata;i++)
-    {
-      bout[i] = 0.0;
-      for (j=0;j<ndata;j++)
-		bout[i]+=idcm[j][i]*b[j];
-    }
+	for (j=0;j<ndata;j++)
+	{
+		for (i=0;i<ndata;i++)
+			bout[i]+=idcm[j][i]*b[j];
+	}
 }
 
 void TKcholDecomposition(double **a, int n, double *p)
