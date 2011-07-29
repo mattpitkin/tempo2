@@ -1063,35 +1063,39 @@ void updateDMvals(pulsar *psr,int p)
 					}
 				}
 			}
+			// update the DM error in the toa
+			psr[p].obsn[i].toaDMErr = 1e6*dme/DM_CONST/psr[p].obsn[i].freq/psr[p].obsn[i].freq;
+			psr[p].obsn[i].toaErr = sqrt(pow(psr[p].obsn[i].origErr,2)+pow(psr[p].obsn[i].toaDMErr,2));
+
 			iflag=jflag=-1;
-			for (j=0;j<psr->obsn[i].nFlags;j++)
+			for (j=0;j<psr[p].obsn[i].nFlags;j++)
 			{
-				if (strcmp(psr->obsn[i].flagID[j],"-dm")==0)
+				if (strcmp(psr[p].obsn[i].flagID[j],"-dm")==0)
 					iflag=j;
-				else if (strcmp(psr->obsn[i].flagID[j],"-dme")==0)
+				else if (strcmp(psr[p].obsn[i].flagID[j],"-dme")==0)
 					jflag=j;
 			}
 			if (iflag==-1)
 			{
-				strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dm");
-				sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6f",dm);
-				psr->obsn[i].nFlags++;
+				strcpy(psr[p].obsn[i].flagID[psr[p].obsn[i].nFlags],"-dm");
+				sprintf(psr[p].obsn[i].flagVal[psr[p].obsn[i].nFlags],"%.6f",dm);
+				psr[p].obsn[i].nFlags++;
 			}
 			else
 			{
-				strcpy(psr->obsn[i].flagID[iflag],"-dm");
-				sprintf(psr->obsn[i].flagVal[iflag],"%.6f",dm);
+				strcpy(psr[p].obsn[i].flagID[iflag],"-dm");
+				sprintf(psr[p].obsn[i].flagVal[iflag],"%.6f",dm);
 			}
 			if (jflag==-1)
 			{
-				strcpy(psr->obsn[i].flagID[psr->obsn[i].nFlags],"-dme");
-				sprintf(psr->obsn[i].flagVal[psr->obsn[i].nFlags],"%.6g",dme);
-				psr->obsn[i].nFlags++;
+				strcpy(psr[p].obsn[i].flagID[psr[p].obsn[i].nFlags],"-dme");
+				sprintf(psr[p].obsn[i].flagVal[psr[p].obsn[i].nFlags],"%.6g",dme);
+				psr[p].obsn[i].nFlags++;
 			}
 			else
 			{
-				strcpy(psr->obsn[i].flagID[jflag],"-dme");
-				sprintf(psr->obsn[i].flagVal[jflag],"%.6g",dme);
+				strcpy(psr[p].obsn[i].flagID[jflag],"-dme");
+				sprintf(psr[p].obsn[i].flagVal[jflag],"%.6g",dme);
 			}
 		}
 	}

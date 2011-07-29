@@ -560,10 +560,9 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   else if (strcasecmp(str,"DMOFF")==0)
     {
       int number = psr->dmoffsNum;
-      fscanf(fin,"%lf %lf",&psr->dmoffsMJD[number],&psr->dmoffsDM[number]);
+      fscanf(fin,"%lf %lf %lf",&psr->dmoffsMJD[number],&psr->dmoffsDM[number],&psr->dmoffsDMe[number]);
       psr->dmoffsOffset[number] = 0;
       psr->dmoffsError[number] = 0;
-      psr->dmoffsDMe[number] = 0;
       (psr->dmoffsNum)++;
     }
   else if (strcasecmp(str,"GW_SINGLE")==0) 
