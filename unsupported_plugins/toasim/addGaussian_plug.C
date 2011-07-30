@@ -35,7 +35,8 @@
 #include "tempo2.h"
 #include "toasim.h"
 
-using namespace std;
+
+void updateDMvals(pulsar *psr,int p);
 
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
@@ -54,6 +55,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	toasim_header_t* read_header;
 	FILE* file;
 	double offsets[MAX_OBSN]; // Will change to doubles - should use malloc
+	char incdm=0; // include the dm error?
 	// Create a set of corrections.
 	toasim_corrections_t* corr = (toasim_corrections_t*)malloc(sizeof(toasim_corrections_t));
 
@@ -75,6 +77,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	for (i=2;i<argc;i++)
 	{
 
+		if (strcmp(argv[i],"-incdm")==0){
+			incdm=1;
+			printf("NOTICE: Including DM error in white noise\n");
+		}
 		if (strcmp(argv[i],"-nreal")==0){
 			nit=atoi(argv[++i]);
 		}
@@ -87,11 +93,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
 
 
+	readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
 	// Now read in all the .tim files
 	readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
 
+	if(incdm){
+		preProcess(psr,*npsr,argc,argv);
+		formBatsAll(psr,*npsr);
+	}
+
 	for (p=0;p<*npsr;p++)
 	{
+		if(incdm)updateDMvals(psr,p);
 		printf("NTOA = %d\n",psr[p].nobs);
 		header = toasim_init_header();
 		strcpy(header->short_desc,"addGaussian");
@@ -123,7 +136,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				fflush(stdout);
 			}
 			for (j=0;j<psr[p].nobs;j++)
-				offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
+				if(incdm)
+					offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
+				else
+					offsets[j] = (double)(psr[p].obsn[j].origErr*1.0e-6*TKgaussDev(&seed));
 			toasim_write_corrections(corr,header,file);
 		}
 		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
