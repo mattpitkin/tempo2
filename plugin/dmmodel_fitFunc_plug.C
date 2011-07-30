@@ -39,6 +39,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	int p,i,k;
 	int count=0;
 	char flags[MAX_PSR];
+	char fflags[MAX_PSR][16];
 	char Jflags[MAX_PSR][MAX_JUMPS];
 	observation* preobs[MAX_PSR];
 	printf("TEST\n");
@@ -46,7 +47,13 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	for (p=0; p < npsr; p++){
 		if (psr[p].param[param_dmmodel].fitFlag[0]==1){
 			flags[p]=1;
+			for (int f=0;f<psr[p].param[param_f].aSize;f++){
+				fflags[p][f]=psr[p].param[param_f].fitFlag[f];
+				psr[p].param[param_f].fitFlag[f]=0;
+				if(fflags[p][f])printf(" <DMMODEL> Disable F%d\n",f); 
+			}
 			count++;
+			printf(" <DMMODEL> Reset DM component of error to 0\n");
 			for(i=0; i < psr[p].nobs; i++){
 				psr[p].obsn[i].toaErr=psr[p].obsn[i].origErr;
 			}
@@ -55,7 +62,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	}
 	strcpy(psr[0].fitFunc,"default");
 
-	printf("ONE\n");
+	printf(" <DMMODEL> First fit...\n");
 	if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
 		doFit(psr,npsr,writeModel);
 	else
@@ -87,9 +94,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			for(i=0; i < psr[p].nJumps; i++){
 				Jflags[p][i]=psr[p].fitJump[i];
 				psr[p].fitJump[i]=0;
+				if(Jflags[p][i])printf(" <DMMODEL> Disable JUMP %s\n",psr[p].jumpStr[i]);
 			}
 		}
-		printf("TWO\n");
+		printf(" <DMMODEL> Second Fit...\n");
 		if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
 			doFit(psr,npsr,writeModel);
 		else
@@ -116,6 +124,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 				printf("Mean total TOA error = %f\n",ns/(double)psr[p].nobs);
 			}
 		}
+
+		printf(" <DMMODEL> Disable DMMODEL\n");
 		for (p=0; p < npsr; p++){
 			psr[p].param[param_dmmodel].fitFlag[0]=0;
 			double sum=0;
@@ -127,12 +137,17 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 				psr[p].dmoffsDM[i]-=sum;
 			}
 			psr[p].param[param_dmmodel].val[0]+=(long double)sum;
+			for (int f=0;f<psr[p].param[param_f].aSize; f++){
+				psr[p].param[param_f].fitFlag[f]=fflags[p][f];
+				if(fflags[p][f]) printf(" <DMMODEL> Enable F%d\n",f);
+			}
+
 		}
 
 
 
 
-		printf("THREE\n");
+		printf(" <DMMODEL> Third Fit...\n");
 		if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
 			doFit(psr,npsr,writeModel);
 		else
@@ -148,9 +163,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			free(preobs[p]);
 			for(i=0; i < psr[p].nJumps; i++){
 				psr[p].fitJump[i]=Jflags[p][i];
+				if(Jflags[p][i])printf(" <DMMODEL> Enable JUMP %s\n",psr[p].jumpStr[i]);
 			}
 
 		}
+
+		printf(" <DMMODEL> Enable DMMODEL\n");
 	}
 	strcpy(psr[0].fitFunc,"dmmodel");
 	return 0;
