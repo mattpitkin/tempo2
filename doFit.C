@@ -82,6 +82,22 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	fprintf(stderr, "[error]: dlopen() unable to open plugin: %s.\n",str);
 	exit(1);
       }
+      /*
+       * Check that the plugin is compiled against the same version of tempo2.h
+       */
+      char ** pv  = (char**)dlsym(module, "plugVersionCheck");
+      if(pv!=NULL){
+	      // there is a version check for this plugin
+	      if(strcmp(TEMPO2_h_VER,*pv)){
+		      fprintf(stderr, "[error]: Plugin version mismatch\n");
+		      fprintf(stderr, " '%s' != '%s'\n",TEMPO2_h_VER,*pv);
+		      fprintf(stderr, " Please recompile plugin against same tempo2 version!\n");
+		      dlclose(module);
+		      exit(1);
+	      }
+      }
+
+
       entry = (char*(*)(pulsar *,int,int))dlsym(module, "pluginFitFunc");
       if( entry == NULL ) {
 	dlclose(module);
@@ -266,6 +282,22 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	fprintf(stderr, "[error]: dlopen() unable to open plugin: %s.\n",str);
 	exit(1);
       }
+      /*
+       * Check that the plugin is compiled against the same version of tempo2.h
+       */
+      char ** pv  = (char**)dlsym(module, "plugVersionCheck");
+      if(pv!=NULL){
+	      // there is a version check for this plugin
+	      if(strcmp(TEMPO2_h_VER,*pv)){
+		      fprintf(stderr, "[error]: Plugin version mismatch\n");
+		      fprintf(stderr, " '%s' != '%s'\n",TEMPO2_h_VER,*pv);
+		      fprintf(stderr, " Please recompile plugin against same tempo2 version!\n");
+		      dlclose(module);
+		      exit(1);
+	      }
+      }
+
+
       entry = (char*(*)(pulsar *,int,int))dlsym(module, "pluginFitFunc");
       if( entry == NULL ) {
 	dlclose(module);

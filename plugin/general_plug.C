@@ -540,3 +540,4 @@ int nint_derived(double x){
   return(i);
 }
 
+char * plugVersionCheck = TEMPO2_h_VER;

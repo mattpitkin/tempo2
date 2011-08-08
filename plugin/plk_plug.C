@@ -3982,3 +3982,6 @@ double lmst2(double mjd,double olong,double *tsid,double *tsid_der)
   *tsid_der = sdd;
   return 0.0;
 }
+
+
+char * plugVersionCheck = TEMPO2_h_VER;

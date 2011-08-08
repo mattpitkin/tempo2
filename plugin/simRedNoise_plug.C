@@ -246,3 +246,4 @@ void getRedNoiseRealisation(pulsar psr,double amp,double alpha,double fc,long *s
     }
 
 }
+char * plugVersionCheck = TEMPO2_h_VER;

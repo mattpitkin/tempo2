@@ -3154,3 +3154,4 @@ double nonlinearFunc( double x, const double *par,int obsNum )
     }
   return fitfunc;
 }
+char * plugVersionCheck = TEMPO2_h_VER;

@@ -233,3 +233,4 @@ void doPlot(pulsar *psr,int *highFreq_id,int *lowFreq_id,double *dmVal,
 
   cpgend();  
 }
+char * plugVersionCheck = TEMPO2_h_VER;

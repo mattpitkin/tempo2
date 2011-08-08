@@ -823,3 +823,4 @@ void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat )
    *ny = (int) ( 4L * k + i ) - 4716;
 }
 
+char * plugVersionCheck = TEMPO2_h_VER;

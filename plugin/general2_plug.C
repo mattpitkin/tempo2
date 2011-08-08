@@ -802,3 +802,4 @@ double fortranMod(double a,double p)
   ret = a - (int)(a/p)*p;
   return ret;
 }
+char * plugVersionCheck = TEMPO2_h_VER;

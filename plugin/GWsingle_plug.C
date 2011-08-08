@@ -507,3 +507,4 @@ void convertXY_celestial(double raj,double decj,double *retx,double *rety)
   *retx = x_ret;
   *rety = y_ret;
 }
+char * plugVersionCheck = TEMPO2_h_VER;

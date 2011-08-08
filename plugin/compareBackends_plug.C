@@ -219,3 +219,4 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
   cpgend();
 
 }
+char * plugVersionCheck = TEMPO2_h_VER;

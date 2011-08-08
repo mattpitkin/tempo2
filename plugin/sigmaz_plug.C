@@ -1975,3 +1975,4 @@ void calcSpline(float *px,float *py,int count)
 
 
 }
+char * plugVersionCheck = TEMPO2_h_VER;

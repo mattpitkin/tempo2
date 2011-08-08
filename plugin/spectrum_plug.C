@@ -896,3 +896,4 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
   cpgend();
   exit(1);
 }
+char * plugVersionCheck = TEMPO2_h_VER;

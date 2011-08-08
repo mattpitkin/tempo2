@@ -96,3 +96,4 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	return 0;
 
 }
+char * plugVersionCheck = TEMPO2_h_VER;

@@ -448,3 +448,4 @@ int detectSource(pulsar *psr,int npsr,double **resX,
   time=2;
   return detection;
 }
+char * plugVersionCheck = TEMPO2_h_VER;

@@ -412,3 +412,4 @@ float findMinVal(float *a, int n)
     }
   return min;
 }
+char * plugVersionCheck = TEMPO2_h_VER;

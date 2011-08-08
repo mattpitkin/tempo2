@@ -1282,3 +1282,4 @@ float HTest(int Nphotons, float phases[])
 
         return max_h;
 }
+char * plugVersionCheck = TEMPO2_h_VER;

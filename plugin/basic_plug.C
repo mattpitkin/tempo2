@@ -329,3 +329,4 @@ void plot_ppdot(pulsar *psr)
     } while (endit==0);
 
 }
+char * plugVersionCheck = TEMPO2_h_VER;

@@ -435,3 +435,4 @@ void callFit(pulsar *psr,int npsr){
     }
 }
 
+char * plugVersionCheck = TEMPO2_h_VER;

@@ -1103,3 +1103,4 @@ void createGWcovarianceFunction(char *file,double gwAmp,double gwAlpha,pulsar *p
       //    exit(1);
     }
 }
+char * plugVersionCheck = TEMPO2_h_VER;

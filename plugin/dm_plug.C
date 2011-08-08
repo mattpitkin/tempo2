@@ -676,3 +676,4 @@ void selectData(pulsar *psr,float *rx,float *ry,double f1,double f2,float *plotX
     }     
 
 }
+char * plugVersionCheck = TEMPO2_h_VER;

@@ -685,3 +685,4 @@ void plotHistogram(float *x,int count)
     cpgsci(2); cpgslw(4); cpgline(n,fx,fy); cpgslw(1); cpgsci(1);
     }*/
 }
+char * plugVersionCheck = TEMPO2_h_VER;

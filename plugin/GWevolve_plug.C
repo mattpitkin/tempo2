@@ -613,3 +613,4 @@ double psrangle(double centre_long,double centre_lat,double psr_long,double psr_
   
   return c;
 }
+char * plugVersionCheck = TEMPO2_h_VER;

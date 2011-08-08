@@ -662,3 +662,4 @@ double fortranMod(double a,double p)
   return ret;
 }
 
+char * plugVersionCheck = TEMPO2_h_VER;

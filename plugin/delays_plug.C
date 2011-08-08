@@ -628,3 +628,4 @@ void createNewArrivalTimes(pulsar *psr,int npsr)
     }
   callFit(psr,npsr);             /* Do all the fitting routines */
 }
+char * plugVersionCheck = TEMPO2_h_VER;

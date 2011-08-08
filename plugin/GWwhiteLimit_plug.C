@@ -1653,3 +1653,4 @@ void writeCommands(int argc, char *argv[]){
   fprintf(fout,"\n");
   fclose(fout);
 }
+char * plugVersionCheck = TEMPO2_h_VER;

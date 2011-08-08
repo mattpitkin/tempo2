@@ -538,3 +538,4 @@ void parseExp(char *str)
   
 
 }
+char * plugVersionCheck = TEMPO2_h_VER;
