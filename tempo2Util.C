@@ -429,6 +429,11 @@ longdouble getParameterValue(pulsar *psr,int param,int arr)
 	  if (psr->param[param].linkTo[0] == param_px)
 	    return 1.0/psr->param[param_px].val[0];
 	}
+      if (param==param_dmmodel){
+	      if (psr->param[param].linkTo[0] == param_dm)
+		      return psr->param[param_dm].val[0];
+
+      }
     }
   return psr->param[param].val[arr];
 }

@@ -35,12 +35,13 @@
 #include <dlfcn.h>
 #include "tempo2.h"
 #include "TKfit.h"
+#include "constraints.h"
 
-//#define DMOFF_NO_CM 1
 
 
 int getNparams(pulsar psr);
-void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
+void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np, int nc,double **uinv);
+double getConstraintDeriv(pulsar *psr,int ipos,int i,int k);
 
 /* Main routines for fitting in TEMPO2               */
 void doFit(pulsar *psr,int npsr,int writeModel) 
@@ -95,17 +96,27 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 
   for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
     {
-      //      strcpy(psr[p].rajStrPost,psr[p].rajStrPre);
-      //      strcpy(psr[p].decjStrPost,psr[p].decjStrPre);
+
+	/*
+	 * Check for "broken" combinations of fit parameters
+	 */
+	if (psr->param[param_dmmodel].paramSet[0] &&
+			psr->param[param_dm].fitFlag[0]!= 0 &&
+			psr->param[param_dmmodel].linkTo[0] != param_dm){
+		// if we are using DMMODEL, and we want to fit for DM then
+		// DMMODEL must be linked to DM... otherwise badness will occur!
+		printf("WARNING: DM cannot be fit with DMMODEL\n         unless you set 'DMMODEL DM 1' in par file.\n");
+		psr->param[param_dm].fitFlag[0]=0;
+	}
 
 
       strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
       /* How many parameters are we fitting for */
       npol = getNparams(psr[p]);
-      x     = (double *)malloc(psr[p].nobs*sizeof(double));
-      y     = (double *)malloc(psr[p].nobs*sizeof(double));
-      sig   = (double *)malloc(psr[p].nobs*sizeof(double));
+      x     = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double)); // max fit data size is nobs+nconstraints
+      y     = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double));
+      sig   = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double));
       val   = (double *)malloc(npol*sizeof(double));
       error = (double *)malloc(npol*sizeof(double));
       int count;
@@ -144,7 +155,17 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 		  count++;
 		}
 	    }
-	}
+		}
+     // add constraints as extra pseudo observations
+     // These point to non-existant observations after the nobs array
+     // These are later caught by getParamDeriv.
+     for (i=0; i < psr[p].nconstraints; i++){
+	ip[count] = psr->nobs+i;
+	x[count]=0;
+	y[count]=0;
+	sig[count]=1e-12;
+	count++;
+      }
 
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
@@ -154,6 +175,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
       /* Do the fit */
       if (npol!=0) /* Are we actually  doing any fitting? */ 
 	{ 
+
 	  if (debugFlag==1) printf("Doing the fit\n");
 	  TKleastSquares_svd_psr(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip);
@@ -259,20 +281,28 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 
   for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
     {
+      int nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
       psr[p].fitMode = 0;
 
-      //  for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
-      //    {
-      //      strcpy(psr[p].rajStrPost,psr[p].rajStrPre);
-      //      strcpy(psr[p].decjStrPost,psr[p].decjStrPre);
-      
+      /*
+       * Check for "broken" combinations of fit parameters
+       */
+      if (psr->param[param_dmmodel].paramSet[0] &&
+		      psr->param[param_dm].fitFlag[0]!= 0 &&
+		      psr->param[param_dmmodel].linkTo[0] != param_dm){
+	      // if we are using DMMODEL, and we want to fit for DM then
+	      // DMMODEL must be linked to DM... otherwise badness will occur!
+	      printf("WARNING: DM cannot be fit with DMMODEL\n         unless you set 'DMMODEL DM 1' in par file.\n");
+	      psr->param[param_dm].fitFlag[0]=0;
+      }
+
       strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
       /* How many parameters are we fitting for */
       npol = getNparams(psr[p]);
-      x     = (double *)malloc(psr[p].nobs*sizeof(double));
-      y     = (double *)malloc(psr[p].nobs*sizeof(double));
-      sig   = (double *)malloc(psr[p].nobs*sizeof(double));
+      x     = (double *)malloc(nobs_and_constraints*sizeof(double));
+      y     = (double *)malloc(nobs_and_constraints*sizeof(double));
+      sig   = (double *)malloc(nobs_and_constraints*sizeof(double));
       val   = (double *)malloc(npol*sizeof(double));
       error = (double *)malloc(npol*sizeof(double));
       int count;
@@ -311,7 +341,18 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 		}
 	    }
 	}
-      
+      // add constraints as extra pseudo observations
+     // These point to non-existant observations after the nobs array
+     // These are later caught by getParamDeriv.
+     for (i=0; i < psr[p].nconstraints; i++){
+	ip[count] = psr->nobs+i;
+	x[count]=0;
+	y[count]=0;
+	sig[count]=1e-12;
+	count++;
+      }
+
+
       //      printf("Count = %d\n",count);
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
@@ -325,10 +366,10 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       meanRes/=(long double)psr[p].nobs;
       for (i=0;i<psr[p].nobs;i++)
 	psr[p].obsn[i].residual-=meanRes;
-      uinv = (double **)malloc(sizeof(double *)*psr[p].nobs);
+      uinv = (double **)malloc(sizeof(double *)*nobs_and_constraints);
 
-      for (i=0;i<psr[p].nobs;i++)
-	uinv[i] = (double *)malloc(sizeof(double)*psr[p].nobs);
+      for (i=0;i<nobs_and_constraints;i++)
+	uinv[i] = (double *)malloc(sizeof(double)*nobs_and_constraints);
       
       // If we have the data covariance matrix on disk
       if (strcmp(dcmFile,"NULL")!=0)
@@ -381,7 +422,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	}
       else // Use data covariance function and calculate the covariance matrix
 	{
-	  int ndays = (int)(x[count-1]-x[0])+2;
+	  int ndays = (int)(x[count-1-psr[p].nconstraints]-x[0])+2;
 	  double covarFunc[ndays];
 	  double escaleFactor = 1.0;
 	  
@@ -409,7 +450,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	    sig[i]*=escaleFactor;
 
 	  // Form the data covariance matrix
-	  formCholeskyMatrix(covarFunc,x,y,sig,count,uinv);
+	  formCholeskyMatrix(covarFunc,x,y,sig,count,psr[p].nconstraints,uinv);
 	}
 
       sprintf(fname,"whitedata_%d.dat",p+1);
@@ -511,12 +552,7 @@ int getNparams(pulsar psr)
       npol+=(psr.ifuncN-1);
   /* Add extra parameters for DMMODEL fitting */
   if (psr.param[param_dmmodel].fitFlag[0]==1)
-#ifdef DMOFF_NO_CM
-    npol+=(int)((psr.dmoffsNum)); // Without the CM signal. Only use this for proving that this mode doesn't work!
-  fprintf(stderr,"**WARNING - compiled without CM fit in DMOFF... bad results will follow!!!\n");
-#else
-    npol+=(int)((psr.dmoffsNum)*2)-1; // *2 because we fit for the DM and constant offset
-#endif
+    npol+=(int)((psr.dmoffsNum)*2); // *2 because we fit for the DM and constant offset
   /* Add extra parameters for GW single source fitting */
   if (psr.param[param_gwsingle].fitFlag[0]==1)
     npol+=4; 
@@ -526,8 +562,19 @@ int getNparams(pulsar psr)
 void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 {
   int i,n=0,k,j,l,found;
+  /*
+   * IMPORTANT NOTICE: To allow for constraints, ipos may be larger than psr->nobs!
+   * 
+   * Therefore, if you modify this function, make sure to check (ipos < psr->nobs) before
+   * using ipos, and calll getParamDeriv to get the derivative since this function checks
+   * for constraints and calls the appropriate constraint function/
+   * 
+   * M. Keith August 2011
+   *
+   */
   
-  afunc[n++] = 1;  /* Always fit for an arbitrary offset */
+  if(ipos < psr->nobs)afunc[n++] = 1;  /* Always fit for an arbitrary offset (unless this obs is a constraint!)*/
+  else afunc[n++] = 0;
   /* See what we are fitting for */
   for (i=0;i<MAX_PARAMS;i++)
     {
@@ -537,6 +584,7 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 	    {
 	      if (i!=param_start && i!=param_finish)
 		{
+
 		  if (debugFlag==1) printf("Fitting for %d (%s)\n",i,psr->param[i].label[k]);
 		  if (i==param_wave_om)
 		    {
@@ -571,17 +619,15 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		    }
 		  else if (i==param_dmmodel)
 		    {		      
-		    double dmf = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
+
+		    double dmf = 1;
+		    if (ipos < psr->nobs)dmf = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
 
 		      for (j=0;j<(int)psr->dmoffsNum;j++)
 			{
 			  // This is for the actual frequency-dep fit
 			  afunc[n++] = dmf*getParamDeriv(psr,ipos,x,i,j);
-#ifndef DMOFF_NO_CM
-			  if(j!=0){
-				  afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
-			  }
-#endif
+			  afunc[n++] =     getParamDeriv(psr,ipos,x,i,j+psr->dmoffsNum);
 			}
 		    }
 		  else
@@ -591,11 +637,13 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 	}
     }
   /* JUMPS */
+  
   for (i=1;i<=psr->nJumps;i++)
     {
       if (psr->fitJump[i]==1)
 	{
 	  found = 0;
+	  if(ipos < psr->nobs){
 	  for (l=0;l<psr->obsn[ipos].obsNjump;l++)
 	    {
 	      if (psr->obsn[ipos].jump[l]==i)
@@ -606,6 +654,7 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 	      //	      else
 	      //		found = 0.0;
 	    }
+	  }
 	  afunc[n++] = found;
 
 	}
@@ -618,8 +667,19 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 {
+
   double afunc=0.0;
-  if (i==param_f)         /* Rotational frequency */
+  /*
+   * If we have ipos > nobs, then this is not a real observation but a 
+   * constraint "pseudo observation". Therefore we call the constraint
+   * function.
+   *
+   * Otherwise, we check what parameter it is and return the appropriate derivative.
+   */
+  if(ipos >= psr->nobs){
+	  afunc= getConstraintDeriv(psr,ipos-psr->nobs,i,k); // this is a constraint pseudo observation.
+//	  printf("MJK -- get deriv for constraint %d i=%d x=%lf k=%d af=%f\n",ipos-psr->nobs,i,x,k,afunc);
+  } else if (i==param_f)         /* Rotational frequency */
     {
       if (k==0)
 	afunc = x*24.0L*3600.0L/psr->param[param_f].val[0];
@@ -1070,7 +1130,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       double sat = (double)psr->obsn[ipos].sat;
       double yoffs[100];
       for (int ioff =0;ioff<psr->dmoffsNum;ioff++){
-	      if (ioff==k){
+	      if (ioff==(k%psr->dmoffsNum)){ // we use modulo to get both the DM and CM signal.
 		      yoffs[ioff]=1;
 	      } else {
 		      yoffs[ioff]=0;//-1.0/(double)(psr->dmoffsNum-1);
@@ -1184,8 +1244,9 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		  psr[p].param[i].val[k] += val[j];
 		  psr[p].param[i].err[k]  = error[j];
 		  // This is slow - should be a better approach
-		  if (i==param_dm)
+		  if (i==param_dm){
 		    psr[p].dmOffset+=val[j];
+		  }
 		}
 	      else if (i==param_dshk)
 		{
@@ -1314,13 +1375,9 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      psr[p].dmoffsDMe[k] = error[j];
 		      j++;
 
-#ifndef DMOFF_NO_CM
-		      if(k!=0){
-			      psr[p].dmoffsOffset[k] = val[j];
-			      psr[p].dmoffsError[k] =  error[j];
-			      j++;
-		      }
-#endif
+		      psr[p].dmoffsOffset[k] = val[j];
+		      psr[p].dmoffsError[k] =  error[j];
+		      j++;
 		    }
 		  j--;
 		}
@@ -1375,7 +1432,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 }
 
 
-void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,double **uinv)
+void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,int nc,double **uinv)
 {
   double **m,**u,sum;
   double *cholp;
@@ -1384,7 +1441,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
   int t1,t2;
   int debug=0;
 
-  //  printf("Getting the covariance matrix in doFit\n");
+//  printf("Getting the covariance matrix in doFit\n");
   m = (double **)malloc(sizeof(double *)*(np+1));
   u= (double **)malloc(sizeof(double *)*(np+1));
   cholp  = (double *)malloc(sizeof(double)*(np+1));  // Was ndays
@@ -1400,6 +1457,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
       for (iy=0;iy<np;iy++)
 	m[ix][iy] = fabs(resx[ix]-resx[iy]);
     }
+
   if (debug==1)
     {
       printf("First m = \n");
@@ -1408,7 +1466,6 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 	  for (j=0;j<5;j++) printf("%10g ",m[i][j]); 
 	  printf("\n");
 	}
-
     }
   // Insert the covariance which depends only on the time difference.
   // Linearly interpolate between elements on the covariance function because
@@ -1426,6 +1483,18 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 	  m[ix][iy] = cint;
 	}
     }
+
+
+  // add the values for the constraints
+  // Constraints are not covariant with anything so it's all zero!
+  for (i=np-nc; i < np; i++){
+	  for (j=0; j < np; j++){
+		  m[i][j]=0;
+		  m[j][i]=0;
+	  }
+  }
+
+
   //  printf("Multiplying by errors\n");
   for (ix=0;ix<np;ix++)
     m[ix][ix]+=rese[ix]*rese[ix];
@@ -1456,7 +1525,6 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 	  uinv[i][j] = m[j][i];
 	}
     } 
-
   if (debug==1)
     {
       printf("uinv = \n\n");
@@ -1481,3 +1549,30 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
   free(u);
   free(cholp);
 }
+
+
+/*
+ *
+ * Constraint functions are in constraints.C
+ *
+ */
+double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
+	int order=0;
+	switch(psr->constraints[iconstraint]){
+		case constraint_dmmodel_mean:
+			return consFunc_dmmodel_mean(psr,i,k);
+
+		// Notice that these case statements fall through, so order is defined
+		// based on which constraint name is used.
+		case constraint_dmmodel_cw_2:
+			order++;
+		case constraint_dmmodel_cw_1:
+			order++;
+		case constraint_dmmodel_cw_0:
+			return consFunc_dmmodel_cw(psr,i,k,order);
+		default:
+			return 0;
+	}
+}
+
+

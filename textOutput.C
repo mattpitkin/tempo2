@@ -32,6 +32,7 @@
 #include <math.h>
 #include <string.h>
 #include "tempo2.h"
+#include "constraints.h"
 #include "TKfit.h"
 
 //#define TSUN (4.925490947e-6L) (Should be tempo2.h now).
@@ -149,6 +150,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("pre/post = %g\n",psr[p].rmsPre/psr[p].rmsPost);
 	}
       printf("Number of points in fit = %d\n",psr[p].nFit);
+      printf("Number of constraints in fit = %d\n",psr[p].nconstraints);
       if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
 	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
       printf("\n\n");
@@ -232,6 +234,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
 	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
 
+      if (psr[p].nconstraints>0){
+	      printf("\nCONSTRAINTS:\n");
+	      for (i=0; i < psr[p].nconstraints; i++){
+		      printf("%s\n",get_constraint_name(psr[p].constraints[i]).c_str());
+	      }
+      printf("\n");
+      }
+
       /* JUMPS */
       for (i=1;i<=psr[p].nJumps;i++){
 	{
@@ -292,10 +302,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  
       if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	{
-	  printf("\nDispersion measure values:\n\n");
+	  printf("\n");
 	  updateDMvals(psr,p);
-	  for (i=0;i<(int)psr[p].dmoffsNum;i++)
+	  printf("Dispersion measure values:\n");
+	  double sum=0;
+	  for (i=0;i<(int)psr[p].dmoffsNum;i++){
 	    printf("DMOFF\t %.15g %.15g %.15g %.15g %.15g\n",psr[p].dmoffsMJD[i],psr[p].dmoffsDM[i],psr[p].dmoffsDMe[i],psr[p].dmoffsOffset[i],psr[p].dmoffsError[i]);
+	  sum+=psr[p].dmoffsDM[i];
+	  }
+      printf("Mean DMOFF = %lg\n",sum/(double)psr[p].dmoffsNum);
 	}
 	  if (psr[p].param[param_ifunc].paramSet[0]==1)
 	    {
@@ -855,11 +870,22 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  // Add DM value parameters
 	  if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	    {
-	      fprintf(fout2,"DMMODEL %.15Lg %d\n",psr[p].param[param_dmmodel].val[0],(int)psr[p].param[param_dmmodel].fitFlag[0]);
+
+	      if (psr->param[param_dmmodel].linkTo[0] == param_dm){
+		      fprintf(fout2,"DMMODEL DM %d\n",(int)psr[p].param[param_dmmodel].fitFlag[0]);
+	      } else {
+		      fprintf(fout2,"DMMODEL %.14Lg %d\n",psr[p].param[param_dmmodel].val[0],(int)psr[p].param[param_dmmodel].fitFlag[0]);
+	      }
 	      for (i=0;i<psr[p].dmoffsNum;i++)
 		fprintf(fout2,"DMOFF\t %.15g %.15g %.15g\n",psr[p].dmoffsMJD[i],psr[p].dmoffsDM[i],psr[p].dmoffsDMe[i]);
 	    }
 
+	  // add constraints
+	  for (int i = 0; i < psr[p].nconstraints; i++){
+		  if (psr[p].constraints[i]==constraint_dmmodel_mean){
+			fprintf(fout2,"CONSTRAIN DMMODEL\n");
+		  }
+	  }
 	  fclose(fout2);	 
 	    }
 	}
@@ -1100,4 +1126,5 @@ void updateDMvals(pulsar *psr,int p)
 		}
 	}
 }
+
 

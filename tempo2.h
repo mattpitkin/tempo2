@@ -102,6 +102,7 @@
 #define T2C_TEMPO   2
 
 
+
 /* Type for doing extra precision computations: longdouble */
 
 /* OSes/architectures that have built-in long double */
@@ -161,6 +162,17 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
             param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om};
 
+/*
+ * These represent the possible constraints to the fit that have been implemented.
+ */
+enum constraint {
+	constraint_dmmodel_mean,
+	constraint_dmmodel_cw_0,
+	constraint_dmmodel_cw_1,
+	constraint_dmmodel_cw_2,
+};
+
+
 extern int MAX_PSR;
 extern int MAX_OBSN;
 extern double ECLIPTIC_OBLIQUITY;
@@ -206,7 +218,6 @@ typedef struct
   char corrects_to[32];
 } clock_correction;
 
- 
 typedef struct observation {
   longdouble sat;                 /* Site arrival time                                          */
   longdouble bat;                 /* Infinite frequency barycentric arrival time                */
@@ -398,6 +409,10 @@ typedef struct pulsar {
 
   /* Which fit function are we using */
   char fitFunc[MAX_FILELEN];
+
+
+  int nconstraints;                       /* Number of fit constraints specified                      */
+  enum constraint constraints[MAX_PARAMS];/* Which constraints are specified */
 } pulsar;
 
 

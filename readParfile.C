@@ -551,6 +551,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	     &psr->quad_across_i[number-1]);
       if (psr->nQuad < number) psr->nQuad = number;
     }
+  /*
+   * DMMODEL fitting.
+   *
+   */
   else if (strcasecmp(str,"DMMODEL")==0) 
     {
       readValue(psr,str,fin,&(psr->param[param_dmmodel]),0);
@@ -565,6 +569,26 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       psr->dmoffsError[number] = 0;
       (psr->dmoffsNum)++;
     }
+  /*
+   * Specify fitting constraints
+   */
+  else if (strcasecmp(str,"CONSTRAIN")==0){
+      char cname[1024];
+      fscanf(fin, "%s",cname);
+      /*
+       * Constraints for DMMODEL.
+       * The DMMODEL constraint affects 4 constraints.
+       */
+      if(strcasecmp(cname,"DMMODEL")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_1;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_2;
+      }
+  }
+  /*
+   * Single source graviational waves (GWs)
+   */
   else if (strcasecmp(str,"GW_SINGLE")==0) 
     readValue(psr,str,fin,&(psr->param[param_gwsingle]),0);
   else if (strcasecmp(str,"GW_POSITION")==0)
@@ -1205,7 +1229,21 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
       psr->param[param_daop].paramSet[0]=1;
       return 0;
     }
-  }
+  } else if (strcasecmp(pmtr,"DMMODEL")==0){
+    if(strcasecmp(str1,"DM")==0){
+      parameter->linkTo[(parameter->nLinkTo)++] = param_dm;
+      psr->param[param_dm].linkFrom[(psr->param[param_dm].nLinkFrom)++]=param_dmmodel;
+      psr->param[param_dmmodel].paramSet[0]=1;
+      if(nread == 2){
+	      if (strcasecmp(str2,"1")==0 || strcasecmp(str2,"0")==0 || strcasecmp(str2,"2")==0) /* Have fit flag not error */
+	      {
+		      sscanf(str2,"%d",&(parameter->fitFlag[arr]));
+	      }
+      }
+
+      return 0;
+    }
+  } 
 
   /* Change e.g. D+02 to e+02 as expected in C */
   for (i=0;i<(int)strlen(str1);i++)
