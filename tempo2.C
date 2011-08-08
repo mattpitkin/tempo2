@@ -256,7 +256,9 @@ int main(int argc, char *argv[])
   strcpy(outputSO,"");
   if (argc==1) /* No command line arguments */
     {
-      printf("TEMPO2.  Usage: tempo2 XXX.tim\n");
+      printf("%s\n",PACKAGE_STRING);
+      printf("  Usage:     %s -f XXX.par XXX.tim\n",argv[0]);
+      printf("\nFor more help, use %s -h\n",argv[0]);
       exit(1);
     }
   npsr = 0;   /* Initialise the number of pulsars */
@@ -265,7 +267,7 @@ int main(int argc, char *argv[])
   /* Obtain command line arguments */
   if (debugFlag==1) printf("Running getInputs %d\n",psr[0].nits);
   getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
-	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,tempo2_plug_path,tempo2_plug_path_len);
+	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile);
   if (debugFlag==1) printf("Completed getInputs\n");
 
   for (i=1;i<argc;i++)

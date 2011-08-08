@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2011.7],[george.hobbs@csiro.au])
+AC_INIT([Tempo2],[2011.8],[george.hobbs@csiro.au])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -95,12 +95,12 @@ SWIN_LIB_FFTW
 SWIN_LIB_CFITSIO
 
 
-
-AX_OPENMP([have_openmp=yes],[have_openmp=no])
-if test X$have_openmp == Xyes; then
-	CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
-	CXXFLAGS="$CXXFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
-fi
+# No longer need openmp.
+#AX_OPENMP([have_openmp=yes],[have_openmp=no])
+#if test X$have_openmp == Xyes; then
+#	CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
+#	CXXFLAGS="$CXXFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
+#fi
 
 
 

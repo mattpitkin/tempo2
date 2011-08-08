@@ -34,7 +34,7 @@
 #include "tempo2.h"
 
 
-void printplugs(char plug_path[][MAX_STRLEN], int plug_path_len);
+void printplugs(bool full);
 
 /* ******************************************** */
 /* getInputs                                    */
@@ -52,8 +52,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *list,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,
 	       int *polyco, char *polyco_args,
-	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,
-	       char plug_path[][MAX_STRLEN], int plug_path_len)
+	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile)
 {
   int i,p;
   int gr=0;
@@ -70,11 +69,11 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
     {
       if (strcmp(argv[1],"-h")==0) /* Some help */
 	{
-	  printf("\n\n");
-	  printf("tempo2 v1\n\n");
-	  printf("examples: tempo2 mytim.tim\n");
-	  printf("          tempo2 -f mypar.par mytim.tim\n");
-	  printf("          tempo2 -gr plk -f mypar.par mytim.tim\n");
+	  printf("\n");
+	  printf("%s\n\n",PACKAGE_STRING);
+	  printf("examples: %s mytim.tim\n",argv[0]);
+	  printf("          %s -f mypar.par mytim.tim\n",argv[0]);
+	  printf("          %s -gr plk -f mypar.par mytim.tim\n",argv[0]);
 	  printf("\n");
 	  printf("Options: \n\n");
 
@@ -93,9 +92,10 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  printf("-allInfo          Prints out clock, Earth orientation and similar information\n");
 	  printf("-reminder         Saves the command line to T2command.input for future reference.\n");
 	  printf("-norescale        Do not rescale parameter uncertainties by the sqrt(red. chisq)\n");
+	  printf("-displayVersion   Display detailed CVS version number of every file used.\n");
 	  printf("\n\n");
 	  printf("Available plugins\n");
-	  printplugs(plug_path,plug_path_len);
+	  printplugs(false);
 //	  system("ls $TEMPO2/plugins/ | grep plug | sed s/\"_\"/\" \"/ | awk '{print \"  - \" $1}' | sort | uniq");
 	  printf("-----------------\n");
 	  exit(1);
@@ -199,21 +199,23 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 
 
 
-void printplugs(char plug_path[][MAX_STRLEN], int plug_path_len){
+void printplugs(bool full){
 	char pname[MAX_STRLEN];
 	char matchstr[MAX_STRLEN];
 	char pname_list[MAX_STRLEN][MAX_STRLEN];
 	int np=0;
+
 	sprintf(matchstr,"%s_plug.t2",tempo2MachineType);
-	for (int i=0; i < plug_path_len; i++){
-		printf("in '%s'\n",plug_path[i]);
+	for (int i=0; i < tempo2_plug_path_len; i++){
+		printf("in '%s'\n",tempo2_plug_path[i]);
 		struct dirent *pent = NULL;
 		DIR* d = NULL;
-		d=opendir(plug_path[i]);
+		d=opendir(tempo2_plug_path[i]);
 		if(d==NULL){
 			printf("(dir not readable)\n");
 			continue;
 		}
+		int count=0;
 		while(pent = readdir(d)){
 			char* name=pent->d_name;
 			strcpy(pname,"");
@@ -236,12 +238,18 @@ void printplugs(char plug_path[][MAX_STRLEN], int plug_path_len){
 							break;
 						}
 					}
-					printf(" - %s%c\n",pname,flag);
+					if(full || flag==' '){
+						printf(" - %s%c\n",pname,flag);
+						count++;
+					}
 					strcpy(pname_list[np++],pname);
 					break;
 				}
 				j++;
 			}
+		}
+		if (!count){
+			printf("(none or all hidden)\n");
 		}
 	}
 }
