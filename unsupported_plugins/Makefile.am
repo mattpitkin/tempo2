@@ -1,4 +1,4 @@
-SUBD=toasim glast
+SUBD=toasim glast ppta
 
 .PHONY: $(SUBD) subdirs
 
@@ -14,5 +14,5 @@ install:
 	$(INSTALL) built_plugins/*.t2 @TEMPO2_PLUG_INSTALL@
 
 
-EXTRA_DIST=glast toasim
+EXTRA_DIST=glast toasim ppta
 
