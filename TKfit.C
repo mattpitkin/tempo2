@@ -189,21 +189,21 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   double **v,**u,**uout;
   double w[nf],wt[nf],sum,wmax,*bout;
   int    i,j,k;
-  designMatrix = (double **)malloc(n*sizeof(double *));
-  v = (double **)malloc(nf*sizeof(double *));
-  u = (double **)malloc(n*sizeof(double *));
-  uout = (double **)alloca(n*sizeof(double *)); // NOT CLEARED
-  bout = (double *)alloca(n*sizeof(double));    // NOT CLEARED
+  designMatrix = (double **)malloc(n*sizeof(double *)); // malloc-TKleastSquares_svd_psr_dcm-designMatrix**
+  v = (double **)malloc(nf*sizeof(double *));   // malloc-TKleastSquares_svd_psr_dcm-v**
+  u = (double **)malloc(n*sizeof(double *));    // malloc-TKleastSquares_svd_psr_dcm-u**
+  uout = (double **)malloc(n*sizeof(double *)); // malloc-TKleastSquares_svd_psr_dcm-uout**
+  bout = (double *)malloc(n*sizeof(double));    // malloc-TKleastSquares_svd_psr_dcm-bout*
 
 
   for (i=0;i<n;i++) 
     {
-      if ((designMatrix[i] = (double *)malloc(nf*sizeof(double))) == NULL) {printf("OUT OF MEMORY\n"); exit(1);}
-      if ((u[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);}
-      if ((uout[i] = (double *)alloca(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);}
+      if ((designMatrix[i] = (double *)malloc(nf*sizeof(double))) == NULL) {printf("OUT OF MEMORY\n"); exit(1);} // malloc-TKleastSquares_svd_psr_dcm-designMatrix*
+      if ((u[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);} // malloc-TKleastSquares_svd_psr_dcm-u*
+      if ((uout[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);} // malloc-TKleastSquares_svd_psr_dcm-uout*
       if (weight==0) sig[i]=1.0;
     }
-  for (i=0;i<nf;i++) v[i] = (double *)malloc(nf*sizeof(double));
+  for (i=0;i<nf;i++) v[i] = (double *)malloc(nf*sizeof(double)); // malloc-TKleastSquares_svd_psr_dcm-v*
   /* This routine has been developed from Section 15 in Numerical Recipes */
   
   /* Determine the design matrix - eq 15.4.4 
@@ -283,42 +283,33 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
       for (k=0;k<nf;k++)
 	{
 	  sum+=p[k]*designMatrix[j][k];
-	  if (j==0)free(v[k]);
 	}
       (*chisq) += pow((b[j]-sum)/sig[j],2);
     }
-  for (j=0;j<n;j++)
-    {
-      free(designMatrix[j]); // Remove memory allocation
-      free(u[j]);
-    }
 
 
-  /*
-  for (j=0;j<n;j++)
-    {
-      fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
 
-      sum=0.0;
-      for (k=0;k<nf;k++)
-	{
-	  sum+=p[k]*basisFunc[k];
-	  if (j==0)free(v[k]);
-	}
-      (*chisq) += pow((y[j]-sum)/sig[j],2);
-
-      free(designMatrix[j]); // Remove memory allocation
-      free(u[j]);
-      
-      }*/
   if (weight==0 || (weight==1 && psr->rescaleErrChisq==1))
     {
       for (j=0;j<nf;j++)
   	e[j] *= sqrt(*chisq/(n-nf));
     }
-  
-  free(v); 
-  free(u); free(designMatrix);
+ 
+  for (j=0;j<nf;j++){
+	  free(v[j]);       // free-TKleastSquares_svd_psr_dcm-v*
+  }
+  for (j=0;j<n;j++)
+    {
+      free(uout[j]);         // free-TKleastSquares_svd_psr_dcm-uout*
+      free(designMatrix[j]); // free-TKleastSquares_svd_psr_dcm-designMatrix*
+      free(u[j]);            // free-TKleastSquares_svd_psr_dcm-u*
+    }
+
+  free(uout);  // free-TKleastSquares_svd_psr_dcm-uout**
+  free(bout);  // free-TKleastSquares_svd_psr_dcm-bout*
+  free(v);     // free-TKleastSquares_svd_psr_dcm-v**
+  free(u);     // free-TKleastSquares_svd_psr_dcm-u**
+  free(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
 }
 
 

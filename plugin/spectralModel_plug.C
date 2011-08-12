@@ -98,6 +98,7 @@ void help() /* Display help */
 }
 
 char skipstep2=0; // test to skip step 2 added by MJK 2011-07.
+bool writeFiles=true;
 
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
@@ -154,6 +155,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	skipstep2=1;
       else if (strcmp(argv[i],"-makeps")==0)
 	makeps=1;
+      else if (strcmp(argv[i],"-nofiles")==0)
+	writeFiles=false;
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -231,6 +234,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   int tempTime=1;
   char dummy[100];
 
+  verbose_calc_spectra=true;
 
   // Test the spectral analysis routine
   /*  {
@@ -289,7 +293,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     nres = obtainTimingResiduals(psr,resx,resy,rese);
     // Step 1b: remove mean from residuals (x and y)
     removeMean(resx,resy,nres);
-    fileOutput3("tresiduals.dat",resx,resy,rese,nres);
+    if(writeFiles)fileOutput3("tresiduals.dat",resx,resy,rese,nres);
 
     if (tempTime==1)
       {
@@ -303,10 +307,10 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     cubicFit(resx,resy,rese,nres,cubicVal,cubicErr);
     // Step 1d: obtain a smooth curve that models the residuals well
     findSmoothCurve(resx,resy,rese,nres,cubicVal,smoothModel,expSmooth);
-    fileOutput3("smoothCurve.dat",resx,smoothModel,rese,nres);
+    if(writeFiles)fileOutput3("smoothCurve.dat",resx,smoothModel,rese,nres);
     // Step 1e: obtain high-freq. residuals
     getHighFreqRes(resy,smoothModel,nres,highFreqRes);
-    fileOutput3("highFreqRes.dat",resx,highFreqRes,rese,nres);
+    if(writeFiles)fileOutput3("highFreqRes.dat",resx,highFreqRes,rese,nres);
     // Step 1f: obtain covariance of high-freq. residuals
     getHighFreqCovar(resx,rese,highFreqRes,nres,hfNormCovar,hfNormCovarNpts,&hfZerolagNormCovar);
     // Step 1g: plot the results
@@ -339,7 +343,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   // Step 2a: Obtain spectra of original residuals without any prewhitening
   //  nOrigSpec = calculateSpectra(resx,resy,rese,nres,1,0,1,origSpecX,origSpecY);
   nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY,-1);
-  fileOutput2("origSpectra.dat",origSpecX,origSpecY,nOrigSpec);
+  if(writeFiles)fileOutput2("origSpectra.dat",origSpecX,origSpecY,nOrigSpec);
 
   // Step 2b: interpolate the smooth curve
   interpolate(resx,resy,rese,nres,cubicVal,interpX,interpY,
@@ -362,11 +366,11 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   printf("Calculating spectra without prewhitening\n");
   nSmoothSpec0 = calculateSpectra(interpX,interpY,rese,nInterp,0,0,2,
 				  smoothSpecX0,smoothSpecY0);
-  fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
+  if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
 
   //  nSmoothSpec0 = calcSpectra(uinvI,interpX,interpY,nInterp,smoothSpecX0,smoothSpecY0,-1);
   printf("Done calculating spectra\n");
-  fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
+  if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
   // TESTING
   //  nSmoothSpec0 = calcSpectra(uinv,resx,resy,rese,nres,
   //			     smoothSpecX0,smoothSpecY0);
@@ -374,15 +378,16 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   // Step 2d: Obtain spectra of smooth interpolated model with 1st order prewhitening
   nSmoothSpec1 = calculateSpectra(interpX,interpY,rese,nInterp,0,1,2,
 				  smoothSpecX1,smoothSpecY1);
-  fileOutput2("oneprewhite.dat",smoothSpecX1,smoothSpecY1,nSmoothSpec1);
+  if(writeFiles)fileOutput2("oneprewhite.dat",smoothSpecX1,smoothSpecY1,nSmoothSpec1);
   // Step 2e: Obtain spectra of smooth interpolated model with 2nd order prewhitening
   nSmoothSpec2 = calculateSpectra(interpX,interpY,rese,nInterp,0,2,2,
 				  smoothSpecX2,smoothSpecY2);
-  fileOutput2("twoprewhite.dat",smoothSpecX2,smoothSpecY2,nSmoothSpec2);
+  if(writeFiles)fileOutput2("twoprewhite.dat",smoothSpecX2,smoothSpecY2,nSmoothSpec2);
   // Step 2f: Obtain spectra of high frequency residuals
+  if(writeFiles)
   {
     long seed= -123;
-    FILE *fout = fopen("highfreqres.dat","w");
+    FILE *fout = fopen("highfreqresiduals.dat","w");
     for (i=0;i<nres;i++)
       {
 	//highFreqRes[i] = TKgaussDev(&seed)*rese[i];
@@ -393,7 +398,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   //  nHighFreqSpec = calculateSpectra(resx,highFreqRes,rese,nres,1,0,1,highFreqSpecX,
   //				   highFreqSpecY);
   nHighFreqSpec = calcSpectra(uinv,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
-  fileOutput2("highfreqspec.dat",highFreqSpecX,highFreqSpecY,nHighFreqSpec);
+  if(writeFiles)fileOutput2("highfreqspec.dat",highFreqSpecX,highFreqSpecY,nHighFreqSpec);
 
   // Step 2g: make the plot
   plot2(origSpecX,origSpecY,nOrigSpec,smoothSpecX0,smoothSpecY0,nSmoothSpec0,
@@ -452,7 +457,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     }
   // Step 4c: get white residuals using the Cholesky matrix
   getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY);
-  fileOutput3("cholWhiteRes.dat",resx,cholWhiteY,rese,nres);
+  if(writeFiles)fileOutput3("cholWhiteRes.dat",resx,cholWhiteY,rese,nres);
   // Spec 4d: get a spectrum of the whitened data
   nCholWspec = calculateSpectra(resx,cholWhiteY,rese,nres,0,0,2,
 				  cholWspecX,cholWspecY);
@@ -1672,6 +1677,7 @@ void interpolate(double *resx,double *resy,double *rese,
       interpY[i] += (cubicVal[0] + cubicVal[1]*interpX[i] + 
 		     cubicVal[2]*pow(interpX[i],2) + cubicVal[3]*pow(interpX[i],3));
     }
+  if(writeFiles)
   {
     FILE *fout;
     fout = fopen("interp.dat","w");

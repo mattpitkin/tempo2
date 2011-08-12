@@ -69,6 +69,7 @@ void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *
 void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 
 double globalOmega;
+bool verbose_calc_spectra=false;
 
 typedef struct complexVal {
   double real;
@@ -1759,9 +1760,9 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
   int ip[nres];
   double param[nfit],error[nfit];
 
-  cvm = (double **)alloca(sizeof(double *)*nfit);
+  cvm = (double **)malloc(sizeof(double *)*nfit);
   for (i=0;i<nfit;i++)
-    cvm[i] = (double *)alloca(sizeof(double)*nfit);
+    cvm[i] = (double *)malloc(sizeof(double)*nfit);
 
   // Should fit independently to all frequencies
   for (i=0;i<nres;i++)
@@ -1771,8 +1772,11 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
     }
   for (k=0;k<nfit;k++)
     {
-      //      printf("%5.2g\%\r",(double)k/(double)nfit*100.0);
-      //      fflush(stdout);
+	    if(verbose_calc_spectra){
+		    printf("\b\b\b\b\b\b\b\b");
+		    printf("%5.2f\%",(double)k/(double)nfit*100.0);
+		    fflush(stdout);
+	    }
       GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
       TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
       v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[1],2)+pow(param[2],2))/pow(365.25*86400.0,2); 
@@ -1780,10 +1784,12 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
       specY[k] = v[k];
     }
 
-  //  for (i=0;i<nfit;i++)
-  //    free(cvm[i]);
-  //  free(cvm);
-  //  printf("Complete spectra\n");
+  for (i=0;i<nfit;i++)
+	  free(cvm[i]);
+  free(cvm);
+  if(verbose_calc_spectra){
+	  printf("\n");
+  }
   return nfit;
 }
 
