@@ -112,7 +112,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	  static int t=0xFFFF;
 	  dmval=0;
 	  //double meanDM=(double)psr[p].param[param_dm].val[0];
-	  double meanDM=getParameterValue(psr,param_dmmodel,0);
+	  double meanDM=getParameterValue(&psr[p],param_dmmodel,0);
 
 	  if (psr[p].param[param_dm].paramSet[0] == 1 && psr->param[param_dmmodel].linkTo[0] != param_dm)
 	  {
@@ -198,7 +198,8 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       if (freqf<=1) /* Have infinitive frequency */
 	psr[p].obsn[i].tdis1 = 0.0;
       else
-	psr[p].obsn[i].tdis1 = dmval/DM_CONST/1.0e-12/freqf/freqf;  /* SHOULD THIS BE INCLUDED IN THE LOOP? */
+	psr[p].obsn[i].tdis1 = dmval/DM_CONST/1.0e-12/freqf/freqf; 
+
       if (debugFlag==1) printf("In dm_delays: calculate tdis1\n");      
       /* Add frequency dependent delay term */
       if (psr[p].param[param_fddc].paramSet[0]==1 && freqf>1)
