@@ -929,3 +929,4 @@ void indexx_patrick(unsigned long n, float arr[], unsigned long indx[])
 #undef NSTACK
 #undef SWAP
 #undef NRANSI
+char * plugVersionCheck = TEMPO2_h_VER;

@@ -267,3 +267,4 @@ long double getTspan(pulsar *psr,int npsr)
 
   return last-first;
 }
+char * plugVersionCheck = TEMPO2_h_VER;

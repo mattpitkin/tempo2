@@ -258,6 +258,10 @@ int main(int argc, char *argv[])
     {
       printf("%s\n",PACKAGE_STRING);
       printf("  Usage:     %s -f XXX.par XXX.tim\n",argv[0]);
+      printf("Plugin search paths:\n");
+      for (i=0; i < tempo2_plug_path_len; i++){
+	      printf(" -- %s/*.t2\n",tempo2_plug_path[i]);
+      }
       printf("\nFor more help, use %s -h\n",argv[0]);
       exit(1);
     }

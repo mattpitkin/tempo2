@@ -197,3 +197,4 @@ extern "C" int selectInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
+char * plugVersionCheck = TEMPO2_h_VER;
