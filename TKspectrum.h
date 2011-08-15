@@ -1774,7 +1774,7 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
     {
 	    if(verbose_calc_spectra){
 		    printf("\b\b\b\b\b\b\b\b");
-		    printf("%5.2f\%",(double)k/(double)nfit*100.0);
+		    printf("%5.1f%%",(double)k/(double)nfit*100.0);
 		    fflush(stdout);
 	    }
       GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
@@ -1788,7 +1788,7 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
 	  free(cvm[i]);
   free(cvm);
   if(verbose_calc_spectra){
-	  printf("\n");
+	  printf("\b\b\b\b\b\b\b\b100.0%%\n");
   }
   return nfit;
 }
