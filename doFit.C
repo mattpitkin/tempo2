@@ -1590,7 +1590,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
  */
 double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 	int order=0;
-	switch(psr->constraints[iconstraint]){
+		switch(psr->constraints[iconstraint]){
 		case constraint_dmmodel_mean:
 			return consFunc_dmmodel_mean(psr,i,k);
 
@@ -1604,7 +1604,7 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 			return consFunc_dmmodel_cw(psr,i,k,order);
 		default:
 			return 0;
-	}
+			}
 }
 
 

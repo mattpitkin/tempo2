@@ -46,18 +46,18 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   int offset;
   int count=0;
   int weightfit=0;
-
+ 
   gnpsr = npsr;
 
   x = (double *)malloc(MAX_OBSN*sizeof(double));
   y = (double *)malloc(MAX_OBSN*sizeof(double));
   sig = (double *)malloc(MAX_OBSN*sizeof(double));
-  printf("About to undertake a global fit, number of pulsars = %d\n",npsr);
+  printf("Update. About to undertake a global fit, number of pulsars = %d\n",npsr);
 
   // Form pre-fit residuals
   for (p=0;p<npsr;p++)
     {
-      printf("Fitmode = %d\n",psr[p].fitMode);
+      //      printf("Fitmode = %d\n",psr[p].fitMode);
       if (psr[p].fitMode==1) weightfit=1;
       if (weightfit==1 && psr[p].fitMode==0)  
 	printf("WARNING: A weighted fit is being carried out, but PSR %s does not have MODE 1 in the parameter file\n",psr[p].name);
@@ -78,7 +78,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	  count++;
 	  if (count >= MAX_OBSN)
 	    {
-	      printf("Must increase max obsn\n");
+	      printf("global_fitFunc: Must increase max obsn, must equal total number of observations for all pulsars\n");
 	      exit(1);
 	    }
 	}
@@ -86,7 +86,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   for (p=0;p<npsr;p++)
     psr[p].nFit=count;
   printf("Total number of points = %d\n",count);
-  if (weightfit==1)printf("Doing a weighted fit\n");
+  if (weightfit==1)printf("Doing a weighted fit (rescale = %d)\n",psr[0].rescaleErrChisq);
   else printf("Doing an unweighted fit\n");
   // Determine number of fit parameters
   npol=0;
@@ -107,7 +107,9 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       for (p=1;p<npsr;p++)
 	psr[p].param[param_waveepoch].val[0] = psr[0].param[param_waveepoch].val[0];
     }
-
+  printf("Checking here %d\n",psr[0].param[param_quad_om].fitFlag[0]);
+  if (psr[0].param[param_quad_om].fitFlag[0]==2)
+      npol+=psr[0].nQuad*4-1;
   if (psr[0].param[param_ifunc].fitFlag[0]==2)	  
       npol+=psr[0].ifuncN-1;
 
@@ -118,7 +120,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   for (p=0;p<npsr;p++)
     {
       npol++; // For the offset
-      printf("Adding fitting func for the pulsar offset %d (%d)\n",p,npol);
+      //      printf("Adding fitting func for the pulsar offset %d (%d)\n",p,npol);
       for (i=0;i<MAX_PARAMS;i++)
 	{
 	  for (k=0;k<psr[p].param[i].aSize;k++)
@@ -127,7 +129,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		if (i!=param_start && i!=param_finish)
 		  {
 		    npol++;
-		    printf("Adding fitting func %d/%d for pulsar %d (%d)\n",i,k,p,npol);
+		    //		    printf("Adding fitting func %d/%d for pulsar %d (%d)\n",i,k,p,npol);
 		  }
 	      }
 	    }
@@ -145,6 +147,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       /* Add extra parameters for sinusoidal whitening */
       if (psr[p].param[param_wave_om].fitFlag[0]==1)
 	npol+=psr[p].nWhite*2-1;
+      if (psr[p].param[param_quad_om].fitFlag[0]==1)
+	npol+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	npol+=psr[p].ifuncN-1;
       if (psr[p].param[param_gwsingle].fitFlag[0]==1)
@@ -156,27 +160,29 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   for (i=0;i<npol;i++)
     covar[i] = (double *)malloc(npol*sizeof(double));
 
-  printf("Number of fit parameters = %d\n",npol);
+  printf("global_fitFunc: Number of fit parameters = %d\n",npol);
   for (i=0;i<npol;i++)
     val[i]=0.0;
-  printf("Here 1\n");
+  printf("Doing the fit: \n");
   TKleastSquares_svd_psr(x,y,sig,count,val,error,npol,covar,&chisq,globalFITfuncs,weightfit,psr,tol,ip);
-  for (i=0;i<npol;i++)
-    printf("covar diag = %g\n",covar[i][i]);
-  printf("Here 2, chisq = %g, red chisq = %g\n",chisq,chisq/(double)(count-npol));
+  printf("Done the fit\n");
+  //  for (i=0;i<npol;i++)
+  //    printf("covar diag = %g\n",covar[i][i]);
+    printf("Here 2, chisq = %g, red chisq = %g\n",chisq,chisq/(double)(count-npol));
   if (npol > MAX_PARAMS)
     {
       printf("ERROR: nterms=%d > MAX_PARAMS=%d\n",npol,MAX_PARAMS);
+      exit(1);       
     }
   for (i=0;i<npol;i++)
     {
-      printf("i = %d\n",i);
+      //      printf("i = %d\n",i);
       for (j=0;j<npol;j++)
-	psr[0].covar[i][j]=covar[i][j];
-      printf("Finished %d\n",npol);
+  	psr[0].covar[i][j]=covar[i][j];
+      //      printf("Finished %d\n",npol);
     }
-  for (i=0;i<npol;i++)
-    printf("val %d = %g %g\n",i,val[i],error[i]);
+  //    for (i=0;i<npol;i++)
+  //      printf("val %d = %g %g\n",i,val[i],error[i]);
   // now update the parameters
   offset=0;
   // update global parameters
@@ -202,6 +208,24 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			  psr[p].wave_sine_err[j] = error[offset];
 			}
 		      offset++;		      
+		    }
+		}
+	      else if (i==param_quad_om)
+		{
+		  for (j=0;j<psr[0].nQuad;j++)
+		    {
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].quad_aplus_r[j]    -= val[offset];		      
+			  psr[p].quad_aplus_i[j]    -= val[offset+1];		      
+			  psr[p].quad_across_r[j]   -= val[offset+2];		      
+			  psr[p].quad_across_i[j]   -= val[offset+3];		      
+			  psr[p].quad_aplus_r_e[j]   = error[offset];		      
+			  psr[p].quad_aplus_i_e[j]   = error[offset+1];		      
+			  psr[p].quad_across_r_e[j]  = error[offset+2];		      
+			  psr[p].quad_across_i_e[j]  = error[offset+3];		      
+			}	      
+		      offset+=4;
 		    }
 		}
 	      else if (i==param_gwsingle)
@@ -268,13 +292,15 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       /* Add extra parameters for sinusoidal whitening */
       if (psr[p].param[param_wave_om].fitFlag[0]==1)
 	offset+=psr[p].nWhite*2-1;
+      if (psr[p].param[param_quad_om].fitFlag[0]==1)
+	offset+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	offset+=psr[p].ifuncN-1;
       if (psr[p].param[param_gwsingle].fitFlag[0]==1)
 	offset+=4;
       offset++; // For arbitrary phase
     }
-  printf("At this point\n");
+  //  printf("At this point\n");
   if (psr[0].param[param_wave_om].fitFlag[0]==2)
     {
       double sx[MAX_OBSN],sy[MAX_OBSN],sy2[MAX_OBSN],sye[MAX_OBSN];
@@ -370,6 +396,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
   /* Add extra parameters for sinusoidal whitening */
   if (psr[p].param[param_wave_om].fitFlag[0]==2)
     nglobal+=psr[p].nWhite*2-1;
+  if (psr[p].param[param_quad_om].fitFlag[0]==2)
+    nglobal+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==2)
     nglobal+=psr[p].ifuncN-1;
   if (psr[p].param[param_gwsingle].fitFlag[0]==2)
@@ -395,6 +423,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
   /* Add extra parameters for sinusoidal whitening */
   if (psr[p].param[param_wave_om].fitFlag[0]==1)
     new_ma+=psr[p].nWhite*2-1;
+  if (psr[p].param[param_quad_om].fitFlag[0]==1)
+    new_ma+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==1)
     new_ma+=psr[p].ifuncN-1;
   if (psr[p].param[param_gwsingle].fitFlag[0]==1)
@@ -427,6 +457,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
       /* Add extra parameters for sinusoidal whitening */
       if (psr[pp].param[param_wave_om].fitFlag[0]==1)
 	n+=psr[pp].nWhite*2-1;
+      if (psr[pp].param[param_quad_om].fitFlag[0]==1)
+	n+=psr[pp].nQuad*4-1;
       if (psr[pp].param[param_ifunc].fitFlag[0]==1)
 	n+=psr[pp].ifuncN-1;
       if (psr[pp].param[param_gwsingle].fitFlag[0]==1)
@@ -448,6 +480,15 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		    {
 		      // Note that a global fit to white data must be related to the same time
 		      afunc[c] = getParamDeriv(&psr[p],ipos,x+(double)psr[p].param[param_pepoch].val[0] - (double)psr[0].param[param_waveepoch].val[0],i,j);
+		      c++;		      
+		    }
+		}
+	      else if (i==param_quad_om) 
+		{
+		  for (j=0;j<psr[p].nQuad*4;j++)
+		    {
+		      //		      printf("Calling fit\n");
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x+(double)psr[p].param[param_pepoch].val[0],i,j);
 		      c++;		      
 		    }
 		}

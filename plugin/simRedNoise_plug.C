@@ -113,7 +113,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 void doPlugin(pulsar *psr,int npsr,double amp,double alpha,double fc,int removeQuad)
 {
   int i,p,j;
-  int nit=4;
+  int nit=2;
   long double sat0[MAX_OBSN];
   long seed = TKsetSeed();
   char fname[100];
@@ -214,18 +214,18 @@ void getRedNoiseRealisation(pulsar psr,double amp,double alpha,double fc,long *s
       //      psd = amp*pow(365.25*86400.0,2)/(dspan/(365.25*86400.0))/pow(1.0+pow(freq*365.25/fc,2),alpha/2.0);
       //      psd = amp/pow(1.0+pow(freq*365.25/fc,2),alpha/2.0);
 
-      psd = amp/pow(1.0+pow(freq*365.25/fc,2),alpha/2.0); // model in yr^3
-            if (i==0)
+      if (i==0)
 	psd=0.0;
+      else
+	psd = amp/pow(1.0+pow(freq*365.25/fc,2),alpha/2.0); // model in yr^3
+      printf("%d amp = %g, psd = %g, freq = %g, alpha = %g, fc = %g\n",i,amp,psd,freq,alpha,fc);
 
       if (i<=((int)pow(2,close2n)/2))
 	{
-	  //	 	  re[i] = sqrt(psd/4.0/(dspan/365.25))*TKgaussDev(seed);
-	  //	  im[i] = sqrt(psd/4.0/(dspan/365.25))*TKgaussDev(seed);
-	  //	  re[i] = sqrt(psd*pow(365.25*86400.0,2)/(dspan/365.25))*TKgaussDev(seed);
-	  //	  im[i] = sqrt(psd*pow(365.25*86400.0,2)/(dspan/365.25))*TKgaussDev(seed);
-	  re[i] = 0.5*sqrt(psd/(dspan/365.25)*pow(365.25*86400.0,2))*TKgaussDev(seed);
-	  im[i] = 0.5*sqrt(psd/(dspan/365.25)*pow(365.25*86400.0,2))*TKgaussDev(seed);
+	  	  re[i] = 0.5*sqrt(psd/(dspan/365.25)*pow(365.25*86400.0,2))*TKgaussDev(seed);
+	  	  im[i] = 0.5*sqrt(psd/(dspan/365.25)*pow(365.25*86400.0,2))*TKgaussDev(seed);
+	  //	  re[i] = sqrt(psd/2.0/(dspan/365.25)*pow(365.25*86400.0,2))*TKgaussDev(seed);
+	  //	  im[i] = sqrt(psd/2.0/(dspan/365.25)*pow(365.25*86400.0,2))*TKgaussDev(seed);
 	  printf("Real val = %g %g %g  %g %d %g %g %g\n",psd,*delta,(double)dspan,freq*365.25,(int)pow(2,close2n),1.0/pow(1.0+pow(freq*365.25/fc,2),alpha/2.0),re[i],im[i]);
 	}
       else
@@ -233,7 +233,7 @@ void getRedNoiseRealisation(pulsar psr,double amp,double alpha,double fc,long *s
 	  re[i] = re[(int)pow(2,close2n)-i];
 	  im[i] = -1.0*im[(int)pow(2,close2n)-i];
 	}
-      //      printf("spectrum = %g %g %g %g\n",freq,psd,re[i],im[i]);
+      printf("spectrum = %g %lg %lg %lg %g\n",freq,psd,re[i],im[i],re[i]*re[i]+im[i]*im[i]);
     }
   TK_fft(-1,(int)pow(2,close2n),re,im);
   *nRedNoise = (int)pow(2,close2n);

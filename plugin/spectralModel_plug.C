@@ -437,11 +437,13 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     {
       double tt;
       // Step 3a: calculate covariance function of the raw data
+      printf("Step 1\n");
       calculateDailyCovariance(resx,resy,rese,nres,rawCovar,rawCovarNpts,&zerolagRawCovar,1);
       //      getHighFreqCovar(resx,rese,resy,nres,rawCovar,rawCovarNpts,&zerolagRawCovar);
       // Step 3b: fit for an exponential function
+      printf("Step 2 %g\n",zerolagRawCovar);
       fitExponential(resx,nres,rawCovar,rawCovarNpts,ampFit,chisqFit,&bestAmp,&bestLag,&bestChisq,&nGridFit);
-
+      printf("Do plot\n");
       do {
 	plot3a(resx,resy,nres,rawCovar,rawCovarNpts,zerolagRawCovar,ampFit,chisqFit,nGridFit,bestAmp,bestLag,bestChisq,makeps);
 	printf("Chosen lag = %g (press '-1' to continue or type in a new lag) ",bestLag); scanf("%lf",&tt);
@@ -642,10 +644,11 @@ void fitExponential(double *resx,int nres,
       chisqFit[i] = 0.0;
       for (j=0;j<nc;j++)
 	chisqFit[i]+=pow((y[j]-ampFit[i]*exp(-x[j]/lag))/e[j],2);
+      //      printf("ampFit = %g %g %g\n",ampFit[i],chisqFit[i],lag);
       //
       // Find first minimum
       //
-      //      printf("Have %g %g\n",lag,chisqFit[i]);
+      //            printf("Have %g %g\n",lag,chisqFit[i]);
       if (i==0)
 	{
 	  *bestLag=lag;
@@ -662,6 +665,7 @@ void fitExponential(double *resx,int nres,
 	foundMin=1;
     }
   *nGridFit = nc;
+  //  printf("Returning %g %g %g %g\n",*bestLag,*bestAmp,*bestChisq,(double)(*nGridFit));
 }
 
 void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpts,double zerolagRawCovar,
@@ -705,11 +709,11 @@ void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpt
 
 
   // WARNING REMOVE
-  zerolagRawCovar = 8.5e-11;
+  //  zerolagRawCovar = 8.5e-11;
 
   miny = -2*fabs(zerolagRawCovar);//TKfindMin_f(fy,nc);
   maxy = 2*fabs(zerolagRawCovar);//TKfindMax_f(fy,nc);
-
+  printf("Here with %g %g\n",miny,maxy);
   if (makeps==1)
     {
       int addi;
@@ -1007,6 +1011,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	}
       cpgsls(2); cpgsci(2); cpgline(nCholSpec,fx2,fy2); cpgsci(1); cpgsls(1);
     }
+    printf("New model spectrum = %g\n",nmodelScale);
     //
     fout = fopen("cholWhiteSpec.dat","w");
   for (i=0;i<nCholWspec;i++)
@@ -1351,7 +1356,11 @@ void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double
     transform_plan = fftw_plan_dft_r2c_1d(j, pf, output, FFTW_ESTIMATE);
     fftw_execute(transform_plan);    
     fftw_destroy_plan(transform_plan);  
-    for (i=0;i<=j/2;i++) covFunc[i] = opf[2*i];
+    for (i=0;i<=j/2;i++) 
+      {
+	covFunc[i] = opf[2*i];
+	printf("covFunc: %g %g\n",opf[2*i],opf[2*i+1]);
+      }
   }
   // Rescale
   printf("Rescaling %d\n",j/2);
@@ -1359,7 +1368,7 @@ void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double
   //  fy2[i] = nmodelScale-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
   actVar = pow(10,modelScale);
   tt = covFunc[0];
-  printf("actvar = %g, weightVarRes = %g, weightVarHighFreqRes = %g, scale = %g, fitVar = %g\n",actVar*pow(86400.0*365.25,2),weightVarRes,weightVarHighFreqRes,weightVarRes-weightVarHighFreqRes,fitVar);
+  printf("actvar = %g, weightVarRes = %g, weightVarHighFreqRes = %g, scale = %g, fitVar = %g, tt = %g\n",actVar*pow(86400.0*365.25,2),weightVarRes,weightVarHighFreqRes,weightVarRes-weightVarHighFreqRes,fitVar,tt);
 
   printf("WARNING: varScaleFactor = %g (used to deal with quadratic removal)\n",varScaleFactor);
   for (i=0;i<=j/2;i++)
@@ -1873,6 +1882,7 @@ void calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,int
       in[i] = 0;
       wt[i] = 0.0;
     }
+  *zl = 0.0;
  
  // Bin in 1 day intervals
   for (i=0;i<n;i++)
@@ -1896,6 +1906,7 @@ void calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,int
 	    }
 	}
     }
+  printf("zl = %g\n",*zl);
   (*zl)/=(double)nzl;
   for (i=0;i<nd;i++)
     {
@@ -1991,15 +2002,14 @@ void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,doub
   cpgsci(2); cpgline(dspan,fx2,fy2); cpgsci(1);
 
   // Overplot the smoothed model of the residuals
-  for (i=0;i<nres;i++)
-    fy3[i] = (float)smoothModel[i];
+  for (i=0;i<nres;i++) fy3[i] = (float)smoothModel[i];
   cpgsci(3); cpgsls(2); cpgline(nres,fx,fy3); cpgsls(1); cpgsci(1);
 
   // Plot the high frequency residuals
-  for (i=0;i<nres;i++)
-    fy4[i] = (float)highFreqRes[i];
+  for (i=0;i<nres;i++) fy4[i] = (float)highFreqRes[i];
   miny = TKfindMin_f(fy4,nres);
   maxy = TKfindMax_f(fy4,nres);
+
   cpgsvp(0.1,0.95,0.47,0.71);
   cpgswin(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny));
   cpgsch(1);

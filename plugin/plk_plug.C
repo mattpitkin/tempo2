@@ -48,7 +48,7 @@ char covarFuncFile[MAX_FILELEN];
 void overPlotN(int overN,float overX[], float overY[],float overYe[]);
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float lockx1,float lockx2,float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile,
-            int showChisq,int nohead,char* flagColour);
+            int showChisq,int nohead,char* flagColour,char *bandsFile);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
 	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log);
 void drawAxisSel(float x,float y,char *str,int sel1,int sel2);
@@ -242,6 +242,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int   menu=3;
   int   nohead=0;
   char  setupFile[100]="";
+  char  bandsFile[100]="";
   //display chisq?
   int showChisq = 0;
   char flagColour[100];
@@ -303,6 +304,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         unitFlag=1.0e-9;
       else if (strcmp(argv[i],"-min")==0)
         unitFlag=60.0;
+      else if (strcmp(argv[i],"-bands")==0)
+	strcpy(bandsFile,argv[++i]);
       else if (strcmp(argv[i],"-nohead")==0)
         nohead=1;
       else if (strcmp(argv[i],"-dcm")==0)
@@ -395,7 +398,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     textOutput(psr,*npsr,0,0,0,1,newParFile);
   if (debugFlag==1) printf("plk: calling doPlot\n");
   doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,lockx1,lockx2,locky1,locky2,xplot,yplot,
-	 publish,argc,argv,menu,setupFile,showChisq,nohead,flagColour);  /* Do plot */
+	 publish,argc,argv,menu,setupFile,showChisq,nohead,flagColour,bandsFile);  /* Do plot */
   if (debugFlag==1) printf("plk: End\n");
   return 0;
 }  
@@ -432,7 +435,7 @@ void callFit(pulsar *psr,int npsr)
           formBatsAll(psr,npsr);
           
           /* Form residuals */
-          formResiduals(psr,npsr,0); // iteration);
+          formResiduals(psr,npsr,1); // iteration);
           
           /* Do the fitting */
           if (iteration==0) 
@@ -441,6 +444,7 @@ void callFit(pulsar *psr,int npsr)
                 doFit(psr,npsr,0);
               else
                 doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
+
             }
           else textOutput(psr,npsr,globalParameter,0,0,0,"");
         }
@@ -455,7 +459,7 @@ void callFit(pulsar *psr,int npsr)
 
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float lockx1, float lockx2, float locky1, float locky2,int xplot,int yplot,
-	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq,int nohead,char* flagColour)
+	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq,int nohead,char* flagColour,char *bandsFile)
 {
   int i,fitFlag=1,exitFlag=0,scale1=0,scale2=psr[0].nobs,count,ncount,j,k;
   longdouble centreEpoch;
@@ -528,10 +532,27 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   errBar = (float *)malloc(sizeof(float)*MAX_OBSN);
   float *px,*py,*x,*y,*yerr1,*yerr2,*x2,*y2,*yerr1_2,*yerr2_2,*freq;
   float *overX,*overY,*overYe;
+  float bandsX1[128],bandsX2[128];
+  int nbands=0;
   int flagN=0;
 
   for (i=0;i<100;i++)
     flagCol[i]= 1;
+
+  if (strlen(bandsFile)>0)
+    {
+      FILE *fin;
+      if (!(fin = fopen(bandsFile,"r")))
+	{
+	  printf("Unable to open file >%s<\n",bandsFile);
+	  exit(1);
+	}
+      while (!feof(fin))
+	{
+	  if (fscanf(fin,"%f %f",&bandsX1[nbands],&bandsX2[nbands])==2)
+	    nbands++;
+	}
+    }
 
   overX = (float *)malloc(sizeof(float)*MAX_OBSN);
   overY = (float *)malloc(sizeof(float)*MAX_OBSN);
@@ -861,11 +882,27 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	else
 	  cpglab(xstr,ystr,"");
 
-  if (publish==0)
+	if (publish==0)
 	  {
 	    cpgsch(0.5); 
 	    cpgmtxt("B",6.5,0.92,0.0,"plk v.3.0 (G. Hobbs)"); 
 	    cpgsch(fontSize); 
+	  }
+
+	if (nbands > 0)
+	  {
+	    int i;
+	    float ffx[2],ffy[2];
+	    printf("nbands = %d\n",nbands);
+	    cpgsls(2);
+	    for (i=0;i<nbands;i++)
+	      {
+		ffx[0] = bandsX1[i]- (double)centreEpoch;
+		ffx[1] = bandsX2[i]- (double)centreEpoch;
+		ffy[0] = ffy[1] = ploty2-(ploty2-ploty1)*0.05 - i*(ploty2-ploty1)*0.02;
+		cpgsci((i%2)+1); cpgline(2,ffx,ffy);
+	      }
+	    cpgsls(1);
 	  }
 
 	if (placeMarks==1)
@@ -1199,6 +1236,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      }
 	    callFit(psr,npsr);
 	    }*/
+	else if (key==2) // ctrl-b (run pdv to get backend jumps)
+	  {
+	    char str[1024];
+	    int i;
+	    for (i=0;i<count;i++)
+	      {
+		printf("Have %s\n",psr[0].obsn[id[i]].fname);
+	      }
+	  }
 	else if (key=='b'){ /* bin the residuals */
 	  binResiduals(psr,npsr,x,y,count,id,&overN,overX,overY,overYe,xplot,yplot,
 		       yerr1,unitFlag,plotPhase,(double)centreEpoch);
@@ -3470,7 +3516,7 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
     doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
   formBatsAll(psr,npsr);	  
   /* Form residuals */
-  formResiduals(psr,npsr,0); // iteration);
+  formResiduals(psr,npsr,1); // iteration);
   textOutput(psr,npsr,0,0,0,0,"");
 
   printf("Leaving with %g %d\n",(double)origFinish,psr[0].param[param_finish].fitFlag[0]);

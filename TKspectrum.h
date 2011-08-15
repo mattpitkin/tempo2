@@ -1793,6 +1793,60 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
   return nfit;
 }
 
+// Spectral analysis using covariance matrix
+// note: uinv array must start from 0, not 1
+// NEW FEATURE:
+// set nfit < 0 to automatically set it to nres/2-1
+int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit)
+{
+  int i,j,k;
+  //  int nfit=nres/2-1;
+  int nSpec;
+
+  if (nfit < 0)
+    nfit=nres/2-1;
+
+  double v[nfit];
+  double sig[nres];
+  double **newUinv;
+  double **cvm;
+  double chisq;
+  pulsar *psr;
+  int ip[nres];
+  double param[nfit],error[nfit];
+
+  cvm = (double **)alloca(sizeof(double *)*nfit);
+  for (i=0;i<nfit;i++)
+    cvm[i] = (double *)alloca(sizeof(double)*nfit);
+
+  // Should fit independently to all frequencies
+  for (i=0;i<nres;i++)
+    {
+      sig[i] = 1.0; // The errors are built into the uinv matrix
+      ip[i] = 0;
+    }
+  for (k=0;k<nfit;k++)
+    {
+      printf("k = %d\n",k);
+      //      printf("%5.2g\%\r",(double)k/(double)nfit*100.0);
+      //      fflush(stdout);
+      GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
+      printf("Doing leastSquares fit\n");
+      TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
+      printf("Done leastSquares fit\n");
+      v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
+      specX[k] = GLOBAL_OMEGA/2.0/M_PI;
+      specY_R[k] = sqrt(v[k])*param[1];
+      specY_I[k] = sqrt(v[k])*param[2];
+    }
+
+  //  for (i=0;i<nfit;i++)
+  //    free(cvm[i]);
+  //  free(cvm);
+  //  printf("Complete spectra\n");
+  return nfit;
+}
+
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored
 void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)

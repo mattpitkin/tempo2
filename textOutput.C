@@ -235,11 +235,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
 
       if (psr[p].nconstraints>0){
-	      printf("\nCONSTRAINTS:\n");
-	      for (i=0; i < psr[p].nconstraints; i++){
-		      printf("%s\n",get_constraint_name(psr[p].constraints[i]).c_str());
-	      }
-      printf("\n");
+	printf("\nCONSTRAINTS:\n");
+	for (i=0; i < psr[p].nconstraints; i++){
+	  printf("%s\n",get_constraint_name(psr[p].constraints[i]).c_str());
+	}
+	printf("\n");
       }
 
       /* JUMPS */

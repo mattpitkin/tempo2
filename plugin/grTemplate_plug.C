@@ -44,12 +44,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
   double globalParameter;
+  const char *CVS_verNum = "$Revision$";
+
+  if (displayCVSversion == 1) CVSdisplayVersion("grTemplate.C","plugin",CVS_verNum);
 
   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
 
   printf("Graphical Interface: name\n");
   printf("Author:              author\n");
-  printf("CVS Version:         $Revision $\n");
+  printf("CVS Version:         $Revision$\n");
   printf(" --- type 'h' for help information\n");
 
 

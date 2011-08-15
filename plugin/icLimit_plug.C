@@ -64,6 +64,7 @@ void help() /* Display help */
   printf("-noise                   Noise level\n");
   printf("-plot                    Plot the results\n");
   printf("-h                       This help file\n");
+  printf("-onlyF0F1                Re-do the fit for only F0 and F1 without using the Cholesky\n");
   printf("\n\n");
   printf("Typical usage: tempo2 -gr icLimit -gwamp 5e-15 -ngw 100 -nit 100 -dcf cfunc_1 -plot -f 0437_10cm.par try.tim -noise 2e-31\n");
   exit(1);
@@ -119,6 +120,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double **avSpecY;
   double ***specX_sim,***specY_sim;
   int    *nSpec;
+  int    onlyF0F1=0;
   double x[MAX_OBSN];
 
   float  **actDataX,**actDataY,**actDataE1,**actDataE2;
@@ -174,6 +176,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	plot=1;
       else if (strcmp(argv[i],"-h")==0)
 	help();
+      else if (strcmp(argv[i],"-onlyF0F1")==0)
+	onlyF0F1=1;
     }
 
   // Allocate memory for spectra
@@ -358,30 +362,32 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
 	
 	formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-	// Turn off fitting for everything except F0 and F1
-			for (i=0;i<MAX_PARAMS;i++)
+	if (onlyF0F1==1)
 	  {
-	    for (p=0;p<*npsr;p++)
+	    // Turn off fitting for everything except F0 and F1
+	    for (i=0;i<MAX_PARAMS;i++)
 	      {
-		if (i==0) // Turn off jumps
+		for (p=0;p<*npsr;p++)
 		  {
-		    for (j=0;j<psr[p].nJumps;j++)
-		      psr[p].fitJump[j] = 0;		    
-		  }
-		for (j=0;j<psr[p].param[i].aSize;j++)
-		  {
-		    if (psr[p].param[i].paramSet[j] == 1 &&
-			psr[p].param[i].fitFlag[j] == 1)
+		    if (i==0) // Turn off jumps
 		      {
-			if (i != param_f)
-			  psr[p].param[i].fitFlag[j] = 0;
+			for (j=0;j<psr[p].nJumps;j++)
+			  psr[p].fitJump[j] = 0;		    
+		      }
+		    for (j=0;j<psr[p].param[i].aSize;j++)
+		      {
+			if (psr[p].param[i].paramSet[j] == 1 &&
+			    psr[p].param[i].fitFlag[j] == 1)
+			  {
+			    if (i != param_f)
+			      psr[p].param[i].fitFlag[j] = 0;
+			  }
 		      }
 		  }
 	      }
-	  }
-	// Re-do the fit without the Cholesky
-	doFit(psr,*npsr,0);     
-	
+	    // Re-do the fit without the Cholesky
+	    doFit(psr,*npsr,0);     
+	  }	    
 	// Re-form post-fit residuals
 	if (fast==1)  // Can speed up by not re-calculating clocks etc.
 	  {
@@ -392,7 +398,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	else
 	  formBatsAll(psr,*npsr);       
 	
-	  formResiduals(psr,*npsr,1);   
+	formResiduals(psr,*npsr,1);   
 	
 
 

@@ -42,9 +42,12 @@
 using namespace std;
 
 void doPlugin1(pulsar *psr,char *flag,int removeQuad);
-int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1);
+int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1,
+				 double *vsf,double *mverr);
 void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[]);
 void plotHistogram(float *x,int count);
+void doSummary(pulsar *psr,float errStep);
+
 int nit = 1;
 long double gwamp = 0;
 long double alpha = 1;
@@ -62,7 +65,7 @@ void help() /* Display help */
   printf("\t-plot <plottype>  = 1 to caclulate EFACs, = 2 to check whiteness\n");
   printf("For use with plot type 1:\n");
   printf("\t-removeQuad       remove quadratic from all the residuals with a given flag\n");
-  printf("\t-daygap <int>     number of days to determine white level\n");
+  printf("\t-daygap <int>     number of days to determine white level (default = 1d)\n");
   printf("For use with plot type 2:\n");
   printf("\t-numits <int>     number if realisations for noise simulation\n");
   printf("\t-gwamp <ldouble>  amplitude of GW noise source\n");
@@ -79,15 +82,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   char flag[10]="-f";
-  int i;
+  int i,summary;
   int plot=1;
   int removeQuad=0;
   double globalParameter;
+  float errStep = 1e-6;
   //  int nit = 1;
   //  long double gwamp = 0;
   //  long double alpha = 1;
 
   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
+  summary=0;
 
   printf("Graphical Interface: fixData\n");
   printf("Author:              G. Hobbs, D. Champion\n");
@@ -118,6 +123,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%Lf",&gwamp);
       else if (strcmp(argv[i],"-alpha")==0)
 	sscanf(argv[++i],"%Lf",&alpha);
+      else if (strcmp(argv[i],"-errstep")==0)
+	sscanf(argv[++i],"%f",&errStep);
       else if (strcmp(argv[i],"-plotout")==0)
       {
 	plotoutSet = 1;
@@ -126,9 +133,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-daygap")==0)
 	sscanf(argv[++i],"%d",&dayGap);
       else if (strcmp(argv[i],"-script")==0)
-      {
 	script = 1;
-      }
+      else if (strcmp(argv[i],"-summary")==0)
+	summary=1;
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -143,6 +150,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
 
+  if (summary==1)
+    {
+      doSummary(psr,errStep);
+      exit(1);
+    }
   if (plot==1)
     doPlugin1(psr,flag,removeQuad);
   else if (plot==2)
@@ -151,6 +163,151 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     printf("Unknown plot required\n");
 
   return 0;
+}
+
+void doSummary(pulsar *psr,float errStep)
+{
+  int i;
+  float x[psr[0].nobs];
+  float y[psr[0].nobs];
+  float e[psr[0].nobs];
+  float plot_x[psr[0].nobs];
+  float plot_y[psr[0].nobs];
+  float fx[2],fy[2];
+  int n,nplot=0;
+  float minErr=psr[0].obsn[0].toaErr*1e-6;
+  float maxErr=psr[0].obsn[0].toaErr*1e-6;
+  float minx,maxx,miny,maxy;
+  float err;
+  double errfac,vsf,mverr;
+  long double sat1[psr[0].nobs];
+  int it,nit;
+  int npts_sf;
+  long seed = TKsetSeed();
+
+  // Find minimum error value
+  for (i=0;i<psr[0].nobs;i++)
+    {
+      if (minErr > psr[0].obsn[i].toaErr*1.0e-6)
+	minErr = psr[0].obsn[i].toaErr*1.0e-6;
+      if (maxErr < psr[0].obsn[i].toaErr*1.0e-6)
+	maxErr = psr[0].obsn[i].toaErr*1.0e-6;
+    }
+  printf("Minimum error bar = %g seconds\n",minErr);
+  printf("Maximum error bar = %g seconds\n",maxErr);
+  for (err = minErr;err < maxErr;err+=errStep)
+    {
+      n=0;
+      for (i=0;i<psr[0].nobs;i++)
+	{
+	  if (psr[0].obsn[i].toaErr*1.0e-6 >= err &&
+	      psr[0].obsn[i].toaErr*1.0e-6 < err+errStep)
+	    {
+	      x[n] = (float)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
+	      y[n] = (float)(psr[0].obsn[i].residual);
+	      e[n] = (float)(psr[0].obsn[i].toaErr*1.0e-6);
+	      n++;
+	    }
+	}
+	      printf("%g < Err < %g has %d points\n",err,err+errStep,n);
+
+      if (n > 2)
+	{
+	  npts_sf = determine1dStructureFunction(x,y,e,n,&errfac,&vsf,&mverr);
+	  if (npts_sf > 1)
+	    {
+	      printf("Have %d %g %g %g\n",npts_sf,errfac,vsf,mverr);
+	  
+
+	      plot_x[nplot] = log10(pow(err+errStep/2.0,2));
+	      //	      plot_y[nplot] = log10(errfac);
+	      plot_y[nplot] = log10((vsf));
+	      if (nplot==0)
+		{
+		  minx = maxx = plot_x[nplot];
+		  miny = maxy = plot_y[nplot];
+		}
+	      else
+		{
+		  if (minx > plot_x[nplot]) minx = plot_x[nplot];
+		  if (maxx < plot_x[nplot]) maxx = plot_x[nplot];
+		  if (miny > plot_y[nplot]) miny = plot_y[nplot];
+		  if (maxy < plot_y[nplot]) maxy = plot_y[nplot];
+		}
+	      nplot++;
+	    }
+	}
+    }
+  cpgbeg(0,"/xs",1,1);
+  cpgsch(1.4);
+  minx -= 0.1;
+  maxx += 0.1;
+  miny -= 2;
+  maxy += 0.1;
+
+  cpgenv(minx,maxx,miny,maxy,0,0);
+  cpglab("log10(Error bar size\\u2\\d)","log10(var)","");
+  cpgpt(nplot,plot_x,plot_y,5);
+  fx[0] = minx; fx[1] = maxx;
+  fy[0] = fx[0];
+  fy[1] = fx[1]; 
+  cpgsls(4); cpgsci(7); cpgline(2,fx,fy); cpgsci(1); cpgsls(1);
+  fy[0] = log10(pow(10,fx[0])*pow(2,2)); // EFAC = 2
+  fy[1] = log10(pow(10,fx[1])*pow(2,2)); 
+  cpgsls(4); cpgsci(2); cpgline(2,fx,fy); cpgsci(1); cpgsls(1);
+  fy[0] = log10(pow(10,fx[0])*pow(4,2)); // EFAC = 4
+  fy[1] = log10(pow(10,fx[1])*pow(4,2)); 
+  cpgsls(4); cpgsci(3); cpgline(2,fx,fy); cpgsci(1); cpgsls(1);
+  printf("errfac = %g\n",errfac);
+
+  // Calculate errors
+  for (i=0;i<psr[0].nobs;i++)
+    sat1[i] = psr[0].obsn[i].sat - psr[0].obsn[i].residual/86400.0L;
+  nit = 100;
+  for (it=0;it<nit;it++)
+    {
+      nplot=0;
+      for (i=0;i<psr[0].nobs;i++)
+	psr[0].obsn[i].sat = sat1[i] + psr[0].obsn[i].toaErr*1.0e-6*TKgaussDev(&seed)/86400.0L;
+      formBatsAll(psr,1);         /* Form the barycentric arrival times */
+      formResiduals(psr,1,1);    /* Form the residuals                 */
+
+      // Now do the process again
+      for (err = minErr;err < maxErr;err+=errStep)
+	{
+	  n=0;
+	  for (i=0;i<psr[0].nobs;i++)
+	    {
+	      if (psr[0].obsn[i].toaErr*1.0e-6 >= err &&
+		  psr[0].obsn[i].toaErr*1.0e-6 < err+errStep)
+		{
+		  x[n] = (float)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
+		  y[n] = (float)(psr[0].obsn[i].residual);
+		  e[n] = (float)(psr[0].obsn[i].toaErr*1.0e-6);
+		  n++;
+		}
+	    }
+	  //	  printf("%g < Err < %g has %d points (part 2)\n",err,err+errStep,n);
+	  
+	  if (n > 2)
+	    {
+	      npts_sf = determine1dStructureFunction(x,y,e,n,&errfac,&vsf,&mverr);
+	      if (npts_sf > 1)
+		{
+		  //		  printf("Have part 2 %d %g %g %g\n",npts_sf,errfac,vsf,mverr);
+		  
+		  plot_x[nplot] = log10(pow(err+errStep/2.0,2));
+		  //	      plot_y[nplot] = log10(errfac);
+		  plot_y[nplot] = log10((vsf));
+		  nplot++;
+		}
+	    }
+	  cpgpt(nplot,plot_x,plot_y,1);
+	}     
+    }
+  
+
+  cpgend();
 }
 
 // Check whether the data are white
@@ -346,6 +503,7 @@ void doPlugin1(pulsar *psr,char *flag,int removeQuad)
   double errfacs[MAX_JUMPS];
   float fx[MAX_OBSN],fy[MAX_OBSN],fe1[MAX_OBSN],fe2[MAX_OBSN],ye[MAX_OBSN],y[MAX_OBSN];
   int id[MAX_OBSN];
+  double vsf,mverr;
   float yrange;
   float minx,miny;
   float maxx,maxy;
@@ -415,10 +573,10 @@ void doPlugin1(pulsar *psr,char *flag,int removeQuad)
   cpgbox("ATNSBC",0.0,0,"",0.0,0);
   sprintf(xlabel,"MJD - %.2f",(float)psr[0].param[param_pepoch].val[0]);
   cpglab(xlabel,"","");
-  printf("-----------------------------------------------------------------------\n");
-  printf("%-15s %5s %6s %7s %5s\n","Data set","Npts","Span","Npts sf","EFAC");
-  printf("%-15s %5s %6s %7s %5s\n","","","(d)","","");
-  printf("-----------------------------------------------------------------------\n");
+  printf("------------------------------------------------------------------------------\n");
+  printf("%-15s %5s %6s %7s %8s %8s %8s %8s %5s\n","Data set","Npts","Span","Npts sf","W. Var","M. err^2","W. RMS","M. err","EFAC");
+  printf("%-15s %5s %6s %7s %8s %8s %8s %8s %5s\n","","","(d)","","(s^2)","(s^2)","(s)","(s)","");
+  printf("------------------------------------------------------------------------------\n");
 
   for (j=0;j<nflag;j++)
     {
@@ -473,15 +631,15 @@ void doPlugin1(pulsar *psr,char *flag,int removeQuad)
       printf("%-15s %5d ",flagV[j],n);
       span = TKrange_f(fx,n);
       printf("%6d ",(int)span);
-      npts_sf = determine1dStructureFunction(fx,y,ye,n,&errfac);
+      npts_sf = determine1dStructureFunction(fx,y,ye,n,&errfac,&vsf,&mverr);
       errfacs[j] = errfac;
-      printf("%7d %5.2f ",npts_sf,errfac);
+      printf("%7d %8.2e %8.2e %8.2e %8.2e %5.2f ",npts_sf,vsf,mverr,sqrt(vsf),sqrt(mverr),errfac);
       //      strcpy(efacFlagID[nefacFlag],flag);
       //      strcpy(efacFlag[nefacFlag],flagV[j]);
       //      efacFlagVal[nefacFlag]=errfac;
       printf("\n");
     }
-  printf("-----------------------------------------------------------------------\n");
+  printf("------------------------------------------------------------------------------\n");
   writeTim("fixData.tim",psr,"tempo2");
 
   cpgend();
@@ -490,11 +648,12 @@ void doPlugin1(pulsar *psr,char *flag,int removeQuad)
     {
       printf("T2EFAC %s %s %5.2f\n",flag, flagV[j],errfacs[j]);
     }
-  printf("-----------------------------------------------------------------------\n");
+  printf("------------------------------------------------------------------------------\n");
 
 }
 
-int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1)
+int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1,
+				 double *mvsf,double *mverr)
 {
   int i,p,j,n=0;
   double sf,verr,vsf;
@@ -529,7 +688,7 @@ int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errf
   verr=0.0;
   n=0;
   for (i=0;i<nn;i++)
-      verr += pow(ye[i],2);
+    verr += pow(ye[i],2);
 
   for (i=0;i<nn;i++)
     {
@@ -550,6 +709,8 @@ int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errf
     }
 
   *errfac1 = sqrt(0.5*sf/(double)n/(verr/(double)nn));
+  *mvsf = 0.5*sf/(double)n;
+  *mverr = verr/(double)nn;
   //      printf("errfac1 = %d %d %g\n",n,nn,errfac1);
   return n;
 }

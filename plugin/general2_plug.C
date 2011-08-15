@@ -287,6 +287,29 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);
 		      }
+		    else if (strcasecmp(var,"solarangle")==0) // Angle from the Sun
+		      {
+			int k,j;
+			double ppos[3],pospos,rsa[3],r,ctheta;
+
+			for (k=0;k<3;k++)
+			  ppos[k] = psr[0].posPulsar[k];
+			pospos = sqrt(ppos[0]*ppos[0] + ppos[1]*ppos[1] + ppos[2]*ppos[2]);
+			for (k=0;k<3;k++)
+			  ppos[k] /= pospos;
+
+			for (j=0;j<3;j++)
+			  {
+			    rsa[j] = -psr[0].obsn[varN].sun_ssb[j] + psr[0].obsn[varN].earth_ssb[j] + psr[0].obsn[varN].observatory_earth[j];
+			  }
+
+			r = sqrt(dotproduct(rsa,rsa));
+			ctheta = dotproduct(ppos,rsa)/r;
+			sprintf(disp,dformat,acos(ctheta)*180/M_PI);
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+
+		      }
 		    else if (strcasecmp(var,"shapiro")==0) /* Solar shapiro delay */
 		      {
 			sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelaySun); 
