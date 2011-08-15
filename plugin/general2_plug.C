@@ -300,7 +300,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 
 			for (j=0;j<3;j++)
 			  {
-			    rsa[j] = -psr[0].obsn[varN].sun_ssb[j] + psr[0].obsn[varN].earth_ssb[j] + psr[0].obsn[varN].observatory_earth[j];
+			    rsa[j] = (-psr[0].obsn[varN].sun_ssb[j] - psr[0].obsn[varN].earth_ssb[j] + psr[0].obsn[varN].observatory_earth[j]);
 			  }
 
 			r = sqrt(dotproduct(rsa,rsa));
