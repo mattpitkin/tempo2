@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "tempo2.h"
 #include "jpleph.h"
 #include "ifteph.h"
