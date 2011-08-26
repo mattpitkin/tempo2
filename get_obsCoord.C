@@ -137,14 +137,14 @@ void get_obsCoord(pulsar *psr,int npsr)
 
   if (displayCVSversion == 1) CVSdisplayVersion("get_obsCoord.C","get_obsCoord()",CVS_verNum);
 
-
   for (p=0;p<npsr;p++)
     {
        for (i=0;i<psr[p].nobs;i++)
 	{ 
 	  if (psr[p].obsn[i].delayCorr!=0)
 	    {	     
-	      if (strcmp(psr[p].obsn[i].telID,"STL")==0) // Satellite
+	      if (strcmp(psr[p].obsn[i].telID,"STL")==0 ||
+		  strcmp(psr[p].obsn[i].telID,"STL_FBAT")==0) // Satellite
 		{
 		  psr[p].obsn[i].siteVel[0] = 0.0;
 		  psr[p].obsn[i].siteVel[1] = 0.0;
@@ -153,24 +153,57 @@ void get_obsCoord(pulsar *psr,int npsr)
 		  // Now check flags to obtain the telescope coordinates for this time
 		  for (k=0;k<psr[p].obsn[i].nFlags;k++)
 		    {
+		      //
+		      // NOTE: For a STL_FBAT setting OBSERVATORY->BAT not OBSERVATORY->EARTH
+		      // The terminology is misleading
+		      //
 		      if (strcmp(psr[p].obsn[i].flagID[k],"-telx")==0){
 			sscanf(psr[p].obsn[i].flagVal[k],"%lf",&psr[p].obsn[i].observatory_earth[0]);
-			psr[p].obsn[i].observatory_earth[0]/=SPEED_LIGHT;
+			if (strcmp(psr[p].obsn[i].telID,"STL")==0) psr[p].obsn[i].observatory_earth[0]/=SPEED_LIGHT;
 		      }
 		      if (strcmp(psr[p].obsn[i].flagID[k],"-tely")==0){
 			sscanf(psr[p].obsn[i].flagVal[k],"%lf",&psr[p].obsn[i].observatory_earth[1]);
-			psr[p].obsn[i].observatory_earth[1]/=SPEED_LIGHT;
+			if (strcmp(psr[p].obsn[i].telID,"STL")==0) psr[p].obsn[i].observatory_earth[1]/=SPEED_LIGHT;
 		      }
 		      if (strcmp(psr[p].obsn[i].flagID[k],"-telz")==0){
 			sscanf(psr[p].obsn[i].flagVal[k],"%lf",&psr[p].obsn[i].observatory_earth[2]);		      
-			psr[p].obsn[i].observatory_earth[2]/=SPEED_LIGHT;
+			if (strcmp(psr[p].obsn[i].telID,"STL")==0) psr[p].obsn[i].observatory_earth[2]/=SPEED_LIGHT;
 		      }
 			
 		    }
 		}
+	      else if (strcmp(psr[p].obsn[i].telID,"STL_BAT")==0) // Satellite in barycentric coordinates
+		{
+		  psr[p].obsn[i].siteVel[0] = 0.0;
+		  psr[p].obsn[i].siteVel[1] = 0.0;
+		  psr[p].obsn[i].siteVel[2] = 0.0;
+		  psr[p].obsn[i].observatory_earth[0] = 0.0;
+		  psr[p].obsn[i].observatory_earth[1] = 0.0;
+		  psr[p].obsn[i].observatory_earth[2] = 0.0;
+		  psr[p].correctTroposphere = 0;
+		}
 	      else
 		{
 		  obs = getObservatory(psr[p].obsn[i].telID);
+		  // Check for override:
+		  if (strcmp(psr[p].obsn[i].telID,"IMAG")==0)
+		    {
+		      //
+		      // Must check what is happening to other parameters - such as velocities
+		      //
+		      for (k=0;k<psr[p].obsn[i].nFlags;k++)
+			{
+			  if (strcmp(psr[p].obsn[i].flagID[k],"-telx")==0){
+			    sscanf(psr[p].obsn[i].flagVal[k],"%lf",&obs->x);
+			  }
+			  if (strcmp(psr[p].obsn[i].flagID[k],"-tely")==0){
+			    sscanf(psr[p].obsn[i].flagVal[k],"%lf",&obs->y);
+			  }
+			  if (strcmp(psr[p].obsn[i].flagID[k],"-telz")==0){
+			    sscanf(psr[p].obsn[i].flagVal[k],"%lf",&obs->z);		      
+			  }
+			}		
+		    }
 		  // New way
 		  if (psr[p].t2cMethod == T2C_IAU2000B)
 		    {

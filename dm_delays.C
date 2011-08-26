@@ -66,12 +66,23 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	{
 	  /*	  rsa[j] = -psr[p].obsn[i].sun_ssb[j] + psr[p].obsn[i].earthMoonBary_ssb[j] -
 		  psr[p].obsn[i].earthMoonBary_earth[j] + psr[p].obsn[i].observatory_earth[j]; */
-	  rsa[j] = -psr[p].obsn[i].sun_ssb[j] + psr[p].obsn[i].earth_ssb[j] + psr[p].obsn[i].observatory_earth[j];
+	  if (strcmp(psr[p].obsn[i].telID,"STL_FBAT")==0)
+	    rsa[j] = -psr[p].obsn[i].sun_ssb[j] + psr[p].obsn[i].observatory_earth[j];
+	  else
+	    rsa[j] = -psr[p].obsn[i].sun_ssb[j] + psr[p].obsn[i].earth_ssb[j] + psr[p].obsn[i].observatory_earth[j];
 	}
       if (debugFlag==1) printf("In dm_delays with rsa = %f %f %f\n",rsa[0],rsa[1],rsa[2]);            
       /* What about Sun from SSB? */
       for (j=0;j<3;j++)
-	vobs[j] = psr[p].obsn[i].earth_ssb[j+3] + psr[p].obsn[i].siteVel[j];
+	{
+	  if (strcmp(psr[p].obsn[i].telID,"STL_FBAT")==0)
+	    {
+	      if (debugFlag==1) printf("WARNING: setting vobs = 0, this can give a large error!\n");
+	      vobs[j] = 0.0;
+	    }
+	  else
+	    vobs[j] = psr[p].obsn[i].earth_ssb[j+3] + psr[p].obsn[i].siteVel[j];
+	}
 	/*	vobs[j] = psr[p].obsn[i].earthMoonBary_ssb[j+3] - psr[p].obsn[i].earthMoonBary_earth[j+3] + 
 		psr[p].obsn[i].siteVel[j];*/
       if (debugFlag==1) printf("In dm_delays with vobs = %f %f %f\n",vobs[0],vobs[1],vobs[2]);      
@@ -79,8 +90,9 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       ctheta = dotproduct(pos,rsa)/r;
       voverc = dotproduct(pos,vobs);
       freqf = psr[p].obsn[i].freq*1.0e6*(1.0-voverc);   /* Converting frequency in to Hz */
+      //      printf("freqf = %g %g %g %g\n",freqf,psr[p].obsn[i].freq,voverc,psr[p].obsn[i].einsteinRate);
       /* Transform freq due to Einstein delay ! */
-      if (psr[p].dilateFreq && freqf > 0)
+      if (psr[p].dilateFreq && freqf > 0 && psr[p].obsn[i].einsteinRate != 0.0)
       	freqf /= psr[p].obsn[i].einsteinRate;
 
       if (debugFlag==1) printf("In dm_delays: Transforming frequency due to Einstein delay\n");      
@@ -224,7 +236,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	    //	    psr[p].obsn[i].tdis2 = 1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr[p].ne_sw*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/freqf/freqf; 	    
 	}
 
-      if (debugFlag==1) 
+            if (debugFlag==1) 
 	  printf("[%d/%d] In dm_delays with tdis2 = %g, freqf = %g %g %g %d %g\n",i,
 		 psr[p].nobs,(double)psr[p].obsn[i].tdis2,(double)freqf,psr[p].obsn[i].freq,
 		 (1.0-voverc),psr[p].dilateFreq,psr[p].obsn[i].einsteinRate);      

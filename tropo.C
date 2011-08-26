@@ -406,9 +406,14 @@ compute_tropospheric_delays(pulsar *psr,int npsr)
       psr[p].obsn[i].troposphericDelay = 0.0;
       if (psr[p].obsn[i].delayCorr!=0 && psr[p].correctTroposphere!=0 && psr[p].obsn[i].zenith[2]==0.0 && !warned)
       {
-	printf( "WARNING: Tropospheric delay correction not possible with T2CMETHOD TEMPO %d %lf\n", i, psr[p].obsn[i].zenith[2]);
+	if (debugFlag==1) printf( "WARNING: Tropospheric delay correction not possible with T2CMETHOD TEMPO %d %lf\n", i, psr[p].obsn[i].zenith[2]);
 	warned = true;
       }
+      else if (strcmp(psr[p].obsn[i].telID,"STL_FBAT")==0)
+	{
+	  if (debugFlag==1)printf("Not correcting for tropospheric delay\n");
+	  warned=true;
+	}
       else if (psr[p].obsn[i].delayCorr!=0 && psr[p].correctTroposphere!=0)
       {
 	obs = getObservatory(psr[p].obsn[i].telID);
