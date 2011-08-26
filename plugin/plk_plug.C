@@ -71,14 +71,14 @@ void overPlotShapiro(pulsar *psr,float offset,longdouble centreEpoch);
 void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id, int *overN,
 		  float overX[], float overY[], float overYe[],int xplot,int yplot,
 		  float errBar[],double unitFlag,int plotPhase,double centreEpoch);
-void drawMenu(pulsar *psr,float plotx1,float plotx2,float ploty1,float ploty2,int menu);
+void drawMenu(pulsar *psr,float plotx1,float plotx2,float ploty1,float ploty2,int menu,int paramOffset);
 void drawMenu3(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot);
 void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat );
 void slaCalyd ( int iy, int im, int id, int *ny, int *nd, int *j );
 void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int xplot,int yplot,int jumpOffset,int iFlagColour, int nFlags);
 void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX1,int setZoomX2,
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,longdouble centreEpoch,
-	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics, char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset,int zoom);
+	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics, char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset,int zoom,int *paramOffset);
 void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX1,int setZoomX2,
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,longdouble centreEpoch,
 	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics,char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset);
@@ -535,6 +535,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   float bandsX1[128],bandsX2[128];
   int nbands=0;
   int flagN=0;
+  int paramOffset=0;
 
   for (i=0;i<100;i++)
     flagCol[i]= 1;
@@ -819,7 +820,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    cpgsvp(0.0,1.0,0.8,1.0);
 	    cpgswin(0,1,0,1);
 	    /*	    cpgbox("",0.0,0,"",0.0,0); */
-	    drawMenu(psr,plotx1,plotx2,ploty1,ploty2,menu);
+	    drawMenu(psr,plotx1,plotx2,ploty1,ploty2,menu,paramOffset);
 	    if (menu==3)
 	      {
 		cpgsvp(0.0,0.3,0.3,0.8);
@@ -1888,7 +1889,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  }
 	      }
 	    if (menu>0 && mouseY > ploty2)
-	      checkMenu(psr,mouseX,mouseY,2,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom);
+	      checkMenu(psr,mouseX,mouseY,2,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset);
 	    else
 	      deletePoint(psr,x,y,id,count,mouseX,mouseY); /* Delete closest point */
 	  }
@@ -2023,10 +2024,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  }
 	      }
 	    if ((menu==1 || menu==2) && mouseY > ploty2)
-	      checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom);
+	      checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset);
 	    else if (menu==3 && (mouseY > ploty2 || mouseX < plotx1 || mouseY < ploty1))
 	      {
-		checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom);
+		checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset);
 	      }
 	    else
 	      idPoint(psr,x,y,id,count,mouseX,mouseY); /* Identify closest point */
@@ -2607,7 +2608,7 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,
 	       longdouble centreEpoch,int menu,int plotx,char parFile[][MAX_FILELEN],
 	       char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics,
-	       char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset,int zoom) 
+	       char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset,int zoom,int *paramOffset) 
 {
   float x1,x2,y1,y2,x3,x4,y3,y4,x7,y7,xscale,yscale,xscale2,x0;
   float x5,x6,y5,y6;
@@ -2689,6 +2690,14 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 	  int i,j;
 	  xpos=0;
 	  ypos=0;
+	  //	  if (*paramOffset > 0)
+	    {
+	      if (mouseX == 9 && mouseY == 0 && *paramOffset > 0)		
+		(*paramOffset)--;
+	      else if (mouseX == 9 && mouseY == 2)
+		(*paramOffset)++;
+	      printf("Setting offset in menu to be %d\n",*paramOffset);
+	    }
 	  for (i=0;i<MAX_PARAMS;i++)
 	    {
 	      for (j=0;j<psr[0].param[i].aSize;j++)
@@ -2706,7 +2715,7 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 			  strcmp(psr[0].param[i].shortlabel[j],"EPHVER")!=0 &&
 			  strcmp(psr[0].param[i].shortlabel[j],"POSEPOCH")!=0)
 			{
-			  if (mouseX==xpos && mouseY==ypos)
+			  if (mouseX==xpos && mouseY==ypos-(*paramOffset))
 			    swapFit(psr,i,j,button);
 			  xpos++;
 			  if (xpos > 8)
@@ -2722,6 +2731,8 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 	}
       if (mouseX==0 && mouseY==3) 
 	{
+	  // Doing the refit
+
 	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,1,plotx,dcmFile,covarFuncFile,zoom);
 
 	  /*     callFit(psr,1); */ /* MUST FIX FOR ZOOM MODES */
@@ -2951,11 +2962,12 @@ void swapFit(pulsar *psr,int par,int k,int button)
     }
 }
 
-void drawMenu(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu)
+void drawMenu(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,int menu,int paramOffset)
 {
   float x1,y1,x2,y2,xscale,yscale,x3,x4,y3,y4;
   float x0,y0,xscale2,yscale2;
   float mx,my;
+  float xpos,ypos;
   char key;
 
  /*  cpgrect(plotx1,plotx1+2,ploty1,10); */
@@ -3037,6 +3049,7 @@ void drawMenu(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,i
     {
       int count=0;
       float xpos,ypos;
+      float xposv,yposv;
       int i,j;
       xpos=0.0;
       ypos=0.9;
@@ -3057,12 +3070,25 @@ void drawMenu(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,i
 		      strcmp(psr[0].param[i].shortlabel[j],"EPHVER")!=0 &&
 		      strcmp(psr[0].param[i].shortlabel[j],"POSEPOCH")!=0)
 		    {
-		      drawOption(xpos,ypos,psr[0].param[i].shortlabel[j],psr->param[i].fitFlag[j]);
+		      if (ypos+paramOffset*0.2 <= 0.9 && ypos+paramOffset*0.2 >= 0.5)
+			drawOption(xpos,ypos+paramOffset*0.2,psr[0].param[i].shortlabel[j],psr->param[i].fitFlag[j]);
 		      xpos+=0.1;
 		      if (xpos > 0.9)
 			{
 			  xpos=0.0;
 			  ypos-=0.2;
+			  if (paramOffset > 0)
+			    {
+			      xposv = 0.985; yposv = 0.9;
+			      cpgpt(1,&xposv,&yposv,30);			      
+			    }
+
+			  if (ypos+paramOffset*0.2 < 0.5) // Don't plot any more
+			    {
+			      i = MAX_PARAMS;
+			      xposv = 0.985; yposv = 0.5;
+			      cpgpt(1,&xposv,&yposv,31);
+			    }
 			}
 		    }
 		}
@@ -3200,7 +3226,13 @@ void drawOption(float x,float y,char *str,int fit)
   else cpgsci(2);
   cpgrect(x,x+0.015,y,y+0.08);
   cpgsci(1);
+  if (strlen(str) > 7)
+    cpgsch(0.8);
+  else
+    cpgsch(1);
+      
   cpgtext(x+0.017,y,str);
+  cpgsch(1);
 }
 
 void newTim(pulsar *psr)

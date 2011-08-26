@@ -44,6 +44,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   longdouble times[MAX_OBSN];
   longdouble out[MAX_OBSN];
   longdouble lowFreq,highFreq,alpha=-3.0,ampPL=1.0e-16;
+  int setref=0;
   int nshots,npts;
   int j,count=0,i,k,ii,jj,kk;
   longdouble solsid  = 1.002737909;
@@ -71,6 +72,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char have_outfile=0;
   char outfile[100];
   char timesfname[100];
+  char telID[128]="7"; // Hardcode to Parkes
   int bunching=0; // flag on whether or not observations occur in groups
   // size of gap between observing runs, and length of observing runs.
   // These defaults give 7 observations every 28 days.
@@ -106,6 +108,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       sscanf(argv[i+1],"%Lf",&imjd);
       printf("Have initial MJD >>%lf<<\n",(double)imjd);
     }
+    if(strcmp(argv[i],"-tel")==0){
+      sscanf(argv[i+1],"%s",telID);
+    }
     if(strcmp(argv[i],"-end")==0){
       sscanf(argv[i+1],"%Lf",&fmjd);
       printf("Have final MJD >>%lf<<\n",(double)fmjd);
@@ -124,6 +129,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       sscanf(argv[i+1],"%s",&timesfname);
       printf("Timesfile = %s\n",timesfname);
     }
+    if (strcmp(argv[i],"-setref")==0)
+      setref=1;
+
     if (strcmp(argv[i],"-o")==0){
       have_outfile=1;
       sscanf(argv[i+1],"%s",&outfile);
@@ -310,6 +318,23 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  }
 		if (endit==0)
 		  {
+		    if (count==0 && setref==1)
+		      {
+			psr[0].obsn[count].sat    = psr[0].param[param_tzrmjd].val[0];
+			strcpy(psr[0].obsn[count].fname,"reference");
+			psr[0].obsn[count].freq   = psr[0].param[param_tzrfrq].val[0];
+			if (giveRMS!=1) grms = psr[0].param[param_tres].val[0]/1e3;
+			//	    else grms=0.0;
+			psr[0].obsn[count].toaErr = grms*1000.0;
+			psr[0].obsn[count].origErr = grms*1000.0;
+			psr[0].obsn[count].phaseOffset = 0.0;
+			strcpy(psr[0].obsn[count].telID, psr[0].tzrsite);
+			psr[0].obsn[count].deleted = 0;
+			psr[0].obsn[count].clockCorr=1;
+			psr[0].obsn[count].delayCorr=1;
+			psr[0].obsn[count].efac=1;
+			count++;
+		      }
 		    psr[0].obsn[count].sat    = mjd;
 		    strcpy(psr[0].obsn[count].fname,fake_fname);
 		    psr[0].obsn[count].freq   = freq;
@@ -318,7 +343,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		    psr[0].obsn[count].toaErr = grms*1000.0;
 		    psr[0].obsn[count].origErr = grms*1000.0;
 		    psr[0].obsn[count].phaseOffset = 0.0;
-		    strcpy(psr[0].obsn[count].telID, "7");
+		    strcpy(psr[0].obsn[count].telID, telID);
 		    psr[0].obsn[count].deleted = 0;
 		    psr[0].obsn[count].clockCorr=1;
 		    psr[0].obsn[count].delayCorr=1;

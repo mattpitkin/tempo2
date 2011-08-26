@@ -380,6 +380,12 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }
+		    else if (strcasecmp(var,"t2tb")==0) // Correction including TT and tt2tb
+		      {
+			sprintf(disp,format,getCorrectionTT(psr[0].obsn+varN)+psr[0].obsn[varN].correctionTT_TB); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
 		    else if (strcasecmp(var,"tt2tb")==0) /* Correction from TT to tb */
 		      {
 			sprintf(disp,format,psr[0].obsn[varN].correctionTT_TB); 
@@ -545,6 +551,18 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		    else if (strcasecmp(var,"posTel")==0)
 		      {
 			sprintf(disp,"%f %f %f",psr[0].obsn[varN].observatory_earth[0],psr[0].obsn[varN].observatory_earth[1],psr[0].obsn[varN].observatory_earth[2]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"telSSB")==0) // Telescope wrt SSB
+		      {
+			sprintf(disp,"%.8f %.8f %.8f",psr[0].obsn[varN].observatory_earth[0]+psr[0].obsn[varN].earth_ssb[0],psr[0].obsn[varN].observatory_earth[1]+psr[0].obsn[varN].earth_ssb[1],psr[0].obsn[varN].observatory_earth[2]+psr[0].obsn[varN].earth_ssb[2]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"telVel")==0) // Telescope wrt SSB
+		      {
+			sprintf(disp,"%.8g %.8g %.8g",psr[0].obsn[varN].siteVel[0]+psr[0].obsn[varN].earth_ssb[3],psr[0].obsn[varN].siteVel[1]+psr[0].obsn[varN].earth_ssb[4],psr[0].obsn[varN].siteVel[2]+psr[0].obsn[varN].earth_ssb[5]); 
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }

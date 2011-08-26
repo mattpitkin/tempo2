@@ -145,7 +145,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       if (strcmp(argv[i],"-f")==0)  // Read parameter file and arrival time files
 	{
-	  strcpy(parFile[*npsr],argv[i+1]); 
+ 	  strcpy(parFile[*npsr],argv[i+1]); 
 	  strcpy(timFile[*npsr],argv[i+2]);	  
 	  (*npsr)++;
 	}
