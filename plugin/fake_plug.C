@@ -61,7 +61,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char str[MAX_FILELEN],str2[MAX_FILELEN];
   double hamax =-1.0;
   char random[100];
-  char read_f;
+  char read_f=0;
   FILE *fout,*fin;
   char addCubic[100]="n",temp[100];
   char formstr[50]="tempo2";
@@ -287,22 +287,22 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      {
 		if (timesFile==1)
 		  {
-			  if (read_f){
-				  if (fscanf(fin,"%s %Lf %Lf\n",fake_fname,&freq,&mjd)==3)
-				  {
-					  printf("Read %g %f\n",(double)mjd, (double)freq);
-					  endit=0;
-				  }
-				  else
-					  endit=1;
-			  } else{
-		    if (fscanf(fin,"%Lf",&mjd)==1)
-		      {
-			printf("Read %g\n",(double)mjd);
-			endit=0;
-		      }
-		    else
-		      endit=1;
+		    if (read_f){
+		      if (fscanf(fin,"%s %Lf %Lf\n",fake_fname,&freq,&mjd)==3)
+			{
+			  printf("Read %g %f\n",(double)mjd, (double)freq);
+			  endit=0;
+			}
+		      else
+			endit=1;
+		    } else{
+		      if (fscanf(fin,"%Lf",&mjd)==1)
+			{
+			  printf("Read %g\n",(double)mjd);
+			  endit=0;
+			}
+		      else
+			endit=1;
 		    }
 		  }
 		else
