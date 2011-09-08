@@ -339,6 +339,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_ifunc]),0);
   else if (strcasecmp(str,"PEPOCH")==0)    /* Period Epoch */
     readValue(psr,str,fin,&(psr->param[param_pepoch]),0);
+  else if (strcasecmp(str,"TELEPOCH")==0) /* Epoch of telescope position */
+    readValue(psr,str,fin,&(psr->param[param_telEpoch]),0);
   else if (strcasecmp(str,"EPHVER")==0)    /* Ephemeris version */
     readValue(psr,str,fin,&(psr->param[param_ephver]),0);
   else if (strcasecmp(str,"DMEPOCH")==0)    /* DM Epoch */
@@ -495,6 +497,49 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	    readValue(psr,str,fin,&(psr->param[param_dm]),dval);
 	}
     }
+  else if (strcasecmp(str,"TELX")==0)
+    readValue(psr,str,fin,&(psr->param[param_telx]),0);
+  else if ((str[0]=='T' || str[0]=='t') &&  /* Higher DM derivatives */
+	   (str[1]=='E' || str[1]=='e') && 
+	   (str[2]=='L' || str[2]=='l') &&
+	   (str[3]=='X' || str[3]=='x') && isdigit(str[4]))
+    {
+      int dval;
+      if (sscanf(str+4,"%d",&dval)==1)
+	{
+	  if (dval<psr->param[param_telx].aSize)
+	    readValue(psr,str,fin,&(psr->param[param_telx]),dval);
+	}
+    }
+  else if (strcasecmp(str,"TELY")==0)
+    readValue(psr,str,fin,&(psr->param[param_tely]),0);
+  else if ((str[0]=='T' || str[0]=='t') &&  /* Higher DM derivatives */
+	   (str[1]=='E' || str[1]=='e') && 
+	   (str[2]=='L' || str[2]=='l') &&
+	   (str[3]=='Y' || str[3]=='y') && isdigit(str[4]))
+    {
+      int dval;
+      if (sscanf(str+4,"%d",&dval)==1)
+	{
+	  if (dval<psr->param[param_tely].aSize)
+	    readValue(psr,str,fin,&(psr->param[param_tely]),dval);
+	}
+    }
+  else if (strcasecmp(str,"TELZ")==0)
+    readValue(psr,str,fin,&(psr->param[param_telz]),0);
+  else if ((str[0]=='T' || str[0]=='t') &&  /* Higher DM derivatives */
+	   (str[1]=='E' || str[1]=='e') && 
+	   (str[2]=='L' || str[2]=='l') &&
+	   (str[3]=='Z' || str[3]=='z') && isdigit(str[4]))
+    {
+      int dval;
+      if (sscanf(str+4,"%d",&dval)==1)
+	{
+	  if (dval<psr->param[param_telz].aSize)
+	    readValue(psr,str,fin,&(psr->param[param_telz]),dval);
+	  printf("Setting %d %d\n",dval,psr->param[param_telz].aSize);
+	}
+    }
   else if (strcasecmp(str,"PX")==0) /* Parallax */
     readValue(psr,str,fin,&(psr->param[param_px]),0);
   else if (strcasecmp(str,"D_AOP")==0) /* AOP Distance (unit: pc)*/
@@ -584,6 +629,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_1;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_2;
+      }
+      if(strcasecmp(cname,"IFUNC")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
       }
   }
   /*

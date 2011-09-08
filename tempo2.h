@@ -160,7 +160,8 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
-            param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om};
+            param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om,
+            param_telx,param_tely,param_telz,param_telEpoch};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
@@ -170,6 +171,9 @@ enum constraint {
 	constraint_dmmodel_cw_0,
 	constraint_dmmodel_cw_1,
 	constraint_dmmodel_cw_2,
+	constraint_ifunc_0,
+	constraint_ifunc_1,
+	constraint_ifunc_2,
 };
 
 

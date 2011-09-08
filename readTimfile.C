@@ -253,6 +253,14 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 				  strcpy(strchr(line+i,' '),"");
 				}
 			      strcpy(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],line+i);
+			      // Check for offset to site arrival time
+			      if (strcmp(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-addsat")==0)
+				{
+				  double offVal;
+				  sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%lf",&offVal);
+				  psr->obsn[nObs].sat += (offVal/86400.0L);
+				}
+
 			      // Check for DM changes
 			      if (strcmp(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-dme")==0)
 				{

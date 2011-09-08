@@ -234,6 +234,36 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_track].shortlabel[0],"TRACK");
   strcpy(psr->param[param_dshk].label[0],"DSHK (kpc)");
   strcpy(psr->param[param_dshk].shortlabel[0],"DSHK");
+
+  /* Telescope coordinates */
+
+  strcpy(psr->param[param_telx].shortlabel[0],"TELX");
+  strcpy(psr->param[param_telx].label[0],"TELX (lt-s)");
+  for (k=1;k<psr->param[param_telx].aSize;k++)
+    {
+      sprintf(psr->param[param_telx].label[k], "TELX%d (lt-s)", k);
+      sprintf(psr->param[param_telx].shortlabel[k], "TELX%d", k);
+    }
+
+  strcpy(psr->param[param_tely].shortlabel[0],"TELY");
+  strcpy(psr->param[param_tely].label[0],"TELY (lt-s)");
+  for (k=1;k<psr->param[param_tely].aSize;k++)
+    {
+      sprintf(psr->param[param_tely].label[k], "TELY%d (lt-s)", k);
+      sprintf(psr->param[param_tely].shortlabel[k], "TELY%d", k);
+    }
+
+  strcpy(psr->param[param_telz].shortlabel[0],"TELZ");
+  strcpy(psr->param[param_telz].label[0],"TELZ (lt-s)");
+  for (k=1;k<psr->param[param_telz].aSize;k++)
+    {
+      sprintf(psr->param[param_telz].label[k], "TELZ%d (lt-s)", k);
+      sprintf(psr->param[param_telz].shortlabel[k], "TELZ%d", k);
+    }
+
+  strcpy(psr->param[param_telEpoch].shortlabel[0],"TELEPOCH");
+  strcpy(psr->param[param_telEpoch].label[0],"TEL EPOCH (MJD)");
+
   /* Glitch parameters */
   for (k=0;k<psr->param[param_glep].aSize;k++)
     {
@@ -416,6 +446,9 @@ void allocateMemory(pulsar *psr, int realloc)
 	psr->param[i].aSize = 9;
       else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
         psr->param[i].aSize = MAX_DMX;
+      else if (i==param_telx) psr->param[i].aSize = 4;
+      else if (i==param_tely) psr->param[i].aSize = 4;
+      else if (i==param_telz) psr->param[i].aSize = 4;
       else psr->param[i].aSize = 1;
       
       psr->param[i].val       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));

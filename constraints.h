@@ -13,4 +13,5 @@ double consFunc_dmmodel_cw(pulsar *psr,int i,int k, int order);
 double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k);
 
 
+double consFunc_ifunc(pulsar *psr,int i,int k, int order);
 

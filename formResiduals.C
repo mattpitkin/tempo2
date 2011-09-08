@@ -407,28 +407,49 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     {
 	       long double wi,t1,t2;
 	       long double dt,speriod,tt;
-	       t1=0.0L,t2=0.0L;
-	       speriod = (long double)(psr[p].ifuncT[1]-psr[p].ifuncT[0]); 
-	       //	       printf("ifuncN = %d\n",psr[p].ifuncN);
-	       for (k=0;k<psr[p].ifuncN;k++)
-	       //	       for (k=3;k<4;k++)
+
+	       if (psr[p].param[param_ifunc].val[0] == 1) // Sinc interpolation
 		 {
-		   //		   printf("Have %g %g\n",psr[p].ifuncT[k],psr[p].ifuncV[k]);
-		   dt = psr[p].obsn[i].bbat - (long double)psr[p].ifuncT[k];
-		   wi=1;
-		   if (dt==0)
+		   t1=0.0L,t2=0.0L;
+		   speriod = (long double)(psr[p].ifuncT[1]-psr[p].ifuncT[0]); 
+		   //	       printf("ifuncN = %d\n",psr[p].ifuncN);
+		   for (k=0;k<psr[p].ifuncN;k++)
+		     //	       for (k=3;k<4;k++)
 		     {
-		       t1 += wi*(long double)psr[p].ifuncV[k];
+		       //		   printf("Have %g %g\n",psr[p].ifuncT[k],psr[p].ifuncV[k]);
+		       dt = psr[p].obsn[i].bbat - (long double)psr[p].ifuncT[k];
+		       wi=1;
+		       if (dt==0)
+			 {
+			   t1 += wi*(long double)psr[p].ifuncV[k];
+			 }
+		       else
+			 {
+			   tt = M_PI/speriod*(dt);
+			   t1 += wi*(long double)psr[p].ifuncV[k]*sinl(tt)/(tt);
+			   //		       t2 += wi*sinl(tt)/(tt);
+			 }
 		     }
-		   else
-		     {
-		       tt = M_PI/speriod*(dt);
-		       t1 += wi*(long double)psr[p].ifuncV[k]*sinl(tt)/(tt);
-		       //		       t2 += wi*sinl(tt)/(tt);
-		     }
+		   phaseW += (psr[p].param[param_f].val[0]*t1);
 		 }
-	       //	       printf("Setting %g %g\n",(double)psr[p].obsn[i].bbat,(double)(t1/t2));
-	       phaseW += (psr[p].param[param_f].val[0]*t1);
+	       else if (psr[p].param[param_ifunc].val[0] == 2) // Linear interpolation
+		 {
+		   int k;
+		   double m,c,ival;
+		   for (k=0;k<psr[p].ifuncN-1;k++)
+		     {
+		       if ((double)psr[p].obsn[i].sat >= psr[p].ifuncT[k] &&
+			   (double)psr[p].obsn[i].sat < psr[p].ifuncT[k+1])
+			 {
+			   m = (psr[p].ifuncV[k]-psr[p].ifuncV[k+1])/(psr[p].ifuncT[k]-psr[p].ifuncT[k+1]);
+			   c = psr[p].ifuncV[k]-m*psr[p].ifuncT[k];
+			   
+			   ival = m*(double)psr[p].obsn[i].sat+c;
+			   break;
+			 }
+		     }
+		   phaseW += (psr[p].param[param_f].val[0]*ival); 				
+		 }
 	     }
 
 

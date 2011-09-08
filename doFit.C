@@ -171,7 +171,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 		  count++;
 		}
 	    }
-		}
+	}
      // add constraints as extra pseudo observations
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
@@ -866,6 +866,66 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  else
 	  afunc = 0.0;
 	  } */
+  else if (i==param_telx)
+    {
+      long double dt,arg;
+      if (psr->param[param_telEpoch].paramSet[0]==1)
+	dt = (x + psr->param[param_pepoch].val[0]) - psr->param[param_telEpoch].val[0];
+      else
+	dt = 0.0;
+      dt *= 86400.0;
+
+      printf("k = %d\n",k);
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	{
+	  if (k==0) afunc = psr->posPulsar[0];
+	  arg = dt; if (k==1) afunc = psr->posPulsar[0]*arg;
+	  arg *= dt; if (k==2) afunc = 0.5*psr->posPulsar[0]*arg;
+	  arg *= dt; if (k==3) afunc = 1.0/6.0*psr->posPulsar[0]*arg;
+	}
+      else
+	afunc = 0;
+    }
+  else if (i==param_tely)
+    {
+      long double dt,arg;
+      if (psr->param[param_telEpoch].paramSet[0]==1)
+	dt = (x + psr->param[param_pepoch].val[0]) - psr->param[param_telEpoch].val[0];
+      else
+	dt = 0.0;
+      dt*=86400.0L;
+
+      printf("k = %d\n",k);
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	{
+	  if (k==0) afunc = psr->posPulsar[1];
+	  arg = dt; if (k==1) afunc = psr->posPulsar[1]*arg;
+	  arg *= dt; if (k==2) afunc = 0.5*psr->posPulsar[1]*arg;
+	  arg *= dt; if (k==3) afunc = 1.0/6.0*psr->posPulsar[1]*arg;
+	}
+      else
+	afunc = 0;
+    }
+  else if (i==param_telz)
+    {
+      long double dt,arg;
+      if (psr->param[param_telEpoch].paramSet[0]==1)
+	dt = (x + psr->param[param_pepoch].val[0]) - psr->param[param_telEpoch].val[0];
+      else
+	dt = 0.0;
+      dt *= 86400.0L;
+
+      printf("k = %d\n",k);
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	{
+	  if (k==0) afunc = psr->posPulsar[2];
+	  arg = dt; if (k==1) afunc = psr->posPulsar[2]*arg;
+	  arg *= dt; if (k==2) afunc = 0.5*psr->posPulsar[2]*arg;
+	  arg *= dt; if (k==3) afunc = 1.0/6.0*psr->posPulsar[2]*arg;
+	}
+      else
+	afunc = 0;
+    }
   else if (i==param_raj || i==param_decj || i==param_pmra || i==param_pmdec ||
 	   i==param_px || i==param_pmrv)
     {
@@ -994,21 +1054,47 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     }
   else if (i==param_ifunc) /* Whitening procedure using interpolated function */
     {
-      double dt = (x + psr->param[param_pepoch].val[0]) - psr->ifuncT[k];
-      double tt = M_PI/(psr->ifuncT[1] - psr->ifuncT[0])*dt;
-      double t1;
-      double t2=0.0;
-      int l;
+      if (psr->param[param_ifunc].val[0]==1)
+	{
+	  double dt = (x + psr->param[param_pepoch].val[0]) - psr->ifuncT[k];
+	  double tt = M_PI/(psr->ifuncT[1] - psr->ifuncT[0])*dt;
+	  double t1;
+	  double t2=0.0;
+	  int l;
+	  
+	  t1 = sin(tt)/tt;
+	  afunc = t1;
+	}
+      else if (psr->param[param_ifunc].val[0]==2) // Linear interpolation
+	{
+	  double yoffs[100];
+	  double sat = (double)psr->obsn[ipos].sat;
+	  for (int ioff =0;ioff<psr->ifuncN;ioff++){
+	      yoffs[ioff]=0;
+	  }
+	  yoffs[k] = 1;
 
-      t1 = sin(tt)/tt;
-      /*      for (l=0;l<psr->ifuncN;l++)
-	      {
-	      dt = (x + (double)psr->param[param_pepoch].val[0]) - psr->ifuncT[l];
-	      tt = M_PI/(psr->ifuncT[1] - psr->ifuncT[0])*dt;
-	      t2+=sin(tt)/tt;
-	      }*/
-
-      afunc = t1;
+	  if (sat < (double)psr->ifuncT[0]){
+	    // we are before the first jump
+	    // so our gradient is just the zeroth offset.
+	    afunc = yoffs[0];
+	  } else if(sat > (double)psr->ifuncT[(int)psr->ifuncN-1]){
+	    afunc = yoffs[(int)psr->ifuncN-1];
+	  } else{
+	    // find the pair we are between...
+	    for (int ioff =0;ioff<psr->ifuncN;ioff++){
+	      if(sat >= psr->ifuncT[ioff] && sat < psr->ifuncT[ioff+1]){
+		double x1 = psr->ifuncT[ioff];
+		double x2 = psr->ifuncT[ioff+1];
+		double x = (sat-x1)/(x2-x1);
+		double y1=yoffs[ioff];
+		double y2=yoffs[ioff+1];
+		afunc = (y2-y1)*x + y1;
+		break;
+	      }
+	    }
+	  }
+	}
     }
   else if (i==param_quad_om)
     {
@@ -1320,6 +1406,11 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		  psr[p].param[i].val[k] -= val[j]*1.0e-27; //*psr[p].param[param_f].val[0]; 
 		  psr[p].param[i].err[k]  = error[j]*1.0e-27;                        
 		}
+ 	      else if (i==param_telx || i==param_tely || i==param_telz)
+		{
+		  psr[p].param[i].val[k] -= val[j];
+		  psr[p].param[i].err[k] = error[j];
+		}	      
 	      else if (i==param_raj)
 		{
 		  char retstr[100];
@@ -1602,6 +1693,12 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 			order++;
 		case constraint_dmmodel_cw_0:
 			return consFunc_dmmodel_cw(psr,i,k,order);
+		case constraint_ifunc_2:
+			order++;
+		case constraint_ifunc_1:
+			order++;
+		case constraint_ifunc_0:
+			return consFunc_ifunc(psr,i,k,order);
 		default:
 			return 0;
 			}

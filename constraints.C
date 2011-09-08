@@ -11,6 +11,13 @@ std::string get_constraint_name(enum constraint c){
 			return "DMMODEL linear(C) = 0";
 		case constraint_dmmodel_cw_2:
 			return "DMMODEL quadratic(C) = 0";
+		case constraint_ifunc_0:
+			return "IFUNC mean(C) = 0";
+		case constraint_ifunc_1:
+			return "IFUNC linear(C) = 0";
+		case constraint_ifunc_2:
+			return "IFUNC quadratic(C) = 0";
+
 		default:
 			return "UNKNOWN!";
 	}
@@ -37,5 +44,20 @@ double consFunc_dmmodel_cw(pulsar *psr,int i,int k,int order){
 	} else return 0;
 
 }
+
+
+double consFunc_ifunc(pulsar *psr,int i,int k,int order){
+	/*
+	 * Only operate on param=ifunc and when fit parameter is 
+	 * one of the frequency independant parts (i.e. last ifuncN).
+	 */
+	if(i==param_ifunc){
+	printf("const %d\n",order);
+		long double epoch = psr->param[param_pepoch].val[0];
+		return pow(psr->ifuncT[k]-epoch,order);
+	} else return 0;
+
+}
+
 
 

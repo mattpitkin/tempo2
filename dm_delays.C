@@ -72,13 +72,26 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	    rsa[j] = -psr[p].obsn[i].sun_ssb[j] + psr[p].obsn[i].earth_ssb[j] + psr[p].obsn[i].observatory_earth[j];
 	}
       if (debugFlag==1) printf("In dm_delays with rsa = %f %f %f\n",rsa[0],rsa[1],rsa[2]);            
+      //      printf("In dm_delays with rsa = %s %f %f %f\n",psr[p].obsn[i].fname,rsa[0],rsa[1],rsa[2]);            
       /* What about Sun from SSB? */
       for (j=0;j<3;j++)
 	{
 	  if (strcmp(psr[p].obsn[i].telID,"STL_FBAT")==0)
 	    {
-	      if (debugFlag==1) printf("WARNING: setting vobs = 0, this can give a large error!\n");
-	      vobs[j] = 0.0;
+	      if (psr[p].param[param_telx].paramSet[1] == 1 &&
+		  psr[p].param[param_tely].paramSet[1] == 1 &&
+		  psr[p].param[param_telz].paramSet[1] == 1)
+		{
+		  if (j==0)      vobs[j] = (double)psr[p].param[param_telx].val[1];
+		  else if (j==1) vobs[j] = (double)psr[p].param[param_tely].val[1];
+		  else if (j==2) vobs[j] = (double)psr[p].param[param_telz].val[1];
+		  //		  printf("Setting vobs = %g\n",vobs[j]);
+		}
+	      else
+		{
+		  if (debugFlag==1) printf("WARNING: setting vobs = 0, this can give a large error!\n");
+		  vobs[j] = 0.0;
+		}
 	    }
 	  else
 	    vobs[j] = psr[p].obsn[i].earth_ssb[j+3] + psr[p].obsn[i].siteVel[j];
@@ -86,6 +99,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	/*	vobs[j] = psr[p].obsn[i].earthMoonBary_ssb[j+3] - psr[p].obsn[i].earthMoonBary_earth[j+3] + 
 		psr[p].obsn[i].siteVel[j];*/
       if (debugFlag==1) printf("In dm_delays with vobs = %f %f %f\n",vobs[0],vobs[1],vobs[2]);      
+      // printf("In dm_delays with vobs = %s %g %g %g\n",psr[p].obsn[i].fname,vobs[0],vobs[1],vobs[2]);      
       r = sqrt(dotproduct(rsa,rsa));
       ctheta = dotproduct(pos,rsa)/r;
       voverc = dotproduct(pos,vobs);

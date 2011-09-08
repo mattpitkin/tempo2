@@ -149,6 +149,72 @@ void get_obsCoord(pulsar *psr,int npsr)
 		  psr[p].obsn[i].siteVel[0] = 0.0;
 		  psr[p].obsn[i].siteVel[1] = 0.0;
 		  psr[p].obsn[i].siteVel[2] = 0.0;		  
+
+		  // Set from the TELX, TELY, TELZ parameters
+		  if (psr[p].param[param_telx].paramSet[0] == 1)
+		    {
+		      longdouble arg,deltaT,t0,pos;
+
+		      if (psr[p].param[param_telEpoch].paramSet[0]==1)
+			t0 = psr[p].param[param_telEpoch].val[0];
+		      else
+			t0 = 0.0L;
+
+		      deltaT = (psr[p].obsn[i].sat - t0)*SECDAY;		
+		      arg = deltaT;
+		      pos = psr[p].param[param_telx].val[0];
+		      if (psr[p].param[param_telx].paramSet[1] == 1) {
+			pos += psr[p].param[param_telx].val[1]*arg;
+			if (psr[p].param[param_telEpoch].paramSet[0]==0)
+			  {
+			    printf("ERROR: Using telescope velocity without setting telEpoch\n");
+			    exit(1);
+			  }
+		      }
+		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[2] == 1) pos += (0.5*psr[p].param[param_telx].val[2]*arg);
+		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_telx].val[3]*arg);
+		      psr[p].obsn[i].observatory_earth[0] = (double)pos;
+		      printf("Setting x to %g\n",(double)psr[p].obsn[i].observatory_earth[0]);
+		    }
+		  if (psr[p].param[param_tely].paramSet[0] == 1)
+		    {
+		      longdouble arg,deltaT,t0,pos;
+
+		      if (psr[p].param[param_telEpoch].paramSet[0]==1)
+			t0 = psr[p].param[param_telEpoch].val[0];
+		      else
+			t0 = 0.0L;
+
+		      deltaT = (psr[p].obsn[i].sat - t0)*SECDAY;		
+		      arg = deltaT;
+		      pos = psr[p].param[param_tely].val[0];
+		      if (psr[p].param[param_tely].paramSet[1] == 1) pos += psr[p].param[param_tely].val[1]*arg;
+		      arg *= deltaT; if (psr[p].param[param_tely].paramSet[2] == 1) pos += (0.5*psr[p].param[param_tely].val[2]*arg);
+		      arg *= deltaT; if (psr[p].param[param_tely].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_tely].val[3]*arg);
+		      psr[p].obsn[i].observatory_earth[1] = (double)pos;
+		      printf("Setting y to %g\n",(double)psr[p].obsn[i].observatory_earth[1]);
+		    }
+		  if (psr[p].param[param_telz].paramSet[0] == 1)
+		    {
+		      longdouble arg,deltaT,t0,pos;
+
+		      if (psr[p].param[param_telEpoch].paramSet[0]==1)
+			t0 = psr[p].param[param_telEpoch].val[0];
+		      else
+			t0 = 0.0L;
+
+		      deltaT = (psr[p].obsn[i].sat - t0)*SECDAY;		
+		      arg = deltaT;
+		      pos = psr[p].param[param_telz].val[0];
+		      if (psr[p].param[param_telz].paramSet[1] == 1) pos += psr[p].param[param_telz].val[1]*arg;
+		      arg *= deltaT; if (psr[p].param[param_telz].paramSet[2] == 1) pos += (0.5*psr[p].param[param_telz].val[2]*arg);
+		      arg *= deltaT; if (psr[p].param[param_telz].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_telz].val[3]*arg);
+		      psr[p].obsn[i].observatory_earth[2] = (double)pos;
+		      printf("Setting z to %g\n",(double)psr[p].obsn[i].observatory_earth[2]);
+		    }
+
+
+
 		  //		  printf("Setting observatory coordinates for TOA %d\n",i);
 		  // Now check flags to obtain the telescope coordinates for this time
 		  for (k=0;k<psr[p].obsn[i].nFlags;k++)
