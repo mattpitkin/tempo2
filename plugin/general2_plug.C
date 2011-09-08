@@ -554,6 +554,12 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }
+		    else if (strcasecmp(var,"dtCOE")==0) // Time to centre of Earth
+		      {
+			sprintf(disp,"%f",dotproduct(psr[0].posPulsar,psr[0].obsn[varN].observatory_earth));
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
 		    else if (strcasecmp(var,"telSSB")==0) // Telescope wrt SSB
 		      {
 			sprintf(disp,"%.8f %.8f %.8f",psr[0].obsn[varN].observatory_earth[0]+psr[0].obsn[varN].earth_ssb[0],psr[0].obsn[varN].observatory_earth[1]+psr[0].obsn[varN].earth_ssb[1],psr[0].obsn[varN].observatory_earth[2]+psr[0].obsn[varN].earth_ssb[2]); 
@@ -641,6 +647,28 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);
 		      }
+		    if (strcasecmp(var,"freqSSB")==0) /* observing frequency at SSB */
+		      {
+			sprintf(disp,format,(longdouble)psr[0].obsn[varN].freqSSB); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);
+		      }
+		    if (strcasecmp(var,"freqCOE")==0) /* approx. observing frequency at COE */
+		      {
+			double ff;
+			double voverc,vobs[3],p[3];
+			int j;
+			for (j=0;j<3;j++)
+			  {
+			    vobs[j] = psr[0].obsn[varN].siteVel[j];
+			    p[j] = psr[0].posPulsar[j];
+			  }
+			voverc = dotproduct(p,vobs);
+			ff = psr[0].obsn[varN].freq*(1.0-voverc);
+		       	sprintf(disp,format,(longdouble)ff); 
+		       	fprintf(fout,"%s",disp);
+			pos+=strlen(disp);
+		      }		    
 		    if (strcasecmp(var,"pre")==0) /* prefit residual */
 		      {
 			sprintf(disp,format,(longdouble)(psr[0].obsn[varN].prefitResidual-sub1*psr[0].obsn[first].prefitResidual)); 

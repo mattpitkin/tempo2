@@ -1263,7 +1263,7 @@ if (yscale_set==0)
   if (combine==0)
     {
       cpgenv(minx-borderx,maxx+borderx,miny-bordery,maxy+bordery,0,1);
-      sprintf(ylabel,"\\gn\\u\\u\\b\\b . \\d\\d%+.0f (10\\u-15\\d s\\u-2\\d)",-mean);
+      sprintf(ylabel,"\\gn\\u\\u\\b\\b . \\d\\d%+.0f(10\\u-15\\d s\\u-2\\d)",-mean);
       cpglab(xlabel,ylabel,"");
     }
   else
@@ -1273,13 +1273,13 @@ if (yscale_set==0)
       if (pos!=0)
 	{
 	  cpgbox("BCTS",0,0,"BCNTS",0,0);
-	  sprintf(ylabel,"\\gn\\u\\u\\b\\b . \\d\\d%+.0f (10\\u-15\\d s\\u-2\\d)",-mean);
+	  sprintf(ylabel,"\\gn\\u\\u\\b\\b . \\d\\d%+.0f(10\\u-15\\d s\\u-2\\d)",-mean);
 	  cpglab("",ylabel,"");
 	}
       else
 	{
 	  cpgbox("BCNTS",0,0,"BCNTS",0,0);
-	  sprintf(ylabel,"\\gn\\u\\u\\b\\b . \\d\\d%+.0f (10\\u-15\\d s\\u-2\\d)",-mean);
+	  sprintf(ylabel,"\\gn\\u\\u\\b\\b . \\d\\d%+.0f(10\\u-15\\d s\\u-2\\d)",-mean);
 	  cpglab(xlabel,ylabel,"");
 
 	}

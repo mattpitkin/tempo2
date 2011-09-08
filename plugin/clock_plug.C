@@ -611,7 +611,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  frx[i]=(float)rx[i];
 	  fry[i]=(float)ry[i]; // Check not including a MINUS SIGN!!!
 	  //	  printf("Expected: %g %g %g\n",frx[i],rx0[i],fry[i]);
-	  fprintf(fout,"%g %g\n",rx[i],ry[i]);
+	  fprintf(fout,"%g %g %g\n",rx[i],ry[i],rx0[i]+(double)psr[0].param[param_pepoch].val[0]);
 	}
       fclose(fout);
       cpgsci(3);

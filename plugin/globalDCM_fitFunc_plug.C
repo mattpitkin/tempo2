@@ -3,6 +3,7 @@
 #include <math.h>
 #include "TKfit.h"
 #include "T2toolkit.h"
+#include "constraints.h"
 
 void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos);
 int gnpsr;
@@ -112,6 +113,17 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	  ip[count]=count;
 	  count++;
 	}
+           // add constraints as extra pseudo observations
+     // These point to non-existant observations after the nobs array
+     // These are later caught by getParamDeriv.
+     for (i=0; i < psr[p].nconstraints; i++){
+	ip[count] = psr->nobs+i;
+	x[count]=0;
+	y[count]=0;
+	sig[count]=1e-12;
+	count++;
+      }
+
     }
   for (p=0;p<npsr;p++)
     psr[p].nFit=count;
@@ -685,8 +697,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 
   for (p=0;p<gnpsr;p++)
     {
-      if (counter < tot+psr[p].nobs) break;
-      tot+=psr[p].nobs;
+      if (counter < tot+psr[p].nobs + psr[p].nconstraints) break;
+      tot+=psr[p].nobs+psr[p].nconstraints;
     }
   //  printf("In globalFit p = %d\n",p);
   ipos = counter-tot;
