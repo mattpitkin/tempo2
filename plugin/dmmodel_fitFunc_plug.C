@@ -32,11 +32,12 @@
 #include "TKfit.h"
 
 void updateDMvals(pulsar *psr,int p);
+void getFitLabels(pulsar* psr, int p,char** ret);
 
 
 extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel) 
 {
-	int p,i,k;
+	int p,i,k,j;
 	int count=0;
 	int flags[MAX_PSR];
 	longdouble* preobs[MAX_PSR];
@@ -60,6 +61,34 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	else
 		doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
 
+
+	for (p=0; p < npsr; p++){
+		char** labels = (char**)malloc(sizeof(char*)*MAX_PARAMS);
+		for (i=0;i<MAX_PARAMS;i++){
+			labels[i]= (char*)malloc(80);
+			strcpy(labels[i],"UNK_PARAM");
+		}
+		getFitLabels(psr,p,labels);
+		double** cvm=psr[p].covar;
+		int npol = psr[p].nFit - psr[p].fitNfree;
+		bool warn=false;
+		for (i=0;i<npol;i++){
+			for (j=0;j<i;j++){
+				double cv=fabs(cvm[i][j]/sqrt((cvm[j][j])*(cvm[i][i])));
+				if(cv > 0.5){
+					if(!warn){
+						printf(" <DMMODEL> Warning: highly covariant parameters in fit!\n");
+						warn=true;
+					}
+					printf("  % 15s % 15s %lg\n",labels[i],labels[j],cv);
+				}
+			}
+		}
+		for (i=0;i<MAX_PARAMS;i++)free(labels[i]);
+		free(labels);
+	}
+
+
 	if(count){
 
 		printf(" <DMMODEL> Disable DMMODEL\n");
@@ -71,7 +100,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			}
 			psr[p].param[param_dmmodel].fitFlag[0]=0;
 		}
-			
+
 
 		formBatsAll(psr,npsr);
 		formResiduals(psr,npsr,0);
@@ -83,7 +112,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			doFitDCM(psr,dcmFile,covarFuncFile,npsr,0);
 
 
-			printf(" <DMMODEL> Enable DMMODEL\n");
+		printf(" <DMMODEL> Enable DMMODEL\n");
 		for (p=0; p < npsr; p++){
 			psr[p].param[param_dmmodel].fitFlag[0]=flags[p];
 			// restore the pre-fit residuals
@@ -96,4 +125,72 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	return 0;
 
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+
+
+
+void getFitLabels(pulsar* psr, int p,char** ret){
+	int i,j,k;
+	int n=0;
+	sprintf(ret[n++],"ZERO_OFF");
+	for (i=0;i<MAX_PARAMS;i++)
+	{
+		for (k=0;k<psr[p].param[i].aSize;k++)
+		{
+			if (psr[p].param[i].fitFlag[k]==1) /* If we are fitting for this parameter */
+			{
+				if (i!=param_start && i!=param_finish)
+				{
+					if (i==param_wave_om)
+					{
+						if (psr[p].waveScale==2)
+						{
+							//                      for (j=0;j<psr[p].nWhite*2;j++)                           
+							for (j=0;j<psr[p].nWhite*4;j++)
+								sprintf(ret[n++],"%s_%02d",psr[p].param[i].shortlabel[k],j);
+						}
+						else
+						{
+							for (j=0;j<psr[p].nWhite*2;j++)
+								sprintf(ret[n++],"%s_%02d",psr[p].param[i].shortlabel[k],j);
+						}
+					}
+					else if (i==param_quad_om)
+					{
+						for (j=0;j<psr[p].nQuad*4;j++)
+							sprintf(ret[n++],"%s_%02d",psr[p].param[i].shortlabel[k],j);
+					}
+					else if (i==param_ifunc)
+					{
+						for (j=0;j<psr[p].ifuncN;j++)
+							sprintf(ret[n++],"%s_%02d",psr[p].param[i].shortlabel[k],j);
+					}
+					else if (i==param_gwsingle)
+					{
+						sprintf(ret[n++],"%s_%02d",psr[p].param[i].shortlabel[k],0);
+						sprintf(ret[n++],"%s_%02d",psr[p].param[i].shortlabel[k],1);
+						sprintf(ret[n++],"%s_%02d",psr[p].param[i].shortlabel[k],2);
+						sprintf(ret[n++],"%s_%02d",psr[p].param[i].shortlabel[k],3);
+					}
+					else if (i==param_dmmodel)
+					{
+						for (j=0;j<(int)psr[p].dmoffsNum;j++)
+						{
+							sprintf(ret[n++],"%s_D_%02d",psr[p].param[i].shortlabel[k],j);
+							sprintf(ret[n++],"%s_C_%02d",psr[p].param[i].shortlabel[k],j);
+						}
+					}
+					else
+						sprintf(ret[n++],"%s",psr[p].param[i].shortlabel[k]);
+				}
+			}
+		}
+	}
+	for (i=1;i<=psr[p].nJumps;i++)
+	{
+		if (psr[p].fitJump[i]==1)
+		{
+			sprintf(ret[n++],"%s",psr[p].jumpStr[i]);
+		}
+	}
+
+}

@@ -52,7 +52,6 @@ double consFunc_ifunc(pulsar *psr,int i,int k,int order){
 	 * one of the frequency independant parts (i.e. last ifuncN).
 	 */
 	if(i==param_ifunc){
-	printf("const %d\n",order);
 		long double epoch = psr->param[param_pepoch].val[0];
 		return pow(psr->ifuncT[k]-epoch,order);
 	} else return 0;

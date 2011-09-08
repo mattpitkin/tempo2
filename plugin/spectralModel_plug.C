@@ -226,7 +226,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   double zerolagWhiteCovar;
   int whiteCovarNpts[MAX_OBSN];
   double whiteCovar[MAX_OBSN];
-  double cholSpecX[MAX_OBSN],cholSpecY[MAX_OBSN];
+  double cholSpecX[MAX_OBSN],cholSpecY[MAX_OBSN],cholSpecE[MAX_OBSN];
   int nCholSpec;
   double ampFit[MAX_OBSN],chisqFit[MAX_OBSN],bestAmp,bestLag,bestChisq;
   int nGridFit;
@@ -487,8 +487,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     
     }*/
 
-  nCholSpec = calcSpectra(uinv,resx,resy,nres,cholSpecX,cholSpecY,-1);
-  fileOutput2("cholSpectra.dat",cholSpecX,cholSpecY,nCholSpec);
+  nCholSpec = calcSpectraErr(uinv,resx,resy,nres,cholSpecX,cholSpecY,cholSpecE,-1);
+  fileOutput3("cholSpectra.dat",cholSpecX,cholSpecY,cholSpecE,nCholSpec);
 
   // Step 5b: refit the model
   if (usePreWhitening!=-1) // If we're calculating the covariance function from a spectrum

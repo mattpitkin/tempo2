@@ -808,7 +808,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
 				else fprintf(outputf,"%d\t",event + 1);
 			
-				fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event]);
+				fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%d\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event],(int)intpart);
 			}
 	
 			event++;
@@ -866,7 +866,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
 			else fprintf(outputf,"%d\t",event + 1);
 			
-			fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\n",psr[0].obsn[1].sat,psr[0].obsn[1].bat,phase[event]);
+			fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%d\n",psr[0].obsn[1].sat,psr[0].obsn[1].bat,phase[event],(int)intpart);
 		}
 
 		// ------------------------------------------------- //

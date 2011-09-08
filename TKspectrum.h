@@ -1742,7 +1742,7 @@ void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, doubl
 // note: uinv array must start from 0, not 1
 // NEW FEATURE:
 // set nfit < 0 to automatically set it to nres/2-1
-int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit)
+int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit)
 {
   int i,j,k;
   //  int nfit=nres/2-1;
@@ -1782,6 +1782,9 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
       v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[1],2)+pow(param[2],2))/pow(365.25*86400.0,2); 
       specX[k] = GLOBAL_OMEGA/2.0/M_PI;
       specY[k] = v[k];
+      if(specE!=NULL){
+	      specE[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(error[1],2)+pow(error[2],2))/pow(365.25*86400.0,2);
+      }
     }
 
   for (i=0;i<nfit;i++)
@@ -1791,6 +1794,11 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
 	  printf("\b\b\b\b\b\b\b\b100.0%%\n");
   }
   return nfit;
+}
+
+
+int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit){
+	return calcSpectraErr(uinv,resx,resy,nres,specX,specY,NULL,nfit);
 }
 
 // Spectral analysis using covariance matrix

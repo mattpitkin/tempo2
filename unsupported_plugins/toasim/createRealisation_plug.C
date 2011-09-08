@@ -116,6 +116,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       for (j=0;j<ncorr;j++)
 	{
 	  file = fopen(fname[j],"r");
+	  if(file==NULL){
+		  printf("ERROR: File could not be read: '%s'\n",fname[j]);
+		  exit(1);
+	  }
 	  read_header = toasim_read_header(file);
 	  if(strcmp(read_header->timfile_name,timFile[p])!=0){
 		  fprintf(stderr,"\n\n*****************\nWARNING: .tim file name mismatch '%s' != '%s'\n*****************\n\n",read_header->timfile_name,timFile[p]);

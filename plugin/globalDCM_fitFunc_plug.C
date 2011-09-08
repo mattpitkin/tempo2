@@ -54,7 +54,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   int maxN=0;
   for (p=0;p<npsr;p++)
     {
-      if (psr[p].nobs > maxN) maxN = psr[p].nobs;
+      if (psr[p].nobs > maxN) maxN = psr[p].nobs+psr[p].nconstraints;
     }
 
   printf("Setting up matrices n(psr0)=%d\n",psr[0].nobs);
@@ -482,6 +482,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			      }
 			      offset++;
 		      }
+		      offset--;
 	      }
 	      else
 		{
@@ -1194,7 +1195,7 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
   int i,j,k,ix,iy;
   double t0,cint,t;
   int t1,t2;
-  int debug=1;
+  int debug=0;
 
   printf("Getting the covariance matrix in doFit, np = %d \n",np);
   m = (double **)malloc(sizeof(double *)*(np+1));
@@ -1207,12 +1208,6 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
       u[i] = (double *)malloc(sizeof(double)*(np+1));
     }
   
-  FILE* ttt=fopen("test2.f","w");
-  for (ix=0;ix<np;ix++)
-    {
-		fprintf(ttt,"%d %g %g %g\n",ix,resx[ix],resy[ix],rese[ix]);
-    }
-  fclose(ttt);
 
 
   for (ix=0;ix<np;ix++)
@@ -1230,17 +1225,7 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
 	}
 
     }
-  ttt=fopen("test2.e","w");
-  for (ix=0;ix<np;ix++)
-    {
-      for (iy=0;iy<np;iy++)
-	{
-		fprintf(ttt,"%d %d %g\n",ix,iy,m[ix][iy]);
-	}
-    }
-  fclose(ttt);
-
-
+  
   // Insert the covariance which depends only on the time difference.
   // Linearly interpolate between elements on the covariance function because
   // valid covariance matrix must have decreasing off diagonal elements.
@@ -1282,16 +1267,6 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
 	  printf("\n");
 	}
     }
-  ttt=fopen("test2.d","w");
-  for (ix=0;ix<np;ix++)
-    {
-      for (iy=0;iy<np;iy++)
-	{
-		fprintf(ttt,"%d %d %g\n",ix,iy,m[ix][iy]);
-	}
-    }
-  fclose(ttt);
-
 
   // Do the Cholesky
   printf("Doing the Cholesky decomposition\n");
