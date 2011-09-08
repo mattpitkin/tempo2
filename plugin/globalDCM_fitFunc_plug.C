@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <tempo2.h>
 #include <math.h>
@@ -12,9 +13,9 @@ void multMatrixVec2(double **idcm,double *b,int ndata,double *bout);
 void TKsingularValueDecomposition_lsq2(double **designMatrix,int n,int nf,double **v,double *w,double **u);
 void TKbacksubstitution_svd2(double **V, double *w,double **U,double *b,double *x,int n,int nf);
 double TKpythag2(double a,double b);
-void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,int count);
+void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,int count,int nconstr);
 void TKbidiagonal2(double **a,double *anorm,int ndata,int nfit,double **v,double *w,double **u,double *rv1);
-void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
+void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np,int nconstraints,double **uinv);
 
 extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel) 
 {
@@ -120,9 +121,11 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	ip[count] = psr->nobs+i;
 	x[count]=0;
 	y[count]=0;
-	sig[count]=1e-12;
+	sigOrig[count]=1e-12;
+	sig[count]=1.0;
 	count++;
       }
+     printf("count = %d\n",count);
 
     }
   for (p=0;p<npsr;p++)
@@ -153,6 +156,11 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       npol+=psr[0].nWhite*2-1;
       nGlobal+=psr[0].nWhite*2-1;
     }
+
+  if (psr[0].param[param_ifunc].fitFlag[0]==2){
+	        npol+=psr[0].ifuncN-1;
+		nGlobal+=psr[0].ifuncN-1;
+  }
 
   printf("Number of global parameters = %d\n",nGlobal);
   // Add non-global parameters
@@ -189,6 +197,11 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	  nFitP[p]+=psr[p].nWhite*2-1;
 	  npol+=psr[p].nWhite*2-1;
 	}
+      if (psr[p].param[param_ifunc].fitFlag[0]==1){
+	      npol+=psr[p].ifuncN-1;
+	      nFitP[p]+=psr[p].ifuncN-1;
+      }
+
       printf("Number of non-global parameters for pulsar %d = %d\n",p,nFitP[p]);
     }
   val   = (double *)malloc(npol*sizeof(double));
@@ -233,7 +246,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   
   for (p=0;p<npsr;p++)
     {
-      for (i=0;i<psr[p].nobs;i++)
+      int nobs_and_constraints = psr[p].nobs+psr[p].nconstraints;
+      for (i=0;i<nobs_and_constraints;i++)
 	{
 	  //	  printf("Here with %d %d\n",p,i);
 	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,ip[i+offset]);
@@ -256,18 +270,18 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       // Pre-whiten the model using the data covariance matrix
       printf("Attempting uinv1, count = %d\n",count);
       printf("ERROR: not checking for deleted points\n");
-      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,psr[p].nobs);
+      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,nobs_and_constraints,psr[p].nconstraints);
       printf("Read uinv1\n");
-      multMatrix2(uinv,designMatrixT,psr[p].nobs,nFitP[p]+nGlobal,uout);
+      multMatrix2(uinv,designMatrixT,nobs_and_constraints,nFitP[p]+nGlobal,uout);
       printf("Finished multMatrix\n");
-      for (i=0;i<psr[p].nobs;i++)
+      for (i=0;i<nobs_and_constraints;i++)
 	{
 	  for (j=0;j<nGlobal;j++) designMatrix[i+offset][j] = uout[i][j];
 	  for (j=0;j<nFitP[p];j++)
 	    designMatrix[i+offset][j+joff+nGlobal] = uout[i][j+nGlobal];
 	}
       joff+=nFitP[p];
-      offset+=psr[p].nobs;
+      offset+=nobs_and_constraints;
     }
   /*  for (i=0;i<n;i++)
     {
@@ -281,17 +295,18 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   offset=0;
   for (p=0;p<npsr;p++)
     {
+      int nobs_and_constraints = psr[p].nobs+psr[p].nconstraints;
       printf("Mult vec\n");
-      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,psr[p].nobs);
+      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,nobs_and_constraints,psr[p].nconstraints);
       printf("Read uinv2\n");
-      multMatrixVec2(uinv,b+offset,psr[p].nobs,bout);
+      multMatrixVec2(uinv,b+offset,nobs_and_constraints,bout);
       printf("Done mult vec\n");
-      for (i=0;i<psr[p].nobs;i++)
+      for (i=0;i<nobs_and_constraints;i++)
 	{
 	  b[i+offset] = bout[i];
 	  //	  printf("Have finished with %g\n",b[i+offset]);
 	}
-      offset+=psr[p].nobs;
+      offset+=nobs_and_constraints;
     }
   /* Now carry out the singular value decomposition */
   printf("Doing singular value decomp\n");
@@ -349,7 +364,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   koff=0, joff=0;
   for (p=0;p<npsr;p++)
     {
-      for (i=0;i<psr[p].nobs;i++)
+      int nobs_and_constraints = psr[p].nobs+psr[p].nconstraints;
+      for (i=0;i<nobs_and_constraints;i++)
 	{
 	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,ip[i+offset]);
 	  for (j=0;j<nGlobal;j++)
@@ -361,9 +377,9 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       koff+=nFitP[p];
       // Pre-whiten the model using the data covariance matrix
       printf("Trying uinv3\n");
-      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,psr[p].nobs);
+      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,nobs_and_constraints,psr[p].nconstraints);
       printf("Read uinv3\n");
-      multMatrix2(uinv,designMatrixT,psr[p].nobs,nFitP[p]+nGlobal,uout);
+      multMatrix2(uinv,designMatrixT,nobs_and_constraints,nFitP[p]+nGlobal,uout);
       for (i=0;i<psr[p].nobs;i++)
 	{
 	  for (j=0;j<nGlobal;j++) designMatrix[i+offset][j] = uout[i][j];
@@ -371,7 +387,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	    designMatrix[i+offset][j+joff+nGlobal] = uout[i][j+nGlobal];
 	}
       joff+=nFitP[p];
-      offset+=psr[p].nobs;
+      offset+=nobs_and_constraints;
     }
 
 
@@ -432,7 +448,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	{
 	  if (psr[0].param[i].fitFlag[k] == 2)
 	    {
-	      printf("Have global parameter %d %d\n",i,param_wave_om);
+	      printf("Have global parameter %d %d %d\n",i,param_wave_om,param_ifunc);
 	      if (i==param_wave_om)
 		{
 		  int kk;
@@ -454,6 +470,19 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		    }
 		  offset--;
 		}
+	      else if(i==param_ifunc) {
+		      printf("Updating %d point\n",psr[0].ifuncN);
+		      for (j=0;j<psr[0].ifuncN;j++)
+		      {
+			      printf("Updating %d %g\n",offset,val[offset]);
+			      for (p=0;p<npsr;p++)
+			      {
+				      psr[p].ifuncV[j]-=val[offset];
+				      psr[p].ifuncE[j]=error[offset];
+			      }
+			      offset++;
+		      }
+	      }
 	      else
 		{
 		  for (p=0;p<npsr;p++)
@@ -487,7 +516,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	}
       /* Add extra parameters for sinusoidal whitening */
       if (psr[p].param[param_wave_om].fitFlag[0]==1)
-	offset+=psr[p].nWhite*2-1;
+	      offset+=psr[p].nWhite*2-1;
+      if (psr[p].param[param_ifunc].fitFlag[0]==1)
+	      offset+=psr[p].ifuncN-1;
+
       offset++; // For arbitrary phase
     }
 
@@ -581,12 +613,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     free(covar);*/
 }
 
-void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,int count)
+void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,int count,int nconstraints)
 {
   int i,j;
   FILE *fin,*fout;
   char fname[1000];
-  int ndays = (int)(x[count-1]-x[0])+2;
+  int ndays = (int)(x[count-nconstraints-1]-x[0])+2;
   double covarFunc[ndays];
   double whiteres[MAX_OBSN];
   double sum;
@@ -620,7 +652,7 @@ void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,in
       //      printf("sig after correction = %g\n",sig[i]);
     }
   // Form the data covariance matrix
-  formCholeskyMatrix2(covarFunc,x,y,sig,count,uinv);
+  formCholeskyMatrix2(covarFunc,x,y,sig,count,nconstraints,uinv);
 
   sprintf(fname,"whitedata_%d.dat",p+1);
   fout = fopen(fname,"w");
@@ -713,6 +745,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	    {
 	      if (i==param_wave_om)
 		nglobal+=psr[0].nWhite*2-1;
+	      if (i==param_ifunc)
+		 nglobal+=psr[p].ifuncN-1;
 	      nglobal++;
 	    }
 	}
@@ -737,6 +771,9 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
   /* Add extra parameters for sinusoidal whitening */
   if (psr[p].param[param_wave_om].fitFlag[0]==1)
     new_ma+=psr[p].nWhite*2-1;
+  if (psr[p].param[param_ifunc].fitFlag[0]==1)
+    new_ma+=psr[p].ifuncN-1;
+
 
   // Now calculate position in afunc array
   n=0;
@@ -765,6 +802,9 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
       /* Add extra parameters for sinusoidal whitening */
       if (psr[pp].param[param_wave_om].fitFlag[0]==1)
 	n+=psr[pp].nWhite*2-1;
+      if (psr[pp].param[param_ifunc].fitFlag[0]==1)
+	n+=psr[pp].ifuncN-1;
+
     }
 
   // Global fit
@@ -785,6 +825,15 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		      c++;
 		    }
 		}
+	      else if(i==param_ifunc){
+		      for (j=0;j<psr[p].ifuncN;j++)
+		      {
+			      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+//			      printf("ifc=%d %d %g\n",counter,c,afunc[c]);
+			      c++;
+		      }
+
+	      }
 	      else
 		{
 		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,k);
@@ -1138,7 +1187,7 @@ double TKpythag2(double a,double b)
   return ret;
 }
 
-void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np,double **uinv)
+void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np, int nc,double **uinv)
 {
   double **m,**u,sum;
   double *cholp;
@@ -1158,6 +1207,14 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
       u[i] = (double *)malloc(sizeof(double)*(np+1));
     }
   
+  FILE* ttt=fopen("test2.f","w");
+  for (ix=0;ix<np;ix++)
+    {
+		fprintf(ttt,"%d %g %g %g\n",ix,resx[ix],resy[ix],rese[ix]);
+    }
+  fclose(ttt);
+
+
   for (ix=0;ix<np;ix++)
     {
       for (iy=0;iy<np;iy++)
@@ -1166,13 +1223,24 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
   if (debug==1)
     {
       printf("First m = \n");
-      for (i=0;i<5;i++)
+      for (i=np-5;i<np;i++)
 	{ 
-	  for (j=0;j<5;j++) printf("%10g ",m[i][j]); 
+	  for (j=np-5;j<np;j++) printf("%10g ",m[i][j]); 
 	  printf("\n");
 	}
 
     }
+  ttt=fopen("test2.e","w");
+  for (ix=0;ix<np;ix++)
+    {
+      for (iy=0;iy<np;iy++)
+	{
+		fprintf(ttt,"%d %d %g\n",ix,iy,m[ix][iy]);
+	}
+    }
+  fclose(ttt);
+
+
   // Insert the covariance which depends only on the time difference.
   // Linearly interpolate between elements on the covariance function because
   // valid covariance matrix must have decreasing off diagonal elements.
@@ -1189,6 +1257,18 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
 	  m[ix][iy] = cint;
 	}
     }
+
+
+  // add the values for the constraints
+  // Constraints are not covariant with anything so it's all zero!
+  for (i=np-nc; i < np; i++){
+          for (j=0; j < np; j++){
+                  m[i][j]=0;
+                  m[j][i]=0;
+          }
+  }
+
+
   printf("Multiplying by errors\n");
   for (ix=0;ix<np;ix++)
     m[ix][ix]+=rese[ix]*rese[ix];
@@ -1196,12 +1276,22 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
   if (debug==1)
     {
       printf("m = \n\n");
-      for (i=0;i<5;i++)
+      for (i=np-5;i<np;i++)
 	{ 
-	  for (j=0;j<5;j++) printf("%10g ",m[i][j]); 
+	  for (j=np-5;j<np;j++) printf("% 10g ",m[i][j]); 
 	  printf("\n");
 	}
     }
+  ttt=fopen("test2.d","w");
+  for (ix=0;ix<np;ix++)
+    {
+      for (iy=0;iy<np;iy++)
+	{
+		fprintf(ttt,"%d %d %g\n",ix,iy,m[ix][iy]);
+	}
+    }
+  fclose(ttt);
+
 
   // Do the Cholesky
   printf("Doing the Cholesky decomposition\n");
