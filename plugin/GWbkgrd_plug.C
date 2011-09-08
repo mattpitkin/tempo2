@@ -243,8 +243,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       for (j=0;j<5;j++)
 	{
-	  for (i=0;i<psr[0].nobs;i++)
-	    psr[0].obsn[i].sat -= psr[0].obsn[i].residual/SECDAY;
+	  for (p=0;p<*npsr;p++)
+	    {
+	      for (i=0;i<psr[p].nobs;i++)
+		psr[p].obsn[i].sat -= psr[p].obsn[i].residual/SECDAY;
+	    }
 	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
 	  formResiduals(psr,*npsr,1);   /* Form the residuals                 */
 	}
