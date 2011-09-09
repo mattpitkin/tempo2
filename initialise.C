@@ -123,6 +123,12 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nWhite = 0;  /* No whitening by default */
   psr->nQuad  = 0;  /* No quadrupolar function */
   psr->ifuncN = 0;  /* No interpolation functions by default */
+  psr->ifuncN = 0;  /* No interpolation functions by default */
+  psr->quad_ifuncN_p = 0;
+  psr->quad_ifuncN_c = 0;
+  psr->quad_ifunc_geom_p = 0;
+  psr->quad_ifunc_geom_c = 0;
+
   psr->timeEphemeris = IF99_TIMEEPH;
   psr->dilateFreq = 1;
   psr->planetShapiro = 1;
@@ -222,6 +228,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH");
   strcpy(psr->param[param_ifunc].label[0],"IFUNC");
   strcpy(psr->param[param_ifunc].shortlabel[0],"IFUNC");
+  strcpy(psr->param[param_quad_ifunc_p].label[0],"QIFUNC_p");
+  strcpy(psr->param[param_quad_ifunc_p].shortlabel[0],"QIFUNC_p");
+  strcpy(psr->param[param_quad_ifunc_c].label[0],"QIFUNC_c");
+  strcpy(psr->param[param_quad_ifunc_c].shortlabel[0],"QIFUNC_c");
   strcpy(psr->param[param_pepoch].label[0],"PEPOCH (MJD)");
   strcpy(psr->param[param_pepoch].shortlabel[0],"PEPOCH");
   strcpy(psr->param[param_dmepoch].label[0],"DMEPOCH (MJD)");

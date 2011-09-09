@@ -123,7 +123,11 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   if (psr[0].param[param_quad_om].fitFlag[0]==2)
       npol+=psr[0].nQuad*4-1;
   if (psr[0].param[param_ifunc].fitFlag[0]==2)	  
-      npol+=psr[0].ifuncN-1;
+    npol+=psr[0].ifuncN-1;
+  if (psr[0].param[param_quad_ifunc_p].fitFlag[0]==2)	  
+    npol+=psr[0].quad_ifuncN_p-1;
+  if (psr[0].param[param_quad_ifunc_c].fitFlag[0]==2)	  
+    npol+=psr[0].quad_ifuncN_c-1;
 
   if (psr[0].param[param_gwsingle].fitFlag[0]==2)
     npol+=(4-1); 
@@ -163,6 +167,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	npol+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	npol+=psr[p].ifuncN-1;
+      if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
+	npol+=psr[p].quad_ifuncN_p-1;
+      if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
+	npol+=psr[p].quad_ifuncN_c-1;
       if (psr[p].param[param_gwsingle].fitFlag[0]==1)
 	npol+=(4-1);
     }
@@ -269,6 +277,34 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		      offset++;
 		    }
 		}
+	      else if (i==param_quad_ifunc_p)
+		{
+		  printf("Updating %d point\n",psr[0].quad_ifuncN_p);
+		  for (j=0;j<psr[0].quad_ifuncN_p;j++)
+		    {
+		      printf("Updating %g\n",val[offset]);
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].quad_ifuncV_p[j]-=val[offset];
+			  psr[p].quad_ifuncE_p[j]=error[offset];
+			}
+		      offset++;
+		    }
+		}
+	      else if (i==param_quad_ifunc_c)
+		{
+		  printf("Updating %d point\n",psr[0].quad_ifuncN_c);
+		  for (j=0;j<psr[0].quad_ifuncN_c;j++)
+		    {
+		      printf("Updating %g\n",val[offset]);
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].quad_ifuncV_c[j]-=val[offset];
+			  psr[p].quad_ifuncE_c[j]=error[offset];
+			}
+		      offset++;
+		    }
+		}
 	      else
 		{
 		  for (p=0;p<npsr;p++)
@@ -311,6 +347,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	offset+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	offset+=psr[p].ifuncN-1;
+      if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
+	offset+=psr[p].quad_ifuncN_p-1;
+      if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
+	offset+=psr[p].quad_ifuncN_c-1;
       if (psr[p].param[param_gwsingle].fitFlag[0]==1)
 	offset+=4;
       offset++; // For arbitrary phase
@@ -417,6 +457,10 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     nglobal+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==2)
     nglobal+=psr[p].ifuncN-1;
+  if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==2)
+    nglobal+=psr[p].quad_ifuncN_p-1;
+  if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==2)
+    nglobal+=psr[p].quad_ifuncN_c-1;
   if (psr[p].param[param_gwsingle].fitFlag[0]==2)
     nglobal+=(4-1);
 
@@ -444,6 +488,10 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     new_ma+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==1)
     new_ma+=psr[p].ifuncN-1;
+  if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
+    new_ma+=psr[p].quad_ifuncN_p-1;
+  if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
+    new_ma+=psr[p].quad_ifuncN_c-1;
   if (psr[p].param[param_gwsingle].fitFlag[0]==1)
     new_ma+=4;
 
@@ -478,6 +526,10 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	n+=psr[pp].nQuad*4-1;
       if (psr[pp].param[param_ifunc].fitFlag[0]==1)
 	n+=psr[pp].ifuncN-1;
+      if (psr[pp].param[param_quad_ifunc_p].fitFlag[0]==1)
+	n+=psr[pp].quad_ifuncN_p-1;
+      if (psr[pp].param[param_quad_ifunc_c].fitFlag[0]==1)
+	n+=psr[pp].quad_ifuncN_c-1;
       if (psr[pp].param[param_gwsingle].fitFlag[0]==1)
 	n+=4-1;
     }
@@ -523,6 +575,22 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	      else if (i==param_ifunc)
 		{
 		  for (j=0;j<psr[p].ifuncN;j++)
+		    {
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		      c++;
+		    }
+		}
+	      else if (i==param_quad_ifunc_p)
+		{
+		  for (j=0;j<psr[p].quad_ifuncN_p;j++)
+		    {
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		      c++;
+		    }
+		}
+	      else if (i==param_quad_ifunc_c)
+		{
+		  for (j=0;j<psr[p].quad_ifuncN_c;j++)
 		    {
 		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
 		      c++;

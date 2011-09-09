@@ -17,6 +17,13 @@ std::string get_constraint_name(enum constraint c){
 			return "IFUNC linear(C) = 0";
 		case constraint_ifunc_2:
 			return "IFUNC quadratic(C) = 0";
+		case constraint_quad_ifunc_p_0:
+			return "QIFUNC_p mean(C) = 0";
+		case constraint_quad_ifunc_p_1:
+			return "QIFUNC_p linear(C) = 0";
+		case constraint_quad_ifunc_p_2:
+			return "QIFUNC_p quadratic(C) = 0";
+
 
 		default:
 			return "UNKNOWN!";
@@ -54,9 +61,30 @@ double consFunc_ifunc(pulsar *psr,int i,int k,int order){
 	if(i==param_ifunc){
 		long double epoch = psr->param[param_pepoch].val[0];
 		return pow(psr->ifuncT[k]-epoch,order);
-	} else return 0;
-
+	}
+	else return 0;
 }
 
 
-
+double consFunc_quad_ifunc_p(pulsar *psr,int i,int k,int order){
+	/*
+	 * Only operate on param=ifunc and when fit parameter is 
+	 * one of the frequency independant parts (i.e. last ifuncN).
+	 */
+	if(i==param_quad_ifunc_p){
+		long double epoch = psr->param[param_pepoch].val[0];
+		return pow(psr->quad_ifuncT_p[k]-epoch,order);
+	}
+	else return 0;
+}
+double consFunc_quad_ifunc_c(pulsar *psr,int i,int k,int order){
+	/*
+	 * Only operate on param=ifunc and when fit parameter is 
+	 * one of the frequency independant parts (i.e. last ifuncN).
+	 */
+	if(i==param_quad_ifunc_c){
+		long double epoch = psr->param[param_pepoch].val[0];
+		return pow(psr->quad_ifuncT_c[k]-epoch,order);
+	}
+	else return 0;
+}

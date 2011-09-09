@@ -318,6 +318,22 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      for (i=0;i<psr[p].ifuncN;i++)
 		printf("%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
 	    }
+	  if (psr[p].param[param_quad_ifunc_p].paramSet[0]==1)
+	    {
+	      printf("---------------------------------------\n");
+	      printf("Interpolated quadrupolar plus function\n");
+	      printf("---------------------------------------\n");
+	      for (i=0;i<psr[p].quad_ifuncN_p;i++)
+		printf("%.2f %.10g %.10g\n",psr[p].quad_ifuncT_p[i],psr[p].quad_ifuncV_p[i],psr[p].quad_ifuncE_p[i]);
+	    }
+	  if (psr[p].param[param_quad_ifunc_c].paramSet[0]==1)
+	    {
+	      printf("---------------------------------------\n");
+	      printf("Interpolated quadrupolar cross function\n");
+	      printf("---------------------------------------\n");
+	      for (i=0;i<psr[p].quad_ifuncN_c;i++)
+		printf("%.2f %.10g %.10g\n",psr[p].quad_ifuncT_c[i],psr[p].quad_ifuncV_c[i],psr[p].quad_ifuncE_c[i]);
+	    }
 
       if (psr[0].param[param_f].paramSet[0]==1 && psr[0].param[param_f].paramSet[1]==1)
 	{

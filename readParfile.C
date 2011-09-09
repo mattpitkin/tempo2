@@ -337,6 +337,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_waveepoch]),0);
   else if (strcasecmp(str,"SIFUNC")==0)  /* Set interpolation function */
     readValue(psr,str,fin,&(psr->param[param_ifunc]),0);
+  else if (strcasecmp(str,"SQIFUNC_p")==0)  /* Set quad interpolation function for plus*/
+      readValue(psr,str,fin,&(psr->param[param_quad_ifunc_p]),0);
+  else if (strcasecmp(str,"SQIFUNC_c")==0)  /* Set quad interpolation function for cross*/
+    readValue(psr,str,fin,&(psr->param[param_quad_ifunc_c]),0);
   else if (strcasecmp(str,"PEPOCH")==0)    /* Period Epoch */
     readValue(psr,str,fin,&(psr->param[param_pepoch]),0);
   else if (strcasecmp(str,"TELEPOCH")==0) /* Epoch of telescope position */
@@ -635,6 +639,17 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
       }
+      if(strcasecmp(cname,"QIFUNC_p")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_0;
+	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_1;
+	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_2;
+      }
+      if(strcasecmp(cname,"QIFUNC_c")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_0;
+	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_1;
+	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_2;
+      }
+
   }
   /*
    * Single source graviational waves (GWs)
@@ -651,7 +666,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     fscanf(fin,"%lf",&psr->gwsrc_epoch);
   else if (strcasecmp(str,"GW_PSR_DIST")==0)
     fscanf(fin,"%lf",&psr->gwsrc_psrdist);
-  else if (strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
+  else if ((strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
+	   && strstr(str,"QIFUNC")==NULL)
     {
       int number;
       /* Obtain parameter number */
@@ -659,6 +675,28 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 
       fscanf(fin,"%lf %lf %lf",&psr->ifuncT[number-1],&psr->ifuncV[number-1],&psr->ifuncE[number-1]);
       if (psr->ifuncN < number) psr->ifuncN = number;
+    }
+  else if (strstr(str,"QIFUNC_p")!=NULL || strstr(str,"qifunc_p")!=NULL)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+8,"%d",&number);
+
+      fscanf(fin,"%lf %lf %lf",&psr->quad_ifuncT_p[number-1],&psr->quad_ifuncV_p[number-1],&psr->quad_ifuncE_p[number-1]);
+      if (psr->quad_ifuncN_p < number) psr->quad_ifuncN_p = number;
+    }
+  else if (strcasecmp(str,"QIFUNC_POS_p") == 0)
+    fscanf(fin,"%lf %lf",&psr->quad_ifunc_p_RA,&psr->quad_ifunc_p_DEC);
+  else if (strcasecmp(str,"QIFUNC_POS_c") == 0)
+    fscanf(fin,"%lf %lf",&psr->quad_ifunc_c_RA,&psr->quad_ifunc_c_DEC);
+  else if (strstr(str,"QIFUNC_c")!=NULL || strstr(str,"qifunc_c")!=NULL)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+8,"%d",&number);
+
+      fscanf(fin,"%lf %lf %lf",&psr->quad_ifuncT_c[number-1],&psr->quad_ifuncV_c[number-1],&psr->quad_ifuncE_c[number-1]);
+      if (psr->quad_ifuncN_c < number) psr->quad_ifuncN_c = number;
     }
   /* ---------------- */
   /* Phase jumps      */

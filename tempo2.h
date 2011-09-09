@@ -161,7 +161,8 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
             param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om,
-            param_telx,param_tely,param_telz,param_telEpoch};
+            param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
+	    param_quad_ifunc_c};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
@@ -174,6 +175,12 @@ enum constraint {
 	constraint_ifunc_0,
 	constraint_ifunc_1,
 	constraint_ifunc_2,
+	constraint_quad_ifunc_p_0,
+	constraint_quad_ifunc_p_1,
+	constraint_quad_ifunc_p_2,
+	constraint_quad_ifunc_c_0,
+	constraint_quad_ifunc_c_1,
+	constraint_quad_ifunc_c_2,
 };
 
 
@@ -399,8 +406,19 @@ typedef struct pulsar {
   double quadRA,quadDEC;
   int    nQuad;
 
+  // IFUNC
+
   double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC];
   int    ifuncN;
+
+  // Quadrupolar IFUNC
+  
+  double quad_ifuncT_p[MAX_IFUNC], quad_ifuncV_p[MAX_IFUNC],quad_ifuncE_p[MAX_IFUNC];
+  int    quad_ifuncN_p;
+  double quad_ifuncT_c[MAX_IFUNC], quad_ifuncV_c[MAX_IFUNC],quad_ifuncE_c[MAX_IFUNC];
+  int    quad_ifuncN_c;
+  double quad_ifunc_p_RA,quad_ifunc_p_DEC,quad_ifunc_c_RA,quad_ifunc_c_DEC;
+  double quad_ifunc_geom_p,quad_ifunc_geom_c;
 
   // T2EFAC/T2EQUAD
   int    nT2efac,nT2equad;

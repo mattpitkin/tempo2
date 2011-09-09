@@ -582,6 +582,11 @@ int getNparams(pulsar psr)
     npol+=(psr.nQuad*4)-1;
   if (psr.param[param_ifunc].fitFlag[0]==1)
       npol+=(psr.ifuncN-1);
+  if (psr.param[param_quad_ifunc_p].fitFlag[0]==1)
+      npol+=(psr.quad_ifuncN_p-1);
+  if (psr.param[param_quad_ifunc_c].fitFlag[0]==1)
+      npol+=(psr.quad_ifuncN_c-1);
+
   /* Add extra parameters for DMMODEL fitting */
   if (psr.param[param_dmmodel].fitFlag[0]==1)
     npol+=(int)((psr.dmoffsNum)*2); // *2 because we fit for the DM and constant offset
@@ -640,6 +645,16 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		  else if (i==param_ifunc)
 		    {
 		      for (j=0;j<psr->ifuncN;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		    }
+		  else if (i==param_quad_ifunc_p)
+		    {
+		      for (j=0;j<psr->quad_ifuncN_p;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		    }
+		  else if (i==param_quad_ifunc_c)
+		    {
+		      for (j=0;j<psr->quad_ifuncN_c;j++)
 			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 		    }
 		  else if (i==param_gwsingle)
@@ -1096,6 +1111,68 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  }
 	}
     }
+    else if (i==param_quad_ifunc_p) /* Whitening procedure using interpolated function */
+    {
+      double yoffs[100];
+      double sat = (double)psr->obsn[ipos].sat;
+      for (int ioff =0;ioff<psr->quad_ifuncN_p;ioff++){
+	yoffs[ioff]=0;
+      }
+      yoffs[k] = 1;
+      
+      if (sat < (double)psr->quad_ifuncT_p[0]){
+	// we are before the first jump
+	// so our gradient is just the zeroth offset.
+	afunc = yoffs[0];
+      } else if(sat > (double)psr->quad_ifuncT_p[(int)psr->quad_ifuncN_p-1]){
+	afunc = yoffs[(int)psr->quad_ifuncN_p-1];
+      } else{
+	// find the pair we are between...
+	for (int ioff =0;ioff<psr->quad_ifuncN_p;ioff++){
+	  if(sat >= psr->quad_ifuncT_p[ioff] && sat < psr->quad_ifuncT_p[ioff+1]){
+	    double x1 = psr->quad_ifuncT_p[ioff];
+	    double x2 = psr->quad_ifuncT_p[ioff+1];
+	    double x = (sat-x1)/(x2-x1);
+	    double y1=yoffs[ioff];
+	    double y2=yoffs[ioff+1];
+	    afunc = (y2-y1)*x + y1;
+	    break;
+	  }
+	}
+      }
+      afunc *= psr->quad_ifunc_geom_p;
+    }
+    else if (i==param_quad_ifunc_c) /* Whitening procedure using interpolated function */
+    {
+      double yoffs[100];
+      double sat = (double)psr->obsn[ipos].sat;
+      for (int ioff =0;ioff<psr->quad_ifuncN_c;ioff++){
+	yoffs[ioff]=0;
+      }
+      yoffs[k] = 1;
+      
+      if (sat < (double)psr->quad_ifuncT_c[0]){
+	// we are before the first jump
+	// so our gradient is just the zeroth offset.
+	afunc = yoffs[0];
+      } else if(sat > (double)psr->quad_ifuncT_c[(int)psr->quad_ifuncN_c-1]){
+	afunc = yoffs[(int)psr->quad_ifuncN_c-1];
+      } else{
+	// find the pair we are between...
+	for (int ioff =0;ioff<psr->quad_ifuncN_c;ioff++){
+	  if(sat >= psr->quad_ifuncT_c[ioff] && sat < psr->quad_ifuncT_c[ioff+1]){
+	    double x1 = psr->quad_ifuncT_c[ioff];
+	    double x2 = psr->quad_ifuncT_c[ioff+1];
+	    double x = (sat-x1)/(x2-x1);
+	    double y1=yoffs[ioff];
+	    double y2=yoffs[ioff+1];
+	    afunc = (y2-y1)*x + y1;
+	    break;
+	  }
+	}
+      }
+      afunc *= psr->quad_ifunc_geom_c;
+    }
   else if (i==param_quad_om)
     {
       double n1,n2,n3;
@@ -1476,6 +1553,28 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      j++;
 		    }
 		}		  
+	      else if (i==param_quad_ifunc_p) 
+		{
+		  int k;
+		  for (k=0;k<psr->quad_ifuncN_p;k++)
+		    {
+		      printf("val ret = %g\n",val[j]);
+		      psr[p].quad_ifuncV_p[k] -= val[j];
+		      psr[p].quad_ifuncE_p[k] = error[j];
+		      j++;
+		    }
+		}		  
+	      else if (i==param_quad_ifunc_c) 
+		{
+		  int k;
+		  for (k=0;k<psr->quad_ifuncN_c;k++)
+		    {
+		      printf("val ret = %g\n",val[j]);
+		      psr[p].quad_ifuncV_c[k] -= val[j];
+		      psr[p].quad_ifuncE_c[k] = error[j];
+		      j++;
+		    }
+		}		  
 	      else if (i==param_gwsingle)
 		{
 		  printf("%d GW SINGLE -- in here %g %g %g %g\n",j,val[j],error[j],val[j+1],error[j+1]);
@@ -1702,6 +1801,19 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 			order++;
 		case constraint_ifunc_0:
 			return consFunc_ifunc(psr,i,k,order);
+		case constraint_quad_ifunc_p_2:
+			order++;
+		case constraint_quad_ifunc_p_1:
+			order++;
+		case constraint_quad_ifunc_p_0:
+			return consFunc_quad_ifunc_p(psr,i,k,order);
+		case constraint_quad_ifunc_c_2:
+			order++;
+		case constraint_quad_ifunc_c_1:
+			order++;
+		case constraint_quad_ifunc_c_0:
+			return consFunc_quad_ifunc_c(psr,i,k,order);
+
 		default:
 			return 0;
 			}
