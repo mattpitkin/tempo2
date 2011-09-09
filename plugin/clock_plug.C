@@ -112,14 +112,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-simple")==0)
 	simplePlot=1;
     }
-  if (harmTaper==0)
+  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+  readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+  preProcess(psr,*npsr,argc,argv);
+
+  if (psr[0].param[param_wave_om].paramSet[0]==1 && harmTaper==0)
     {
       printf("Must set a harmonic taper number using -harmTaper (make smaller than the number of waves being fit)\n");
       exit(1);
     }
-  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
-  readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
-  preProcess(psr,*npsr,argc,argv);
+
 
   for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
     {
@@ -205,44 +207,38 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  sy2[i] = sy[i];
 	  sye[i] = sqrt(sye[i]);
 	}
-      else
+    }
+  if (psr[0].param[param_wave_om].paramSet[0]==1)
+    {
+      TKremovePoly_d(sx,sy2,npt,3);
+      TKremovePoly_d(sx,taperY1,npt,3);
+      for (i=0;i<npt;i++)
 	{
-	  long double speriod,tt,dt;
-	  long double t1=0.0L;
-	  speriod = (long double)(psr[0].ifuncT[1]-psr[0].ifuncT[0]); 
-	  xval = sx[i];
-	  for (k=0;k<psr[0].ifuncN;k++)
-	    {
-	      dt = xval-(long double)psr[0].ifuncT[k];
-	      tt = M_PI/speriod*dt;
-	      t1+=(long double)psr[0].ifuncV[k]*sinl(tt)/tt;
-	    }
-	  sy[i] = t1;
-	  sy2[i] = sy[i];
-	  //	  printf("Here with %g %g %Lg %g\n",sx[i],sy[i],speriod,xval);
+	  if (psr[0].param[param_wave_om].paramSet[0]==1)
+	    px[i] = (float)mjd2year(sx[i]+(double)psr[0].param[param_waveepoch].val[0]);
+	  else
+	    px[i] = (float)mjd2year(sx[i]);
+	  
+	  fx[i] = (float)sx[i];
+	  fy[i] = (float)sy2[i];
+	  fyTaper[i] = (float)taperY1[i];
+	  fye1[i] = (float)(sy2[i] - sye[i]);
+	  fye2[i] = (float)(sy2[i] + sye[i]);
+	  //      printf("fye = %g %g\n",fye1[i],fye2[i]);
+	  fprintf(fout_clkcurve,"%g %g %g %g %g\n",px[i],sx[i],sy[i],sy2[i],sx[i]+(double)psr[0].param[param_waveepoch].val[0]);
+	  fprintf(fout_newclk,"%g %.15f\n",sx[i]+(double)psr[0].param[param_waveepoch].val[0],(double)(32.184L+taperY1[i]));
 	}
     }
-  TKremovePoly_d(sx,sy2,npt,3);
-  TKremovePoly_d(sx,taperY1,npt,3);
-  for (i=0;i<npt;i++)
+  else
     {
-      if (psr[0].param[param_wave_om].paramSet[0]==1)
-	px[i] = (float)mjd2year(sx[i]+(double)psr[0].param[param_waveepoch].val[0]);
-      else
-	px[i] = (float)mjd2year(sx[i]);
-
-      fx[i] = (float)sx[i];
-      fy[i] = (float)sy2[i];
-      fyTaper[i] = (float)taperY1[i];
-      fye1[i] = (float)(sy2[i] - sye[i]);
-      fye2[i] = (float)(sy2[i] + sye[i]);
-      //      printf("fye = %g %g\n",fye1[i],fye2[i]);
-      fprintf(fout_clkcurve,"%g %g %g %g %g\n",px[i],sx[i],sy[i],sy2[i],sx[i]+(double)psr[0].param[param_waveepoch].val[0]);
-      fprintf(fout_newclk,"%g %.15f\n",sx[i]+(double)psr[0].param[param_waveepoch].val[0],(double)(32.184L+taperY1[i]));
+      for (i=0;i<npt;i++)
+	{
+	    px[i] = (float)mjd2year(sx[i]);
+	}
     }
+      // Calculate variances
+      int ne=0;
 
-  // Calculate variances
-  int ne=0;
 
   if (psr[0].param[param_wave_om].paramSet[0]==1)
     {
@@ -477,6 +473,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
   else
     {
+      printf("In here\n");
       for (k=0;k<psr[0].ifuncN;k++)
 	{
 	  ex[k] = (float)mjd2year(psr[0].ifuncT[k]);
@@ -488,10 +485,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  ey1[k] = (float)(ey0[k]-psr[0].ifuncE[k]);
 	  ey2[k] = (float)(ey0[k]+psr[0].ifuncE[k]);
-	  printf("Error has size %g\n",psr[0].ifuncE[k]);
+	  printf("Error has size %g value = %g\n",psr[0].ifuncE[k],ey0[k]);
 	}
-
     }
+
   fclose(fout_clkpts);
   fclose(fout_clkcurve);
   fclose(fout_newclk);
@@ -560,18 +557,24 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   //      cpgsls(4);cpgline(npt,px,fy);cpgsls(1);
   cpgsci(1); cpgsls(2);cpgline(npt,px,fyTaper);cpgsls(1);
   cpgsci(1);
-  //  cpgsls(4);
-  //  cpgline(npt,px,fye1);
-  //  cpgline(npt,px,fye2);
-  //  cpgsls(1);
-  //  cpgerry(ne,ex,ey1,ey2,1);
-  //  cpgpt(ne,ex,ey0,4);
-  //  cpgslw(2);  cpgsci(3); cpgerry(ne,ex,ey2_1,ey2_2,1);cpgsci(1); cpgslw(1);
-  
-  // Covariance
-  cpgsci(1); cpgpt(nptsClk,cvX,cvY,4); cpgerry(nptsClk,cvX,cvY1,cvY2,1); cpgsci(1);
 
-  
+  if (psr[0].param[param_ifunc].paramSet[0]==1)
+    {
+      printf("plotting %d points\n",npt);
+      cpgsls(4);
+      cpgline(npt,px,fye1);
+      cpgline(npt,px,fye2);
+      cpgsls(1);
+      cpgerry(ne,ex,ey1,ey2,1);
+      cpgpt(ne,ex,ey0,4);
+      cpgslw(2);  cpgsci(3); cpgerry(ne,ex,ey2_1,ey2_2,1);cpgsci(1); cpgslw(1);
+    }
+  else
+    {
+      // Covariance
+      cpgsci(1); cpgpt(nptsClk,cvX,cvY,4); cpgerry(nptsClk,cvX,cvY1,cvY2,1); cpgsci(1);
+    }
+  printf("GOT HERE\n");
   if (strcmp(overlay,"NULL")!=0)
     {
       FILE *fin;
@@ -619,6 +622,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       cpgslw(4); cpgline(nr,frx,fry);  cpgslw(2);
       //      cpgsls(1);
       cpgsci(1);
+      if (psr[0].param[param_wave_om].paramSet[1]==1)
       {
 	double dist=0;
 	// Now only obtain the overlay file at the points from the covariance matrix
