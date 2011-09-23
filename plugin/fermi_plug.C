@@ -8,7 +8,7 @@
 #include <fitsio.h>
 #include <time.h>
 
-using namespace std;   		/* Is this required for a plugin ? Yes, for Linux */
+using namespace std;
 
 void extra_delays_fermi(pulsar *psr,int npsr);
 void clock_corrections_fermi(pulsar *psr,int npsr);
@@ -57,8 +57,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             20 March 2011\n");
-	printf("Version:             5.4\n");
+	printf("Updated:             21 September 2011\n");
+	printf("Version:             5.5\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -85,6 +85,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	char FT2[MAX_FILELEN];
 	char output[MAX_FILELEN];
 	char output_pos_file[MAX_FILELEN];
+	char output_prof_file[MAX_FILELEN];
 	char phasecol[32];
 	strcpy(phasecol,"PULSE_PHASE");
 	char command[128];
@@ -99,14 +100,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	int  graph	         = 1;
 	int  output_file     = 0;
 	int  output_pos      = 0;
+	int  output_prof     = 0;
 	int  phase_replace   = 0;
     int  phasecol_set    = 0;
     int  phasecol_exists = 0;
+    int  mint_set        = 0;
+    int  maxt_set        = 0;
 
 	double intpart;
 
 	FILE *outputf;
 	FILE *output_posf;
+	FILE *output_proff;
 	FILE *temp_tim;
 
 	/* ------------------------------------------------- //
@@ -119,7 +124,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	double nulval = 0.;
 
 	int FT1_time_col,FT1_phase_col,FT2_time_col1,FT2_time_col2,FT2_pos_col;
-	int nrows2, rows_status, rows_left;
+	int nrows2, nrows3, rows_status, rows_left;
 	int max_rows = MAX_OBSN_VAL / 2;
 
 	/* ------------------------------------------------- //
@@ -130,6 +135,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	double minFT1time = 999999999., maxFT1time = 0.;
 	double minFT2time = 999999999., maxFT2time = 0.;
 	
+	double mint = 0., maxt = 999999999.;
+
 	double time_MET_TT[max_rows];
 	longdouble time_MJD_TT;
 	double obs_earth[max_rows][3];
@@ -153,8 +160,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	// cpgplot definitions
 	// ------------------------------------------------- */
 
-	int endit;
-	float fontsize;
+	float fontsize = 0.75;
 	int linewidth = 1;
 
 	/* ------------------------------------------------- //
@@ -219,6 +225,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			strcpy(output_pos_file,argv[i+1]);
 			i++;
 		}
+		else if (strcmp(argv[i],"-profile")==0)
+		{
+			output_prof = 1;
+			strcpy(output_prof_file,argv[i+1]);
+			i++;
+		}
 		else if (strcmp(argv[i],"-phase")==0)
 		{
 			phase_replace = 1;
@@ -232,7 +244,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			strcpy(phasecol,argv[i+1]);
 			phasecol_set = 1;
 			i++;
-		}	
+		}
+		else if (strcmp(argv[i],"-tmin")==0)
+		{
+			sscanf(argv[i+1],"%lf",&mint);
+			mint_set = 1;
+			i++;
+		}
+		else if (strcmp(argv[i],"-tmax")==0)
+		{
+			sscanf(argv[i+1],"%lf",&maxt);
+			maxt_set = 1;
+			i++;
+		}
 		else if (strcmp(argv[i],"-h")==0)
 		{
 			printf("\n TEMPO2 fermi plugin\n");
@@ -245,9 +269,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			printf("\t -Hbins N: number of time bins for the H-test vs time plot\n");
 			printf("\t -output XXX: writes event times and phases in file XXX\n");
 			printf("\t -pos XXX: puts the satellite (X,Y,Z) positions as a function of time in file XXX\n");
+			printf("\t -profile XXX: stores the binned light curve in file XXX (plotting mode only)\n");
 			printf("\t -phase: stores phases in the FT1 by the ones calculated by TEMPO2\n");
 			printf("\t -ophase: will calculate orbital phases instead of pulse phases. Changes default column name to ORBITAL_PHASE.\n");
 			printf("\t -col XXX: phases will be stored in column XXX. Default is PULSE_PHASE\n");
+			printf("\t -tmin XXX: event times smaller than MJD XXX will be skipped.\n");
+			printf("\t -tmax XXX: event times larger than MJD XXX will be skipped.\n");
 			printf("\t -h: this help.\n");
 			printf("===============================================");
 			printf("===============================================\n");
@@ -264,6 +291,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("\t tempo2 -gr fermi -h\n");
 		exit(1);
 	}
+
 	if (!FT2_file)
 	{
 		printf("No spacecraft file !\n");
@@ -273,6 +301,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("\t tempo2 -gr fermi -h\n");		
 		exit(2);
 	}
+
 	if (!par_file)
 	{
 		printf("No ephemeris file !\n");
@@ -282,17 +311,38 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("\t tempo2 -gr fermi -h\n");
 		exit(3);
 	}
+
+	if ((!graph) && (output_prof))
+	{
+		printf("Can only save the profile in plotting mode!\n");
+		printf("If you need help, please type:\n");
+		printf("\t tempo2 -gr fermi -h\n");
+		exit(4);
+	}
+
 	if (output_file)
 	{
 		outputf = fopen(output,"w+");
 	}
+
 	if (output_pos)
 	{
 		output_posf = fopen(output_pos_file,"w+");
 	}
+
 	if (ophase)
 	{
 		if (!phasecol_set) strcpy(phasecol,"ORBITAL_PHASE");
+	}
+
+	if (mint_set)
+	{
+		mint = mjd2met(mint);
+	}
+
+	if (maxt_set)
+	{
+		maxt = mjd2met(maxt);
 	}
 
 	/* ------------------------------------------------- //
@@ -347,7 +397,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		{
 		    fits_get_colname(ft1,CASESEN,phasecol,colname,&FT1_phase_col,&status);
             
-            if (status>0)
+            if (status > 0)
             {
                 phasecol_exists = 0;
             }
@@ -389,7 +439,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         else 
         {
             printf("Adding new column %s.\n\n", phasecol);
-            sprintf(FT_in_filter, "%s[%d][col *;%s = 0.0]", FT1, 1, phasecol);
+            sprintf(FT_in_filter, "%s[%d][col *;%s = -1.0]", FT1, 1, phasecol);
         }
         
         if (!fits_open_file(&ft1, FT_in_filter, READONLY, &open_status))
@@ -485,10 +535,31 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("Warning: no spacecraft data for date %lf MET. Check the FT2 file.\n",maxFT1time);
 		printf("All photon phases after %lf MET will be set to -1.\n\n",maxFT2time);
 	}
-	
-	
-	// The FT1 file is cut into small tim files with # rows <= (MAX_OBSN_VAL / 2)
 
+	if (mint_set)
+	{
+		printf("Will skip event times smaller than %lf MET.\n\n",mint);
+
+		if (mint > maxFT1time)
+		{
+			printf("Error: requested tmin larger than all event times in the FT1 file! Exitting...\n");
+			exit(5);
+		}
+	}
+
+	if (maxt_set)
+	{
+		printf("Will skip event times larger than %lf MET.\n\n",maxt);
+
+		if (maxt < minFT1time)
+		{
+			printf("Error: requested tmax smaller than all event times in the FT1 file! Exitting...\n");
+			exit(6);
+		}
+	}
+	
+
+	// The FT1 file is cut into small tim files with # rows <= (MAX_OBSN_VAL / 2)
 	rows_status = 1;
 	rows_left	= nrows_FT1 - rows_status + 1;
 	nrows2 		= min(rows_left,max_rows);
@@ -496,7 +567,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	float *phase;
 	float *times;
         
-	if (graph == 0)
+	if (!graph)
 	{
 		phase  = (float *)calloc(max_rows,sizeof(float));
 		times  = (float *)calloc(max_rows,sizeof(float));
@@ -571,7 +642,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("Treating events # %d to %d... \n",rows_status,rows_status + nrows2 - 1);
 
 		// Acquisition of the non-barycentered TOAs in MET TT
-		j = 0;
+		nrows3 = nrows2;
+		j      = 0;
 
 		if (!fits_open_file(&ft1,FT1, READONLY, &status))
 		{
@@ -580,12 +652,39 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			for (i=rows_status;i<rows_status + nrows2;i++)
 			{
 				fits_read_col_dbl(ft1,FT1_time_col,i,1,1,nulval,&time_MET_TT[j],&anynul,&status);
+
+				if (mint_set && (time_MET_TT[j] < mint)) nrows3--;
+				if (maxt_set && (time_MET_TT[j] > maxt)) nrows3--;
+
 				j++;
 			}
 		}
 
 		fits_close_file(ft1, &status);
 
+		// If all event times are outside the requested range, continue to the next set of photons TBD
+		if (nrows3 == 0)
+		{
+			printf("All events are outside the requested time range. Continuing...\n");
+
+			if (!graph)
+			{
+				event = 0;
+			}
+			else
+			{
+				for (i=0;i<nrows2;i++)
+				{
+					phase[event] = -1.;
+					event++;
+				}
+			}
+
+			rows_status	+= nrows2;
+			rows_left	= nrows_FT1 - rows_status + 1;
+			nrows2 		= min(rows_left,max_rows);
+			continue;
+		}
 
 		// A temporary file is created. TOAs in MJD TT are stored is this file
 		temp_tim = fopen(timFile[0],"w+");
@@ -607,11 +706,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		/* ------------------------------------------------- //
 		// Satellite position as a function of time
 		// ------------------------------------------------- */
+
 		j = 1;
 
 		for (i=0;i<nrows2;i++)
 		{
 			if ((time_MET_TT[i] < minFT2time) || (time_MET_TT[i] > maxFT2time))
+			{
+				for (k=0;k<3;k++)
+				{
+					obs_earth[i][k] = 0.;
+				}
+			}
+			else if (mint_set && (time_MET_TT[i] < mint))
+			{
+				for (k=0;k<3;k++)
+				{
+					obs_earth[i][k] = 0.;
+				}
+			}
+			else if (maxt_set && (time_MET_TT[i] > maxt))
 			{
 				for (k=0;k<3;k++)
 				{
@@ -719,6 +833,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		/* ------------------------------------------------- //
 		// Delays, corrections and positions
 		// ------------------------------------------------- */
+
 		for (i=0;i<nrows2;i++)
 		{
 			psr->obsn[i].deleted = 0;
@@ -753,6 +868,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		/* ------------------------------------------------- //
 		// Stick in a fake obs to get the reference phase
 		// ------------------------------------------------- */
+
 		psr->obsn[0].sat = tzrmjd_bary;
 		psr->obsn[0].freq = 0.;
 		psr->obsn[0].deleted = 0;
@@ -763,16 +879,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		// ------------------------------------------------- //
 		// Form barycentric arrival times - step 1
 		// ------------------------------------------------- //
+
 		formBatsAll_fermi(psr,*npsr);
 
 		// ------------------------------------------------- //
 		// Calculate event phases - step 1
 		// ------------------------------------------------- //		
+
 		formResiduals(psr,*npsr,0.0);
 
 		for (i=1;i<nrows2;i++)
 		{
 			if ((time_MET_TT[i-1] < minFT2time) || (time_MET_TT[i-1] > maxFT2time))
+			{
+				phase[event] = -1.;
+			}
+			else if (mint_set && (time_MET_TT[i-1] < mint))
+			{
+				phase[event] = -1.;
+			}
+			else if (maxt_set && (time_MET_TT[i-1] > maxt))
 			{
 				phase[event] = -1.;
 			}
@@ -785,11 +911,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				}
 				else
 				{
-					if(psr[0].param[param_tasc].paramSet[0])
+					if (psr[0].param[param_tasc].paramSet[0])
 					{
 						tpb = (psr[0].obsn[i].bat-psr[0].param[param_tasc].val[0])/(psr[0].param[param_pb].val[0]);
 					}
-					else if(psr[0].param[param_t0].paramSet[0])
+					else if (psr[0].param[param_t0].paramSet[0])
 					{
 						tpb = (psr[0].obsn[i].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
 					}
@@ -799,16 +925,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				}
 	
 				times[event] = psr[0].obsn[i].bat;
-				if (times[event] > tmax) 	tmax = times[event];
-				if (times[event] < tmin)	tmin = times[event];
+				if (times[event] > tmax) tmax = times[event];
+				if (times[event] < tmin) tmin = times[event];
 			}
 				
 			if (output_file)
 			{
-				if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
+				if (!graph)	fprintf(outputf,"%d\t",event + rows_status);
 				else fprintf(outputf,"%d\t",event + 1);
 			
-				fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%d\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event],(int)intpart);
+				fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event]);
 			}
 	
 			event++;
@@ -817,20 +943,31 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		// ------------------------------------------------- //
 		// Calculation of the event phases - step 2
 		// ------------------------------------------------- //
+
 		psr[0].obsn[1].sat = lasttime;
 		for (k=0;k<3;k++) psr[0].obsn[1].observatory_earth[k] = lastpos[k];
 	
 		// ------------------------------------------------- //
 		// Form barycentric arrival times - step 2
 		// ------------------------------------------------- //
+
 		formBatsAll_fermi(psr,*npsr);
 
 		// ------------------------------------------------- //
 		// Calculate event phases - step 2
 		// ------------------------------------------------- //		
+
 		formResiduals(psr,*npsr,0.0);
 	
 		if ((time_MET_TT[psr[0].nobs-1] < minFT2time) || (time_MET_TT[psr[0].nobs-1] > maxFT2time))
+		{
+			phase[event] = -1.;
+		}
+		else if (mint_set && (time_MET_TT[psr[0].nobs-1] < mint))
+		{
+			phase[event] = -1.;
+		}
+		else if (maxt_set && (time_MET_TT[psr[0].nobs-1] > maxt))
 		{
 			phase[event] = -1.;
 		}
@@ -843,11 +980,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			}
 			else
 			{
-				if(psr[0].param[param_tasc].paramSet[0])
+				if (psr[0].param[param_tasc].paramSet[0])
 				{
 					tpb = (psr[0].obsn[1].bat-psr[0].param[param_tasc].val[0])/(psr[0].param[param_pb].val[0]);
 				}
-				else if(psr[0].param[param_t0].paramSet[0])
+				else if (psr[0].param[param_t0].paramSet[0])
 				{
 					tpb = (psr[0].obsn[1].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
 				}
@@ -863,27 +1000,28 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		if (output_file)
 		{
-			if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
+			if (!graph) fprintf(outputf,"%d\t",event + rows_status);
 			else fprintf(outputf,"%d\t",event + 1);
 			
-			fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%d\n",psr[0].obsn[1].sat,psr[0].obsn[1].bat,phase[event],(int)intpart);
+			fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\n",psr[0].obsn[1].sat,psr[0].obsn[1].bat,phase[event]);
 		}
 
 		// ------------------------------------------------- //
 		// Put new phases into the input FT1 file
 		// ------------------------------------------------- //
+
 		if (phase_replace)
 		{
   			if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
-    			{
+    		{
 				fits_movabs_hdu(ft1,2,NULL,&status);
 				
 				for (event2=rows_status;event2<rows_status+nrows2;event2++)
 				{
-					if (graph == 0)	i = event2 - rows_status;
+					if (!graph) i = event2 - rows_status;
 					else i = event2 - 1;
-				
-					fits_write_col_flt(ft1,FT1_phase_col,event2,1,1,&phase[i],&status);
+
+					if (phase[i] != -1.) fits_write_col_flt(ft1,FT1_phase_col,event2,1,1,&phase[i],&status);
 				}
 			}
 
@@ -893,11 +1031,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		/* ------------------------------------------------- //
 		// End of the loop
 		// ------------------------------------------------- */	
+
 		rows_status	+= nrows2;
 		rows_left	= nrows_FT1 - rows_status + 1;
 		nrows2 		= min(rows_left,max_rows);
 		
-		if (graph == 0)
+		if (!graph)
 		{
 			event = 0;
 		}
@@ -910,41 +1049,41 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     // ------------------------------------------------- //
 	// Add a little bit of history to the header
 	// ------------------------------------------------- //
+
 	if (phase_replace)
 	{
-	        sprintf(history,"Pulse phases calculated with the TEMPO2 Fermi plugin using ephemeris %s",parFile[0]);
-	        
-	        if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
-	        {
-	                status = 0;
-	                fits_movabs_hdu(ft1,2,NULL,&status);
-	                fits_write_history(ft1,history,&status);
-	                
-	                if (status != 0)
-	                {
-	                        fits_get_errstatus(status,error_buffer);
-	                        printf( "fits_insert_col: %s\n", error_buffer);
-	                        exit(-1);
-	                }
-	        }
-	        
-	        fits_close_file(ft1, &status);
+		sprintf(history,"Pulse phases calculated with the TEMPO2 Fermi plugin using ephemeris %s",parFile[0]);
+
+		if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
+		{
+			status = 0;
+			fits_movabs_hdu(ft1,2,NULL,&status);
+			fits_write_history(ft1,history,&status);
+
+			if (status != 0)
+			{
+				fits_get_errstatus(status,error_buffer);
+				printf( "fits_insert_col: %s\n", error_buffer);
+				exit(-1);
+			}
+		}
+
+		fits_close_file(ft1, &status);
 	}
 
 	if (output_file) fclose(outputf);
 	if (output_pos)  fclose(output_posf);
 
-
-
-
 	// ------------------------------------------------- //
 	// Graphical output
 	// ------------------------------------------------- //	
-	if (graph != 0)
+
+	if (graph)
 	{	
 		// ------------------------------------------------- //
 		// 1D histogram of phase
 		// ------------------------------------------------- //							
+
 		float bins[nbins*2];
 		float lc[nbins*2];
 		float errX[nbins*2],errY[nbins*2];
@@ -982,9 +1121,23 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		
 		binmax += sqrt(binmax);
 		
+		// Output the profile in a file
+		if (output_prof)
+		{
+			output_proff = fopen(output_prof_file,"w+");
+
+			for (i=0;i<nbins;i++)
+			{
+				fprintf(output_proff,"%f\t%f\t%f\n",bins[i],lc[i],errY[i]);
+			}
+
+			fclose(output_proff);
+		}
+
 		// ------------------------------------------------- //
 		// H-test TS calculation
 		// ------------------------------------------------- //	
+
 		float Hbin[Hbins+1], HTS[Hbins+1], hmin = 1.e6, hmax = -1.e6;
 		int Nphot[Hbins+1];
 		
@@ -1023,26 +1176,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		ymoy[0] = (float)l/(float)nbins;
 		ymoy[1] = ymoy[0];
 		
-		printf("Max H-test TS = %f\n",hmax);
-
-		// ------------------------------------------------- //
-		// Output phase historgram information (mkeith Jan 2011)
-		// ------------------------------------------------- //
-
-		outputf=fopen("profile.hist","w");
-
-		for (i=0; i < nbins; i++){
-			fprintf(outputf,"%f %f %f\n",bins[i],lc[i],errY[i]);
-		}
-		fclose(outputf);
-
-
-			
-
 
 		// ------------------------------------------------- //
 		// Graphical output initialization
 		// ------------------------------------------------- //							
+
 		cpgbeg(0,gr,1,1);
 		cpgask(0);
 
@@ -1050,79 +1188,68 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		cpgscr(0,1,1,1); 
 		cpgscr(1,0,0,0);
 	
-		endit = 0;
-		fontsize = 0.75;
-		if (strstr(gr,"/xs") == NULL)  endit = 1;
 		if (strstr(gr,"/ps") != NULL)  linewidth = 2;
 		if (strstr(gr,"/cps") != NULL) linewidth = 2;
-	
-		// Plotting loop 
-		do
-		{
-			// ------------------------------------------------- //
-			// First panel: phase histogram
-			// ------------------------------------------------- //							
-			cpgsvp(0.05,0.5,0.55,0.975);
-			cpgswin(0.,2.,0.,1.1*binmax);
-			
-			cpgsci(1);
-			cpgslw(linewidth);
-			cpgsch(fontsize);	
-			cpgbox("ABCNTS",0.5,5,"ABCNTS",pow(10,int(log10(binmax))),5);
-			
-			if (ophase == 0) 	cpglab("Pulse phase","Number of events","");
-			else				cpglab("Orbital phase","Number of events","");
-						
-			cpgsci(2);
-			cpgbin(nbins*2,bins,lc,0);
-			cpgerrb(6,nbins*2,errX,lc,errY,1.0);
-			
-			cpgsci(1);
-			cpgsls(2);
-			cpgline(2,xmoy,ymoy);
-			cpgsls(1);
-			
-			// ------------------------------------------------- //
-			// Second panel: time vs phase
-			// ------------------------------------------------- //				
-			cpgsvp(0.6,0.95,0.1,0.975);
-			cpgswin(0.,1.,tmin,tmax);
-			
-			cpgsci(1);
-			
-			cpgbox("ABCNTS",0.5,5,"ABCNTS1",pow(10,int(log10(tmax-tmin))),10);
-			
-			if (ophase == 0) 	cpglab("Pulse phase","Event time (MJD)","");
-			else				cpglab("Orbital phase","Event time (MJD)","");
-						
 
-			// Un-comment the following if you want points instead of binned-data
-			
-			cpgsci(2);
-			cpgslw(5);
-			cpgpt(nrows_FT1,phase,times,-1);
-			
-			
-			// ------------------------------------------------- //
-			// Third panel: H-test TS vs time
-			// ------------------------------------------------- //	
-			cpgsvp(0.05,0.5,0.1,0.45);
-			cpgswin(tmin,tmax,0,hmax + 0.1*(hmax-hmin));
-			
-			cpgsci(1);
-			cpgslw(linewidth);
-			cpgbox("ABCNTS1",2*pow(10,int(log10(tmax-tmin))),10,"ABCNTS",pow(10,int(log10(hmax-hmin))),5);
-			cpglab("Event time (MJD)","H-test TS","");
-			
-			cpgsci(2);
-			cpgslw(5);
-			cpgpt(Hbins+1,Hbin,HTS,3);
-			cpgslw(1);
-			cpgline(Hbins+1,Hbin,HTS);
-			
-			endit = 1;
-	
-		} while (endit == 0);
+		// ------------------------------------------------- //
+		// First panel: phase histogram
+		// ------------------------------------------------- //
+
+		cpgsvp(0.05,0.5,0.55,0.975);
+		cpgswin(0.,2.,0.,1.1*binmax);
+
+		cpgsci(1);
+		cpgslw(linewidth);
+		cpgsch(fontsize);
+		cpgbox("ABCNTS",0.5,5,"ABCNTS",pow(10,int(log10(binmax))),5);
+
+		if (ophase == 0) cpglab("Pulse phase","Number of events","");
+		else			 cpglab("Orbital phase","Number of events","");
+
+		cpgsci(2);
+		cpgbin(nbins*2,bins,lc,0);
+		cpgerrb(6,nbins*2,errX,lc,errY,1.0);
+
+		cpgsci(1);
+		cpgsls(2);
+		cpgline(2,xmoy,ymoy);
+		cpgsls(1);
+
+		// ------------------------------------------------- //
+		// Second panel: time vs phase
+		// ------------------------------------------------- //
+
+		cpgsvp(0.6,0.95,0.1,0.975);
+		cpgswin(0.,1.,tmin,tmax);
+
+		cpgsci(1);
+
+		cpgbox("ABCNTS",0.5,5,"ABCNTS1",pow(10,int(log10(tmax-tmin))),10);
+
+		if (ophase == 0) cpglab("Pulse phase","Event time (MJD)","");
+		else			 cpglab("Orbital phase","Event time (MJD)","");
+
+		cpgsci(2);
+		cpgslw(5);
+		cpgpt(nrows_FT1,phase,times,-1);
+
+		// ------------------------------------------------- //
+		// Third panel: H-test TS vs time
+		// ------------------------------------------------- //
+
+		cpgsvp(0.05,0.5,0.1,0.45);
+		cpgswin(tmin,tmax,0,hmax + 0.1*(hmax-hmin));
+
+		cpgsci(1);
+		cpgslw(linewidth);
+		cpgbox("ABCNTS1",pow(10,int(log10(tmax-tmin))),10,"ABCNTS",pow(10,int(log10(hmax-hmin))),5);
+		cpglab("Event time (MJD)","H-test TS","");
+
+		cpgsci(2);
+		cpgslw(5);
+		cpgpt(Hbins+1,Hbin,HTS,3);
+		cpgslw(1);
+		cpgline(Hbins+1,Hbin,HTS);
 			
 		cpgend();
 	}
@@ -1282,4 +1409,3 @@ float HTest(int Nphotons, float phases[])
 
         return max_h;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
