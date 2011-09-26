@@ -42,11 +42,11 @@
 using namespace std;
 
 void doPlugin1(pulsar *psr,char *flag,int removeQuad);
-void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[]);
+void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[],float dstep);
 int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1,
 				 double *vsf,double *mverr);
 void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[]);
-void plotHistogram(float *x,int count);
+float plotHistogram(float *x,int count,int *flagCol,int nFlag);
 void doSummary(pulsar *psr,float errStep);
 
 int nit = 1;
@@ -88,6 +88,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int removeQuad=0;
   double globalParameter;
   float errStep = 1e-6;
+  float dstep = 100;
   //  int nit = 1;
   //  long double gwamp = 0;
   //  long double alpha = 1;
@@ -133,6 +134,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       }
       else if (strcmp(argv[i],"-daygap")==0)
 	sscanf(argv[++i],"%d",&dayGap);
+      else if (strcmp(argv[i],"-dstep")==0)
+		sscanf(argv[++i],"%f",&dstep);
       else if (strcmp(argv[i],"-script")==0)
 	script = 1;
       else if (strcmp(argv[i],"-summary")==0)
@@ -161,14 +164,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   else if (plot==2)
     doPlugin2(psr,parFile,timFile,argc,argv);
   else if (plot==3)
-    doPlugin3(psr,flag,parFile,timFile,argc,argv);
+    doPlugin3(psr,flag,parFile,timFile,argc,argv,dstep);
   else
     printf("Unknown plot required\n");
 
   return 0;
 }
 
-void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[])
+void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[],float dstep)
 {
   int n = psr[0].nobs;
   int i,j,k;
@@ -180,23 +183,34 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
   float actRMS;
   float tx[2],ty[2];
   float normY[n],wnormY[n];
-  float dstep = 100;
   double xpos;
   double globalParameter=0;
   double reducedChisq;
   double equadv=0,equad=0;
+  double efac=1,efacv=0;
+  float highest;
   int loop=1;
   int nFlag=0,found;
   int col;
   char flagV[100][16];
   int flagCol[n];
   int nCount;
+  int use_equad=1;
+  double storeOrigErr[n];
+  double px[n],py[n],specX[2*n],specY[2*n],pe[n],temp[2*n];
+  float specX_f[2*n],specY_f[2*n];
+  int np;
+  double dx;
+  int nSpec;
 
-  // a) Must colour the residuals and normalised residuals by their flag type
+  printf("Use equad (1), efac (2) or both (3) ");
+  scanf("%d",&use_equad);
+
   // b) Must produce table giving the variance of each backend normalised residuals
 
   for (i=0;i<psr[0].nobs;i++)
     {
+      storeOrigErr[i]=psr[0].obsn[i].toaErr;
       for (j=0;j<psr[0].obsn[i].nFlags;j++)
 	{
 	  if (strcmp(psr[0].obsn[i].flagID[j],flag)==0)
@@ -207,7 +221,10 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 		{
 		  if (strcmp(psr[0].obsn[i].flagVal[j],flagV[k])==0)
 		    {
-		      flagCol[i] = k+2;
+		      if (k+2 > 14)
+			flagCol[i] = 14;
+		      else
+			flagCol[i] = k+2;
 		      found=1;
 		      break;
 		    }
@@ -215,7 +232,10 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 	      if (found==0)
 		{
 		  strcpy(flagV[nFlag++],psr[0].obsn[i].flagVal[j]);
-		  flagCol[i] = nFlag+1;
+		  if (nFlag+1 > 14)
+		    flagCol[i]=14;
+		  else
+		    flagCol[i] = nFlag+1;
 		}
 	    }
 	}
@@ -309,9 +329,33 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 
     for (i=0;i<psr[0].nobs;i++)
       {
-	psr[0].obsn[i].equad = equad;
-	psr[0].obsn[i].toaErr = sqrt(pow(psr[0].obsn[i].origErr,2)+equad*equad);
+	// Check for T2efacs
+	psr[0].obsn[i].toaErr = storeOrigErr[i];
+	for (j=0;j<psr[0].obsn[i].nFlags;j++)
+	  {	 
+	    for (k=0;k<psr[0].nT2efac;k++)
+	      {
+		if (strcmp(psr[0].obsn[i].flagID[j],psr[0].T2efacFlagID[k])==0)
+		  {
+		    if (strcmp(psr[0].obsn[i].flagVal[j],psr[0].T2efacFlagVal[k])==0)
+		      psr[0].obsn[i].toaErr *= psr[0].T2efacVal[k];
+		  }
+	      }
+	  }
+	if (use_equad==1 || use_equad==3)
+	  {
+	    psr[0].obsn[i].equad = equad;
+	    psr[0].obsn[i].toaErr = sqrt(pow(psr[0].obsn[i].toaErr,2)+equad*equad);
+	  }
+	if (use_equad==2 || use_equad==3)
+	  {
+	    psr[0].obsn[i].efac = efac;
+	    psr[0].obsn[i].toaErr *= efac;
+	  }
+	// Must do this because the DM correction error bar uses the original error
+	psr[0].obsn[i].origErr = psr[0].obsn[i].toaErr;
       }
+
     psr[0].ifuncN = 0;
     
     do {
@@ -345,21 +389,16 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
     psr[0].constraints[psr[0].nconstraints++]= constraint_ifunc_1;
     psr[0].constraints[psr[0].nconstraints++]= constraint_ifunc_2;
     
-
     formBatsAll(psr,1);         /* Form the barycentric arrival times */
     formResiduals(psr,1,1);    /* Form the residuals                 */
-    
     doFit(psr,1,0);   /* Do the fitting     */
-    
     formBatsAll(psr,1);         /* Form the barycentric arrival times */
     formResiduals(psr,1,1);    /* Form the residuals                 */
-    
     textOutput(psr,1,globalParameter,0,0,0,"");  /* Display the output */
     reducedChisq = psr[0].fitChisq/(double)psr[0].fitNfree;
 
     cpgbeg(0,"24/xs",1,2);
     cpgsch(1.3);
-
     for (i=0;i<psr[0].nobs;i++)
       {
 	wresx[i] = (float)(psr[0].obsn[i].sat - psr[0].param[param_pepoch].val[0]);
@@ -368,6 +407,10 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 	ye1[i] = wresy[i]-wrese[i];
 	ye2[i] = wresy[i]+wrese[i];
 	wnormY[i] = wresy[i]/wrese[i];	
+	px[i] = (double)wresx[i];
+	py[i] = (double)wnormY[i];
+	pe[i] = 1.0;
+	if (fabs(wnormY[i]) > 4) printf("> 4 sigma: %s %g %g %g\n",psr[0].obsn[i].fname,wresy[i],wrese[i],wnormY[i]);
       }
 
     minResY = TKfindMin_f(wresy,n);
@@ -405,31 +448,96 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
     ty[0] = ty[1] = actRMS;  cpgsci(2);  cpgline(2,tx,ty); cpgsci(1);
     ty[0] = ty[1] = -actRMS;  cpgsci(2);  cpgline(2,tx,ty); cpgsci(1);
     printf("RMS of normalised residuals = %g\n",actRMS);
+
+    // Provide table of normalised residuals for different backends
+    printf("------------------------------------------------------------------------\n");
+    printf(" -- %-16.16s %4.4s %9.9s %9.9s\n","Flag","Npts","Mean","RMS");
+    printf("------------------------------------------------------------------------\n");
+    for (i=0;i<nFlag;i++)
+      {
+	np=0;
+	for (j=0;j<n;j++)
+	  {
+	    if (flagCol[j] == i+2)
+	      {
+		py[np] = wnormY[j];
+		np++;
+	      }
+	  }
+	printf(" -- %-16.16s %4d %9.3g %9.3g\n",flagV[i],np,TKmean_d(py,np),TKfindRMS_d(py,np));
+      }
+    printf("------------------------------------------------------------------------\n");
     cpgend();
 
+    // Plot spectrum of whitened, normalised residuals
+    cpgbeg(0,"26/xs",1,1);
+    TKspectrum(px,py,pe,n,0,0,0,0,0,2,1,1,1,specX,specY,&nSpec,0,0,temp,temp);
+    for (i=0;i<nSpec;i++)
+      {
+	specX_f[i] = (float)specX[i]*365.25;
+	specY_f[i] = (float)log10(specY[i]*pow(365.25*86400.0,2));
+      }
+    cpgenv(0,TKfindMax_f(specX_f,nSpec),TKfindMin_f(specY_f,nSpec),TKfindMax_f(specY_f,nSpec),0,20);
+    cpglab("Frequency (yr\\u-1\\d)","PSD (yr)",psr[0].name);
+    cpgline(nSpec,specX_f,specY_f);
+    // Draw confidence levels
+    tx[0] = 0; tx[1] = TKfindMax_f(specX_f,nSpec);
+    ty[0] = ty[1] = log10(1.0/specX_f[nSpec-1]);  cpgsci(7); cpgsls(2); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+    ty[0] = ty[1] = log10(3.0/specX_f[nSpec-1]);  cpgsci(3); cpgsls(2); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+    ty[0] = ty[1] = log10(0.05/specX_f[nSpec-1]);  cpgsci(3); cpgsls(2); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+
+    tx[0] = tx[1] = 1.0/(dstep/365.25);
+    ty[0] = TKfindMin_f(specY_f,nSpec);
+    ty[1] = TKfindMax_f(specY_f,nSpec);
+    cpgsci(2); cpgsls(1); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+    // Now plot expected curve
+    for (i=0;i<nSpec;i++)
+      {
+	dx = specX_f[i]*dstep/365.25;
+	specY_f[i] = log10((1-pow(sin(dx)/dx,4))*1.0/specX_f[nSpec-1]);
+      }
+    cpgsci(5); cpgsls(4); cpgline(nSpec,specX_f,specY_f); cpgsci(1); cpgsls(1);
+    cpgend();
+
+
     cpgbeg(0,"25/xs",1,1);
-    plotHistogram(wnormY,n);
+    highest = plotHistogram(wnormY,n,flagCol,nFlag);
     // Overplot Gaussian with sdev = 1
     for (i=0;i<100;i++)
       {
 
 	histX[i] = (i-50)/8.0;
-	histY[i] = 0.15*exp(-pow(histX[i],2)/2);
+	histY[i] = highest*exp(-pow(histX[i],2)/2);
       }
     cpgsci(7); cpgline(100,histX,histY); cpgsci(1);
     cpgend();
     
 
     printf("Reduced chisq = %g\n",reducedChisq);
-    printf("New EQUAD: (-1 = quit) ");
-    scanf("%lf",&equadv);
-    if (equadv==-1)
-      loop=0;
-    else
-      equad = equadv;
+    if (use_equad==1 || use_equad==3)
+      {
+	printf("New EQUAD: (%g; -1 = quit) ",equad);
+	scanf("%lf",&equadv);
+      
+	if (equadv==-1)
+	  loop=0;
+	else
+	  equad = equadv;
+      }
+    if (use_equad==2 || use_equad==3)
+      {
+	printf("New EFAC: (%g; -1 = quit) ",efac);
+	scanf("%lf",&efacv);
+	if (efacv==-1)
+	  loop=0;
+	else
+	  efac=efacv;
+      }
+
     psr[0].nconstraints-=3;
   } while (loop==1); 
-  printf("Final choice of EQUAD = %g us\n",equad);
+  if (use_equad==1) printf("Final choice of EQUAD = %g us\n",equad);
+  else if (use_equad==2) printf("Final choice of EFAC = %g\n",efac);
 }
 
 void doSummary(pulsar *psr,float errStep)
@@ -700,7 +808,7 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
       textOutput(psr,1,0,0,0,0,"");
       rms[it] = (float)psr[0].rmsPost;
       if (rms[it] > measuredRMS) count++;
-      plotHistogram(rms,it+1);
+      //      plotHistogram(rms,it+1);
       printf("[%d/%d] rms = %g, measured rms = %g. percent rms > measured value = %g\n",it+1,nit,rms[it],measuredRMS,count/(double)(it+1)*100.0);
       for (i=0;i<psr[0].nobs;i++)
 	{
@@ -719,7 +827,7 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
   else
     cpgbeg(0,"/null",1,2);
   cpgsch(1.4);
-  plotHistogram(rms,nit);
+  //  plotHistogram(rms,nit);
   fx[0] = fx[1] = (float)measuredRMS;
   fy[0] = 0; fy[1] = 1000;
   cpgsls(4); cpgline(2,fx,fy); cpgsls(1);
@@ -982,13 +1090,15 @@ int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errf
   return n;
 }
 
-void plotHistogram(float *x,int count)
+float plotHistogram(float *x,int count,int *flagCol,int nFlag)
 {
-  int i;
+  int i,j,k;
   float binvalX[100],binvalY[100];
+  float binvalY_flag[nFlag][100];
   float area;
   float highest,meanx;
   float mousex,mousey,fontSize;
+  float tbin;
   char key;
   int nbin;
   float minx;
@@ -999,13 +1109,14 @@ void plotHistogram(float *x,int count)
   int log;
   float offset;
   int endit=0;
+  int b;
 
-
-  nbin = 20;
-  normalise = 1;
+  nbin = 21;
+  normalise = 0;
   colour = -1;
   log = 0;
-  offset = 0.5;
+  //  offset = 0.5;
+  offset = 0;
 
   maxy = -1;
   
@@ -1022,29 +1133,43 @@ void plotHistogram(float *x,int count)
       if (minx > x[i]-meanx) minx = x[i]-meanx;
       if (maxx < x[i]-meanx) maxx = x[i]-meanx;
       } 
+  if (fabs(minx) > maxx) maxx = fabs(minx);
+  else minx = -maxx;
+  //  tbin = maxx*2/(double)nbin;
+
+  printf("Histogram: have minx = %g, maxx = %g\n",minx,maxx);
   ominx = minx;
   minx -= 2.0*(maxx-ominx)/nbin;
   maxx += 2.0*(maxx-ominx)/nbin;
 
-  for (i=0;i<100;i++)
+  for (i=0;i<nbin;i++)
     {
       binvalX[i]=i*(maxx-minx)/nbin+minx+(maxx-minx)/nbin/2.0*offset;
       binvalY[i]=0.0;
+      for (j=0;j<nFlag;j++)
+	binvalY_flag[j][i]=0.0;
     }
   for (i=0;i<count;i++)
     {
-      if ((int)((x[i]-meanx-minx)/((maxx-minx)/nbin))>=0 
-        && (int)((x[i]-meanx-minx)/((maxx-minx)/nbin)) <100)
-      binvalY[(int)((x[i]-meanx-minx)/((maxx-minx)/nbin))]++;
+      b = (int)((x[i]-meanx-minx)/((maxx-minx)/nbin));
+      if (b>=0 && (int)(b<nbin))
+	{
+	  binvalY[b]++;
+	  binvalY_flag[flagCol[i]-2][b]++;
+	}
     }
 
   if (normalise>0)
     {
       area=0.0;
       for (i=0;i<nbin;i++)
-      area+=binvalY[i];
+	area+=binvalY[i];
       for (i=0;i<nbin;i++)
-      binvalY[i]=binvalY[i]/area*normalise;
+	{
+	  binvalY[i]=binvalY[i]/area*normalise;
+	  for (j=0;j<nFlag;j++)
+	    binvalY_flag[j][i]=binvalY_flag[j][i]/area*normalise;
+	}
     }
   /* Normalise so that highest point lies at 1 */
   highest=0.0;
@@ -1059,18 +1184,22 @@ void plotHistogram(float *x,int count)
       if (highest!=0.0)
 	{
 	  for (i=0;i<nbin;i++)
-	    binvalY[i]/=highest;
+	    {
+	      binvalY[i]/=highest;
+	      for (j=0;j<nFlag;j++)
+		binvalY_flag[j][i]/=highest;
+	    }
 	}
     }
   if (colour==-1)
     {
       if (log==1)
-      cpgenv(minx, maxx, 0, maxy, 0, 10); 
+	cpgenv(minx, maxx, 0, maxy, 0, 10); 
       else
-      cpgenv(minx, maxx, 0, maxy, 0, 0); 
-      cpglab("RMS (\\gms)","Number","");
+	cpgenv(minx, maxx, 0, maxy, 0, 0); 
+      cpglab("Normalised residual","Number","");
       cpgqch(&fontSize); cpgsch(0.5); cpgmtxt("B",8,0.92,0.0,"fixData v.1.0 (G. Hobbs)"); cpgsch(fontSize); 
-
+      
       cpgsls(1);
       cpgsci(1);
     }
@@ -1080,7 +1209,7 @@ void plotHistogram(float *x,int count)
       cpgsci(1);
       cpgsls(1);
       cpgslw(1);
-
+      
     }
   else
     {
@@ -1091,12 +1220,33 @@ void plotHistogram(float *x,int count)
       if (colour==2) cpgslw(5);
       if (colour==3) cpgsls(3);
       if (colour==4) cpgsls(5);
-
+      
     }
-
+  
   cpgbin(nbin,binvalX,binvalY,0);
+  cpgsfs(1);
+
+  // Make solid histogram
+  for (i=nFlag-1;i>=0;i--)
+    {
+      for (j=0;j<i;j++)
+	{
+	  for (k=0;k<nbin;k++)
+	    binvalY_flag[i][k]+=binvalY_flag[j][k];
+	}
+    }
+  for (i=nFlag-1;i>=0;i--)
+    {
+      cpgsci(i+2);
+      //      cpgbin(nbin,binvalX,binvalY_flag[i],0);
+      for (j=0;j<nbin-1;j++)
+	{
+	  cpgrect(binvalX[j],binvalX[j+1],0,binvalY_flag[i][j]);
+	}
+    }
   cpgsls(1);
   cpgsci(1);
+  cpgbin(nbin,binvalX,binvalY,0);
   cpgslw(1);
 
   /*  {
@@ -1112,5 +1262,6 @@ void plotHistogram(float *x,int count)
       }
     cpgsci(2); cpgslw(4); cpgline(n,fx,fy); cpgslw(1); cpgsci(1);
     }*/
+  return highest;
 }
 char * plugVersionCheck = TEMPO2_h_VER;
