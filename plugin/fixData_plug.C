@@ -42,6 +42,7 @@
 using namespace std;
 
 void doPlugin1(pulsar *psr,char *flag,int removeQuad);
+void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[]);
 int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1,
 				 double *vsf,double *mverr);
 void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[]);
@@ -159,10 +160,276 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     doPlugin1(psr,flag,removeQuad);
   else if (plot==2)
     doPlugin2(psr,parFile,timFile,argc,argv);
+  else if (plot==3)
+    doPlugin3(psr,flag,parFile,timFile,argc,argv);
   else
     printf("Unknown plot required\n");
 
   return 0;
+}
+
+void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[])
+{
+  int n = psr[0].nobs;
+  int i,j,k;
+  float resx[n],resy[n],rese[n],ye1[n],ye2[n];
+  float wresx[n],wresy[n],wrese[n];
+  float histX[100],histY[100];
+  int nhist;
+  float minResX,maxResX,minResY,maxResY;
+  float actRMS;
+  float tx[2],ty[2];
+  float normY[n],wnormY[n];
+  float dstep = 100;
+  double xpos;
+  double globalParameter=0;
+  double reducedChisq;
+  double equadv=0,equad=0;
+  int loop=1;
+  int nFlag=0,found;
+  int col;
+  char flagV[100][16];
+  int flagCol[n];
+  int nCount;
+
+  // a) Must colour the residuals and normalised residuals by their flag type
+  // b) Must produce table giving the variance of each backend normalised residuals
+
+  for (i=0;i<psr[0].nobs;i++)
+    {
+      for (j=0;j<psr[0].obsn[i].nFlags;j++)
+	{
+	  if (strcmp(psr[0].obsn[i].flagID[j],flag)==0)
+	    {
+	      found=0;
+	      flagCol[i] = 1;
+	      for (k=0;k<nFlag;k++)
+		{
+		  if (strcmp(psr[0].obsn[i].flagVal[j],flagV[k])==0)
+		    {
+		      flagCol[i] = k+2;
+		      found=1;
+		      break;
+		    }
+		}
+	      if (found==0)
+		{
+		  strcpy(flagV[nFlag++],psr[0].obsn[i].flagVal[j]);
+		  flagCol[i] = nFlag+1;
+		}
+	    }
+	}
+    }
+  printf("Number of unique flags = %d\n",nFlag);
+  for (k=0;k<nFlag;k++)
+    printf(" -- %s\n",flagV[k]);
+
+
+  for (i=0;i<n;i++)
+    {
+      resx[i] = (float)(psr[0].obsn[i].sat - psr[0].param[param_pepoch].val[0]);
+      resy[i] = (float)(psr[0].obsn[i].residual);
+      rese[i] = (float)(psr[0].obsn[i].toaErr*1.0e-6);
+      ye1[i] = resy[i]-rese[i];
+      ye2[i] = resy[i]+rese[i];
+      normY[i] = resy[i]/rese[i];
+    }
+  minResX = TKfindMin_f(resx,n);
+  maxResX = TKfindMax_f(resx,n);
+  minResY = TKfindMin_f(resy,n);
+  maxResY = TKfindMax_f(resy,n);
+
+  // Plot original residuals
+  cpgbeg(0,"23/xs",1,2);
+  cpgsch(1.3);
+  cpgenv(minResX,maxResX,minResY,maxResY,0,1);
+  cpglab("Day","Residual","");
+  for (i=0;i<n;i++)
+    {
+      cpgsci(flagCol[i]);
+      cpgpt(1,resx+i,resy+i,4);
+      cpgerry(1,resx+i,ye1+i,ye2+i,1);
+      cpgsci(1);
+    }
+  minResY = TKfindMin_f(normY,n);
+  maxResY = TKfindMax_f(normY,n);
+  cpgenv(minResX,maxResX,minResY,maxResY,0,1);
+  cpglab("Day","Normalised Residual","");
+  for (i=0;i<n;i++)
+    {
+      cpgsci(flagCol[i]);
+      cpgpt(1,resx+i,normY+i,4);
+      cpgsci(1);
+    }
+  // Draw 1 sigma and 3 sigma lines
+  tx[0] = minResX; tx[1] = maxResX;
+  ty[0] = ty[1] = 1.0;  cpgsci(7); cpgsls(4); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+  ty[0] = ty[1] = -1.0;  cpgsci(7); cpgsls(4); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+  ty[0] = ty[1] = 3.0;  cpgsci(3); cpgsls(4); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+  ty[0] = ty[1] = -3.0;  cpgsci(3); cpgsls(4); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+
+  // Draw actual rms
+  actRMS = TKfindRMS_f(normY,n);
+  ty[0] = ty[1] = actRMS;  cpgsci(2);  cpgline(2,tx,ty); cpgsci(1);
+  ty[0] = ty[1] = -actRMS;  cpgsci(2);  cpgline(2,tx,ty); cpgsci(1);
+  printf("RMS of normalised residuals = %g\n",actRMS);
+  cpgend();
+
+  // Re-do the fit with constrained fit
+  // 1. Turn off all fitting
+  for (i=0;i<MAX_PARAMS;i++)
+    {
+      for (j=0;j<psr[0].param[i].aSize;j++)
+	{
+	  if (psr[0].param[i].fitFlag[j]==1)
+	    psr[0].param[i].fitFlag[j]=0;
+	}
+    }
+  for (i=1;i<=psr[0].nJumps;i++)
+    {
+      if (psr[0].fitJump[i]==1)
+	psr[0].fitJump[i]=0;
+    }
+
+  // 2. Turn on fitting for F0 and F1
+  psr[0].param[param_f].fitFlag[0] = 1;
+  psr[0].param[param_f].fitFlag[1] = 1;
+  
+  // 3. Add in constrained IFUNC values
+  psr[0].param[param_ifunc].paramSet[0]=1;
+  psr[0].param[param_ifunc].fitFlag[0]=1;
+  psr[0].param[param_ifunc].val[0]=2;
+
+
+  do {
+    xpos = minResX + (double)psr[0].param[param_pepoch].val[0] - dstep/2;
+
+    psr[0].param[param_f].val[0] = psr[0].param[param_f].prefit[0];
+    psr[0].param[param_f].val[1] = psr[0].param[param_f].prefit[1];
+
+    for (i=0;i<psr[0].nobs;i++)
+      {
+	psr[0].obsn[i].equad = equad;
+	psr[0].obsn[i].toaErr = sqrt(pow(psr[0].obsn[i].origErr,2)+equad*equad);
+      }
+    psr[0].ifuncN = 0;
+    
+    do {
+      if (psr[0].ifuncN > 0)
+	{
+	  nCount=0;
+	  for (k=0;k<psr[0].nobs;k++)
+	    {
+	      if (psr[0].obsn[k].sat > psr[0].ifuncT[psr[0].ifuncN-1] &&
+		  psr[0].obsn[k].sat < xpos)
+		nCount++;
+	    }
+	  if (nCount>2)
+	    {
+	      psr[0].ifuncT[psr[0].ifuncN] = xpos;
+	      psr[0].ifuncV[psr[0].ifuncN] = 0.0;
+	      psr[0].ifuncE[psr[0].ifuncN] = 0.0;
+	      psr[0].ifuncN++;
+	    }
+	}
+      else
+	{
+	  psr[0].ifuncT[psr[0].ifuncN] = xpos;
+	  psr[0].ifuncV[psr[0].ifuncN] = 0.0;
+	  psr[0].ifuncE[psr[0].ifuncN] = 0.0;
+	  psr[0].ifuncN++;
+	}
+      xpos += dstep;
+    } while (xpos < maxResX + (double)psr[0].param[param_pepoch].val[0]);
+    psr[0].constraints[psr[0].nconstraints++]= constraint_ifunc_0;
+    psr[0].constraints[psr[0].nconstraints++]= constraint_ifunc_1;
+    psr[0].constraints[psr[0].nconstraints++]= constraint_ifunc_2;
+    
+
+    formBatsAll(psr,1);         /* Form the barycentric arrival times */
+    formResiduals(psr,1,1);    /* Form the residuals                 */
+    
+    doFit(psr,1,0);   /* Do the fitting     */
+    
+    formBatsAll(psr,1);         /* Form the barycentric arrival times */
+    formResiduals(psr,1,1);    /* Form the residuals                 */
+    
+    textOutput(psr,1,globalParameter,0,0,0,"");  /* Display the output */
+    reducedChisq = psr[0].fitChisq/(double)psr[0].fitNfree;
+
+    cpgbeg(0,"24/xs",1,2);
+    cpgsch(1.3);
+
+    for (i=0;i<psr[0].nobs;i++)
+      {
+	wresx[i] = (float)(psr[0].obsn[i].sat - psr[0].param[param_pepoch].val[0]);
+	wresy[i] = (float)(psr[0].obsn[i].residual);
+	wrese[i] = (float)(psr[0].obsn[i].toaErr*1.0e-6);
+	ye1[i] = wresy[i]-wrese[i];
+	ye2[i] = wresy[i]+wrese[i];
+	wnormY[i] = wresy[i]/wrese[i];	
+      }
+
+    minResY = TKfindMin_f(wresy,n);
+    maxResY = TKfindMax_f(wresy,n);
+
+    cpgenv(minResX,maxResX,minResY,maxResY,0,1);
+    cpglab("Day","Residual","");
+
+    for (i=0;i<n;i++)
+      {
+	cpgsci(flagCol[i]);
+	cpgpt(1,wresx+i,wresy+i,4);
+	cpgerry(1,wresx+i,ye1+i,ye2+i,1);
+	cpgsci(1);
+      }
+    minResY = TKfindMin_f(wnormY,n);
+    maxResY = TKfindMax_f(wnormY,n);
+    cpgenv(minResX,maxResX,minResY,maxResY,0,1);
+    cpglab("Day","Normalised Residual","");
+    for (i=0;i<n;i++)
+      {
+	cpgsci(flagCol[i]);
+	cpgpt(1,wresx+i,wnormY+i,4);
+	cpgsci(1);
+      }
+    // Draw 1 sigma and 3 sigma lines
+    tx[0] = minResX; tx[1] = maxResX;
+    ty[0] = ty[1] = 1.0;  cpgsci(7); cpgsls(4); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+    ty[0] = ty[1] = -1.0;  cpgsci(7); cpgsls(4); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+    ty[0] = ty[1] = 3.0;  cpgsci(3); cpgsls(4); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+    ty[0] = ty[1] = -3.0;  cpgsci(3); cpgsls(4); cpgline(2,tx,ty); cpgsls(1); cpgsci(1);
+    
+    // Draw actual rms
+    actRMS = TKfindRMS_f(wnormY,n);
+    ty[0] = ty[1] = actRMS;  cpgsci(2);  cpgline(2,tx,ty); cpgsci(1);
+    ty[0] = ty[1] = -actRMS;  cpgsci(2);  cpgline(2,tx,ty); cpgsci(1);
+    printf("RMS of normalised residuals = %g\n",actRMS);
+    cpgend();
+
+    cpgbeg(0,"25/xs",1,1);
+    plotHistogram(wnormY,n);
+    // Overplot Gaussian with sdev = 1
+    for (i=0;i<100;i++)
+      {
+
+	histX[i] = (i-50)/8.0;
+	histY[i] = 0.15*exp(-pow(histX[i],2)/2);
+      }
+    cpgsci(7); cpgline(100,histX,histY); cpgsci(1);
+    cpgend();
+    
+
+    printf("Reduced chisq = %g\n",reducedChisq);
+    printf("New EQUAD: (-1 = quit) ");
+    scanf("%lf",&equadv);
+    if (equadv==-1)
+      loop=0;
+    else
+      equad = equadv;
+    psr[0].nconstraints-=3;
+  } while (loop==1); 
+  printf("Final choice of EQUAD = %g us\n",equad);
 }
 
 void doSummary(pulsar *psr,float errStep)
