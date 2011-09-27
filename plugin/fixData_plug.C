@@ -193,7 +193,7 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
   int nFlag=0,found;
   int col;
   char flagV[100][16];
-  int flagCol[n];
+  int flagCol[n],flagID[n];
   int nCount;
   int use_equad=1;
   double storeOrigErr[n];
@@ -217,6 +217,7 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 	    {
 	      found=0;
 	      flagCol[i] = 1;
+	      flagID[i] = 1;
 	      for (k=0;k<nFlag;k++)
 		{
 		  if (strcmp(psr[0].obsn[i].flagVal[j],flagV[k])==0)
@@ -225,6 +226,7 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 			flagCol[i] = 14;
 		      else
 			flagCol[i] = k+2;
+		      flagID[i] = k;
 		      found=1;
 		      break;
 		    }
@@ -236,6 +238,7 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 		    flagCol[i]=14;
 		  else
 		    flagCol[i] = nFlag+1;
+		  flagID[i] = nFlag;
 		}
 	    }
 	}
@@ -458,7 +461,7 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 	np=0;
 	for (j=0;j<n;j++)
 	  {
-	    if (flagCol[j] == i+2)
+	    if (flagID[j] == i)
 	      {
 		py[np] = wnormY[j];
 		np++;
