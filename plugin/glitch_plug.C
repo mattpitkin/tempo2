@@ -53,7 +53,7 @@ typedef struct glitchS {
 } glitchS;
 
 void defineGlitchVal(glitchS *glitch,int nglt);
-void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set);
+void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set,int numberGlitch,int internalTitle,char *grDev,float nGltFntSize);
 void plot1(double *epoch,double *f0,float *yerr1,float *yerr2,
 	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);          
 void plot8(double *epoch,double *f0,float *yerr1,float *yerr2,
@@ -201,9 +201,12 @@ void help() /* Display help */
   printf("-fitf1    fit for F0 and F1 (default just F0)\n");  
   printf("-font x   set font size\n");
   printf("-foot x   set fraction of page as footer\n");
+  printf("-g x      set graphics device to x\n");        
   printf("-gt x     set glitch at MJD x (can use -gr multiple times)\n");
   printf("-h        this help file\n");
   printf("-head x   set fraction of page as header\n");
+  printf("-ngltfntsize x set font size for numbering the glitches\n");
+  printf("-numberglitch Number the glitches\n");
   printf("-offset x set time offset\n");
   printf("-p x      make plot of type x (can be used multiple times)\n");
   printf("-t        data file containing MJD ranges and .par files\n");
@@ -269,6 +272,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   float yscale_min[100];
   float yscale_max[100];
   int   yscale_set[100];
+  int   numberGlitch=0;
+  int   internalTitle=0;
+  float nGltFntSize=1.0;
+  char grDev[128] = "/xs";
 
   for (i=0;i<100;i++)
     yscale_set[i]=0;
@@ -301,6 +308,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-h")==0)
 	help();
+      else if (strcmp(argv[i],"-g")==0)
+	strcpy(grDev,argv[++i]);
       else if (strcmp(argv[i],"-title")==0)
 	strcpy(title,argv[++i]);
       else if (strcmp(argv[i],"-t")==0)
@@ -311,8 +320,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%d",&plotType[nplot++]);
       else if (strcmp(argv[i],"-offset")==0)
 	sscanf(argv[++i],"%lf",&plotOffset);
+      else if (strcasecmp(argv[i],"-ngltfntsize")==0)
+	sscanf(argv[++i],"%f",&nGltFntSize);
       else if (strcmp(argv[i],"-i")==0)
 	interactive=1;
+      else if (strcmp(argv[i],"-numberglitch")==0)
+	numberGlitch=1;
+      else if (strcmp(argv[i],"-internaltitle")==0)
+	internalTitle=1;
       else if (strcmp(argv[i],"-fitf1")==0)
 	fitf1=1;
       else if (strcmp(argv[i],"-font")==0)
@@ -497,9 +512,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  }
     }
   // Do the plotting
-  printf("Doing the plot\n");
+  printf("Doing the plot here\n");
   if (interactive==0)
-    doPlot(epoch,f0,f0e,f1,f1e,fitf1,nFit,id,n,gt,ngt,plotType,nplot,plotOffset,plotResX,plotResY,plotResE,nplotVal,combine,fontSize,title,yscale_min,yscale_max,yscale_set);
+    doPlot(epoch,f0,f0e,f1,f1e,fitf1,nFit,id,n,gt,ngt,plotType,nplot,plotOffset,plotResX,plotResY,plotResE,nplotVal,combine,fontSize,title,yscale_min,yscale_max,yscale_set,numberGlitch,internalTitle,grDev,nGltFntSize);
   else
     interactivePlot(epoch,f0,f0e,nFit,id,n);
   printf("Done the plot\n");
@@ -507,13 +522,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set)
+void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set,int numberGlitch,int internalTitle,char *grDev,float nGltFntSize)
 {
   float yerr1[n],yerr2[n];
   float fx[2],fy[2];
+  float x1,x2,y1,y2;
   int i,k;
   int plot=2;
   int last;
+  char str[128];
+  float height,width;
 
   for (i=0;i<n;i++)
     {
@@ -521,7 +539,7 @@ void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf
       yerr2[i] = (float)(f0[i]+f0e[i]);
     }
 
-  cpgbeg(0,"?",1,1);
+  cpgbeg(0,grDev,1,1);
   
   /*  if (combine==1)
     {
@@ -554,15 +572,30 @@ void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf
       else if (plotType[k]==9)
 	plot9(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[9],yscale_max[9],yscale_set[9]);           
 
+      cpgqwin(&x1,&x2,&y1,&y2);
+      printf("Have %g %g %g %g\n",x1,x2,y1,y2);
       for (i=0;i<ngt;i++)
 	{
 	  fx[0] = fx[1] = gt[i]-plotOffset;
 	  fy[0] = -1000; fy[1] = 1000;
 	  cpgsls(4); cpgline(2,fx,fy); cpgsls(1);
-	  
+	  if (k==nplot-1 && numberGlitch==1)
+	    {
+	      cpgsch(nGltFntSize);
+	      cpgqcs(4,&width,&height);
+	      fy[0] = y2+height/3;
+	      sprintf(str,"%d",i+1);
+	      fx[0] = fx[0]-width*strlen(str)/3;
+	      cpgtext(fx[0],fy[0],str);
+	      cpgsch(fontSize);
+	    }
 	}
     }
-  cpglab("","",title);
+	      cpgqcs(4,&width,&height);
+  if (internalTitle==1)
+      cpgtext(x1+width*2,y2-height*1.5,title);
+  else
+    cpglab("","",title);
   cpgend();
 }
 
