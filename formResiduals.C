@@ -585,11 +585,17 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 	       for (k=0;k<psr[p].obsn[i].nFlags;k++)
 		 {
-		   if (strcmp(psr[p].obsn[i].flagID[k],"-radd")==0)
+		   if (strcmp(psr[p].obsn[i].flagID[k],"-radd")==0) // Add in extra time
 		     {
 		       sscanf(psr[p].obsn[i].flagVal[k],"%Lf",&extra);
 		       /* psr[p].obsn[i].residual+=extra; */
 		       phase5[i]+=(extra*psr[p].param[param_f].val[0]);
+		     }
+		   if (strcmp(psr[p].obsn[i].flagID[k],"-padd")==0) // Add in extra phase
+		     {
+		       sscanf(psr[p].obsn[i].flagVal[k],"%Lf",&extra);
+		       /* psr[p].obsn[i].residual+=extra; */
+		       phase5[i]+=(extra);
 		     }
 		 }
 	     }
