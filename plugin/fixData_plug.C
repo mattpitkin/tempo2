@@ -46,7 +46,7 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errfac1,
 				 double *vsf,double *mverr);
 void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[]);
-float plotHistogram(float *x,int count,int *flagCol,int nFlag);
+float plotHistogram(float *x,int count,int *flagCol,int nFlag,char flagV[100][16]);
 void doSummary(pulsar *psr,float errStep);
 
 int nit = 1;
@@ -504,7 +504,7 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
 
 
     cpgbeg(0,"25/xs",1,1);
-    highest = plotHistogram(wnormY,n,flagCol,nFlag);
+    highest = plotHistogram(wnormY,n,flagCol,nFlag,flagV);
     // Overplot Gaussian with sdev = 1
     for (i=0;i<100;i++)
       {
@@ -1093,7 +1093,7 @@ int determine1dStructureFunction(float *x,float *y,float *ye,int nn,double *errf
   return n;
 }
 
-float plotHistogram(float *x,int count,int *flagCol,int nFlag)
+float plotHistogram(float *x,int count,int *flagCol,int nFlag,char flagV[100][16])
 {
   int i,j,k;
   float binvalX[100],binvalY[100];
@@ -1113,6 +1113,7 @@ float plotHistogram(float *x,int count,int *flagCol,int nFlag)
   float offset;
   int endit=0;
   int b;
+  float fx[2],fy[2];
 
   nbin = 21;
   normalise = 0;
@@ -1252,6 +1253,22 @@ float plotHistogram(float *x,int count,int *flagCol,int nFlag)
   cpgbin(nbin,binvalX,binvalY,0);
   cpgslw(1);
 
+  // Plot legend
+  fx[0] = minx+(maxx-minx)*0.05;
+  fx[1] = minx+(maxx-minx)*0.1;
+
+  for (i=0;i<nFlag;i++)
+    {
+      fy[0] = fy[1] = highest-i*highest/20.0;
+      if (i+2<14)
+	cpgsci(i+2);
+      else
+	cpgsci(14);
+      cpgline(2,fx,fy);
+      cpgsci(1);
+      cpgtext(fx[1],fy[1],flagV[i]);
+    }
+  cpgsci(1);
   /*  {
     // Plot Gaussian
     float fx[1000],fy[1000];

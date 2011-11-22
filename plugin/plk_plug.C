@@ -464,7 +464,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   int i,fitFlag=1,exitFlag=0,scale1=0,scale2=psr[0].nobs,count,ncount,j,k;
   longdouble centreEpoch;
   char xstr[1000],ystr[1000],title[1000];
-  float lx[100];
+  float lx1[100],lx2[100],ly1[100],ly2[100];
   int overN;
   int   nline=0;
   int id[MAX_OBSN];
@@ -954,12 +954,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  }
 	if (nline > 0)
 	  {
-	    py[0]=miny;
-	    py[1]=maxy;
+	    //	    py[0]=miny;
+	    //	    py[1]=maxy;
 	    for (i=0;i<nline;i++)
 	      {
-		px[0] = lx[i];
-		px[1] = lx[i];
+		px[0] = lx1[i];
+		px[1] = lx2[i];
+		py[0] = ly1[i];
+		py[1] = ly2[i];
 		cpgline(2,px,py);
 	      }			
 	  }
@@ -1896,8 +1898,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	else if (key=='p') changeParameters(psr);   /* Change parameter values */
 	else if (key==12) /* Add line to plot */
 	  {
-	    printf("Enter x-position ");
-	    scanf("%f",&lx[nline]);
+	    printf("Enter x1 y2 x2 y2 ");
+	    scanf("%f %f %f %f",&lx1[nline],&ly1[nline],&lx2[nline],&ly2[nline]);
 	    nline++;
 	  }
 	else if (key=='c') changeFitParameters(psr); /* Change fit parameters   */

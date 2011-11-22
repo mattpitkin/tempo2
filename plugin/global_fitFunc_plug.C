@@ -87,7 +87,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
      for (i=0; i < psr[p].nconstraints; i++){
-	ip[count] = psr->nobs+i;
+       ip[count] = count; //psr[p].nobs+i;
 	x[count]=0;
 	y[count]=0;
 	sig[count]=1e-12;
@@ -124,6 +124,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       npol+=psr[0].nQuad*4-1;
   if (psr[0].param[param_ifunc].fitFlag[0]==2)	  
     npol+=psr[0].ifuncN-1;
+  if (psr[0].param[param_tel_dx].fitFlag[0]==2)	  
+    npol+=(psr[0].nTelDX-1);
+  if (psr[0].param[param_tel_dy].fitFlag[0]==2)	  
+    npol+=(psr[0].nTelDY-1);
+  if (psr[0].param[param_tel_dz].fitFlag[0]==2)	  
+    npol+=(psr[0].nTelDZ-1);
   if (psr[0].param[param_quad_ifunc_p].fitFlag[0]==2)	  
     npol+=psr[0].quad_ifuncN_p-1;
   if (psr[0].param[param_quad_ifunc_c].fitFlag[0]==2)	  
@@ -167,6 +173,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	npol+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	npol+=psr[p].ifuncN-1;
+      if (psr[p].param[param_tel_dx].fitFlag[0]==1)
+	npol+=(psr[p].nTelDX-1);
+      if (psr[p].param[param_tel_dy].fitFlag[0]==1)
+	npol+=(psr[p].nTelDY-1);
+      if (psr[p].param[param_tel_dz].fitFlag[0]==1)
+	npol+=(psr[p].nTelDZ-1);
       if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
 	npol+=psr[p].quad_ifuncN_p-1;
       if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
@@ -174,33 +186,50 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       if (psr[p].param[param_gwsingle].fitFlag[0]==1)
 	npol+=(4-1);
     }
-  val   = (double *)malloc(npol*sizeof(double));
-  error = (double *)malloc(npol*sizeof(double));
-  covar = (double **)malloc(npol*sizeof(double *));
+  if (!(val   = (double *)malloc(npol*sizeof(double))))
+    {
+      printf("Unable to allocate enough memory\n");
+      exit(1);
+    }
+  if (!(error = (double *)malloc(npol*sizeof(double))))
+    {
+      printf("Unable to allocate enough memory\n");
+      exit(1);
+    }
+  
+  if (!(covar = (double **)malloc(npol*sizeof(double *))))
+    {
+      printf("Unable to allocate enough memory\n");
+      exit(1);      
+    }
   for (i=0;i<npol;i++)
-    covar[i] = (double *)malloc(npol*sizeof(double));
-
+    {
+      if (!(covar[i] = (double *)malloc(npol*sizeof(double))))
+	{
+	  printf("Unable to allocate enough memory\n");
+	  exit(1);      
+	}
+    }
   printf("global_fitFunc: Number of fit parameters = %d\n",npol);
   for (i=0;i<npol;i++)
     val[i]=0.0;
-  printf("Doing the fit: \n");
+  printf("Doing the fit: npol = %d\n",npol);
   TKleastSquares_svd_psr(x,y,sig,count,val,error,npol,covar,&chisq,globalFITfuncs,weightfit,psr,tol,ip);
   printf("Done the fit\n");
   //  for (i=0;i<npol;i++)
   //    printf("covar diag = %g\n",covar[i][i]);
     printf("Here 2, chisq = %g, red chisq = %g\n",chisq,chisq/(double)(count-npol));
-  if (npol > MAX_PARAMS)
+    //  if (npol > MAX_PARAMS)
+    //    {
+    //      printf("ERROR: nterms=%d > MAX_PARAMS=%d\n",npol,MAX_PARAMS);
+    //      exit(1);       
+    //    }
+    /*  for (i=0;i<npol;i++)
     {
-      printf("ERROR: nterms=%d > MAX_PARAMS=%d\n",npol,MAX_PARAMS);
-      exit(1);       
-    }
-  for (i=0;i<npol;i++)
-    {
-      //      printf("i = %d\n",i);
       for (j=0;j<npol;j++)
   	psr[0].covar[i][j]=covar[i][j];
-      //      printf("Finished %d\n",npol);
-    }
+	}*/
+  printf("Now updating the parameters\n");
   //    for (i=0;i<npol;i++)
   //      printf("val %d = %g %g\n",i,val[i],error[i]);
   // now update the parameters
@@ -277,6 +306,43 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		      offset++;
 		    }
 		}
+	      else if (i==param_tel_dx)
+		{
+		  for (j=0;j<psr[0].nTelDX;j++)
+		    {
+		      printf("Setting: %d %g\n",j,val[offset]);
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].telDX_v[j]-=val[offset];
+			  psr[p].telDX_e[j]=error[offset];
+			}
+		      offset++;
+		    }
+		}
+	      else if (i==param_tel_dy)
+		{
+		  for (j=0;j<psr[0].nTelDY;j++)
+		    {
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].telDY_v[j]-=val[offset];
+			  psr[p].telDY_e[j]=error[offset];
+			}
+		      offset++;
+		    }
+		}
+	      else if (i==param_tel_dz)
+		{
+		  for (j=0;j<psr[0].nTelDZ;j++)
+		    {
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].telDZ_v[j]-=val[offset];
+			  psr[p].telDZ_e[j]=error[offset];
+			}
+		      offset++;
+		    }
+		}
 	      else if (i==param_quad_ifunc_p)
 		{
 		  printf("Updating %d point\n",psr[0].quad_ifuncN_p);
@@ -347,6 +413,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	offset+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	offset+=psr[p].ifuncN-1;
+      if (psr[p].param[param_tel_dx].fitFlag[0]==1)
+	offset+=(psr[p].nTelDX-1);
+      if (psr[p].param[param_tel_dy].fitFlag[0]==1)
+	offset+=(psr[p].nTelDY-1);
+      if (psr[p].param[param_tel_dz].fitFlag[0]==1)
+	offset+=(psr[p].nTelDZ-1);
       if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
 	offset+=psr[p].quad_ifuncN_p-1;
       if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
@@ -405,7 +477,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     }
   
   
-  
+  printf("Freeing the memory\n");
   free(x);
   free(y);
   free(sig);
@@ -429,8 +501,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
   int nglobal=0;
 
   // MUST DO SOMETHING WITH CONSTRAINTS
-
-  //  printf("Here with joe %g %d %d\n",x,ma,counter);
+  //  printf("Here at the top\n");
+  //  printf("Here with joe %g %d %d %s\n",x,ma,counter,psr->name);
   for (i=0;i<ma;i++) afunc[i]=0.0;
 
   for (p=0;p<gnpsr;p++)
@@ -438,8 +510,9 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
       if (counter < tot+psr[p].nobs+psr[p].nconstraints) break;
       tot+=psr[p].nobs+psr[p].nconstraints;
     }
+  //  printf("pos 1\n");
   ipos = counter-tot;
-
+  //  printf("Here with joe2 %s %d %d %d %d\n",psr[p].name,ipos,counter,tot,psr[p].nobs);
   new_ma=1;
   // Add global parameters
   for (i=0;i<MAX_PARAMS;i++)
@@ -450,6 +523,7 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	    nglobal++;
 	}
     }
+  //  printf("pos 2\n");
   /* Add extra parameters for sinusoidal whitening */
   if (psr[p].param[param_wave_om].fitFlag[0]==2)
     nglobal+=psr[p].nWhite*2-1;
@@ -457,13 +531,19 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     nglobal+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==2)
     nglobal+=psr[p].ifuncN-1;
+  if (psr[p].param[param_tel_dx].fitFlag[0]==2)
+    nglobal+=(psr[p].nTelDX-1);
+  if (psr[p].param[param_tel_dy].fitFlag[0]==2)
+    nglobal+=(psr[p].nTelDY-1);
+  if (psr[p].param[param_tel_dz].fitFlag[0]==2)
+    nglobal+=(psr[p].nTelDZ-1);
   if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==2)
     nglobal+=psr[p].quad_ifuncN_p-1;
   if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==2)
     nglobal+=psr[p].quad_ifuncN_c-1;
   if (psr[p].param[param_gwsingle].fitFlag[0]==2)
     nglobal+=(4-1);
-
+  //  printf("pos 3\n");
   new_ma+=nglobal;
   for (i=0;i<MAX_PARAMS;i++)
     {
@@ -475,12 +555,14 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	  }
 	}
     }
+  //  printf("pos 4\n");
   /* Add extra parameters for jumps */
   for (i=1;i<=psr[p].nJumps;i++)
     {
       if (psr[p].fitJump[i]==1)
 	new_ma++;
     }
+  //  printf("pos 5\n");
   /* Add extra parameters for sinusoidal whitening */
   if (psr[p].param[param_wave_om].fitFlag[0]==1)
     new_ma+=psr[p].nWhite*2-1;
@@ -488,13 +570,19 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     new_ma+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==1)
     new_ma+=psr[p].ifuncN-1;
+  if (psr[p].param[param_tel_dx].fitFlag[0]==1)
+    new_ma+=(psr[p].nTelDX-1);
+  if (psr[p].param[param_tel_dy].fitFlag[0]==1)
+    new_ma+=(psr[p].nTelDY-1);
+  if (psr[p].param[param_tel_dz].fitFlag[0]==1)
+    new_ma+=(psr[p].nTelDZ-1);
   if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
     new_ma+=psr[p].quad_ifuncN_p-1;
   if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
     new_ma+=psr[p].quad_ifuncN_c-1;
   if (psr[p].param[param_gwsingle].fitFlag[0]==1)
     new_ma+=4;
-
+  //  printf("pos 6\n");
   // Now calculate position in afunc array
   n=0;
   // Add global parameters
@@ -519,6 +607,7 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	  if (psr[pp].fitJump[i]==1)
 	    n++;
 	}
+      //  printf("pos 7\n");
       /* Add extra parameters for sinusoidal whitening */
       if (psr[pp].param[param_wave_om].fitFlag[0]==1)
 	n+=psr[pp].nWhite*2-1;
@@ -526,18 +615,27 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	n+=psr[pp].nQuad*4-1;
       if (psr[pp].param[param_ifunc].fitFlag[0]==1)
 	n+=psr[pp].ifuncN-1;
+      if (psr[p].param[param_tel_dx].fitFlag[0]==1)
+	n+=(psr[p].nTelDX-1);
+      if (psr[p].param[param_tel_dy].fitFlag[0]==1)
+	n+=(psr[p].nTelDY-1);
+      if (psr[p].param[param_tel_dz].fitFlag[0]==1)
+	n+=(psr[p].nTelDZ-1);
       if (psr[pp].param[param_quad_ifunc_p].fitFlag[0]==1)
 	n+=psr[pp].quad_ifuncN_p-1;
       if (psr[pp].param[param_quad_ifunc_c].fitFlag[0]==1)
 	n+=psr[pp].quad_ifuncN_c-1;
       if (psr[pp].param[param_gwsingle].fitFlag[0]==1)
 	n+=4-1;
+      //  printf("pos 8\n");
     }
 
   // Global fit
   int c=0;
+  //  printf("pos 9\n");
   for (i=0;i<MAX_PARAMS;i++)
     {
+      //      printf("Checking param %d %s\n",i,psr[p].param[i].label[0]);
       for (k=0;k<psr[p].param[i].aSize;k++)
 	{
 	  if (psr[p].param[i].fitFlag[k] == 2)  
@@ -580,6 +678,34 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		      c++;
 		    }
 		}
+	      else if (i==param_tel_dx)
+		{
+		  //		  printf("Got in here with nTelDX = %d, c = %d\n",psr[p].nTelDX,c);
+		  for (j=0;j<psr[p].nTelDX;j++)
+		    {
+		      //		      printf("c = %d, j = %d\n",c,j);
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		      //		      printf("Done it\n");
+		      c++;
+		    }
+		  //		  printf("Finished here\n");
+		}
+	      else if (i==param_tel_dy)
+		{
+		  for (j=0;j<psr[p].nTelDY;j++)
+		    {
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		      c++;
+		    }
+		}
+	      else if (i==param_tel_dz)
+		{
+		  for (j=0;j<psr[p].nTelDZ;j++)
+		    {
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		      c++;
+		    }
+		}
 	      else if (i==param_quad_ifunc_p)
 		{
 		  for (j=0;j<psr[p].quad_ifuncN_p;j++)
@@ -604,9 +730,12 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	    }
 	} 
     }
+  //  printf("pos 10\n");
   //  printf("Global fit n = %d, nglobal = %d\n",n,nglobal);
   //  printf("Global fit = %g\n",afunc[0]);
+  //  printf("Now calling fitfuncs\n");
   FITfuncs(x,afunc+n,new_ma-nglobal,&psr[p],ipos);
+  //  printf("Finished\n");
   //  printf("-----------------------------\n");
   //  for (i=0;i<ma;i++)
   //    printf("have %g\n",afunc[i]);

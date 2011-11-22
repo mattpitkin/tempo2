@@ -504,7 +504,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (simplePlot==0)
     {
       cpgsvp(0.1,0.95,0.50,0.95);
-      cpgswin(px[0],px[npt-1],0,1);
+      cpgswin(px[0]-1,px[npt-1]+1,0,1);
       cpgbox("BCST",0,0,"BCS",0,0);
       // Plot data spans
       {
@@ -518,7 +518,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      }
 	    cpgsci((p%3)+1); 
 	    cpgsch(0.6);
-	    cpgtext(px[0]-(px[npt-1]-px[0])*0.10,dspanY[0]-0.8/(*npsr)*0.25,psr[p].name);
+	    cpgtext(px[0]-1-(px[npt-1]-px[0]+2)*0.10,dspanY[0]-0.8/(*npsr)*0.25,psr[p].name);
 	    cpgpt(psr[p].nobs,dspanX,dspanY,16);
 	    cpgsch(1.4);
 	  }
@@ -541,10 +541,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 
       cpgsvp(0.1,0.95,0.13,0.50);
-  cpgswin(px[0],px[npt-1],miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny));
-  cpgsch(1);
-  cpgbox("BNCTS",0,0,"BCNTS",0,0);
-  cpglab("Year","Clock difference (sec)","");
+      cpgswin(px[0]-1,px[npt-1]+1,miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny));
+      cpgsch(1);
+      cpgbox("BNCTS",0,0,"BCNTS",0,0);
+      cpglab("Year","Clock difference (sec)","");
     }
   else
     {

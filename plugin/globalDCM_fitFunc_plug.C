@@ -20,7 +20,7 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
 extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel) 
 {
   int i,j,k,p;
-  double tol = 1.0e-40;  /* Tolerence for singular value decomposition routine */
+  double tol = 1.0e-27;  /* Tolerence for singular value decomposition routine */
   int npol=1,n,nf;
   int ip[MAX_OBSN];
   int nFitP[MAX_PSR];
@@ -118,11 +118,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
      for (i=0; i < psr[p].nconstraints; i++){
-	ip[count] = psr->nobs+i;
+       ip[count] = count; // psr->nobs+i;
 	x[count]=0;
 	y[count]=0;
 	sigOrig[count]=1e-12;
-	sig[count]=1.0;
+	sig[count]=1.0;    // Remember for the Cholesky that we switch off weighted fitting
+
 	count++;
       }
      printf("count = %d\n",count);
@@ -158,8 +159,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     }
 
   if (psr[0].param[param_ifunc].fitFlag[0]==2){
-	        npol+=psr[0].ifuncN-1;
-		nGlobal+=psr[0].ifuncN-1;
+    npol+=psr[0].ifuncN-1;
+    nGlobal+=psr[0].ifuncN-1;
   }
 
   printf("Number of global parameters = %d\n",nGlobal);
@@ -320,7 +321,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   wmax = TKfindMax_d(w,nf);
   for (i=0;i<nf;i++)
     {
-      if (w[j] < tol*wmax) w[j]=0.0;
+      if (w[i] < tol*wmax) w[i]=0.0;
     }
 
   /* Back substitution */
@@ -827,13 +828,13 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		    }
 		}
 	      else if(i==param_ifunc){
-		      for (j=0;j<psr[p].ifuncN;j++)
-		      {
-			      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
-//			      printf("ifc=%d %d %g\n",counter,c,afunc[c]);
-			      c++;
-		      }
-
+		for (j=0;j<psr[p].ifuncN;j++)
+		  {
+		    afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		    //			      printf("ifc=%d %d %g\n",counter,c,afunc[c]);
+		    c++;
+		  }
+		
 	      }
 	      else
 		{
@@ -1248,8 +1249,8 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
   // Constraints are not covariant with anything so it's all zero!
   for (i=np-nc; i < np; i++){
           for (j=0; j < np; j++){
-                  m[i][j]=0;
-                  m[j][i]=0;
+		m[i][j]=0;
+		m[j][i]=0;
           }
   }
 

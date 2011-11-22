@@ -49,6 +49,23 @@ float calcYr(float mjd);
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
 
+void help()
+{
+  printf("plotMany: plugin to plot the timing residuals for multiple pulsars\n\n");
+  
+  printf("-centremjd val Set the central mjd value to 'val'.  Use -1 to use years\n");
+  printf("-fontsize val  Set the fontsize to 'val'\n");
+  printf("-h             This help\n");
+  printf("-g val         Set the graphics device to 'val'\n");
+  printf("-plotus        Scale in microseconds\n");
+  printf("-ptsize val    Set the point size to 'val'\n");
+  printf("-ptstyle val   Set the point style to 'val'\n");
+  printf("-reverse       Reverse the ordering of the pulsars\n");
+
+  
+  exit(1);
+}
+
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
   char parFile[MAX_PSR][MAX_FILELEN];
@@ -70,8 +87,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   *npsr = 0;  /* This graphical interface will only show results for one pulsar */
 
-  printf("Graphical Interface: plk emulator\n");
-  printf("Author:              George Hobbs (21 Dec 2003)\n");
+  printf("Graphical Interface: plotMany\n");
+  printf("Author:              George Hobbs\n");
   printf("Version:             1.0\n");
 
   /* Obtain the .par and the .tim file from the command line */
@@ -90,6 +107,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-g")==0)
 	strcpy(grDev,argv[++i]);
+      else if (strcmp(argv[i],"-h")==0)
+	help();
       else if (strcmp(argv[i],"-scale")==0)
 	{
 	  sscanf(argv[i+1],"%f",&scale[nScale]);
@@ -296,7 +315,7 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
       /*  cpgenv(plotx1,plotx2,ploty1,ploty2+(ploty2-ploty1)*(npsr-1),0,0); */
   //  cpgenv(plotx1,plotx2,0,npsr+1,0,-1);
 
-  cpgsvp(0.87,1.0,0.1,1.0);
+  cpgsvp(0.85,1.0,0.1,1.0);
   cpgswin(0,1,0,npsr);
   cpgbox("ABC",0.0,0,"C",0.0,0);
 
