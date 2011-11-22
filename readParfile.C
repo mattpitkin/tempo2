@@ -337,6 +337,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_waveepoch]),0);
   else if (strcasecmp(str,"SIFUNC")==0)  /* Set interpolation function */
     readValue(psr,str,fin,&(psr->param[param_ifunc]),0);
+  else if (strcasecmp(str,"STEL_DX")==0)  /* Set interpolation function for telescope position offset*/
+    readValue(psr,str,fin,&(psr->param[param_tel_dx]),0);
+  else if (strcasecmp(str,"STEL_DY")==0)  /* Set interpolation function for telescope position offset*/
+    readValue(psr,str,fin,&(psr->param[param_tel_dy]),0);
+  else if (strcasecmp(str,"STEL_DZ")==0)  /* Set interpolation function for telescope position offset*/
+    readValue(psr,str,fin,&(psr->param[param_tel_dz]),0);
   else if (strcasecmp(str,"SQIFUNC_p")==0)  /* Set quad interpolation function for plus*/
       readValue(psr,str,fin,&(psr->param[param_quad_ifunc_p]),0);
   else if (strcasecmp(str,"SQIFUNC_c")==0)  /* Set quad interpolation function for cross*/
@@ -639,6 +645,21 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
       }
+      if(strcasecmp(cname,"TEL_DX")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dx_0;
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dx_1;
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dx_2;
+      }
+      if(strcasecmp(cname,"TEL_DY")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dy_0;
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dy_1;
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dy_2;
+      }
+      if(strcasecmp(cname,"TEL_DZ")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dz_0;
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dz_1;
+	      psr->constraints[psr->nconstraints++] = constraint_tel_dz_2;
+      }
       if(strcasecmp(cname,"QIFUNC_p")==0){
 	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_0;
 	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_1;
@@ -675,6 +696,30 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 
       fscanf(fin,"%lf %lf %lf",&psr->ifuncT[number-1],&psr->ifuncV[number-1],&psr->ifuncE[number-1]);
       if (psr->ifuncN < number) psr->ifuncN = number;
+    }
+  else if ((strstr(str,"TEL_DX")!=NULL || strstr(str,"tel_dx")!=NULL) && strcmp(str,"STEL_DX")!=0)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+6,"%d",&number);
+      fscanf(fin,"%lf %lf %lf",&psr->telDX_t[number-1],&psr->telDX_v[number-1],&psr->telDX_e[number-1]);
+      if (psr->ifuncN < number) psr->nTelDX = number;
+    }
+  else if ((strstr(str,"TEL_DY")!=NULL || strstr(str,"tel_dy")!=NULL) && strcmp(str,"STEL_DY")!=0)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+6,"%d",&number);
+      fscanf(fin,"%lf %lf %lf",&psr->telDY_t[number-1],&psr->telDY_v[number-1],&psr->telDY_e[number-1]);
+      if (psr->ifuncN < number) psr->nTelDY = number;
+    }
+  else if ((strstr(str,"TEL_DZ")!=NULL || strstr(str,"tel_dz")!=NULL) && strcmp(str,"STEL_DZ")!=0)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+6,"%d",&number);
+      fscanf(fin,"%lf %lf %lf",&psr->telDZ_t[number-1],&psr->telDZ_v[number-1],&psr->telDZ_e[number-1]);
+      if (psr->ifuncN < number) psr->nTelDZ = number;
     }
   else if (strstr(str,"QIFUNC_p")!=NULL || strstr(str,"qifunc_p")!=NULL)
     {

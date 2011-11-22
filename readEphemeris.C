@@ -336,7 +336,69 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 	  /* Calculate obsn[i].nutations */
 	  err_code = jpl_pleph(ephem, jd_teph, 14, 3, psr[p].obsn[i].nutations, 1);
 	  /* Note interpolation done in the JPL reading routines */
-
+	  if (psr[p].nTelDX > 0)
+	    {
+	      int k;
+	      double m,c,ival;
+	      ival=0.0;
+	      //	      printf("Using interpolation function for telDX\n");
+	      for (k=0;k<psr[p].nTelDX-1;k++)
+		{
+		  if ((double)psr[p].obsn[i].sat >= psr[p].telDX_t[k] &&
+		      (double)psr[p].obsn[i].sat < psr[p].telDX_t[k+1])
+		    {
+		      m = (psr[p].telDX_v[k]-psr[p].telDX_v[k+1])/(psr[p].telDX_t[k]-psr[p].telDX_t[k+1]);
+		      c = psr[p].telDX_v[k]-m*psr[p].telDX_t[k];
+		      
+		      ival = m*(double)psr[p].obsn[i].sat+c;
+		      break;
+		    }
+		}
+	      printf("xpos add = %g %d\n",ival,i);
+	      psr[p].obsn[i].earth_ssb[0] += ival; // Change x-position
+	    }
+	  if (psr[p].nTelDY > 0)
+	    {
+	      int k;
+	      double m,c,ival;
+	      ival=0.0;
+	      //	      printf("Using interpolation function for telDY\n");
+	      for (k=0;k<psr[p].nTelDY-1;k++)
+		{
+		  if ((double)psr[p].obsn[i].sat >= psr[p].telDY_t[k] &&
+		      (double)psr[p].obsn[i].sat < psr[p].telDY_t[k+1])
+		    {
+		      m = (psr[p].telDY_v[k]-psr[p].telDY_v[k+1])/(psr[p].telDY_t[k]-psr[p].telDY_t[k+1]);
+		      c = psr[p].telDY_v[k]-m*psr[p].telDY_t[k];
+		      
+		      ival = m*(double)psr[p].obsn[i].sat+c;
+		      break;
+		    }
+		}
+	      printf("ypos add = %g %d\n",ival,i);
+	      psr[p].obsn[i].earth_ssb[1] += ival; // Change y-position
+	    }
+	  if (psr[p].nTelDZ > 0)
+	    {
+	      int k;
+	      double m,c,ival;
+	      ival=0.0;
+	      //	      printf("Using interpolation function for telDZ\n");
+	      for (k=0;k<psr[p].nTelDZ-1;k++)
+		{
+		  if ((double)psr[p].obsn[i].sat >= psr[p].telDZ_t[k] &&
+		      (double)psr[p].obsn[i].sat < psr[p].telDZ_t[k+1])
+		    {
+		      m = (psr[p].telDZ_v[k]-psr[p].telDZ_v[k+1])/(psr[p].telDZ_t[k]-psr[p].telDZ_t[k+1]);
+		      c = psr[p].telDZ_v[k]-m*psr[p].telDZ_t[k];
+		      
+		      ival = m*(double)psr[p].obsn[i].sat+c;
+		      break;
+		    }
+		}
+	      printf("zpos add = %g %d\n",ival,i);
+	      psr[p].obsn[i].earth_ssb[2] += ival; // Change z-position
+	    }
 	  if (strcmp(psr[p].obsn[i].telID,"STL_BAT")==0)
 	    {
 	      int k;

@@ -45,7 +45,10 @@
 #define MAX_PARAMS           500   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
-#define MAX_IFUNC            100   /* Maximum number of parameters for interpolation function  */
+#define MAX_IFUNC            500   /* Maximum number of parameters for interpolation function  */
+#define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
+#define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
+#define MAX_TEL_DZ           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_T2EFAC           50    /* Maximum number of T2EFACs allowed                */
 #define MAX_T2QUAD           50    /* Maximum number of T2EQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
@@ -162,7 +165,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
             param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
-	    param_quad_ifunc_c};
+	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
@@ -175,6 +178,15 @@ enum constraint {
 	constraint_ifunc_0,
 	constraint_ifunc_1,
 	constraint_ifunc_2,
+	constraint_tel_dx_0,
+	constraint_tel_dx_1,
+	constraint_tel_dx_2,
+	constraint_tel_dy_0,
+	constraint_tel_dy_1,
+	constraint_tel_dy_2,
+	constraint_tel_dz_0,
+	constraint_tel_dz_1,
+	constraint_tel_dz_2,
 	constraint_quad_ifunc_p_0,
 	constraint_quad_ifunc_p_1,
 	constraint_quad_ifunc_p_2,
@@ -287,7 +299,7 @@ typedef struct observation {
   longdouble roemer;              /* Roemer delay                                               */
   longdouble torb;                /* Combined binary delays */
   longdouble nphase;              /* allows the pulse number to be determined                   */
-  longdouble phase;               /* What is this used for?  - in polycos                       */
+  longdouble phase;               
 
   char flagID[MAX_FLAGS][16];     /* Flags in .tim file                                         */
   char flagVal[MAX_FLAGS][16];
@@ -358,6 +370,7 @@ typedef struct pulsar {
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
   int    rescaleErrChisq;         /* = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
   double offset;                  /* Offset, always fitted for */
+  double offset_e;                /* Error in the offset */
   double **covar; //[MAX_PARAMS][MAX_PARAMS];
 
   int    calcShapiro;              /* = 1 Calculate Solar system Shapiro delay (otherwise -1)*/
@@ -419,6 +432,20 @@ typedef struct pulsar {
   int    quad_ifuncN_c;
   double quad_ifunc_p_RA,quad_ifunc_p_DEC,quad_ifunc_c_RA,quad_ifunc_c_DEC;
   double quad_ifunc_geom_p,quad_ifunc_geom_c;
+
+  // Telescope position error
+  int    nTelDX;
+  double telDX_t[MAX_TEL_DX];
+  double telDX_v[MAX_TEL_DX];
+  double telDX_e[MAX_TEL_DX];
+  int    nTelDY;
+  double telDY_t[MAX_TEL_DY];
+  double telDY_v[MAX_TEL_DY];
+  double telDY_e[MAX_TEL_DY];
+  int    nTelDZ;
+  double telDZ_v[MAX_TEL_DZ];
+  double telDZ_t[MAX_TEL_DZ];
+  double telDZ_e[MAX_TEL_DZ];
 
   // T2EFAC/T2EQUAD
   int    nT2efac,nT2equad;

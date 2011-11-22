@@ -124,6 +124,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nQuad  = 0;  /* No quadrupolar function */
   psr->ifuncN = 0;  /* No interpolation functions by default */
   psr->ifuncN = 0;  /* No interpolation functions by default */
+  psr->nTelDX = 0;
+  psr->nTelDY = 0;
+  psr->nTelDZ = 0;
   psr->quad_ifuncN_p = 0;
   psr->quad_ifuncN_c = 0;
   psr->quad_ifunc_geom_p = 0;
@@ -226,6 +229,12 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_posepoch].shortlabel[0],"POSEPOCH");
   strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
   strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH");
+  strcpy(psr->param[param_tel_dx].label[0],"TEL_DX");
+  strcpy(psr->param[param_tel_dy].label[0],"TEL_DY");
+  strcpy(psr->param[param_tel_dz].label[0],"TEL_DZ");
+  strcpy(psr->param[param_tel_dx].shortlabel[0],"TEL_DX");
+  strcpy(psr->param[param_tel_dy].shortlabel[0],"TEL_DY");
+  strcpy(psr->param[param_tel_dz].shortlabel[0],"TEL_DZ");
   strcpy(psr->param[param_ifunc].label[0],"IFUNC");
   strcpy(psr->param[param_ifunc].shortlabel[0],"IFUNC");
   strcpy(psr->param[param_quad_ifunc_p].label[0],"QIFUNC_p");
@@ -459,6 +468,9 @@ void allocateMemory(pulsar *psr, int realloc)
       else if (i==param_telx) psr->param[i].aSize = 4;
       else if (i==param_tely) psr->param[i].aSize = 4;
       else if (i==param_telz) psr->param[i].aSize = 4;
+      else if (i==param_tel_dx) psr->param[i].aSize = MAX_TEL_DX;
+      else if (i==param_tel_dy) psr->param[i].aSize = MAX_TEL_DY;
+      else if (i==param_tel_dz) psr->param[i].aSize = MAX_TEL_DZ;
       else psr->param[i].aSize = 1;
       
       psr->param[i].val       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));

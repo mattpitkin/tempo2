@@ -49,7 +49,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
   int p,npol,i,j,okay,ip[MAX_OBSN],k;
   double *x,*y,*sig,*val,chisq;
   double *error;
-  double tol = 1.0e-40;  /* Tolerence for singular value decomposition routine */
+  double tol = 1.0e-27;  /* Tolerence for singular value decomposition routine */
   double newStart=-1.0,newFinish=-1.0;
   const char *CVS_verNum = "$Revision$";
 
@@ -212,9 +212,11 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	  //	  printf("Chisq = %g, reduced chisq = %g\n",(double)psr[p].fitChisq,(double)(psr[p].fitChisq/psr[p].fitNfree));
 	  /* Now update the parameters */
 	  if (debugFlag==1) printf("Updating the parameters\n");
+	  for (i=0;i<npol;i++)
+	    printf("Fit values and errors are %g %g\n",val[i],error[i]);
 	  updateParameters(psr,p,val,error);
 	  if (debugFlag==1) printf("Completed updating the parameters\n");
-	}    
+	}
       /* Free the vectors and matrices */
       free(error);
       free(val);
@@ -254,9 +256,12 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   double newStart=-1.0,newFinish=-1.0;
   long double meanRes=0.0;
 
+  clock_t clk;
+
   //  printf("WARNING: Switching weighting off for the fit\n");
   //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
-
+  clk=clock();  
+  printf("Tcheck: Starting Cholesky fit (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (strcmp(psr[0].fitFunc,"default")!=0)
     {
       char *(*entry)(pulsar *,int,int);
@@ -314,6 +319,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
     {
       int nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
+      printf("Tcheck: Processing pulsar %d\n",p);
       psr[p].fitMode = 0;
 
       /*
@@ -331,6 +337,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
       /* How many parameters are we fitting for */
+      printf("Tcheck: Determining which parameters we are fitting for  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
       npol = getNparams(psr[p]);
       x     = (double *)malloc(nobs_and_constraints*sizeof(double));
       y     = (double *)malloc(nobs_and_constraints*sizeof(double));
@@ -384,7 +391,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	count++;
       }
 
-
+     printf("Tcheck: Complete determining which parameters we are fitting for  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
       //      printf("Count = %d\n",count);
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
@@ -392,17 +399,19 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       psr[p].param[param_start].paramSet[0] = 1;
       psr[p].param[param_finish].paramSet[0] = 1; 
       
-      
+      printf("Tcheck: removing mean from the residuals??  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
       for (i=0;i<psr[p].nobs;i++)
 	meanRes+=(long double)psr[p].obsn[i].residual;
       meanRes/=(long double)psr[p].nobs;
       for (i=0;i<psr[p].nobs;i++)
 	psr[p].obsn[i].residual-=meanRes;
+      printf("Tcheck: complete removing mean from the residuals??  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      printf("Tcheck: allocating memory for uinv  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
       uinv = (double **)malloc(sizeof(double *)*nobs_and_constraints);
 
       for (i=0;i<nobs_and_constraints;i++)
 	uinv[i] = (double *)malloc(sizeof(double)*nobs_and_constraints);
-      
+      printf("Tcheck: complete allocating memory for uinv  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
       // If we have the data covariance matrix on disk
       if (strcmp(dcmFile,"NULL")!=0)
 	{
@@ -458,7 +467,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  double covarFunc[ndays];
 	  double escaleFactor = 1.0;
 	  
-
+	  printf("Tcheck: reading covariance function from disk  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  strcpy(fname,covarFuncFile);
 	  if (npsr>1)
 	    {
@@ -474,17 +483,25 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  if (debugFlag==1) printf("ndays = %d\n",ndays);
 	  fscanf(fin,"%lf",&escaleFactor);
 	  for (i=0;i<ndays;i++)
-	    fscanf(fin,"%lf",&covarFunc[i]);
+	    {
+	      if (fscanf(fin,"%lf",&covarFunc[i])!=1)
+		{
+		  printf("ERROR: Incorrect number of days in the Cholesky matrix\n");
+		  exit(1);
+		}
+	    }
 	  fclose(fin);
 	  //	  printf("Read covariance function\n");
 	  //	  printf("WARNING: scaling all errors by: %g\n",escaleFactor);
 	  for (i=0;i<count;i++)
 	    sig[i]*=escaleFactor;
-
+	  printf("Tcheck: complete reading covariance function from disk  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  // Form the data covariance matrix
+	  printf("Tcheck: forming Cholesky matrix  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  formCholeskyMatrix(covarFunc,x,y,sig,count,psr[p].nconstraints,uinv);
+	  printf("Tcheck: complete forming Cholesky matrix  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	}
-
+      printf("Tcheck: writing debug info to disk\n");
       sprintf(fname,"whitedata_%d.dat",p+1);
       fout = fopen(fname,"w");
       for (i=0;i<psr[p].nobs;i++)
@@ -498,14 +515,16 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 		  whiteres[i],(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr);
 	}
       fclose(fout);
-          
+      printf("Tcheck: complete writing debug info to disk (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 
       /* Do the fit */
       if (npol!=0) /* Are we actually  doing any fitting? */ 
 	{ 
 	  if (debugFlag==1) printf("Doing the fit\n");
+	  printf("Tcheck: doing the fit  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  TKleastSquares_svd_psr_dcm(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip,uinv);
+	  printf("Tcheck: complete doing the fit  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
 	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
 	  //	  printf("chisq = %g\n",chisq);
@@ -514,7 +533,9 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  
 	  /* Now update the parameters */
 	  if (debugFlag==1) printf("Updating the parameters\n");
+	  printf("Tcheck: updating the parameter values  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  updateParameters(psr,p,val,error);
+	  printf("Tcheck: complete updating the parameter values  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  if (debugFlag==1) printf("Completed updating the parameters\n");
 	}    
       /* Free the vectors and matrices */
@@ -537,10 +558,11 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  printf("Calculating uncertainties on fitted parameters using a Monte-Carlo bootstrap method (%d)\n",psr[p].bootStrap);
 	  bootstrap(psr,p,npsr);
 	}
-    
+	  printf("Tcheck: freeing memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (i=0;i<psr[p].nobs;i++)
     free(uinv[i]);
   free(uinv);
+	  printf("Tcheck: complete freeing memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
     }
 }
 
@@ -582,6 +604,12 @@ int getNparams(pulsar psr)
     npol+=(psr.nQuad*4)-1;
   if (psr.param[param_ifunc].fitFlag[0]==1)
       npol+=(psr.ifuncN-1);
+  if (psr.param[param_tel_dx].fitFlag[0]==1)
+      npol+=(psr.nTelDX-1);
+  if (psr.param[param_tel_dy].fitFlag[0]==1)
+      npol+=(psr.nTelDY-1);
+  if (psr.param[param_tel_dz].fitFlag[0]==1)
+      npol+=(psr.nTelDZ-1);
   if (psr.param[param_quad_ifunc_p].fitFlag[0]==1)
       npol+=(psr.quad_ifuncN_p-1);
   if (psr.param[param_quad_ifunc_c].fitFlag[0]==1)
@@ -603,7 +631,7 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
    * IMPORTANT NOTICE: To allow for constraints, ipos may be larger than psr->nobs!
    * 
    * Therefore, if you modify this function, make sure to check (ipos < psr->nobs) before
-   * using ipos, and calll getParamDeriv to get the derivative since this function checks
+   * using ipos, and call getParamDeriv to get the derivative since this function checks
    * for constraints and calls the appropriate constraint function/
    * 
    * M. Keith August 2011
@@ -645,6 +673,21 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		  else if (i==param_ifunc)
 		    {
 		      for (j=0;j<psr->ifuncN;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		    }
+		  else if (i==param_tel_dx)
+		    {
+		      for (j=0;j<psr->nTelDX;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		    }
+		  else if (i==param_tel_dy)
+		    {
+		      for (j=0;j<psr->nTelDY;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		    }
+		  else if (i==param_tel_dz)
+		    {
+		      for (j=0;j<psr->nTelDZ;j++)
 			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 		    }
 		  else if (i==param_quad_ifunc_p)
@@ -723,10 +766,15 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
    *
    * Otherwise, we check what parameter it is and return the appropriate derivative.
    */
-  if(ipos >= psr->nobs){
-	  afunc= getConstraintDeriv(psr,ipos-psr->nobs,i,k); // this is a constraint pseudo observation.
+  //  printf("In here with %s %d %d %d\n",psr->name,psr->nobs,ipos,i);
+  if(ipos >= psr->nobs)
+    {
+      //      printf("In here with ipos = %d, psr->nobs=%d, i=%d, str = %s, k= %d\n",ipos,psr->nobs,i,psr->param[i].shortlabel[0],k);
+      afunc= getConstraintDeriv(psr,ipos-psr->nobs,i,k); // this is a constraint pseudo observation.
+      //      printf("In here afunc = %g\n",afunc);
+    }
 //	  printf("MJK -- get deriv for constraint %d i=%d x=%lf k=%d af=%f\n",ipos-psr->nobs,i,x,k,afunc);
-  } else if (i==param_f)         /* Rotational frequency */
+  else if (i==param_f)         /* Rotational frequency */
     {
       if (k==0)
 	afunc = x*24.0L*3600.0L/psr->param[param_f].val[0];
@@ -1067,6 +1115,102 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	    }
 	}
     }
+  else if (i==param_tel_dx)
+    {
+      double yoffs[MAX_TEL_DX];
+      double sat = (double)psr->obsn[ipos].sat;
+      for (int ioff =0;ioff<psr->nTelDX;ioff++){
+	yoffs[ioff]=0;
+      }
+      yoffs[k] = 1;
+      
+      if (sat < (double)psr->telDX_t[0]){
+	// we are before the first jump
+	// so our gradient is just the zeroth offset.
+	afunc = yoffs[0]*psr->posPulsar[0];
+;
+      } else if(sat > (double)psr->telDX_t[(int)psr->nTelDX-1]){
+	afunc = yoffs[(int)psr->nTelDX-1]*psr->posPulsar[0];
+      } else{
+	// find the pair we are between...
+	for (int ioff =0;ioff<psr->nTelDX;ioff++){
+	  if(sat >= psr->telDX_t[ioff] && sat < psr->telDX_t[ioff+1]){
+	    double x1 = psr->telDX_t[ioff];
+	    double x2 = psr->telDX_t[ioff+1];
+	    double x = (sat-x1)/(x2-x1);
+	    double y1=yoffs[ioff];
+	    double y2=yoffs[ioff+1];
+	    afunc = ((y2-y1)*x + y1)*psr->posPulsar[0];
+	    break;
+	  }
+	}
+      }
+      //      printf("afunc = %g\n",afunc);
+    }
+  else if (i==param_tel_dy)
+    {
+      double yoffs[MAX_TEL_DY];
+      double sat = (double)psr->obsn[ipos].sat;
+      for (int ioff =0;ioff<psr->nTelDY;ioff++){
+	yoffs[ioff]=0;
+      }
+      yoffs[k] = 1;
+      
+      if (sat < (double)psr->telDY_t[0]){
+	// we are before the first jump
+	// so our gradient is just the zeroth offset.
+	afunc = yoffs[0]*psr->posPulsar[1];
+;
+      } else if(sat > (double)psr->telDY_t[(int)psr->nTelDY-1]){
+	afunc = yoffs[(int)psr->nTelDY-1]*psr->posPulsar[1];
+      } else{
+	// find the pair we are between...
+	for (int ioff =0;ioff<psr->nTelDY;ioff++){
+	  if(sat >= psr->telDY_t[ioff] && sat < psr->telDY_t[ioff+1]){
+	    double x1 = psr->telDY_t[ioff];
+	    double x2 = psr->telDY_t[ioff+1];
+	    double x = (sat-x1)/(x2-x1);
+	    double y1=yoffs[ioff];
+	    double y2=yoffs[ioff+1];
+	    afunc = ((y2-y1)*x + y1)*psr->posPulsar[1];
+	    break;
+	  }
+	}
+      }
+      //      printf("afunc = %g\n",afunc);
+    }
+  else if (i==param_tel_dz)
+    {
+      double yoffs[MAX_TEL_DZ];
+      double sat = (double)psr->obsn[ipos].sat;
+      for (int ioff =0;ioff<psr->nTelDZ;ioff++){
+	yoffs[ioff]=0;
+      }
+      yoffs[k] = 1;
+      
+      if (sat < (double)psr->telDZ_t[0]){
+	// we are before the first jump
+	// so our gradient is just the zeroth offset.
+	afunc = yoffs[0]*psr->posPulsar[2];
+;
+      } else if(sat > (double)psr->telDZ_t[(int)psr->nTelDZ-1]){
+	afunc = yoffs[(int)psr->nTelDZ-1]*psr->posPulsar[2];
+      } else{
+	// find the pair we are between...
+	for (int ioff =0;ioff<psr->nTelDZ;ioff++){
+	  if(sat >= psr->telDZ_t[ioff] && sat < psr->telDZ_t[ioff+1]){
+	    double x1 = psr->telDZ_t[ioff];
+	    double x2 = psr->telDZ_t[ioff+1];
+	    double x = (sat-x1)/(x2-x1);
+	    double y1=yoffs[ioff];
+	    double y2=yoffs[ioff+1];
+	    afunc = ((y2-y1)*x + y1)*psr->posPulsar[2];
+	    break;
+	  }
+	}
+      }
+      //      printf("afunc = %g\n",afunc);
+    }
   else if (i==param_ifunc) /* Whitening procedure using interpolated function */
     {
       if (psr->param[param_ifunc].val[0]==1)
@@ -1082,7 +1226,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
       else if (psr->param[param_ifunc].val[0]==2) // Linear interpolation
 	{
-	  double yoffs[100];
+	  double yoffs[MAX_IFUNC];
 	  double sat = (double)psr->obsn[ipos].sat;
 	  for (int ioff =0;ioff<psr->ifuncN;ioff++){
 	      yoffs[ioff]=0;
@@ -1406,6 +1550,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 
   if (debugFlag==1) printf("Updating parameters\n");
   psr[p].offset = val[0];
+  psr[p].offset_e = error[0];
   j=1;
   for (i=0;i<MAX_PARAMS;i++)
     {
@@ -1553,6 +1698,39 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		      j++;
 		    }
 		}		  
+	      else if (i==param_tel_dx) 
+		{
+		  int k;
+		  for (k=0;k<psr->nTelDX;k++)
+		    {
+		      printf("val ret = %g\n",val[j]);
+		      psr[p].telDX_v[k] -= val[j];
+		      psr[p].telDX_e[k] = error[j];
+		      j++;
+		    }
+		}		  
+	      else if (i==param_tel_dy) 
+		{
+		  int k;
+		  for (k=0;k<psr->nTelDY;k++)
+		    {
+		      printf("val ret = %g\n",val[j]);
+		      psr[p].telDY_v[k] -= val[j];
+		      psr[p].telDY_e[k] = error[j];
+		      j++;
+		    }
+		}		  
+	      else if (i==param_tel_dz) 
+		{
+		  int k;
+		  for (k=0;k<psr->nTelDZ;k++)
+		    {
+		      printf("val ret = %g\n",val[j]);
+		      psr[p].telDZ_v[k] -= val[j];
+		      psr[p].telDZ_e[k] = error[j];
+		      j++;
+		    }
+		}		  
 	      else if (i==param_quad_ifunc_p) 
 		{
 		  int k;
@@ -1662,7 +1840,11 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
   double t0,cint,t;
   int t1,t2;
   int debug=0;
+  clock_t clk;
 
+  clk = clock();
+
+  printf("Tcheck: forming Cholesky matrix ... allocating memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 //  printf("Getting the covariance matrix in doFit\n");
   m = (double **)malloc(sizeof(double *)*(np+1));
   u= (double **)malloc(sizeof(double *)*(np+1));
@@ -1674,13 +1856,14 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
       m[i] = (double *)malloc(sizeof(double)*(np+1));
       u[i] = (double *)malloc(sizeof(double)*(np+1));
     }
-  
+  printf("Tcheck: forming Cholesky matrix ... complete allocating memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  printf("Tcheck: forming Cholesky matrix ... determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (ix=0;ix<np;ix++)
     {
       for (iy=0;iy<np;iy++)
 	m[ix][iy] = fabs(resx[ix]-resx[iy]);
     }
-
+  printf("Tcheck: forming Cholesky matrix ... complete determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (debug==1)
     {
       printf("First m = \n");
@@ -1695,6 +1878,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
   // Linearly interpolate between elements on the covariance function because
   // valid covariance matrix must have decreasing off diagonal elements.
   //  printf("Inserting into the covariance matrix\n");
+  printf("Tcheck: forming Cholesky matrix ... determing covariance based on time difference  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (ix=0;ix<np;ix++)
     {
       for (iy=0;iy<np;iy++)
@@ -1707,7 +1891,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 	  m[ix][iy] = cint;
 	}
     }
-
+  printf("Tcheck: forming Cholesky matrix ... complete determing covariance based on time difference  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 
   // add the values for the constraints
   // Constraints are not covariant with anything so it's all zero!
@@ -1720,8 +1904,10 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 
 
   //  printf("Multiplying by errors\n");
+  printf("Tcheck: forming Cholesky matrix ... multiplying by errors  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (ix=0;ix<np;ix++)
     m[ix][ix]+=rese[ix]*rese[ix];
+  printf("Tcheck: forming Cholesky matrix ... complete multiplying by errors  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (debug==1)
     {
       printf("m = \n\n");
@@ -1734,9 +1920,12 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 
   
   // Do the Cholesky
+  printf("Tcheck: forming Cholesky matrix ... do Cholesky decomposition  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   TKcholDecomposition(m,np,cholp);
+  printf("Tcheck: forming Cholesky matrix ... complete do Cholesky decomposition  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   // Now calculate uinv
-  for (i=0;i<np;i++)
+  printf("Tcheck: forming Cholesky matrix ... calculate uinv  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+    for (i=0;i<np;i++)
     {
       m[i][i] = 1.0/cholp[i];
       uinv[i][i] = m[i][i];
@@ -1749,7 +1938,21 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 	  m[j][i]=sum/cholp[j];
 	  uinv[i][j] = m[j][i];
 	}
-    } 
+	} 
+    // Note we can use something like the following - see p98 in nrec, but it doesn't speed things up much 
+    /*
+      for (i=0;i<np;i++)
+      {
+      uinv[i][i] = 1.0/cholp[i];
+      for (j=i+1;j<np;j++)
+      {
+      sum=0.0;
+      for (k=i;k<j;k++) sum-=m[j][k]*m[k][i];
+      uinv[i][j] = sum/cholp[j];
+      }
+      }*/
+ 
+  printf("Tcheck: forming Cholesky matrix ... complete calculate uinv  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (debug==1)
     {
       printf("uinv = \n\n");
@@ -1764,7 +1967,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
 
   // Should free memory not required
   // (note: not freeing uinv)
-
+  printf("Tcheck: forming Cholesky matrix ... free memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (i=0;i<np+1;i++)
     {
       free(m[i]);
@@ -1773,6 +1976,7 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
   free(m);
   free(u);
   free(cholp);
+  printf("Tcheck: forming Cholesky matrix ... complete free memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 }
 
 
@@ -1801,6 +2005,24 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 			order++;
 		case constraint_ifunc_0:
 			return consFunc_ifunc(psr,i,k,order);
+		case constraint_tel_dx_2:
+		  order++;
+		case constraint_tel_dx_1:
+		  order++;
+		case constraint_tel_dx_0:
+		  return consFunc_tel_dx(psr,i,k,order);
+		case constraint_tel_dy_2:
+		  order++;
+		case constraint_tel_dy_1:
+		  order++;
+		case constraint_tel_dy_0:
+		  return consFunc_tel_dy(psr,i,k,order);
+		case constraint_tel_dz_2:
+		  order++;
+		case constraint_tel_dz_1:
+		  order++;
+		case constraint_tel_dz_0:
+		  return consFunc_tel_dz(psr,i,k,order);
 		case constraint_quad_ifunc_p_2:
 			order++;
 		case constraint_quad_ifunc_p_1:

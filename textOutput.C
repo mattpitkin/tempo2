@@ -318,6 +318,24 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      for (i=0;i<psr[p].ifuncN;i++)
 		printf("%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
 	    }
+	  if (psr[p].param[param_tel_dx].paramSet[0]==1)
+	    {
+	      printf("Telescope x function\n");
+	      for (i=0;i<psr[p].nTelDX;i++)
+		printf("%.2f %.10g %.10g\n",psr[p].telDX_t[i],psr[p].telDX_v[i],psr[p].telDX_e[i]);
+	    }
+	  if (psr[p].param[param_tel_dy].paramSet[0]==1)
+	    {
+	      printf("Telescope y function\n");
+	      for (i=0;i<psr[p].nTelDY;i++)
+		printf("%.2f %.10g %.10g\n",psr[p].telDX_t[i],psr[p].telDY_v[i],psr[p].telDY_e[i]);
+	    }
+	  if (psr[p].param[param_tel_dz].paramSet[0]==1)
+	    {
+	      printf("Telescope z function\n");
+	      for (i=0;i<psr[p].nTelDZ;i++)
+		printf("%.2f %.10g %.10g\n",psr[p].telDZ_t[i],psr[p].telDZ_v[i],psr[p].telDZ_e[i]);
+	    }
 	  if (psr[p].param[param_quad_ifunc_p].paramSet[0]==1)
 	    {
 	      printf("---------------------------------------\n");
@@ -1107,6 +1125,11 @@ void updateDMvals(pulsar *psr,int p)
 			}
 			// update the DM error in the toa
 			psr[p].obsn[i].toaDMErr = 1e6*dme/DM_CONST/psr[p].obsn[i].freq/psr[p].obsn[i].freq;
+
+			/*			
+			* Removed this because we don't want the DM error added to the TOA error.
+			* Mike & George Nov 2011
+			*
 			psr[p].obsn[i].toaErr = sqrt(pow(psr[p].obsn[i].origErr,2)+pow(psr[p].obsn[i].toaDMErr,2));
 
 			iflag=jflag=-1;
@@ -1139,6 +1162,7 @@ void updateDMvals(pulsar *psr,int p)
 				strcpy(psr[p].obsn[i].flagID[jflag],"-dme");
 				sprintf(psr[p].obsn[i].flagVal[jflag],"%.6g",dme);
 			}
+			*/
 		}
 	}
 }

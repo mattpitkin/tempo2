@@ -35,5 +35,7 @@ void TKfitPoly(double x,double *v,int m);
 void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int),int weight,pulsar *psr,double tol, int *ip,double **uinv);
 void TKcholDecomposition(double **a, int n,double *p);
 void TKleastSquares_svd_passN(double *x,double *y,double *sig2,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,int),int weight);
+void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double **v,double *w,double **u);
+void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x,int n,int nf);
 
 

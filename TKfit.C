@@ -34,10 +34,8 @@
 #include "T2toolkit.h"
 #include "TKfit.h"
 
-void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x,int n,int nf);
 double TKpythag(double a,double b);
 void TKbidiagonal(double **a,double *anorm,int ndata,int nfit,double **v,double *w,double **u,double *rv1);
-void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double **v,double *w,double **u);
 void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout);
 void multMatrixVec(double **idcm,double *b,int ndata,double *bout);
 
@@ -102,9 +100,22 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
   double w[nf],wt[nf],sum,wmax;
   int    i,j,k;
 
-  designMatrix = (double **)malloc(n*sizeof(double *));
-  v = (double **)malloc(nf*sizeof(double *));
-  u = (double **)malloc(n*sizeof(double *));
+  if (!(designMatrix = (double **)malloc(n*sizeof(double *))))
+    {
+      printf("Unable to allocate enough memory for the design matrix\n");
+      exit(1);
+    }
+  if (!(v = (double **)malloc(nf*sizeof(double *))))
+    {
+      printf("Unable to allocate enough memory for the fitting\n");
+      exit(1);      
+    }
+  if (!(u = (double **)malloc(n*sizeof(double *))))
+    {
+      printf("Unable to allocate enough memory for the fitting\n");
+      exit(1);      
+    }
+
   for (i=0;i<n;i++) 
     {
       if ((designMatrix[i] = (double *)malloc(nf*sizeof(double))) == NULL) {printf("OUT OF MEMORY\n"); exit(1);}
@@ -112,20 +123,31 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
       if (weight==0) sig[i]=1.0;
     }
   for (i=0;i<nf;i++) v[i] = (double *)malloc(nf*sizeof(double));
+
   /* This routine has been developed from Section 15 in Numerical Recipes */
   
   /* Determine the design matrix - eq 15.4.4 
    * and the vector 'b' - eq 15.4.5 
    */
   //  printf("Set b\n");
+  //  printf("Got this far 3\n");
+
   for (i=0;i<n;i++)
     {
+      //      printf("Doing the fit\n");
       fitFuncs(x[i],basisFunc,nf,psr,ip[i]);
-      for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j]/sig[i];
+      //      printf("Done the fit\n");
+      for (j=0;j<nf;j++) 
+	{
+	  //	  printf("Setting %d %d max = %d %d\n",i,j,n,nf);
+	  designMatrix[i][j] = basisFunc[j]/sig[i];
+	}
       b[i] = y[i]/sig[i];
     }
   /* Now carry out the singular value decomposition */
   //  printf("Decomposition\n");
+  //  printf("Got this far 4\n");
+
   TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
   //  printf("Weights\n");
   wmax = TKfindMax_d(w,nf);
@@ -140,6 +162,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
   /* Now form the covariance matrix */
   for (i=0;i<nf;i++)
     {
+      printf("w[i] = %g\n",w[i]);
       if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
       else wt[i] = 0.0;     
     }
@@ -153,6 +176,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
 	  cvm[i][j] = cvm[j][i] = sum;
 	}
       e[i] = sqrt(cvm[i][i]);
+      printf("At this point %g %g\n",e[i],cvm[i][i]);
     }
   //  printf("chisq\n");
   *chisq = 0.0;
@@ -923,7 +947,8 @@ void TKcholDecomposition(double **a, int n, double *p)
 {
   int i,j,k;
   long double sum;
-
+  // float sum;
+  printf("Starting the cholDecomp %d\n",n);
   for (i=0;i<n;i++)
     {
       for (j=i;j<n;j++)
@@ -935,8 +960,6 @@ void TKcholDecomposition(double **a, int n, double *p)
 		{
 		  printf("Here with %d %d %g %Lg\n",i,j,a[i][j],sum);
 		  printf("Failed - the matrix is not positive definite\n");
-		  //		  for (k=i-1;k>=1;k--)
-		  //	    printf("a[%d][%d] = %g\n",j,k,a[j][k]);
 		  exit(1);
 		}
 	      p[i] = sqrt(sum);
@@ -945,4 +968,5 @@ void TKcholDecomposition(double **a, int n, double *p)
 	    a[j][i] = (double)(sum/p[i]);
 	}
     }
+  printf("Finishing the cholDecomp\n");
 }
