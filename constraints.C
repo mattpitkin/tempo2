@@ -1,4 +1,6 @@
 #include "constraints.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 std::string get_constraint_name(enum constraint c){
