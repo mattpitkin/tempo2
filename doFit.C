@@ -212,8 +212,8 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	  //	  printf("Chisq = %g, reduced chisq = %g\n",(double)psr[p].fitChisq,(double)(psr[p].fitChisq/psr[p].fitNfree));
 	  /* Now update the parameters */
 	  if (debugFlag==1) printf("Updating the parameters\n");
-	  for (i=0;i<npol;i++)
-	    printf("Fit values and errors are %g %g\n",val[i],error[i]);
+	  //	  for (i=0;i<npol;i++)
+	  //	    printf("Fit values and errors are %g %g\n",val[i],error[i]);
 	  updateParameters(psr,p,val,error);
 	  if (debugFlag==1) printf("Completed updating the parameters\n");
 	}

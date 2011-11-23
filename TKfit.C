@@ -162,7 +162,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
   /* Now form the covariance matrix */
   for (i=0;i<nf;i++)
     {
-      printf("w[i] = %g\n",w[i]);
+      //      printf("w[i] = %g\n",w[i]);
       if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
       else wt[i] = 0.0;     
     }
@@ -176,7 +176,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
 	  cvm[i][j] = cvm[j][i] = sum;
 	}
       e[i] = sqrt(cvm[i][i]);
-      printf("At this point %g %g\n",e[i],cvm[i][i]);
+      //      printf("At this point %g %g\n",e[i],cvm[i][i]);
     }
   //  printf("chisq\n");
   *chisq = 0.0;
