@@ -212,7 +212,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       if (strcasecmp(unit,"TDB")==0) psr->units = TDB_UNITS;
       else if (strcasecmp(unit,"SI")==0) psr->units = SI_UNITS;
     }
-  else if (strcasecmp(str,"NE1AU")==0 || strcasecmp(str,"NE_SW")==0)
+  else if (strcasecmp(str,"NE1AU")==0 || strcasecmp(str,"NE_SW")==0 ||
+          strcasecmp(str,"SOLARN0")==0)
     fscanf(fin,"%lf",&(psr->ne_sw));
   else if (strcasecmp(str, "TIMEEPH")==0)
     {
@@ -890,7 +891,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   else if (strcasecmp(str,"A1DOT")==0 || strcasecmp(str,"XDOT")==0)
     {
       readValue(psr,str,fin,&(psr->param[param_a1dot]),0);
-      if (psr->param[param_a1dot].val[0] > 1e-7) /* Check units: DO BETTER JOB */
+      if (fabs(psr->param[param_a1dot].val[0]) > 1e-7) /* Check units: DO BETTER JOB */
 	psr->param[param_a1dot].val[0]*=1.0e-12;
       psr->param[param_a1dot].prefit[0] = psr->param[param_a1dot].val[0];
     }
@@ -904,11 +905,21 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   else if (strcasecmp(str,"EPS1")==0)
     readValue(psr,str,fin,&(psr->param[param_eps1]),0);
   else if (strcasecmp(str,"EPS1DOT")==0)
-    readValue(psr,str,fin,&(psr->param[param_eps1dot]),0);
+    {
+      readValue(psr,str,fin,&(psr->param[param_eps1dot]),0);
+      if (fabs(psr->param[param_eps1dot].val[0]) > 1e-7) 
+        psr->param[param_eps1dot].val[0] *= 1.0e-12;
+      psr->param[param_eps1dot].prefit[0] = psr->param[param_eps1dot].val[0];
+    }
   else if (strcasecmp(str,"EPS2")==0)
     readValue(psr,str,fin,&(psr->param[param_eps2]),0);
   else if (strcasecmp(str,"EPS2DOT")==0)
-    readValue(psr,str,fin,&(psr->param[param_eps2dot]),0);
+    {
+      readValue(psr,str,fin,&(psr->param[param_eps2dot]),0);
+      if (fabs(psr->param[param_eps2dot].val[0]) > 1e-7) 
+        psr->param[param_eps2dot].val[0] *= 1.0e-12;
+      psr->param[param_eps2dot].prefit[0] = psr->param[param_eps2dot].val[0];
+    }
   else if (strcasecmp(str,"M2")==0)
     readValue(psr,str,fin,&(psr->param[param_m2]),0);
   else if (strcasecmp(str,"KOM")==0)
