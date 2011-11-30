@@ -177,8 +177,9 @@ void updateELL1(pulsar *psr,double val,double err,int pos)
       psr->param[param_pb].err[0]  = err/SECDAY;
     }
   else if (pos==param_a1 || pos==param_eps1 || pos==param_eps2 || pos==param_tasc
-	   || pos==param_sini || pos == param_m2 || pos==param_eps1dot ||
-	   pos==param_eps2dot)
+	   || pos==param_sini || pos == param_m2 
+       || pos==param_eps1dot || pos==param_eps2dot
+       || pos==param_a1dot)
     {
       psr->param[pos].val[0] += val;
       psr->param[pos].err[0]  = err;
