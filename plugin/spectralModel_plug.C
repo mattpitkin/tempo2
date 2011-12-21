@@ -44,7 +44,7 @@ double G_OMEGA;
 void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 	   double *cholWspecY,int nCholWspec,double *highFreqSpecX,
 	   double *highFreqSpecY,int nHighFreqSpec,int makeps);
-void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps);
+void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp);
 int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese);
 void fitSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 void cubicFit(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *cubicErr);
@@ -67,7 +67,7 @@ void plot2(double *origSpecX,double *origSpecY,int nOrigSpec,double *smoothSpecX
 void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,
 	   int nHighFreqSpec,double modelAlpha,double modelFc,int modelNfit,double modelScale,int closeit,float *minx,float *maxx);
-int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt);
+int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp);
 void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpts,
 	    double zerolagRawCovar,double *ampFit,double *chisqFit,int nGridFit,
 	    double bestAmp,double bestLag,double bestChisq,int makeps);
@@ -111,6 +111,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double idt=0;
   double ifc=-1;
   double iexp=0;
+  double amp=-1;
   int inpt=-1;
   int ipw=-1;
   int makeps=0;
@@ -149,6 +150,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%lf",&iexp);
       else if (strcmp(argv[i],"-pw")==0)
 	sscanf(argv[++i],"%d",&ipw);
+      else if (strcmp(argv[i],"-setamp")==0)
+	sscanf(argv[++i],"%lf",&amp);
       else if (strcmp(argv[i],"-nfit")==0)
 	sscanf(argv[++i],"%d",&inpt);
       else if (strcmp(argv[i],"-skipstep2")==0)
@@ -173,12 +176,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   //
   printf("Plugin to obtain a spectral model of pulsar timing residuals\n");
-  doPlugin(psr,idt,ipw,ifc,iexp,inpt,makeps);
+  doPlugin(psr,idt,ipw,ifc,iexp,inpt,makeps,amp);
 
   return 0; 
 } 
 
-void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps)
+void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp)
 {
   int i,j;
 
@@ -423,12 +426,20 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 				       preWhiteSpecX,preWhiteSpecY);
       // Step 3b: plot spectra
       cont=1;
-      do {
-	plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,
-	      highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
-	// Step 3c: Fit to spectra
-	cont = fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt);
-      } while (cont==1);
+      //      if (amp==-1)
+	{
+	  do {
+	    plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,
+		  highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
+	    // Step 3c: Fit to spectra
+	    cont = fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp);
+	    printf("modelScale = %g\n",modelScale);
+	  } while (cont==1);
+	}
+	//      else
+	//	{
+	//	  modelScale = amp;
+	//	}
 
       // Step 4a: calculate the Cholesky whitening matrix (uinv)
       calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor);
@@ -493,7 +504,18 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   // Step 5b: refit the model
   if (usePreWhitening!=-1) // If we're calculating the covariance function from a spectrum
     {
-      fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt);
+      FILE *fout;
+      char fname[128];
+
+      fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt,amp);
+      sprintf(fname,"%s.model",psr[0].name);
+      fout = fopen(fname,"w");
+      fprintf(fout,"MODEL 1\n");
+      fprintf(fout,"ALPHA %g\n",modelAlpha);
+      fprintf(fout,"FC %g\n",modelFc);
+      fprintf(fout,"AMP %g\n",nmodelScale);
+      fclose(fout);
+      
       plot5(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,highFreqSpecX,highFreqSpecY,nHighFreqSpec,
 	    modelAlpha,modelFc,modelNfit,modelScale,nmodelScale,cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,makeps);
 
@@ -1328,7 +1350,8 @@ void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double
 
   for (i=0;i<ndays;i++)
     {
-      f[i] = i*1.0/(resx[np-1]-resx[0])*365.25;
+      //      f[i] = i*1.0/(resx[np-1]-resx[0])*365.25;
+      f[i] = i*0.5/(resx[np-1]-resx[0])*365.25;
       p[i] = 1.0/(pow((1.0+pow(f[i]/(modelFc*2),2)),(modelAlpha)/2.0));
       pf[i] = p[i];
     }
@@ -1359,7 +1382,7 @@ void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double
     for (i=0;i<=j/2;i++) 
       {
 	covFunc[i] = opf[2*i];
-	printf("covFunc: %g %g\n",opf[2*i],opf[2*i+1]);
+	//	printf("covFunc: %d %g %g %d\n",i,opf[2*i],opf[2*i+1],j);
       }
   }
   // Rescale
@@ -1368,7 +1391,7 @@ void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double
   //  fy2[i] = nmodelScale-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
   actVar = pow(10,modelScale);
   tt = covFunc[0];
-  printf("actvar = %g, weightVarRes = %g, weightVarHighFreqRes = %g, scale = %g, fitVar = %g, tt = %g\n",actVar*pow(86400.0*365.25,2),weightVarRes,weightVarHighFreqRes,weightVarRes-weightVarHighFreqRes,fitVar,tt);
+  printf("actvar = %g, weightVarRes = %g, weightVarHighFreqRes = %g, scale = %g, fitVar = %g, tt = %g, modelScale = %g\n",actVar*pow(86400.0*365.25,2),weightVarRes,weightVarHighFreqRes,weightVarRes-weightVarHighFreqRes,fitVar,tt,modelScale);
 
   printf("WARNING: varScaleFactor = %g (used to deal with quadratic removal)\n",varScaleFactor);
   for (i=0;i<=j/2;i++)
@@ -1501,7 +1524,7 @@ void formCholeskyMatrix_pl(double *c,double *resx,double *resy,double *rese,int 
   free(cholp);
 }
 
-int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt)
+int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp)
 {
   static int time=1;
   double v1,v2,m;
@@ -1536,21 +1559,31 @@ int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,dou
   // The error on each point is simply taken as the model value squared and so we solve for
   // chisq = sum (P_d(f) - aM(f))^2/M^2(f)
   // which simplifies to a simple formula
-  v1 = 0.0;
-  for (i=0;i<*modelNfit;i++)
+  if (amp == -1)
     {
-      m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
-      v1 += preWhiteSpecY[i]/m;
+      v1 = 0.0;
+      for (i=0;i<*modelNfit;i++)
+	{
+	  m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
+	  v1 += preWhiteSpecY[i]/m;
+	}
+      //  *modelScale = log10(v1/(double)(*modelNfit));
+      *modelScale = (v1/(double)(*modelNfit));
     }
-  //  *modelScale = log10(v1/(double)(*modelNfit));
-  *modelScale = (v1/(double)(*modelNfit));
+  else
+    *modelScale = amp;
   printf("Model scale = %g\n",*modelScale);
 
   // Get area under the spectra
   *fitVar=0.0;
   df = preWhiteSpecX[0]*365.25;
-  for (i=0;i<*modelNfit;i++)
-    *fitVar+=preWhiteSpecY[i]*df;
+  //  for (i=0;i<*modelNfit;i++)
+  for (i=0;i<nPreWhiteSpec;i++)
+    {
+      m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
+      //      *fitVar+=preWhiteSpecY[i]*df;
+      *fitVar+=(*modelScale*m*df);
+    }
   (*fitVar)*=pow(86400.0*365.25,2);
   return 1;
 }
