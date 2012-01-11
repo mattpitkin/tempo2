@@ -137,7 +137,11 @@ void readParfileGlobal(pulsar *psr,int npsr,char tpar[MAX_STRLEN][MAX_FILELEN],
 
   for (p=0;p<npsr;p++)
     {
-      fin = fopen(tpar[0],"r");
+      if (!(fin = fopen(tpar[0],"r")))
+	{
+	  printf("ERROR: unable to open file >%s<\n",tpar[0]);
+	  exit(1);
+	}
       while (!feof(fin))
 	{
 	  // Read in a line from the parameter file
