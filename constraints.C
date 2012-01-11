@@ -102,10 +102,14 @@ double consFunc_ifunc(pulsar *psr,int i,int k,int order){
    * Only operate on param=ifunc and when fit parameter is 
    * one of the frequency independant parts (i.e. last ifuncN).
    */
-  printf("In here with %d %d %d %s\n",i,k,order,psr->name);
+  //  printf("In here with %d %d %d %s\n",i,k,order,psr->name);
   if(i==param_ifunc){
     long double epoch = psr->param[param_pepoch].val[0];
-    return pow(psr->ifuncT[k]-epoch,order);
+    //        if (k > 9)
+    //          return 65*65*pow(psr->ifuncT[k]-epoch,order);
+    //        else
+      return 1*pow(psr->ifuncT[k]-epoch,order);
+
   }
   else return 0;
 }

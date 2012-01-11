@@ -149,8 +149,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("Chisqr/nfree = %.2f/%d = %g\t",chisqr,psr[p].fitNfree,chisqr/(double)psr[p].fitNfree);
 	  printf("pre/post = %g\n",psr[p].rmsPre/psr[p].rmsPost);
 	}
-      printf("Number of points in fit = %d\n",psr[p].nFit);
-      printf("Number of constraints in fit = %d\n",psr[p].nconstraints);
+
+      if (psr[p].nconstraints > 0)
+	{
+	  printf("Number of points in fit (including constraint points) = %d\n",psr[p].nFit);
+	  printf("Number of constraints in fit = %d\n",psr[p].nconstraints);
+	  printf("Number of observations in fit = %d\n",psr[p].nFit - psr[p].nconstraints);
+	}
+      else
+	  printf("Number of points in fit = %d\n",psr[p].nFit);
       if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
 	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
       printf("\n\n");

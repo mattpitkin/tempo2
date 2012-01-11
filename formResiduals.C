@@ -657,44 +657,50 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   psr[p].obsn[i].nphase = nphase;
 	   /* residual = residual in phase */
 	   if (psr[p].obsn[i].deleted!=1)
-	     {
-	       gotit = 1;
-	     }
-
-	   if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0] != 0 && gotit==1 && time==1)
+	     gotit = 1;
+	   else
+	     gotit = 0;
+	   
+	   printf("%s deleted = %d\n",psr[p].obsn[i].fname,psr[p].obsn[i].deleted);
+	   if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0] != 0 && time==1)
 	     {
 	       residual+=ntrk;
 	       // Note that this requires that the points be in time order
-	       if (psr[p].obsn[i].bbat - ct00 < 0.0L && fabs(psr[p].obsn[i].bbat-ct00) > 1 && i > 0)
+	       if (gotit==1)
 		 {
-		   printf("ERROR: Points must be in time order for tracking to work\n");
-		   printf("Pulsar = %s\n",psr[p].name);
-		   printf("Observation %d (%s) has BBAT = %.5g\n",i,psr[p].obsn[i].fname,(double)psr[p].obsn[i].bbat);
-		   printf("Observation %d (%s) has BBAT = %.5g\n",i-1,psr[p].obsn[i-1].fname,(double)psr[p].obsn[i-1].bbat);
-		   printf("Difference = %Lg %Lg %Lg\n",psr[p].obsn[i].bbat, ct00,psr[p].obsn[i].bbat - ct00);
-		   exit(1);
-		 }
-	       if (psr[p].obsn[i].bbat - ct00 < fabs(psr[p].param[param_track].val[0]))
-		 {
-		   if (fabs(residual+1.0-dt00) < fabs(residual-dt00))
+		   if (psr[p].obsn[i].bbat - ct00 < 0.0L && fabs(psr[p].obsn[i].bbat-ct00) > 1 && i > 0)
 		     {
-		       residual+=1.0;
-		       ntrk+=1;
-		     } 
-		   else if (fabs(residual-1.0-dt00) < fabs(residual-dt00))
+		       printf("ERROR: Points must be in time order for tracking to work\n");
+		       printf("Pulsar = %s\n",psr[p].name);
+		       printf("Observation %d (%s) has BBAT = %.5g\n",i,psr[p].obsn[i].fname,(double)psr[p].obsn[i].bbat);
+		       printf("Observation %d (%s) has BBAT = %.5g\n",i-1,psr[p].obsn[i-1].fname,(double)psr[p].obsn[i-1].bbat);
+		       printf("Difference = %Lg %Lg %Lg\n",psr[p].obsn[i].bbat, ct00,psr[p].obsn[i].bbat - ct00);
+		       exit(1);
+		     }	       
+		   if (psr[p].obsn[i].bbat - ct00 < fabs(psr[p].param[param_track].val[0]))
 		     {
-		       residual-=1.0;
-		       ntrk-=1;
-		     } 
+		       if (fabs(residual+1.0-dt00) < fabs(residual-dt00))
+			 {
+			   residual+=1.0;
+			   ntrk+=1;
+			   printf("ADDING PHASE %s\n",psr[p].obsn[i].fname);
+			 } 
+		       else if (fabs(residual-1.0-dt00) < fabs(residual-dt00))
+			 {
+			   residual-=1.0;
+			   ntrk-=1;
+			   printf("SUBTRACT PHASE %s\n",psr[p].obsn[i].fname);
+			 } 
+		     }
 		 }
 	     }
 	   
 	   if ((double)psr[p].param[param_track].val[0] < 0) // Do extra tracking
 	     {
 	       if (dtm1s==0) printf("Attempting tracking via the gradient method\n");
-
+	       
 	       if (dtm1s>1 && fabs(psr[p].obsn[i].bat-lastBat) > 1 
-		 		   && fabs(lastBat-priorBat) > 1) // Have 3 points each separated by more than 1 day
+		   && fabs(lastBat-priorBat) > 1) // Have 3 points each separated by more than 1 day
 		 {
 		   double m1,m2,m3,m4,m5;
 		   m1 = (double)(lastResidual-priorResidual)/(lastBat-priorBat);
@@ -702,7 +708,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   m3 = (double)(residual-1-lastResidual)/(psr[p].obsn[i].bat-lastBat);
 		   m4 = (double)(residual+1-lastResidual)/(psr[p].obsn[i].bat-lastBat);
 		   //		   printf("pos %d %g %g %g %g (%g) (%g) (%g)\n",i,m1,m2,m3,m4,fabs(m2-m1),fabs(m3-m1),fabs(m4-m1));
-
+		   
 		   if (fabs(m1-m2) < fabs(m1-m3) && fabs(m1-m2) < fabs(m1-m4))
 		     {
 		     }
@@ -717,16 +723,17 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		       //		       printf("Updating pos\n");
 		       residual+=1.0;
 		       ntrk+=1;
-		       } 
+		     } 
 		 }
 	     }
-	   
-	   dtm1s ++;
-	   dtm1 = dt00;
-	   dt00  = residual;
-
-	   ct00 = psr[p].obsn[i].bbat;
-	   
+	   if (gotit==1)
+	     {
+	       dtm1s ++;
+	       dtm1 = dt00;
+	       dt00  = residual;
+	       
+	       ct00 = psr[p].obsn[i].bbat;
+	     }
 	   if (gotit==1 && time==0)
 	     time=1;
 	   psr[p].obsn[i].residual = residual/psr[p].param[param_f].val[0];

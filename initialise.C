@@ -123,7 +123,6 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nWhite = 0;  /* No whitening by default */
   psr->nQuad  = 0;  /* No quadrupolar function */
   psr->ifuncN = 0;  /* No interpolation functions by default */
-  psr->ifuncN = 0;  /* No interpolation functions by default */
   psr->nTelDX = 0;
   psr->nTelDY = 0;
   psr->nTelDZ = 0;

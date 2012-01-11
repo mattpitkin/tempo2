@@ -67,6 +67,7 @@ void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, doubl
 void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
 void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
+void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 
 double globalOmega;
 bool verbose_calc_spectra=false;
@@ -1778,13 +1779,22 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
 		    fflush(stdout);
 	    }
       GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
-      TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
-      v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[1],2)+pow(param[2],2))/pow(365.25*86400.0,2); 
+      //      TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
+      //      v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[1],2)+pow(param[2],2))/pow(365.25*86400.0,2); 
+      //      specX[k] = GLOBAL_OMEGA/2.0/M_PI;
+      //      specY[k] = v[k];
+      //      if(specE!=NULL){
+      //	      specE[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(error[1],2)+pow(error[2],2))/pow(365.25*86400.0,2);
+      //      }
+
+      TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,2,cvm,&chisq,fitCosSineFunc,0,psr,1.0e-40,ip,uinv);
+      v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[0],2)+pow(param[1],2))/pow(365.25*86400.0,2); 
       specX[k] = GLOBAL_OMEGA/2.0/M_PI;
       specY[k] = v[k];
       if(specE!=NULL){
-	      specE[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(error[1],2)+pow(error[2],2))/pow(365.25*86400.0,2);
+	      specE[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(error[0],2)+pow(error[1],2))/pow(365.25*86400.0,2);
       }
+
     }
 
   for (i=0;i<nfit;i++)
@@ -1863,5 +1873,15 @@ void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
   v[0] = 1; // Fit for mean
   v[1] = cos(GLOBAL_OMEGA*x);
   v[2] = sin(GLOBAL_OMEGA*x);
+
+}
+
+// Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
+// The psr and ival parameters are ignored
+void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
+{
+  int i;
+  v[0] = cos(GLOBAL_OMEGA*x);
+  v[1] = sin(GLOBAL_OMEGA*x);
 
 }
