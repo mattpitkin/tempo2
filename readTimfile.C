@@ -471,8 +471,6 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	    }
 	  if (skip==1) valid=0;
 	  psr->obsn[nObs].origErr = psr->obsn[nObs].toaErr;
-	  // add the DM error after the EFACs etc.
-	  psr->obsn[nObs].toaErr = sqrt(pow(psr->obsn[nObs].toaErr,2) + pow(psr->obsn[nObs].toaDMErr,2));
 
 	  if (valid==1)(psr->nobs)++;
 	  if (psr->nobs > MAX_OBSN-2)
