@@ -907,7 +907,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      fprintf(fout2,"SIFUNC %d %d\n",(int)psr[p].param[param_ifunc].val[0],
 		      (int)psr[p].param[param_ifunc].fitFlag[0]);
 	      for (i=0;i<psr[p].ifuncN;i++)
-		fprintf(fout2,"IFUNC%d %.15f %.10f %.10f\n",psr[p].ifuncT[i],
+		fprintf(fout2,"IFUNC%d %.15f %.10f %.10f\n",i+1,psr[p].ifuncT[i],
 			psr[p].ifuncV[i],psr[p].ifuncE[i]);
 	    }
 	  /* Add phase jumps */
