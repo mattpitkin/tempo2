@@ -756,7 +756,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		  for (k=0;k<psr[p].param[i].aSize;k++)
 		    {
 		  if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om 
-		      && i!=param_waveepoch && i!=param_dmmodel &&
+		      && i!=param_waveepoch && i!=param_ifunc && i!=param_dmmodel &&
 		      (psr[p].tempo1==0 || (i!=param_dmepoch)))
 		    {
 		      if (strcmp(psr[p].param[i].shortlabel[k],"PB")==0)
@@ -902,6 +902,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		fprintf(fout2,"WAVE%d %.14g %.14g\n",i+1,psr[p].wave_sine[i],psr[p].wave_cos[i]);
 	    }
 
+	  if (psr[p].param[param_ifunc].paramSet[0]==1)
+	    {
+	      fprintf(fout2,"SIFUNC %d %d\n",(int)psr[p].param[param_ifunc].val[0],
+		      (int)psr[p].param[param_ifunc].fitFlag[0]);
+	      for (i=0;i<psr[p].ifuncN;i++)
+		fprintf(fout2,"IFUNC%d %.15f %.10f %.10f\n",psr[p].ifuncT[i],
+			psr[p].ifuncV[i],psr[p].ifuncE[i]);
+	    }
 	  /* Add phase jumps */
 	  for (i=0;i<psr[p].nPhaseJump;i++)
 	    {
