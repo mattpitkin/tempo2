@@ -49,8 +49,7 @@ typedef struct sample {
 
 void plotResiduals(pulsar *psr,sample *samples,int nSample);
 void plotModel(pulsar *psr,double startSample,double endSample,double spacingSample,sample *samples,int nSamples);
-void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,double startSample,double endSample,
-		     double *covFunc,int *nCovFunc);
+void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,double startSample,double endSample,double *covFunc,int *nCovFunc,sample *samples,int nSampleTimes);
 void sortSamples(sample *s,int n);
 void choldc(double **a, int n,double *p);
 void lubksb(double **a, int n, int *indx, double b[]);
@@ -71,8 +70,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double globalParameter;
   double startSample,endSample,spacingSample;
   double modelA,modelFc,modelAlpha,x;
-  double covFunc[10000];
-  sample samples[10000];
+  int    setModelA,setModelFc,setModelAlpha;
+  double covFunc[15000];
+  sample samples[15000];
   int nSampleTimes=0;
   int nCovFunc;
   double **covMatrix,t,det;
@@ -84,6 +84,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   startSample = 1;
   endSample = 0;
+  spacingSample = -1;
+  setModelA=setModelFc=setModelAlpha=-1;
 
   const char *CVS_verNum = "$Revision$";
 
@@ -112,11 +114,36 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-dx")==0)
 	sscanf(argv[++i],"%lf",&spacingSample);
       else if (strcmp(argv[i],"-a")==0)
-	sscanf(argv[++i],"%lf",&modelA);
+	{
+	  sscanf(argv[++i],"%lf",&modelA);
+	  setModelA = 1;
+	}
       else if (strcmp(argv[i],"-fc")==0)
-	sscanf(argv[++i],"%lf",&modelFc);
+	{
+	  sscanf(argv[++i],"%lf",&modelFc);
+	  setModelFc = 1;
+	}
       else if (strcmp(argv[i],"-alpha")==0)
-	sscanf(argv[++i],"%lf",&modelAlpha);
+	{
+	  sscanf(argv[++i],"%lf",&modelAlpha);
+	  setModelAlpha = 1;
+	}
+    }
+
+  if (setModelA == 0)
+    {
+      printf("Must set A with -a option\n");
+      exit(1);
+    }
+  if (setModelFc == 0)
+    {
+      printf("Must set Fc with -fc option\n");
+      exit(1);
+    }
+  if (setModelAlpha == 0)
+    {
+      printf("Must set Alpha with -alpha option\n");
+      exit(1);
     }
 
   if (endSample < startSample)
@@ -124,7 +151,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("x2 must be greater than x1 (use -x1 and -x2 options)\n");
       exit(1);
     }
-
+  if (spacingSample < 1)
+    {
+      printf("Must set a sample spacing: use -dx option\n");
+      exit(1);      
+    }
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
   preProcess(psr,*npsr,argc,argv);
@@ -165,7 +196,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   //      printf("%g %g\n",samples[i].x,samples[i].y);
 
   // Create the power spectrum
-  getPowerSpectra(psr,modelA,modelFc,modelAlpha,startSample,endSample,covFunc,&nCovFunc);
+  getPowerSpectra(psr,modelA,modelFc,modelAlpha,startSample,endSample,covFunc,&nCovFunc,samples,nSampleTimes);
 
   // Create the covariance matrix
   covMatrix = (double **)malloc(sizeof(double *)*nSampleTimes);
@@ -379,17 +410,32 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,double startSample,double endSample,
-		     double *covFunc,int *nCovFunc)
+void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,double startSample,double endSample,double *covFunc,int *nCovFunc,sample *samples,int nSampleTimes)
 {
   int i,j;
   int ndays;
   double pwr;
-  float fx[4096*2],fy[4096*2],freq[4096*2];
-  double opf[10000];
-  double pf[10000];
+  float *fx,*fy,*freq;
+  double *opf;
+  double *pf;
 
-  ndays = endSample-startSample;
+  ndays = (int)(samples[nSampleTimes-1].x - samples[0].x + 0.5);
+  printf("ndays = %d\n",ndays);
+  // 6220
+  if (!(fx = (float *)malloc(sizeof(float)*(ndays*2+2))))
+    {
+      printf("Unable to allocate memory\n");
+      exit(1);
+    }
+  fy = (float *)malloc(sizeof(float)*(ndays*2+2));
+  freq = (float *)malloc(sizeof(float)*(ndays*2+2));
+  opf = (double *)malloc(sizeof(double)*(ndays*2+2));
+  if (!(pf = (double *)malloc(sizeof(double)*(ndays*2+2))))
+    {
+      printf("Unable to allocate memory\n");
+      exit(1);
+    }
+
   *nCovFunc = ndays;
 
   for (i=0;i<ndays+1;i++)
@@ -403,8 +449,11 @@ void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,
   j = ndays+1;
   for (i=ndays;i>0;i--)
     {
-      freq[j] = -freq[i];
+      // NOTE: NOT SETTING TO NEGATIVE FREQUENCIES ....
+
+      freq[j] = freq[i];
       pwr  = modelA/pow(1+pow(freq[j]/modelFc,modelAlpha/2.0),2);
+      printf("Here with %d %d %g %g\n",i,j,freq[j],pwr);
       pf[j] = pwr;
       fx[j] = (float)(j);
       fy[j] = (float)log10(pwr);
@@ -412,11 +461,12 @@ void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,
     } 
   ndays=j;
   for (i=0;i<ndays;i++)
-    printf("freq %d %g %g\n",i,freq[i],pf[i]);
+    printf("freq %d %g %g %d\n",i,freq[i],pf[i],ndays);
   printf("Got here\n");
   cpgbeg(0,"1/xs",1,2);
   cpgsch(1.4);
   cpgenv(TKfindMin_f(fx,ndays),TKfindMax_f(fx,ndays),TKfindMin_f(fy,ndays),TKfindMax_f(fy,ndays),0,20);
+  cpglab("Frequency channel","PSD","");
   cpgline(ndays,fx,fy);
 
   // Get covariance function
@@ -439,10 +489,14 @@ void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,
     ndays/=2;
     printf("ndays = %d\n",ndays);
     cpgenv(TKfindMin_f(fx,ndays),TKfindMax_f(fx,ndays),TKfindMin_f(fy,ndays),TKfindMax_f(fy,ndays),0,1);
+    cpglab("Lag","Covariance function","");
     cpgline(ndays,fx,fy);
   }
 
   cpgend();
+
+  free(fx); free(fy); free(freq); free(opf); free(pf);
+
 
 }
 
@@ -497,6 +551,7 @@ void plotResiduals(pulsar *psr,sample *samples,int nSample)
 
 
   cpgenv(minx,maxx,TKfindMin_f(fy,n),TKfindMax_f(fy,n),0,1);
+  cpglab("Day","Residual (s)","");
   cpgpt(n,fx,fy,9);
 
 }
