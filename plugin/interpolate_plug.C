@@ -48,7 +48,7 @@ typedef struct sample {
 
 
 void plotResiduals(pulsar *psr,sample *samples,int nSample);
-void plotModel(pulsar *psr,double startSample,double endSample,double spacingSample,sample *samples,int nSamples);
+void plotModel(pulsar *psr,double startSample,double endSample,double spacingSample,sample *samples,int nSamples,int actualSamples);
 void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,double startSample,double endSample,double *covFunc,int *nCovFunc,sample *samples,int nSampleTimes);
 void sortSamples(sample *s,int n);
 void choldc(double **a, int n,double *p);
@@ -81,6 +81,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int t1,t2;
   double cint,sum;
   double rms;
+  int actualSamples=0;
 
   startSample = 1;
   endSample = 0;
@@ -148,13 +149,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   if (endSample < startSample)
     {
+      actualSamples = 1;
       printf("x2 must be greater than x1 (use -x1 and -x2 options)\n");
-      exit(1);
+      printf("Using the actual samples\n");
     }
-  if (spacingSample < 1)
+  if (spacingSample < 1 && actualSamples==0)
     {
-      printf("Must set a sample spacing: use -dx option\n");
-      exit(1);      
+      printf("Warning: spacing of the samples not set (use -dx option).  Using 1/fc instead.\n");
+      spacingSample = 1.0/modelFc*365.25;
+      printf("Set to %g days\n",spacingSample);
+      /* THIS IS THE WRONG CORNER FREQUENCY - SHOULD BE THE 
+	 WHITE NOISE LEVEL */
     }
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
@@ -180,16 +185,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   rms /= (double)psr[0].nobs;
   rms = sqrt(1.0/rms);
   printf("rms = %g %d\n",rms,psr[0].nobs);
-
   nSampleTimes = psr[0].nobs;
-  // Add sample times for requested data
-  for (x=startSample;x<=endSample;x+=spacingSample)
+
+  if (actualSamples == 0)
     {
-      samples[nSampleTimes].x = (double)(x-psr[0].param[param_pepoch].val[0]);
-      samples[nSampleTimes].y = 0.0; // Set the requested residuals to zero
-      samples[nSampleTimes].e = 1e6*rms;  // Set the requested errors to a large number -- SET PROPERLY
-      samples[nSampleTimes].actual = 0;
-      nSampleTimes++;
+      // Add sample times for requested data
+      for (x=startSample;x<=endSample;x+=spacingSample)
+	{
+	  samples[nSampleTimes].x = (double)(x-psr[0].param[param_pepoch].val[0]);
+	  samples[nSampleTimes].y = 0.0; // Set the requested residuals to zero
+	  samples[nSampleTimes].e = 1e6*rms;  // Set the requested errors to a large number -- SET PROPERLY
+	  samples[nSampleTimes].actual = 0;
+	  nSampleTimes++;
+	}
     }
   sortSamples(samples,nSampleTimes);
   //    for (i=0;i<nSampleTimes;i++)
@@ -280,29 +288,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     } 
 
 
-   printf("\n\nUcninv ... \n\n");
-  for (i=133;i<143;i++)
-    {
-      for (j=133;j<143;j++)
-	{
-	  printf("%g ",ucninv[i][j]);
-	}
-      printf("\n");
-    }
 
   for (i=0;i<nSampleTimes;i++)
     {
       for (j=0;j<nSampleTimes;j++)
 	cninv[i][j] = ucninv[j][i]*ucninv[i][j];
-    }
-   printf("\n\n cninv ... (%d)\n\n",nSampleTimes);
-  for (i=133;i<143;i++)
-    {
-      for (j=133;j<143;j++)
-	{
-	  printf("%g ",cninv[i][j]);
-	}
-      printf("\n");
     }
   // Calculate final predicted residual
   for (i=0;i<nSampleTimes;i++)
@@ -369,7 +359,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   cpgbeg(0,"3/xs",1,1);
   plotResiduals(psr,samples,nSampleTimes);
   // Plot the model
-  plotModel(psr,startSample,endSample,spacingSample,samples,nSampleTimes);
+  plotModel(psr,startSample,endSample,spacingSample,samples,nSampleTimes,actualSamples);
   cpgend();
 
   // Write out new par file with the IFUNC commands
@@ -379,7 +369,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   psr[0].ifuncN = 0;
   for (i=0;i<nSampleTimes;i++)
     {
-      if (samples[i].actual==0)
+      if ((samples[i].actual==0 && actualSamples == 0)
+	  || (samples[i].actual==1 && actualSamples == 1))
 	{
 	  psr[0].ifuncT[psr[0].ifuncN] = samples[i].x+(double)psr[0].param[param_pepoch].val[0];
 	  psr[0].ifuncV[psr[0].ifuncN] = -samples[i].pred;
@@ -500,7 +491,7 @@ void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,
 
 }
 
-void plotModel(pulsar *psr,double startSample,double endSample,double spacingSample,sample *samples,int nSamples)
+void plotModel(pulsar *psr,double startSample,double endSample,double spacingSample,sample *samples,int nSamples,int actualSamples)
 {
   int i;
   double x;
@@ -509,7 +500,8 @@ void plotModel(pulsar *psr,double startSample,double endSample,double spacingSam
 
   for (i=0;i<nSamples;i++)
     {
-      if (samples[i].actual == 0)
+      if ((samples[i].actual == 0 && actualSamples == 0)
+	  || (samples[i].actual == 1 && actualSamples == 1))
 	{
 	  fx[n] = (float)samples[i].x;
 	  fy[n] = (float)samples[i].pred;
