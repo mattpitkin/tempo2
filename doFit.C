@@ -558,11 +558,11 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  printf("Calculating uncertainties on fitted parameters using a Monte-Carlo bootstrap method (%d)\n",psr[p].bootStrap);
 	  bootstrap(psr,p,npsr);
 	}
-	  printf("Tcheck: freeing memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
-  for (i=0;i<psr[p].nobs;i++)
-    free(uinv[i]);
-  free(uinv);
-	  printf("Tcheck: complete freeing memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      printf("Tcheck: freeing memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      for (i=0;i<nobs_and_constraints;i++)
+	free(uinv[i]);
+      free(uinv);
+      printf("Tcheck: complete freeing memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
     }
 }
 
