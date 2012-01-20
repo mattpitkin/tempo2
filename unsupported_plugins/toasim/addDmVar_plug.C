@@ -47,13 +47,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	long double result;
 	long seed = TKsetSeed();
 
+	double secperyear=365*86400.0;
 	// my parameters
-	double alpha=-11.0/3.0;
-	double cal_scale=1.0/100;
-	double cal_val=1e-4;
+	double tdiff=100;//s
 	int resolution=1024;
-	double is = 10; // days
+	double is = 1; // days
 	double os = -10; // 10 times data length
+	double alpha= -8.0/3.0;
 
 
 	//
@@ -94,19 +94,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			strcpy(timFile[*npsr],argv[++i]);
 			(*npsr)++;
 		}
-		if (strcmp(argv[i],"-strength")==0){
-			cal_val=atof(argv[++i]);
-		}
-		if (strcmp(argv[i],"-alpha")==0){
-			alpha=atof(argv[++i]);
+		if (strcmp(argv[i],"-tdiff")==0){
+			tdiff=atof(argv[++i]);
 		}
 		if (strcmp(argv[i],"-os")==0){
 			os=atof(argv[++i]);
 		}
+		if (strcmp(argv[i],"-is")==0){
+			is=atof(argv[++i]);
+		}
+
 
 	}
 
-	alpha/=2.0; // we are computing amplitudes
 
 	readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
 	// Now read in all the .tim files
@@ -149,11 +149,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		double fft_binsize = 1.0/(mjd_end-mjd_start);
 		int nwav=(int)(os/is);
-		double fstart=1.0/os; // per day
-		double fend=1.0/is;
+		double fstart=365.0/os; // per year
+		double fend=356.0/is;
 		double fstep=(fend-fstart)/double(nwav);
 
-		double fft_sf = 1e-6*fstep/fft_binsize;
 
 
 		printf("start    = %f (mjd)\n",mjd_start);
@@ -161,11 +160,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("OS       = %f (days)\n",os       );
 		printf("IS       = %f (days)\n",is       );
 		printf("nwav     = %d\n",nwav     );
-		printf("fmin     = %f (1/day)\n",fstart);
-		printf("fmax     = %f (1/day)\n",fend);
-		printf("cal_scale= %f (1/day)\n",cal_scale);
-		printf("cal_value= %f (?)\n",cal_val);
-		printf("fft_sf   = %f (?)\n",fft_sf);
+		printf("fmin     = %f (1/yr)\n",fstart);
+		printf("fmax     = %f (1/yr)\n",fend);
+		printf("tdiff    = %f (s)\n",tdiff);
 
 		
 
@@ -182,18 +179,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				offsets[j] =0;
 				dms[j] =0;
 			}
-			double a=pow(cal_scale,alpha);
-			double scalefactor = sqrt(fft_sf*cal_val/(2*a*a));
 			for (int iwav = 0; iwav < nwav; iwav++){
 				double f=fstart+(double)iwav*fstep;
-				a = scalefactor*pow(f,alpha);
+
+				double ofreq=1.4e9;
+
+				double top = 2.0*pow(2.0*M_PI*ofreq,-2.0) * pow(tdiff,-5.0/3.0) * pow(f,alpha);
+				double bottom = 179.0*pow(secperyear,1.0/3.0);
+				double pism = top/bottom; // years
+				double a = sqrt(pism*fstep); // delay in years
+				a *= secperyear; // delay in seconds
+				a *= DM_CONST*pow(ofreq/1e6,2.0); // DM in cm^-3 pc
+				a /= sqrt(2.0); // account for cos + sin
+
 				double a2 =a*TKgaussDev(&seed);
 				a*=TKgaussDev(&seed);
-				fprintf(log_spec,"%g %g\n",f,a*a+a2*a2);
-				double phase=TKranDev(&seed) * 2*M_PI;
+
+				fprintf(log_spec,"%lg %lg\n",f,a*a+a2*a2);
 				for (j=0;j<psr[p].nobs;j++){
-					double t=psr[p].obsn[j].bat - mjd_start;
-					double dmv=a*sin(2*M_PI*t*f + phase) + a2*cos(2*M_PI*t*f + phase);
+					double t=(psr[p].obsn[j].bat - mjd_start)/365; // t in years!
+					double dmv=a*sin(2*M_PI*t*f) + a2*cos(2*M_PI*t*f);
 					dms[j]+=dmv;
 				}
 			}
