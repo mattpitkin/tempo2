@@ -213,6 +213,8 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
   cpgbeg(0,grDev,1,1);
   //    cpgpap(widthPap,aspectPap);
   cpgsch(fontSize);
+  cpgscf(2);
+  cpgslw(2);
   cpgask(0);
 
   for (p=0;p<npsr;p++)
@@ -298,16 +300,19 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
   plotx1 = tmin-(tmax-tmin)*0.1;
   plotx2 = tmax+(tmax-tmin)*0.1;
   
-  ploty1 = tminy2-(tmaxy2-tminy2)*0.1;
-  ploty2 = tmaxy2+(tmaxy2-tminy2)*0.1;
+  //  ploty1 = tminy2-(tmaxy2-tminy2)*0.1;
+  //  ploty2 = tmaxy2+(tmaxy2-tminy2)*0.1;
 	
+  ploty1 = 0.1;
+  ploty2 = 0.9;
+
   for (p=0;p<npsr;p++)
     {
       for (i=0;i<count[p];i++)
 	{
-	  y[p][i]=(p)+y[p][i]/(ploty2-ploty1);
-	  yerr1[p][i]=(p)+yerr1[p][i]/(ploty2-ploty1);
-	  yerr2[p][i]=(p)+yerr2[p][i]/(ploty2-ploty1);
+	  y[p][i]=(p)+ploty1+y[p][i]*(ploty2-ploty1);
+	  yerr1[p][i]=(p)+ploty1+yerr1[p][i]*(ploty2-ploty1);
+	  yerr2[p][i]=(p)+ploty1+yerr2[p][i]*(ploty2-ploty1);
 	}
     } 
   
