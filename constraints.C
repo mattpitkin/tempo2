@@ -43,7 +43,18 @@ std::string get_constraint_name(enum constraint c){
 			return "TEL_DZ linear(C) = 0";
 		case constraint_tel_dz_2:
 			return "TEL_DZ quadratic(C) = 0";
-
+		case constraint_dmmodel_cw_year_sin:
+			return "DMMODEL_YEAR C.sin(t) = 0";
+		case constraint_dmmodel_cw_year_cos:
+			return "DMMODEL_YEAR C.cos(t) = 0";
+		case constraint_dmmodel_cw_year_xsin:
+			return "DMMODEL_YEAR C.t.sin(t) = 0";
+		case constraint_dmmodel_cw_year_xcos:
+			return "DMMODEL_YEAR C.t.cos(t) = 0";
+		case constraint_dmmodel_cw_year_sin2:
+			return "DMMODEL_YEAR C.sin(2t) = 0";
+		case constraint_dmmodel_cw_year_cos2:
+			return "DMMODEL_YEAR C.cos(2t) = 0";
 
 		default:
 			return "UNKNOWN!";
@@ -68,6 +79,36 @@ double consFunc_dmmodel_cw(pulsar *psr,int i,int k,int order){
 	if(i==param_dmmodel && k >= psr->dmoffsNum){
 		long double epoch = psr->param[param_pepoch].val[0];
 		return pow(psr->dmoffsMJD[k%psr->dmoffsNum]-epoch,order);
+	} else return 0;
+
+}
+
+double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k,int order){
+	/*
+	 * Only operate on param=dmmodel and when fit parameter is 
+	 * one of the frequency independant parts (i.e. last dmoffsNum).
+	 */
+	if(i==param_dmmodel && k >= psr->dmoffsNum){
+		long double epoch = psr->param[param_pepoch].val[0];
+		long double t = psr->dmoffsMJD[k%psr->dmoffsNum]-epoch;
+		long double x = 2.0*M_PI*t/365.25;
+		switch (order){
+			case 0:
+				return sin(x);
+			case 1:
+				return cos(x);
+			case 2:
+				return x*sin(x);
+			case 3:
+				return x*cos(x);
+			case 4:
+				return sin(2*x);
+			case 5:
+				return cos(2*x);
+
+			default:
+				return 0;
+		}
 	} else return 0;
 
 }

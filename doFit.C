@@ -2036,6 +2036,20 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 		case constraint_quad_ifunc_c_0:
 			return consFunc_quad_ifunc_c(psr,i,k,order);
 
+		// DMMODEL annual terms
+		case constraint_dmmodel_cw_year_cos2:
+			order++;
+		case constraint_dmmodel_cw_year_sin2:
+			order++;
+		case constraint_dmmodel_cw_year_xcos:
+			order++;
+		case constraint_dmmodel_cw_year_xsin:
+			order++;
+		case constraint_dmmodel_cw_year_cos:
+			order++;
+		case constraint_dmmodel_cw_year_sin:
+			return consFunc_dmmodel_cw_year(psr,i,k,order);
+
 		default:
 			return 0;
 			}

@@ -40,6 +40,7 @@
 using namespace std;
 
 
+char pgdevice[80];
 double G_OMEGA;
 void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 	   double *cholWspecY,int nCholWspec,double *highFreqSpecX,
@@ -134,6 +135,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       strcat(parFile[0],"par");
     }
 
+  strcpy(pgdevice,"/xs");
   /* Obtain all parameters from the command line */
   for (i=2;i<argc;i++)
     {
@@ -144,6 +146,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-t")==0)
 	sscanf(argv[++i],"%lf",&idt);
+      else if (strcmp(argv[i],"-g")==0)
+	strcpy(pgdevice,argv[++i]);
       else if (strcmp(argv[i],"-fc")==0)
 	sscanf(argv[++i],"%lf",&ifc);
       else if (strcmp(argv[i],"-exp")==0)
@@ -793,7 +797,7 @@ void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpt
       cpgend();
     }
 
-  cpgbeg(0,"/xs",1,1);
+  cpgbeg(0,pgdevice,1,1);
   cpgsch(1.4);
   cpgsfs(2);
   cpgslw(2);
@@ -893,7 +897,7 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
   miny = TKfindMin_f(fy,nCholSpec);
   maxy = TKfindMax_f(fy,nCholSpec);
 
-  cpgbeg(0,"/xs",1,1);
+  cpgbeg(0,pgdevice,1,1);
   cpgsvp(0.1,0.95,0.45,0.95);
   cpgswin(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny));
   cpgbox("BCLTS",0,0,"BCNTS",0,0);
@@ -1003,7 +1007,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
   FILE *fout1,*fout2,*fout;
 
   // First do exactly the same as plot3
-  cpgbeg(0,"/xs",1,1);
+  cpgbeg(0,pgdevice,1,1);
   cpgask(0);
   cpgsch(1);
   cpgsfs(2);
@@ -1206,7 +1210,7 @@ void plot4(double *resx,double *resy,double *rese,int nres,double *cholWhiteY,
 	}
     }
 
-  cpgbeg(0,"/xs",1,1);
+  cpgbeg(0,pgdevice,1,1);
   cpgsch(1.4);
   cpgsfs(2);
   cpgslw(2);
@@ -1624,7 +1628,7 @@ void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
     }
   if (closeit==1)
     {
-      cpgbeg(0,"/xs",1,1);
+      cpgbeg(0,pgdevice,1,1);
       cpgask(0);
       cpgsch(1.4);
       cpgsfs(2);
@@ -1837,7 +1841,7 @@ void plot2(double *origSpecX,double *origSpecY,int nOrigSpec,double *smoothSpecX
     }
 
 
-  cpgbeg(0,"/xs",1,1);
+  cpgbeg(0,pgdevice,1,1);
   cpgask(0);
   cpgsch(1.4);
   cpgsfs(2);
@@ -2005,7 +2009,7 @@ void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,doub
   float minx,maxx,miny,maxy;
   int i,j,ncovar,np;
 
-  cpgbeg(0,"/xs",1,1); cpgsch(1.4); cpgsfs(2); cpgslw(2);
+  cpgbeg(0,pgdevice,1,1); cpgsch(1.4); cpgsfs(2); cpgslw(2);
   // Plot timing residuals
   for (i=0;i<nres;i++)
     {

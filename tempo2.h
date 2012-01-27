@@ -193,6 +193,12 @@ enum constraint {
 	constraint_quad_ifunc_c_0,
 	constraint_quad_ifunc_c_1,
 	constraint_quad_ifunc_c_2,
+	constraint_dmmodel_cw_year_sin,
+	constraint_dmmodel_cw_year_cos,
+	constraint_dmmodel_cw_year_xsin,
+	constraint_dmmodel_cw_year_xcos,
+	constraint_dmmodel_cw_year_sin2,
+	constraint_dmmodel_cw_year_cos2,
 };
 
 

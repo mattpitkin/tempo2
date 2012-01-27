@@ -41,6 +41,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	int count=0;
 	int flags[MAX_PSR];
 	longdouble* preobs[MAX_PSR];
+	FILE *dmf;
 	printf(" <DMMODEL> Reset DM component of error to 0\n");
 
 	for (p=0; p < npsr; p++){
@@ -90,6 +91,50 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 
 
 	if(count){
+
+
+		{
+			p=0;
+			dmf=fopen("dm.model","w");
+			for (i=0;i<(int)psr[p].dmoffsNum;i++){
+				fprintf(dmf,"%lf %.15lg %.15lg %.15lg %.15lg\n",(double)psr[p].dmoffsMJD[i],(double)psr[p].dmoffsDM[i],(double)psr[p].dmoffsDMe[i],(double)psr[p].dmoffsOffset[i],(double)psr[p].dmoffsError[i]);
+			}
+			fclose(dmf);
+			dmf=fopen("dm.toas","w");
+			double dmval=0;
+			double meanDM=0;
+			double m,c;
+			for (i=0;i<(int)psr[p].nobs;i++){
+				if ((double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[0])
+					dmval = meanDM + psr[p].dmoffsDM[0];
+				else if ((double)psr[p].obsn[i].sat > psr[p].dmoffsMJD[psr[p].dmoffsNum-1])
+					dmval = meanDM+psr[p].dmoffsDM[psr[p].dmoffsNum-1];
+				else
+				{
+					for (k=0;k<psr[p].dmoffsNum-1;k++)
+					{
+						if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsMJD[k] &&
+								(double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[k+1])
+						{
+							// Do linear interpolation
+							// Note: this is also used at various points in the 
+							// code (e.g., textOutput.C - if any changes are 
+							// made here then these changes should be made throughout!
+							m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
+							c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsMJD[k];
+							dmval = m*(double)psr[p].obsn[i].sat+c + meanDM;
+							break;
+						}
+					}
+				}
+				double freqf= psr[p].obsn[i].freq*1.0e6;
+				double delay= dmval/DM_CONST/1.0e-12/freqf/freqf;
+				fprintf(dmf,"%lf %.10lg %.10lg %.10lg %.10lg\n",(double)psr[p].obsn[i].sat,dmval,delay,(double)psr[p].obsn[i].toaErr*1e-6,freqf);
+			}
+
+		}
+		fclose(dmf);
+
 
 		printf(" <DMMODEL> Disable DMMODEL\n");
 		// we also save the pre-fit residuals so it appears as if only one fit has happened

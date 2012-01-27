@@ -639,12 +639,25 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
        * Constraints for DMMODEL.
        * The DMMODEL constraint affects 4 constraints.
        */
-      if(strcasecmp(cname,"DMMODEL")==0){
+      if((strcasecmp(cname,"DMMODEL_X")==0)){
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
+      }
+      if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_OLD")==0)){
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_1;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_2;
       }
+      if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_YEAR")==0)){
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xsin;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xcos;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin2;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos2;
+      }
+
       if(strcasecmp(cname,"IFUNC")==0){
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
