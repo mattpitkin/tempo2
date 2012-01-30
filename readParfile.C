@@ -662,6 +662,13 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xsin;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xcos;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin2;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos2;
+
       }
       if(strcasecmp(cname,"TEL_DX")==0){
 	      psr->constraints[psr->nconstraints++] = constraint_tel_dx_0;

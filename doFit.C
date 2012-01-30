@@ -604,12 +604,19 @@ int getNparams(pulsar psr)
     npol+=(psr.nQuad*4)-1;
   if (psr.param[param_ifunc].fitFlag[0]==1)
       npol+=(psr.ifuncN-1);
-  if (psr.param[param_tel_dx].fitFlag[0]==1)
+  if (psr.param[param_tel_dx].fitFlag[0]==1 && psr.param[param_tel_dx].val[0] < 2)
       npol+=(psr.nTelDX-1);
-  if (psr.param[param_tel_dy].fitFlag[0]==1)
+  else if (psr.param[param_tel_dx].fitFlag[0]==1 && psr.param[param_tel_dx].val[0] == 2)
+      npol+=(psr.nTelDX-2);
+  if (psr.param[param_tel_dy].fitFlag[0]==1 && psr.param[param_tel_dy].val[0] < 2)
       npol+=(psr.nTelDY-1);
-  if (psr.param[param_tel_dz].fitFlag[0]==1)
+  else if (psr.param[param_tel_dy].fitFlag[0]==1 && psr.param[param_tel_dy].val[0] == 2)
+      npol+=(psr.nTelDY-2);
+
+  if (psr.param[param_tel_dz].fitFlag[0]==1 && psr.param[param_tel_dz].val[0] < 2)
       npol+=(psr.nTelDZ-1);
+  else if (psr.param[param_tel_dz].fitFlag[0]==1 && psr.param[param_tel_dz].val[0] == 2)
+    npol+=(psr.nTelDZ-2);
   if (psr.param[param_quad_ifunc_p].fitFlag[0]==1)
       npol+=(psr.quad_ifuncN_p-1);
   if (psr.param[param_quad_ifunc_c].fitFlag[0]==1)
@@ -677,18 +684,42 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		    }
 		  else if (i==param_tel_dx)
 		    {
-		      for (j=0;j<psr->nTelDX;j++)
-			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		      if (psr->param[param_tel_dx].val[0]<2)
+			{
+			  for (j=0;j<psr->nTelDX;j++)
+			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			}
+		      else if (psr->param[param_tel_dx].val[0]==2)
+			{
+			  for (j=0;j<psr->nTelDX-1;j++)
+			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			}
 		    }
 		  else if (i==param_tel_dy)
 		    {
-		      for (j=0;j<psr->nTelDY;j++)
-			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		      if (psr->param[param_tel_dy].val[0]<2)
+			{
+			  for (j=0;j<psr->nTelDY;j++)
+			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			}
+		      else if (psr->param[param_tel_dy].val[0] == 2)
+			{
+			  for (j=0;j<psr->nTelDY-1;j++)
+			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			}
 		    }
 		  else if (i==param_tel_dz)
 		    {
-		      for (j=0;j<psr->nTelDZ;j++)
-			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		      if (psr->param[param_tel_dz].val[0]<2)
+			{
+			  for (j=0;j<psr->nTelDZ;j++)
+			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			}
+		      else if (psr->param[param_tel_dz].val[0] == 2)
+			{
+			  for (j=0;j<psr->nTelDZ-1;j++)
+			    afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+			}
 		    }
 		  else if (i==param_quad_ifunc_p)
 		    {
@@ -1119,30 +1150,42 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     {
       double yoffs[MAX_TEL_DX];
       double sat = (double)psr->obsn[ipos].sat;
-      for (int ioff =0;ioff<psr->nTelDX;ioff++){
-	yoffs[ioff]=0;
-      }
-      yoffs[k] = 1;
-      
-      if (sat < (double)psr->telDX_t[0]){
-	// we are before the first jump
-	// so our gradient is just the zeroth offset.
-	afunc = yoffs[0]*psr->posPulsar[0];
-;
-      } else if(sat > (double)psr->telDX_t[(int)psr->nTelDX-1]){
-	afunc = yoffs[(int)psr->nTelDX-1]*psr->posPulsar[0];
-      } else{
-	// find the pair we are between...
-	for (int ioff =0;ioff<psr->nTelDX;ioff++){
-	  if(sat >= psr->telDX_t[ioff] && sat < psr->telDX_t[ioff+1]){
-	    double x1 = psr->telDX_t[ioff];
-	    double x2 = psr->telDX_t[ioff+1];
-	    double x = (sat-x1)/(x2-x1);
-	    double y1=yoffs[ioff];
-	    double y2=yoffs[ioff+1];
-	    afunc = ((y2-y1)*x + y1)*psr->posPulsar[0];
-	    break;
+      if (psr->param[param_tel_dx].val[0] == 2)
+	{
+	  if (psr->telDX_t[k] <=  psr->obsn[ipos].sat &&
+	      psr->telDX_t[k+1] > psr->obsn[ipos].sat)
+	    return psr->posPulsar[0];
+	  else 
+	    return 0;
+	}
+      else
+	{
+
+	  for (int ioff =0;ioff<psr->nTelDX;ioff++){
+	    yoffs[ioff]=0;
 	  }
+	  yoffs[k] = 1;
+	  
+	  if (sat < (double)psr->telDX_t[0]){
+	    // we are before the first jump
+	    // so our gradient is just the zeroth offset.
+	    afunc = yoffs[0]*psr->posPulsar[0];
+	    ;
+	  } else if(sat > (double)psr->telDX_t[(int)psr->nTelDX-1]){
+	    afunc = yoffs[(int)psr->nTelDX-1]*psr->posPulsar[0];
+	  } else{
+	    // find the pair we are between...
+	    for (int ioff =0;ioff<psr->nTelDX;ioff++){
+	      if(sat >= psr->telDX_t[ioff] && sat < psr->telDX_t[ioff+1]){
+		double x1 = psr->telDX_t[ioff];
+		double x2 = psr->telDX_t[ioff+1];
+		double x = (sat-x1)/(x2-x1);
+		double y1=yoffs[ioff];
+		double y2=yoffs[ioff+1];
+		afunc = ((y2-y1)*x + y1)*psr->posPulsar[0];
+		break;
+	      }
+	    }
 	}
       }
       //      printf("afunc = %g\n",afunc);
@@ -1151,62 +1194,86 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     {
       double yoffs[MAX_TEL_DY];
       double sat = (double)psr->obsn[ipos].sat;
-      for (int ioff =0;ioff<psr->nTelDY;ioff++){
-	yoffs[ioff]=0;
-      }
-      yoffs[k] = 1;
-      
-      if (sat < (double)psr->telDY_t[0]){
-	// we are before the first jump
-	// so our gradient is just the zeroth offset.
-	afunc = yoffs[0]*psr->posPulsar[1];
-;
-      } else if(sat > (double)psr->telDY_t[(int)psr->nTelDY-1]){
-	afunc = yoffs[(int)psr->nTelDY-1]*psr->posPulsar[1];
-      } else{
-	// find the pair we are between...
-	for (int ioff =0;ioff<psr->nTelDY;ioff++){
-	  if(sat >= psr->telDY_t[ioff] && sat < psr->telDY_t[ioff+1]){
-	    double x1 = psr->telDY_t[ioff];
-	    double x2 = psr->telDY_t[ioff+1];
-	    double x = (sat-x1)/(x2-x1);
-	    double y1=yoffs[ioff];
-	    double y2=yoffs[ioff+1];
-	    afunc = ((y2-y1)*x + y1)*psr->posPulsar[1];
-	    break;
+
+      if (psr->param[param_tel_dz].val[0] == 2)
+	{
+	  if (psr->telDY_t[k] <=  psr->obsn[ipos].sat &&
+	      psr->telDY_t[k+1] > psr->obsn[ipos].sat)
+	    return psr->posPulsar[1];
+	  else 
+	    return 0;
+	}
+      else
+	{
+	  for (int ioff =0;ioff<psr->nTelDY;ioff++){
+	    yoffs[ioff]=0;
+	  }
+	  yoffs[k] = 1;
+	  
+	  if (sat < (double)psr->telDY_t[0]){
+	    // we are before the first jump
+	    // so our gradient is just the zeroth offset.
+	    afunc = yoffs[0]*psr->posPulsar[1];
+	    ;
+	  } else if(sat > (double)psr->telDY_t[(int)psr->nTelDY-1]){
+	    afunc = yoffs[(int)psr->nTelDY-1]*psr->posPulsar[1];
+	  } else{
+	    // find the pair we are between...
+	    for (int ioff =0;ioff<psr->nTelDY;ioff++){
+	      if(sat >= psr->telDY_t[ioff] && sat < psr->telDY_t[ioff+1]){
+		double x1 = psr->telDY_t[ioff];
+		double x2 = psr->telDY_t[ioff+1];
+		double x = (sat-x1)/(x2-x1);
+		double y1=yoffs[ioff];
+		double y2=yoffs[ioff+1];
+		afunc = ((y2-y1)*x + y1)*psr->posPulsar[1];
+		break;
+	      }
+	    }
 	  }
 	}
-      }
       //      printf("afunc = %g\n",afunc);
     }
   else if (i==param_tel_dz)
     {
       double yoffs[MAX_TEL_DZ];
       double sat = (double)psr->obsn[ipos].sat;
-      for (int ioff =0;ioff<psr->nTelDZ;ioff++){
-	yoffs[ioff]=0;
-      }
-      yoffs[k] = 1;
-      
-      if (sat < (double)psr->telDZ_t[0]){
-	// we are before the first jump
-	// so our gradient is just the zeroth offset.
-	afunc = yoffs[0]*psr->posPulsar[2];
-;
-      } else if(sat > (double)psr->telDZ_t[(int)psr->nTelDZ-1]){
-	afunc = yoffs[(int)psr->nTelDZ-1]*psr->posPulsar[2];
-      } else{
-	// find the pair we are between...
-	for (int ioff =0;ioff<psr->nTelDZ;ioff++){
-	  if(sat >= psr->telDZ_t[ioff] && sat < psr->telDZ_t[ioff+1]){
-	    double x1 = psr->telDZ_t[ioff];
-	    double x2 = psr->telDZ_t[ioff+1];
-	    double x = (sat-x1)/(x2-x1);
-	    double y1=yoffs[ioff];
-	    double y2=yoffs[ioff+1];
-	    afunc = ((y2-y1)*x + y1)*psr->posPulsar[2];
-	    break;
+      if (psr->param[param_tel_dz].val[0] == 2)
+	{
+	  // MUST SET SOME OF THESE TO ZERO!!
+	  if (psr->telDZ_t[k] <=  psr->obsn[ipos].sat &&
+	      psr->telDZ_t[k+1] > psr->obsn[ipos].sat)
+	    return psr->posPulsar[2];
+	  else 
+	    return 0;
+	}
+      else
+	{
+	  for (int ioff =0;ioff<psr->nTelDZ;ioff++){
+	    yoffs[ioff]=0;
 	  }
+	  yoffs[k] = 1;
+	  
+	  if (sat < (double)psr->telDZ_t[0]){
+	    // we are before the first jump
+	    // so our gradient is just the zeroth offset.
+	    afunc = yoffs[0]*psr->posPulsar[2];
+	    ;
+	  } else if(sat > (double)psr->telDZ_t[(int)psr->nTelDZ-1]){
+	    afunc = yoffs[(int)psr->nTelDZ-1]*psr->posPulsar[2];
+	  } else{
+	    // find the pair we are between...
+	    for (int ioff =0;ioff<psr->nTelDZ;ioff++){
+	      if(sat >= psr->telDZ_t[ioff] && sat < psr->telDZ_t[ioff+1]){
+		double x1 = psr->telDZ_t[ioff];
+		double x2 = psr->telDZ_t[ioff+1];
+		double x = (sat-x1)/(x2-x1);
+		double y1=yoffs[ioff];
+		double y2=yoffs[ioff+1];
+		afunc = ((y2-y1)*x + y1)*psr->posPulsar[2];
+		break;
+	      }
+	    }
 	}
       }
       //      printf("afunc = %g\n",afunc);
@@ -1701,34 +1768,69 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 	      else if (i==param_tel_dx) 
 		{
 		  int k;
-		  for (k=0;k<psr->nTelDX;k++)
+		  if (psr[p].param[param_tel_dx].val[0] < 2)
 		    {
-		      printf("val ret = %g\n",val[j]);
-		      psr[p].telDX_v[k] -= val[j];
-		      psr[p].telDX_e[k] = error[j];
-		      j++;
+		      for (k=0;k<psr->nTelDX;k++)
+			{
+			  psr[p].telDX_v[k] -= val[j];
+			  psr[p].telDX_e[k] = error[j];
+			  j++;
+			}
+		    }
+		  else
+		    {
+		      for (k=0;k<psr->nTelDX-1;k++)
+			{
+			  psr[p].telDX_v[k] -= val[j];
+			  psr[p].telDX_e[k] = error[j];
+			  j++;
+			}
 		    }
 		}		  
 	      else if (i==param_tel_dy) 
 		{
 		  int k;
-		  for (k=0;k<psr->nTelDY;k++)
+		  if (psr[p].param[param_tel_dy].val[0] < 2)
 		    {
-		      printf("val ret = %g\n",val[j]);
-		      psr[p].telDY_v[k] -= val[j];
-		      psr[p].telDY_e[k] = error[j];
-		      j++;
+		      for (k=0;k<psr->nTelDY;k++)
+			{
+			  psr[p].telDY_v[k] -= val[j];
+			  psr[p].telDY_e[k] = error[j];
+			  j++;
+			}
 		    }
+		  else
+		    {
+		      for (k=0;k<psr->nTelDY-1;k++)
+			{
+			  psr[p].telDY_v[k] -= val[j];
+			  psr[p].telDY_e[k] = error[j];
+			  j++;
+			}
+		    }
+
+		      
 		}		  
 	      else if (i==param_tel_dz) 
 		{
 		  int k;
-		  for (k=0;k<psr->nTelDZ;k++)
+		  if (psr[p].param[param_tel_dz].val[0] < 2)
 		    {
-		      printf("val ret = %g\n",val[j]);
-		      psr[p].telDZ_v[k] -= val[j];
-		      psr[p].telDZ_e[k] = error[j];
-		      j++;
+		      for (k=0;k<psr->nTelDZ;k++)
+			{
+			  psr[p].telDZ_v[k] -= val[j];
+			  psr[p].telDZ_e[k] = error[j];
+			  j++;
+			}
+		    }
+		  else
+		    {
+		      for (k=0;k<psr->nTelDZ-1;k++)
+			{
+			  psr[p].telDZ_v[k] -= val[j];
+			  psr[p].telDZ_e[k] = error[j];
+			  j++;
+			}
 		    }
 		}		  
 	      else if (i==param_quad_ifunc_p) 
@@ -2049,6 +2151,20 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 			order++;
 		case constraint_dmmodel_cw_year_sin:
 			return consFunc_dmmodel_cw_year(psr,i,k,order);
+
+		// IFUNC annual terms
+		case constraint_ifunc_year_cos2:
+			order++;
+		case constraint_ifunc_year_sin2:
+			order++;
+		case constraint_ifunc_year_xcos:
+			order++;
+		case constraint_ifunc_year_xsin:
+			order++;
+		case constraint_ifunc_year_cos:
+			order++;
+		case constraint_ifunc_year_sin:
+			return consFunc_ifunc_year(psr,i,k,order);
 
 		default:
 			return 0;
