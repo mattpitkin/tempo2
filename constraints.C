@@ -55,17 +55,17 @@ std::string get_constraint_name(enum constraint c){
 			return "DMMODEL_YEAR C.sin(2t) = 0";
 		case constraint_dmmodel_cw_year_cos2:
 			return "DMMODEL_YEAR C.cos(2t) = 0";
-		case constraint_ifunc_cw_year_sin:
+		case constraint_ifunc_year_sin:
 			return "IFUNC_YEAR C.sin(t) = 0";
-		case constraint_ifunc_cw_year_cos:
+		case constraint_ifunc_year_cos:
 			return "IFUNC_YEAR C.cos(t) = 0";
-		case constraint_ifunc_cw_year_xsin:
+		case constraint_ifunc_year_xsin:
 			return "IFUNC_YEAR C.t.sin(t) = 0";
-		case constraint_ifunc_cw_year_xcos:
+		case constraint_ifunc_year_xcos:
 			return "IFUNC_YEAR C.t.cos(t) = 0";
-		case constraint_ifunc_cw_year_sin2:
+		case constraint_ifunc_year_sin2:
 			return "IFUNC_YEAR C.sin(2t) = 0";
-		case constraint_ifunc_cw_year_cos2:
+		case constraint_ifunc_year_cos2:
 			return "IFUNC_YEAR C.cos(2t) = 0";
 
 		default:

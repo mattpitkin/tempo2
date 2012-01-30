@@ -199,6 +199,12 @@ enum constraint {
 	constraint_dmmodel_cw_year_xcos,
 	constraint_dmmodel_cw_year_sin2,
 	constraint_dmmodel_cw_year_cos2,
+	constraint_ifunc_year_sin,
+	constraint_ifunc_year_cos,
+	constraint_ifunc_year_xsin,
+	constraint_ifunc_year_xcos,
+	constraint_ifunc_year_sin2,
+	constraint_ifunc_year_cos2,
 };
 
 
