@@ -55,6 +55,18 @@ std::string get_constraint_name(enum constraint c){
 			return "DMMODEL_YEAR C.sin(2t) = 0";
 		case constraint_dmmodel_cw_year_cos2:
 			return "DMMODEL_YEAR C.cos(2t) = 0";
+		case constraint_ifunc_cw_year_sin:
+			return "IFUNC_YEAR C.sin(t) = 0";
+		case constraint_ifunc_cw_year_cos:
+			return "IFUNC_YEAR C.cos(t) = 0";
+		case constraint_ifunc_cw_year_xsin:
+			return "IFUNC_YEAR C.t.sin(t) = 0";
+		case constraint_ifunc_cw_year_xcos:
+			return "IFUNC_YEAR C.t.cos(t) = 0";
+		case constraint_ifunc_cw_year_sin2:
+			return "IFUNC_YEAR C.sin(2t) = 0";
+		case constraint_ifunc_cw_year_cos2:
+			return "IFUNC_YEAR C.cos(2t) = 0";
 
 		default:
 			return "UNKNOWN!";
@@ -132,6 +144,7 @@ double consFunc_tel_dy(pulsar *psr,int i,int k,int order){
 
 double consFunc_tel_dz(pulsar *psr,int i,int k,int order){
   if(i==param_tel_dz){
+    printf("In contraint with k = %d, order = %d\n",k,order); 
     long double epoch = psr->param[param_pepoch].val[0];
     return pow(psr->telDZ_t[k]-epoch,order);
   }
@@ -143,16 +156,41 @@ double consFunc_ifunc(pulsar *psr,int i,int k,int order){
    * Only operate on param=ifunc and when fit parameter is 
    * one of the frequency independant parts (i.e. last ifuncN).
    */
-  //  printf("In here with %d %d %d %s\n",i,k,order,psr->name);
   if(i==param_ifunc){
     long double epoch = psr->param[param_pepoch].val[0];
-    //        if (k > 9)
-    //          return 65*65*pow(psr->ifuncT[k]-epoch,order);
-    //        else
       return 1*pow(psr->ifuncT[k]-epoch,order);
 
   }
   else return 0;
+}
+
+double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
+	/*
+	 * Only operate on param=dmmodel and when fit parameter is 
+	 * one of the frequency independant parts (i.e. last dmoffsNum).
+	 */
+  if(i==param_ifunc && k >= psr->ifuncN){
+    long double epoch = psr->param[param_pepoch].val[0];
+    long double t = psr->ifuncT[k%psr->ifuncN]-epoch;
+    long double x = 2.0*M_PI*t/365.25;
+    switch (order){
+    case 0:
+      return sin(x);
+    case 1:
+      return cos(x);
+    case 2:
+      return x*sin(x);
+    case 3:
+      return x*cos(x);
+    case 4:
+      return sin(2*x);
+    case 5:
+      return cos(2*x);
+      
+    default:
+      return 0;
+    }
+  } else return 0;
 }
 
 
