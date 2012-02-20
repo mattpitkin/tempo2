@@ -73,7 +73,7 @@ AC_ARG_WITH([tempo2-plug-dir],
 
 AC_MSG_CHECKING([for plugin install path])
 if test -z "$with_tempo2_plug_dir" ; then
-	TEMPO2_PLUG_INSTALL=$TEMPO2/plugins
+	TEMPO2_PLUG_INSTALL=$TEMPO2/plugins/
 else
 	TEMPO2_PLUG_INSTALL=$with_tempo2_plug_dir
 	AC_DEFINE_UNQUOTED([TEMPO2_CONFIGURE_PLUG], "$with_tempo2_plug_dir",["Tempo2 plugin path"])

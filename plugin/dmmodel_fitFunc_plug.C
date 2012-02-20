@@ -48,10 +48,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		if (psr[p].param[param_dmmodel].fitFlag[0]==1){
 			flags[p]=1;
 			count++;
-			for(i=0; i < psr[p].nobs; i++){
-				psr[p].obsn[i].toaErr=psr[p].obsn[i].origErr;
-				psr[p].obsn[i].toaDMErr=0;
-			}
+//			for(i=0; i < psr[p].nobs; i++){
+//				psr[p].obsn[i].toaErr=psr[p].obsn[i].origErr;
+//				psr[p].obsn[i].toaDMErr=0;
+//			}
 		} else flags[p]=0;
 	}
 	strcpy(psr[0].fitFunc,"default");

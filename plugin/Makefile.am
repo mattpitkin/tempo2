@@ -52,3 +52,6 @@ endif
 plugins: $(PLUGINS)
 plugins-install: $(PLUGINSTALLS)
 
+
+plugdir:
+	mkdir -p $(plugindir)
