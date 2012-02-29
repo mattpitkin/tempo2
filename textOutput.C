@@ -327,9 +327,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    }
 	  if (psr[p].param[param_tel_dx].paramSet[0]==1)
 	    {
+	      FILE *fout;
 	      printf("Telescope x function\n");
 	      for (i=0;i<psr[p].nTelDX;i++)
 		printf("%.2f %.10g %.10g\n",psr[p].telDX_t[i],psr[p].telDX_v[i],psr[p].telDX_e[i]);
+	      fout = fopen("telescopeXYZ.dat","w");
+	      for (i=0;i<psr[p].nTelDX;i++)
+		fprintf(fout,"%.2f %.10g %.10g %.10g %.10g %.10g %.10g\n",psr[p].telDX_t[i],psr[p].telDX_v[i],psr[p].telDX_e[i],psr[p].telDY_v[i],psr[p].telDY_e[i],psr[p].telDZ_v[i],psr[p].telDZ_e[i]);
+	      fclose(fout);
 	    }
 	  if (psr[p].param[param_tel_dy].paramSet[0]==1)
 	    {

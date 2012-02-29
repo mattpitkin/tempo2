@@ -39,8 +39,6 @@ void residualTracking(pulsar *psr);
 void formResiduals(pulsar *psr,int npsr,int removeMean)
 {
    longdouble residual;  /* Residual in phase */
-   longdouble ddnprd;
-   longdouble dphase;
    longdouble nphase,phase5[MAX_OBSN],phase2,phase3,phase4,lastResidual=0,priorResidual=0,ppRes=0;
    longdouble lastBat=0.0,priorBat=0.0,ppBat=0.0;
    longdouble phaseJ,phaseW;
@@ -55,6 +53,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    int time=0;
    int ntrk=0;
    int gotit=0;
+   int pn0=-1;
    const char *CVS_verNum = "$Revision$";
    
    if (displayCVSversion == 1) CVSdisplayVersion("formResiduals.C","formResiduals()",CVS_verNum);
@@ -66,8 +65,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
        for (i=0;i<psr[p].nobs;i++)
 	 {
-	   ddnprd = 0.0; /* ALWAYS ?? */
-	   dphase = 0.0; /*    "      */
 	   
 	   torb = 0.0; 
 
@@ -377,6 +374,48 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       //	       printf("Res = %g\n",(double)res);
 	     }
 
+	   if (psr[p].param[param_gwm_amp].paramSet[0]==1)
+	     {
+	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+	       //	       double res_e,res_i;
+	       long double resp,resc,res_r,res_i;
+	       double theta_p,theta_g,phi_p,phi_g;
+	       double lambda_p,beta_p,lambda,beta;
+	       long double time;	      
+	       double n1,n2,n3;
+	       double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+	       double cosTheta;
+
+	       time    = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*86400.0L;
+
+	       lambda_p = (double)psr[p].param[param_raj].val[0];
+	       beta_p   = (double)psr[p].param[param_decj].val[0];
+	       lambda   = psr[p].gwm_raj;
+	       //	       beta     = M_PI/2.0-psr[p].gwsrc_dec;
+	       beta     = psr[p].gwm_decj;
+	       //			       phi_g   = psr[p].gwsrc_ra;
+
+	       // Pulsar vector
+	       n1 = cosl(lambda_p)*cosl(beta_p);
+	       n2 = sinl(lambda_p)*cosl(beta_p);
+	       n3 = sinl(beta_p);
+	       //	       printf("n = %g %g %g\n",n1,n2,n3);
+	       cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+		 sinl(beta)*sinl(beta_p);
+	       //	       printf("cosTheta = %g\n",cosTheta);
+
+	       /* Only has effect after the glitch epoch */
+	       if (psr[p].obsn[i].sat >= psr[p].gwm_epoch)
+		 {
+		   long double dt,scale;
+		   dt = psr[p].obsn[i].sat - psr[p].gwm_epoch;
+		   scale = 0.5*cos(2*psr[p].gwm_phi)*(1-cosTheta);
+		   phaseW += scale*(psr[p].param[param_gwm_amp].val[0]*psr[p].param[param_f].val[0])*dt;
+		 }
+	       //	       printf("Res = %g\n",(double)res);
+	     }
+
 	   /* Add in extra phase due to interpolation */
 	   if (psr[p].param[param_ifunc].paramSet[0] == 1)
 	     {
@@ -577,7 +616,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 
 	   phase5[i] = phase2+phase3+phase4+phaseJ+phaseW;
-
+	   //	   printf("Point 1: %.5f %.5f %.5f %.5f %.5f %.5f\n",(double)phase5[i],(double)phase2,(double)phase3,(double)phase4,(double)phaseJ,(double)phaseW);
 	   if (psr[p].obsn[i].nFlags>0) /* Look for extra factor to add to residuals */
 	     {
 	       int k;
@@ -631,13 +670,21 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
        for (i=0;i<psr[p].nobs;i++)
 	 {
 	   if (psr[p].obsn[i].deleted==0 && 
-	       (psr[0].param[param_start].fitFlag[0]==0 || psr[0].obsn[i].sat > psr[0].param[param_start].val[0]) &&
-	       (psr[0].param[param_finish].fitFlag[0]==0 || psr[0].obsn[i].sat < psr[0].param[param_finish].val[0]))
+	       (psr[0].param[param_start].fitFlag[0]==0 
+		|| psr[0].obsn[i].sat > psr[0].param[param_start].val[0]) &&
+	       (psr[0].param[param_finish].fitFlag[0]==0 
+		|| psr[0].obsn[i].sat < psr[0].param[param_finish].val[0]))
 	     {
 	       if (psr[p].param[param_iperharm].paramSet[0]==1)
-		 phas1  = phase5[i];
+		 phas1 = phase5[i];
 	       else
 		 phas1 = fortran_mod((phase5[i]),1.0L); 
+		 //		 phas1 = phase5[i];
+		 //
+		 
+		 //		 phas1 = fortran_mod((phase5[i]),1.0L); 
+
+		 //
 	       zeroID=i;
 	       //	       printf("phas1 set to observation number %d\n",i);
 	       break;
@@ -652,17 +699,17 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	    */
 	   phase5[i] -= phas1;
 	   nphase = (longdouble)fortran_nint(phase5[i]);
-
-	   residual = phase5[i] - nphase + dphase+ddnprd;
 	   psr[p].obsn[i].nphase = nphase;
+
+	   residual = phase5[i] - nphase;
 	   /* residual = residual in phase */
 	   if (psr[p].obsn[i].deleted!=1)
 	     gotit = 1;
 	   else
 	     gotit = 0;
 	   
-	   printf("%s deleted = %d\n",psr[p].obsn[i].fname,psr[p].obsn[i].deleted);
-	   if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0] != 0 && time==1)
+	   //	   printf("%s deleted = %d\n",psr[p].obsn[i].fname,psr[p].obsn[i].deleted);
+	   if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0] > 0 && time==1)
 	     {
 	       residual+=ntrk;
 	       // Note that this requires that the points be in time order
@@ -695,7 +742,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	     }
 	   
-	   if ((double)psr[p].param[param_track].val[0] < 0) // Do extra tracking
+	   if ((double)psr[p].param[param_track].val[0] == -1) // Do extra tracking
 	     {
 	       if (dtm1s==0) printf("Attempting tracking via the gradient method\n");
 	       
@@ -724,6 +771,37 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		       residual+=1.0;
 		       ntrk+=1;
 		     } 
+		 }
+	     }
+	   if ((double)psr[p].param[param_track].val[0] == -2) // Track on pulse number
+	     {
+	       int pnNew;
+	       int pnAct;
+	       int addPhase;
+
+	       nf0  = (int)psr[p].param[param_f].val[0];
+	       ntpd = ((int)psr[p].obsn[i].bbat-(int)psr[p].param[param_pepoch].val[0]);
+	       phaseint = nf0*ntpd*86400.0;
+	       pnNew = (int)(phaseint + fortran_nint(phase5[i]));
+	       if (pn0 == -1)
+		 {
+		   pn0 = pnNew;
+		   pnNew = 0;
+		 }
+	       else
+		 pnNew -= pn0;
+	       printf("Have %g %d\n",(double)psr[p].obsn[i].sat,pnNew);
+	       // Compare with flag
+	       for (int kk=0;kk<psr[p].obsn[i].nFlags;kk++)
+		 {
+		   if (strcmp(psr[p].obsn[i].flagID[kk],"-pn")==0)
+		     {
+		       sscanf(psr[p].obsn[i].flagVal[kk],"%d",&pnAct);
+		       addPhase = pnNew-pnAct;
+		       residual += addPhase;
+		       ntrk += addPhase;
+		       printf("*** Adding phase %d ***\n",addPhase);
+		     }
 		 }
 	     }
 	   if (gotit==1)
@@ -761,6 +839,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /* dt in resid.f */
 	   /*	   psr[p].obsn[i].phase = phaseint+nphase+phase5-nphase+dphase+ddnprd; */	   
 	   psr[p].obsn[i].phase = phaseint+phase5[i];  
+	   psr[p].obsn[i].pulseN = (int)(phaseint + fortran_nint(phase5[i]));
+	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %d\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,psr[p].obsn[i].pulseN);
 	   if (psr[p].obsn[i].deleted!=1)
 	     {
 	       mean+=psr[p].obsn[i].residual;

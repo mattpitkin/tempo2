@@ -228,6 +228,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_posepoch].shortlabel[0],"POSEPOCH");
   strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
   strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH");
+  strcpy(psr->param[param_gwm_amp].label[0],"GWM_AMP");
+  strcpy(psr->param[param_gwm_amp].shortlabel[0],"GWM_AMP");
   strcpy(psr->param[param_tel_dx].label[0],"TEL_DX");
   strcpy(psr->param[param_tel_dy].label[0],"TEL_DY");
   strcpy(psr->param[param_tel_dz].label[0],"TEL_DZ");

@@ -658,6 +658,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos2;
       }
 
+      if(strcasecmp(cname,"IFUNC_ONLYF0F1")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
+      }
+
       if(strcasecmp(cname,"IFUNC")==0){
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
@@ -712,6 +718,15 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     fscanf(fin,"%lf",&psr->gwsrc_epoch);
   else if (strcasecmp(str,"GW_PSR_DIST")==0)
     fscanf(fin,"%lf",&psr->gwsrc_psrdist);
+  //* Gravitational wave memory
+  else if (strcasecmp(str,"GWM_AMP")==0)
+    readValue(psr,str,fin,&(psr->param[param_gwm_amp]),0);
+  else if (strcasecmp(str,"GWM_POSITION")==0)
+    fscanf(fin,"%lf %lf",&psr->gwm_raj,&psr->gwm_decj);
+  else if (strcasecmp(str,"GWM_EPOCH")==0)
+    fscanf(fin,"%lf",&psr->gwm_epoch);
+  else if (strcasecmp(str,"GWM_PHI")==0)
+    fscanf(fin,"%lf",&psr->gwm_phi);
   else if ((strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
 	   && strstr(str,"QIFUNC")==NULL)
     {
@@ -728,7 +743,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       /* Obtain parameter number */
       sscanf(str+6,"%d",&number);
       fscanf(fin,"%lf %lf %lf",&psr->telDX_t[number-1],&psr->telDX_v[number-1],&psr->telDX_e[number-1]);
-      if (psr->ifuncN < number) psr->nTelDX = number;
+      if (psr->nTelDX < number) psr->nTelDX = number;
     }
   else if ((strstr(str,"TEL_DY")!=NULL || strstr(str,"tel_dy")!=NULL) && strcmp(str,"STEL_DY")!=0)
     {
@@ -736,7 +751,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       /* Obtain parameter number */
       sscanf(str+6,"%d",&number);
       fscanf(fin,"%lf %lf %lf",&psr->telDY_t[number-1],&psr->telDY_v[number-1],&psr->telDY_e[number-1]);
-      if (psr->ifuncN < number) psr->nTelDY = number;
+      if (psr->nTelDY < number) psr->nTelDY = number;
     }
   else if ((strstr(str,"TEL_DZ")!=NULL || strstr(str,"tel_dz")!=NULL) && strcmp(str,"STEL_DZ")!=0)
     {
@@ -744,7 +759,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       /* Obtain parameter number */
       sscanf(str+6,"%d",&number);
       fscanf(fin,"%lf %lf %lf",&psr->telDZ_t[number-1],&psr->telDZ_v[number-1],&psr->telDZ_e[number-1]);
-      if (psr->ifuncN < number) psr->nTelDZ = number;
+      if (psr->nTelDZ < number) psr->nTelDZ = number;
     }
   else if (strstr(str,"QIFUNC_p")!=NULL || strstr(str,"qifunc_p")!=NULL)
     {

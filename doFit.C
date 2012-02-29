@@ -1531,6 +1531,42 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  //	  else if (k==3) afunc = resc*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
 	}
     }
+  else if (i==param_gwm_amp)
+    {
+      double n1,n2,n3;
+      double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+      double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+      double cosTheta,omega_g;
+      long double resp,resc,res_r,res_i;
+      double theta_p,theta_g,phi_p,phi_g;
+      double lambda_p,beta_p,lambda,beta;
+      long double time;
+
+      time    = (psr->obsn[ipos].bbat - psr->gwm_epoch)*86400.0L;
+      
+      lambda_p = (double)psr->param[param_raj].val[0];
+      beta_p   = (double)psr->param[param_decj].val[0];
+      lambda   = psr->gwm_raj;
+      beta     = psr->gwm_decj;
+      
+      // Pulsar vector
+      n1 = cosl(lambda_p)*cosl(beta_p);
+      n2 = sinl(lambda_p)*cosl(beta_p);
+      n3 = sinl(beta_p);
+      cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+	sinl(beta)*sinl(beta_p);
+      
+      /* Only has effect after the glitch epoch */
+      if (psr->obsn[ipos].sat >= psr->gwm_epoch)
+	{
+	  long double dt,scale;
+	  dt = psr->obsn[ipos].sat - psr->gwm_epoch;
+	  scale = 0.5*cos(2*psr->gwm_phi)*(1-cosTheta);
+	  afunc = scale*dt;
+	}
+      else
+	afunc = 0;
+    }
   else if (i==param_dmmodel)
     {
       double sat = (double)psr->obsn[ipos].sat;
@@ -1866,6 +1902,11 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		  j++;
 		  psr[p].gwsrc_across_i -= val[j];
 		  printf("Now have: %g %g\n",psr[p].gwsrc_aplus_r,psr[p].gwsrc_across_r);
+		}
+	      else if (i==param_gwm_amp)
+		{
+		  psr[p].param[i].val[0] -= val[j];
+		  j++;
 		}
 	      else if (i==param_dmmodel)
 		{

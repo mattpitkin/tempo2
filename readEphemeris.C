@@ -71,6 +71,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
   if (addEphemNoise!=0)
     printf("WARNING: Adding noise into ephemeris %d\n",addEphemNoise); 
 
+  //  printf("Reading the ephemeris\n");
   for (p=0;p<npsr;p++)
     {
       /* Must convert MJD to JD */
@@ -336,12 +337,12 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 	  /* Calculate obsn[i].nutations */
 	  err_code = jpl_pleph(ephem, jd_teph, 14, 3, psr[p].obsn[i].nutations, 1);
 	  /* Note interpolation done in the JPL reading routines */
+	  //	  printf("Checking for interpolation %d\n",psr[p].nTelDX);
 	  if (psr[p].nTelDX > 0)
 	    {
 	      int k;
 	      double m,c,ival;
 	      ival=0.0;
-	      //	      printf("Using interpolation function for telDX\n");
 	      for (k=0;k<psr[p].nTelDX-1;k++)
 		{
 		  if ((double)psr[p].obsn[i].sat >= psr[p].telDX_t[k] &&
@@ -354,7 +355,6 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 		      break;
 		    }
 		}
-	      printf("xpos add = %g %d\n",ival,i);
 	      psr[p].obsn[i].earth_ssb[0] += ival; // Change x-position
 	    }
 	  if (psr[p].nTelDY > 0)
@@ -375,7 +375,6 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 		      break;
 		    }
 		}
-	      printf("ypos add = %g %d\n",ival,i);
 	      psr[p].obsn[i].earth_ssb[1] += ival; // Change y-position
 	    }
 	  if (psr[p].nTelDZ > 0)
@@ -396,7 +395,6 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 		      break;
 		    }
 		}
-	      printf("zpos add = %g %d\n",ival,i);
 	      psr[p].obsn[i].earth_ssb[2] += ival; // Change z-position
 	    }
 	  if (strcmp(psr[p].obsn[i].telID,"STL_BAT")==0)
@@ -419,7 +417,6 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 	}
       jpl_close_ephemeris(ephem); 
     }
-
 }
 
 /* Based on ran1.f in original fortran */

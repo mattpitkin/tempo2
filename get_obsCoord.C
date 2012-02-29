@@ -174,7 +174,7 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[2] == 1) pos += (0.5*psr[p].param[param_telx].val[2]*arg);
 		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_telx].val[3]*arg);
 		      psr[p].obsn[i].observatory_earth[0] = (double)pos;
-		      printf("Setting x to %g\n",(double)psr[p].obsn[i].observatory_earth[0]);
+		      //		      printf("Setting x to %g\n",(double)psr[p].obsn[i].observatory_earth[0]);
 		    }
 		  if (psr[p].param[param_tely].paramSet[0] == 1)
 		    {
@@ -192,7 +192,7 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      arg *= deltaT; if (psr[p].param[param_tely].paramSet[2] == 1) pos += (0.5*psr[p].param[param_tely].val[2]*arg);
 		      arg *= deltaT; if (psr[p].param[param_tely].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_tely].val[3]*arg);
 		      psr[p].obsn[i].observatory_earth[1] = (double)pos;
-		      printf("Setting y to %g\n",(double)psr[p].obsn[i].observatory_earth[1]);
+		      //		      printf("Setting y to %g\n",(double)psr[p].obsn[i].observatory_earth[1]);
 		    }
 		  if (psr[p].param[param_telz].paramSet[0] == 1)
 		    {
@@ -210,7 +210,7 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      arg *= deltaT; if (psr[p].param[param_telz].paramSet[2] == 1) pos += (0.5*psr[p].param[param_telz].val[2]*arg);
 		      arg *= deltaT; if (psr[p].param[param_telz].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_telz].val[3]*arg);
 		      psr[p].obsn[i].observatory_earth[2] = (double)pos;
-		      printf("Setting z to %g\n",(double)psr[p].obsn[i].observatory_earth[2]);
+		      //		      printf("Setting z to %g\n",(double)psr[p].obsn[i].observatory_earth[2]);
 		    }
 
 
@@ -237,6 +237,85 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      }
 			
 		    }
+		  // Check for offsets in satellite position
+		  if (psr[p].nTelDX > 0)
+		    {
+		      int k;
+		      double m,c,ival;
+		      ival=0.0;
+		      //	      printf("Using interpolation function for telDX\n");
+		      for (k=0;k<psr[p].nTelDX-1;k++)
+			{
+			  if ((double)psr[p].obsn[i].sat >= psr[p].telDX_t[k] &&
+			      (double)psr[p].obsn[i].sat < psr[p].telDX_t[k+1])
+			    {
+			      m = (psr[p].telDX_v[k]-psr[p].telDX_v[k+1])/(psr[p].telDX_t[k]-psr[p].telDX_t[k+1]);
+			      c = psr[p].telDX_v[k]-m*psr[p].telDX_t[k];
+			      
+			      if (psr[p].param[param_tel_dx].val[0] == 0 ||
+				  psr[p].param[param_tel_dx].val[0] == 1)
+				ival = m*(double)psr[p].obsn[i].sat+c;
+			      else if (psr[p].param[param_tel_dx].val[0] == 2)
+				ival = psr[p].telDX_v[k];
+			      break;
+			    }
+			}
+		      //		      printf("xpos add (stl) = %g %d\n",ival,i);
+		      psr[p].obsn[i].observatory_earth[0] += ival; // Change x-position
+		    }		  
+		  // Check for offsets in satellite position
+		  if (psr[p].nTelDY > 0)
+		    {
+		      int k;
+		      double m,c,ival;
+		      ival=0.0;
+		      //	      printf("Using interpolation function for telDX\n");
+		      for (k=0;k<psr[p].nTelDY-1;k++)
+			{
+			  if ((double)psr[p].obsn[i].sat >= psr[p].telDY_t[k] &&
+			      (double)psr[p].obsn[i].sat < psr[p].telDY_t[k+1])
+			    {
+			      m = (psr[p].telDY_v[k]-psr[p].telDY_v[k+1])/(psr[p].telDY_t[k]-psr[p].telDY_t[k+1]);
+			      c = psr[p].telDY_v[k]-m*psr[p].telDY_t[k];
+			      
+			      if (psr[p].param[param_tel_dy].val[0] == 0 ||
+				  psr[p].param[param_tel_dy].val[0] == 1)
+				ival = m*(double)psr[p].obsn[i].sat+c;
+			      else if (psr[p].param[param_tel_dy].val[0] == 2)
+				ival = psr[p].telDY_v[k];
+
+			      break;
+			    }
+			}
+		      //		      printf("ypos add (stl) = %g %d\n",ival,i);
+		      psr[p].obsn[i].observatory_earth[1] += ival; // Change y-position
+		    }		  
+		  // Check for offsets in satellite position
+		  if (psr[p].nTelDZ > 0)
+		    {
+		      int k;
+		      double m,c,ival;
+		      ival=0.0;
+		      //	      printf("Using interpolation function for telDX\n");
+		      for (k=0;k<psr[p].nTelDZ-1;k++)
+			{
+			  if ((double)psr[p].obsn[i].sat >= psr[p].telDZ_t[k] &&
+			      (double)psr[p].obsn[i].sat < psr[p].telDZ_t[k+1])
+			    {
+			      m = (psr[p].telDZ_v[k]-psr[p].telDZ_v[k+1])/(psr[p].telDZ_t[k]-psr[p].telDZ_t[k+1]);
+			      c = psr[p].telDZ_v[k]-m*psr[p].telDZ_t[k];
+			      
+			      if (psr[p].param[param_tel_dz].val[0] == 0 ||
+				  psr[p].param[param_tel_dz].val[0] == 1)
+				ival = m*(double)psr[p].obsn[i].sat+c;
+			      else if (psr[p].param[param_tel_dz].val[0] == 2)
+				ival = psr[p].telDZ_v[k];
+			      break;
+			    }
+			}
+		      //		      printf("zpos add (stl) = %g %d\n",ival,i);
+		      psr[p].obsn[i].observatory_earth[2] += ival; // Change z-position
+		    }		  
 		}
 	      else if (strcmp(psr[p].obsn[i].telID,"STL_BAT")==0) // Satellite in barycentric coordinates
 		{

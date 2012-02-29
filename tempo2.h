@@ -165,7 +165,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
             param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
-	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz};
+	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,param_gwm_amp};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
@@ -312,6 +312,7 @@ typedef struct observation {
   longdouble torb;                /* Combined binary delays */
   longdouble nphase;              /* allows the pulse number to be determined                   */
   longdouble phase;               
+  int  pulseN;                    /* Pulse number */
 
   char flagID[MAX_FLAGS][16];     /* Flags in .tim file                                         */
   char flagVal[MAX_FLAGS][16];
@@ -349,6 +350,12 @@ typedef struct pulsar {
   double gwsrc_across_r_e,gwsrc_across_i_e;
   double gwsrc_epoch;
   double gwsrc_psrdist;
+
+  // Gravitational wave memory information
+  double gwm_raj;
+  double gwm_decj;
+  double gwm_epoch;
+  double gwm_phi; // Polarisation angle
 
   // General pulsar information
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
