@@ -100,6 +100,7 @@ void help() /* Display help */
 
 char skipstep2=0; // test to skip step 2 added by MJK 2011-07.
 bool writeFiles=true;
+int skipprocess=0;
 
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
@@ -160,6 +161,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%d",&inpt);
       else if (strcmp(argv[i],"-skipstep2")==0)
 	skipstep2=1;
+      else if (strcmp(argv[i],"-skipprocess")==0)
+	skipprocess=1;
       else if (strcmp(argv[i],"-makeps")==0)
 	makeps=1;
       else if (strcmp(argv[i],"-nofiles")==0)
@@ -309,19 +312,21 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	for (i=0;i<nres+1;i++)uinv[i] = (double *)malloc(sizeof(double)*(nres+1));      
 	tempTime=2;
       }
-
-    // Step 1c: fit a cubic to the timing residuals
-    cubicFit(resx,resy,rese,nres,cubicVal,cubicErr);
-    // Step 1d: obtain a smooth curve that models the residuals well
-    findSmoothCurve(resx,resy,rese,nres,cubicVal,smoothModel,expSmooth);
-    if(writeFiles)fileOutput3("smoothCurve.dat",resx,smoothModel,rese,nres);
-    // Step 1e: obtain high-freq. residuals
-    getHighFreqRes(resy,smoothModel,nres,highFreqRes);
-    if(writeFiles)fileOutput3("highFreqRes.dat",resx,highFreqRes,rese,nres);
-    // Step 1f: obtain covariance of high-freq. residuals
-    getHighFreqCovar(resx,rese,highFreqRes,nres,hfNormCovar,hfNormCovarNpts,&hfZerolagNormCovar);
-    // Step 1g: plot the results
-    plot1(resx,resy,rese,nres,cubicVal,smoothModel,highFreqRes,hfNormCovar,hfNormCovarNpts,hfZerolagNormCovar);
+	// Step 1c: fit a cubic to the timing residuals
+	cubicFit(resx,resy,rese,nres,cubicVal,cubicErr);
+	// Step 1d: obtain a smooth curve that models the residuals well
+	findSmoothCurve(resx,resy,rese,nres,cubicVal,smoothModel,expSmooth);
+	if(writeFiles)fileOutput3("smoothCurve.dat",resx,smoothModel,rese,nres);
+	// Step 1e: obtain high-freq. residuals
+	getHighFreqRes(resy,smoothModel,nres,highFreqRes);
+	if(writeFiles)fileOutput3("highFreqRes.dat",resx,highFreqRes,rese,nres);
+	// Step 1f: obtain covariance of high-freq. residuals
+	getHighFreqCovar(resx,rese,highFreqRes,nres,hfNormCovar,hfNormCovarNpts,&hfZerolagNormCovar);
+	// Step 1g: plot the results
+    if (skipprocess==0)
+      {
+	plot1(resx,resy,rese,nres,cubicVal,smoothModel,highFreqRes,hfNormCovar,hfNormCovarNpts,hfZerolagNormCovar);
+      }
     if (idt!=0) cont=0;
     else {
       printf("smooth = %g days. Press 0 to continue, or another number to update the smooth\n",expSmooth);
@@ -349,13 +354,15 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
   // Step 2a: Obtain spectra of original residuals without any prewhitening
   //  nOrigSpec = calculateSpectra(resx,resy,rese,nres,1,0,1,origSpecX,origSpecY);
-  nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY,-1);
-  if(writeFiles)fileOutput2("origSpectra.dat",origSpecX,origSpecY,nOrigSpec);
+  if (skipprocess==0)
+    {
+      nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY,-1);
+      if(writeFiles)fileOutput2("origSpectra.dat",origSpecX,origSpecY,nOrigSpec);
 
-  // Step 2b: interpolate the smooth curve
-  interpolate(resx,resy,rese,nres,cubicVal,interpX,interpY,
-	      &nInterp,interpTime,expSmooth);
-
+      // Step 2b: interpolate the smooth curve
+      interpolate(resx,resy,rese,nres,cubicVal,interpX,interpY,
+		  &nInterp,interpTime,expSmooth);
+    }
   // Step 2c: Obtain spectra of smooth interpolated model without any prewhitening
   // Errors are ignored
   //  nSmoothSpec0 = calculateSpectra(interpX,interpY,rese,nInterp,0,0,2,
@@ -370,27 +377,33 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	  else	    uinvI[i][j]=0.0;
 	}
     }
-  printf("Calculating spectra without prewhitening\n");
-  nSmoothSpec0 = calculateSpectra(interpX,interpY,rese,nInterp,0,0,2,
-				  smoothSpecX0,smoothSpecY0);
-  if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
+  if (skipprocess==0)
+    {
+      printf("Calculating spectra without prewhitening\n");
+      nSmoothSpec0 = calculateSpectra(interpX,interpY,rese,nInterp,0,0,2,
+				      smoothSpecX0,smoothSpecY0);
+      if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
 
-  //  nSmoothSpec0 = calcSpectra(uinvI,interpX,interpY,nInterp,smoothSpecX0,smoothSpecY0,-1);
-  printf("Done calculating spectra\n");
-  if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
+      //  nSmoothSpec0 = calcSpectra(uinvI,interpX,interpY,nInterp,smoothSpecX0,smoothSpecY0,-1);
+      printf("Done calculating spectra\n");
+    }
+      if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
   // TESTING
   //  nSmoothSpec0 = calcSpectra(uinv,resx,resy,rese,nres,
   //			     smoothSpecX0,smoothSpecY0);
 
   // Step 2d: Obtain spectra of smooth interpolated model with 1st order prewhitening
-  nSmoothSpec1 = calculateSpectra(interpX,interpY,rese,nInterp,0,1,2,
-				  smoothSpecX1,smoothSpecY1);
-  if(writeFiles)fileOutput2("oneprewhite.dat",smoothSpecX1,smoothSpecY1,nSmoothSpec1);
-  // Step 2e: Obtain spectra of smooth interpolated model with 2nd order prewhitening
-  nSmoothSpec2 = calculateSpectra(interpX,interpY,rese,nInterp,0,2,2,
-				  smoothSpecX2,smoothSpecY2);
-  if(writeFiles)fileOutput2("twoprewhite.dat",smoothSpecX2,smoothSpecY2,nSmoothSpec2);
-  // Step 2f: Obtain spectra of high frequency residuals
+      if (skipprocess==0)
+	{
+	  nSmoothSpec1 = calculateSpectra(interpX,interpY,rese,nInterp,0,1,2,
+					  smoothSpecX1,smoothSpecY1);
+	  if(writeFiles)fileOutput2("oneprewhite.dat",smoothSpecX1,smoothSpecY1,nSmoothSpec1);
+	  // Step 2e: Obtain spectra of smooth interpolated model with 2nd order prewhitening
+	  nSmoothSpec2 = calculateSpectra(interpX,interpY,rese,nInterp,0,2,2,
+					  smoothSpecX2,smoothSpecY2);
+	  if(writeFiles)fileOutput2("twoprewhite.dat",smoothSpecX2,smoothSpecY2,nSmoothSpec2);
+	  // Step 2f: Obtain spectra of high frequency residuals
+	}
   if(writeFiles)
   {
     long seed= -123;
@@ -404,15 +417,17 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   }
   //  nHighFreqSpec = calculateSpectra(resx,highFreqRes,rese,nres,1,0,1,highFreqSpecX,
   //				   highFreqSpecY);
-  nHighFreqSpec = calcSpectra(uinv,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
-  if(writeFiles)fileOutput2("highfreqspec.dat",highFreqSpecX,highFreqSpecY,nHighFreqSpec);
-
-  // Step 2g: make the plot
-  plot2(origSpecX,origSpecY,nOrigSpec,smoothSpecX0,smoothSpecY0,nSmoothSpec0,
-	smoothSpecX1,smoothSpecY1,nSmoothSpec1,smoothSpecX1,smoothSpecY2,nSmoothSpec2,
-	highFreqSpecX,highFreqSpecY,nHighFreqSpec,makeps);
-
-
+  if (skipprocess==0)
+    {
+      nHighFreqSpec = calcSpectra(uinv,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
+      if(writeFiles)fileOutput2("highfreqspec.dat",highFreqSpecX,highFreqSpecY,nHighFreqSpec);
+      
+      // Step 2g: make the plot
+      plot2(origSpecX,origSpecY,nOrigSpec,smoothSpecX0,smoothSpecY0,nSmoothSpec0,
+	    smoothSpecX1,smoothSpecY1,nSmoothSpec1,smoothSpecX1,smoothSpecY2,nSmoothSpec2,
+	    highFreqSpecX,highFreqSpecY,nHighFreqSpec,makeps);
+      
+    }
   }
   // Step 3: select a prewhitening
   if (ipw==-1){
@@ -426,20 +441,26 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     {
       float mx,my;
       // Step 3a: obtain spectra with this prewhitening
-      nPreWhiteSpec = calculateSpectra(interpX,interpY,rese,nInterp,0,usePreWhitening,2,
-				       preWhiteSpecX,preWhiteSpecY);
+      if (skipprocess==0)
+	{
+	  nPreWhiteSpec = calculateSpectra(interpX,interpY,rese,nInterp,0,usePreWhitening,2,
+					   preWhiteSpecX,preWhiteSpecY);
+	}
       // Step 3b: plot spectra
       cont=1;
       //      if (amp==-1)
-	{
-	  do {
-	    plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,
-		  highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
-	    // Step 3c: Fit to spectra
-	    cont = fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp);
-	    printf("modelScale = %g\n",modelScale);
-	  } while (cont==1);
-	}
+      {
+	do {
+	  if (skipprocess==0)
+	    {
+	      plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,
+		    highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
+	    }
+	  // Step 3c: Fit to spectra
+	  cont = fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp);
+	  printf("modelScale = %g\n",modelScale);
+	} while (cont==1);
+      }
 	//      else
 	//	{
 	//	  modelScale = amp;
@@ -447,6 +468,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
       // Step 4a: calculate the Cholesky whitening matrix (uinv)
       calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor);
+      for (i=0;i<100;i++)
+	printf("cov: %g %g %g %g %d %g %g\n",covFunc[i],resx[i],resy[i],rese[i],nres,highFreqRes[i],errorScaleFactor);
     }
   else // Calculate covariance function from the data
     {
@@ -1354,8 +1377,10 @@ void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double
 
   for (i=0;i<ndays;i++)
     {
-      //      f[i] = i*1.0/(resx[np-1]-resx[0])*365.25;
-      f[i] = i*0.5/(resx[np-1]-resx[0])*365.25;
+      f[i] = i*1.0/(resx[np-1]-resx[0])*365.25;
+
+      // CHANGED TO THIS ...
+      //      f[i] = i*0.5/(resx[np-1]-resx[0])*365.25;
       p[i] = 1.0/(pow((1.0+pow(f[i]/(modelFc*2),2)),(modelAlpha)/2.0));
       pf[i] = p[i];
     }
@@ -1581,12 +1606,13 @@ int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,dou
   // Get area under the spectra
   *fitVar=0.0;
   df = preWhiteSpecX[0]*365.25;
-  //  for (i=0;i<*modelNfit;i++)
-  for (i=0;i<nPreWhiteSpec;i++)
+    for (i=0;i<*modelNfit;i++)
+      //for (i=0;i<nPreWhiteSpec;i++)
     {
-      m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
-      //      *fitVar+=preWhiteSpecY[i]*df;
-      *fitVar+=(*modelScale*m*df);
+      *fitVar+=preWhiteSpecY[i]*df;
+      // CHANGED HERE ...
+      //      m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
+      //*fitVar+=(*modelScale*m*df);
     }
   (*fitVar)*=pow(86400.0*365.25,2);
   return 1;

@@ -259,7 +259,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (flo==0)
     {
       flo=0.01/tspan;
-      printf("flo = %.5Lg\n",flo);
+      printf("flo = %.5Lg, tspan = %.5Lg\n",flo,tspan);
     }
   if (fhi==0)
     {

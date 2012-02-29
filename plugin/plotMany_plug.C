@@ -370,7 +370,10 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
       cpgsls(4);
       px[0] = tmin;
       px[1] = tmax+(tmax-tmin)*0.03;
-      py[0] = py[1] = (0-miny[p])/(maxy[p]-miny[p])/(ploty2-ploty1)+p;
+
+      py[0]=py[1] =(p)+ploty1+(-miny[p]/(maxy[p]-miny[p]))*(ploty2-ploty1);
+      //      py[0]=py[1] = (p)+ploty1;
+      //      py[0] = py[1] = (0-miny[p])/(maxy[p]-miny[p])/(ploty2-ploty1)+p;
       cpgline(2,px,py);
 
       px[0] = plotx1+0.005*(plotx2-plotx1);

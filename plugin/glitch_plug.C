@@ -206,6 +206,7 @@ void help() /* Display help */
   printf("-head x   set fraction of page as header\n");
   printf("-offset x set time offset\n");
   printf("-p x      make plot of type x (can be used multiple times)\n");
+  printf("-removeF2 remove the pre-fit F2 value from the resulting plots\n");
   printf("-t        data file containing MJD ranges and .par files\n");
   printf("-title x  set title\n");
 
@@ -269,6 +270,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   float yscale_min[100];
   float yscale_max[100];
   int   yscale_set[100];
+  int removeF2=0;
+  long double storeEpoch;
+  long double storeExpectedF0,storeExpectedF1,storeExpectedF2;
+  long double storeOrigF0,storeOrigF1,storeOrigF2;
+  int removeExpected=0;
 
   for (i=0;i<100;i++)
     yscale_set[i]=0;
@@ -325,6 +331,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	combine=1;
       else if (strcmp(argv[i],"-plotPar")==0)
 	strcpy(plotPar,argv[++i]);
+      else if (strcmp(argv[i],"-removeF2")==0)
+	removeF2=1;
+      else if (strcmp(argv[i],"-removeExpected")==0)
+	removeExpected=1;
       else if (strcmp(argv[i],"-yscale")==0)
 	{
 	  int n;
@@ -334,6 +344,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  yscale_set[n] = 1;
 	}
     }
+  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
+  readTimfile(psr,timFile,1); /* Load the arrival times    */
+  storeEpoch = psr[0].param[param_pepoch].val[0];
+  storeOrigF0 = psr[0].param[param_f].val[0];
+  storeOrigF1 = psr[0].param[param_f].val[1];
+  storeOrigF2 = psr[0].param[param_f].val[2];
 
   // Read the list of strides
   fin = fopen(timeList,"r");
@@ -391,6 +407,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       sprintf(argv[argn+1],"%.5f",(double)centreMJD);
       preProcess(psr,1,argc,argv);      
 
+      storeExpectedF0 = storeOrigF0 + storeOrigF1*(centreMJD-storeEpoch)*86400.0L + 0.5*storeOrigF2*pow((centreMJD-storeEpoch)*86400.0L,2);
+      storeExpectedF1 = storeOrigF1 + storeOrigF2*(centreMJD-storeEpoch)*86400.0L;
+
       // Turn off all fitting
       for (j=0;j<MAX_PARAMS;j++)
 	{
@@ -424,11 +443,32 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  epoch[n] = (double)centreMJD;
 	  f0[n]    = (double)psr[0].param[param_f].val[0];
-	  f0e[n]   = (double)psr[0].param[param_f].err[0];
+	  if ((psr[0].nFit==2 && fitf1==0))
+	    f0e[n]=-1; // Set a negative error
+	  else
+	    f0e[n]   = (double)psr[0].param[param_f].err[0];
+	  if (removeF2==1)
+	    f0[n] -= (double)(0.5*psr[0].param[param_f].val[2]*pow((centreMJD-storeEpoch)*86400.0,2));
+	  if (removeExpected==1)
+	    f0[n] -= storeExpectedF0;
+
 	  if (fitf1==1)
 	    {
 	      f1[n] = (double)psr[0].param[param_f].val[1];
-	      f1e[n] = (double)psr[0].param[param_f].err[1];
+	      if (psr[0].nFit==3)
+		{
+		  f1e[n] = -1;
+		  f0e[n] = -1;
+		}
+	      else
+		f1e[n] = (double)psr[0].param[param_f].err[1];
+	      if (removeF2==1)
+		{
+		  //		  printf("Updating by: %g\n",(double)(psr[0].param[param_f].val[2]*(centreMJD-psr[0].param[param_pepoch].val[0])*86400.0));
+		  f1[n] -= (double)(psr[0].param[param_f].val[2]*(centreMJD-storeEpoch)*86400.0);
+		}
+	      if (removeExpected==1)
+		f1[n] -= storeExpectedF1;
 	    }
 	  nFit[n]  = psr[0].nFit;
 	  id[n]  = i;
@@ -443,8 +483,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
   fclose(fout);
   // Get timing residuals for plotting
+  strcpy(argv[argn],origArgV[argn]);
+  strcpy(argv[argn+1],origArgV[argn+1]);
+  strcpy(argv[argn+2],origArgV[argn+2]);
+  strcpy(timFile[0],origArgV[argn+2]);
+  strcpy(parFile[0],origArgV[argn+1]);
   if (strcmp(plotPar,"NULL")==0)
-    strcpy(parFile[0],parFileName[0]);
+      strcpy(parFile[0],parFileName[0]);
   else
     strcpy(parFile[0],plotPar);
 
@@ -623,7 +668,6 @@ void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotO
     }
   cpgpt(n,fx,fy,16);
   cpgerry(n,fx,yerr1,yerr2,1);
-
   // Draw line representing one phase
   /*  fx[0] = fx[1] = minx-borderx/2.0;
   fy[0] = -1.0/psrF0/2.0*1000.0;
@@ -1011,9 +1055,20 @@ void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 	}
     }
 
-
-  cpgpt(n,fx,fy,16);
-  cpgerry(n,fx,yerr1,yerr2,1);
+  for (i=0;i<n;i++)
+    {
+      if (f0e[i]>0)
+	{
+	  cpgpt(1,fx+i,fy+i,16);
+	  cpgerry(1,fx+i,yerr1+i,yerr2+i,1);
+	}
+      else
+	{
+	  cpgsci(2);
+	  cpgpt(1,fx+i,fy+i,16);
+	  cpgsci(1);
+	}
+    }
 }
 
 void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,
@@ -1285,8 +1340,20 @@ if (yscale_set==0)
 	}
     }
 
-  cpgpt(n,fx,fy,16);
-  cpgerry(n,fx,yerr1,yerr2,1);
+  for (i=0;i<n;i++)
+    {
+      if (f1e[i] > 0)
+	{
+	  cpgpt(1,fx+i,fy+i,16);
+	  cpgerry(1,fx+i,yerr1+i,yerr2+i,1);
+	}
+      else
+	{
+	  cpgsci(2);
+	  cpgpt(1,fx+i,fy+i,16);
+	  cpgsci(1);
+	}
+    }
 }
 
 void interactivePlot(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n)

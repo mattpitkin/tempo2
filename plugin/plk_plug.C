@@ -48,7 +48,7 @@ char covarFuncFile[MAX_FILELEN];
 void overPlotN(int overN,float overX[], float overY[],float overYe[]);
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float lockx1,float lockx2,float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile,
-            int showChisq,int nohead,char* flagColour,char *bandsFile);
+            int showChisq,int nohead,char* flagColour,char *bandsFile,int displayPP);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
 	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log);
 void drawAxisSel(float x,float y,char *str,int sel1,int sel2);
@@ -243,6 +243,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int   nohead=0;
   char  setupFile[100]="";
   char  bandsFile[100]="";
+  int   displayPP = 1;
   //display chisq?
   int showChisq = 0;
   char flagColour[100];
@@ -276,6 +277,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         strcpy(gr,argv[++i]);
       else if (strcmp(argv[i],"-menu")==0)
         sscanf(argv[i+1],"%d",&menu);
+      else if (strcmp(argv[i],"-nophase")==0)
+	displayPP=0;
       else if (strcmp(argv[i],"-locky")==0)
         {
           sscanf(argv[++i],"%f",&locky1);
@@ -398,7 +401,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     textOutput(psr,*npsr,0,0,0,1,newParFile);
   if (debugFlag==1) printf("plk: calling doPlot\n");
   doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,lockx1,lockx2,locky1,locky2,xplot,yplot,
-	 publish,argc,argv,menu,setupFile,showChisq,nohead,flagColour,bandsFile);  /* Do plot */
+	 publish,argc,argv,menu,setupFile,showChisq,nohead,flagColour,bandsFile,displayPP);  /* Do plot */
   if (debugFlag==1) printf("plk: End\n");
   return 0;
 }  
@@ -459,7 +462,7 @@ void callFit(pulsar *psr,int npsr)
 
 void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float lockx1, float lockx2, float locky1, float locky2,int xplot,int yplot,
-	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq,int nohead,char* flagColour,char *bandsFile)
+	    int publish,int argc,char *argv[],int menu,char *setupFile, int showChisq,int nohead,char* flagColour,char *bandsFile,int displayPP)
 {
   int i,fitFlag=1,exitFlag=0,scale1=0,scale2=psr[0].nobs,count,ncount,j,k;
   longdouble centreEpoch;
@@ -842,7 +845,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
           //cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
         }
       // Print period axis (right-hand y-axis)
-      if( publish==0 && (yplot == 1 || yplot == 2 )){
+      if( publish==0 && (yplot == 1 || yplot == 2 ) && displayPP==1){
         cpgbox( "BCNST", 0.0, 0, "BNST1", 0.0, 0 );
         cpgaxis( "N", plotx2, ploty1, plotx2, ploty2,
                  ploty1*psr[0].param[param_f].val[0]*unitFlag,
@@ -857,7 +860,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  cpgenv(plotx1,plotx2,ploty1,ploty2,0,-1);
     //cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
     // Print period axis (right-hand y-axis )
-    if(publish==0 &&( yplot == 1 || yplot == 2 )){
+    if(publish==0 &&( yplot == 1 || yplot == 2 ) && displayPP == 1){
       cpgbox( "BCNST1", 0.0, 0, "BNST1", 0.0, 0 );
         cpgaxis( "N", plotx2, ploty1, plotx2, ploty2,
                  ploty1*psr[0].param[param_f].val[0]*unitFlag,
@@ -876,36 +879,36 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   if (yplot==2) sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPost,fitType);
   else sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPre,fitType);
   
-	if (showChisq == 1)
-	  sprintf(title,"%s chisq=%.2f",title,psr[0].fitChisq/psr[0].fitNfree);
-	if (nohead==0)
-	  cpglab(xstr,ystr,title);
-	else
-	  cpglab(xstr,ystr,"");
-
-	if (publish==0)
-	  {
-	    cpgsch(0.5); 
-	    cpgmtxt("B",6.5,0.92,0.0,"plk v.3.0 (G. Hobbs)"); 
-	    cpgsch(fontSize); 
-	  }
-
-	if (nbands > 0)
-	  {
-	    int i;
-	    float ffx[2],ffy[2];
-	    printf("nbands = %d\n",nbands);
-	    cpgsls(2);
-	    for (i=0;i<nbands;i++)
-	      {
-		ffx[0] = bandsX1[i]- (double)centreEpoch;
-		ffx[1] = bandsX2[i]- (double)centreEpoch;
-		ffy[0] = ffy[1] = ploty2-(ploty2-ploty1)*0.05 - i*(ploty2-ploty1)*0.02;
-		cpgsci((i%2)+1); cpgline(2,ffx,ffy);
-	      }
-	    cpgsls(1);
-	  }
-
+  if (showChisq == 1)
+    sprintf(title,"%s chisq=%.2f",title,psr[0].fitChisq/psr[0].fitNfree);
+  if (nohead==0)
+    cpglab(xstr,ystr,title);
+  else
+    cpglab(xstr,ystr,"");
+  
+  if (publish==0 && (strlen(setupFile)==0))
+    {
+      cpgsch(0.5); 
+      cpgmtxt("B",6.5,0.92,0.0,"plk v.3.0 (G. Hobbs)"); 
+      cpgsch(fontSize); 
+    }
+  
+  if (nbands > 0)
+    {
+      int i;
+      float ffx[2],ffy[2];
+      printf("nbands = %d\n",nbands);
+      cpgsls(2);
+      for (i=0;i<nbands;i++)
+	{
+	  ffx[0] = bandsX1[i]- (double)centreEpoch;
+	  ffx[1] = bandsX2[i]- (double)centreEpoch;
+	  ffy[0] = ffy[1] = ploty2-(ploty2-ploty1)*0.05 - i*(ploty2-ploty1)*0.02;
+	  cpgsci((i%2)+1); cpgline(2,ffx,ffy);
+	}
+      cpgsls(1);
+    }
+  
 	if (placeMarks==1)
 	  {
 	    i=0;
@@ -1331,6 +1334,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    char str[1000],str2[1000];
 	    int xn,yn;
 	    printf("Enter Nx Ny "); scanf("%d %d",&xn,&yn);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	    strcpy(str,"pav -DFTCp -g 10/xs ");
 	    sprintf(str2,"-N %d,%d ",xn,yn);
 	    strcat(str,str2);
@@ -1354,8 +1358,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  }
 	else if (key=='L') /* Add label to plot */
 	  {
-	    printf("Enter x y str ");
-	    scanf("%f %f %s",&labelX,&labelY,labelStr);
+	    char labelS[1024];
+	    printf("Enter string:\n");
+	    fgets(labelS,1024,stdin);
+	    labelS[strlen(labelS)-1]='\0';
+	    strcpy(labelStr,labelS);
+	    printf("Enter x y: ");
+	    scanf("%f %f",&labelX,&labelY);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
+
 	    label=1;
 	  }
 	else if (key=='C') /* Run UNIX command */
@@ -1423,6 +1434,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		int found=0;
 		printf("Enter flag identifier ");
 		scanf("%s",flagColour);
+		getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 		iFlagColour=1;
 		flagN=0;
 		for (i=0;i<psr[0].nobs;i++)
@@ -1453,6 +1465,17 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  }
 	else if (key=='S') /* Save new .tim file */
 	  newTim(psr);
+	else if (key=='n') /* Save new .tim file with pulse numbers */
+	  {
+	    for (i=0;i<psr[0].nobs;i++)
+	      {
+		printf("%g %d\n",(double)psr[0].obsn[i].sat,psr[0].obsn[i].pulseN - psr[0].obsn[0].pulseN);
+		strcpy(psr[0].obsn[i].flagID[psr[0].obsn[i].nFlags],"-pn");
+		sprintf(psr[0].obsn[i].flagVal[psr[0].obsn[i].nFlags],"%d",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
+		psr[0].obsn[i].nFlags++;
+	      }
+	    writeTim("withpn.tim",psr,"tempo2");
+	  }
 	else if (key==19) /* over-write .tim file */
 	    writeTim(timFile[0],psr,"tempo2");
 	else if (key=='t') /* Toggle displaying statistics */
@@ -1461,6 +1484,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  {
 	    printf("FlagID = ");  scanf("%s",highlightID[highlightNum]);
 	    printf("FlagVal = "); scanf("%s",highlightVal[highlightNum++]);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	  }
 	else if (key=='-' || key=='+') /*  phase jump */
 	  {
@@ -1563,6 +1587,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    char filen[100];
 	    printf("Please enter filename (or part of filename) ");
 	    scanf("%s",filen);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	    for (i=0;i<count;i++)
 	      {
 		if (strstr(psr[0].obsn[id[i]].fname,filen)!=NULL)
@@ -1576,6 +1601,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      {
 		printf("Enter constant offset ");
 		scanf("%f",&shapiroOffset);
+		getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	      }
 	  }
 	else if (key=='U') /* Unselect all */
@@ -1597,6 +1623,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  {
 	    double errMult;
 	    printf("Enter error multiplication factor "); scanf("%lf",&errMult);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	    for (i=0;i<psr[0].nobs;i++){
 	      psr[0].obsn[i].efac *= errMult;
 	      psr[0].obsn[i].toaErr*=errMult;
@@ -1653,9 +1680,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  
 	  printf("Enter filename ");
 	  scanf("%s",fname);
+	  getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	  printf("Enter smoothing (0 for no smoothing) ");
 	  scanf("%d",&smooth);
-
+	  getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	  outfile = fopen(fname,"w");
 	  if (smooth>0)
 	    {
@@ -1713,6 +1741,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  
 	  printf("Enter filename ");
 	  scanf("%s",fname);
+	  getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	  outfile = fopen(fname,"w");
 	  for (i=0;i<count;i++)
 	    {
@@ -1747,6 +1776,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  {
 	    printf("Enter y-range: minimum maximum ");
 	    scanf("%f %f",&zoomY1,&zoomY2);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	    setZoomY1 = 1;
 	    setZoomY2 = 1;
 	  }
@@ -1757,6 +1787,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      mark0 = mouseX;
 	      printf("Enter periodicity (d) ");
 	      scanf("%f",&markT);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	    }     
 	}
 	else if (key==24) /* cntr-X -- set X-scale */
@@ -1811,6 +1842,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  long idum=TKsetSeed();
 	  printf("Please enter amount of noise to add in micro-sec ");
 	  scanf("%lf",&noiseAdd);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	  for (i=0;i<psr[0].nobs;i++)
 	    psr[0].obsn[i].sat+=((noiseAdd*1e-6*TKgaussDev(&idum))/86400.0);
 	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile,zoom);
@@ -1842,6 +1874,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  scanf("%d %d",&nx,&ny);
 	  printf("Enter fontsize (e.g. 1) ");
 	  scanf("%f",&fontSize);
+	  getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	  cpgend();
 	  cpgbeg(0,"/xs",nx,ny);
 	  cpgask(0);
@@ -1852,6 +1885,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  {
 	    printf("Enter fontsize (e.g. 1) ");
 	    scanf("%f",&fontSize);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	  }
 	else if (key=='d' || key=='X') 
 	  {
@@ -1900,6 +1934,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  {
 	    printf("Enter x1 y2 x2 y2 ");
 	    scanf("%f %f %f %f",&lx1[nline],&ly1[nline],&lx2[nline],&ly2[nline]);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	    nline++;
 	  }
 	else if (key=='c') changeFitParameters(psr); /* Change fit parameters   */
@@ -1909,6 +1944,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    scanf("%s",userCMD);
 	    printf("Enter parameter understood by '%s' ",userCMD);
 	    scanf("%s",userValStr);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
 	    userValChange=1;
 	  }
 	else if (key==22) /* Ctrl-v: View models */
@@ -2231,6 +2267,7 @@ void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id,int *
   printf("Or enter -1 for specification of the number of bins.\n");
   printf("\t(Might be off by one due to rounding.)\n");
   scanf("%f",&binSize);
+	    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
   if(binSize==-1){
     printf("Enter number of bins: ");
     scanf("%f",&binSize);
@@ -2889,6 +2926,7 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
     {
       printf("FlagID = ");  scanf("%s",highlightID[*highlightNum]);
       printf("FlagVal = "); scanf("%s",highlightVal[(*highlightNum)++]);
+      getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
     }
 
   /* Now check jumps */
@@ -2959,6 +2997,7 @@ void swapFit(pulsar *psr,int par,int k,int button)
       printf("Please enter new value "); 
       char inpstr[1024];
       scanf("%s",inpstr);
+      getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
       psr->param[par].val[k]  = parse_longdouble(inpstr);
 
     }
@@ -3244,12 +3283,16 @@ void newTim(pulsar *psr)
   FILE *fout;
   printf("Enter format (tempo2/parkes) ");
   scanf("%s",format);
+  getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
   if(strcmp(format,"tempo2")*strcmp(format,"parkes")!=0){
     printf("Enter format (tempo2/parkes) ");
     scanf("%s",format);
+    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
   }
+
   printf("New .tim file name ");
   scanf("%s",newtim);
+  getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
   writeTim(newtim,psr,format);
 
   /*  if (!(fout = fopen(newtim,"w")))

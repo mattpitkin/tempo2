@@ -55,7 +55,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   char overlay[100]="NULL";
-  int i;
+  int i,j,k,p;
   double globalParameter;
   double maxy,miny;
   double wmean,wmeanE[MAX_OBSN];
@@ -64,6 +64,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int nstep=14;
   int simplePlot=0;
   int harmTaper=0;
+  int covarError=0;
+  double whiteErr[MAX_IFUNC];
 
   *npsr = 0;  /* For a graphical interface that only shows results for one pulsar */
 
@@ -100,6 +102,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-harmTaper")==0)
 	sscanf(argv[++i],"%d",&harmTaper);
+      else if (strcmp(argv[i],"-covarError")==0)
+	covarError=1;
        else if (strcmp(argv[i],"-miny")==0)
 	{
 	  sscanf(argv[++i],"%lf",&miny);
@@ -122,7 +126,72 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       exit(1);
     }
 
+  // If using IFUNCS get the error bars for the white component by turning off all
+  // fits except for the global parameters
+  if (psr[0].ifuncN > 0 && covarError==1)
+    {
+      FILE *fout_nofit;
+      //      char tpar[MAX_STRLEN][MAX_FILELEN];
+      //      char ttim[MAX_STRLEN][MAX_FILELEN];
 
+      //      sprintf(tpar[0],"global_clock1.par");
+      fout_nofit = fopen("clk_nofit.dat","w");
+      for (p=0;p<*npsr;p++)
+	{
+	  for (i=0;i<MAX_PARAMS;i++)
+	    {
+	      for (j=0;j<psr[p].param[i].aSize;j++)
+		{
+		  if (psr[p].param[i].fitFlag[j] == 1)
+		    psr[p].param[i].fitFlag[j] = 0;
+		}
+	    }
+
+	  // Turn off jump fitting
+	  for (i=0;i<psr[p].nJumps;i++)
+	    {
+	      if (psr[p].fitJump[i] == 1)
+		psr[p].fitJump[i]=0;
+	    }
+	}
+      // Now do the fit
+      formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+      formResiduals(psr,*npsr,1);    /* Form the residuals                 */
+      doFit(psr,*npsr,0);   /* Do the fitting     */
+      //      textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
+      // Store error bars
+      for (i=0;i<psr[0].ifuncN;i++)
+	{
+	  printf("Values without fitting: %g %g %g\n",psr[0].ifuncT[i],psr[0].ifuncV[i],psr[0].ifuncE[i]);
+	  fprintf(fout_nofit,"Values without fitting: %g %g %g\n",psr[0].ifuncT[i],psr[0].ifuncV[i],psr[0].ifuncE[i]);
+	  whiteErr[i] = psr[0].ifuncE[i];
+	}
+      fclose(fout_nofit);
+      // Re-read the par file
+      for (p=0;p<*npsr;p++)
+	{
+	  psr[p].nconstraints = 0;
+	  psr[p].nJumps = 0;
+	  psr[p].nT2efac = 0;
+	  psr[p].nT2equad = 0;
+	  psr[p].T2globalEfac = 1;
+	  for(i=0;i<MAX_JUMPS;i++){
+	    psr[p].jumpVal[i] = 0.0;
+	    psr[p].jumpValErr[i] = 0.0;
+	  }
+	  for(i=0;i<MAX_PARAMS;i++){
+	    psr[p].param[i].nLinkTo = 0;
+	    psr[p].param[i].nLinkFrom = 0;
+	  }
+	}
+      
+      readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+      readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+      preProcess(psr,*npsr,argc,argv);
+      // Now re-read the global par file
+      //      readParfileGlobal(psr,*npsr,tpar,ttim);
+      // Continue as normal
+    }
   for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
     {
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
@@ -130,6 +199,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
+
+  for (k=0;k<psr[0].ifuncN;k++)
+    {
+      psr[0].ifuncE[k] *= 1e6; // Convert to microseconds
+      psr[0].ifuncV[k] *= 1e6;
+    }
+
+  for (p=0;p<*npsr;p++)
+    {
+      for (i=0;i<psr[p].nobs;i++)
+	printf("psr%d %g %g\n",p+1,(double)psr[p].obsn[i].sat,(double)psr[p].obsn[i].residual);
+    }
+
+
 
   // Write new par files
   {
@@ -142,6 +225,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       }
   }
 
+  
 
   // Show clock function
   double sx[MAX_OBSN],sy[MAX_OBSN],sy2[MAX_OBSN],sye[MAX_OBSN];
@@ -154,12 +238,34 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   float ex[MAX_OBSN],ey[MAX_OBSN],ey1[MAX_OBSN],ey2[MAX_OBSN],ey0[MAX_OBSN];
   float ey2_1[MAX_OBSN],ey2_2[MAX_OBSN];
   float px[MAX_OBSN];
-  int npt,j,p,k;
+  int npt,nfit;
   int nptsClk=psr[0].nWhite*2;
+  int nr=0;
   float cvX[nptsClk],cvY[nptsClk],cvY1[nptsClk],cvY2[nptsClk],cvTime[nptsClk];
   FILE *fout_clkpts;
   FILE *fout_clkcurve;
   FILE *fout_newclk;
+  FILE *fout_covar;
+  char str[128];
+  float frx[MAX_OBSN],fry[MAX_OBSN];
+      
+  // Look at the covariance matrix of the fitted parameters
+  if (psr[0].ifuncN > 0)
+    {
+      nfit = psr[0].ifuncN;
+      for (i=0;i<nfit;i++)
+	{
+	  sprintf(str,"covarpt_%d",i+1);
+	  fout_covar = fopen(str,"w");
+	  for (j=0;j<nfit;j++)
+	    {
+	      printf("%g ",psr[0].covar[i][j]);
+	      fprintf(fout_covar,"%d %g\n",j-i,psr[0].covar[i][j]);
+	    }
+	  printf("\n");
+	  fclose(fout_covar);
+	}
+    }
 
 
   fout_clkpts = fopen("clock_pts.dat","w");
@@ -544,7 +650,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       cpgswin(px[0]-1,px[npt-1]+1,miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny));
       cpgsch(1);
       cpgbox("BNCTS",0,0,"BCNTS",0,0);
-      cpglab("Year","Clock difference (sec)","");
+      cpglab("Year","Clock difference (\\gms)","");
     }
   else
     {
@@ -558,32 +664,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   cpgsci(1); cpgsls(2);cpgline(npt,px,fyTaper);cpgsls(1);
   cpgsci(1);
 
-  if (psr[0].param[param_ifunc].paramSet[0]==1)
-    {
-      printf("plotting %d points\n",npt);
-      cpgsls(4);
-      cpgline(npt,px,fye1);
-      cpgline(npt,px,fye2);
-      cpgsls(1);
-      cpgerry(ne,ex,ey1,ey2,1);
-      cpgpt(ne,ex,ey0,4);
-      cpgslw(2);  cpgsci(3); cpgerry(ne,ex,ey2_1,ey2_2,1);cpgsci(1); cpgslw(1);
-    }
-  else
-    {
-      // Covariance
-      cpgsci(1); cpgpt(nptsClk,cvX,cvY,4); cpgerry(nptsClk,cvX,cvY1,cvY2,1); cpgsci(1);
-    }
   printf("GOT HERE\n");
   if (strcmp(overlay,"NULL")!=0)
     {
       FILE *fin;
       FILE *fout;
-      float frx[MAX_OBSN],fry[MAX_OBSN];
-      double rx0[MAX_OBSN];
-      double rx[MAX_OBSN],ry[MAX_OBSN],ry2[MAX_OBSN];
+      double rx0[10000];
+      double rx[10000],ry[10000],ry2[10000];
 
-      int nr=0;
 
       fout = fopen("expected.dat","w");
 
@@ -594,21 +682,63 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       while (!feof(fin))
 	{
-	  if (fscanf(fin,"%lf %lf",&rx[nr],&ry[nr]))
+	  if (fscanf(fin,"%lf %lf",&rx[nr],&ry[nr])==2)
 	    {
-	      if (rx[nr] > earliestTime && rx[nr] < latestTime)
-		{
+	      //	      if (rx[nr] >= earliestTime && rx[nr] < latestTime)
+	      //		{
 		  rx0[nr] = (double)(rx[nr]-psr[0].param[param_pepoch].val[0]);
 		  rx[nr] = mjd2year(rx[nr]);
 		  ry[nr] *= overlayInvert;
+		  ry[nr] /= 1.0e-6;
 		  nr++;
-		}
+		  //		}
 	    }
 	}
       fclose(fin);
       printf("Have read %d lines from the clock file\n",nr);
-      // Remove quadratic
-      TKremovePoly_d(rx,ry,nr,3);
+      // Remove quadratic      
+      if (psr[0].ifuncN > 0)
+	{
+	  double sx[psr[0].ifuncN],sy[psr[0].ifuncN];
+	  float fsx[psr[0].ifuncN],fsy[psr[0].ifuncN];
+	  double param[3];
+	  double chisq=0.0;
+	  // Want to remove the same quadratic as in the pulsar clock function (i.e., same sampling)
+	  for (i=0;i<psr[0].ifuncN;i++)
+	    {
+	      sx[i] = (double)(psr[0].ifuncT[i] - psr[0].param[param_pepoch].val[0]);
+	      sy[i] = 0;
+	      for (j=0;j<nr-1;j++)
+		{
+		  if (sx[i] < rx0[j+1]+1 && sx[i] >= rx0[j]-1)
+		    {
+		      sy[i] = ry[j];
+		      break;
+		    }
+		}
+	    }
+	  TKleastSquares_svd_noErr(sx,sy,psr[0].ifuncN, param, 3, TKfitPoly);  
+	  //	  TKremovePoly_d(sx,sy,psr[0].ifuncN,3);
+	  chisq=0.0;
+	  for (i=0;i<psr[0].ifuncN;i++)
+	    {
+	      printf("sxsy_val: %.15f %.15f %g %g %g %g %g\n",sx[i],sy[i],chisq,psr[0].ifuncV[i],sy[i],sy[i]-(param[0]+param[1]*sx[i]+param[2]*sx[i]*sx[i]),psr[0].ifuncE[i]);
+	      
+	      chisq+= pow((psr[0].ifuncV[i]-(sy[i]-(param[0]+param[1]*sx[i]+param[2]*sx[i]*sx[i])))/(psr[0].ifuncE[i]),2);
+	    }
+	  for (i=0;i<nr;i++)
+	    {
+	      printf("sxsy = %.15f %.15f %.15f",rx[i],ry[i],(param[0]-param[1]*rx0[i]-param[2]*rx0[i]*rx0[i]));
+	      ry[i] -= (param[0]+param[1]*rx0[i]+param[2]*rx0[i]*rx0[i]);
+	      printf(" %.15f\n",ry[i]);
+	    }
+	  printf("Params %.15f %.15f %.15f\n",param[0],param[1],param[2]);
+	  printf("Chisq of match between data and overlay = %g\n",chisq);
+	  printf("Chisq/(npts) = %g\n",chisq/(double)psr[0].ifuncN);
+	  //	  cpgpt(psr[0].ifuncN,fsx,fsy,19);
+	}
+      else
+	TKremovePoly_d(rx,ry,nr,3);
       for (i=0;i<nr;i++)
 	{
 	  frx[i]=(float)rx[i];
@@ -620,6 +750,34 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       cpgsci(3);
       //      cpgsls(2); 
       cpgslw(4); cpgline(nr,frx,fry);  cpgslw(2);
+
+      // Now overlay the error bar due to the correlation
+      if (covarError == 1)
+	{
+	  float fre1[nr],fre2[nr];
+	  double m,c,ival;
+	  for (i=0;i<nr;i++)
+	    {
+	      // Find interpolated error bar at this time
+	      for (k=0;k<psr[0].ifuncN-1;k++)
+		{
+		  if (rx0[i]+psr[0].param[param_pepoch].val[0] >= psr[0].ifuncT[k] &&
+		      rx0[i]+psr[0].param[param_pepoch].val[0] < psr[0].ifuncT[k+1])
+		    {
+		      m = (psr[0].ifuncE[k]-psr[0].ifuncE[k+1])/(psr[0].ifuncT[k]-psr[0].ifuncT[k+1]);
+		      c = psr[0].ifuncE[k]-m*psr[0].ifuncT[k];
+		      
+		      ival = m*(double)(rx0[i]+psr[0].param[param_pepoch].val[0])+c;
+		      break;
+		    }
+		}
+	      fre1[i] = fry[i] - ival;
+	      fre2[i] = fry[i] + ival;
+	    }
+	  cpgsci(8); cpgsls(4);cpgline(nr,frx,fre1);
+	  cpgline(nr,frx,fre2); cpgsls(1); cpgsci(1);
+	}
+
       //      cpgsls(1);
       cpgsci(1);
       if (psr[0].param[param_wave_om].paramSet[1]==1)
@@ -649,6 +807,49 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	//	cpgline(nptsClk,frx,fry);
       }
     }
+  if (psr[0].param[param_ifunc].paramSet[0]==1)
+    {
+      float er1[psr[0].ifuncN],er2[psr[0].ifuncN];
+      float er3[psr[0].ifuncN],er4[psr[0].ifuncN];
+      for (i=0;i<psr[0].ifuncN;i++)
+	{	  
+	  if (covarError==1)
+	    {
+	      er1[i] = ey0[i] + whiteErr[i];
+	      er2[i] = ey0[i] - whiteErr[i];
+	      if (whiteErr[i] > psr[0].ifuncE[i]) {er3[i] = 0.0; er4[i] = 0.0;}
+	      else
+		{
+		  er3[i] = sqrt(psr[0].ifuncE[i]*psr[0].ifuncE[i]-whiteErr[i]*whiteErr[i]);
+		  er4[i] = -sqrt(psr[0].ifuncE[i]*psr[0].ifuncE[i]-whiteErr[i]*whiteErr[i]);
+		}
+	    }
+	  else
+	    {
+	      er1[i] = ey0[i] + psr[0].ifuncE[i];
+	      er2[i] = ey0[i] - psr[0].ifuncE[i];
+	    }
+	}
+      printf("plotting %d points\n",npt);
+      //      cpgsls(4);
+      //      cpgline(npt,px,fye1);
+      // cpgline(npt,px,fye2);
+      cpgsls(1);
+      
+      cpgerry(ne,ex,er1,er2,1);
+      cpgpt(ne,ex,ey0,4);
+      //      if (covarError==1)
+      //	{
+      //	  cpgsls(4); cpgline(ne,ex,er3);
+      //	  cpgline(ne,ex,er4); cpgsls(1);
+      //	}
+    }
+  else
+    {
+      // Covariance
+      cpgsci(1); cpgpt(nptsClk,cvX,cvY,4); cpgerry(nptsClk,cvX,cvY1,cvY2,1); cpgsci(1);
+    }
+
   fx[0] = px[0];
   fx[1] = px[npt-1];
   fy[0] = 0.0;

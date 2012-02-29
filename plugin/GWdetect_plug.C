@@ -83,6 +83,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-app")==0)
 	strcpy(app,argv[++i]);
+      else if (strcmp(argv[i],"-nlat")==0)
+	sscanf(argv[++i],"%d",&nlat);
+      else if (strcmp(argv[i],"-nlong")==0)
+	sscanf(argv[++i],"%d",&nlong);
     }
 
   gridPos=0;

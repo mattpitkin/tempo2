@@ -108,7 +108,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       for (k=0;k<psr[0].param[i].aSize;k++)
 	{
 	  if (psr[0].param[i].fitFlag[k]==2) {
-	    npol++;
+	    {
+	      printf("Found a global parameter: %s %d %d\n",psr[0].param[i].label[k],npol,psr[0].ifuncN);
+	      npol++;
+	    }
 	  }
 	}
     }
@@ -120,25 +123,36 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	psr[p].param[param_waveepoch].val[0] = psr[0].param[param_waveepoch].val[0];
     }
   printf("Checking here %d\n",psr[0].param[param_quad_om].fitFlag[0]);
+  printf("1] Adding %d global parameters\n",npol);
   if (psr[0].param[param_quad_om].fitFlag[0]==2)
       npol+=psr[0].nQuad*4-1;
   if (psr[0].param[param_ifunc].fitFlag[0]==2)	  
     npol+=psr[0].ifuncN-1;
-  if (psr[0].param[param_tel_dx].fitFlag[0]==2)	  
+  printf("2] Adding %d global parameters\n",npol);
+  if (psr[0].param[param_tel_dx].fitFlag[0]==2 && psr[0].param[param_tel_dx].val[0] < 2)	  
     npol+=(psr[0].nTelDX-1);
-  if (psr[0].param[param_tel_dy].fitFlag[0]==2)	  
-    npol+=(psr[0].nTelDY-1);
-  if (psr[0].param[param_tel_dz].fitFlag[0]==2)	  
+  else if (psr[0].param[param_tel_dx].fitFlag[0]==2 && psr[0].param[param_tel_dx].val[0] == 2)	  
+    npol+=(psr[0].nTelDX-2);
+  printf("3] Adding %d global parameters\n",npol);
+  if (psr[0].param[param_tel_dz].fitFlag[0]==2 && psr[0].param[param_tel_dz].val[0] < 2)	  
     npol+=(psr[0].nTelDZ-1);
+  else if (psr[0].param[param_tel_dz].fitFlag[0]==2 && psr[0].param[param_tel_dz].val[0] == 2)	  
+    npol+=(psr[0].nTelDZ-2);
+  printf("4] Adding %d global parameters\n",npol);
+  if (psr[0].param[param_tel_dy].fitFlag[0]==2 && psr[0].param[param_tel_dy].val[0] < 2)	  
+    npol+=(psr[0].nTelDY-1);
+  else if (psr[0].param[param_tel_dy].fitFlag[0]==2 && psr[0].param[param_tel_dy].val[0] == 2)	  
+    npol+=(psr[0].nTelDY-2);
+  printf("5] Adding %d global parameters\n",npol);
   if (psr[0].param[param_quad_ifunc_p].fitFlag[0]==2)	  
     npol+=psr[0].quad_ifuncN_p-1;
   if (psr[0].param[param_quad_ifunc_c].fitFlag[0]==2)	  
     npol+=psr[0].quad_ifuncN_c-1;
-
+  printf("6] Adding %d global parameters\n",npol);
   if (psr[0].param[param_gwsingle].fitFlag[0]==2)
     npol+=(4-1); 
 
-  printf("Adding %d global parameters\n",npol);
+  printf("7] Adding %d global parameters\n",npol);
   for (p=0;p<npsr;p++)
     {
       npol++; // For the offset
@@ -173,12 +187,21 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	npol+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	npol+=psr[p].ifuncN-1;
-      if (psr[p].param[param_tel_dx].fitFlag[0]==1)
+      if (psr[p].param[param_tel_dx].fitFlag[0]==1 && psr[p].param[param_tel_dx].val[0] < 2)
 	npol+=(psr[p].nTelDX-1);
-      if (psr[p].param[param_tel_dy].fitFlag[0]==1)
+      else if (psr[p].param[param_tel_dx].fitFlag[0]==1 && psr[p].param[param_tel_dx].val[0] == 2)
+	npol+=(psr[p].nTelDX-2);
+
+      if (psr[p].param[param_tel_dy].fitFlag[0]==1 && psr[p].param[param_tel_dy].val[0] < 2)
 	npol+=(psr[p].nTelDY-1);
-      if (psr[p].param[param_tel_dz].fitFlag[0]==1)
+      else if (psr[p].param[param_tel_dy].fitFlag[0]==1 && psr[p].param[param_tel_dy].val[0] == 2)
+	npol+=(psr[p].nTelDY-2);
+
+      if (psr[p].param[param_tel_dz].fitFlag[0]==1 && psr[p].param[param_tel_dz].val[0] < 2)
 	npol+=(psr[p].nTelDZ-1);
+      else if (psr[p].param[param_tel_dz].fitFlag[0]==1 && psr[p].param[param_tel_dz].val[0] == 2)
+	npol+=(psr[p].nTelDZ-2);
+
       if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
 	npol+=psr[p].quad_ifuncN_p-1;
       if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
@@ -224,12 +247,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     //      printf("ERROR: nterms=%d > MAX_PARAMS=%d\n",npol,MAX_PARAMS);
     //      exit(1);       
     //    }
-    /*  for (i=0;i<npol;i++)
-    {
-      for (j=0;j<npol;j++)
-  	psr[0].covar[i][j]=covar[i][j];
-	}*/
-  printf("Now updating the parameters\n");
+    for (i=0;i<npol;i++)
+      {
+	for (j=0;j<npol;j++)
+	  psr[0].covar[i][j]=covar[i][j];
+      }
+    printf("Now updating the parameters\n");
   //    for (i=0;i<npol;i++)
   //      printf("val %d = %g %g\n",i,val[i],error[i]);
   // now update the parameters
@@ -308,39 +331,85 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		}
 	      else if (i==param_tel_dx)
 		{
-		  for (j=0;j<psr[0].nTelDX;j++)
+		  if (psr[0].param[param_tel_dx].val[0] < 2)
 		    {
-		      printf("Setting: %d %g\n",j,val[offset]);
-		      for (p=0;p<npsr;p++)
+		      for (j=0;j<psr[0].nTelDX;j++)
 			{
-			  psr[p].telDX_v[j]-=val[offset];
-			  psr[p].telDX_e[j]=error[offset];
+			  printf("Setting: %d %g\n",j,val[offset]);
+			  for (p=0;p<npsr;p++)
+			    {
+			      psr[p].telDX_v[j]-=val[offset];
+			      psr[p].telDX_e[j]=error[offset];
+			    }
+			  offset++;
 			}
-		      offset++;
+		    }
+		  else
+		    {
+		      for (j=0;j<psr[0].nTelDX-1;j++)
+			{
+			  printf("Setting: %d %g\n",j,val[offset]);
+			  for (p=0;p<npsr;p++)
+			    {
+			      psr[p].telDX_v[j]-=val[offset];
+			      psr[p].telDX_e[j]=error[offset];
+			    }
+			  offset++;
+			}
 		    }
 		}
 	      else if (i==param_tel_dy)
 		{
-		  for (j=0;j<psr[0].nTelDY;j++)
+		  if (psr[0].param[param_tel_dy].val[0] < 2)
 		    {
-		      for (p=0;p<npsr;p++)
+		      for (j=0;j<psr[0].nTelDY;j++)
 			{
-			  psr[p].telDY_v[j]-=val[offset];
-			  psr[p].telDY_e[j]=error[offset];
+			  for (p=0;p<npsr;p++)
+			    {
+			      psr[p].telDY_v[j]-=val[offset];
+			      psr[p].telDY_e[j]=error[offset];
+			    }
+			  offset++;
 			}
-		      offset++;
+		    }
+		  else
+		    {
+		      for (j=0;j<psr[0].nTelDY-1;j++)
+			{
+			  for (p=0;p<npsr;p++)
+			    {
+			      psr[p].telDY_v[j]-=val[offset];
+			      psr[p].telDY_e[j]=error[offset];
+			    }
+			  offset++;
+			}
 		    }
 		}
 	      else if (i==param_tel_dz)
 		{
-		  for (j=0;j<psr[0].nTelDZ;j++)
+		  if (psr[0].param[param_tel_dz].val[0] < 2)
 		    {
-		      for (p=0;p<npsr;p++)
+		      for (j=0;j<psr[0].nTelDZ;j++)
 			{
-			  psr[p].telDZ_v[j]-=val[offset];
-			  psr[p].telDZ_e[j]=error[offset];
+			  for (p=0;p<npsr;p++)
+			    {
+			      psr[p].telDZ_v[j]-=val[offset];
+			      psr[p].telDZ_e[j]=error[offset];
+			    }
+			  offset++;
 			}
-		      offset++;
+		    }
+		  else
+		    {
+		      for (j=0;j<psr[0].nTelDZ-1;j++)
+			{
+			  for (p=0;p<npsr;p++)
+			    {
+			      psr[p].telDZ_v[j]-=val[offset];
+			      psr[p].telDZ_e[j]=error[offset];
+			    }
+			  offset++;
+			}
 		    }
 		}
 	      else if (i==param_quad_ifunc_p)
@@ -376,7 +445,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		  for (p=0;p<npsr;p++)
 		    {
 		      printf("Fitting (1): %d %d %d %d %g\n",i,k,p,offset,val[offset]);
-		      if (i==param_telx || i==param_tely || i==param_telz)
+		      if (i==param_telx || i==param_tely || i==param_telz || i==param_gwm_amp)
 			psr[p].param[i].val[k] -= val[offset];
 		      else
 			psr[p].param[i].val[k] += val[offset];
@@ -413,12 +482,27 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	offset+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	offset+=psr[p].ifuncN-1;
-      if (psr[p].param[param_tel_dx].fitFlag[0]==1)
+      if (psr[p].param[param_tel_dx].fitFlag[0]==1 &&
+	  psr[p].param[param_tel_dx].val[0] < 2)
 	offset+=(psr[p].nTelDX-1);
-      if (psr[p].param[param_tel_dy].fitFlag[0]==1)
+      else if (psr[p].param[param_tel_dx].fitFlag[0]==1 &&
+	       psr[p].param[param_tel_dx].val[0] == 2)
+	offset+=(psr[p].nTelDX-2);
+
+      if (psr[p].param[param_tel_dy].fitFlag[0]==1 &&
+	  psr[p].param[param_tel_dy].val[0] < 2)
 	offset+=(psr[p].nTelDY-1);
-      if (psr[p].param[param_tel_dz].fitFlag[0]==1)
+      else if (psr[p].param[param_tel_dy].fitFlag[0]==1 &&
+	       psr[p].param[param_tel_dy].val[0] == 2)
+	offset+=(psr[p].nTelDY-2);
+
+      if (psr[p].param[param_tel_dz].fitFlag[0]==1 &&
+	  psr[p].param[param_tel_dz].val[0] < 2)
 	offset+=(psr[p].nTelDZ-1);
+      else if (psr[p].param[param_tel_dz].fitFlag[0]==1 &&
+	       psr[p].param[param_tel_dz].val[0] == 2)
+	offset+=(psr[p].nTelDZ-2);
+
       if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
 	offset+=psr[p].quad_ifuncN_p-1;
       if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
@@ -531,12 +615,27 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     nglobal+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==2)
     nglobal+=psr[p].ifuncN-1;
-  if (psr[p].param[param_tel_dx].fitFlag[0]==2)
+  if (psr[p].param[param_tel_dx].fitFlag[0]==2 &&
+      psr[p].param[param_tel_dx].val[0] < 2)
     nglobal+=(psr[p].nTelDX-1);
-  if (psr[p].param[param_tel_dy].fitFlag[0]==2)
+  else if (psr[p].param[param_tel_dx].fitFlag[0]==2 &&
+      psr[p].param[param_tel_dx].val[0] == 2)
+    nglobal+=(psr[p].nTelDX-2);
+
+  if (psr[p].param[param_tel_dy].fitFlag[0]==2 &&
+      psr[p].param[param_tel_dy].val[0] < 2)
     nglobal+=(psr[p].nTelDY-1);
-  if (psr[p].param[param_tel_dz].fitFlag[0]==2)
+  else if (psr[p].param[param_tel_dy].fitFlag[0]==2 &&
+      psr[p].param[param_tel_dy].val[0] == 2)
+    nglobal+=(psr[p].nTelDY-2);
+
+  if (psr[p].param[param_tel_dz].fitFlag[0]==2 &&
+      psr[p].param[param_tel_dz].val[0] < 2)
     nglobal+=(psr[p].nTelDZ-1);
+  else if (psr[p].param[param_tel_dz].fitFlag[0]==2 &&
+      psr[p].param[param_tel_dz].val[0] == 2)
+    nglobal+=(psr[p].nTelDZ-2);
+
   if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==2)
     nglobal+=psr[p].quad_ifuncN_p-1;
   if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==2)
@@ -570,12 +669,27 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     new_ma+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==1)
     new_ma+=psr[p].ifuncN-1;
-  if (psr[p].param[param_tel_dx].fitFlag[0]==1)
+  if (psr[p].param[param_tel_dx].fitFlag[0]==1 && 
+      psr[p].param[param_tel_dx].val[0] < 2)
     new_ma+=(psr[p].nTelDX-1);
-  if (psr[p].param[param_tel_dy].fitFlag[0]==1)
+  else if (psr[p].param[param_tel_dx].fitFlag[0]==1 && 
+      psr[p].param[param_tel_dx].val[0] == 2)
+    new_ma+=(psr[p].nTelDX-2);
+
+  if (psr[p].param[param_tel_dy].fitFlag[0]==1 && 
+      psr[p].param[param_tel_dy].val[0] < 2)
     new_ma+=(psr[p].nTelDY-1);
-  if (psr[p].param[param_tel_dz].fitFlag[0]==1)
+  else if (psr[p].param[param_tel_dy].fitFlag[0]==1 && 
+      psr[p].param[param_tel_dy].val[0] == 2)
+    new_ma+=(psr[p].nTelDY-2);
+
+  if (psr[p].param[param_tel_dz].fitFlag[0]==1 && 
+      psr[p].param[param_tel_dz].val[0] < 2)
     new_ma+=(psr[p].nTelDZ-1);
+  else if (psr[p].param[param_tel_dz].fitFlag[0]==1 && 
+      psr[p].param[param_tel_dz].val[0] == 2)
+    new_ma+=(psr[p].nTelDZ-2);
+
   if (psr[p].param[param_quad_ifunc_p].fitFlag[0]==1)
     new_ma+=psr[p].quad_ifuncN_p-1;
   if (psr[p].param[param_quad_ifunc_c].fitFlag[0]==1)
@@ -615,12 +729,27 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	n+=psr[pp].nQuad*4-1;
       if (psr[pp].param[param_ifunc].fitFlag[0]==1)
 	n+=psr[pp].ifuncN-1;
-      if (psr[p].param[param_tel_dx].fitFlag[0]==1)
+      if (psr[p].param[param_tel_dx].fitFlag[0]==1 && 
+	  psr[p].param[param_tel_dx].val[0] < 2)
 	n+=(psr[p].nTelDX-1);
-      if (psr[p].param[param_tel_dy].fitFlag[0]==1)
+      else if (psr[p].param[param_tel_dx].fitFlag[0]==1 && 
+	       psr[p].param[param_tel_dx].val[0] == 2)
+	n+=(psr[p].nTelDX-2);
+
+      if (psr[p].param[param_tel_dy].fitFlag[0]==1 && 
+	  psr[p].param[param_tel_dy].val[0] < 2)
 	n+=(psr[p].nTelDY-1);
-      if (psr[p].param[param_tel_dz].fitFlag[0]==1)
+      else if (psr[p].param[param_tel_dy].fitFlag[0]==1 && 
+	       psr[p].param[param_tel_dy].val[0] == 2)
+	n+=(psr[p].nTelDY-2);
+
+      if (psr[p].param[param_tel_dz].fitFlag[0]==1 && 
+	  psr[p].param[param_tel_dz].val[0] < 2)
 	n+=(psr[p].nTelDZ-1);
+      else if (psr[p].param[param_tel_dz].fitFlag[0]==1 && 
+	       psr[p].param[param_tel_dz].val[0] == 2)
+	n+=(psr[p].nTelDZ-2);
+
       if (psr[pp].param[param_quad_ifunc_p].fitFlag[0]==1)
 	n+=psr[pp].quad_ifuncN_p-1;
       if (psr[pp].param[param_quad_ifunc_c].fitFlag[0]==1)
@@ -680,30 +809,59 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		}
 	      else if (i==param_tel_dx)
 		{
-		  //		  printf("Got in here with nTelDX = %d, c = %d\n",psr[p].nTelDX,c);
-		  for (j=0;j<psr[p].nTelDX;j++)
+		  if (psr[p].param[param_tel_dx].val[0] < 2)
 		    {
-		      //		      printf("c = %d, j = %d\n",c,j);
-		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
-		      //		      printf("Done it\n");
-		      c++;
+		      for (j=0;j<psr[p].nTelDX;j++)
+			{
+			  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+			  c++;
+			}
 		    }
-		  //		  printf("Finished here\n");
+		  else if (psr[p].param[param_tel_dx].val[0] == 2)
+		    {
+		      for (j=0;j<psr[p].nTelDX-1;j++)
+			{
+			  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+			  c++;
+			}
+		    }
 		}
 	      else if (i==param_tel_dy)
 		{
-		  for (j=0;j<psr[p].nTelDY;j++)
+		  if (psr[p].param[param_tel_dy].val[0] < 2)
 		    {
-		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
-		      c++;
+		      for (j=0;j<psr[p].nTelDY;j++)
+			{
+			  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+			  c++;
+			}
+		    }
+		  else if (psr[p].param[param_tel_dy].val[0] == 2)
+		    {
+		      for (j=0;j<psr[p].nTelDY-1;j++)
+			{
+			  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+			  c++;
+			}
 		    }
 		}
 	      else if (i==param_tel_dz)
 		{
-		  for (j=0;j<psr[p].nTelDZ;j++)
+		  if (psr[p].param[param_tel_dz].val[0] < 2)
 		    {
-		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
-		      c++;
+		      for (j=0;j<psr[p].nTelDZ;j++)
+			{
+			  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+			  c++;
+			}
+		    }
+		  else if (psr[p].param[param_tel_dz].val[0] == 2)
+		    {
+		      for (j=0;j<psr[p].nTelDZ-1;j++)
+			{
+			  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+			  c++;
+			}
 		    }
 		}
 	      else if (i==param_quad_ifunc_p)

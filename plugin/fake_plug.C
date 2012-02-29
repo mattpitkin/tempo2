@@ -55,6 +55,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int endit=0;
   long idum = 0;
   int nday = -1;
+  int nit=4;
   float ngap=-1.0;
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
@@ -123,6 +124,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     if(strcmp(argv[i],"-format")==0){
 	sscanf(argv[i+1],"%s",&formstr);
 	printf("Have output format >>%s<<\n",formstr);
+    }
+    if(strcmp(argv[i],"-nit")==0){
+	sscanf(argv[i+1],"%d",&nit);
     }
     if (strcmp(argv[i],"-times")==0){
       timesFile=1;
@@ -265,6 +269,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       //      printf("SET AFTER 1: %d\n",psr[0].param[param_pb].val[0]);
       readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
       //      printf("SET AFTER 2: %d %s\n",psr[0].param[param_pb].val[0],psr[0].name);
+      if (psr[0].param[param_track].paramSet[0]==1)
+	psr[0].param[param_track].paramSet[0] = 0;
       ra = (double)psr[0].param[param_raj].val[0]/2.0/M_PI;
       
       /* Code based on fake1.f to calculate the TOA at transit for each of these observations */
@@ -383,7 +389,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       /* Now run the tempo2 code */
       preProcess(psr,*npsr,argc,argv);
       callFit(psr,*npsr);             /* Do all the fitting routines */
-      for (j=0;j<9;j++)
+      for (j=0;j<nit;j++)
 	{
 	  /* Now update the site arrival times depending upon the residuals */
 	  
@@ -411,7 +417,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  callFit(psr,*npsr);             /* Do all the fitting routines */
 	}
 
-      printf("Complete 10 iterations\n");
+      printf("Complete %d iterations\n",nit);
       for (i=0;i<psr[0].nobs;i++)  
 	{
 	  psr[0].obsn[i].sat -= psr[0].obsn[i].prefitResidual/SECDAY;  
