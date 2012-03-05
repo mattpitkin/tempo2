@@ -164,6 +164,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
             param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om,
+	    param_h3,param_h4,param_nharm,param_stig,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,param_gwm_amp};
 
@@ -606,6 +607,12 @@ double DDSmodel(pulsar *psr,int p,int obs,int param);
 void updateDDS(pulsar *psr,double val,double err,int pos);
 double DDGRmodel(pulsar *psr,int p,int obs,int param);
 void updateDDGR(pulsar *psr,double val,double err,int pos);
+// Freire & Wex (2010; FW10) models:
+double DDHmodel( pulsar *psr, int p, int obs, int param );
+void updateDDH( pulsar *psr, double val, double err, int pos );
+double ELL1Hmodel( pulsar *psr, int p, int obs, int param );
+void updateELL1H( pulsar *psr, double val, double err, int pos );
+
 void displayMsg(int type,char *key,char *searchStr,char *variableStr,int noWarnings);
 void CVSdisplayVersion(char *file,char *func,const char *verNum);
 

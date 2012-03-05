@@ -967,6 +967,19 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_kin]),0);
   else if (strcasecmp(str,"SHAPMAX")==0)
     readValue(psr,str,fin,&(psr->param[param_shapmax]),0);
+  else if( strcasecmp( str, "H3" ) == 0 ){
+    // h3 harmonic Shapiro delay parameter for DDH model (FW10)
+    readValue( psr, str, fin, &( psr->param[param_h3] ), 0 );
+  }else if( strcasecmp( str, "H4" ) == 0 ){
+    // h4 harmonic Shapiro delay parameter for DDH model (FW10)
+    readValue( psr, str, fin, &( psr->param[param_h4] ), 0 );
+  }else if( strcasecmp( str, "STIG" ) == 0 ){
+    // Stigma Shapiro delay harmonic ratio for DDH model (FW10)
+    readValue( psr, str, fin, &( psr->param[param_stig] ), 0 );
+  }else if( strcasecmp( str, "NHARM" ) == 0 ){
+    // Number of Shapiro delay harmonics to be used for DDH model (FW10)
+    readValue( psr, str, fin, &( psr->param[param_nharm] ), 0 );
+  }
   else if (strcasecmp(str,"MTOT")==0)
     readValue(psr,str,fin,&(psr->param[param_mtot]),0);
   else if (strcasecmp(str,"SINI")==0)

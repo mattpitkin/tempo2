@@ -52,6 +52,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
   double tol = 1.0e-27;  /* Tolerence for singular value decomposition routine */
   double newStart=-1.0,newFinish=-1.0;
   const char *CVS_verNum = "$Revision$";
+  int count;
 
   if (displayCVSversion == 1) CVSdisplayVersion("doFit.C","doFit()",CVS_verNum);
   if (debugFlag==1) printf("Entering doFit\n");
@@ -135,7 +136,6 @@ void doFit(pulsar *psr,int npsr,int writeModel)
       sig   = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double));
       val   = (double *)malloc(npol*sizeof(double));
       error = (double *)malloc(npol*sizeof(double));
-      int count;
       count=0;
       for (i=0;i<psr[p].nobs;i++)
 	{	  
@@ -255,9 +255,10 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   double tol = 1.0e-40;  /* Tolerence for singular value decomposition routine */
   double newStart=-1.0,newFinish=-1.0;
   long double meanRes=0.0;
-
+  int count;
   clock_t clk;
-
+  int nobs_and_constraints;
+  
   //  printf("WARNING: Switching weighting off for the fit\n");
   //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
   clk=clock();  
@@ -318,7 +319,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 
   for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
     {
-      int nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
+      nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
       printf("Tcheck: Processing pulsar %d\n",p);
       psr[p].fitMode = 0;
 
@@ -344,7 +345,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       sig   = (double *)malloc(nobs_and_constraints*sizeof(double));
       val   = (double *)malloc(npol*sizeof(double));
       error = (double *)malloc(npol*sizeof(double));
-      int count;
+
       count=0;
       for (i=0;i<psr[p].nobs;i++)
 	{	  
@@ -1541,6 +1542,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       double theta_p,theta_g,phi_p,phi_g;
       double lambda_p,beta_p,lambda,beta;
       long double time;
+      double g1,g2,g3;
 
       time    = (psr->obsn[ipos].bbat - psr->gwm_epoch)*86400.0L;
       
@@ -1548,6 +1550,11 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       beta_p   = (double)psr->param[param_decj].val[0];
       lambda   = psr->gwm_raj;
       beta     = psr->gwm_decj;
+
+      // GW vector
+      g1 = cosl(lambda)*cosl(beta);
+      g2 = sinl(lambda)*cosl(beta);
+      g3 = sinl(beta);
       
       // Pulsar vector
       n1 = cosl(lambda_p)*cosl(beta_p);
@@ -1560,8 +1567,35 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       if (psr->obsn[ipos].sat >= psr->gwm_epoch)
 	{
 	  long double dt,scale;
+	  double cos2Phi;
+	  double cosPhi;
+	  double l1,l2,l3,k,n4,n5,m1,m2,m3;
+	  double beta_m;
+	  
+	  beta_m = atan2(-cosl(beta)*cosl(lambda-psr->gwm_phi),sinl(beta));
+	  m1 = cosl(psr->gwm_phi)*cosl(beta_m);
+	  m2 = sinl(psr->gwm_phi)*cosl(beta_m);
+	  m3 = sinl(beta_m);
+	  
+
+		   k = (g1*n2 + g2*n1)/(g3*n2 - n3*g2);
+		   n4 = k*n3 + n1 ;
+		   n5 = -k*n2;
+		   
+		   l1 = 1;
+		   l2 = l1*(g3*n2-g1*n5)/(g2*n5-g3*n4);
+		   l3 = l1*(g2*n2-g1*n4)/(g3*n4-g2*n5);
+	  	
+		   cosPhi = fabs(l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1+l2*l2+l3*l3);  
+	  
+	  if (cosPhi >= 1.0/sqrt(2.0))
+	    cos2Phi = 2*cosPhi*cosPhi - 1.0;
+	  else
+	    cos2Phi = 2*sqrt(1.0-cosPhi*cosPhi)*sqrt(1.0-cosPhi*cosPhi) - 1.0;
+	  
 	  dt = psr->obsn[ipos].sat - psr->gwm_epoch;
-	  scale = 0.5*cos(2*psr->gwm_phi)*(1-cosTheta);
+	  scale = 0.5*cos2Phi*(1-cosTheta);
+	  
 	  afunc = scale*dt;
 	}
       else
@@ -1640,7 +1674,11 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
   else if (strcmp(psr->binaryModel,"MSS")==0) 
     afunc = MSSmodel(psr,0,ipos,i);
   else if (strcmp(psr->binaryModel,"T2")==0) 
-    afunc = T2model(psr,0,ipos,i,k);	  
+    afunc = T2model(psr,0,ipos,i,k);	
+  else if (strcmp(psr->binaryModel,"DDH")==0)
+    afunc = DDHmodel(psr,0,ipos,i);
+  else if (strcmp(psr->binaryModel,"ELL1H")==0)
+    afunc = ELL1Hmodel(psr,0,ipos,i);
   
 
   return afunc;
@@ -1795,7 +1833,6 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		  int k;
 		  for (k=0;k<psr->ifuncN;k++)
 		    {
-		      printf("val ret = %g\n",val[j]);
 		      psr[p].ifuncV[k] -= val[j];
 		      psr[p].ifuncE[k] = error[j];
 		      j++;
@@ -1874,7 +1911,6 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		  int k;
 		  for (k=0;k<psr->quad_ifuncN_p;k++)
 		    {
-		      printf("val ret = %g\n",val[j]);
 		      psr[p].quad_ifuncV_p[k] -= val[j];
 		      psr[p].quad_ifuncE_p[k] = error[j];
 		      j++;
@@ -1885,7 +1921,6 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		  int k;
 		  for (k=0;k<psr->quad_ifuncN_c;k++)
 		    {
-		      printf("val ret = %g\n",val[j]);
 		      psr[p].quad_ifuncV_c[k] -= val[j];
 		      psr[p].quad_ifuncE_c[k] = error[j];
 		      j++;
@@ -1948,6 +1983,10 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		updateMSS(&psr[p],val[j],error[j],i);
 	      else if (strcmp(psr[p].binaryModel,"T2")==0)
 		updateT2(&psr[p],val[j],error[j],i,k);
+	      else if (strcmp(psr[p].binaryModel,"DDH")==0)
+		updateDDH(&psr[p],val[j],error[j],i);
+	      else if (strcmp(psr[p].binaryModel,"ELL1H")==0)
+		updateELL1H(&psr[p],val[j],error[j],i);
 	      j++; /* Increment position in fit list */
 	    }
 	}

@@ -360,6 +360,16 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_dtheta].shortlabel[0],"DTHETA");
   strcpy(psr->param[param_sini].label[0],"SINI");
   strcpy(psr->param[param_sini].shortlabel[0],"SINI");
+ // Freire & Wex (2010; FW10) parameters:
+  strcpy( psr->param[param_h3].label[0], "H3" );
+  strcpy( psr->param[param_h3].shortlabel[0], "H3" );
+  strcpy( psr->param[param_stig].label[0], "STIG" );
+  strcpy( psr->param[param_stig].shortlabel[0], "STIG" );
+  strcpy( psr->param[param_h4].label[0], "H4" );
+  strcpy( psr->param[param_h4].shortlabel[0], "H4" );
+  strcpy( psr->param[param_nharm].label[0], "Number of Shapiro delay harmonics" );
+  strcpy( psr->param[param_nharm].shortlabel[0], "NHARM" );
+  // End Freire & Wex parameters
   strcpy(psr->param[param_gamma].label[0],"GAMMA");
   strcpy(psr->param[param_gamma].shortlabel[0],"GAMMA");
   strcpy(psr->param[param_pbdot].label[0],"PBDOT");

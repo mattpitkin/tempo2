@@ -80,6 +80,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       else if (strcmp(psr[p].binaryModel,"MSS")==0)   torb = MSSmodel(psr,p,i,-1);
 	       else if (strcmp(psr[p].binaryModel,"DDGR")==0)  torb = DDGRmodel(psr,p,i,-1);
 	       else if (strcmp(psr[p].binaryModel,"T2")==0)    torb = T2model(psr,p,i,-1,0);
+	       else if( strcmp( psr[p].binaryModel, "DDH" ) == 0) torb = DDHmodel( psr, p, i, -1 );
+	       else if( strcmp( psr[p].binaryModel, "ELL1H" ) == 0) torb = ELL1Hmodel( psr, p, i, -1 );
 	       else {printf("Warning: Unknown binary model '%s'\n",psr[p].binaryModel); exit(1);}
 	     }
 	   psr[p].obsn[i].torb = torb; // save for plotting etc
@@ -386,6 +388,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 	       double cosTheta;
+	       double g1,g2,g3;
 
 	       time    = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*86400.0L;
 
@@ -395,6 +398,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       //	       beta     = M_PI/2.0-psr[p].gwsrc_dec;
 	       beta     = psr[p].gwm_decj;
 	       //			       phi_g   = psr[p].gwsrc_ra;
+
+	       // GW vector
+	       g1 = cosl(lambda)*cosl(beta);
+	       g2 = sinl(lambda)*cosl(beta);
+	       g3 = sinl(beta);
+
 
 	       // Pulsar vector
 	       n1 = cosl(lambda_p)*cosl(beta_p);
@@ -409,8 +418,39 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       if (psr[p].obsn[i].sat >= psr[p].gwm_epoch)
 		 {
 		   long double dt,scale;
+		   double cos2Phi;
+		   double cosPhi;
+		   double l1,l2,l3,k,n4,n5,m1,m2,m3;
+		   double beta_m;
+
+		   beta_m = atan2(-cosl(beta)*cosl(lambda-psr[p].gwm_phi),sinl(beta));
+		   m1 = cosl(psr[p].gwm_phi)*cosl(beta_m);
+		   m2 = sinl(psr[p].gwm_phi)*cosl(beta_m);
+		   m3 = sinl(beta_m);
+
+
+		   k = (g1*n2 + g2*n1)/(g3*n2 - n3*g2);
+		   n4 = k*n3 + n1 ;
+		   n5 = -k*n2;
+		   
+		   l1 = 1;
+		   l2 = l1*(g3*n2-g1*n5)/(g2*n5-g3*n4);
+		   l3 = l1*(g2*n2-g1*n4)/(g3*n4-g2*n5);
+
+		   //l1 = l1/sqrt(1+l2*l2+l3*l3);
+		   // l2 = l2/sqrt(1+l2*l2+l3*l3);
+		   //l3 = l3/sqrt(1+l2*l2+l3*l3);
+		   
+		   
+		   cosPhi = fabs(l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1+l2*l2+l3*l3);
+		   
+		   if (cosPhi >= 1.0/sqrt(2.0))
+		     cos2Phi = 2*cosPhi*cosPhi - 1.0;
+		   else
+		     cos2Phi = 2*sqrt(1.0-cosPhi*cosPhi)*sqrt(1.0-cosPhi*cosPhi) - 1.0;
+
 		   dt = psr[p].obsn[i].sat - psr[p].gwm_epoch;
-		   scale = 0.5*cos(2*psr[p].gwm_phi)*(1-cosTheta);
+		   scale = 0.5*cos2Phi*(1-cosTheta);
 		   phaseW += scale*(psr[p].param[param_gwm_amp].val[0]*psr[p].param[param_f].val[0])*dt;
 		 }
 	       //	       printf("Res = %g\n",(double)res);

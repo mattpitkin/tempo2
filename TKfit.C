@@ -948,7 +948,6 @@ void TKcholDecomposition(double **a, int n, double *p)
   int i,j,k;
   long double sum;
   // float sum;
-  printf("Starting the cholDecomp %d\n",n);
   for (i=0;i<n;i++)
     {
       for (j=i;j<n;j++)
@@ -968,5 +967,4 @@ void TKcholDecomposition(double **a, int n, double *p)
 	    a[j][i] = (double)(sum/p[i]);
 	}
     }
-  printf("Finishing the cholDecomp\n");
 }

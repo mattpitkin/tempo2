@@ -430,15 +430,31 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      printf(" +- %.12f solar masses \n",err);
 	      printf("Minimum, median and maximum companion mass: %.4f < %.4f < %.4f solar masses\n",
 		     m2(fn,1.0,1.35),m2(fn,0.866025403,1.35),m2(fn,0.4358898944,1.35));
-        // 90% confidence level is based on cos(i) = 0.9 -> sini = 0.4358898944
 
-        //m2(fn,1.0,1.35),m2(fn,0.866025403,1.35),m2(fn,0.438371146,1.35));
-	      /* printf("Minimum companion mass         
-                             = %.4f solar masses\n",m2(fn,1.0,1.35));
-	      printf("Median companion mass          
-                             = %.4f solar masses\n",m2(fn,0.866025403,1.35));
-	      printf("Maximum companion mass         
-                             = %.4f solar masses\n",m2(fn,0.438371146,1.35)); */
+	      
+// M2 and SINI from DDH model (FW10)
+        if( psr[p].param[param_h3].paramSet[0] == 1 ){ 
+          long double h3 = psr[p].param[param_h3].val[0];
+          long double m2, sini;
+          if( psr[p].param[param_stig].paramSet[0] == 1 ){
+            long double stig = psr[p].param[param_stig].val[0];
+            // Freire & Wex, Eq. 20:
+            m2 = h3 / 4.925490947e-6 * pow( stig, -3.0 );
+            // Freire & Wex, Eq. 22:
+            sini = 2.0 * stig / ( 1.0 + pow( stig, 2.0 ) );
+            printf( " DDH-model Derived parameters:  M2 = %lg\n", (double)m2 );
+            printf( "                              SINI = %lg\n", (double)sini );
+          }else if( psr[p].param[param_h4].paramSet[0] == 1 ){
+            long double h4 = psr[p].param[param_h4].val[0];
+            // Freire & Wex, Eq. 26:
+            if( h4 != 0.0 )
+              m2 = pow( h3, 4.0 ) / pow( h4, 3.0 ) / 4.925490947e-6;
+            // Freire & Wex, Eq. 25:
+            sini = 2.0 * h3 * h4 / ( h3 * h3 + h4 * h4 );
+            printf( " DDH-model Derived parameters:  M2 = %lg\n", (double)m2 );
+            printf( "                              SINI = %lg\n", (double)sini );
+          }
+        }        
 
 	      // Joris' mass calculations.
 
@@ -447,7 +463,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
            psr[p].param[param_a1].paramSet[0]*
            psr[p].param[param_pb].paramSet[0]==1
            && psr[p].param[param_sini].nLinkTo==0){
-          longdouble mp[2];
+          long double mp[2];
           double DAY2S = (24.0L*3600.0L);
           mp[0] = -psr[p].param[param_m2].val[0]+
             sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
