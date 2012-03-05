@@ -312,6 +312,11 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   /* Binary parameters */
   strcpy(psr->param[param_t0].label[0],"T0 (MJD)");
   strcpy(psr->param[param_t0].shortlabel[0],"T0");
+  for (k=1;k<psr->param[param_fb].aSize;k++)
+    {
+      sprintf(temp,"FB_%d (d)",k); strcpy(psr->param[param_fb].label[k],temp);
+      sprintf(temp,"FB_%d",k); strcpy(psr->param[param_fb].shortlabel[k],temp);
+    }
   /* Dispersion measure and its derivative */
   for (k=1;k<psr->param[param_pb].aSize;k++)
     {
@@ -332,6 +337,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }
   strcpy(psr->param[param_pb].label[0],"PB (d)");
   strcpy(psr->param[param_pb].shortlabel[0],"PB");
+  strcpy(psr->param[param_fb].label[0],"FB (Hz)");
+  strcpy(psr->param[param_fb].shortlabel[0],"FB");
   strcpy(psr->param[param_a1].label[0],"A1 (lt-s)");
   strcpy(psr->param[param_a1].shortlabel[0],"A1");
   strcpy(psr->param[param_om].label[0],"OM (deg)");
@@ -468,6 +475,8 @@ void allocateMemory(pulsar *psr, int realloc)
       else if (i==param_f)  psr->param[i].aSize = MAX_FREQ_DERIVATIVES;
       else if (i==param_pb || i==param_ecc || i==param_om || i==param_t0 || i==param_a1) 
 	psr->param[i].aSize = MAX_COMPANIONS;
+      else if (i==param_fb)
+	psr->param[i].aSize = 9;
       else if (i==param_bpjep || i==param_bpjph || i==param_bpja1 || i==param_bpjec || i==param_bpjom
 	       || i==param_bpjpb)  psr->param[i].aSize = MAX_BPJ_JUMPS;
       else if (i==param_glep || i==param_glph || i==param_glf0 || i==param_glf1 || i==param_glf2 || 

@@ -153,7 +153,7 @@ extern char TEMPO2_ERROR[];
 
 enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
-	    param_sini,param_pb,param_t0,param_a1,param_om,param_pmrv,
+	    param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
 	    param_ecc,param_edot,param_xpbdot,param_pbdot,param_a1dot,
 	    param_omdot,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
 	    param_mtot,param_glep,param_glph,param_glf0,param_glf1,param_glf2,
@@ -593,6 +593,8 @@ double BTmodel(pulsar *psr,int p,int obs,int param);
 void updateBT(pulsar *psr,double val,double err,int pos);
 double BTJmodel(pulsar *psr,int p,int obs,int param,int arr);
 void updateBTJ(pulsar *psr,double val,double err,int pos,int arr);
+double BTXmodel(pulsar *psr,int p,int obs,int param,int arr);
+void updateBTX(pulsar *psr,double val,double err,int pos,int arr);
 double ELL1model(pulsar *psr,int p,int obs,int param);
 void updateELL1(pulsar *psr,double val,double err,int pos);
 long double DDmodel(pulsar *psr,int p,int obs,int param);

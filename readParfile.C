@@ -891,6 +891,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	    }
 	}
     }       
+  else if (strcasecmp(str,"FB")==0)
+    {
+      int fbval;
+      if (strlen(str)==2)
+	fbval=0;
+      else
+	sscanf(str+2,"%d",&fbval);
+
+      readValue(psr,str,fin,&(psr->param[param_pb]),fbval);
+    }
   else if (strcasecmp(str,"GAMMA")==0)
     readValue(psr,str,fin,&(psr->param[param_gamma]),0);
   else if (strcasecmp(str,"DR")==0)
