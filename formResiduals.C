@@ -69,7 +69,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   torb = 0.0; 
 
 	   /* Binary parameters */
-	   if (psr[p].param[param_pb].paramSet[0]==1) 
+	   if (psr[p].param[param_pb].paramSet[0]==1 || psr[p].param[param_fb].paramSet[0]==1) 
 	     {
 	       if (strcmp(psr[p].binaryModel,"BT")==0)         torb = BTmodel(psr,p,i,-1);
 	       else if (strcmp(psr[p].binaryModel,"BTJ")==0)   torb = BTJmodel(psr,p,i,-1,0);

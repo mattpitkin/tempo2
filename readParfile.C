@@ -455,7 +455,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_f]),1);
   else if (strcasecmp(str,"F0")==0 || strcasecmp(str,"F")==0)      /* F0 */
     readValue(psr,str,fin,&(psr->param[param_f]),0);
-  else if (str[0]=='F' || str[0]=='f') /* Read higher frequency derivatives */
+  else if ((str[0]=='F' || str[0]=='f') && (str[1]!='B')) /* Read higher frequency derivatives */
     {
       int fval;
       if (sscanf(str+1,"%d",&fval)==1)
@@ -891,7 +891,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	    }
 	}
     }       
-  else if (strcasecmp(str,"FB")==0)
+  else if (str[0]=='F' && str[1]=='B')
     {
       int fbval;
       if (strlen(str)==2)
@@ -899,7 +899,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       else
 	sscanf(str+2,"%d",&fbval);
 
-      readValue(psr,str,fin,&(psr->param[param_pb]),fbval);
+      readValue(psr,str,fin,&(psr->param[param_fb]),fbval);
     }
   else if (strcasecmp(str,"GAMMA")==0)
     readValue(psr,str,fin,&(psr->param[param_gamma]),0);

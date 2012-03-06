@@ -106,7 +106,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	exit(1);
       }
       entry(psr,npsr,writeModel);
-      printf("Returning\n");
+      //      printf("Returning\n");
       
       return;
     }
@@ -131,6 +131,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
       /* How many parameters are we fitting for */
       npol = getNparams(psr[p]);
+      //      printf("Number of parameters in fit = %d\n",npol);
       x     = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double)); // max fit data size is nobs+nconstraints
       y     = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double));
       sig   = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double));
@@ -195,6 +196,8 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	  if (debugFlag==1) printf("Doing the fit\n");
 	  TKleastSquares_svd_psr(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip);
+	  //	  for (i=0;i<npol;i++)
+	  //	    printf("Val: %g %g\n",val[i],error[i]);
 	  //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
 	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
 	  //
@@ -262,7 +265,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   //  printf("WARNING: Switching weighting off for the fit\n");
   //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
   clk=clock();  
-  printf("Tcheck: Starting Cholesky fit (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  //  printf("Tcheck: Starting Cholesky fit (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (strcmp(psr[0].fitFunc,"default")!=0)
     {
       char *(*entry)(pulsar *,int,int);
@@ -538,7 +541,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  updateParameters(psr,p,val,error);
 	  printf("Tcheck: complete updating the parameter values  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  if (debugFlag==1) printf("Completed updating the parameters\n");
-	}    
+	}   
       /* Free the vectors and matrices */
       free(error);
       free(val);
@@ -578,7 +581,7 @@ int getNparams(pulsar psr)
     {
       for (k=0;k<psr.param[i].aSize;k++)
 	{
-	  if (psr.param[i].fitFlag[k]==1) {
+	  if (psr.param[i].paramSet[k]==1 && psr.param[i].fitFlag[k]==1) {
 	    if (i!=param_start && i!=param_finish && i!=param_dmmodel && i!=param_gwsingle)
 	      npol++;
 	  }
@@ -645,7 +648,7 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
    * M. Keith August 2011
    *
    */
-  
+
   if(ipos < psr->nobs)afunc[n++] = 1;  /* Always fit for an arbitrary offset (unless this obs is a constraint!)*/
   else afunc[n++] = 0;
   /* See what we are fitting for */
@@ -653,7 +656,7 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
     {
       for (k=0;k<psr->param[i].aSize;k++)
 	{
-	  if (psr->param[i].fitFlag[k]==1) /* If we are fitting for this parameter */
+	  if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]==1) /* If we are fitting for this parameter */
 	    {
 	      if (i!=param_start && i!=param_finish)
 		{
@@ -753,7 +756,10 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 			}
 		    }
 		  else
-		    afunc[n++] = getParamDeriv(psr,ipos,x,i,k);
+		    {
+		      afunc[n++] = getParamDeriv(psr,ipos,x,i,k);
+		      //		      printf("getParamDeriv: n = %d, result = %g, %d %d %d %g %s\n",n-1,afunc[n-1],ipos,i,k,x,psr->param[i].shortlabel[k]);
+		    }
 		}
 	    }
 	}
@@ -1633,7 +1639,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		      }
 	      }
       }
-      
+          
 /*
       double ti = (double)psr->obsn[ipos].sat;
       double tm1 = (double)psr->dmoffsMJD[k-1];
@@ -1662,7 +1668,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
   else if (strcmp(psr->binaryModel,"BTJ")==0) 
     afunc = BTJmodel(psr,0,ipos,i,k);
   else if (strcmp(psr->binaryModel,"BTX")==0) 
-    afunc = BTXmodel(psr,0,ipos,i,k);
+      afunc = BTXmodel(psr,0,ipos,i,k);
   else if (strcmp(psr->binaryModel,"ELL1")==0) 
     afunc = ELL1model(psr,0,ipos,i);	  
   else if (strcmp(psr->binaryModel,"DD")==0) 
@@ -1699,7 +1705,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
     {
       for (k=0;k<psr[p].param[i].aSize;k++)
 	{
-	  if (psr[p].param[i].fitFlag[k]==1 && (i!=param_start && i!=param_finish))
+	  if (psr[p].param[i].paramSet[k]==1 && psr[p].param[i].fitFlag[k]==1 && (i!=param_start && i!=param_finish))
 	    {
 	      if (i==param_f) 
 		{

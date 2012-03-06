@@ -135,6 +135,7 @@ transform_units(struct pulsar *psr, int from, int to)
   // Binary parameters
   xform_mjd(&psr->param[param_t0],0, f);
   scale_param(&psr->param[param_pb],0, f);
+  scale_param(&psr->param[param_fb],0, one/f);
   scale_param(&psr->param[param_a1],0, f);
   scale_param(&psr->param[param_edot],0, one/f);
   // XXX need to investigate DR, DTHETA, GAMMA

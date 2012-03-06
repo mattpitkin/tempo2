@@ -56,8 +56,7 @@ double BTXmodel(pulsar *psr,int p,int ipos,int param,int k)
   double alpha,beta,sbe,cbe,q,r,s,fac;
   const char *CVS_verNum = "$Revision$";
 
-  if (displayCVSversion == 1) CVSdisplayVersion("BTmodel.C","BTmodel()",CVS_verNum);
-
+  if (displayCVSversion == 1) CVSdisplayVersion("BTXmodel.C","BTXmodel()",CVS_verNum);
 
   tt0 = (psr[p].obsn[ipos].bbat - psr[p].param[param_t0].val[0])*SECDAY;
 
@@ -67,7 +66,7 @@ double BTXmodel(pulsar *psr,int p,int ipos,int param,int k)
 
   if (ecc < 0.0 || ecc > 1.0)
     {
-      printf("BTmodel: problem with eccentricity = %Lg\n",psr[p].param[param_ecc].val[0]);
+      printf("BTXmodel: problem with eccentricity = %Lg\n",psr[p].param[param_ecc].val[0]);
       exit(1);
     }
 
@@ -88,17 +87,16 @@ double BTXmodel(pulsar *psr,int p,int ipos,int param,int k)
   // Note for the BTX model we use the FB parameters
   orbits = psr[p].param[param_fb].val[0]*tt0;
   // DO CHECK FOR NFBJ
-  printf("Not checking for NFBJ\n");
+  //  printf("Not checking for NFBJ %g\n",orbits);
   fac = 1.0;
   for (j=1;j<psr[p].param[param_fb].aSize;j++)
     {
       fac = fac/(double)(j+1);
       if (psr[p].param[param_fb].paramSet[j]==1)
-	orbits += fac*psr[p].param[param_fb].val[j]*pow(tt0,j+1);
+	orbits += fac*psr[p].param[param_fb].val[j]*powl(tt0,j+1);
     }
-
   // UPDATE FOR EDOT, XDOT etc.
-  printf("Not updating EDOT, XDOT, OMEGA etc.\n");
+  //  printf("Not updating EDOT, XDOT, OMEGA etc. %g\n",orbits);
 
   //  orbits = tt0/pb - 0.5*(pbdot+xpbdot)*pow(tt0/pb,2); 
   norbits = (int)orbits;
@@ -129,29 +127,39 @@ double BTXmodel(pulsar *psr,int p,int ipos,int param,int k)
   q = alpha * (cbe-ecc) + (beta+gamma)*sbe;
   r = -alpha*sbe + beta*cbe;
   s = 1.0/(1.0-ecc*cbe);
-
-  torb = -q+(2*M_PI*psr[p].param[param_fb].val[0])*q*r*s + torb;
-
+  //  printf("Have torb = %g %g %g %g\n",torb,q,r,s);
+  torb = -q+(2*M_PI*(double)psr[p].param[param_fb].val[0])*q*r*s + torb;
+  //  printf("Have torb2 = %g %g %g %g %g\n",torb,q,r,s,(double)psr[p].param[param_fb].val[0]);
   if (param==-1) return torb;
-
   //  if (param==param_pb)
   //    return -2.0*M_PI*r*s/pb*SECDAY*tt0/(SECDAY*pb) * SECDAY;  /* fctn(12+j) */
   if (param==param_fb)
     {
       double diff;
+      tt0/=1.0e7;
       diff = 2.0*M_PI*r*s*tt0;
       for (j=1;j<=k;j++)
-	diff = 1.0/(double)(j+1)*tt0*diff;
+	{
+	  //	  tt0/=1.0e7;
+	  diff = (1.0/(double)(j+1))*tt0*diff;      
+	}
+      //      printf("Returning: param_fb %d %g %g %g %g\n",k,diff,(double)r,(double)s,(double)tt0);
       return diff;
     }
   else if (param==param_a1)
-    return (som*(cbe-ecc) + com*sbe*sqrt(tt));                /* fctn(9+j) */
+    {
+      //      printf("Returning A1: %g\n",(som*(cbe-ecc) + com*sbe*sqrt(tt)));
+      return (som*(cbe-ecc) + com*sbe*sqrt(tt));                /* fctn(9+j) */
+    }
   else if (param==param_ecc)
     return -(alpha*(1.0+sbe*sbe-ecc*cbe)*tt - beta*(cbe-ecc)*sbe)*s/tt; /* fctn(10+j) */
   else if (param==param_om)
-    return asini*(com*(cbe-ecc) - som*sqrt(tt)*sbe);          /* fctn(13+j) */
+   return asini*(com*(cbe-ecc) - som*sqrt(tt)*sbe);          /* fctn(13+j) */
   else if (param==param_t0)
-    return -2.0*M_PI*psr[p].param[param_fb].val[0]*r*s*SECDAY;                           /* fctn(11+j) */
+    {
+      //      printf("Returning T0 %g\n",-2.0*M_PI*psr[p].param[param_fb].val[0]*r*s*SECDAY);
+      return -2.0*M_PI*psr[p].param[param_fb].val[0]*r*s*SECDAY;                           /* fctn(11+j) */
+    }
   //  else if (param==param_pbdot)
   //    return 0.5*(-2.0*M_PI*r*s/pb*SECDAY*tt0/(SECDAY*pb))*tt0; /* fctn(18+j) */
   else if (param==param_a1dot)
@@ -169,8 +177,8 @@ void updateBTX(pulsar *psr,double val,double err,int pos,int k)
 {
   if (pos==param_fb)
     {
-      psr->param[param_pb].val[k] += val;
-      psr->param[param_pb].err[k]  = err;
+      psr->param[param_fb].val[k] += (val/powl(1.0e7,k+1));
+      psr->param[param_fb].err[k]  = err/powl(1.0e7,k+1);
     }
   else if (pos==param_a1 || pos==param_ecc || pos==param_t0 || pos==param_gamma || pos==param_edot)
     {
