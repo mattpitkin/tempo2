@@ -177,7 +177,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
      for (i=0; i < psr[p].nconstraints; i++){
-	ip[count] = psr->nobs+i;
+       ip[count] = psr[p].nobs+i;  // This was a mistake -- originally had psr->nobs 
 	x[count]=0;
 	y[count]=0;
 	sig[count]=1e-12;
@@ -388,7 +388,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
      for (i=0; i < psr[p].nconstraints; i++){
-	ip[count] = psr->nobs+i;
+	ip[count] = psr[p].nobs+i;
 	x[count]=0;
 	y[count]=0;
 	sig[count]=1e-12;
@@ -1314,8 +1314,9 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  } else if(sat > (double)psr->ifuncT[(int)psr->ifuncN-1]){
 	    afunc = yoffs[(int)psr->ifuncN-1];
 	  } else{
+	    int ioff;
 	    // find the pair we are between...
-	    for (int ioff =0;ioff<psr->ifuncN;ioff++){
+	    for (ioff =0;ioff<psr->ifuncN;ioff++){
 	      if(sat >= psr->ifuncT[ioff] && sat < psr->ifuncT[ioff+1]){
 		double x1 = psr->ifuncT[ioff];
 		double x2 = psr->ifuncT[ioff+1];
@@ -1324,8 +1325,13 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		double y2=yoffs[ioff+1];
 		afunc = (y2-y1)*x + y1;
 		break;
-	      }
+	      }	      
 	    }
+	    if (ioff == psr->ifuncN)
+	      {
+		printf("We should never reach this bit of code in doFit.C -- something wrong\n");
+		exit(1);
+	      }
 	  }
 	}
     }
