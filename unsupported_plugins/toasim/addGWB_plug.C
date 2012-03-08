@@ -72,6 +72,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   FILE *gwFile;
 
 
+  fname[0]='\0';
+
 
   //
   // For the output file
@@ -80,6 +82,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   toasim_header_t* read_header;
   FILE* file;
   double offsets[MAX_OBSN]; // Will change to doubles - should use malloc
+  double epochs[MAX_OBSN]; // Will change to doubles - should use malloc
   // Create a set of corrections.
   toasim_corrections_t* corr = (toasim_corrections_t*)malloc(sizeof(toasim_corrections_t));
 
@@ -93,7 +96,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   *npsr = 0;
   nit = 1;
 
-  printf("Graphical Interface: addGaussian\n");
+  printf("Graphical Interface: addGWB\n");
   printf("Author:              G. Hobbs, M. Keith\n");
   printf("Version:             1.0\n");
 
@@ -131,6 +134,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-readGW")==0){
 	sscanf(argv[++i],"%s",&gwFileName);
 	readGW=1;
+      } else if (strcmp(argv[i],"-outf")==0){
+	      sscanf(argv[++i],"%s",&fname);
       } else if (strcmp(argv[i],"-writeGW")==0){
 	sscanf(argv[++i],"%s",&gwFileName);
 	writeGW=1;
@@ -199,7 +204,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       header->nrealisations = nit;
 
       // First we write the header...
-      sprintf(fname,"%s.addGWB",timFile[p]);
+      if(fname[0]=='\0')
+	      sprintf(fname,"%s.addGWB",timFile[p]);
       file = toasim_write_header(header,fname);
 
       for (j=0;j<nit;j++)
@@ -231,9 +237,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	  for (i=0;i<psr[p].nobs;i++)
 	    {
-	      // Should remove a quadratic -- not doing 
+              epochs[i]=(double)psr[p].obsn[i].sat;
 	      offsets[i] = (double)((gwRes[i]-mean));
 	    }
+
+
+	  // remove quadratic to make the total variation smaller.
+	  TKremovePoly_d(epochs,offsets,psr[p].nobs,2);
+
+	  printf("Write '%s'\n",fname);
 	  toasim_write_corrections(corr,header,file);
 	}
       fclose(file);

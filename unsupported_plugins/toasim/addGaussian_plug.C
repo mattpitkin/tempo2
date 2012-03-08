@@ -90,6 +90,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			strcpy(timFile[*npsr],argv[++i]);
 			(*npsr)++;
 		}
+		if (strcmp(argv[i],"-seed")==0){
+			sscanf(argv[++i],"%d",&seed);
+		}
 	}
 
 

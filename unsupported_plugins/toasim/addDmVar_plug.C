@@ -104,6 +104,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			is=atof(argv[++i]);
 		}
 
+		else if (strcmp(argv[i],"-seed")==0){
+			sscanf(argv[++i],"%d",&seed);
+		}
 
 	}
 
@@ -169,35 +172,36 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		for (i=0;i<nit;i++)
 		{
 			FILE *log_spec = fopen("dmvar.spec","w");
-			if(i%10 == 0){
-				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+//			if(i%10 == 0){
+//				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+//				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 				printf("Iteration %d/%d",i+1,nit);
 				fflush(stdout);
-			}
+//			}
 			for (j=0;j<psr[p].nobs;j++){
 				offsets[j] =0;
 				dms[j] =0;
 			}
+
+			double ofreq=1.4e9;
+			double top = 2.0*pow(2.0*M_PI*ofreq,-2.0) * pow(tdiff,-5.0/3.0);
+			double bottom = 179.0*pow(secperyear,1.0/3.0);
+			double pism = top/bottom; // years
+
+			double aC = sqrt(pism*fstep); // delay in years
+			aC *= secperyear; // delay in seconds
+			aC *= DM_CONST*pow(ofreq/1e6,2.0); // DM in cm^-3 pc
+			aC /= sqrt(2.0); // account for cos + sin
+
+
 			for (int iwav = 0; iwav < nwav; iwav++){
 				double f=fstart+(double)iwav*fstep;
-
-				double ofreq=1.4e9;
-
-				double top = 2.0*pow(2.0*M_PI*ofreq,-2.0) * pow(tdiff,-5.0/3.0) * pow(f,alpha);
-				double bottom = 179.0*pow(secperyear,1.0/3.0);
-				double pism = top/bottom; // years
-				double a = sqrt(pism*fstep); // delay in years
-				a *= secperyear; // delay in seconds
-				a *= DM_CONST*pow(ofreq/1e6,2.0); // DM in cm^-3 pc
-				a /= sqrt(2.0); // account for cos + sin
-
+				double a=aC * pow(f,alpha/2.0);
 				double a2 =a*TKgaussDev(&seed);
 				a*=TKgaussDev(&seed);
-
-				fprintf(log_spec,"%lg %lg\n",f,a*a+a2*a2);
+//				fprintf(log_spec,"%lg %lg\n",f,a*a+a2*a2);
 				for (j=0;j<psr[p].nobs;j++){
-					double t=(psr[p].obsn[j].bat - mjd_start)/365; // t in years!
+					double t=(psr[p].obsn[j].bat - mjd_start)/365.0; // t in years!
 					double dmv=a*sin(2*M_PI*t*f) + a2*cos(2*M_PI*t*f);
 					dms[j]+=dmv;
 				}
@@ -218,8 +222,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			fclose(log_spec);
 			fclose(log_ts);
 		}
-		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+//		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+//		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 		printf("Iteration %d/%d\n",i,nit);
 
 		printf("Close file\n");
