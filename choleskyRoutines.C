@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "TKfit.h"
-#include "TKspectrum.h"
 #include "fftw3.h"
 
 // Automatic determination of the covariance function
@@ -868,14 +867,14 @@ void interpolate(double *resx,double *resy,double *rese,
       interpY[i] += (cubicVal[0] + cubicVal[1]*interpX[i] + 
 		     cubicVal[2]*pow(interpX[i],2) + cubicVal[3]*pow(interpX[i],3));
     }
-  if(writeFiles)
+  /*  if(writeFiles)
   {
     FILE *fout;
     fout = fopen("interp.dat","w");
     for (i=0;i<*nInterp;i++)
       fprintf(fout,"%g %g\n",interpX[i],interpY[i]);
     fclose(fout);
-  }
+    }*/
 }
 
 void getHighFreqRes(double *resy,double *smoothModel,int nres,double *highFreqRes)
@@ -968,8 +967,10 @@ int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,dou
   return 1;
 }
 
-void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double fitVar,double **uinv,double *covFunc,
-		       double *resx,double *resy,double *rese,int np,double *highFreqRes,double *errorScaleFactor)
+void calculateCholesky(double modelAlpha,double modelFc,double modelScale,
+double fitVar,double **uinv,double *covFunc,double *resx,double *resy,
+double *rese,int np,double *highFreqRes,double *errorScaleFactor, 
+int dcmflag)
 {
   int i,j;
   double *f; // Frequency vector
@@ -1270,3 +1271,36 @@ void formCholeskyMatrix_pl(double *c,double *resx,double *resy,double *rese,int 
   free(cholp);
 }
 
+// Fill resx with the SATs (in days), resy with post-fit residuals (s) and rese
+// with TOA errors (s)
+//
+int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese)
+{
+  int i;
+  int nres=0;
+
+  for (i=0;i<psr[0].nobs;i++)
+    {
+      if (psr[0].obsn[i].deleted==0)
+	{
+	  resx[nres] = (double)(psr[0].obsn[i].sat - psr[0].param[param_pepoch].val[0]);
+	  // Check to make sure that the data are time sorted
+	  /*if (nres>0 && resx[nres] < resx[nres-1])
+	    {
+	      printf("ERROR: Data are not time sorted\n");
+	      exit(1);
+	    }
+	  */	 
+
+	  resy[nres] = (double)(psr[0].obsn[i].residual);
+	  rese[nres] = (double)(psr[0].obsn[i].toaErr*1.0e-6);
+	  //fprintf(stderr, "%.13le %.13le %.13le\n", resx[nres],(double) (psr[1].obsn[i].residual) , rese[nres]);
+	  nres++;
+	}
+    }
+
+  
+  
+
+  return nres;
+}
