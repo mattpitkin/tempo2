@@ -106,9 +106,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		else if (strcmp(argv[i],"-seed")==0){
 			sscanf(argv[++i],"%d",&seed);
+			if (seed > 0)seed=-seed;
 		}
 
 	}
+
+	printf("seed=%d\n",seed);
 
 
 	readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -166,6 +169,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		printf("fmin     = %f (1/yr)\n",fstart);
 		printf("fmax     = %f (1/yr)\n",fend);
 		printf("tdiff    = %f (s)\n",tdiff);
+		printf("seed     = %d\n",seed);
 
 		
 

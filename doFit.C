@@ -746,7 +746,8 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		    {		      
 
 		    double dmf = 1;
-		    if (ipos < psr->nobs)dmf = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
+			if (ipos < psr->nobs)dmf = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
+//		    if (ipos < psr->nobs)dmf = 1.0/(powl(psr->obsn[ipos].freqSSB/1.0e6,4.4)); // FAKE SCATTERING TEST
 
 		      for (j=0;j<(int)psr->dmoffsNum;j++)
 			{

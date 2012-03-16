@@ -328,6 +328,7 @@ int GWbackground_read(gwSrc *gw, FILE *file, int ireal){
 }
 
 
+
 void GWbackground_write(gwSrc *gw, FILE *file,int ngw, int ireal){
 	int igw;
 	const unsigned int gwsize = 9*sizeof(long double);

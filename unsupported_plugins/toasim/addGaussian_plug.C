@@ -95,6 +95,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		}
 	}
 
+	if (seed > 0)seed=-seed;
 
 	readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
 	// Now read in all the .tim files

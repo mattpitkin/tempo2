@@ -142,6 +142,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       }
 
     }
+
+  if (seed > 0)seed=-seed;
   scale = pow(86400.0*365.25,alpha);
   gwAmp *= scale;
   if (distNum!=*npsr)

@@ -223,8 +223,13 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	}
       if (freqf<=1) /* Have infinitive frequency */
 	psr[p].obsn[i].tdis1 = 0.0;
-      else
+      else{
 	psr[p].obsn[i].tdis1 = dmval/DM_CONST/1.0e-12/freqf/freqf; 
+	/* The lines below were used to test scattering variation instead of DM variation.
+	 */
+//	psr[p].obsn[i].tdis1 = psr[p].param[param_dm].val[0]/DM_CONST/1.0e-12/freqf/freqf; 
+//	psr[p].obsn[i].tdis1 += dmval/pow(freqf/1e6,4.4); 
+      }
 
       if (debugFlag==1) printf("In dm_delays: calculate tdis1\n");      
       /* Add frequency dependent delay term */
