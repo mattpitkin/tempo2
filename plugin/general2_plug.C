@@ -486,11 +486,11 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		      }
 		      
 		      if (iparam==MAX_PARAMS)
-		      {
-			fprintf(stderr, "Parameter %s not found!\n",
-				var+2);
-			exit(1);
-		      }
+			{
+			  fprintf(stderr, "Parameter %s not found!\n",
+				  var+2);
+			  exit(1);
+			}
 
 		      sprintf(disp,dformat, 
 			      getParamDeriv(psr,varN,psr[0].obsn[varN].bbat-psr[0].param[param_pepoch].val[0], iparam, iindex)); 
@@ -615,14 +615,13 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			int l;
 			strcpy(disp,"");
 			for (l=0;l<psr[0].obsn[varN].nclock_correction;l++)
-			  {
-			    if (l!=0)
-			      strcat(disp,"->");
-			    strcat(disp,psr[0].obsn[varN].correctionsTT[l].corrects_to);
-			  }			    
+			  
+			  if (l!=0)
+			    strcat(disp,"->");
+			strcat(disp,psr[0].obsn[varN].correctionsTT[l].corrects_to);
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
-		      }		    
+		      }		
 		    else if (strcasecmp(var,"ipm")==0) /* Interplanetary medium delay */
 		      {
 			sprintf(disp,dformat,psr[0].obsn[varN].tdis2); 
@@ -635,7 +634,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }
-		    if (strcasecmp(var,"x")==0) /* BAT - epoch */
+		else if (strcasecmp(var,"x")==0) /* BAT - epoch */
 		      {
 			sprintf(disp,format,psr[0].obsn[varN].bat - psr[0].param[param_pepoch].val[0]); 
 			fprintf(fout,"%s",disp);
@@ -712,14 +711,13 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		    fprintf(fout,"%s",disp);
 		    pos+=strlen(disp);
 		  }
-		
+		  }		
 	      }
+	    else
+	      {
+		fprintf(fout,"%c",line[i]);	      
+		pos++;
 	      }
-	else
-	  {
-	    fprintf(fout,"%c",line[i]);	      
-	    pos++;
-	  }
 	  }
       }
   } while (end==0);
