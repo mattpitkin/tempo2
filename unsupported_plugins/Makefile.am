@@ -7,7 +7,7 @@ subdirs: $(SUBD)
 $(SUBD):
 	mkdir -p $@/../built_plugins
 	@echo "BUILD $@"
-	@if test -e $@/Makefile ; then $(MAKE) -C $@ ; else if test -e $@/build.sh ; then cd $@ ; ./build.sh ; else echo "Don't know how to build $@" ; fi ; fi
+	@if test -e $@/Makefile ; then $(MAKE) -C $@ ; else if test -e $@/build.sh ; then cd $@ ; chmod +x build.sh; ./build.sh ; else echo "Don't know how to build $@" ; fi ; fi
 
 
 install:
