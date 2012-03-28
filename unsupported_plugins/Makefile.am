@@ -14,5 +14,5 @@ install:
 	$(INSTALL) built_plugins/*.t2 @TEMPO2_PLUG_INSTALL@
 
 
-EXTRA_DIST=glast toasim ppta
+EXTRA_DIST=glast/ toasim/ ppta/
 
