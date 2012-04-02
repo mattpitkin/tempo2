@@ -477,12 +477,13 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   float zoomX1=0.0,zoomX2=0.0,zoomY1=0.0,zoomY2=0.0;
   float delX1=0.0, delX2=0.0, delY1=0.0,delY2=0.0;
   float aspect=1.0;
+  float viewport_x0 = 0.1,viewport_x1 = 0.95,viewport_y0 = 0.15, viewport_y1 = 0.85;
   int   fontType=1;
   int   lineWidth=1;
   char  userValStr[1000]="DPA";
   int   userValChange=1;
   int   setZoomX1=0,setZoomX2=0,setZoomY1=0,setZoomY2=0,graphics=0;
-  int   zoom=0;
+  int   zoom=-1;
   int   noreplot=0;
   int overPlotn = 0;
   int   overPlotS = -1;
@@ -593,6 +594,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
       printf("Default plotting setup will be used\n");
       fontSize=1.0;
       aspect=0.8;
+      viewport_x0 = 0.1;
+      viewport_x1 = 0.95;
+      viewport_y0 = 0.15;
+      viewport_y1 = 0.85;
       fontType=1;
       lineWidth=1;
       minFreqCol[0] = 0;    maxFreqCol[0] = 500;   freqCol[0] = 1; freqStyle[0] = 16;
@@ -614,6 +619,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		fscanf(fin,"%f",&fontSize);
 	      else if (strcasecmp(str,"aspect")==0)
 		fscanf(fin,"%f",&aspect);
+	      else if (strcasecmp(str,"viewport_x0")==0)
+		fscanf(fin,"%f",&viewport_x0);
+	      else if (strcasecmp(str,"viewport_x1")==0)
+		fscanf(fin,"%f",&viewport_x1);
+	      else if (strcasecmp(str,"viewport_y0")==0)
+		fscanf(fin,"%f",&viewport_y0);
+	      else if (strcasecmp(str,"viewport_y1")==0)
+		fscanf(fin,"%f",&viewport_y1);
 	      else if (strcasecmp(str,"fonttype")==0)
 		fscanf(fin,"%d",&fontType);
 	      else if (strcasecmp(str,"linewidth")==0)
@@ -644,8 +657,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     }
 
 
-  if (psr[0].param[param_start].fitFlag[0]==1) origStart = psr[0].param[param_start].val[0];
-  if (psr[0].param[param_finish].fitFlag[0]==1) origFinish = psr[0].param[param_finish].val[0];
+  if (psr[0].param[param_start].fitFlag[0]==1) 
+    origStart = psr[0].param[param_start].val[0];
+  if (psr[0].param[param_finish].fitFlag[0]==1) 
+      origFinish = psr[0].param[param_finish].val[0];
 
   /* Obtain a graphical PGPLOT window */
   cpgbeg(0,gr,1,1);
@@ -781,7 +796,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
       origStart = x[0] + centreEpoch - 1;
     if (origFinish==-1)
       origFinish = x[count-1] + 1 + centreEpoch;
-
+  
     /* Get scaling for graph */
     minx = x[0];
     maxx = x[count-1];
@@ -840,12 +855,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      }
 	    else
 	      {
-          cpgsvp(0.1,0.9,0.1,0.8);
-          cpgswin(plotx1,plotx2,ploty1,ploty2);
-          //cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
-        }
-      // Print period axis (right-hand y-axis)
-      if( publish==0 && (yplot == 1 || yplot == 2 ) && displayPP==1){
+		cpgeras();
+		cpgsvp(viewport_x0,viewport_x1,viewport_y0,viewport_y1);
+
+		cpgswin(plotx1,plotx2,ploty1,ploty2);
+		//cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
+	      }
+	    // Print period axis (right-hand y-axis)
+	    if( publish==0 && (yplot == 1 || yplot == 2 ) && displayPP==1){
         cpgbox( "BCNST", 0.0, 0, "BNST1", 0.0, 0 );
         cpgaxis( "N", plotx2, ploty1, plotx2, ploty2,
                  ploty1*psr[0].param[param_f].val[0]*unitFlag,
@@ -853,24 +870,26 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                  0.5, 0.3, 0.0 );
         cpgptxt( plotx2+(plotx2-plotx1)/15.0, (ploty2+ploty1)/2.0, 90.0, 
                  0.5, "Residual in pulse periods" );
-      }else
-        cpgbox( "BCNST1", 0.0, 0, "BCNST1", 0.0, 0 );
+	    }else
+	      cpgbox( "BCNST1", 0.0, 0, "BCNST1", 0.0, 0 );
 	  }
 	else{
-	  cpgenv(plotx1,plotx2,ploty1,ploty2,0,-1);
-    //cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
-    // Print period axis (right-hand y-axis )
-    if(publish==0 &&( yplot == 1 || yplot == 2 ) && displayPP == 1){
-      cpgbox( "BCNST1", 0.0, 0, "BNST1", 0.0, 0 );
-        cpgaxis( "N", plotx2, ploty1, plotx2, ploty2,
-                 ploty1*psr[0].param[param_f].val[0]*unitFlag,
-                 ploty2*psr[0].param[param_f].val[0]*unitFlag, 0.0, 0, 0.5, 0.0,
-                 0.5, 0.3, 0.0 );
-        cpgptxt( plotx2+(plotx2-plotx1)/15.0, (ploty2+ploty1)/2.0, 90.0, 
-                 0.5, "Residual in pulse periods" );
-      }else
-        cpgbox( "BCNST1", 0.0, 0, "BCNST1", 0.0, 0 );
-  }
+	  cpgeras();
+	  cpgsvp(viewport_x0,viewport_x1,viewport_y0,viewport_y1);
+	  cpgswin(plotx1,plotx2,ploty1,ploty2);
+	  //cpgbox("BCNST1",0.0,0,"BCNST1",0.0,0);
+	  // Print period axis (right-hand y-axis )
+	  if(publish==0 &&( yplot == 1 || yplot == 2 ) && displayPP == 1){
+	    cpgbox( "BCNST1", 0.0, 0, "BNST1", 0.0, 0 );
+	    cpgaxis( "N", plotx2, ploty1, plotx2, ploty2,
+		     ploty1*psr[0].param[param_f].val[0]*unitFlag,
+		     ploty2*psr[0].param[param_f].val[0]*unitFlag, 0.0, 0, 0.5, 0.0,
+		     0.5, 0.3, 0.0 );
+	    cpgptxt( plotx2+(plotx2-plotx1)/15.0, (ploty2+ploty1)/2.0, 90.0, 
+		     0.5, "Residual in pulse periods" );
+	  }else
+	    cpgbox( "BCNST1", 0.0, 0, "BCNST1", 0.0, 0 );
+	}
 
   char rmsStr[10];
   if (psr[0].fitMode==1) strcpy(rmsStr,"Wrms");
@@ -3521,7 +3540,7 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 	   longdouble origFinish,longdouble centreEpoch,pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile,int zoom)
 {
   int i,k;
-  printf("Redoing the fit %d\n",zoom);
+  printf("Redoing the fit %d (%g %d %d)\n",zoom,(double)origStart,setZoomX1,fitFlag);
   if (fitFlag==1 || fitFlag==2)
     {
       if (setZoomX1 == 0) {
@@ -3568,11 +3587,11 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 	psr[0].param[param_finish].prefit[0] = psr[0].param[param_finish].val[0];
       }
       if (zoom==0)
-	{
-	  psr[0].param[param_start].fitFlag[0]=0;
-	  psr[0].param[param_finish].fitFlag[0]=0;
-	}
-
+      	{
+      	  psr[0].param[param_start].fitFlag[0]=0;
+      	  psr[0].param[param_finish].fitFlag[0]=0;
+      	}
+      
     }
   /* Convert all prefit values to postfit values */
   for (i=0;i<MAX_PARAMS;i++)
