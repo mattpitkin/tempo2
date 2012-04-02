@@ -62,8 +62,8 @@ void help() /* Display help */
   printf("-clock simulate clock errors instead of a GWB\n");
   printf("-dist  pulsar distance in kpc\n");
   printf("-f     parfile.par timfile.tim:  input par and tim files\n");
-  printf("-flo   lowest GW frequency to simulate (default = 0.01/Tspan) \n");
-  printf("-fhi   highest GW frequency to simulate (default = day^-1)\n");
+  printf("-flo   lowest GW frequency to simulate (default = 0.01/Tspan) (Hz) \n");
+  printf("-fhi   highest GW frequency to simulate (default = d^-1) (Hz)\n");
   printf("-gwamp GWamplitude in dimensionless units\n");
   printf("-h     this help file\n");
   printf("-linear Use linear spacing for GW frequencies (default = logarithmic spacing)\n");

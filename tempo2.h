@@ -55,7 +55,7 @@
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX              64    /* Max number of DM steps allowed */
-#define MAX_FLAGS            50    /* Maximum number of flags in .tim file/observation */
+#define MAX_FLAGS            150    /* Maximum number of flags in .tim file/observation */
 #define MAX_CLK_CORR         10    /* Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /* Number of seconds in 1 day                 */
 #define SPEED_LIGHT          299792458.0 /* Speed of light (m/s)                       */

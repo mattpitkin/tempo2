@@ -34,6 +34,7 @@
 #include "TKfit.h"
 #include "T2toolkit.h"
 #include <cpgplot.h>
+#include "choleskyRoutines.C"
 
 using namespace std;
 
@@ -42,7 +43,6 @@ void help() /* Display help */
 {
 }
 
-void calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *covFunc,double *resx,double *resy,double *rese,int np);
 
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
@@ -57,6 +57,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double covFunc[MAX_OBSN];
   double whiteNoise;
   char fname[128];
+  double rms;
   FILE *fout;
   double gwamp=1.0e-15;
   modelAlpha = 13.0/3.0;
@@ -64,13 +65,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   modelFc = -1;
   modelA = -1; // 1.819e-26;
   whiteNoise = -1;
+  rms = 100e-9;
 
-  if (displayCVSversion == 1) CVSdisplayVersion("grTemplate.C","plugin",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion("analyticChol.C","plugin",CVS_verNum);
 
   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
 
-  printf("Graphical Interface: name\n");
-  printf("Author:              author\n");
+  printf("Graphical Interface: analyticChol\n");
+  printf("Author:              G. Hobbs\n");
   printf("CVS Version:         $Revision$\n");
   printf(" --- type 'h' for help information\n");
 
@@ -86,6 +88,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%lf",&modelFc);
       else if (strcmp(argv[i],"-gwamp")==0)
 	sscanf(argv[++i],"%lf",&gwamp);
+      else if (strcmp(argv[i],"-rms")==0)
+	sscanf(argv[++i],"%lf",&rms);
       else if (strcmp(argv[i],"-alpha_res")==0)
 	{
 	  sscanf(argv[++i],"%lf",&modelAlpha);
@@ -115,7 +119,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   if (modelFc == -1)
     {
-      int ndays = resx[np-1]-resx[0];
+      int ndays = ceil(resx[np-1]-resx[0]);
       modelFc = 1.0/(ndays/365.25*2.0);
     }
   if (modelA == -1)
@@ -124,28 +128,23 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
   if (whiteNoise == -1)
     {
-      double rms,tspan;
+      double tspan;
       int npts;
-      
-      // UPDATE .....
-      rms = 100e-9; // HARDCODED TO 100ns
       
       tspan = (resx[np-1]-resx[0])/365.25;
       npts = np;
       whiteNoise = pow(rms/86400.0/365.25,2)*2*tspan/npts;
     }
 
-  ndays = (int)((resx[np-1])-(resx[0])+0.5)+2; 
-  calculateCovarFunc(modelAlpha,modelFc,modelA,covFunc,resx,resy,rese,np);
+  ndays = ceil((resx[np-1])-(resx[0])); 
+  T2calculateCovarFunc(modelAlpha,modelFc,modelA,covFunc,resx,resy,rese,np,1);
 
   // Write it out
   sprintf(fname,"covarFunc.dat_%s",psr[0].name);
   fout = fopen(fname,"w");
   fprintf(fout,"1\n");
-  for (i=0;i<ndays;i++)
-    {
-      fprintf(fout,"%.15g\n",covFunc[i]);
-    }
+  for (i=0;i<=ndays;i++)
+    fprintf(fout,"%.15g\n",covFunc[i]);
   fclose(fout);
 
   sprintf(fname,"%s.model",psr[0].name);
@@ -158,87 +157,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-void calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *covFunc,double *resx,double *resy,double *rese,int np)
-{
-  int i,j;
-  double *f; // Frequency vector
-  double *p; // Model of pulsar power spectrum
-  double *pe;
-  double *pf; // Periodic spectrum model
-  double *opf; 
-  double weightVarRes,weightMeanRes;
-  double weightVarHighFreqRes,weightMeanHighFreqRes;
-  double mean,escale,actVar,tt,tl,bl,tl2,bl2;
-  int ndays;
-  int debug=1;
-  double varScaleFactor = 0.6;
-
-  ndays = (int)((resx[np-1])-(resx[0])+0.5); 
-  f  = (double *)malloc(sizeof(double)*(ndays*2+2)); // Frequency vector
-  p  = (double *)malloc(sizeof(double)*(ndays*2+2)); // Model of pulsar power spectrum
-  pf = (double *)malloc(sizeof(double)*(ndays*2+2)); // Periodic spectrum model
-  opf = (double *)malloc(sizeof(double)*(ndays*2+2)); // Periodic spectrum model
-  pe = (double *)malloc(sizeof(double)*(ndays*2+2)); // Periodic spectrum model
-
-  printf("Number of days = %d\n",ndays);
-
-
-  //  for (i=0;i<ndays+1;i++)
-  //  for (i=0;i<ndays;i++)
-  for (i=0;i<2*ndays;i++)
-    {
-      //      f[i] = i*1.0/(resx[np-1]-resx[0])*365.25;
-      f[i] = (double)(i+1)/(double)(2*ndays)*365.25;
-      //      f[i] = (double)(i+1)/(double)(2*ndays)*365.25;
-      
-      // CHANGED TO THIS ...
-      // BIG CHANGE HERE ........
-      p[i] = modelA/pow(1.0+pow(f[i]/modelFc,modelAlpha/2.0),2);
-	     //p[i] = 1e-14*1e-14/12.0/M_PI/M_PI*pow(f[i]*365.25,-13.0/3.0);
-      pf[i] = p[i];
-    }
-  //  j = ndays+1;
-      ndays *= 2; j = ndays;
-  /*  j = ndays;
-  //  for (i=ndays;i>0;i--)
-  for (i=ndays-1;i>=0;i--)
-    {
-      // Changed from minus sign
-      //f[j] = -f[i];
-            f[j] = f[i];
-      //      pf[j] = 1.0/(pow((1.0+pow(f[j]/(modelFc*2),2)),modelAlpha/2.0));
-      pf[j] = modelA/pow(1.0+pow(f[j]/modelFc,modelAlpha/2.0),2);
-      //pf[j] = 1e-14*1e-14/12.0/M_PI/M_PI*pow(f[j]*365.25,-13.0/3.0);
-      j++;
-    }
-  //  ndays = j;
-  ndays=j-1; */
-
-  printf("Obtaining covariance function from analytic model\n");
-  {
-    fftw_complex* output;
-    fftw_plan transform_plan;
-    double tt;
-
-    output = (fftw_complex*)opf;
-    //    transform_plan = fftw_plan_dft_r2c_1d(ndays, pf, output, FFTW_ESTIMATE);
-    transform_plan = fftw_plan_dft_r2c_1d(ndays, pf, output, FFTW_ESTIMATE);
-    fftw_execute(transform_plan);    
-    fftw_destroy_plan(transform_plan);  
-    for (i=0;i<ndays;i++) 
-      {
-	// Xinping does not have the varScale factor
-	covFunc[i] = opf[2*i]/ndays*pow(86400.0*365.25,2)*365.25*varScaleFactor;
-      }
-  }
-
-
-  free(p);              
-  free(f);
-  free(pf);
-  free(opf);
-  free(pe);
-}
 
 
 

@@ -36,6 +36,7 @@
 #include "TKspectrum.h"
 #include "TKfit.h"
 #include "fftw3.h"
+#include "choleskyRoutines.C"
 
 using namespace std;
 
@@ -48,7 +49,6 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp);
 int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese);
 void fitSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
-void cubicFit(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *cubicErr);
 void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *smoothModel,double *highFreqRes,double *hfNormCovar,int *hfNormCovarNpts,double hfZerolagNormCovar);
 void removeMean(double *resx,double *resy,int n);
 void fileOutput3(char *fname,double *x,double *y,double *z,int n);
@@ -68,17 +68,10 @@ void plot2(double *origSpecX,double *origSpecY,int nOrigSpec,double *smoothSpecX
 void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,
 	   int nHighFreqSpec,double modelAlpha,double modelFc,int modelNfit,double modelScale,int closeit,float *minx,float *maxx);
-int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp);
 void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpts,
 	    double zerolagRawCovar,double *ampFit,double *chisqFit,int nGridFit,
 	    double bestAmp,double bestLag,double bestChisq,int makeps);
 
-void interpolate(double *resx,double *resy,double *rese,
-		 int nres,double *cubicVal,double *interpX,
-		 double *interpY,int *nInterp,int interpTime,double expSmooth);
-void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double fitVar,double **uinv,double *covFunc,
-		       double *resx,double *resy,double *rese,int nres,double *highFreqRes,double *errorScaleFactor);
-void getWhiteRes(double *resx,double *resy,double *rese,int nres,double **uinv,double *cholWhiteY);
 void plot4(double *resx,double *resy,double *rese,int nres,double *cholWhiteY,double *whiteCovar,int *whiteCovarNpts,double zerolagWhiteCovar);
 void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,int nHighFreqSpec,
@@ -87,7 +80,6 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps);
 void outputMatrix(double **uinv,int nres);
 void fitExponential(double *resx,int nres,double *rawCovar,int *rawCovarNpts,double *ampFit,double *chisqFit,double *bestAmp,double *bestLag,double *bestChisq,int *nGridFit);
-void formCholeskyMatrix_pl(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
 void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,double **uinv,double *resx,
 				double *resy,double *rese,int nres,double *covarFunc);
 void outputCovarianceFunction(double *covFunc,int n,double errorScaleFactor,pulsar *psr);
@@ -313,12 +305,12 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	tempTime=2;
       }
 	// Step 1c: fit a cubic to the timing residuals
-	cubicFit(resx,resy,rese,nres,cubicVal,cubicErr);
+	T2cubicFit(resx,resy,rese,nres,cubicVal,cubicErr);
 	// Step 1d: obtain a smooth curve that models the residuals well
-	findSmoothCurve(resx,resy,rese,nres,cubicVal,smoothModel,expSmooth);
+	T2findSmoothCurve(resx,resy,rese,nres,cubicVal,smoothModel,expSmooth);
 	if(writeFiles)fileOutput3("smoothCurve.dat",resx,smoothModel,rese,nres);
 	// Step 1e: obtain high-freq. residuals
-	getHighFreqRes(resy,smoothModel,nres,highFreqRes);
+	T2getHighFreqRes(resy,smoothModel,nres,highFreqRes);
 	if(writeFiles)fileOutput3("highFreqRes.dat",resx,highFreqRes,rese,nres);
 	// Step 1f: obtain covariance of high-freq. residuals
 	getHighFreqCovar(resx,rese,highFreqRes,nres,hfNormCovar,hfNormCovarNpts,&hfZerolagNormCovar);
@@ -360,7 +352,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       if(writeFiles)fileOutput2("origSpectra.dat",origSpecX,origSpecY,nOrigSpec);
 
       // Step 2b: interpolate the smooth curve
-      interpolate(resx,resy,rese,nres,cubicVal,interpX,interpY,
+      T2interpolate(resx,resy,rese,nres,cubicVal,interpX,interpY,
 		  &nInterp,interpTime,expSmooth);
     }
   // Step 2c: Obtain spectra of smooth interpolated model without any prewhitening
@@ -380,7 +372,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   if (skipprocess==0)
     {
       printf("Calculating spectra without prewhitening\n");
-      nSmoothSpec0 = calculateSpectra(interpX,interpY,rese,nInterp,0,0,2,
+      nSmoothSpec0 = T2calculateSpectra(interpX,interpY,rese,nInterp,0,0,2,
 				      smoothSpecX0,smoothSpecY0);
       if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
 
@@ -395,11 +387,11 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   // Step 2d: Obtain spectra of smooth interpolated model with 1st order prewhitening
       if (skipprocess==0)
 	{
-	  nSmoothSpec1 = calculateSpectra(interpX,interpY,rese,nInterp,0,1,2,
+	  nSmoothSpec1 = T2calculateSpectra(interpX,interpY,rese,nInterp,0,1,2,
 					  smoothSpecX1,smoothSpecY1);
 	  if(writeFiles)fileOutput2("oneprewhite.dat",smoothSpecX1,smoothSpecY1,nSmoothSpec1);
 	  // Step 2e: Obtain spectra of smooth interpolated model with 2nd order prewhitening
-	  nSmoothSpec2 = calculateSpectra(interpX,interpY,rese,nInterp,0,2,2,
+	  nSmoothSpec2 = T2calculateSpectra(interpX,interpY,rese,nInterp,0,2,2,
 					  smoothSpecX2,smoothSpecY2);
 	  if(writeFiles)fileOutput2("twoprewhite.dat",smoothSpecX2,smoothSpecY2,nSmoothSpec2);
 	  // Step 2f: Obtain spectra of high frequency residuals
@@ -443,7 +435,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       // Step 3a: obtain spectra with this prewhitening
       if (skipprocess==0)
 	{
-	  nPreWhiteSpec = calculateSpectra(interpX,interpY,rese,nInterp,0,usePreWhitening,2,
+	  nPreWhiteSpec = T2calculateSpectra(interpX,interpY,rese,nInterp,0,usePreWhitening,2,
 					   preWhiteSpecX,preWhiteSpecY);
 	}
       // Step 3b: plot spectra
@@ -457,7 +449,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 		    highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
 	    }
 	  // Step 3c: Fit to spectra
-	  cont = fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp);
+	  cont = T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp);
 	  printf("modelScale = %g\n",modelScale);
 	} while (cont==1);
       }
@@ -467,7 +459,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	//	}
 
       // Step 4a: calculate the Cholesky whitening matrix (uinv)
-      calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor);
+      T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
       for (i=0;i<100;i++)
 	printf("cov: %g %g %g %g %d %g %g\n",covFunc[i],resx[i],resy[i],rese[i],nres,highFreqRes[i],errorScaleFactor);
     }
@@ -496,14 +488,14 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       //      exit(1);
     }
   // Step 4c: get white residuals using the Cholesky matrix
-  getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY);
+  T2getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY);
   if(writeFiles)fileOutput3("cholWhiteRes.dat",resx,cholWhiteY,rese,nres);
   // Spec 4d: get a spectrum of the whitened data
-  nCholWspec = calculateSpectra(resx,cholWhiteY,rese,nres,0,0,2,
+  nCholWspec = T2calculateSpectra(resx,cholWhiteY,rese,nres,0,0,2,
 				  cholWspecX,cholWspecY);
   //  fileOutput2("cholWhiteSpec.dat",cholWspecX,cholWspecY,nCholWspec);
   // Step 4e: get covariance of white residuals
-  calculateDailyCovariance(resx,cholWhiteY,rese,nres,whiteCovar,whiteCovarNpts,&zerolagWhiteCovar,0);
+  T2calculateDailyCovariance(resx,cholWhiteY,rese,nres,whiteCovar,whiteCovarNpts,&zerolagWhiteCovar,0);
   // Step 4f: plot
   plot4(resx,resy,rese,nres,cholWhiteY,whiteCovar,whiteCovarNpts,zerolagWhiteCovar);
   if (inpt==-1) {printf("Continue (press '1') "); scanf("%s",dummy);}
@@ -534,7 +526,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       FILE *fout;
       char fname[128];
 
-      fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt,amp);
+      T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt,amp);
       sprintf(fname,"%s.model",psr[0].name);
       fout = fopen(fname,"w");
       fprintf(fout,"MODEL 1\n");
@@ -547,7 +539,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	    modelAlpha,modelFc,modelNfit,modelScale,nmodelScale,cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,makeps);
 
       // Step 5c: recalculate the Cholesky matrix
-      calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor);
+      T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
     }
   else
     plot6(cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,highFreqSpecX,highFreqSpecY,nHighFreqSpec,makeps);
@@ -650,7 +642,7 @@ void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,doubl
       fclose(fout);
     }
   //      c[i]=c[i]*pow(86400.0*365.25,2)/tt*actVar; 
-  formCholeskyMatrix_pl(covarFunc,resx,resy,rese,nres,uinv);
+  T2formCholeskyMatrix_pl(covarFunc,ndays,resx,resy,rese,nres,uinv);
 }
 
 // Do a grid search for minimum in chisq for fitting an exponential function
@@ -1289,161 +1281,7 @@ void plot4(double *resx,double *resy,double *rese,int nres,double *cholWhiteY,
 }
 
 
-void getWhiteRes(double *resx,double *resy,double *rese,int nres,double **uinv,double *cholWhiteY)
-{
-  int i,j;
-  double sum;
-  printf("Getting white residuals\n");
-  for (i=0;i<nres;i++)
-    {
-      sum=0.0;
-      for (j=0;j<nres;j++)
-	{
-	  sum+=uinv[j][i]*resy[j];
-	  //	  if (i==0) printf("uinv = %g\n",uinv[j+1][i+1]);
-	}
-      cholWhiteY[i]=sum;
-    }
-  //  exit(1);
-}
 
-void calculateCholesky(double modelAlpha,double modelFc,double modelScale,double fitVar,double **uinv,double *covFunc,
-		       double *resx,double *resy,double *rese,int np,double *highFreqRes,double *errorScaleFactor)
-{
-  int i,j;
-  double *f; // Frequency vector
-  double *p; // Model of pulsar power spectrum
-  double *pe;
-  double *pf; // Periodic spectrum model
-  double *opf; 
-  double weightVarRes,weightMeanRes;
-  double weightVarHighFreqRes,weightMeanHighFreqRes;
-  double mean,escale,actVar,tt,tl,bl,tl2,bl2;
-  int ndays;
-  int debug=1;
-  double varScaleFactor = 0.6;
-
-  ndays = (int)(ceil(resx[np-1])-floor(resx[0])+1)+2; // Add two extra days for interpolation
-  f  = (double *)malloc(sizeof(double)*ndays*2); // Frequency vector
-  p  = (double *)malloc(sizeof(double)*ndays); // Model of pulsar power spectrum
-  pf = (double *)malloc(sizeof(double)*ndays*2); // Periodic spectrum model
-  opf = (double *)malloc(sizeof(double)*ndays*2); // Periodic spectrum model
-  pe = (double *)malloc(sizeof(double)*ndays*2); // Periodic spectrum model
-
-  printf("Number of days = %d\n",ndays);
-
-  // Get rms of normalised high freq residuals
-  mean=0.0;
-  for (i=0;i<np;i++)
-    mean+=highFreqRes[i]/rese[i];
-  mean/=(double)np;
-  escale=0;
-  for (i=0;i<np;i++)
-    escale += pow(highFreqRes[i]/rese[i]-mean,2);
-  escale/=(double)(np-1);
-  escale = sqrt(escale);
-  printf("Error scaling factor = %g\n",escale);
-  // Scale error bars
-  // NOTE: Have actually changed the rese[] array
-      printf("ERROR NOT SCALING ERRORS\n");
-      //printf("WARNING: scaling errors\n");
-       escale = 1.0;
-
-  for (i=0;i<np;i++)
-    rese[i] *= escale;
-  *errorScaleFactor *= escale;
-  // Weighted variance of residuals
-  weightVarRes=0.0;
-  weightMeanRes=0.0;
-  tl=0.0; bl=0.0;
-  tl2=0.0; bl2=0.0;
-  for (i=0;i<np;i++)
-    {
-      tl+=resy[i]/(rese[i]*rese[i]);
-      bl+=1.0/(rese[i]*rese[i]);
-      tl2+=highFreqRes[i]/(rese[i]*rese[i]);
-    }
-  weightMeanRes = tl/bl;
-  weightMeanHighFreqRes = tl2/bl;
-  tl = bl = tl2 = 0.0;
-  for (i=0;i<np;i++)
-    {
-      tl += pow(resy[i]-weightMeanRes,2)/(rese[i]*rese[i]);
-      tl2 += pow(highFreqRes[i]-weightMeanHighFreqRes,2)/(rese[i]*rese[i]);
-      bl += 1.0/(rese[i]*rese[i]);
-    }
-  weightVarRes = tl/bl;
-  weightVarHighFreqRes = tl2/bl;
-
-  for (i=0;i<ndays;i++)
-    {
-      f[i] = i*1.0/(resx[np-1]-resx[0])*365.25;
-
-      // CHANGED TO THIS ...
-      //      f[i] = i*0.5/(resx[np-1]-resx[0])*365.25;
-      p[i] = 1.0/(pow((1.0+pow(f[i]/(modelFc*2),2)),(modelAlpha)/2.0));
-      pf[i] = p[i];
-    }
-  j = ndays;
-  for (i=ndays-1;i>0;i--)
-    {
-      f[j] = -f[i];
-      pf[j] = 1.0/(pow((1.0+pow(f[j]/(modelFc*2),2)),modelAlpha/2.0));
-      j++;
-    }
-  if (debug==1)
-    {
-      FILE *fout;
-      fout = fopen("specModel","w");
-      for (i=0;i<j;i++)
-	fprintf(fout,"%d %g\n",i,pf[i]);
-      fclose(fout);     
-    }
-  printf("Obtaining covariance function from analytic model\n");
-  {
-    fftw_complex* output;
-    fftw_plan transform_plan;
-    
-    output = (fftw_complex*)opf;
-    transform_plan = fftw_plan_dft_r2c_1d(j, pf, output, FFTW_ESTIMATE);
-    fftw_execute(transform_plan);    
-    fftw_destroy_plan(transform_plan);  
-    for (i=0;i<=j/2;i++) 
-      {
-	covFunc[i] = opf[2*i];
-	//	printf("covFunc: %d %g %g %d\n",i,opf[2*i],opf[2*i+1],j);
-      }
-  }
-  // Rescale
-  printf("Rescaling %d\n",j/2);
-  //  for (i=0;i<np/2;i++)
-  //  fy2[i] = nmodelScale-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
-  actVar = pow(10,modelScale);
-  tt = covFunc[0];
-  printf("actvar = %g, weightVarRes = %g, weightVarHighFreqRes = %g, scale = %g, fitVar = %g, tt = %g, modelScale = %g\n",actVar*pow(86400.0*365.25,2),weightVarRes,weightVarHighFreqRes,weightVarRes-weightVarHighFreqRes,fitVar,tt,modelScale);
-
-  printf("WARNING: varScaleFactor = %g (used to deal with quadratic removal)\n",varScaleFactor);
-  for (i=0;i<=j/2;i++)
-    covFunc[i] = covFunc[i]*fitVar*varScaleFactor/tt;
-
-  if (debug==1)
-    {
-      FILE *fout;
-      fout = fopen("scaleCovar","w");
-      for (i=0;i<=j/2;i++)
-	fprintf(fout,"%d %g\n",i,covFunc[i]);
-      fclose(fout);
-    }
-  // Now get the covariance matrix ...
-  // First put the abs(time difference) in each matrix element
-  formCholeskyMatrix_pl(covFunc,resx,resy,rese,np,uinv);
-
-  free(p);              
-  free(f);
-  free(pf);
-  free(opf);
-  free(pe);
-}
 
 void formCholeskyMatrix_pl(double *c,double *resx,double *resy,double *rese,int np,double **uinv)
 {
@@ -1553,70 +1391,6 @@ void formCholeskyMatrix_pl(double *c,double *resx,double *resy,double *rese,int 
   free(cholp);
 }
 
-int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp)
-{
-  static int time=1;
-  double v1,v2,m;
-  double df;
-  int i;
-
-  if (time==2 && aval==0)
-    {
-      int redo;
-      if (inpt == -1)
-	{
-	  printf("Redo fit (1 = yes, 0 = no)\n");
-	  scanf("%d",&redo);
-	  if (redo==0)
-	    return 0;
-	}
-      else
-	return 0;
-    }
-  time=2;
-  if (aval==0)
-    {
-      if (ifc == -1) {printf("Enter corner freq (yr-1) "); scanf("%lf",modelFc);}
-      else *modelFc = ifc;
-      if (iexp == 0) {printf("Enter power law exponential (should be positive) "); scanf("%lf",modelAlpha);}
-      else *modelAlpha = iexp;	
-      if (inpt == -1) {printf("Enter nfit "); scanf("%d",modelNfit);}
-      else *modelNfit = inpt;
-    }
-  // Do the fit
-  // This fit is useful for fitting spectra where the error is proportional to the mean
-  // The error on each point is simply taken as the model value squared and so we solve for
-  // chisq = sum (P_d(f) - aM(f))^2/M^2(f)
-  // which simplifies to a simple formula
-  if (amp == -1)
-    {
-      v1 = 0.0;
-      for (i=0;i<*modelNfit;i++)
-	{
-	  m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
-	  v1 += preWhiteSpecY[i]/m;
-	}
-      //  *modelScale = log10(v1/(double)(*modelNfit));
-      *modelScale = (v1/(double)(*modelNfit));
-    }
-  else
-    *modelScale = amp;
-  printf("Model scale = %g\n",*modelScale);
-
-  // Get area under the spectra
-  *fitVar=0.0;
-  df = preWhiteSpecX[0]*365.25;
-    for (i=0;i<*modelNfit;i++)
-      //for (i=0;i<nPreWhiteSpec;i++)
-    {
-      *fitVar+=preWhiteSpecY[i]*df;
-      // CHANGED HERE ...
-      //      m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
-      //*fitVar+=(*modelScale*m*df);
-    }
-  (*fitVar)*=pow(86400.0*365.25,2);
-  return 1;
-}
 
 void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,
@@ -1718,46 +1492,6 @@ void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
   if (closeit==1) cpgend();
 }
 
-// Exponential smoothing and interpolation
-void interpolate(double *resx,double *resy,double *rese,
-		 int nres,double *cubicVal,double *interpX,
-		 double *interpY,int *nInterp,int interpTime,double expSmooth)
-{
-  int i,j;
-  double tl,bl,dt;
-  double yval;
-  
-  *nInterp = (int)((resx[nres-1]-resx[0])/interpTime+0.5); // Number of interpolated points
-  for (i=0;i<*nInterp;i++)
-    {
-      interpX[i] = resx[0]+i*interpTime;
-      tl = 0.0;
-      bl = 0.0;
-      // Interpolate difference between points and cubic
-      for (j=0;j<nres;j++)
-	{
-	  dt = interpX[i] - resx[j];
-	  yval = resy[j]-(cubicVal[0] + cubicVal[1]*resx[j] + 
-		  cubicVal[2]*pow(resx[j],2) + cubicVal[3]*pow(resx[j],3));
-
-
-	  tl += yval/rese[j]/rese[j]*exp(-fabs(dt/expSmooth));
-	  bl += 1.0/rese[j]/rese[j]*exp(-fabs(dt/expSmooth));
-	}	    
-      interpY[i] = tl/bl;      
-      // Add on cubic
-      interpY[i] += (cubicVal[0] + cubicVal[1]*interpX[i] + 
-		     cubicVal[2]*pow(interpX[i],2) + cubicVal[3]*pow(interpX[i],3));
-    }
-  if(writeFiles)
-  {
-    FILE *fout;
-    fout = fopen("interp.dat","w");
-    for (i=0;i<*nInterp;i++)
-      fprintf(fout,"%g %g\n",interpX[i],interpY[i]);
-    fclose(fout);
-  }
-}
 
 void plot2(double *origSpecX,double *origSpecY,int nOrigSpec,double *smoothSpecX0,
 	   double *smoothSpecY0,int nSmoothSpec0,double *smoothSpecX1,
@@ -2163,38 +1897,6 @@ void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,doub
 }
 
 
-// NOTE: Bill does an unweighted fit
-//
-void cubicFit(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *cubicErr)
-{
-  double **cvm;
-  int i;
-  int nfit=4; // a+b*x+c*x^2 + d*x^3 
-  double chisq;
-  int useWeight=0;
-
-  // Allocate memory for fit covariance matrix
-  cvm = (double **)malloc(sizeof(double *)*nfit);
-  for (i=0;i<nfit;i++) cvm[i] = (double *)malloc(sizeof(double)*nfit);
-
-  TKleastSquares_svd(resx,resy,rese,nres,cubicVal,cubicErr,nfit,cvm,&chisq,TKfitPoly,useWeight);
-
-  // Provide information about the fit
-  printf("---------------------------------------------------------\n");
-  printf("Cubic fit to timing residuals:\n");
-  printf("y = %.5g + %.5g * x + %.5g * x^2 + %.5g * x^3\n",cubicVal[0],cubicVal[1],
-	 cubicVal[2],cubicVal[3]);
-  printf("chisq of fit = %g, reduced chisq = %g\n",chisq,chisq/(nres-4.0));
-  printf("\n");
-  printf("This curve is plotted as a red line through the timing residuals\n");
-  printf("---------------------------------------------------------\n");
-  
-
-  // Free memory allocation
-  for (i=0;i<nfit;i++) free(cvm[i]);
-  free(cvm);
-  
-}
 
 // Fill resx with the SATs (in days), resy with post-fit residuals (s) and rese
 // with TOA errors (s)

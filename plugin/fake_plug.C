@@ -228,47 +228,47 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   hnobs = nday/2.0; 
   for(ii=0;ii<Npsr;ii++){
-      count = 0;
-      strcpy(parFile[0],parFile[ii]);
-      printf("SET: %d\n",psr[0].param[param_pb].val[0]);
-      psr[0].nJumps=0;
-      psr[0].fitMode=0;
-      psr[0].eclCoord=0;
-  psr[0].nits=1;
-  psr[0].clockFromOverride[0] = '\0';
-  psr[0].nCompanion = 0;
-  psr[0].bootStrap = 0;
-  psr[0].units = SI_UNITS;
-  psr[0].ne_sw  = NE_SW_DEFAULT; 
-  psr[0].nWhite = 0;  /* No whitening by default */
-  psr[0].timeEphemeris = IF99_TIMEEPH;
-  psr[0].dilateFreq = 1;
-  psr[0].planetShapiro = 1;
-  psr[0].correctTroposphere = 1;
-  psr[0].t2cMethod = T2C_IAU2000B;
-  psr[0].fixedFormat=0;
-  psr[0].nStorePrecision=0;
-  strcpy(psr[0].deleteFileName,"NONE");
-  strcpy(psr[0].tzrsite,"NULL");
-  psr[0].calcShapiro=1;
-  psr[0].ipm = 1;
-  psr[0].swm = 0;
-  psr[0].nPhaseJump=0;
-
-      for (i=0;i<MAX_PARAMS;i++)
-	{
-	  for (j=0;j<psr[0].param[i].aSize;j++)
-	    {
-	      psr[0].param[i].fitFlag[j] = 0;
-	      psr[0].param[i].paramSet[j] = 0;
-	      psr[0].param[i].err[j] = 0;
-	      psr[0].param[i].val[j] = 0;
-	    }
-	}
-      //      initialise(psr,0);              /* Initialise the structures */      
-      //      printf("SET AFTER 1: %d\n",psr[0].param[param_pb].val[0]);
-      readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
-      //      printf("SET AFTER 2: %d %s\n",psr[0].param[param_pb].val[0],psr[0].name);
+    count = 0;
+    strcpy(parFile[0],parFile[ii]);
+    printf("SET: %d\n",psr[0].param[param_pb].val[0]);
+    psr[0].nJumps=0;
+    psr[0].fitMode=0;
+    psr[0].eclCoord=0;
+    psr[0].nits=1;
+    psr[0].clockFromOverride[0] = '\0';
+    psr[0].nCompanion = 0;
+    psr[0].bootStrap = 0;
+    psr[0].units = SI_UNITS;
+    psr[0].ne_sw  = NE_SW_DEFAULT; 
+    psr[0].nWhite = 0;  /* No whitening by default */
+    psr[0].timeEphemeris = IF99_TIMEEPH;
+    psr[0].dilateFreq = 1;
+    psr[0].planetShapiro = 1;
+    psr[0].correctTroposphere = 1;
+    psr[0].t2cMethod = T2C_IAU2000B;
+    psr[0].fixedFormat=0;
+    psr[0].nStorePrecision=0;
+    strcpy(psr[0].deleteFileName,"NONE");
+    strcpy(psr[0].tzrsite,"NULL");
+    psr[0].calcShapiro=1;
+    psr[0].ipm = 1;
+    psr[0].swm = 0;
+    psr[0].nPhaseJump=0;
+    
+    for (i=0;i<MAX_PARAMS;i++)
+      {
+	for (j=0;j<psr[0].param[i].aSize;j++)
+	  {
+	    psr[0].param[i].fitFlag[j] = 0;
+	    psr[0].param[i].paramSet[j] = 0;
+	    psr[0].param[i].err[j] = 0;
+	    psr[0].param[i].val[j] = 0;
+	  }
+      }
+    //      initialise(psr,0);              /* Initialise the structures */      
+    //      printf("SET AFTER 1: %d\n",psr[0].param[param_pb].val[0]);
+    readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+    //      printf("SET AFTER 2: %d %s\n",psr[0].param[param_pb].val[0],psr[0].name);
       if (psr[0].param[param_track].paramSet[0]==1)
 	psr[0].param[param_track].paramSet[0] = 0;
       ra = (double)psr[0].param[param_raj].val[0]/2.0/M_PI;

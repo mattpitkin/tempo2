@@ -52,7 +52,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int i;
   double globalParameter;
   double tsmooth;
-  double expSmooth,fc,modelAlpha_out,modelVal,whiteNoiseLevel;
+  double expSmooth,fc_w,modelAlpha_out,modelVal,whiteNoiseLevel,fc_r;
   char covarFuncName[128];
   char modelName[128];
 
@@ -91,11 +91,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
 
   sprintf(covarFuncName,"covarFunc.dat_%s",psr[0].name);
-  get_covFunc_automatic(psr,0,covarFuncName,&fc,&modelAlpha_out,&modelVal,&whiteNoiseLevel,0,0);
+  T2get_covFunc_automatic(psr,0,covarFuncName,&fc_w,&fc_r,&modelAlpha_out,&modelVal,&whiteNoiseLevel,0,0);
   sprintf(modelName,"%s.model",psr[0].name);
-  writeCovarFuncModel(modelAlpha_out,fc,modelVal,whiteNoiseLevel,modelName);
+  T2writeCovarFuncModel(modelAlpha_out,fc_r,modelVal,whiteNoiseLevel,modelName);
   printf("Complete with\n");
-  printf("fc              = %g\n",fc);
+  printf("fc              = %g\n",fc_r);
   printf("modelAlpha      = %g\n",modelAlpha_out);
   printf("modelVal        = %g\n",modelVal);
   printf("whiteNoiseLevel = %g\n",whiteNoiseLevel);

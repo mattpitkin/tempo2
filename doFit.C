@@ -40,7 +40,7 @@
 
 
 int getNparams(pulsar psr);
-void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np, int nc,double **uinv);
+void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *rese,int np, int nc,double **uinv);
 double getConstraintDeriv(pulsar *psr,int ipos,int i,int k);
 
 /* Main routines for fitting in TEMPO2               */
@@ -467,16 +467,18 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	}
       else // Use data covariance function and calculate the covariance matrix
 	{
-	  int ndays = (int)(x[count-1-psr[p].nconstraints]-x[0])+2;
-	  double covarFunc[ndays];
+	  int ndays = ceil((x[count-1-psr[p].nconstraints]-x[0]));
+	  double covarFunc[ndays+1];
 	  double escaleFactor = 1.0;
 	  
-	  printf("Tcheck: reading covariance function from disk  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  printf("Tcheck: reading covariance function from disk  (%.2f), ndays = %d\n",(clock()-clk)/(float)CLOCKS_PER_SEC,ndays);
 	  strcpy(fname,covarFuncFile);
 	  if (npsr>1)
 	    {
 	      sprintf(temp,"%s_%d",fname,p+1);
 	      strcpy(fname,temp);
+	      if (strcmp(covarFuncFile,"PSRJ")==0)
+		sprintf(fname,"covarFunc.dat_%s",psr[p].name);
 	    }
 	  //	  printf("Opening >%s<\n",fname);
 	  if (!(fin = fopen(fname,"r")))
@@ -486,11 +488,11 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	    }
 	  if (debugFlag==1) printf("ndays = %d\n",ndays);
 	  fscanf(fin,"%lf",&escaleFactor);
-	  for (i=0;i<ndays;i++)
+	  for (i=0;i<=ndays;i++)
 	    {
 	      if (fscanf(fin,"%lf",&covarFunc[i])!=1)
 		{
-		  printf("ERROR: Incorrect number of days in the Cholesky matrix\n");
+		  printf("ERROR: Incorrect number of days in the Cholesky matrix: %s, trying to read %d days, pulsar %s, p = %d\n",fname,ndays,psr[p].name,p);
 		  exit(1);
 		}
 	    }
@@ -501,8 +503,8 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	    sig[i]*=escaleFactor;
 	  printf("Tcheck: complete reading covariance function from disk  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  // Form the data covariance matrix
-	  printf("Tcheck: forming Cholesky matrix  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
-	  formCholeskyMatrix(covarFunc,x,y,sig,count,psr[p].nconstraints,uinv);
+	  printf("Tcheck: forming Cholesky matrix  (%.2f) %s\n",(clock()-clk)/(float)CLOCKS_PER_SEC,psr[p].name);
+	  formCholeskyMatrix(covarFunc,ndays,x,y,sig,count,psr[p].nconstraints,uinv);
 	  printf("Tcheck: complete forming Cholesky matrix  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	}
       printf("Tcheck: writing debug info to disk\n");
@@ -1585,29 +1587,31 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  double l1,l2,l3,k,n4,n5,m1,m2,m3;
 	  double beta_m;
 	  
-	  beta_m = atan2(-cosl(beta)*cosl(lambda-psr->gwm_phi),sinl(beta));
+	   if  (g3 != 0) 
+    		   {beta_m = atan2(-cos(beta)*cos(lambda-psr->gwm_phi),sin(beta));}
+	  else  
+              {beta_m = atan2(sinl(psr->gwm_phi),cosl(psr->gwm_phi));
+	       psr->gwm_phi = lambda + 1.5708;}
 	  m1 = cosl(psr->gwm_phi)*cosl(beta_m);
 	  m2 = sinl(psr->gwm_phi)*cosl(beta_m);
 	  m3 = sinl(beta_m);
+	  if  (cosTheta != 1.0 && cosTheta != -1.0)
+		{g1 = g1*cosTheta; 
+		 g2 = g2*cosTheta;
+		 g3 = g3*cosTheta;
+		 l1 = n1 - g1;
+		 l2 = n2 - g2;
+		 l3 = n3 - g3;
+		 cosPhi = fabs(l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1 + l2*l2 + l3*l3);
+		 if  (cosPhi >= 1.0/sqrt(2.0))
+		     cos2Phi = 2*cosPhi*cosPhi - 1.0;
+		 else
+		     cos2Phi = 2*sqrt(1.0 - cosPhi*cosPhi)*sqrt(1.0 - cosPhi*cosPhi) - 1.0;}
+	  else 
+       	         {cos2Phi = 0;}
 	  
-
-		   k = (g1*n2 + g2*n1)/(g3*n2 - n3*g2);
-		   n4 = k*n3 + n1 ;
-		   n5 = -k*n2;
-		   
-		   l1 = 1;
-		   l2 = l1*(g3*n2-g1*n5)/(g2*n5-g3*n4);
-		   l3 = l1*(g2*n2-g1*n4)/(g3*n4-g2*n5);
-	  	
-		   cosPhi = fabs(l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1+l2*l2+l3*l3);  
-	  
-	  if (cosPhi >= 1.0/sqrt(2.0))
-	    cos2Phi = 2*cosPhi*cosPhi - 1.0;
-	  else
-	    cos2Phi = 2*sqrt(1.0-cosPhi*cosPhi)*sqrt(1.0-cosPhi*cosPhi) - 1.0;
-	  
-	  dt = psr->obsn[ipos].sat - psr->gwm_epoch;
-	  scale = 0.5*cos2Phi*(1-cosTheta);
+	  dt = (psr->obsn[ipos].sat - psr->gwm_epoch)*86400.0;
+	  scale = -0.5*cos2Phi*(1-cosTheta);
 	  
 	  afunc = scale*dt;
 	}
@@ -2031,35 +2035,34 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 }
 
 
-void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,int nc,double **uinv)
+void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *rese,int np,int nc,double **uinv)
 {
   double **m,**u,sum;
   double *cholp;
   int i,j,k,ix,iy;
   double t0,cint,t;
   int t1,t2;
-  int debug=0;
+  int debug=1;
   clock_t clk;
 
   clk = clock();
-
+  printf("Starting with np = %d and nc = %d\n",np,nc);
   printf("Tcheck: forming Cholesky matrix ... allocating memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
 //  printf("Getting the covariance matrix in doFit\n");
   m = (double **)malloc(sizeof(double *)*(np+1));
   u= (double **)malloc(sizeof(double *)*(np+1));
   cholp  = (double *)malloc(sizeof(double)*(np+1));  // Was ndays
-
   
-  for (i=0;i<np+1;i++)
+  for (i=0;i<(np)+1;i++)
     {
       m[i] = (double *)malloc(sizeof(double)*(np+1));
       u[i] = (double *)malloc(sizeof(double)*(np+1));
     }
   printf("Tcheck: forming Cholesky matrix ... complete allocating memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   printf("Tcheck: forming Cholesky matrix ... determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
-  for (ix=0;ix<np;ix++)
+  for (ix=0;ix<(np);ix++)
     {
-      for (iy=0;iy<np;iy++)
+      for (iy=0;iy<(np);iy++)
 	m[ix][iy] = fabs(resx[ix]-resx[iy]);
     }
   printf("Tcheck: forming Cholesky matrix ... complete determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
@@ -2078,16 +2081,28 @@ void formCholeskyMatrix(double *c,double *resx,double *resy,double *rese,int np,
   // valid covariance matrix must have decreasing off diagonal elements.
   //  printf("Inserting into the covariance matrix\n");
   printf("Tcheck: forming Cholesky matrix ... determing covariance based on time difference  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
-  for (ix=0;ix<np;ix++)
+  for (ix=0;ix<(np);ix++)
     {
-      for (iy=0;iy<np;iy++)
+      for (iy=0;iy<(np);iy++)
 	{
-	  t0 = m[ix][iy];
-	  t1 = (int)floor(t0);
-	  t2 = t1+1;
-	  t  = t0-t1;
-	  cint = c[t1]*(1-t)+c[t2]*t; // Linear interpolation
-	  m[ix][iy] = cint;
+	  if (ix >= np-nc || iy >= np-nc)
+	    {
+	      m[ix][iy] = 0;
+	    }
+	  else
+	    {
+	      t0 = m[ix][iy];
+	      t1 = (int)floor(t0);
+	      t2 = t1+1;
+	      t  = t0-t1;
+	      if (t1 > ncovar || t2 > ncovar)
+		{
+		  printf("ERROR in doFit.C.  Problem that t1 or t2 > ncovar: t1 = %d, t2 = %d, ncovar = %d, ix = %d, iy = %d, np = %d\n",t1,t2,ncovar,ix,iy,np);
+		  exit(1);
+		}
+	      cint = c[t1]*(1-t)+c[t2]*t; // Linear interpolation
+	      m[ix][iy] = cint;
+	    }
 	}
     }
   printf("Tcheck: forming Cholesky matrix ... complete determing covariance based on time difference  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);

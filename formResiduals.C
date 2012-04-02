@@ -424,35 +424,34 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   double l1,l2,l3,k,n4,n5,m1,m2,m3;
 		   double beta_m;
 
-		   beta_m = atan2(-cosl(beta)*cosl(lambda-psr[p].gwm_phi),sinl(beta));
+		   
+		   if  (g3 != 0) 
+		     {beta_m = atan2(-cos(beta)*cos(lambda-psr[p].gwm_phi),sin(beta));}
+		   else  
+          	   	{beta_m = atan2(sinl(psr[p].gwm_phi),cosl(psr[p].gwm_phi));
+	      		psr[p].gwm_phi = lambda + 1.5708;}	
 		   m1 = cosl(psr[p].gwm_phi)*cosl(beta_m);
 		   m2 = sinl(psr[p].gwm_phi)*cosl(beta_m);
 		   m3 = sinl(beta_m);
+		   if  (cosTheta != 1.0 && cosTheta != -1.0)
+		       {g1 = g1*cosTheta; 
+		    	g2 = g2*cosTheta;
+		    	g3 = g3*cosTheta;
+		    	l1 = n1 - g1;
+		    	l2 = n2 - g2;
+		    	l3 = n3 - g3;
+		    	cosPhi = fabs(l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1 + l2*l2 + l3*l3);
+		        if  (cosPhi >= 1.0/sqrt(2.0))
+		      	   cos2Phi = 2*cosPhi*cosPhi - 1.0;
+		       else
+		      	   cos2Phi = 2*sqrt(1.0 - cosPhi*cosPhi)*sqrt(1.0 - cosPhi*cosPhi) - 1.0;}
+		   else 
+       		       {cos2Phi = 0;}
 
-
-		   k = (g1*n2 + g2*n1)/(g3*n2 - n3*g2);
-		   n4 = k*n3 + n1 ;
-		   n5 = -k*n2;
-		   
-		   l1 = 1;
-		   l2 = l1*(g3*n2-g1*n5)/(g2*n5-g3*n4);
-		   l3 = l1*(g2*n2-g1*n4)/(g3*n4-g2*n5);
-
-		   //l1 = l1/sqrt(1+l2*l2+l3*l3);
-		   // l2 = l2/sqrt(1+l2*l2+l3*l3);
-		   //l3 = l3/sqrt(1+l2*l2+l3*l3);
-		   
-		   
-		   cosPhi = fabs(l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1+l2*l2+l3*l3);
-		   
-		   if (cosPhi >= 1.0/sqrt(2.0))
-		     cos2Phi = 2*cosPhi*cosPhi - 1.0;
-		   else
-		     cos2Phi = 2*sqrt(1.0-cosPhi*cosPhi)*sqrt(1.0-cosPhi*cosPhi) - 1.0;
-
-		   dt = psr[p].obsn[i].sat - psr[p].gwm_epoch;
-		   scale = 0.5*cos2Phi*(1-cosTheta);
+		   dt = (psr[p].obsn[i].sat - psr[p].gwm_epoch)*86400.0;
+		   scale = -0.5*cos2Phi*(1-cosTheta);
 		   phaseW += scale*(psr[p].param[param_gwm_amp].val[0]*psr[p].param[param_f].val[0])*dt;
+
 		 }
 	       //	       printf("Res = %g\n",(double)res);
 	     }

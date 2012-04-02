@@ -177,6 +177,11 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       npol+=(psr[0].nTelDZ-1);
       nGlobal+=(psr[0].nTelDZ-1);
     }
+  if (psr[0].param[param_gwsingle].fitFlag[0]==2)
+    {
+      npol+=(4-1); 
+      nGlobal+=(4-1);
+    }
   printf("Number of global parameters = %d\n",nGlobal);
   // Add non-global parameters
   for (p=0;p<npsr;p++)
@@ -230,6 +235,11 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	{
 	  npol+=(psr[p].nTelDZ-1);
 	  nFitP[p]+=(psr[p].nTelDZ-1);
+	}
+      if (psr[p].param[param_gwsingle].fitFlag[0]==1)
+	{
+	  npol+=(4-1);
+	  nFitP[p]+=(4-1);
 	}
 
       printf("Number of non-global parameters for pulsar %d = %d\n",p,nFitP[p]);
@@ -556,6 +566,21 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		    }
 		  offset--;
 		}
+	      else if (i==param_gwsingle)
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      psr[p].gwsrc_aplus_r -= val[offset];		      
+		      psr[p].gwsrc_across_r -= val[offset+1];		      
+		      psr[p].gwsrc_aplus_r_e = error[offset];		      
+		      psr[p].gwsrc_across_r_e = error[offset+1];		      
+		      psr[p].gwsrc_aplus_i -= val[offset+2];		      
+		      psr[p].gwsrc_across_i -= val[offset+3];		      
+		      psr[p].gwsrc_aplus_i_e = error[offset+2];		      
+		      psr[p].gwsrc_across_i_e = error[offset+3];		      
+		    }
+		  offset+=3;
+		}
 	      else
 		{
 		  for (p=0;p<npsr;p++)
@@ -598,6 +623,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	offset+=psr[p].nTelDY-1;
       if (psr[p].param[param_tel_dz].fitFlag[0]==1)
 	offset+=psr[p].nTelDZ-1;
+      if (psr[p].param[param_gwsingle].fitFlag[0]==1)
+	offset+=(4-1);
 
       offset++; // For arbitrary phase
     }
@@ -832,6 +859,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		 nglobal+=psr[p].nTelDY-1;
 	      if (i==param_tel_dz)
 		 nglobal+=psr[p].nTelDZ-1;
+	      if (i==param_gwsingle)
+		nglobal+=(4-1);
 
 	      nglobal++;
 	    }
@@ -865,7 +894,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     new_ma+=psr[p].nTelDY-1;
   if (psr[p].param[param_tel_dz].fitFlag[0]==1)
     new_ma+=psr[p].nTelDZ-1;
-
+  if (psr[p].param[param_gwsingle].fitFlag[0]==1)
+    new_ma+=(4-1);
 
   // Now calculate position in afunc array
   n=0;
@@ -902,7 +932,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	n+=psr[pp].nTelDY-1;
       if (psr[pp].param[param_tel_dz].fitFlag[0]==1)
 	n+=psr[pp].nTelDZ-1;
-
+      if (psr[pp].param[param_gwsingle].fitFlag[0]==1)
+	n+=(4-1);
     }
 
   // Global fit
@@ -953,6 +984,17 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		    c++;
 		  }		
 	      }
+	      else if (i==param_gwsingle)
+		{
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,0);
+		  c++;
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,1);
+		  c++;
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,2);
+		  c++;
+		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,3);
+		  c++;
+		}
 	      else
 		{
 		  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,k);
