@@ -336,11 +336,11 @@ typedef struct pulsar {
   char binaryModel[100];                 /* Binary model e.g. BT/ELL1/BT2P etc.                        */
 
   int    dmoffsNum;
-  double dmoffsMJD[100]; 
-  double dmoffsDM[100];
-  double dmoffsDMe[100];
-  double dmoffsOffset[100];
-  double dmoffsError[100];
+  double dmoffsMJD[MAX_IFUNC]; 
+  double dmoffsDM[MAX_IFUNC];
+  double dmoffsDMe[MAX_IFUNC];
+  double dmoffsOffset[MAX_IFUNC];
+  double dmoffsError[MAX_IFUNC];
 
   // Single source gravitational wave information
   double gwsrc_ra;

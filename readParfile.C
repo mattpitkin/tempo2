@@ -628,6 +628,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       psr->dmoffsOffset[number] = 0;
       psr->dmoffsError[number] = 0;
       (psr->dmoffsNum)++;
+      if (psr->dmoffsNum > MAX_IFUNC){
+	fprintf(stderr,"ERROR: Too many DMOFF values - need to increase MAX_IFUNC\n");
+	exit(1);
+      } 
     }
   /*
    * Specify fitting constraints

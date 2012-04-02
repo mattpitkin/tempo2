@@ -1621,7 +1621,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
   else if (i==param_dmmodel)
     {
       double sat = (double)psr->obsn[ipos].sat;
-      double yoffs[100];
+      double yoffs[MAX_IFUNC*2];
       for (int ioff =0;ioff<psr->dmoffsNum;ioff++){
 	      if (ioff==(k%psr->dmoffsNum)){ // we use modulo to get both the DM and CM signal.
 		      yoffs[ioff]=1;
