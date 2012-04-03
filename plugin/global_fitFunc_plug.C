@@ -128,6 +128,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       npol+=psr[0].nQuad*4-1;
   if (psr[0].param[param_ifunc].fitFlag[0]==2)	  
     npol+=psr[0].ifuncN-1;
+  if (psr[0].param[param_clk_offs].fitFlag[0]==2)	  
+    npol+=psr[0].clkOffsN-2;
   printf("2] Adding %d global parameters\n",npol);
   if (psr[0].param[param_tel_dx].fitFlag[0]==2 && psr[0].param[param_tel_dx].val[0] < 2)	  
     npol+=(psr[0].nTelDX-1);
@@ -187,6 +189,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	npol+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	npol+=psr[p].ifuncN-1;
+      if (psr[p].param[param_clk_offs].fitFlag[0]==1)
+	npol+=psr[p].clkOffsN-2;
       if (psr[p].param[param_tel_dx].fitFlag[0]==1 && psr[p].param[param_tel_dx].val[0] < 2)
 	npol+=(psr[p].nTelDX-1);
       else if (psr[p].param[param_tel_dx].fitFlag[0]==1 && psr[p].param[param_tel_dx].val[0] == 2)
@@ -325,6 +329,18 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			{
 			  psr[p].ifuncV[j]-=val[offset];
 			  psr[p].ifuncE[j]=error[offset];
+			}
+		      offset++;
+		    }
+		}
+	      else if (i==param_clk_offs)
+		{
+		  for (j=0;j<psr[0].clkOffsN-1;j++)
+		    {
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].clk_offsV[j]-=val[offset];
+			  psr[p].clk_offsE[j]=error[offset];
 			}
 		      offset++;
 		    }
@@ -482,6 +498,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	offset+=psr[p].nQuad*4-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	offset+=psr[p].ifuncN-1;
+      if (psr[p].param[param_clk_offs].fitFlag[0]==1)
+	offset+=psr[p].clkOffsN-2;
       if (psr[p].param[param_tel_dx].fitFlag[0]==1 &&
 	  psr[p].param[param_tel_dx].val[0] < 2)
 	offset+=(psr[p].nTelDX-1);
@@ -615,6 +633,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     nglobal+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==2)
     nglobal+=psr[p].ifuncN-1;
+  if (psr[p].param[param_clk_offs].fitFlag[0]==2)
+    nglobal+=psr[p].clkOffsN-2;
   if (psr[p].param[param_tel_dx].fitFlag[0]==2 &&
       psr[p].param[param_tel_dx].val[0] < 2)
     nglobal+=(psr[p].nTelDX-1);
@@ -669,6 +689,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     new_ma+=psr[p].nQuad*4-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==1)
     new_ma+=psr[p].ifuncN-1;
+  if (psr[p].param[param_clk_offs].fitFlag[0]==1)
+    new_ma+=psr[p].clkOffsN-2;
   if (psr[p].param[param_tel_dx].fitFlag[0]==1 && 
       psr[p].param[param_tel_dx].val[0] < 2)
     new_ma+=(psr[p].nTelDX-1);
@@ -729,6 +751,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	n+=psr[pp].nQuad*4-1;
       if (psr[pp].param[param_ifunc].fitFlag[0]==1)
 	n+=psr[pp].ifuncN-1;
+      if (psr[pp].param[param_clk_offs].fitFlag[0]==1)
+	n+=psr[pp].clkOffsN-2;
       if (psr[p].param[param_tel_dx].fitFlag[0]==1 && 
 	  psr[p].param[param_tel_dx].val[0] < 2)
 	n+=(psr[p].nTelDX-1);
@@ -802,6 +826,14 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	      else if (i==param_ifunc)
 		{
 		  for (j=0;j<psr[p].ifuncN;j++)
+		    {
+		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		      c++;
+		    }
+		}
+	      else if (i==param_clk_offs)
+		{
+		  for (j=0;j<psr[p].clkOffsN-1;j++)
 		    {
 		      afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
 		      c++;
