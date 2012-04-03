@@ -123,6 +123,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nWhite = 0;  /* No whitening by default */
   psr->nQuad  = 0;  /* No quadrupolar function */
   psr->ifuncN = 0;  /* No interpolation functions by default */
+  psr->clkOffsN = 0;/* No clock offsets by default */
   psr->nTelDX = 0;
   psr->nTelDY = 0;
   psr->nTelDZ = 0;
@@ -238,6 +239,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_tel_dz].shortlabel[0],"TEL_DZ");
   strcpy(psr->param[param_ifunc].label[0],"IFUNC");
   strcpy(psr->param[param_ifunc].shortlabel[0],"IFUNC");
+  strcpy(psr->param[param_clk_offs].label[0],"CLK_OFFS");
+  strcpy(psr->param[param_clk_offs].shortlabel[0],"CLK_OFFS");
   strcpy(psr->param[param_quad_ifunc_p].label[0],"QIFUNC_p");
   strcpy(psr->param[param_quad_ifunc_p].shortlabel[0],"QIFUNC_p");
   strcpy(psr->param[param_quad_ifunc_c].label[0],"QIFUNC_c");

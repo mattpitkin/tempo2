@@ -319,6 +319,18 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  }
       printf("Mean DMOFF = %lg\n",sum/(double)psr[p].dmoffsNum);
 	}
+      if (psr[p].param[param_clk_offs].paramSet[0]==1)
+	{
+	  FILE *fout;
+	  printf("Clock offsets\n");
+	  for (i=0;i<psr[p].clkOffsN;i++)
+	    printf("%.2f %.10g %.10g\n",psr[p].clk_offsT[i],psr[p].clk_offsV[i],psr[p].clk_offsE[i]);
+	  fout = fopen("clockOffset.dat","w");
+	  for (i=0;i<psr[p].clkOffsN;i++)
+	    fprintf(fout,"%.2f %.10g %.10g\n",psr[p].clk_offsT[i],psr[p].clk_offsV[i],psr[p].clk_offsE[i]);
+	  fclose(fout);
+	  
+	}
 	  if (psr[p].param[param_ifunc].paramSet[0]==1)
 	    {
 	      printf("Interpolated function\n");

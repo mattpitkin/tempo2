@@ -46,6 +46,7 @@
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
 #define MAX_IFUNC            500   /* Maximum number of parameters for interpolation function  */
+#define MAX_TEL_CLK_OFFS     500   /* Maximum number of parameters for telescope clock offset */
 #define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DZ           500   /* Maximum number of parameters for interpolation function  */
@@ -162,7 +163,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
-            param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,
+            param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,param_clk_offs,
             param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om,
 	    param_h3,param_h4,param_nharm,param_stig,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
@@ -443,6 +444,10 @@ typedef struct pulsar {
 
   double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC];
   int    ifuncN;
+
+  double clk_offsT[MAX_TEL_CLK_OFFS], clk_offsV[MAX_TEL_CLK_OFFS];
+  double clk_offsE[MAX_TEL_CLK_OFFS];
+  int    clkOffsN;
 
   // Quadrupolar IFUNC
   

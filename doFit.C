@@ -610,6 +610,8 @@ int getNparams(pulsar psr)
     npol+=(psr.nQuad*4)-1;
   if (psr.param[param_ifunc].fitFlag[0]==1)
       npol+=(psr.ifuncN-1);
+  if (psr.param[param_clk_offs].fitFlag[0]==1)
+      npol+=(psr.clkOffsN-1);
   if (psr.param[param_tel_dx].fitFlag[0]==1 && psr.param[param_tel_dx].val[0] < 2)
       npol+=(psr.nTelDX-1);
   else if (psr.param[param_tel_dx].fitFlag[0]==1 && psr.param[param_tel_dx].val[0] == 2)
@@ -686,6 +688,11 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 		  else if (i==param_ifunc)
 		    {
 		      for (j=0;j<psr->ifuncN;j++)
+			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+		    }
+		  else if (i==param_ifunc)
+		    {
+		      for (j=0;j<psr->clkOffsN;j++)
 			afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 		    }
 		  else if (i==param_tel_dx)
@@ -1288,6 +1295,20 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       }
       //      printf("afunc = %g\n",afunc);
     }
+  else if (i==param_clk_offs) /* Whitening procedure using interpolated function */
+    {
+      if (psr->param[param_clk_offs].val[0]==2)
+	{
+	  int j;
+	  for (j=0;j<psr->clkOffsN-1;j++)
+	    {
+	      if (psr->obsn[ipos].sat >= psr->clk_offsT[j] &&
+		  psr->obsn[ipos].sat < psr->clk_offsT[j+1])
+		return 1;
+	    }
+	  return 0;
+	}
+    }
   else if (i==param_ifunc) /* Whitening procedure using interpolated function */
     {
       if (psr->param[param_ifunc].val[0]==1)
@@ -1854,6 +1875,16 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		    {
 		      psr[p].ifuncV[k] -= val[j];
 		      psr[p].ifuncE[k] = error[j];
+		      j++;
+		    }
+		}		  
+	      else if (i==param_clk_offs) 
+		{
+		  int k;
+		  for (k=0;k<psr->clkOffsN;k++)
+		    {
+		      psr[p].clk_offsV[k] -= val[j];
+		      psr[p].clk_offsE[k] = error[j];
 		      j++;
 		    }
 		}		  

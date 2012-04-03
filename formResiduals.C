@@ -455,6 +455,22 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	       //	       printf("Res = %g\n",(double)res);
 	     }
+	 
+	   /* Add in extra phase due to clock offset */
+	   if (psr[p].param[param_clk_offs].paramSet[0] == 1)
+	     {
+	       int j;
+	       printf("IN HERE SETTING THE CLOCKS %d\n",psr[p].clkOffsN);
+	       for (j=0;j<psr[p].clkOffsN-1;j++)
+		 {
+		   if (psr[p].obsn[i].bbat >= psr[p].clk_offsT[j] &&
+		       psr[p].obsn[i].bbat < psr[p].clk_offsT[j+1])
+		     {
+		       phaseW += (psr[p].clk_offsV[j]*psr[p].param[param_f].val[0]);
+		       break;
+		     }
+		 }
+	     }
 
 	   /* Add in extra phase due to interpolation */
 	   if (psr[p].param[param_ifunc].paramSet[0] == 1)

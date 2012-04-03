@@ -342,6 +342,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_waveepoch]),0);
   else if (strcasecmp(str,"SIFUNC")==0)  /* Set interpolation function */
     readValue(psr,str,fin,&(psr->param[param_ifunc]),0);
+  else if (strcasecmp(str,"STEL_CLK_OFFS")==0)  /* Set clock offsets */
+    readValue(psr,str,fin,&(psr->param[param_clk_offs]),0);
   else if (strcasecmp(str,"STEL_DX")==0)  /* Set interpolation function for telescope position offset*/
     readValue(psr,str,fin,&(psr->param[param_tel_dx]),0);
   else if (strcasecmp(str,"STEL_DY")==0)  /* Set interpolation function for telescope position offset*/
@@ -740,6 +742,17 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 
       fscanf(fin,"%lf %lf %lf",&psr->ifuncT[number-1],&psr->ifuncV[number-1],&psr->ifuncE[number-1]);
       if (psr->ifuncN < number) psr->ifuncN = number;
+    }
+  else if ((strstr(str,"TEL_CLK_OFFS")!=NULL || strstr(str,"tel_clk_offs")!=NULL) &&
+	   strcmp(str,"STEL_CLK_OFFS")!=0)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+12,"%d",&number);
+      printf("Reading clock with %s %d\n",str,number);
+
+      fscanf(fin,"%lf %lf %lf",&psr->clk_offsT[number-1],&psr->clk_offsV[number-1],&psr->clk_offsE[number-1]);
+      if (psr->clkOffsN < number) psr->clkOffsN = number;
     }
   else if ((strstr(str,"TEL_DX")!=NULL || strstr(str,"tel_dx")!=NULL) && strcmp(str,"STEL_DX")!=0)
     {
