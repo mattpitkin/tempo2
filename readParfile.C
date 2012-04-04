@@ -122,7 +122,7 @@ int readSimpleParfile (FILE *fin, pulsar *p)
 	checkLine(p,str,fin,&elong,&elat);
     }
 
-  checkAllSet(p,elong,elat,"");
+  checkAllSet(p,elong,elat,(char *)"");
 
   return 0;
 }
@@ -164,12 +164,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     fscanf(fin,"%s",psr->clock);
   else if (strcasecmp(str,"TRES")==0)
     readValue(psr,str,fin,&(psr->param[param_tres]),0);
-  else if (strcasecmp(str,"MODE")==0) /* Fitting mode */
+  else if (strcasecmp(str,"MODE")==0 || strcasecmp(str,"WEIGHT")==0) /* Fitting mode */
     fscanf(fin,"%d",&(psr->fitMode));
   else if (strcasecmp(str,"NOTRACK")==0)  /* TEMPO2 uses automatic tracking */
     psr->param[param_track].paramSet[0]=0;
   else if (strcasecmp(str,"TRACK")==0)  /* TEMPO2 uses automatic tracking */
-    readValue(psr,"TRACK",fin,&(psr->param[param_track]),0);
+    readValue(psr,(char *)"TRACK",fin,&(psr->param[param_track]),0);
   else if (strcasecmp(str,"NO_SS_SHAPIRO")==0)
     psr->calcShapiro=-1;
   else if (strcasecmp(str,"IPM")==0)
@@ -363,13 +363,13 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   else if (strcasecmp(str,"DMEPOCH")==0)    /* DM Epoch */
     readValue(psr,str,fin,&(psr->param[param_dmepoch]),0);
   else if (strcasecmp(str,"RAJ")==0 || strcasecmp(str,"RA")==0)       /* Right ascension */
-    readValue(psr,"RAJ",fin,&(psr->param[param_raj]),0);
+    readValue(psr,(char *)"RAJ",fin,&(psr->param[param_raj]),0);
   else if (strcasecmp(str,"DECJ")==0 || strcasecmp(str,"DEC")==0)      /* Declination */
-    readValue(psr,"DECJ",fin,&(psr->param[param_decj]),0);
+    readValue(psr,(char *)"DECJ",fin,&(psr->param[param_decj]),0);
   else if (strcasecmp(str,"ELONG")==0 || strcasecmp(str,"LAMBDA")==0)
-    readValue(psr,"ELONG",fin,elong,0);
+    readValue(psr,(char *)"ELONG",fin,elong,0);
   else if (strcasecmp(str,"ELAT")==0 || strcasecmp(str,"BETA")==0)
-    readValue(psr,"ELAT",fin,elat,0);
+    readValue(psr,(char *)"ELAT",fin,elat,0);
   else if (strstr(str,"GLEP_")!=NULL || strstr(str,"glep_")!=NULL)
     {
       if (sscanf(str+5,"%d",&gval)==1)
@@ -821,7 +821,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       if (strcasecmp(psr->binaryModel,"BT1P")==0 ||
 	  strcasecmp(psr->binaryModel,"BT2P")==0)
 	{
-	  displayMsg(1,"BIN3","Converting binary model to T2 model","",psr->noWarnings);
+	  displayMsg(1,(char *)"BIN3",(char *)"Converting binary model to T2 model",
+		     (char *)"",psr->noWarnings);
 	  strcpy(psr->binaryModel,"T2");
 	}
     }
@@ -1085,7 +1086,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     fgets(str,1000,fin);
   else 
     {
-      displayMsg(1,"MISC1","Unknown parameter in par file: ",str,psr->noWarnings);
+      displayMsg(1,(char *)"MISC1",(char *)"Unknown parameter in par file: ",str,psr->noWarnings);
     }
 }
 
@@ -1118,14 +1119,14 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
    }
   if (psr->param[param_posepoch].paramSet[0] == 0)
     {
-      displayMsg(1,"PAR1","Have not set a position epoch. The period epoch will be used instead.",filename,psr->noWarnings);
+      displayMsg(1,(char *)"PAR1",(char *)"Have not set a position epoch. The period epoch will be used instead.",filename,psr->noWarnings);
        copyParam(psr->param[param_pepoch],&(psr->param[param_posepoch]));
       strcpy(psr->param[param_posepoch].label[0],"POSEPOCH (MJD)");
       strcpy(psr->param[param_posepoch].shortlabel[0],"POSEPOCH");
     }
   if (psr->param[param_dmepoch].paramSet[0] == 0)
     {
-      displayMsg(1,"PAR2","Have not set a DM epoch. The period epoch will be used instead.",filename,psr->noWarnings);
+      displayMsg(1,(char *)"PAR2",(char *)"Have not set a DM epoch. The period epoch will be used instead.",filename,psr->noWarnings);
       copyParam(psr->param[param_pepoch],&(psr->param[param_dmepoch]));
       strcpy(psr->param[param_dmepoch].label[0],"DMEPOCH (MJD)");
       strcpy(psr->param[param_dmepoch].shortlabel[0],"DMEPOCH");
@@ -1153,27 +1154,27 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
   /* correct CLK parameter if necessary */
   if (!strcmp(psr->clock, "UNCORR"))
     {
-      strcpy(psr->clock, "TT(TAI)");
-      strcpy(psr->clockFromOverride, "UTC");
+      strcpy(psr->clock, (char *)"TT(TAI)");
+      strcpy(psr->clockFromOverride, (char *)"UTC");
     }
   if ((psr->clock[0]!='T' || psr->clock[1]!='T'))
     {
       char msg[1000];
       sprintf(msg,"CLK parameter '%s' is not a realization of TT!",psr->clock);
-      displayMsg(1,"CLK1",msg,"",psr->noWarnings);
+      displayMsg(1,(char *)"CLK1",msg,(char *)"",psr->noWarnings);
       
       /* try various tempo possibilities */
       char *clk;
       if (!strcmp(psr->clock, "UTC(NIST)"))
-	clk = "TT(UTC(NIST))";
+	clk = (char *)"TT(UTC(NIST))";
       else if (!strcmp(psr->clock, "UTC(BIPM)"))
-	clk = "TT(TAI)";
+	clk = (char *)"TT(TAI)";
       else if (!strcmp(psr->clock, "PTB"))
-	clk = "TT(UTC(PTB))";
+	clk = (char *)"TT(UTC(PTB))";
       else if (!strcmp(psr->clock, "AT1"))
-	clk = "TT(TA(NIST))";
+	clk = (char *)"TT(TA(NIST))";
       else /* default to TT(TAI) */
-	clk = "TT(TAI)";
+	clk = (char *)"TT(TAI)";
       if (psr->noWarnings!=2)
 	printf("-> Using %s instead.(You should set CLK to what you really mean!)\n", clk);
       strcpy(psr->clock, clk);
@@ -1200,7 +1201,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
   int noread=0,endit;
   const char *CVS_verNum = "$Revision$";
 
-  if (displayCVSversion == 1) CVSdisplayVersion("readParfile.C","readParfile()",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion((char *)"readParfile.C",(char *)"readParfile()",CVS_verNum);
 
   elong.aSize = 1;
   elong.val       = (longdouble *)malloc(elong.aSize*sizeof(longdouble));
