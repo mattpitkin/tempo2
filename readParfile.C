@@ -1513,6 +1513,20 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
       strcpy(psr->decjStrPost,str1);
       parameter->val[arr] = turn_deg(dms_turn(str1))*M_PI/180.0;
     }
+  else if (strcasecmp(pmtr,"EPHVER")==0) // Check strings for EPHVER
+    {
+      if (strcasecmp(str1,"2")==0 || strcasecmp(str1,"5")==0) 
+	parameter->val[arr] = parse_longdouble(str1);
+      else if (strcasecmp(str1,"TEMPO1")==0)
+	parameter->val[arr] = 2;
+      else if (strcasecmp(str1,"TEMPO2")==0)
+	parameter->val[arr]=5;
+      else
+	{
+	  printf("ERROR: Unknown EPHVER >%s<\n",str1);
+	  exit(1);
+	}
+    }
   else
     parameter->val[arr] = parse_longdouble(str1);
   parameter->fitFlag[arr] = 0;
