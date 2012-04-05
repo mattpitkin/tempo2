@@ -10,3 +10,4 @@ spectrum_plug.C
 simulDM_plug.C
 fixData_plug.C
 clock_plug.C
+GWbkgrd_plug.C
