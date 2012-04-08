@@ -1588,9 +1588,9 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       beta     = psr->gwm_decj;
 
       // GW vector
-      g1 = cosl(lambda)*cosl(beta);
-      g2 = sinl(lambda)*cosl(beta);
-      g3 = sinl(beta);
+      g1 = -cosl(lambda)*cosl(beta);
+      g2 = -sinl(lambda)*cosl(beta);
+      g3 = -sinl(beta);
       
       // Pulsar vector
       n1 = cosl(lambda_p)*cosl(beta_p);
@@ -1623,11 +1623,12 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		 l1 = n1 - g1;
 		 l2 = n2 - g2;
 		 l3 = n3 - g3;
-		 cosPhi = fabs(l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1 + l2*l2 + l3*l3);
-		 if  (cosPhi >= 1.0/sqrt(2.0))
-		     cos2Phi = 2*cosPhi*cosPhi - 1.0;
-		 else
-		     cos2Phi = 2*sqrt(1.0 - cosPhi*cosPhi)*sqrt(1.0 - cosPhi*cosPhi) - 1.0;}
+		 cosPhi = (l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1 + l2*l2 + l3*l3);
+		 //		 if  (cosPhi >= 1.0/sqrt(2.0))
+		 cos2Phi = 2*cosPhi*cosPhi - 1.0;
+		 //		 else
+		 //		     cos2Phi = 2*sqrt(1.0 - cosPhi*cosPhi)*sqrt(1.0 - cosPhi*cosPhi) - 1.0;
+		}
 	  else 
        	         {cos2Phi = 0;}
 	  
