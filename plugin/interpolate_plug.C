@@ -45,7 +45,7 @@ typedef struct sample {
   int    actual;
 } sample;
 
-
+#define MAX_SAMPLES 20000
 
 void plotResiduals(pulsar *psr,sample *samples,int nSample,int drawFig);
 void plotModel(pulsar *psr,double startSample,double endSample,double spacingSample,sample *samples,int nSamples,int actualSamples,int drawFig);
@@ -71,8 +71,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double startSample,endSample,spacingSample;
   double modelA,modelFc,modelAlpha,x;
   int    setModelA,setModelFc,setModelAlpha;
-  double covFunc[15000];
-  sample samples[15000];
+  double covFunc[MAX_SAMPLES];
+  sample samples[MAX_SAMPLES];
   int nSampleTimes=0;
   int nCovFunc;
   double **covMatrix,t,det;
@@ -185,7 +185,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
   rms = 0.0;
-
   for (i=0;i<psr[0].nobs;i++)
     {
       samples[i].x = (double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
@@ -198,7 +197,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   rms = sqrt(1.0/rms);
   printf("rms = %g %d\n",rms,psr[0].nobs);
   nSampleTimes = psr[0].nobs;
-
   if (actualSamples == 0)
     {
       // Add sample times for requested data
@@ -217,25 +215,68 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   // Create the power spectrum
   getPowerSpectra(psr,modelA,modelFc,modelAlpha,startSample,endSample,covFunc,&nCovFunc,samples,nSampleTimes,gw,drawFig);
-
   // Create the covariance matrix
-  covMatrix = (double **)malloc(sizeof(double *)*nSampleTimes);
-  cn = (double **)malloc(sizeof(double *)*nSampleTimes);
-  ucninv = (double **)malloc(sizeof(double *)*nSampleTimes);
-  cninv = (double **)malloc(sizeof(double *)*nSampleTimes);
-  mat = (double **)malloc(sizeof(double *)*nSampleTimes);
-  imat = (double **)malloc(sizeof(double *)*nSampleTimes);
-  cholp = (double *)malloc(sizeof(double)*nSampleTimes);
-  vec = (double *)malloc(sizeof(double)*nSampleTimes);
+  if (!(covMatrix = (double **)malloc(sizeof(double *)*nSampleTimes)))
+    {
+      printf("Unable to allocate memory 1\n"); exit(1);
+    }
+  if (!(cn = (double **)malloc(sizeof(double *)*nSampleTimes)))
+    {
+      printf("Unable to allocate memory 2\n"); exit(1);
+    }
+  if (!(ucninv = (double **)malloc(sizeof(double *)*nSampleTimes)))
+    {
+      printf("Unable to allocate memory 3\n"); exit(1);
+    }
+  if (!(cninv = (double **)malloc(sizeof(double *)*nSampleTimes)))
+    {
+      printf("Unable to allocate memory 4\n"); exit(1);
+    }
+  if (!(mat = (double **)malloc(sizeof(double *)*nSampleTimes)))
+    {
+      printf("Unable to allocate memory 5\n"); exit(1);
+    }
+  if (!(imat = (double **)malloc(sizeof(double *)*nSampleTimes)))
+    {
+      printf("Unable to allocate memory 6\n"); exit(1);
+    }
+  if  (!(cholp = (double *)malloc(sizeof(double)*nSampleTimes)))
+    {
+      printf("Unable to allocate memory 7\n"); exit(1);
+    }
+  if (!(vec = (double *)malloc(sizeof(double)*nSampleTimes)))
+    {
+      printf("Unable to allocate memory 8\n"); exit(1);
+    }
   for (i=0;i<nSampleTimes;i++)
     {
-      covMatrix[i] = (double *)malloc(sizeof(double)*nSampleTimes);
-      cn[i] = (double *)malloc(sizeof(double)*nSampleTimes);
-      ucninv[i] = (double *)malloc(sizeof(double)*nSampleTimes);
-      cninv[i] = (double *)malloc(sizeof(double)*nSampleTimes);
-      mat[i] = (double *)malloc(sizeof(double)*nSampleTimes);
-      imat[i] = (double *)malloc(sizeof(double)*nSampleTimes);
+      if (!(covMatrix[i] = (double *)malloc(sizeof(double)*nSampleTimes)))
+      {
+	printf("Unable to allocate memory 9\n"); exit(1);
+      }
+      if (!(cn[i] = (double *)malloc(sizeof(double)*nSampleTimes)))
+      {
+	printf("Unable to allocate memory 10\n"); exit(1);
+      }
+      if (!(ucninv[i] = (double *)malloc(sizeof(double)*nSampleTimes)))
+      {
+	printf("Unable to allocate memory 11\n"); exit(1);
+      }
+      if (!(cninv[i] = (double *)malloc(sizeof(double)*nSampleTimes)))
+      {
+	printf("Unable to allocate memory 12\n"); exit(1);
+      }
+      if (!(mat[i] = (double *)malloc(sizeof(double)*nSampleTimes)))
+      {
+	printf("Unable to allocate memory 13\n"); exit(1);
+      }
+      if (!(imat[i] = (double *)malloc(sizeof(double)*nSampleTimes)))
+      {
+	printf("Unable to allocate memory 14\n"); exit(1);
+      }
     }
+  // *********** 
+
   for (i=0;i<nSampleTimes;i++)
     {
       for (j=0;j<nSampleTimes;j++)
@@ -247,7 +288,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    cn[i][j]=0.0;
 	}
     }
-
   /*   printf("\n\ncn ... \n\n");
   for (i=0;i<5;i++)
     {
@@ -258,7 +298,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("\n");
     }
   */
-
   for (i=0;i<nSampleTimes;i++)
     {
       for (j=0;j<nSampleTimes;j++)
@@ -280,7 +319,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       printf("\n");
       }*/
-
   TKcholDecomposition(cn,nSampleTimes,cholp);
   // Now calculate inverse
   for (i=0;i<nSampleTimes;i++)
@@ -299,13 +337,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
     } 
 
-
-
   for (i=0;i<nSampleTimes;i++)
     {
       for (j=0;j<nSampleTimes;j++)
 	cninv[i][j] = ucninv[j][i]*ucninv[i][j];
     }
+  // *************
+ 
   // Calculate final predicted residual
   for (i=0;i<nSampleTimes;i++)
     {
@@ -338,6 +376,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("%g ",mat[i][j]);
       printf("\n");
       } */
+  // *********
   // Calculate inverse of mat
   {
     double d,col[nSampleTimes];
@@ -365,7 +404,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	samples[i].pred += imat[j][i]*vec[j]; 
       //      printf("Answer = %g %g %g\n",samples[i].x,samples[i].y,samples[i].pred);
     }
-  
 
   // Plot the residuals
   if (drawFig == 1)
@@ -376,7 +414,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       plotModel(psr,startSample,endSample,spacingSample,samples,nSampleTimes,actualSamples,drawFig);
       cpgend();
     }
-
   // Write out new par file with the IFUNC commands
   psr[0].param[param_ifunc].paramSet[0] = 1;
   psr[0].param[param_ifunc].val[0] = 2;
@@ -388,13 +425,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  || (samples[i].actual==1 && actualSamples == 1))
 	{
 	  psr[0].ifuncT[psr[0].ifuncN] = samples[i].x+(double)psr[0].param[param_pepoch].val[0];
-	  psr[0].ifuncV[psr[0].ifuncN] = -samples[i].pred;
+	psr[0].ifuncV[psr[0].ifuncN] = -samples[i].pred;
 	  psr[0].ifuncE[psr[0].ifuncN] = 0;
 	  psr[0].ifuncN++;
-	}
+	  if (psr[0].ifuncN > MAX_IFUNC)
+	    {
+	      printf("ERROR: Trying to set psr[0].ifuncN > MAX_IFUNC\n");
+	      exit(1);
+	    }
+      }
     }
   if (outPred==0)
-    textOutput(psr,1,0,0,0,1,nparFile);
+    {
+      textOutput(psr,1,0,0,0,1,nparFile);
+    }
   else
     {
       FILE *fout;
@@ -422,6 +466,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   free(imat);
   free(vec);
   return 0;
+
 }
 
 void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,double startSample,double endSample,double *covFunc,int *nCovFunc,sample *samples,int nSampleTimes,int gw,int drawFig)
@@ -434,22 +479,30 @@ void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,
   double *pf;
 
   ndays = (int)(samples[nSampleTimes-1].x - samples[0].x + 0.5);
-  //  printf("ndays = %d\n",ndays);
   // 6220
   if (!(fx = (float *)malloc(sizeof(float)*(ndays*2+2))))
     {
       printf("Unable to allocate memory\n");
       exit(1);
     }
-  fy = (float *)malloc(sizeof(float)*(ndays*2+2));
-  freq = (float *)malloc(sizeof(float)*(ndays*2+2));
-  opf = (double *)malloc(sizeof(double)*(ndays*2+2));
+  if (!(fy = (float *)malloc(sizeof(float)*(ndays*2+2))))
+    {
+      printf("Unable to allocate memory in getPowerSpectra\n"); exit(1);
+    }
+  if (!(freq = (float *)malloc(sizeof(float)*(ndays*2+2))))
+    {
+      printf("Unable to allocate memory in getPowerSpectra\n"); exit(1);
+    }
+  if (!(opf = (double *)malloc(sizeof(double)*(ndays*2+2))))
+    {
+      printf("Unable to allocate memory in getPowerSpectra\n"); exit(1);
+    }
   if (!(pf = (double *)malloc(sizeof(double)*(ndays*2+2))))
     {
       printf("Unable to allocate memory\n");
       exit(1);
     }
-
+  
   *nCovFunc = ndays;
 
   for (i=0;i<ndays+1;i++)
@@ -505,6 +558,11 @@ void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,
     transform_plan = fftw_plan_dft_r2c_1d(ndays, pf, output, FFTW_ESTIMATE);
     fftw_execute(transform_plan);    
     fftw_destroy_plan(transform_plan);  
+    if (ndays > MAX_SAMPLES)
+      {
+	printf("ERROR in interpolate: ndays > MAX_SAMPLES\n");
+	exit(1);
+      }
     for (i=0;i<ndays;i++) 
       {
 	covFunc[i] = opf[2*i]/ndays*pow(86400.0*365.25,2)*365.25; // Note: ndays**2 scaling is because of IFFT --- CHECK THIS
@@ -558,11 +616,15 @@ void plotModel(pulsar *psr,double startSample,double endSample,double spacingSam
 
 void plotResiduals(pulsar *psr,sample *samples,int nSample,int drawFig)
 {
-  float fx[psr[0].nobs],fy[psr[0].nobs];
+  float *fx,*fy;
   float minx,maxx;
   int n,i;
-  
   n = 0;
+
+  if (!(fx = (float *)malloc(sizeof(float)*nSample)))
+    {printf("Unable to allocate memory in plotResiduals 1\n"); exit(1);}
+  if (!(fy = (float *)malloc(sizeof(float)*nSample)))
+    {printf("Unable to allocate memory in plotResiduals 1\n"); exit(1);}
 
   for (i=0;i<nSample;i++)
     {
@@ -582,13 +644,14 @@ void plotResiduals(pulsar *psr,sample *samples,int nSample,int drawFig)
 	  n++;
 	}
     }
-
   if (drawFig==1)
     {
       cpgenv(minx,maxx,TKfindMin_f(fy,n),TKfindMax_f(fy,n),0,1);
       cpglab("Day","Residual (s)","");
       cpgpt(n,fx,fy,9);
     }
+  free(fx);
+  free(fy);
 }
 
 void sortSamples(sample *s,int n)
