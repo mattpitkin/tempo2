@@ -53,12 +53,12 @@ typedef struct glitchS {
 } glitchS;
 
 void defineGlitchVal(glitchS *glitch,int nglt);
-void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set);
+void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set,int interactive);
 void plot1(double *epoch,double *f0,float *yerr1,float *yerr2,
-	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);          
+	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);          
 void plot8(double *epoch,double *f0,float *yerr1,float *yerr2,
-	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);          
-void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);  
+	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);          
+void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);  
 void interactivePlot(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n);
 void fitFuncs(double x,double *p,int m);
 void changeFit(glitchS *glitch,int nglt);
@@ -67,13 +67,13 @@ void drawMenu(float minx,float maxx,float miny,float maxy,glitchS *glitch, int n
 void checkMenu(float minx,float maxx,float miny,float maxy,glitchS *glitch, int nglt,
 	       float mx,float my,int *fitf0,int *fitf1,char key);
 double nonlinearFunc( double t, const double *par,int obsNum );
-void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
-void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
-void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
-void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
-void plot7(double *plotResX,double *plotResY,double *plotResE,int nplotVal,double plotOffset,int combine,int pos,int nplot,double start,double end,double psrF0,float yscale_min,float yscale_max,int yscale_set);
+void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);
+void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);
+void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);
+void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);
+void plot7(double *plotResX,double *plotResY,double *plotResE,int nplotVal,double plotOffset,int combine,int pos,int nplot,double start,double end,double psrF0,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);
 void plot9(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,
-	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set);
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx);
 
 
 // Global parameters for the fit
@@ -204,6 +204,7 @@ void help() /* Display help */
   printf("-gt x     set glitch at MJD x (can use -gr multiple times)\n");
   printf("-h        this help file\n");
   printf("-head x   set fraction of page as header\n");
+  printf("-loadResults x Load a result.dat file from 'x'\n");
   printf("-offset x set time offset\n");
   printf("-p x      make plot of type x (can be used multiple times)\n");
   printf("-removeF2 remove the pre-fit F2 value from the resulting plots\n");
@@ -225,7 +226,7 @@ void help() /* Display help */
   exit(1);
 }
 
-#define MAX_TIMES 1000
+#define MAX_TIMES 2000
 
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
@@ -237,15 +238,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int i,j,k;
   double globalParameter;
   char timeList[MAX_STRLEN];
-  long double mjd1[MAX_TIMES],mjd2[MAX_TIMES];
+  long double *mjd1,*mjd2;
   long double centreMJD;
   char parFileName[MAX_TIMES][MAX_STRLEN];
   char timFileName[MAX_TIMES][MAX_STRLEN];
-  double epoch[MAX_TIMES];
-  double f0[MAX_TIMES];
-  double f0e[MAX_TIMES];
-  double f1[MAX_TIMES];
-  double f1e[MAX_TIMES];
+  double *epoch;
+  double *f0;
+  double *f0e;
+  double *f1;
+  double *f1e;
   double plotOffset=0;
   char plotPar[100]="NULL";
   int fitf1=0;
@@ -267,6 +268,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char title[100]="";
   char tname[100]="";
   int nread;
+  char resultFname[1024];
+  int loadResults=0;
   float yscale_min[100];
   float yscale_max[100];
   int   yscale_set[100];
@@ -275,6 +278,24 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   long double storeExpectedF0,storeExpectedF1,storeExpectedF2;
   long double storeOrigF0,storeOrigF1,storeOrigF2;
   int removeExpected=0;
+
+  // Allocate memory
+  printf("Allocating memory\n");
+  if (!(mjd1 = (long double *)malloc(sizeof(long double)*MAX_TIMES)))
+    {printf("Sorry: out of memory\n"); exit(1);}
+  if (!(mjd2 = (long double *)malloc(sizeof(long double)*MAX_TIMES)))
+    {printf("Sorry: out of memory\n"); exit(1);}
+  if (!(epoch = (double *)malloc(sizeof(double)*MAX_TIMES)))
+    {printf("Sorry: out of memory\n"); exit(1);}
+  if (!(f0 = (double *)malloc(sizeof(double)*MAX_TIMES)))
+    {printf("Sorry: out of memory\n"); exit(1);}
+  if (!(f0e = (double *)malloc(sizeof(double)*MAX_TIMES)))
+    {printf("Sorry: out of memory\n"); exit(1);}
+  if (!(f1 = (double *)malloc(sizeof(double)*MAX_TIMES)))
+    {printf("Sorry: out of memory\n"); exit(1);}
+  if (!(f1e = (double *)malloc(sizeof(double)*MAX_TIMES)))
+    {printf("Sorry: out of memory\n"); exit(1);}
+
 
   for (i=0;i<100;i++)
     yscale_set[i]=0;
@@ -335,6 +356,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	removeF2=1;
       else if (strcmp(argv[i],"-removeExpected")==0)
 	removeExpected=1;
+      else if (strcmp(argv[i],"-loadResults")==0)
+	{
+	  loadResults=1;
+	  strcpy(resultFname,argv[++i]);
+	}
       else if (strcmp(argv[i],"-yscale")==0)
 	{
 	  int n;
@@ -344,221 +370,287 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  yscale_set[n] = 1;
 	}
     }
-  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
-  readTimfile(psr,timFile,1); /* Load the arrival times    */
-  storeEpoch = psr[0].param[param_pepoch].val[0];
-  storeOrigF0 = psr[0].param[param_f].val[0];
-  storeOrigF1 = psr[0].param[param_f].val[1];
-  storeOrigF2 = psr[0].param[param_f].val[2];
-
-  // Read the list of strides
-  fin = fopen(timeList,"r");
-  while (!feof(fin))
+  if (loadResults==0)
     {
-      nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
-      if (nread==3 || nread==4)
+      readParfile(psr,parFile,timFile,1); /* Load the parameters       */
+      readTimfile(psr,timFile,1); /* Load the arrival times    */
+      storeEpoch = psr[0].param[param_pepoch].val[0];
+      storeOrigF0 = psr[0].param[param_f].val[0];
+      storeOrigF1 = psr[0].param[param_f].val[1];
+      storeOrigF2 = psr[0].param[param_f].val[2];
+    
+      // Read the list of strides
+      fin = fopen(timeList,"r");
+      while (!feof(fin))
 	{
-	  if (nread==4)
-	    strcpy(timFileName[nStride],tname);
-	  else
-	    strcpy(timFileName[nStride],timFile[0]);
-	  nStride++;
+	  nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
+	  if (nread==3 || nread==4)
+	    {
+	      if (nread==4)
+		strcpy(timFileName[nStride],tname);
+	      else
+		strcpy(timFileName[nStride],timFile[0]);
+	      nStride++;
+	      if (nStride > MAX_TIMES)
+		{
+		  printf("Sorry the maximum number of regions that can be loaded is %d\n",MAX_TIMES);
+		  exit(1);
+		}
+	    }
 	}
-    }
-  fclose(fin);
-  printf("Have read %d strides\n",nStride);
-  if (nStride == 0)
-    {
-      printf("ERROR: require at least one stride - use -t option\n");
-      exit(1);
+      fclose(fin);
+      printf("Have read %d strides\n",nStride);
+      if (nStride == 0)
+	{
+	  printf("ERROR: require at least one stride - use -t option\n");
+	  exit(1);
+	}
     }
 
   // Now do the stride fitting
-  if (!(fout = fopen("result.dat","w")))
+  if (loadResults==0)
     {
-      printf("Unable to open output file result.dat\n");
-      exit(1);
+      if (!(fout = fopen("result.dat","w")))
+	{
+	  printf("Unable to open output file result.dat\n");
+	  exit(1);
+	}
+      for (i=0;i<nStride;i++)
+	{
+	  centreMJD = (mjd1[i]+mjd2[i])/2.0;
+	  printf("Analysing %g\n",(double)centreMJD);
+	  
+	  strcpy(parFile[0],parFileName[i]);
+	  strcpy(timFile[0],timFileName[i]);
+	  
+	  psr[0].nJumps=0;
+	  for(j=0;j<MAX_PARAMS;j++){
+	    psr[0].param[j].nLinkTo = 0;
+	    psr[0].param[j].nLinkFrom = 0;
+	    for (k=0;k<psr[0].param[j].aSize;k++)
+	      {
+		psr[0].param[j].paramSet[k] = 0;
+		psr[0].param[j].fitFlag[k] = 0;
+		psr[0].param[j].prefit[k] = 0.0;
+		psr[0].param[j].val[k] = 0.0;
+	      }
+	  }
+	  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
+	  readTimfile(psr,timFile,1); /* Load the arrival times    */
+	  
+	  // Update the epoch in the par file for centreMJD
+	  strcpy(argv[argn],"-epoch");
+	  sprintf(argv[argn+1],"%.5f",(double)centreMJD);
+	  preProcess(psr,1,argc,argv);      
+	  
+	  storeExpectedF0 = storeOrigF0 + storeOrigF1*(centreMJD-storeEpoch)*86400.0L + 0.5*storeOrigF2*pow((centreMJD-storeEpoch)*86400.0L,2);
+	  storeExpectedF1 = storeOrigF1 + storeOrigF2*(centreMJD-storeEpoch)*86400.0L;
+	  
+	  // Turn off all fitting
+	  for (j=0;j<MAX_PARAMS;j++)
+	    {
+	      for (k=0;k<psr[0].param[j].aSize;k++)
+		psr[0].param[j].fitFlag[k] = 0;
+	    }
+	  
+	  // Update the start and finish flags
+	  psr[0].param[param_start].val[0] = mjd1[i];
+	  psr[0].param[param_start].fitFlag[0] = 1;
+	  psr[0].param[param_start].paramSet[0] = 1;
+	  
+	  psr[0].param[param_finish].val[0] = mjd2[i];
+	  psr[0].param[param_finish].fitFlag[0] = 1;
+	  psr[0].param[param_finish].paramSet[0] = 1;
+	  
+	  // Turn on required fitting
+	  psr[0].param[param_f].fitFlag[0] = 1;
+	  if (fitf1==1)
+	    psr[0].param[param_f].fitFlag[1] = 1;
+	  
+	  // Do the fitting
+	  for (j=0;j<2;j++)                   /* Do two iterations for pre- and post-fit residuals*/
+	    {
+	      formBatsAll(psr,1);         /* Form the barycentric arrival times */
+	      formResiduals(psr,1,1);    /* Form the residuals                 */
+	      if (j==0) doFit(psr,1,0);   /* Do the fitting     */
+	      else textOutput(psr,1,globalParameter,0,0,0,(char *)"");  /* Display the output */
+	    }
+	  if ((psr[0].nFit>1 && fitf1==0) || (fitf1==1 && psr[0].nFit>2))
+	    {
+	      epoch[n] = (double)centreMJD;
+	      f0[n]    = (double)psr[0].param[param_f].val[0];
+	      if ((psr[0].nFit==2 && fitf1==0))
+		f0e[n]=-1; // Set a negative error
+	      else
+		f0e[n]   = (double)psr[0].param[param_f].err[0];
+	      if (removeF2==1)
+		f0[n] -= (double)(0.5*psr[0].param[param_f].val[2]*pow((centreMJD-storeEpoch)*86400.0,2));
+	      if (removeExpected==1)
+		f0[n] -= storeExpectedF0;
+	      
+	      if (fitf1==1)
+		{
+		  f1[n] = (double)psr[0].param[param_f].val[1];
+		  if (psr[0].nFit==3)
+		    {
+		      f1e[n] = -1;
+		      f0e[n] = -1;
+		    }
+		  else
+		    f1e[n] = (double)psr[0].param[param_f].err[1];
+		  if (removeF2==1)
+		    {
+		      //		  printf("Updating by: %g\n",(double)(psr[0].param[param_f].val[2]*(centreMJD-psr[0].param[param_pepoch].val[0])*86400.0));
+		      f1[n] -= (double)(psr[0].param[param_f].val[2]*(centreMJD-storeEpoch)*86400.0);
+		    }
+		  if (removeExpected==1)
+		    f1[n] -= storeExpectedF1;
+		}
+	      nFit[n]  = psr[0].nFit;
+	      id[n]  = i;
+	      if (fitf1==0)
+		fprintf(fout,"%g %.10f %g %d %d\n",epoch[n],f0[n],f0e[n],nFit[n],id[n]+1);
+	      else
+		fprintf(fout,"%g %.10f %g %g %g %d %d\n",epoch[n],f0[n],f0e[n],f1[n],f1e[n],nFit[n],id[n]+1);
+	      n++;    
+	    }
+	  else 
+	    fprintf(fout,"# %g %d failed: nfit = %d \n",(double)centreMJD,i+1,psr[0].nFit);
+	}
+      fclose(fout);
     }
-  for (i=0;i<nStride;i++)
+  else
     {
-      centreMJD = (mjd1[i]+mjd2[i])/2.0;
-      printf("Analysing %g\n",(double)centreMJD);
-
-      strcpy(parFile[0],parFileName[i]);
-      strcpy(timFile[0],timFileName[i]);
-
+      FILE *fin;
+      printf("Loading results from %s\n",resultFname);
+      fin = fopen(resultFname,"r");
+      n=0;
+      while (!feof(fin))
+	{
+	  if (fitf1==0)
+	    {
+	      if (fscanf(fin,"%lf %lf %lf %d %d",&epoch[n],&f0[n],&f0e[n],&nFit[n],&id)==5)
+		{
+		  id[n]--;
+		  n++;
+		}
+	    }
+	  else
+	    {
+	      char str[1024];
+	      printf("At this point %d\n",n);
+	      fgets(str,1024,fin);
+	      if (str[0]=='#')
+		printf("Warning line: %s\n",str);
+	      else if (sscanf(str,"%lf %lf %lf %lf %lf %d %d",&epoch[n],&f0[n],&f0e[n],&f1[n],&f1e[n],&nFit[n],&id[n])==7)
+		{
+		  id[n]--;
+		  n++;
+		}
+	      printf("Read %g %d\n",epoch[n-1],id[n-1]);
+	    }
+	}
+      fclose(fin);
+      printf("Complete\n");
+    }
+  // Get timing residuals for plotting
+  int needRes=0;
+  for (i=0;i<nplot;i++)
+    {
+      if (plotType[i] == 7)
+	needRes=1;
+    }
+  if (needRes==1)
+    {
+      strcpy(argv[argn],origArgV[argn]);
+      strcpy(argv[argn+1],origArgV[argn+1]);
+      strcpy(argv[argn+2],origArgV[argn+2]);
+      strcpy(timFile[0],origArgV[argn+2]);
+      strcpy(parFile[0],origArgV[argn+1]);
+      if (strcmp(plotPar,"NULL")==0)
+	strcpy(parFile[0],parFileName[0]);
+      else
+	strcpy(parFile[0],plotPar);
+      
       psr[0].nJumps=0;
       for(j=0;j<MAX_PARAMS;j++){
 	psr[0].param[j].nLinkTo = 0;
 	psr[0].param[j].nLinkFrom = 0;
-	for (k=0;k<psr[0].param[j].aSize;k++)
-	  {
-	    psr[0].param[j].paramSet[k] = 0;
-	    psr[0].param[j].fitFlag[k] = 0;
-	    psr[0].param[j].prefit[k] = 0.0;
-	    psr[0].param[j].val[k] = 0.0;
-	  }
       }
+      printf("\n\n------------------------------------------\n");
+      printf("Reading the par file after the stridefits\n");
+      for (i=0;i<argc;i++)
+	strcpy(argv[i],origArgV[i]);
+      
+      for (i=0;i<argc;i++)
+	printf("%s\n",argv[i]);
       readParfile(psr,parFile,timFile,1); /* Load the parameters       */
       readTimfile(psr,timFile,1); /* Load the arrival times    */
-
-      // Update the epoch in the par file for centreMJD
-      strcpy(argv[argn],"-epoch");
-      sprintf(argv[argn+1],"%.5f",(double)centreMJD);
-      preProcess(psr,1,argc,argv);      
-
-      storeExpectedF0 = storeOrigF0 + storeOrigF1*(centreMJD-storeEpoch)*86400.0L + 0.5*storeOrigF2*pow((centreMJD-storeEpoch)*86400.0L,2);
-      storeExpectedF1 = storeOrigF1 + storeOrigF2*(centreMJD-storeEpoch)*86400.0L;
-
-      // Turn off all fitting
-      for (j=0;j<MAX_PARAMS;j++)
-	{
-	  for (k=0;k<psr[0].param[j].aSize;k++)
-	    psr[0].param[j].fitFlag[k] = 0;
-	}
-
-      // Update the start and finish flags
-      psr[0].param[param_start].val[0] = mjd1[i];
-      psr[0].param[param_start].fitFlag[0] = 1;
-      psr[0].param[param_start].paramSet[0] = 1;
-
-      psr[0].param[param_finish].val[0] = mjd2[i];
-      psr[0].param[param_finish].fitFlag[0] = 1;
-      psr[0].param[param_finish].paramSet[0] = 1;
-
-      // Turn on required fitting
-      psr[0].param[param_f].fitFlag[0] = 1;
-      if (fitf1==1)
-	psr[0].param[param_f].fitFlag[1] = 1;
-
+      //  psr[0].param[param_start].fitFlag[0] = 0;
+      //  psr[0].param[param_start].paramSet[0] = 0;
+      //  psr[0].param[param_finish].fitFlag[0] = 0;
+      //  psr[0].param[param_finish].paramSet[0] = 0;
+      
+      preProcess(psr,1,argc,argv);        
       // Do the fitting
       for (j=0;j<2;j++)                   /* Do two iterations for pre- and post-fit residuals*/
 	{
 	  formBatsAll(psr,1);         /* Form the barycentric arrival times */
 	  formResiduals(psr,1,1);    /* Form the residuals                 */
 	  if (j==0) doFit(psr,1,0);   /* Do the fitting     */
-	  else textOutput(psr,1,globalParameter,0,0,0,"");  /* Display the output */
+	  else textOutput(psr,1,globalParameter,0,0,0,(char *)"");  /* Display the output */
 	}
-      if ((psr[0].nFit>1 && fitf1==0) || (fitf1==1 && psr[0].nFit>2))
+    
+      nplotVal=0;
+      for (i=0;i<psr[0].nobs;i++)
 	{
-	  epoch[n] = (double)centreMJD;
-	  f0[n]    = (double)psr[0].param[param_f].val[0];
-	  if ((psr[0].nFit==2 && fitf1==0))
-	    f0e[n]=-1; // Set a negative error
-	  else
-	    f0e[n]   = (double)psr[0].param[param_f].err[0];
-	  if (removeF2==1)
-	    f0[n] -= (double)(0.5*psr[0].param[param_f].val[2]*pow((centreMJD-storeEpoch)*86400.0,2));
-	  if (removeExpected==1)
-	    f0[n] -= storeExpectedF0;
-
-	  if (fitf1==1)
+	  okay=1;
+	  if (psr[0].obsn[i].deleted!=0)
+	    okay=0;
+	  if (psr[0].param[param_start].paramSet[0]==1 && psr[0].param[param_start].fitFlag[0]==1 &&
+	      (psr[0].param[param_start].val[0] > psr[0].obsn[i].sat))
+	    okay=0;
+	  if (psr[0].param[param_finish].paramSet[0]==1 && psr[0].param[param_finish].fitFlag[0]==1 &&
+	      psr[0].param[param_finish].val[0] < psr[0].obsn[i].sat)
+	    okay=0;
+	  if (okay==1)
 	    {
-	      f1[n] = (double)psr[0].param[param_f].val[1];
-	      if (psr[0].nFit==3)
-		{
-		  f1e[n] = -1;
-		  f0e[n] = -1;
-		}
-	      else
-		f1e[n] = (double)psr[0].param[param_f].err[1];
-	      if (removeF2==1)
-		{
-		  //		  printf("Updating by: %g\n",(double)(psr[0].param[param_f].val[2]*(centreMJD-psr[0].param[param_pepoch].val[0])*86400.0));
-		  f1[n] -= (double)(psr[0].param[param_f].val[2]*(centreMJD-storeEpoch)*86400.0);
-		}
-	      if (removeExpected==1)
-		f1[n] -= storeExpectedF1;
+	      plotResX[nplotVal] = (double)(psr[0].obsn[i].sat);
+	      plotResY[nplotVal] = (double)(psr[0].obsn[i].residual);
+	      plotResE[nplotVal] = (double)(psr[0].obsn[i].toaErr*1.0e-6);
+	      nplotVal++;
 	    }
-	  nFit[n]  = psr[0].nFit;
-	  id[n]  = i;
-	  if (fitf1==0)
-	    fprintf(fout,"%g %.10f %g %d %d\n",epoch[n],f0[n],f0e[n],nFit[n],id[n]+1);
-	  else
-	    fprintf(fout,"%g %.10f %g %g %g %d %d\n",epoch[n],f0[n],f0e[n],f1[n],f1e[n],nFit[n],id[n]+1);
-	  n++;    
 	}
-      else 
-	fprintf(fout,"# %g %d failed: nfit = %d \n",(double)centreMJD,i+1,psr[0].nFit);
     }
-  fclose(fout);
-  // Get timing residuals for plotting
-  strcpy(argv[argn],origArgV[argn]);
-  strcpy(argv[argn+1],origArgV[argn+1]);
-  strcpy(argv[argn+2],origArgV[argn+2]);
-  strcpy(timFile[0],origArgV[argn+2]);
-  strcpy(parFile[0],origArgV[argn+1]);
-  if (strcmp(plotPar,"NULL")==0)
-      strcpy(parFile[0],parFileName[0]);
-  else
-    strcpy(parFile[0],plotPar);
-
-  psr[0].nJumps=0;
-  for(j=0;j<MAX_PARAMS;j++){
-    psr[0].param[j].nLinkTo = 0;
-    psr[0].param[j].nLinkFrom = 0;
-  }
-  printf("\n\n------------------------------------------\n");
-  printf("Reading the par file after the stridefits\n");
-  for (i=0;i<argc;i++)
-    strcpy(argv[i],origArgV[i]);
-
-  for (i=0;i<argc;i++)
-    printf("%s\n",argv[i]);
-  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
-  readTimfile(psr,timFile,1); /* Load the arrival times    */
-  //  psr[0].param[param_start].fitFlag[0] = 0;
-  //  psr[0].param[param_start].paramSet[0] = 0;
-  //  psr[0].param[param_finish].fitFlag[0] = 0;
-  //  psr[0].param[param_finish].paramSet[0] = 0;
-
-  preProcess(psr,1,argc,argv);        
-  // Do the fitting
-  for (j=0;j<2;j++)                   /* Do two iterations for pre- and post-fit residuals*/
-    {
-      formBatsAll(psr,1);         /* Form the barycentric arrival times */
-      formResiduals(psr,1,1);    /* Form the residuals                 */
-      if (j==0) doFit(psr,1,0);   /* Do the fitting     */
-	  else textOutput(psr,1,globalParameter,0,0,0,"");  /* Display the output */
-    }
-  nplotVal=0;
-  for (i=0;i<psr[0].nobs;i++)
-    {
-      okay=1;
-      if (psr[0].obsn[i].deleted!=0)
-	  okay=0;
-	if (psr[0].param[param_start].paramSet[0]==1 && psr[0].param[param_start].fitFlag[0]==1 &&
-	    (psr[0].param[param_start].val[0] > psr[0].obsn[i].sat))
-	  okay=0;
-	if (psr[0].param[param_finish].paramSet[0]==1 && psr[0].param[param_finish].fitFlag[0]==1 &&
-	    psr[0].param[param_finish].val[0] < psr[0].obsn[i].sat)
-		okay=0;
-	if (okay==1)
-	  {
-	    plotResX[nplotVal] = (double)(psr[0].obsn[i].sat);
-	    plotResY[nplotVal] = (double)(psr[0].obsn[i].residual);
-	    plotResE[nplotVal] = (double)(psr[0].obsn[i].toaErr*1.0e-6);
-	    nplotVal++;
-	  }
-    }
-  // Do the plotting
+      // Do the plotting
   printf("Doing the plot\n");
-  if (interactive==0)
-    doPlot(epoch,f0,f0e,f1,f1e,fitf1,nFit,id,n,gt,ngt,plotType,nplot,plotOffset,plotResX,plotResY,plotResE,nplotVal,combine,fontSize,title,yscale_min,yscale_max,yscale_set);
-  else
-    interactivePlot(epoch,f0,f0e,nFit,id,n);
+  //  if (interactive==0)
+    doPlot(epoch,f0,f0e,f1,f1e,fitf1,nFit,id,n,gt,ngt,plotType,nplot,plotOffset,plotResX,plotResY,plotResE,nplotVal,combine,fontSize,title,yscale_min,yscale_max,yscale_set,interactive);
+  //  else
+  //    interactivePlot(epoch,f0,f0e,nFit,id,n);
   printf("Done the plot\n");
+
+  // De-allocate memory
+  free(mjd1); free(mjd2); free(epoch); free(f0); free(f0e); free(f1); free(f1e);
+
 
   return 0;
 }
 
-void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set)
+void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf1,int *nFit,int *id,int n,float *gt,int ngt,int *plotType,int nplot,double plotOffset,double *plotResX,double *plotResY,double *plotResE,int nplotVal,int combine,float fontSize,char *title,float *yscale_min,float *yscale_max,int *yscale_set,int interactive)
 {
   float yerr1[n],yerr2[n];
   float fx[2],fy[2];
+  float mx,my;
+  char key;
   int i,k;
   int plot=2;
   int last;
+  double minx=-1,maxx=-1;
+
+  minx = epoch[0];
+  maxx = epoch[n-1];
+
 
   for (i=0;i<n;i++)
     {
@@ -577,64 +669,89 @@ void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf
   cpgscf(2);
   cpgslw(2);
 
-  for (k=0;k<nplot;k++)
-    {
-      last=0;
-      if (plotType[k]==1)
-	plot1(epoch,f0,yerr1,yerr2,n,plotOffset,combine,k,nplot,yscale_min[1],yscale_max[1],yscale_set[1]);           
-      else if (plotType[k]==2)
-	plot2(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[2],yscale_max[2],yscale_set[2]);           
-      else if (plotType[k]==3)
-	plot3(epoch,f1,f1e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[3],yscale_max[3],yscale_set[3]);
-      else if (plotType[k]==4)
-	plot4(epoch,f0,f0e,nFit,id,n,plotOffset,gt,ngt,combine,k,nplot,yscale_min[4],yscale_max[4],yscale_set[4]);           
-      else if (plotType[k]==5)
-	plot5(epoch,f0,f0e,nFit,id,n,plotOffset,gt,ngt,combine,k,nplot,yscale_min[5],yscale_max[5],yscale_set[5]);           
-      else if (plotType[k]==6)
-	plot6(epoch,f1,f1e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[6],yscale_max[6],yscale_set[6]);
-      else if (plotType[k]==7)
-	plot7(plotResX,plotResY,plotResE,nplotVal,plotOffset,combine,k,nplot,epoch[0],epoch[n-1],f0[0],yscale_min[7],yscale_max[7],yscale_set[7]);
-      else if (plotType[k]==8)
-	plot8(epoch,f0,yerr1,yerr2,n,plotOffset,combine,k,nplot,yscale_min[8],yscale_max[8],yscale_set[8]);           
-      else if (plotType[k]==9)
-	plot9(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[9],yscale_max[9],yscale_set[9]);           
-
-      for (i=0;i<ngt;i++)
-	{
-	  fx[0] = fx[1] = gt[i]-plotOffset;
-	  fy[0] = -1000; fy[1] = 1000;
-	  cpgsls(4); cpgline(2,fx,fy); cpgsls(1);
-	  
-	}
-    }
+  do {
+    for (k=0;k<nplot;k++)
+      {
+	last=0;
+	if (plotType[k]==1)
+	  plot1(epoch,f0,yerr1,yerr2,n,plotOffset,combine,k,nplot,yscale_min[1],yscale_max[1],yscale_set[1],minx,maxx);           
+	else if (plotType[k]==2)
+	  plot2(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[2],yscale_max[2],yscale_set[2],minx,maxx);           
+	else if (plotType[k]==3)
+	  plot3(epoch,f1,f1e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[3],yscale_max[3],yscale_set[3],minx,maxx);
+	else if (plotType[k]==4)
+	  plot4(epoch,f0,f0e,nFit,id,n,plotOffset,gt,ngt,combine,k,nplot,yscale_min[4],yscale_max[4],yscale_set[4],minx,maxx);           
+	else if (plotType[k]==5)
+	  plot5(epoch,f0,f0e,nFit,id,n,plotOffset,gt,ngt,combine,k,nplot,yscale_min[5],yscale_max[5],yscale_set[5],minx,maxx);           
+	else if (plotType[k]==6)
+	  plot6(epoch,f1,f1e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[6],yscale_max[6],yscale_set[6],minx,maxx);
+	else if (plotType[k]==7)
+	  plot7(plotResX,plotResY,plotResE,nplotVal,plotOffset,combine,k,nplot,epoch[0],epoch[n-1],f0[0],yscale_min[7],yscale_max[7],yscale_set[7],minx,maxx);
+	else if (plotType[k]==8)
+	  plot8(epoch,f0,yerr1,yerr2,n,plotOffset,combine,k,nplot,yscale_min[8],yscale_max[8],yscale_set[8],minx,maxx);           
+	else if (plotType[k]==9)
+	  plot9(epoch,f0,f0e,nFit,id,n,plotOffset,combine,k,nplot,yscale_min[9],yscale_max[9],yscale_set[9],minx,maxx);           
+	
+	for (i=0;i<ngt;i++)
+	  {
+	    fx[0] = fx[1] = gt[i]-plotOffset;
+	    fy[0] = -1000; fy[1] = 1000;
+	    cpgsls(4); cpgline(2,fx,fy); cpgsls(1);
+	    
+	  }
+      }
+    if (interactive==1)
+      {
+	float mx2,my2;
+	cpgcurs(&mx,&my,&key);
+	if (key=='z')
+	  {
+	    cpgband(4,0,mx,my,&mx2,&my2,&key);
+	    if (mx2 > mx) { minx = mx; maxx=mx2;}
+	    else {minx = mx2; maxx=mx;}
+	    cpgeras();
+	  }
+	else if (key=='u')
+	  {
+	    cpgeras();
+	    minx = maxx = -1;
+	  }
+      }
+      } while (interactive==1 && key!='q');
   cpglab("","",title);
   cpgend();
 }
 
-void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotOffset,int combine,int pos,int nplot,double start,double end,double psrF0,float yscale_min,float yscale_max,int yscale_set)
+void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotOffset,int combine,int pos,int nplot,double start,double end,double psrF0,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   float fx[n],fy[n],yerr1[n],yerr2[n];
   int i;
   char xlabel[100]="MJD";
+  int n2=0;
 
   if (plotOffset!=0)
     sprintf(xlabel,"Days after MJD %.0f",plotOffset);
 
   for (i=0;i<n;i++)
     {
-      fx[i] = (float)(plotResX[i]-plotOffset);
-      fy[i] = (float)(plotResY[i]*1000.0);
-      yerr1[i] = fy[i] - plotResE[i]*1000.0;
-      yerr2[i] = fy[i] + plotResE[i]*1000.0;
+      fx[n2] = (float)(plotResX[i]-plotOffset);
+      fy[n2] = (float)(plotResY[i]*1000.0);
+      yerr1[n2] = fy[i] - plotResE[i]*1000.0;
+      yerr2[n2] = fy[i] + plotResE[i]*1000.0;
+      if (minx==maxx || (fx[n2] > minx && fx[n2] <= maxx))
+	n2++;
     }
-  minx = start-plotOffset;
-  maxx = end-plotOffset;
+  if (minx == maxx)
+    {
+      minx = start-plotOffset;
+      maxx = end-plotOffset;
+    }
   if (yscale_set==0)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      miny = TKfindMin_f(fy,n2);
+      maxy = TKfindMax_f(fy,n2);
       bordery = (maxy-miny)*0.1;      
     }
   else
@@ -666,8 +783,8 @@ void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotO
 	  cpglab(xlabel,"Residual (ms)","");
 	  } 
     }
-  cpgpt(n,fx,fy,16);
-  cpgerry(n,fx,yerr1,yerr2,1);
+  cpgpt(n2,fx,fy,16);
+  cpgerry(n2,fx,yerr1,yerr2,1);
   // Draw line representing one phase
   /*  fx[0] = fx[1] = minx-borderx/2.0;
   fy[0] = -1.0/psrF0/2.0*1000.0;
@@ -677,30 +794,35 @@ void plot7(double *plotResX,double *plotResY,double *plotResE,int n,double plotO
 
 
 void plot1(double *epoch,double *f0,float *yerr1,float *yerr2,
-	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
+	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)           
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   float fx[n],fy[n];
   int i;
   char xlabel[100]="MJD";
+  int n2=0;
 
   if (plotOffset!=0)
     sprintf(xlabel,"Days after MJD %.0f",plotOffset);
 
   for (i=0;i<n;i++)
     {
-      fx[i] = (float)epoch[i]-plotOffset;
-      fy[i] = (float)f0[i];
+      fx[n2] = (float)epoch[i]-plotOffset;
+      fy[n2] = (float)f0[i];
+      if (minx==maxx || (fx[n2] > minx && fx[n2] <= maxx))
+	n2++;
     }
   
-
-  minx = TKfindMin_f(fx,n);
-  maxx = TKfindMax_f(fx,n);
+  if (minx == maxx)
+    {
+      minx = TKfindMin_f(fx,n2);
+      maxx = TKfindMax_f(fx,n2);
+    }
  if (yscale_set==0)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      miny = TKfindMin_f(fy,n2);
+      maxy = TKfindMax_f(fy,n2);
       bordery = (maxy-miny)*0.1;
     }
   else
@@ -732,39 +854,51 @@ void plot1(double *epoch,double *f0,float *yerr1,float *yerr2,
 	  cpglab(xlabel,"F0 (Hz)","");
 	}
     }
-  cpgpt(n,fx,fy,16);
-  cpgerry(n,fx,yerr1,yerr2,1);
+  cpgpt(n2,fx,fy,16);
+  cpgerry(n2,fx,yerr1,yerr2,1);
 
 }
 
 void plot8(double *epoch,double *f0,float *yerr1,float *yerr2,
-	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
+	   int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)           
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   float fx[n],fy[n];
   int i;
   char xlabel[100]="MJD";
   double mean=0;
+  int n2=0;
 
   if (plotOffset!=0)
     sprintf(xlabel,"Days after MJD %.0f",plotOffset);
 
   for (i=0;i<n;i++)
     {
-      fx[i] = (float)epoch[i]-plotOffset;
-      mean+=(double)f0[i];
+      fx[n2] = (float)epoch[i]-plotOffset;
+      if (minx==maxx || (fx[n2] > minx && fx[n2] <= maxx))
+	{
+	  mean+=(double)f0[n2];
+	  n2++;
+	}
     }
+  n2=0;
   for (i=0;i<n;i++)
-    fy[i] = (float)(f0[i]-mean/(double)n);
-  
-  minx = TKfindMin_f(fx,n);
-  maxx = TKfindMax_f(fx,n);
+    {
+      fy[n2] = (float)(f0[i]-mean/(double)n);
+      if (minx==maxx || (epoch[i]-plotOffset > minx && epoch[i]-plotOffset <= maxx))
+	n2++;
+    }
+  if (minx == maxx)
+    {  
+      minx = TKfindMin_f(fx,n2);
+      maxx = TKfindMax_f(fx,n2);
+    }
 
   if (yscale_set==0)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      miny = TKfindMin_f(fy,n2);
+      maxy = TKfindMax_f(fy,n2);
       bordery = (maxy-miny)*0.1;
     }
   else
@@ -796,20 +930,21 @@ void plot8(double *epoch,double *f0,float *yerr1,float *yerr2,
 	  cpglab(xlabel,"F0 (Hz)","");
 	}
     }
-  cpgpt(n,fx,fy,16);
-  cpgerry(n,fx,yerr1,yerr2,1);
+  cpgpt(n2,fx,fy,16);
+  cpgerry(n2,fx,yerr1,yerr2,1);
 
 }
 
 void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,
-	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)           
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   double ty[n];
   float fx[n],fy[n],yerr1[n],yerr2[n];
   char str[100];
   int i;
+  int n2=0;
   char xlabel[100]="MJD";
 
   if (plotOffset!=0)
@@ -822,19 +957,23 @@ void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
   TKremovePoly_d(epoch,ty,n,2);
   for (i=0;i<n;i++)
     {
-      fx[i] = (float)epoch[i]-plotOffset;
-      fy[i] = (float)ty[i];
-      yerr1[i] = ty[i]-f0e[i];
-      yerr2[i] = ty[i]+f0e[i];
+      fx[n2] = (float)epoch[i]-plotOffset;
+      fy[n2] = (float)ty[i];
+      yerr1[n2] = ty[i]-f0e[i];
+      yerr2[n2] = ty[i]+f0e[i];
+      if (minx==maxx || (fx[n2] > minx && fx[n2] <= maxx))
+	n2++;
     }
 
-
-  minx = TKfindMin_f(fx,n);
-  maxx = TKfindMax_f(fx,n);
+  if (minx == maxx)
+    {
+      minx = TKfindMin_f(fx,n2);
+      maxx = TKfindMax_f(fx,n2);
+    }
   if (yscale_set==0)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      miny = TKfindMin_f(fy,n2);
+      maxy = TKfindMax_f(fy,n2);
       bordery = (maxy-miny)*0.1;
     }
   else
@@ -873,11 +1012,11 @@ void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 
 
 
-  cpgpt(n,fx,fy,16);
-  cpgerry(n,fx,yerr1,yerr2,1);
+  cpgpt(n2,fx,fy,16);
+  cpgerry(n2,fx,yerr1,yerr2,1);
   cpgsci(2);
   cpgsch(0.7);
-    for (i=0;i<n;i++)
+    for (i=0;i<n2;i++)
     {
       cpgsci(2);
       sprintf(str,"%d",nFit[i]);
@@ -892,14 +1031,15 @@ void plot2(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 }
 
 void plot9(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,
-	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)           
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   double ty[n];
   float fx[n],fy[n],yerr1[n],yerr2[n];
   char str[100];
   int i;
+  int n2=0;
   char xlabel[100]="MJD";
 
   if (plotOffset!=0)
@@ -912,19 +1052,23 @@ void plot9(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
   TKremovePoly_d(epoch,ty,n,2);
   for (i=0;i<n;i++)
     {
-      fx[i] = (float)epoch[i]-plotOffset;
-      fy[i] = (float)ty[i]*1e9;
-      yerr1[i] = ty[i]*1e9-f0e[i]*1e9;
-      yerr2[i] = ty[i]*1e9+f0e[i]*1e9;
+      fx[n2] = (float)epoch[i]-plotOffset;
+      fy[n2] = (float)ty[i]*1e9;
+      yerr1[n2] = ty[i]*1e9-f0e[i]*1e9;
+      yerr2[n2] = ty[i]*1e9+f0e[i]*1e9;
+      if (minx==maxx || (fx[n2] > minx && fx[n2] <= maxx))
+	n2++;
     }
 
-
-  minx = TKfindMin_f(fx,n);
-  maxx = TKfindMax_f(fx,n);
+  if (minx == maxx)
+    {
+      minx = TKfindMin_f(fx,n2);
+      maxx = TKfindMax_f(fx,n2);
+    }
   if (yscale_set==0)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      miny = TKfindMin_f(fy,n2);
+      maxy = TKfindMax_f(fy,n2);
       bordery = (maxy-miny)*0.1;
     }
   else
@@ -963,17 +1107,17 @@ void plot9(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 
 
 
-  cpgpt(n,fx,fy,16);
-  cpgerry(n,fx,yerr1,yerr2,1);
+  cpgpt(n2,fx,fy,16);
+  cpgerry(n2,fx,yerr1,yerr2,1);
   cpgsci(1);
   //  cpgsch(1.4);
 
 }
 
 void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,
-	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   float mingt;
   double ty[n];
@@ -984,6 +1128,7 @@ void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
   char xlabel[100]="MJD";
   double vx[n],vy[n],ve[n];
   int nfit=0;
+  int n2=0;
 
   mingt = TKfindMin_f(gt,ngt);
 
@@ -1008,20 +1153,24 @@ void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 
   for (i=0;i<n;i++)
     {
-      fx[i] = (float)epoch[i]-plotOffset;
-      fy[i] = (float)ty[i]/1.0e-6;
-      yerr1[i] = ty[i]/1.0e-6-f0e[i];
-      yerr2[i] = ty[i]/1.0e-6+f0e[i];
+      fx[n2] = (float)epoch[i]-plotOffset;
+      fy[n2] = (float)ty[i]/1.0e-6;
+      yerr1[n2] = ty[i]/1.0e-6-f0e[i];
+      yerr2[n2] = ty[i]/1.0e-6+f0e[i];
+      if (minx==maxx || (fx[n2] > minx && fx[n2] <= maxx))
+	n2++;
     }
 
 
-  minx = TKfindMin_f(fx,n);
-  maxx = TKfindMax_f(fx,n);
-
+  if (minx == maxx)
+    {
+      minx = TKfindMin_f(fx,n2);
+      maxx = TKfindMax_f(fx,n2);
+    }
  if (yscale_set==0)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      miny = TKfindMin_f(fy,n2);
+      maxy = TKfindMax_f(fy,n2);
       bordery = (maxy-miny)*0.1;
     }
   else
@@ -1055,7 +1204,7 @@ void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 	}
     }
 
-  for (i=0;i<n;i++)
+  for (i=0;i<n2;i++)
     {
       if (f0e[i]>0)
 	{
@@ -1072,9 +1221,9 @@ void plot4(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
 }
 
 void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double plotOffset,float *gt,int ngt,
-	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)
+	   int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   float mingt;
   double ty[n];
@@ -1089,6 +1238,7 @@ void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
   double maxTime;
   int nfit=0;
   int k;
+  int n2=0;
 
   maxTime = TKfindMax_d(epoch,n);
 
@@ -1157,12 +1307,33 @@ void plot5(double *epoch,double *f0,double *f0e,int *nFit,int *id,int n,double p
                
 
 
-  minx = TKfindMin_f(fx,n);
-  maxx = TKfindMax_f(fx,n);
-if (yscale_set==0)
+  if (minx == maxx)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      minx = TKfindMin_f(fx,n);
+      maxx = TKfindMax_f(fx,n);
+    }
+  if (yscale_set==0)
+    {
+      if (minx==maxx)
+	{
+	  miny = TKfindMin_f(fy,n);
+	  maxy = TKfindMax_f(fy,n);	  
+	}
+      else
+	{
+	  int t=1;
+	  for (i=0;i<n;i++)
+	    {
+	      if (fx[i] > minx && fx[i] <= maxx)
+		{
+		  if (t==1){miny = fy[i]; maxy = fy[i]; t=2;}
+		  if (miny > fy[i]) miny = fy[i];
+		  if (maxy < fy[i]) maxy = fy[i];
+		}
+	    }
+	  printf("In here with %g %g\n",miny,maxy);
+	}
+
       bordery = (maxy-miny)*0.1;
     }
   else
@@ -1202,14 +1373,15 @@ if (yscale_set==0)
 }
 
 
-void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
+void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)           
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   double ty[n];
   float fx[n],fy[n],yerr1[n],yerr2[n];
   char str[100];
   int i;
+  int n2=0;
   char xlabel[100]="MJD";
 
   if (plotOffset!=0)
@@ -1221,19 +1393,25 @@ void plot3(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double p
   //  TKremovePoly_d(epoch,ty,n,2);
   for (i=0;i<n;i++)
     {
-      fx[i] = (float)epoch[i]-plotOffset;
-      fy[i] = (float)ty[i];
-      yerr1[i] = ty[i]-f1e[i];
-      yerr2[i] = ty[i]+f1e[i];
+      fx[n2] = (float)epoch[i]-plotOffset;
+      fy[n2] = (float)ty[i];
+      yerr1[n2] = ty[i]-f1e[i];
+      yerr2[n2] = ty[i]+f1e[i];
+      if (minx==maxx || (fx[n2] > minx && fx[n2] <= maxx))
+	n2++;
     }
 
 
-  minx = TKfindMin_f(fx,n);
-  maxx = TKfindMax_f(fx,n);
-if (yscale_set==0)
+  if (minx == maxx)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      minx = TKfindMin_f(fx,n2);
+      maxx = TKfindMax_f(fx,n2);
+    }
+
+  if (yscale_set==0)
+    {
+      miny = TKfindMin_f(fy,n2);
+      maxy = TKfindMax_f(fy,n2);
       bordery = (maxy-miny)*0.1;
     }
   else
@@ -1265,13 +1443,13 @@ if (yscale_set==0)
 	  cpglab(xlabel,"F1","");
 	}
     }
-  cpgpt(n,fx,fy,16);
-  cpgerry(n,fx,yerr1,yerr2,1);
+  cpgpt(n2,fx,fy,16);
+  cpgerry(n2,fx,yerr1,yerr2,1);
 }
 
-void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set)           
+void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double plotOffset,int combine,int pos,int nplot,float yscale_min,float yscale_max,int yscale_set,float minx,float maxx)           
 {
-  float minx,maxx,miny,maxy;
+  float miny,maxy;
   float borderx,bordery;
   double ty[n];
   float fx[n],fy[n],yerr1[n],yerr2[n];
@@ -1280,6 +1458,7 @@ void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double p
   char xlabel[100]="MJD";
   char ylabel[100];
   double mean;
+  int n2=0;
 
   if (plotOffset!=0)
     sprintf(xlabel,"Days after MJD %.0f",plotOffset);
@@ -1290,20 +1469,24 @@ void plot6(double *epoch,double *f1,double *f1e,int *nFit,int *id,int n,double p
   mean = TKmean_d(ty,n);
   for (i=0;i<n;i++)
     {
-      fx[i] = (float)epoch[i]-plotOffset;
-      fy[i] = (float)(ty[i]-mean);
-      yerr1[i] = (ty[i]-mean)-f1e[i]/1.0e-15;
-      yerr2[i] = (ty[i]-mean)+f1e[i]/1.0e-15;
+      fx[n2] = (float)epoch[i]-plotOffset;
+      fy[n2] = (float)(ty[i]-mean);
+      yerr1[n2] = (ty[i]-mean)-f1e[i]/1.0e-15;
+      yerr2[n2] = (ty[i]-mean)+f1e[i]/1.0e-15;
+      if (minx==maxx || (fx[n2] > minx && fx[n2] <= maxx))
+	n2++;
     }
 
 
-  minx = TKfindMin_f(fx,n);
-  maxx = TKfindMax_f(fx,n);
-
+  if (minx == maxx)
+    {
+      minx = TKfindMin_f(fx,n2);
+      maxx = TKfindMax_f(fx,n2);
+    }
 if (yscale_set==0)
     {
-      miny = TKfindMin_f(fy,n);
-      maxy = TKfindMax_f(fy,n);
+      miny = TKfindMin_f(fy,n2);
+      maxy = TKfindMax_f(fy,n2);
       bordery = (maxy-miny)*0.1;
     }
   else
@@ -1340,7 +1523,7 @@ if (yscale_set==0)
 	}
     }
 
-  for (i=0;i<n;i++)
+  for (i=0;i<n2;i++)
     {
       if (f1e[i] > 0)
 	{
@@ -3221,4 +3404,4 @@ double nonlinearFunc( double x, const double *par,int obsNum )
     }
   return fitfunc;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+char * plugVersionCheck = (char *)TEMPO2_h_VER;
