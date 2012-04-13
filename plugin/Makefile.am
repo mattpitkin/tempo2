@@ -29,6 +29,11 @@ include build_settings/pgplot.am
 
 if HAVE_FFTW3
 include build_settings/pgplot_fftw.am
+
+if HAVE_GSL
+include build_settings/gsl.am
+endif
+
 endif
 
 if HAVE_CFITSIO
@@ -50,7 +55,7 @@ endif
 .PHONY: $(PLUGINS) $(PLUGINSTALLS) plugins plugins-install
 
 plugins: $(PLUGINS)
-plugins-install: $(PLUGINSTALLS)
+plugins-install: plugdir $(PLUGINSTALLS)
 
 
 plugdir:
