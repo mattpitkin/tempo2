@@ -1596,8 +1596,8 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       n1 = cosl(lambda_p)*cosl(beta_p);
       n2 = sinl(lambda_p)*cosl(beta_p);
       n3 = sinl(beta_p);
-      cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
-	sinl(beta)*sinl(beta_p);
+      cosTheta = -(cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+	sinl(beta)*sinl(beta_p));
       
       /* Only has effect after the glitch epoch */
       if (psr->obsn[ipos].sat >= psr->gwm_epoch)

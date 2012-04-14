@@ -411,8 +411,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       n2 = sinl(lambda_p)*cosl(beta_p);
 	       n3 = sinl(beta_p);
 	       //	       printf("n = %g %g %g\n",n1,n2,n3);
-	       cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
-		 sinl(beta)*sinl(beta_p);
+	       cosTheta = -(cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+		 sinl(beta)*sinl(beta_p));
 	       //	       printf("cosTheta = %g\n",cosTheta);
 
 	       /* Only has effect after the glitch epoch */

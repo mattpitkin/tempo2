@@ -663,6 +663,14 @@ typedef struct
 
 observatory *getObservatory(char *code);
 void lookup_observatory_alias(char *incode, char *outcode);
+void 
+get_obsCoord_IAU2000B(double observatory_trs[3],
+		      double zenith_trs[3],
+		      longdouble tt_mjd, longdouble utc_mjd,
+		      double observatory_crs[3],
+		      double zenith_crs[3],
+		      double observatory_velocity_crs[3]);
+
 
 /* redwards stuff to get earth orientation parameters */
 void get_EOP(double mjd, double *xp, double *yp, double *dut1, 

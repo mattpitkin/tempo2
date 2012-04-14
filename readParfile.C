@@ -232,7 +232,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
       char unit[1000];
       fscanf(fin,"%s", unit);
-      if (strcasecmp(unit,"IAU200B")==0) 
+      if (strcasecmp(unit,"IAU2000B")==0) 
 	psr->t2cMethod = T2C_IAU2000B;
       else if (strcasecmp(unit,"TEMPO")==0) 
 	psr->t2cMethod = T2C_TEMPO;

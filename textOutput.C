@@ -63,7 +63,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
   FILE *fout;
   const char *CVS_verNum = "$Revision$";
 
-  if (displayCVSversion == 1) CVSdisplayVersion("textOutput.C","textOutput()",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion((char *)"textOutput.C",(char *)"textOutput()",CVS_verNum);
 	
 
   if (debugFlag==1)
@@ -186,6 +186,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		    printf("%-25.15g ",(double)psr[p].param[i].prefit[k]*180.0/M_PI);
       else if (i == param_sini && psr[p].param[param_sini].nLinkTo != 0)
         printf("%-25.15g ",(double)sin(psr[p].param[param_kin].prefit[0]/180.0*M_PI));
+		  else if (i == param_ephver)
+		    {
+		      if (psr[p].param[i].prefit[k]==2)
+			printf("%-25.25s ","TEMPO1");
+		      if (psr[p].param[i].prefit[k]==5)
+			printf("%-25.25s ","TEMPO2");
+		      else
+			printf("%-25.25g ",(double)psr[p].param[i].prefit[k]);
+		    }
 		  else
 		    printf("%-25.15g ",(double)psr[p].param[i].prefit[k]);
 		  
@@ -198,6 +207,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		  /* *180.0/M_PI*60.0*60.0*1000.0*SECDAY*365.25/24.0/3600.0);*/
 		  else if ((i == param_raj || i == param_decj) && psr[p].eclCoord==1)
 		    printf("%-25.15g ",(double)psr[p].param[i].val[k]*180.0/M_PI);
+		  else if (i == param_ephver)
+		    {
+		      if (psr[p].param[i].val[k]==2)
+			printf("%-25.25s ","TEMPO1");
+		      if (psr[p].param[i].val[k]==5)
+			printf("%-25.25s ","TEMPO2");
+		      else
+			printf("%-25.25g ",(double)psr[p].param[i].val[k]);
+		    }
 		  else printf("%-25.15g ",(double)getParameterValue(&psr[p],i,k));
 		  
 		  if ((i == param_raj || i == param_decj) && psr[p].eclCoord==1)
@@ -934,7 +952,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      for (i=0;i<psr[p].nWhite;i++)
 		fprintf(fout2,"WAVE%d %.14g %.14g\n",i+1,psr[p].wave_sine[i],psr[p].wave_cos[i]);
 	    }
-
+ 
 	  if (psr[p].param[param_ifunc].paramSet[0]==1)
 	    {
 	      fprintf(fout2,"SIFUNC %d %d\n",(int)psr[p].param[param_ifunc].val[0],

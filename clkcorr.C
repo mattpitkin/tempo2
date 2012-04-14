@@ -640,13 +640,16 @@ getCorrectionTT(observation *obs)
 double
 getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings)
 {
-  observatory *site = getObservatory(obs->telID);
+    observatory *site;
   DynamicArray *sequence;
   size_t ifunc;
   char *currClock;
   ClockCorrectionFunction *func;
   double correction = 0.0;
   const char *CVS_verNum = "$Revision$";
+
+  if (clockFrom[0]=='\0')
+    site = getObservatory(obs->telID);
 
   if (displayCVSversion == 1) CVSdisplayVersion("clkcorr.C","getCorrection()",CVS_verNum);
 
