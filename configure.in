@@ -142,7 +142,11 @@ AC_SUBST(T2ARCH)
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 AM_CONFIG_HEADER([config.h])
-AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile unsupported_plugins/Makefile])
+AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile
+		 unsupported_plugins/Makefile
+		 unsupported_plugins/toasim/Makefile
+		 unsupported_plugins/ppta/Makefile
+		 unsupported_plugins/glast/Makefile])
 
 AC_OUTPUT
 

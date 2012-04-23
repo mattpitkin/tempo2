@@ -1,18 +1,21 @@
-SUBD=toasim glast ppta
-
-.PHONY: $(SUBD) subdirs
-
-subdirs: $(SUBD)
-
-$(SUBD):
-	mkdir -p $@/../built_plugins
-	@echo "BUILD $@"
-	@if test -e $@/Makefile ; then $(MAKE) -C $@ ; else if test -e $@/build.sh ; then cd $@ ; chmod +x build.sh; ./build.sh ; else echo "Don't know how to build $@" ; fi ; fi
+SUBDIRS=toasim ppta glast
 
 
-install:
-	$(INSTALL) built_plugins/*.t2 @TEMPO2_PLUG_INSTALL@
+ppta:
+	make -C ppta
+
+ppta-install:
+	make -C ppta install
+
+toasim:
+	make -C toasim
+
+toasim-install:
+	make -C toasim install
 
 
-EXTRA_DIST=glast/ toasim/ ppta/
+glast:
+	make -C glast
 
+glast-install:
+	make -C glast install
