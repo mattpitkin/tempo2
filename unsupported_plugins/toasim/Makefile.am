@@ -8,14 +8,14 @@ plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian
 ## This sets the includes and options that are needed to build nice modules with libtool
 #
 ####
-LDFLAGS+= -shared -module -avoid-version -shrext .t2
+LDFLAGS+= -shared -module -avoid-version -shrext .t2 -lfftw3f
 INCLUDES=-I@top_srcdir@/
 
+CFLAGS+=@FFTW_CFLAGS@
 
 pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install formIdeal-install createRealisation-install
 
-
-TOASIM_src=toasim.h toasim.c toasim_compute.c toasim_io.c
+TOASIM_src=toasim.h toasim.c toasim_compute.c toasim_io.c makeRedNoise.C makeRedNoise.h
 
 
 addDmVar_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addDmVar_plug.C $(TOASIM_src)

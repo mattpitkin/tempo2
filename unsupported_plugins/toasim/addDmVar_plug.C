@@ -34,6 +34,7 @@
 #include "T2toolkit.h"
 #include "tempo2.h"
 #include "toasim.h"
+#include "makeRedNoise.h"
 
 using namespace std;
 
@@ -49,11 +50,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	double secperyear=365*86400.0;
 	// my parameters
-	double tdiff=100;//s
-	int resolution=1024;
-	double is = 1; // days
-	double os = -10; // 10 times data length
 	double alpha= -8.0/3.0;
+	int npts=1024;
+	float D_d=1; // us
+	float ref_freq=1400; // MHz
+	float d=1000;
 
 
 	//
@@ -94,15 +95,22 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			strcpy(timFile[*npsr],argv[++i]);
 			(*npsr)++;
 		}
-		if (strcmp(argv[i],"-tdiff")==0){
-			tdiff=atof(argv[++i]);
+		if (strcmp(argv[i],"-npts")==0){
+			npts=atoi(argv[++i]);
 		}
-		if (strcmp(argv[i],"-os")==0){
-			os=atof(argv[++i]);
+
+		if (strcmp(argv[i],"-D")==0){
+			D_d=atof(argv[++i]);
 		}
-		if (strcmp(argv[i],"-is")==0){
-			is=atof(argv[++i]);
+		if (strcmp(argv[i],"-t")==0){
+			d=atof(argv[++i]);
 		}
+		if (strcmp(argv[i],"-f")==0){
+			ref_freq=atof(argv[++i]);
+		}
+
+
+
 
 		else if (strcmp(argv[i],"-seed")==0){
 			sscanf(argv[++i],"%d",&seed);
@@ -151,64 +159,57 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			if(psr[p].obsn[j].bat < mjd_start)mjd_start=(double)psr[p].obsn[j].bat;
 			if(psr[p].obsn[j].bat > mjd_end)mjd_end=(double)psr[p].obsn[j].bat;
 		}
-		if(os < 0)os=-os*(mjd_end-mjd_start);
-
-		double fft_binsize = 1.0/(mjd_end-mjd_start);
-		int nwav=(int)(os/is);
-		double fstart=365.0/os; // per year
-		double fend=356.0/is;
-		double fstep=(fend-fstart)/double(nwav);
-
 
 
 		printf("start    = %f (mjd)\n",mjd_start);
 		printf("end      = %f (mjd)\n",mjd_end  );
-		printf("OS       = %f (days)\n",os       );
-		printf("IS       = %f (days)\n",is       );
-		printf("nwav     = %d\n",nwav     );
-		printf("fmin     = %f (1/yr)\n",fstart);
-		printf("fmax     = %f (1/yr)\n",fend);
-		printf("tdiff    = %f (s)\n",tdiff);
+		printf("npts     = %d (days)\n",npts     );
+		printf("D_d(%f)  = %f (us^2)\n",d,D_d    );
+		printf("ref_freq = %f (MHz)\n",ref_freq    );
+
 		printf("seed     = %d\n",seed);
 
-		
+
+		D_d *=1e-12; // convert us to seconds
+		d*=86400.0;  // convert days to seconds.
+
+
+		double pism = (2.0/189.0) * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
+
+		printf("pism(1yr)  = %g (yr^3) \n",pism );
+
+
+
+		double yr2dm = secperyear * DM_CONST*pow(ref_freq,2.0);
+		printf("yr2dm   = %f \n",yr2dm    );
+
+		pism *= pow(yr2dm,2); // convert yr^3 to yr.cm^-3.pc
+
+		printf("pism(1yr)  = %g ((cm^-3pc)^2 yr) \n",pism );
+
+		rednoisemodel_t* model = setupRedNoiseModel(mjd_start,mjd_end,npts,nit,pism,alpha);
+		populateRedNoiseModel(model,seed);
+
+		FILE *log_spec = fopen("dmvar.spec","w");
+		float* pwr_spec=getPowerSpectrum(model);
+		float ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
+		for (j=0;j<(model->npt/2+1);j++){
+			fprintf(log_spec,"%10.10g %10.10g\n",ps_fres*j,pwr_spec[j]);
+		}
+
+		fclose(log_spec);
 
 		for (i=0;i<nit;i++)
 		{
-			FILE *log_spec = fopen("dmvar.spec","w");
 //			if(i%10 == 0){
 //				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 //				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 				printf("Iteration %d/%d",i+1,nit);
 				fflush(stdout);
 //			}
+			
 			for (j=0;j<psr[p].nobs;j++){
-				offsets[j] =0;
-				dms[j] =0;
-			}
-
-			double ofreq=1.4e9;
-			double top = 2.0*pow(2.0*M_PI*ofreq,-2.0) * pow(tdiff,-5.0/3.0);
-			double bottom = 179.0*pow(secperyear,1.0/3.0);
-			double pism = top/bottom; // years
-
-			double aC = sqrt(pism*fstep); // delay in years
-			aC *= secperyear; // delay in seconds
-			aC *= DM_CONST*pow(ofreq/1e6,2.0); // DM in cm^-3 pc
-			aC /= sqrt(2.0); // account for cos + sin
-
-
-			for (int iwav = 0; iwav < nwav; iwav++){
-				double f=fstart+(double)iwav*fstep;
-				double a=aC * pow(f,alpha/2.0);
-				double a2 =a*TKgaussDev(&seed);
-				a*=TKgaussDev(&seed);
-//				fprintf(log_spec,"%lg %lg\n",f,a*a+a2*a2);
-				for (j=0;j<psr[p].nobs;j++){
-					double t=(psr[p].obsn[j].bat - mjd_start)/365.0; // t in years!
-					double dmv=a*sin(2*M_PI*t*f) + a2*cos(2*M_PI*t*f);
-					dms[j]+=dmv;
-				}
+				dms[j]=getRedNoiseValue(model,psr[p].obsn[j].bat,i);
 			}
 			FILE *log_ts = fopen("dmvar.ts","w");
 			double sum=0;
@@ -223,7 +224,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				fprintf(log_ts,"%lg %lg %lg %lg\n",(double)psr[p].obsn[j].bat,dms[j],offsets[j],(double)ofreq);
 			}
 			toasim_write_corrections(corr,header,file);
-			fclose(log_spec);
 			fclose(log_ts);
 		}
 //		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
