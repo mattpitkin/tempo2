@@ -55,6 +55,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	float D_d=1; // us
 	float ref_freq=1400; // MHz
 	float d=1000;
+	char writeTextFiles=0;
 
 
 	//
@@ -118,8 +119,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		}
 
 	}
-
-	printf("seed=%d\n",seed);
 
 
 	readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -187,31 +186,52 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		printf("pism(1yr)  = %g ((cm^-3pc)^2 yr) \n",pism );
 
+		printf("\n");
+		printf("Generating red noise...\n");
+
 		rednoisemodel_t* model = setupRedNoiseModel(mjd_start,mjd_end,npts,nit,pism,alpha);
 		populateRedNoiseModel(model,seed);
 
-		FILE *log_spec = fopen("dmvar.spec","w");
-		float* pwr_spec=getPowerSpectrum(model);
-		float ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
-		for (j=0;j<(model->npt/2+1);j++){
-			fprintf(log_spec,"%10.10g %10.10g\n",ps_fres*j,pwr_spec[j]);
+		if (writeTextFiles){
+			FILE *log_spec = fopen("dmvar.spec","w");
+			float* pwr_spec=getPowerSpectrum(model);
+			float ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
+			for (j=0;j<(model->npt/2+1);j++){
+				fprintf(log_spec,"%10.10g %10.10g\n",ps_fres*j,pwr_spec[j]);
+			}
+
+			fclose(log_spec);
 		}
 
-		fclose(log_spec);
-
+		int itjmp=nit/50;
+		if (itjmp<1)itjmp=1;
+		int dots=0;
+		printf("v");
+		for (i=0;i<nit/itjmp;i++){
+			printf("_");
+		}
+		printf("v\n");
+		printf("[");
+		fflush(stdout);
 		for (i=0;i<nit;i++)
 		{
-//			if(i%10 == 0){
-//				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-//				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-				printf("Iteration %d/%d",i+1,nit);
-				fflush(stdout);
-//			}
-			
+			if (i%itjmp==0){
+				int v = i/itjmp;
+				v-=dots;
+				while (v > 0){
+					printf(".");
+					fflush(stdout);
+					v--;
+					dots++;
+				}
+			}
+
 			for (j=0;j<psr[p].nobs;j++){
 				dms[j]=getRedNoiseValue(model,psr[p].obsn[j].bat,i);
 			}
-			FILE *log_ts = fopen("dmvar.ts","w");
+			FILE *log_ts;
+			if (writeTextFiles)
+				log_ts = fopen("dmvar.ts","w");
 			double sum=0;
 			for (j=0;j<psr[p].nobs;j++){
 				sum+=dms[j];
@@ -221,14 +241,22 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				dms[j]-=sum;
 				double ofreq=psr[p].obsn[j].freqSSB;
 				offsets[j] = (double)(dms[j]/DM_CONST/ofreq/ofreq)*1e12;
-				fprintf(log_ts,"%lg %lg %lg %lg\n",(double)psr[p].obsn[j].bat,dms[j],offsets[j],(double)ofreq);
+				if (writeTextFiles)
+					fprintf(log_ts,"%lg %lg %lg %lg\n",(double)psr[p].obsn[j].bat,dms[j],offsets[j],(double)ofreq);
 			}
 			toasim_write_corrections(corr,header,file);
-			fclose(log_ts);
+			if (writeTextFiles)
+				fclose(log_ts);
 		}
-//		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-//		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-		printf("Iteration %d/%d\n",i,nit);
+		int v = i/itjmp;
+		v-=dots;
+		while (v > 0){
+			printf(".");
+			v--;
+			dots++;
+		}
+
+		printf("]\n");
 
 		printf("Close file\n");
 		fclose(file);
