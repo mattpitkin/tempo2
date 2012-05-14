@@ -119,7 +119,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  for (j=0;j<psr[p].nobs;j++){
 	    psr[p].obsn[j].sat -= (psr[p].obsn[j].residual/SECDAY);	    
-	    printf("Residual hello = %g (%d)\n",(double)psr[p].obsn[j].residual,j);
+	    //printf("Residual hello = %g (%d)\n",(double)psr[p].obsn[j].residual,j);
 
 	  }
 	}

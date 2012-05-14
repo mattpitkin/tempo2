@@ -50,12 +50,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	double secperyear=365*86400.0;
 	// my parameters
-	double alpha= -8.0/3.0;
+	double alpha= -3.0;
 	int npts=1024;
-	float D_d=1; // us
-	float ref_freq=1400; // MHz
-	float d=1000;
+	float p_1yr=1e-12; // s^2 yr
 	char writeTextFiles=0;
+	float cnr_flat=0;
+	float cnr_cut=0;
+	float old_fc=-1;
 
 
 	//
@@ -65,7 +66,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	toasim_header_t* read_header;
 	FILE* file;
 	double offsets[MAX_OBSN]; // Will change to doubles - should use malloc
-	double dms[MAX_OBSN]; // Will change to doubles - should use malloc
 	// Create a set of corrections.
 	toasim_corrections_t* corr = (toasim_corrections_t*)malloc(sizeof(toasim_corrections_t));
 
@@ -79,7 +79,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	*npsr = 0;
 	nit = 1;
 
-	printf("Graphical Interface: addDmVar\n");
+	printf("Graphical Interface: addRedNoise\n");
 	printf("Author:              M. Keith\n");
 	printf("Version:             1.0\n");
 
@@ -100,17 +100,33 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			npts=atoi(argv[++i]);
 		}
 
-		if (strcmp(argv[i],"-D")==0){
-			D_d=atof(argv[++i]);
+		if (strcmp(argv[i],"-Pus2yr")==0){
+			p_1yr=atof(argv[++i]); // convert to s^2yr
 		}
-		if (strcmp(argv[i],"-t")==0){
-			d=atof(argv[++i]);
-		}
-		if (strcmp(argv[i],"-nu")==0){
-			ref_freq=atof(argv[++i]);
+		if (strcmp(argv[i],"-Pyr3")==0){
+			p_1yr=atof(argv[++i]) * secperyear*secperyear; // convert to s^2yr
 		}
 
+		if (strcmp(argv[i],"-fc")==0){
+			old_fc=atof(argv[++i]);
+			cnr_flat=old_fc;
+		}
 
+		if (strcmp(argv[i],"-cnr_flat")==0){
+			cnr_flat=atof(argv[++i]);
+		}
+
+		if (strcmp(argv[i],"-cnr_cut")==0){
+			cnr_cut=atof(argv[++i]);
+		}
+
+		if (strcmp(argv[i],"-a")==0){
+			alpha=atof(argv[++i]);
+		}
+
+		if (strcmp(argv[i],"-txt")==0){
+			writeTextFiles=1;
+		}
 
 
 		else if (strcmp(argv[i],"-seed")==0){
@@ -132,7 +148,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 		printf("NTOA = %d\n",psr[p].nobs);
 		header = toasim_init_header();
-		strcpy(header->short_desc,"addDmVar");
+		strcpy(header->short_desc,"addRedNoise");
 		strcpy(header->invocation,argv[0]);
 		strcpy(header->timfile_name,timFile[p]);
 		strcpy(header->parfile_name,"Unknown");
@@ -148,7 +164,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		header->nrealisations = nit;
 
 		// First we write the header...
-		sprintf(fname,"%s.addDmVar",timFile[p]);
+		sprintf(fname,"%s.addRedNoise",timFile[p]);
 		file = toasim_write_header(header,fname);
 
 		double mjd_start=1000000.0;
@@ -160,40 +176,33 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		}
 
 
+		if (old_fc > 0){
+			p_1yr *= pow(old_fc,-alpha);
+		}
+
 		printf("start    = %f (mjd)\n",mjd_start);
 		printf("end      = %f (mjd)\n",mjd_end  );
 		printf("npts     = %d (days)\n",npts     );
-		printf("D_d(%f)  = %f (us^2)\n",d,D_d    );
-		printf("ref_freq = %f (MHz)\n",ref_freq    );
+		printf("P(1yr)   = %g (yr^3)\n",p_1yr/secperyear/secperyear);
+		printf("P(1yr)   = %g (us^2yr)\n",p_1yr*1e-12);
+		printf("Flatten  @ %f (yr^-1)\n",cnr_flat);
+		printf("Cutoff   @ %f (yr^-1)\n",cnr_cut);
+		printf("index    = %f\n",alpha);
 
 		printf("seed     = %d\n",seed);
-
-
-		D_d *=1e-12; // convert us to seconds
-		d*=86400.0;  // convert days to seconds.
-
-
-		double pism = (2.0/189.0) * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
-
-		printf("pism(1yr)  = %g (yr^3) \n",pism );
-
-
-
-		double yr2dm = secperyear * DM_CONST*pow(ref_freq,2.0);
-		printf("yr2dm   = %f \n",yr2dm    );
-
-		pism *= pow(yr2dm,2); // convert yr^3 to yr.cm^-3.pc
-
-		printf("pism(1yr)  = %g ((cm^-3pc)^2 yr) \n",pism );
 
 		printf("\n");
 		printf("Generating red noise...\n");
 
-		rednoisemodel_t* model = setupRedNoiseModel(mjd_start,mjd_end,npts,nit,pism,alpha);
+		rednoisemodel_t* model = setupRedNoiseModel(mjd_start,mjd_end,npts,nit,p_1yr,alpha);
+		
+		model->cutoff=cnr_cut;
+		model->flatten=cnr_flat;
+
 		populateRedNoiseModel(model,seed);
 
 		if (writeTextFiles){
-			FILE *log_spec = fopen("dmvar.spec","w");
+			FILE *log_spec = fopen("red.spec","w");
 			float* pwr_spec=getPowerSpectrum(model);
 			float ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
 			for (j=0;j<(model->npt/2+1);j++){
@@ -201,6 +210,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			}
 
 			fclose(log_spec);
+			FILE *log_ts2 = fopen("red.ts2","w");
+			for (j=0;j<(model->npt);j++){
+				fprintf(log_ts2,"%10.10g %10.10g\n",model->start+model->tres*j,model->data[j]);
+			}
+
+			fclose(log_ts2);
 		}
 
 		int itjmp=nit/50;
@@ -227,22 +242,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			}
 
 			for (j=0;j<psr[p].nobs;j++){
-				dms[j]=getRedNoiseValue(model,psr[p].obsn[j].bat,i);
+				offsets[j]=getRedNoiseValue(model,psr[p].obsn[j].bat,i);
 			}
 			FILE *log_ts;
 			if (writeTextFiles)
-				log_ts = fopen("dmvar.ts","w");
+				log_ts = fopen("red.ts","w");
 			double sum=0;
 			for (j=0;j<psr[p].nobs;j++){
-				sum+=dms[j];
+				sum+=offsets[j];
 			}
 			sum/=psr[p].nobs;
 			for (j=0;j<psr[p].nobs;j++){
-				dms[j]-=sum;
-				double ofreq=psr[p].obsn[j].freqSSB;
-				offsets[j] = (double)(dms[j]/DM_CONST/ofreq/ofreq)*1e12;
+				offsets[j]-=sum;
 				if (writeTextFiles)
-					fprintf(log_ts,"%lg %lg %lg %lg\n",(double)psr[p].obsn[j].bat,dms[j],offsets[j],(double)ofreq);
+					fprintf(log_ts,"%lg %lg %lg %lg\n",(double)psr[p].obsn[j].bat,offsets[j]);
 			}
 			toasim_write_corrections(corr,header,file);
 			if (writeTextFiles)

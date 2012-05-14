@@ -2,6 +2,7 @@
 #include <config.h>
 #endif
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <complex.h>
 #include <T2toolkit.h>
@@ -78,6 +79,7 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
 		float scale = A*pow(freq,index);
 		if (freq < model->cutoff)scale=0;
 		spectrum[i]=scale*TKgaussDev(&seed) + I*scale*TKgaussDev(&seed);
+		
 	}
 	plan=fftwf_plan_dft_c2r_1d(t_npts,spectrum,data,FFTW_ESTIMATE);
 	fftwf_execute(plan);
