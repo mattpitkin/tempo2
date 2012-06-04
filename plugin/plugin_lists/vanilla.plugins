@@ -3,6 +3,7 @@ general_plug.C
 applet_plug.C
 general2_plug.C
 matrix_plug.C
+designmatrix_plug.C
 transform_plug.C
 fake_plug.C
 publish_plug.C
