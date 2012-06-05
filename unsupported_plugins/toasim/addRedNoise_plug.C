@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "T2toolkit.h"
+#include "TKfit.h"
 #include "tempo2.h"
 #include "toasim.h"
 #include "makeRedNoise.h"
@@ -65,7 +66,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	toasim_header_t* header;
 	toasim_header_t* read_header;
 	FILE* file;
-	double offsets[MAX_OBSN]; // Will change to doubles - should use malloc
+	double offsets[MAX_OBSN]; // should use malloc
+	double mjds[MAX_OBSN]; //  should use malloc
 	// Create a set of corrections.
 	toasim_corrections_t* corr = (toasim_corrections_t*)malloc(sizeof(toasim_corrections_t));
 
@@ -253,10 +255,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			}
 			sum/=psr[p].nobs;
 			for (j=0;j<psr[p].nobs;j++){
+				mjds[j]=(double)psr[p].obsn[j].bat;
 				offsets[j]-=sum;
 				if (writeTextFiles)
 					fprintf(log_ts,"%lg %lg %lg %lg\n",(double)psr[p].obsn[j].bat,offsets[j]);
 			}
+			TKremovePoly_d(mjds,offsets,psr[p].nobs,2); // remove a quadratic to reduce the chances of phase wraps
+			// The above is ok because it's linear with F0/F1
 			toasim_write_corrections(corr,header,file);
 			if (writeTextFiles)
 				fclose(log_ts);
@@ -278,3 +283,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 }
 
 char * plugVersionCheck = TEMPO2_h_VER;
+
+
+
+

@@ -76,7 +76,7 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
 		freq=(float)i*f_bin;
 		if (freq < model->flatten)
 			freq=model->flatten;
-		float scale = A*pow(freq,index);
+		float scale = A*pow(freq,index)/M_PI; // WARNING: Not sure about this factor of pi
 		if (freq < model->cutoff)scale=0;
 		spectrum[i]=scale*TKgaussDev(&seed) + I*scale*TKgaussDev(&seed);
 		
