@@ -360,7 +360,7 @@ void doPlot(pulsar *psr,int npsr,gwSrc *gw,long double **gwRes,long double timeO
   FILE *fout;
 
   cpgbeg(0,"/xs",1,1);
-
+  cpgpap(0,0.5);
   cpgask(0);
   do {
   if (plot==3 || plot==4 || plot==5 || plot==6)
