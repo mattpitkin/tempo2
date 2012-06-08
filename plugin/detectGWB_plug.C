@@ -30,7 +30,6 @@
 #include <math.h>
 #include "tempo2.h"
 #include "T2toolkit.h"
-#include <cpgplot.h>
 #include "TKspectrum.h"
 
 using namespace std;

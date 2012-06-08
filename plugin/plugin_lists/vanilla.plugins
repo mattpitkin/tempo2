@@ -13,3 +13,4 @@ ppta_splug.C
 simRedNoise_plug.C
 dmmodel_fitFunc_plug.C
 bary_plug.C
+detectGWB_plug.C

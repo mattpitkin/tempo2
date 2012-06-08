@@ -182,7 +182,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       fhi = 1.0/(long double)SECDAY;
       printf("fhi = %.5Lg\n",fhi);
     }
-  timeOffset = psr[0].param[param_pepoch].val[0];
+//  timeOffset = psr[0].param[param_pepoch].val[0];
+    timeOffset=56000; // this needs to be the same for all pulsars!
 
 
   for (p=0;p<*npsr;p++)
