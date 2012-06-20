@@ -113,7 +113,7 @@ void help() /* Display help */
   printf("M          toggle removing mean from the residuals\n");
   printf("ctrl-n     Add white noise to site-arrival-times\n");
   printf("p          Change model parameter values\n");
-  printf("ctrl-p     Toggle fitting versus pulse phase\n");
+  printf("ctrl-p     Toggle plotting versus pulse phase\n");
   printf("r          Reset (reload .par and .tim file)\n");
   printf("ctrl-r     Select regions in MJDs and write to file\n");
   printf("w          toggle fitting using weights\n");
@@ -1488,9 +1488,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  {
 	    for (i=0;i<psr[0].nobs;i++)
 	      {
-		printf("%g %d\n",(double)psr[0].obsn[i].sat,psr[0].obsn[i].pulseN - psr[0].obsn[0].pulseN);
+		printf("%g %g\n",(double)psr[0].obsn[i].sat,(double)(psr[0].obsn[i].pulseN - psr[0].obsn[0].pulseN));
 		strcpy(psr[0].obsn[i].flagID[psr[0].obsn[i].nFlags],"-pn");
-		sprintf(psr[0].obsn[i].flagVal[psr[0].obsn[i].nFlags],"%d",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
+		sprintf(psr[0].obsn[i].flagVal[psr[0].obsn[i].nFlags],"%Lg",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
 		psr[0].obsn[i].nFlags++;
 	      }
 	    writeTim("withpn.tim",psr,"tempo2");
@@ -1970,7 +1970,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	  viewModel*=-1;
 	else if (key==18) /* Control-R - select regions */
 	  {
-	    float rx1[1000],rx2[1000];
+	    int maxRegions = 5000;
+	    float rx1[maxRegions],rx2[maxRegions];
 	    int   nregion=0;
 	    char key2;
 	    float mx2,my2,mx1,my1;
@@ -2020,6 +2021,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);
 
 		  nregion++;
+		  if (nregion > maxRegions)
+		    {
+		      printf("ERROR: maximum number of regions at any given time = %d -- please save and start again\n",maxRegions);
+		      nregion--;
+
+		    }
 		}
 	    } while (key2 != 'X');
 	    printf("Goodbye\n");
