@@ -345,12 +345,21 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   else if (strcasecmp(str,"STEL_CLK_OFFS")==0)  /* Set clock offsets */
     readValue(psr,str,fin,&(psr->param[param_clk_offs]),0);
   else if (strcasecmp(str,"STEL_DX")==0)  /* Set interpolation function for telescope position offset*/
-    readValue(psr,str,fin,&(psr->param[param_tel_dx]),0);
+    {
+      psr->setTelVelX=0;
+      readValue(psr,str,fin,&(psr->param[param_tel_dx]),0);
+    }
   else if (strcasecmp(str,"STEL_DY")==0)  /* Set interpolation function for telescope position offset*/
-    readValue(psr,str,fin,&(psr->param[param_tel_dy]),0);
+    {
+      psr->setTelVelY=1;
+      readValue(psr,str,fin,&(psr->param[param_tel_dy]),0);
+    }
   else if (strcasecmp(str,"STEL_DZ")==0)  /* Set interpolation function for telescope position offset*/
-    readValue(psr,str,fin,&(psr->param[param_tel_dz]),0);
-  else if (strcasecmp(str,"SQIFUNC_p")==0)  /* Set quad interpolation function for plus*/
+    {
+      psr->setTelVelZ=1;
+      readValue(psr,str,fin,&(psr->param[param_tel_dz]),0);
+    }
+    else if (strcasecmp(str,"SQIFUNC_p")==0)  /* Set quad interpolation function for plus*/
       readValue(psr,str,fin,&(psr->param[param_quad_ifunc_p]),0);
   else if (strcasecmp(str,"SQIFUNC_c")==0)  /* Set quad interpolation function for cross*/
     readValue(psr,str,fin,&(psr->param[param_quad_ifunc_c]),0);
@@ -431,7 +440,6 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	  if (gval<psr->param[param_gltd].aSize)
 	    readValue(psr,str,fin,&(psr->param[param_gltd]),gval-1);
 	}
-      
     }
   else if (strcasecmp(str,"TZRMJD")==0)      /* TZRMJD */
     readValue(psr,str,fin,&(psr->param[param_tzrmjd]),0);
@@ -762,6 +770,14 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       fscanf(fin,"%lf %lf %lf",&psr->telDX_t[number-1],&psr->telDX_v[number-1],&psr->telDX_e[number-1]);
       if (psr->nTelDX < number) psr->nTelDX = number;
     }
+  else if ((strstr(str,"TEL_VX")!=NULL || strstr(str,"tel_vx")!=NULL))
+    {
+      int number;
+      psr->setTelVelX=1;
+      /* Obtain parameter number */
+      sscanf(str+6,"%d",&number);
+      fscanf(fin,"%lf %lf",&psr->telDX_vel[number-1],&psr->telDX_vel_e[number-1]);
+    }
   else if ((strstr(str,"TEL_DY")!=NULL || strstr(str,"tel_dy")!=NULL) && strcmp(str,"STEL_DY")!=0)
     {
       int number;
@@ -770,6 +786,14 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       fscanf(fin,"%lf %lf %lf",&psr->telDY_t[number-1],&psr->telDY_v[number-1],&psr->telDY_e[number-1]);
       if (psr->nTelDY < number) psr->nTelDY = number;
     }
+  else if ((strstr(str,"TEL_VY")!=NULL || strstr(str,"tel_vy")!=NULL))
+    {
+      int number;
+      psr->setTelVelY=1;
+      /* Obtain parameter number */
+      sscanf(str+6,"%d",&number);
+      fscanf(fin,"%lf %lf",&psr->telDY_vel[number-1],&psr->telDY_vel_e[number-1]);
+    }
   else if ((strstr(str,"TEL_DZ")!=NULL || strstr(str,"tel_dz")!=NULL) && strcmp(str,"STEL_DZ")!=0)
     {
       int number;
@@ -777,6 +801,14 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       sscanf(str+6,"%d",&number);
       fscanf(fin,"%lf %lf %lf",&psr->telDZ_t[number-1],&psr->telDZ_v[number-1],&psr->telDZ_e[number-1]);
       if (psr->nTelDZ < number) psr->nTelDZ = number;
+    }
+  else if ((strstr(str,"TEL_VZ")!=NULL || strstr(str,"tel_vz")!=NULL))
+    {
+      int number;
+      psr->setTelVelZ=1;
+      /* Obtain parameter number */
+      sscanf(str+6,"%d",&number);
+      fscanf(fin,"%lf %lf",&psr->telDZ_vel[number-1],&psr->telDZ_vel_e[number-1]);
     }
   else if (strstr(str,"QIFUNC_p")!=NULL || strstr(str,"qifunc_p")!=NULL)
     {

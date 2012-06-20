@@ -337,8 +337,8 @@ void preProcessSimple3 (pulsar *psr)
   //
   if (strlen(psr->fjumpID)>0)
     {
-      char val[MAX_FLAGS][16];
-      int  nval[MAX_FLAGS];
+      char val[MAX_JUMPS][16];
+      int  nval[MAX_JUMPS];
       int  nf=0;
       int found;
       // Find flag corresponding to longest data set
@@ -363,9 +363,9 @@ void preProcessSimple3 (pulsar *psr)
 			{
 			  strcpy(val[nf],psr->obsn[i].flagVal[k]);
 			  nf++;
-			  if (nf >= MAX_FLAGS)
+			  if (nf >= MAX_JUMPS)
 			    {
-			      printf("preProcessSimple3: Number of different flags in the .tim file > MAX_FLAGS (%d)\n",MAX_FLAGS);
+			      printf("preProcessSimple3: Number of different flags in the .tim file > MAX_JUMPS (%d)\n",MAX_JUMPS);
 			      exit(1);
 			    }
 			  

@@ -466,7 +466,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	}
 
       // Check efacs and equads
-      if (psr->nT2efac > 0 || psr->nT2equad > 0 || psr->T2globalEfac!=1.0)
+      if (psr[p].nT2efac > 0 || psr[p].nT2equad > 0 || psr[p].T2globalEfac!=1.0)
 	{
 	  double err;
 	  printf("Updating TOA errors using T2EFAC, T2EQUAD and T2GLOBALEFAC\n");

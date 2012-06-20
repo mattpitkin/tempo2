@@ -896,8 +896,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /* dt in resid.f */
 	   /*	   psr[p].obsn[i].phase = phaseint+nphase+phase5-nphase+dphase+ddnprd; */	   
 	   psr[p].obsn[i].phase = phaseint+phase5[i];  
-	   psr[p].obsn[i].pulseN = (int)(phaseint + fortran_nint(phase5[i]));
-	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %d\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,psr[p].obsn[i].pulseN);
+	   psr[p].obsn[i].pulseN = (long double)(phaseint + fortran_nint(phase5[i]));
+	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
 	   if (psr[p].obsn[i].deleted!=1)
 	     {
 	       mean+=psr[p].obsn[i].residual;

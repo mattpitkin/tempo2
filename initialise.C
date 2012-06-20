@@ -54,7 +54,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   int fail = 0;
   int i,j,k;
   char temp[100];
-
+  
   psr->nobs = 0;
   //  psr->obsn = NULL;
   psr->covar = NULL;
@@ -93,14 +93,14 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   // "glitches" don't happen with any other parameters.
   //
   // JPWV, MPIfR, 22 July 2010.
-  for(int obsct = 0; obsct < MAX_OBSN; obsct++ ){
+  /*  for(int obsct = 0; obsct < MAX_OBSN; obsct++ ){
     for (int vecct = 0; vecct < 6; vecct++ ){
       psr->obsn[obsct].earthMoonBary_ssb[vecct] = 0.0;
       psr->obsn[obsct].earthMoonBary_earth[vecct] = 0.0;
       psr->obsn[obsct].observatory_earth[vecct] = 0.0;
       psr->obsn[obsct].earth_ssb[vecct] = 0.0;
     }
-  }
+    }*/
   if (fail)
     {
       printf("Not enough memory to allocate room for %d observations\n",MAX_OBSN);
