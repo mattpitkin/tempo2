@@ -56,8 +56,8 @@
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX              64    /* Max number of DM steps allowed */
-#define MAX_FLAGS            150    /* Maximum number of flags in .tim file/observation */
-#define MAX_CLK_CORR         10    /* Maximum number of steps in the correction to TT  */ 
+#define MAX_FLAGS            20    /* Maximum number of flags in .tim file/observation */
+#define MAX_CLK_CORR         30    /* Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /* Number of seconds in 1 day                 */
 #define SPEED_LIGHT          299792458.0 /* Speed of light (m/s)                       */
 #define SOLAR_MASS  1.98892e30           /* Mass of Sun (kg)                           */
@@ -116,7 +116,8 @@
 #endif
 
 #ifdef sun
-#include <sunmath.h>
+#include <sunmath.h> 
+//* there is no such file ! J. Wang */
 // Note: you sometimes need a compile line e.g. -I/opt/SUNWspro/WS6U2/include/cc
 #endif
 
@@ -314,7 +315,7 @@ typedef struct observation {
   longdouble torb;                /* Combined binary delays */
   longdouble nphase;              /* allows the pulse number to be determined                   */
   longdouble phase;               
-  int  pulseN;                    /* Pulse number */
+  longdouble pulseN;                    /* Pulse number */
 
   char flagID[MAX_FLAGS][16];     /* Flags in .tim file                                         */
   char flagVal[MAX_FLAGS][16];
@@ -459,18 +460,26 @@ typedef struct pulsar {
   double quad_ifunc_geom_p,quad_ifunc_geom_c;
 
   // Telescope position error
-  int    nTelDX;
+  int    nTelDX,setTelVelX;
   double telDX_t[MAX_TEL_DX];
   double telDX_v[MAX_TEL_DX];
   double telDX_e[MAX_TEL_DX];
-  int    nTelDY;
+  double telDX_vel[MAX_TEL_DX];
+  double telDX_vel_e[MAX_TEL_DX];
+
+  int    nTelDY,setTelVelY;
   double telDY_t[MAX_TEL_DY];
   double telDY_v[MAX_TEL_DY];
   double telDY_e[MAX_TEL_DY];
-  int    nTelDZ;
+  double telDY_vel[MAX_TEL_DY];
+  double telDY_vel_e[MAX_TEL_DY];
+
+  int    nTelDZ,setTelVelZ;
   double telDZ_v[MAX_TEL_DZ];
   double telDZ_t[MAX_TEL_DZ];
   double telDZ_e[MAX_TEL_DZ];
+  double telDZ_vel[MAX_TEL_DZ];
+  double telDZ_vel_e[MAX_TEL_DZ];
 
   // T2EFAC/T2EQUAD
   int    nT2efac,nT2equad;
