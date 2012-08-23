@@ -66,8 +66,20 @@ void doFit(pulsar *psr,int npsr,int writeModel)
       char tempo2MachineType[MAX_FILELEN]="";
 
       printf("Calling fitting plugin: %s\n",psr[0].fitFunc);
-      strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
+#ifdef  TEMPO2_ARCH 
+      strcpy(tempo2MachineType, TEMPO2_ARCH);
+#else
+      if (getenv("LOGIN_ARCH")==NULL)
+	{
+	  printf("Unable to determine machine type: You must do one of the following:\n"
+                 "Re-compile tempo2 with the standard export distrubution, or\n"
+                 "Set the LOGIN_ARCH environment variable, or\n"
+                 "Use -machine on the command line\n");
+	  exit(1);
+	}
 
+      strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
+#endif
       for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
 	      sprintf(str,"%s/%s_fitFunc_%s_plug.t2",tempo2_plug_path[iplug],
 			      psr[0].fitFunc,tempo2MachineType);
