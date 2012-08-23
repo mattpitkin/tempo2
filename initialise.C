@@ -234,9 +234,21 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_tel_dx].label[0],"TEL_DX");
   strcpy(psr->param[param_tel_dy].label[0],"TEL_DY");
   strcpy(psr->param[param_tel_dz].label[0],"TEL_DZ");
+  strcpy(psr->param[param_tel_vx].label[0],"TEL_VX (km/s)");
+  strcpy(psr->param[param_tel_vy].label[0],"TEL_VY (km/s)");
+  strcpy(psr->param[param_tel_vz].label[0],"TEL_VZ (km/s)");
+  strcpy(psr->param[param_tel_x0].label[0],"TEL_X0 (km)");
+  strcpy(psr->param[param_tel_y0].label[0],"TEL_Y0 (km)");
+  strcpy(psr->param[param_tel_z0].label[0],"TEL_Z0 (km)");
   strcpy(psr->param[param_tel_dx].shortlabel[0],"TEL_DX");
   strcpy(psr->param[param_tel_dy].shortlabel[0],"TEL_DY");
   strcpy(psr->param[param_tel_dz].shortlabel[0],"TEL_DZ");
+  strcpy(psr->param[param_tel_vx].shortlabel[0],"TEL_VX");
+  strcpy(psr->param[param_tel_vy].shortlabel[0],"TEL_VY");
+  strcpy(psr->param[param_tel_vz].shortlabel[0],"TEL_VZ");
+  strcpy(psr->param[param_tel_x0].shortlabel[0],"TEL_X0");
+  strcpy(psr->param[param_tel_y0].shortlabel[0],"TEL_Y0");
+  strcpy(psr->param[param_tel_z0].shortlabel[0],"TEL_Z0");
   strcpy(psr->param[param_ifunc].label[0],"IFUNC");
   strcpy(psr->param[param_ifunc].shortlabel[0],"IFUNC");
   strcpy(psr->param[param_clk_offs].label[0],"CLK_OFFS");
@@ -492,6 +504,7 @@ void allocateMemory(pulsar *psr, int realloc)
       else if (i==param_tel_dx) psr->param[i].aSize = MAX_TEL_DX;
       else if (i==param_tel_dy) psr->param[i].aSize = MAX_TEL_DY;
       else if (i==param_tel_dz) psr->param[i].aSize = MAX_TEL_DZ;
+      else if (i==param_raj || i==param_decj) psr->param[i].aSize = 2; // Use second for gravitational wave work
       else psr->param[i].aSize = 1;
       
       psr->param[i].val       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));

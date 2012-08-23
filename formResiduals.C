@@ -208,8 +208,15 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       dt = (psr[p].obsn[i].bbat - psr[p].quadEpoch)*86400.0;
 	       om = psr[p].param[param_quad_om].val[0];
 
-	       lambda_p = (double)psr[p].param[param_raj].val[0];
-	       beta_p   = (double)psr[p].param[param_decj].val[0];
+	       if (psr[p].param[param_raj].paramSet[1] == 1)
+		 lambda_p = (double)psr[p].param[param_raj].val[1];
+	       else
+		 lambda_p = (double)psr[p].param[param_raj].val[0];
+
+	       if (psr[p].param[param_decj].paramSet[1] == 1)
+		 beta_p   = (double)psr[p].param[param_decj].val[1];
+	       else
+		 beta_p   = (double)psr[p].param[param_decj].val[0];
 	       lambda   = psr[p].quadRA;
 	       beta     = psr[p].quadDEC;
 
@@ -259,9 +266,19 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       for (k=0;k<psr[p].nQuad;k++)
 		 {
 		   omega_g = (double)psr[p].param[param_quad_om].val[0]*(k+1);		   
- 		   res_r = (psr[p].quad_aplus_r[k]*resp+psr[p].quad_across_r[k]*resc)*sin(omega_g*dt);
+ 		   res_r = (psr[p].quad_aplus_r[k]*resp+psr[p].quad_across_r[k]*resc)*sinl(omega_g*dt);
 		   //		   res_i = (psr[p].quad_aplus_i[k]*resp+psr[p].quad_across_i[k]*resc)*(cos(omega_g*dt)-1);
-		   res_i = (psr[p].quad_aplus_i[k]*resp+psr[p].quad_across_i[k]*resc)*(cos(omega_g*dt));
+		   res_i = (psr[p].quad_aplus_i[k]*resp+psr[p].quad_across_i[k]*resc)*(cosl(omega_g*dt));
+
+
+		   if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term
+		     {
+		       printf("Pulsar distance = %g\n",(double)psr[p].gwsrc_psrdist);
+		       res_r -= (psr[p].quad_aplus_r[k]*resp+psr[p].quad_across_r[k]*resc)*sinl(omega_g*dt-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g); 
+		       //
+		       res_i -= (psr[p].quad_aplus_i[k]*resp+psr[p].quad_across_i[k]*resc)*(cosl(omega_g*dt-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g));
+		     }
+		   //		   printf("cosTheta = %g\n",(double)cosTheta);
 		   if ((1-cosTheta)==0.0)
 		     {
 		       res_r = 0.0;
@@ -271,12 +288,14 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     {
 		       res_r = 1.0L/(2.0L*omega_g*(1.0L-cosTheta))*(res_r); 
 		       res_i = 1.0L/(2.0L*omega_g*(1.0L-cosTheta))*(res_i); 
+		       //		       res_r = 1.0L/(omega_g)*(res_r);
+		       //res_i = 1.0L/(omega_g)*(res_i);
 		     }
 		   phaseW += (res_r+res_i)*psr[p].param[param_f].val[0];
 		   
 		 }
 	     } 
-	   
+
 
 	   /* Add in extra phase due to gravitational wave signal */
 	   if (psr[p].param[param_gwsingle].paramSet[0]==1)
@@ -353,14 +372,14 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		       n2*(n1*e21c+n2*e22c+n3*e23c)+
 		       n3*(n1*e31c+n2*e32c+n3*e33c));
 
-	       res_r = (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sin(omega_g*time);
-	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time));
+	       res_r = (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time);
+	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cosl(omega_g*time));
 	       //	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time)-1);
 	       if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term
 		 {
-		   res_r += (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sin(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g);
+		   res_r += (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g);
 		   //		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)-1);
-		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g));
+		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cosl(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g));
 		 }
 
 	       if ((1-cosTheta)==0.0)
@@ -390,11 +409,17 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 	       double cosTheta;
 	       double g1,g2,g3;
-
 	       time    = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*86400.0L;
 
-	       lambda_p = (double)psr[p].param[param_raj].val[0];
-	       beta_p   = (double)psr[p].param[param_decj].val[0];
+	       if (psr[p].param[param_raj].paramSet[1] == 1)
+		 lambda_p = (double)psr[p].param[param_raj].val[1];
+	       else
+		 lambda_p = (double)psr[p].param[param_raj].val[0];
+
+	       if (psr[p].param[param_decj].paramSet[1] == 1)
+		 beta_p   = (double)psr[p].param[param_decj].val[1];
+	       else
+		 beta_p   = (double)psr[p].param[param_decj].val[0];
 	       lambda   = psr[p].gwm_raj;
 	       //	       beta     = M_PI/2.0-psr[p].gwsrc_dec;
 	       beta     = psr[p].gwm_decj;
@@ -411,8 +436,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       n2 = sinl(lambda_p)*cosl(beta_p);
 	       n3 = sinl(beta_p);
 	       //	       printf("n = %g %g %g\n",n1,n2,n3);
-	       cosTheta = -(cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
-		 sinl(beta)*sinl(beta_p));
+	       cosTheta = -(cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p) + sinl(beta)*sinl(beta_p));
+
 	       //	       printf("cosTheta = %g\n",cosTheta);
 
 	       /* Only has effect after the glitch epoch */
@@ -421,22 +446,91 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   long double dt,scale;
 		   double cos2Phi;
 		   double cosPhi;
-		   double l1,l2,l3,k,n4,n5,m1,m2,m3;
-		   double beta_m;
-
+		   double l1,l2,l3,m1,m2,m3;
+		   //double beta_m;
+	           double d1,d2,d3,md;
+	           double a1,a2,a3,ma;
 		   
-		   if  (g3 != 0) 
-		     {beta_m = atan2(-cos(beta)*cos(lambda-psr[p].gwm_phi),sin(beta));}
-		   else  
-          	   	{beta_m = atan2(sinl(psr[p].gwm_phi),cosl(psr[p].gwm_phi));
-	      		psr[p].gwm_phi = lambda + 1.5708;}	
-		   m1 = cosl(psr[p].gwm_phi)*cosl(beta_m);
-		   m2 = sinl(psr[p].gwm_phi)*cosl(beta_m);
-		   m3 = sinl(beta_m);
+		 /* define the GW coordinate system see Hobbs,G. (2009)*/
+		 /* the d vector point to north pole or south pole*/ 
+
+              if (beta == 0.0 )
+              {
+               d1 = 0.0;
+               d2 = 0.0;
+               d3 = 1.0;
+              }
+
+		   if ( beta > 0)
+		    {
+                     d1 = g1*cosl(0.5*M_PI - beta);
+                     d2 = g2*cosl(0.5*M_PI - beta);
+                     d3 = 1.0 + g3*cos(0.5*M_PI - beta);
+		     md = sqrt(d1*d1 + d2*d2 + d3*d3);
+		     d1 = d1/md;
+		     d2 = d2/md;
+		     d3 = d3/md;
+		     /*covert d to unit vector */
+ 		    } 
+		   else if (beta < 0)
+		    {
+                     d1 = g1*cosl(-0.5*M_PI - beta);
+                     d2 = g2*cosl(-0.5*M_PI - beta);
+                     d3 = -1.0 + g3*cos(-0.5*M_PI - beta);
+		     md = sqrt(d1*d1 + d2*d2 + d3*d3);
+		     d1 = d1/md;
+		     d2 = d2/md;
+		     d3 = d3/md;
+ 		    } 
+
+		 //if (g2*d3-d2*g3 != 0)
+		 // {
+                 //  a1 = 1.0; 
+                 //  a2 = (d1*g3-g1*d3)/(g2*d3-d2*g3);
+                 //  a3 = (g2*d1-g1*d2)/(g3*d2-g2*d3); 
+	         // }
+		 //else if (g1*d3-d1*g3 != 0)
+		 // {
+                 //  a1 = (g3*d2-d3*g2)/(g1*d3-g3*d1); 
+                 //  a2 = 1.0;
+                 //  a3 = (g1*d2-d1*g2)/(g3*d1-d1*d3);
+		 // }
+                 //else if (d2*g1-g2*d1 != 0)			
+		 // {
+                 //  a1 = (g2*d3-d2*g3)/(d2*g1-g2*d1); 
+                 //  a2 = (g1*d3-d1*g3)/(d1*g2-g1*d2);
+                 //  a3 =1.0; 
+		 // }
+                   a1 = -(d2*g3-d3*g2);
+                   a2 = -(d3*g1-d1*g3);
+                   a3 = -(d1*g2-d2*g1);
+		   /* conver it to unit vector */
+		   ma = sqrt(a1*a1 +a2*a2 + a3*a3);
+		   a1 = a1/ma;
+		   a2 = a2/ma;
+		   a3 = a3/ma;
+
+		  /* polarisation vector of GW source */
+	           m1 = d1*cosl(psr[p].gwm_phi)	+ a1*sinl(psr[p].gwm_phi);   
+                   m2 = d2*cosl(psr[p].gwm_phi)	+ a2*sinl(psr[p].gwm_phi);
+                   m3 = d3*cosl(psr[p].gwm_phi)	+ a3*sinl(psr[p].gwm_phi);
+
+//////		   if  (g3 != 0) 
+//		     {beta_m = atan2(-cos(beta)*cos(lambda-psr[p].gwm_phi),sin(beta));}
+//		   else  
+	//	     {
+	//	       beta_m = atan2(sinl(psr[p].gwm_phi),cosl(psr[p].gwm_phi));
+	//	       psr[p].gwm_phi = lambda + 1.5708;
+		//     }	
+		//   m1 = cosl(psr[p].gwm_phi)*cosl(beta_m);
+		//   m2 = sinl(psr[p].gwm_phi)*cosl(beta_m);
+		//   m3 = sinl(beta_m);
 		   if  (cosTheta != 1.0 && cosTheta != -1.0)
 		       {g1 = g1*cosTheta; 
 		    	g2 = g2*cosTheta;
 		    	g3 = g3*cosTheta;
+
+			/*l is  the projection of pulsar vector on the plane which pependicular to the GW source direction */
 		    	l1 = n1 - g1;
 		    	l2 = n2 - g2;
 		    	l3 = n3 - g3;

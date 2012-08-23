@@ -1167,6 +1167,14 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     {
       double yoffs[MAX_TEL_DX];
       double sat = (double)psr->obsn[ipos].sat;
+      if (psr->param[param_tel_dx].val[0] == -1)
+	{
+	  printf("Here with %g %g\n",psr->posPulsar[0],psr->telDX_v[0]);
+	  if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	    return psr->posPulsar[0]/SPEED_LIGHT*1000.0;
+	  else
+	    return 0;
+	}
       if (psr->param[param_tel_dx].val[0] == 2)
 	{
 	  if (psr->telDX_t[k] <=  psr->obsn[ipos].sat &&
@@ -1212,7 +1220,15 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       double yoffs[MAX_TEL_DY];
       double sat = (double)psr->obsn[ipos].sat;
 
-      if (psr->param[param_tel_dz].val[0] == 2)
+
+      if (psr->param[param_tel_dy].val[0] == -1)
+	{
+	  if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	    return psr->posPulsar[1]/SPEED_LIGHT*1000.0;
+	  else 
+	    return 0;
+	}
+      if (psr->param[param_tel_dy].val[0] == 2)
 	{
 	  if (psr->telDY_t[k] <=  psr->obsn[ipos].sat &&
 	      psr->telDY_t[k+1] > psr->obsn[ipos].sat)
@@ -1255,6 +1271,14 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     {
       double yoffs[MAX_TEL_DZ];
       double sat = (double)psr->obsn[ipos].sat;
+      if (psr->param[param_tel_dz].val[0] == -1)
+	{
+	  if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	    return psr->posPulsar[2]/SPEED_LIGHT*1000.0;
+	  else
+	    return 0;
+	}
+
       if (psr->param[param_tel_dz].val[0] == 2)
 	{
 	  // MUST SET SOME OF THESE TO ZERO!!
@@ -1294,6 +1318,51 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
       }
       //      printf("afunc = %g\n",afunc);
+    }
+  else if (i==param_tel_x0) // satellite position
+    {
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	return psr->posPulsar[0]/SPEED_LIGHT*1000.0;
+      else
+	return 0;
+    }
+  else if (i==param_tel_y0) // satellite position
+    {
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	return psr->posPulsar[1]/SPEED_LIGHT*1000.0;
+      else
+	return 0;
+    }
+  else if (i==param_tel_z0) // satellite position
+    {
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	return psr->posPulsar[2]/SPEED_LIGHT*1000.0;
+      else
+	return 0;
+    }
+  else if (i==param_tel_vx) // Velocity of satellite
+    {
+      long double dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	return psr->posPulsar[0]/SPEED_LIGHT*1000.0*dt;
+      else
+	return 0;
+    }
+  else if (i==param_tel_vy) // Velocity of satellite
+    {
+      long double dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	return psr->posPulsar[1]/SPEED_LIGHT*1000.0*dt;
+      else
+	return 0;
+    }
+  else if (i==param_tel_vz) // Velocity of satellite
+    {
+      long double dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
+      if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
+	return psr->posPulsar[2]/SPEED_LIGHT*1000.0*dt;
+      else
+	return 0;
     }
   else if (i==param_clk_offs) /* Whitening procedure using interpolated function */
     {
@@ -1432,8 +1501,16 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
       double lambda_p,beta_p,lambda,beta;
       long double time;
       time    = (psr->obsn[ipos].bbat - psr->quadEpoch)*86400.0L;
-      lambda_p = (double)psr->param[param_raj].val[0];
-      beta_p   = (double)psr->param[param_decj].val[0];
+      if (psr->param[param_raj].paramSet[1] == 1)
+	lambda_p = (double)psr->param[param_raj].val[1];
+      else
+	lambda_p = (double)psr->param[param_raj].val[0];
+
+      if (psr->param[param_raj].paramSet[1] == 1)
+	beta_p   = (double)psr->param[param_decj].val[1];
+      else
+	beta_p   = (double)psr->param[param_decj].val[0];
+
       lambda   = psr->quadRA;
       beta     = psr->quadDEC;
       // Pulsar vector
@@ -1490,6 +1567,14 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  // else if (k%4==1) afunc = resp*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
 	  //else if (k%4==2) afunc = resc*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_re
 	  //else if (k%4==3) afunc = resc*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+
+	  if (psr->gwsrc_psrdist > 0) // Add in the pulsar term
+	    {
+	      if (k%4==0) afunc      -=  resp*sinl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	      else if (k%4==1) afunc -=  resp*cosl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	      else if (k%4==2) afunc -=  resc*sinl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	      else if (k%4==3) afunc -=  resc*cosl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+	    }
 
 
 	  //	  printf("Here with %d %d %g %g %g %g %g %g %g\n",k,k%4,afunc,sin(omega_g*time),cos(omega_g*time),(double)(omega_g*time),(double)resp,(double)resc,(double)cosTheta);
@@ -1582,8 +1667,16 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 
       time    = (psr->obsn[ipos].bbat - psr->gwm_epoch)*86400.0L;
       
-      lambda_p = (double)psr->param[param_raj].val[0];
-      beta_p   = (double)psr->param[param_decj].val[0];
+      if (psr->param[param_raj].paramSet[1] == 1)
+	lambda_p = (double)psr->param[param_raj].val[1];
+      else
+	lambda_p = (double)psr->param[param_raj].val[0];
+
+      if (psr->param[param_decj].paramSet[1] == 1)
+	beta_p   = (double)psr->param[param_decj].val[1];
+      else
+	beta_p   = (double)psr->param[param_decj].val[0];
+
       lambda   = psr->gwm_raj;
       beta     = psr->gwm_decj;
 
@@ -1605,17 +1698,82 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  long double dt,scale;
 	  double cos2Phi;
 	  double cosPhi;
-	  double l1,l2,l3,k,n4,n5,m1,m2,m3;
+	  double l1,l2,l3,n5,m1,m2,m3;
 	  double beta_m;
-	  
-	   if  (g3 != 0) 
-    		   {beta_m = atan2(-cos(beta)*cos(lambda-psr->gwm_phi),sin(beta));}
-	  else  
-              {beta_m = atan2(sinl(psr->gwm_phi),cosl(psr->gwm_phi));
-	       psr->gwm_phi = lambda + 1.5708;}
-	  m1 = cosl(psr->gwm_phi)*cosl(beta_m);
-	  m2 = sinl(psr->gwm_phi)*cosl(beta_m);
-	  m3 = sinl(beta_m);
+	  double d1,d2,d3,md;
+	  double a1,a2,a3,ma;
+ 
+//   if  (g3 != 0) 
+//	   {beta_m = atan2(-cos(beta)*cos(lambda-psr->gwm_phi),sin(beta));}
+//  else  
+//      {beta_m = atan2(sinl(psr->gwm_phi),cosl(psr->gwm_phi));
+//       psr->gwm_phi = lambda + 1.5708;}
+//  m1 = cosl(psr->gwm_phi)*cosl(beta_m);
+//  m2 = sinl(psr->gwm_phi)*cosl(beta_m);
+//  m3 = sinl(beta_m);
+
+                  if (beta == 0.0 )
+                  {
+                   d1 = 0.0;
+                   d2 = 0.0;
+                   d3 = 1.0;
+                  }
+
+		   if ( beta > 0)
+		    {
+                     d1 = g1*cosl(0.5*M_PI - beta);
+                     d2 = g2*cosl(0.5*M_PI - beta);
+                     d3 = 1.0 + g3*cos(0.5*M_PI - beta);
+		     md = sqrt(d1*d1 + d2*d2 + d3*d3);
+		     d1 = d1/md;
+		     d2 = d2/md;
+		     d3 = d3/md;
+		     /*covert d to unit vector */
+ 		    } 
+		   else if (beta < 0) 
+		    {
+                     d1 = g1*cosl(-0.5*M_PI - beta);
+                     d2 = g2*cosl(-0.5*M_PI - beta);
+                     d3 = -1.0 + g3*cos(-0.5*M_PI - beta);
+		     md = sqrt(d1*d1 + d2*d2 + d3*d3);
+		     d1 = d1/md;
+		     d2 = d2/md;
+		     d3 = d3/md;
+ 		    } 
+
+		 //if (g2*d3-d2*g3 != 0)
+		 // {
+                 //  a1 = 1.0; 
+                 //  a2 = (d1*g3-g1*d3)/(g2*d3-d2*g3);
+                 //  a3 = (g2*d1-g1*d2)/(g3*d2-g2*d3); 
+	         // }
+		 //else if (g1*d3-d1*g3 != 0)
+		 // {
+                 //  a1 = (g3*d2-d3*g2)/(g1*d3-g3*d1); 
+                 //  a2 = 1.0;
+                 //  a3 = (g1*d2-d1*g2)/(g3*d1-d1*d3);
+		 // }
+                 //else if (d2*g1-g2*d1 != 0)			
+		 // {
+                 //  a1 = (g2*d3-d2*g3)/(d2*g1-g2*d1); 
+                 //  a2 = (g1*d3-d1*g3)/(d1*g2-g1*d2);
+                 //  a3 =1.0; 
+		 // }
+		   a1 = -(d2*g3-d3*g2);
+		   a2 = -(d3*g1-d1*g3);
+		   a3 = -(d1*g2-d2*g1);
+ 
+		   /* conver it to unit vector */
+		   ma = sqrt(a1*a1 +a2*a2 + a3*a3);
+		   a1 = a1/ma;
+		   a2 = a2/ma;
+		   a3 = a3/ma;
+
+		  /* polarisation vector of GW source */
+	           m1 = d1*cosl(psr->gwm_phi)	+ a1*sinl(psr->gwm_phi);   
+                   m2 = d2*cosl(psr->gwm_phi)	+ a2*sinl(psr->gwm_phi);
+                   m3 = d3*cosl(psr->gwm_phi)	+ a3*sinl(psr->gwm_phi);
+
 	  if  (cosTheta != 1.0 && cosTheta != -1.0)
 		{g1 = g1*cosTheta; 
 		 g2 = g2*cosTheta;
@@ -1729,7 +1887,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 void updateParameters(pulsar *psr,int p,double *val,double *error)
 {
   int i,j,k;
-
+  printf("UPDATING PARAMETERS !!!!\n");
   if (debugFlag==1) printf("Updating parameters\n");
   psr[p].offset = val[0];
   psr[p].offset_e = error[0];
@@ -1892,7 +2050,14 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 	      else if (i==param_tel_dx) 
 		{
 		  int k;
-		  if (psr[p].param[param_tel_dx].val[0] < 2)
+		  printf("HERE --- hello\n");
+		  if (psr[p].param[param_tel_dx].val[0] == -1)
+		    {
+		      printf("Updating with %g %g\n",val[j],error[j]);
+		      psr[p].telDX_v[0] -= val[j]; //*SPEED_LIGHT/1000.0;
+		      psr[p].telDX_e[0] = error[j]; //*SPEED_LIGHT/1000.0;
+		    }
+		  else if (psr[p].param[param_tel_dx].val[0] < 2)
 		    {
 		      for (k=0;k<psr->nTelDX;k++)
 			{
@@ -1914,7 +2079,12 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 	      else if (i==param_tel_dy) 
 		{
 		  int k;
-		  if (psr[p].param[param_tel_dy].val[0] < 2)
+		  if (psr[p].param[param_tel_dy].val[0] == -1)
+		    {
+		      psr[p].telDY_v[0] -= val[j]; //*SPEED_LIGHT/1000.0;
+		      psr[p].telDY_e[0] = error[j]; //*SPEED_LIGHT/1000.0;
+		    }
+		  else if (psr[p].param[param_tel_dy].val[0] < 2)
 		    {
 		      for (k=0;k<psr->nTelDY;k++)
 			{
@@ -1938,7 +2108,12 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 	      else if (i==param_tel_dz) 
 		{
 		  int k;
-		  if (psr[p].param[param_tel_dz].val[0] < 2)
+		  if (psr[p].param[param_tel_dz].val[0] == -1)
+		    {
+		      psr[p].telDZ_v[0] -= val[j]; //*SPEED_LIGHT/1000.0;
+		      psr[p].telDZ_e[0] = error[j]; //*SPEED_LIGHT/1000.0;
+		    }
+		  else if (psr[p].param[param_tel_dz].val[0] < 2)
 		    {
 		      for (k=0;k<psr->nTelDZ;k++)
 			{
