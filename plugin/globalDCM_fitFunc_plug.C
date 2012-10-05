@@ -162,6 +162,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     npol+=psr[0].ifuncN-1;
     nGlobal+=psr[0].ifuncN-1;
   }
+
+  if (psr[0].param[param_quad_om].fitFlag[0]==2){
+    npol+=psr[0].nQuad*4-1;
+    nGlobal+=psr[0].nQuad*4-1;
+  }
+
   if (psr[0].param[param_tel_dx].fitFlag[0]==2)	  
     {
       npol+=(psr[0].nTelDX-1);
@@ -220,6 +226,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       if (psr[p].param[param_ifunc].fitFlag[0]==1){
 	      npol+=psr[p].ifuncN-1;
 	      nFitP[p]+=psr[p].ifuncN-1;
+      }
+      if (psr[p].param[param_quad_om].fitFlag[0]==1){
+	      npol+=psr[p].nQuad*4-1;
+	      nFitP[p]+=psr[p].nQuad*4-1;
       }
        if (psr[p].param[param_tel_dx].fitFlag[0]==1)
 	{
@@ -524,6 +534,26 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		  }
 		offset--;
 	      }
+	      else if(i==param_quad_om) {
+		printf("Updating %d point\n",psr[0].ifuncN);
+		for (j=0;j<psr[0].nQuad;j++)
+		  {
+		    printf("Updating %d %g\n",offset,val[offset]);
+		    for (p=0;p<npsr;p++)
+		      {
+			psr[p].quad_aplus_r[j]    -= val[offset];		      
+			psr[p].quad_aplus_i[j]    -= val[offset+1];		      
+			psr[p].quad_across_r[j]   -= val[offset+2];		      
+			psr[p].quad_across_i[j]   -= val[offset+3];		      
+			psr[p].quad_aplus_r_e[j]   = error[offset];		      
+			psr[p].quad_aplus_i_e[j]   = error[offset+1];		      
+			psr[p].quad_across_r_e[j]  = error[offset+2];		      
+			psr[p].quad_across_i_e[j]  = error[offset+3];		      
+		      }
+		    offset+=4;
+		  }
+		offset--;
+	      }
 	      else if (i==param_tel_dx)
 		{
 		  for (j=0;j<psr[0].nTelDX;j++)
@@ -585,7 +615,10 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		{
 		  for (p=0;p<npsr;p++)
 		    {
-		      psr[p].param[i].val[k] += val[offset];
+		      if (i==param_telx || i==param_tely || i==param_telz || i==param_gwm_amp)
+			psr[p].param[i].val[k] -= val[offset];
+		      else
+			psr[p].param[i].val[k] += val[offset];
 		      psr[p].param[i].err[k] = error[offset];
 		    }
 		}
@@ -617,6 +650,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	      offset+=psr[p].nWhite*2-1;
       if (psr[p].param[param_ifunc].fitFlag[0]==1)
 	offset+=psr[p].ifuncN-1;
+      if (psr[p].param[param_quad_om].fitFlag[0]==1)
+	offset+=psr[p].nQuad*4-1;
       if (psr[p].param[param_tel_dx].fitFlag[0]==1)
 	offset+=psr[p].nTelDX-1;
       if (psr[p].param[param_tel_dy].fitFlag[0]==1)
@@ -853,6 +888,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		nglobal+=psr[0].nWhite*2-1;
 	      if (i==param_ifunc)
 		 nglobal+=psr[p].ifuncN-1;
+	      if (i==param_quad_om)
+		 nglobal+=psr[p].nQuad*4-1;
 	      if (i==param_tel_dx)
 		 nglobal+=psr[p].nTelDX-1;
 	      if (i==param_tel_dy)
@@ -888,6 +925,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     new_ma+=psr[p].nWhite*2-1;
   if (psr[p].param[param_ifunc].fitFlag[0]==1)
     new_ma+=psr[p].ifuncN-1;
+  if (psr[p].param[param_quad_om].fitFlag[0]==1)
+    new_ma+=psr[p].nQuad*4-1;
   if (psr[p].param[param_tel_dx].fitFlag[0]==1)
     new_ma+=psr[p].nTelDX-1;
   if (psr[p].param[param_tel_dy].fitFlag[0]==1)
@@ -926,6 +965,8 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 	n+=psr[pp].nWhite*2-1;
       if (psr[pp].param[param_ifunc].fitFlag[0]==1)
 	n+=psr[pp].ifuncN-1;
+      if (psr[pp].param[param_quad_om].fitFlag[0]==1)
+	n+=psr[pp].nQuad*4-1;
       if (psr[pp].param[param_tel_dx].fitFlag[0]==1)
 	n+=psr[pp].nTelDX-1;
       if (psr[pp].param[param_tel_dy].fitFlag[0]==1)
@@ -958,6 +999,15 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 		for (j=0;j<psr[p].ifuncN;j++)
 		  {
 		    afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+		    //			      printf("ifc=%d %d %g\n",counter,c,afunc[c]);
+		    c++;
+		  }
+		
+	      }
+	      else if(i==param_quad_om){
+		for (j=0;j<psr[p].nQuad*4;j++)
+		  {
+		    afunc[c] = getParamDeriv(&psr[p],ipos,x+(double)psr[p].param[param_pepoch].val[0],i,j);
 		    //			      printf("ifc=%d %d %g\n",counter,c,afunc[c]);
 		    c++;
 		  }
