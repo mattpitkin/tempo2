@@ -13,6 +13,8 @@ std::string get_constraint_name(enum constraint c){
 			return "DMMODEL linear(C) = 0";
 		case constraint_dmmodel_cw_2:
 			return "DMMODEL quadratic(C) = 0";
+		case constraint_dmmodel_cw_3:
+			return "DMMODEL cubic(C) = 0";
 		case constraint_ifunc_0:
 			return "IFUNC mean(C) = 0";
 		case constraint_ifunc_1:
@@ -169,7 +171,7 @@ double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
 	 * Only operate on param=dmmodel and when fit parameter is 
 	 * one of the frequency independant parts (i.e. last dmoffsNum).
 	 */
-  if(i==param_ifunc && k >= psr->ifuncN){
+  if(i==param_ifunc && k < psr->ifuncN){
     long double epoch = psr->param[param_pepoch].val[0];
     long double t = psr->ifuncT[k%psr->ifuncN]-epoch;
     long double x = 2.0*M_PI*t/365.25;
@@ -179,8 +181,10 @@ double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
     case 1:
       return cos(x);
     case 2:
+	  printf("t2\n");
       return x*sin(x);
     case 3:
+	  printf("t3\n");
       return x*cos(x);
     case 4:
       return sin(2*x);
