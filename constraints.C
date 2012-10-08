@@ -181,10 +181,8 @@ double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
     case 1:
       return cos(x);
     case 2:
-	  printf("t2\n");
       return x*sin(x);
     case 3:
-	  printf("t3\n");
       return x*cos(x);
     case 4:
       return sin(2*x);
