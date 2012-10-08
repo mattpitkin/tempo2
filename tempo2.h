@@ -179,6 +179,7 @@ enum constraint {
 	constraint_dmmodel_cw_0,
 	constraint_dmmodel_cw_1,
 	constraint_dmmodel_cw_2,
+	constraint_dmmodel_cw_3,
 	constraint_ifunc_0,
 	constraint_ifunc_1,
 	constraint_ifunc_2,

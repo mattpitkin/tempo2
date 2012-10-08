@@ -2183,6 +2183,10 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		}
 	      else if (i==param_dmmodel)
 		{
+// These commented lines will install the CM into a set of IFUNCs
+//		psr[p].ifuncN = psr[p].dmoffsNum;
+//		psr[p].param[param_ifunc].val[0]=2;
+//		psr[p].param[param_ifunc].paramSet[0]=1;
 		  for (k=0;k<psr[p].dmoffsNum;k++)
 		    {
 		      //		      printf("Updating %g by %g\n",psr[p].dmvalsDM[k],val[j]);
@@ -2193,6 +2197,10 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 
 		      psr[p].dmoffsOffset[k] = val[j];
 		      psr[p].dmoffsError[k] =  error[j];
+//		      psr[p].ifuncT[k]=psr[p].dmoffsMJD[k];
+//		      psr[p].ifuncV[k] -= val[j];
+//		      psr[p].ifuncE[k] =  error[j];
+
 		      j++;
 		    }
 		  j--;
@@ -2426,6 +2434,8 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 
 		// Notice that these case statements fall through, so order is defined
 		// based on which constraint name is used.
+		case constraint_dmmodel_cw_3:
+			order++;
 		case constraint_dmmodel_cw_2:
 			order++;
 		case constraint_dmmodel_cw_1:

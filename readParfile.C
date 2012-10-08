@@ -669,6 +669,9 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
       }
+      if((strcasecmp(cname,"DMMODEL_CUBIC")==0)){
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_3;
+      }
       if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_OLD")==0)){
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
