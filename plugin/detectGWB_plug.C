@@ -189,7 +189,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin2;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos2;
       sprintf(newname,"%s.new.par",psr[p].name);
-      textOutput(psr+p,1,0,0,0,1,newname);
+      if(write_debug_files)textOutput(psr+p,1,0,0,0,1,newname);
     }
 
   //
@@ -202,14 +202,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       formResiduals(psr,*npsr,1);         /* Form the residuals                 */
       //      if (i==0) doFitDCM(psr,dcmFile,covarFuncFile,*npsr,0);       /* Do the fitting     */
       if (i==0) doFit(psr,*npsr,0);       /* Do the fitting     */
-      else textOutput(psr,*npsr,globalParameter,0,0,0,tstr);  /* Display the output */
+      else if (write_debug_files)textOutput(psr,*npsr,globalParameter,0,0,0,tstr);  /* Display the output */
     }
   for (p=0;p<*npsr;p++)
     {
+	if(write_debug_files){
       sprintf(newname,"%s.afterfit.par",psr[p].name);
       textOutput(psr+p,1,0,0,0,1,newname);
 
-	if(write_debug_files){
       sprintf(tstr,"%s.ifuncDGW",psr[p].name);
       fout = fopen(tstr,"w");
       for (i=0;i<psr[p].ifuncN;i++)
