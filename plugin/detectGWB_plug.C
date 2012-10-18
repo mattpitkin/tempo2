@@ -34,6 +34,7 @@
 
 using namespace std;
 
+bool write_debug_files=true;
 double OMEGA0=0;
 
 void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char *dofFile);
@@ -94,6 +95,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   int useRed=0;
   int nSpecNdof;
+  int specStart;
 
   strcpy(dcmFile,"NULL");
   strcpy(covarFuncFile,"PSRJ");
@@ -128,6 +130,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	strcpy(dofFile,argv[++i]);
       else if (strcasecmp(argv[i],"-usered")==0)
 	useRed=1;
+      else if (strcasecmp(argv[i],"-fast")==0)
+	write_debug_files=false;
     }
 
   toffset = 0.5*(startMJD+endMJD);
@@ -204,12 +208,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       sprintf(newname,"%s.afterfit.par",psr[p].name);
       textOutput(psr+p,1,0,0,0,1,newname);
+
+	if(write_debug_files){
       sprintf(tstr,"%s.ifuncDGW",psr[p].name);
       fout = fopen(tstr,"w");
       for (i=0;i<psr[p].ifuncN;i++)
-	fprintf(fout,"%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
+			fprintf(fout,"%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
 
       fclose(fout);
+	}
     }
 
   // Now get a spectrum of each pulsar (should do this pairwise using the same
@@ -221,7 +228,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       fout = fopen(tstr,"w");
       getSpectrum(&psr[p],px1,py_r1,py_i1,&nSpec,toffset);
       for (i=0;i<nSpec;i++)
-	fprintf(fout,"%g %g %g\n",px1[i],py_r1[i],py_i1[i]);
+	if(write_debug_files)fprintf(fout,"%g %g %g\n",px1[i],py_r1[i],py_i1[i]);
       fclose(fout);
       }*/
 
@@ -256,17 +263,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      else nSpec = nSpec2;
 
 	      sprintf(tstr,"%s-%s.crossSpecDGW",psr[p1].name,psr[p2].name);
-	      fout2 = fopen(tstr,"w");
+	      if (write_debug_files) fout2 = fopen(tstr,"w");
 	      
 	      // Form the cross power spectrum
 	      for (i=0;i<nSpec;i++)
 		{
-		  crossX[i] = px1[i];
+		  crossX[i] = px1[i]; 
 		  crossY_r[i] = (py_r1[i]*py_r2[i]+py_i1[i]*py_i2[i]); // /(toverlap/365.25);
 		  crossY_i[i] = (py_i1[i]*py_r2[i]-py_i2[i]*py_r1[i]); // /(toverlap/365.25);
-		  fprintf(fout2,"%g %g %g %g %g %g %g\n",crossX[i],crossY_r[i],crossY_i[i],px1[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],px2[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i]);
+		  if (write_debug_files) fprintf(fout2,"%g %g %g %g %g %g %g\n",crossX[i],crossY_r[i],crossY_i[i],px1[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],px2[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i]);
 		}
-	      fclose(fout2);
+	      if (write_debug_files) fclose(fout2);
 	      angle[npair]  = (double)psrangle(psr[p1].param[param_raj].val[0],
 					       psr[p1].param[param_decj].val[0],
 					       psr[p2].param[param_raj].val[0],
@@ -310,7 +317,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  fscanf(fin,"%s %lf",dummy,&red_alpha2);
 		  fclose(fin);
 		}
+
 	      nSpecNdof=nSpec;
+	      specStart=0;
+	      if(useRed==1)nSpecNdof=0;
 	      for (i=0;i<nSpec;i++)
 		{
 		  pg = guessGWamp*guessGWamp*pow((double)(crossX[i]*365.25),alpha_res)/12.0/M_PI/M_PI;
@@ -323,11 +333,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		      pr2 = red_pwr2*pow((double)(crossX[i]*365.25),red_alpha2);
 		      modelPwr1 += pr1;
 		      modelPwr2 += pr2;
-		      if (pr1 + pw1 > pg || pr2 + pw2 > pg)
-			{
-			  nSpecNdof = i;
-			  break;
-			}
+                      if (nSpecNdof==0){
+			      if(pg > pr1+pw1 && pg > pr2+pw2){
+				      nSpecNdof++;
+			      } else {
+				      specStart++;
+			      }
+		      } else {
+			      if(pg > pr1 && pg > pr2){
+				      nSpecNdof++;
+			      } else{
+				      break;
+			      }
+		      }
 		    }
 		  //
 		  // Should check this 0.5+zeta^2
@@ -337,24 +355,24 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  printf("In here with %s-%s %g %g %g %g %g %g\n",psr[p1].name,psr[p2].name,pg,pw1,pw2,guessGWamp,crossX[i],crossPowerErr[i]);
 		}
 	      
-	      nSpec = nSpecNdof;
+	      nSpec = nSpecNdof+specStart;
 
-	      if (nSpec > 0)
+	      if (nSpecNdof > 0)
 		{
 		  sum1=sum2=sum3=sum4=0.0L;
 		  weight1 = -alpha_res;
 		  sprintf(tstr,"%s-%s.weightDGW",psr[p1].name,psr[p2].name);
-		  fout2 = fopen(tstr,"w");
+		  if(write_debug_files)fout2 = fopen(tstr,"w");
 		  
-		  for (i=0;i<nSpec;i++)
+		  for (i=specStart;i<nSpec;i++)
 		    {
 		      sum1 += (crossY_r[i]*pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2));
 		      sum2 += (pow((double)(i+1),-2.0*weight1)/pow(crossPowerErr[i],2));
 		      sum3 += (crossY_i[i]*pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2));
 		      sum4 += (1.0/pow(crossPowerErr[i],2)/pow((double)(i+1),2.0*weight1));
-		      fprintf(fout2,"%g %g %g %g\n",crossPowerErr[i],(pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2)),(pow((double)(i+1),-2.0*weight1)/pow(crossPowerErr[i],2)),(1.0/pow(crossPowerErr[i],2)/pow((double)(i+1),2.0*weight1)));
+		      if(write_debug_files)fprintf(fout2,"%g %g %g %g\n",crossPowerErr[i],(pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2)),(pow((double)(i+1),-2.0*weight1)/pow(crossPowerErr[i],2)),(1.0/pow(crossPowerErr[i],2)/pow((double)(i+1),2.0*weight1)));
 		    }
-		  fclose(fout2);
+		  if (write_debug_files) fclose(fout2);
 		  printf("Complete weighting\n");
 		  a2zeta[npair]    = 12.0*M_PI*M_PI/pow(toverlap/365.25,weight1)*(sum1/sum2); // Equation 9 in Yardley et al.
 		  printf("Step2\n");
@@ -364,7 +382,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  printf("Step4\n");
 		  printf("v1 = %g\n",angle[npair]);
 		  printf("v2 = %g\n",a2zeta[npair]);
-		  fprintf(fout,"%g %g %g %s %s %g %g %g %g %d %d %d\n",angle[npair],a2zeta[npair],a2zeta_e[npair],psr[p1].name,psr[p2].name,(double)sum1,(double)sum2,(double)weight1,(double)toverlap,nSpec,nSpec1,nSpec2);
+		  fprintf(fout,"%g %g %g %s %s %g %g %g %g %d %d %d\n",angle[npair],a2zeta[npair],a2zeta_e[npair],psr[p1].name,psr[p2].name,(double)sum1,(double)sum2,(double)weight1,(double)toverlap,nSpec,specStart,nSpecNdof);
 		  printf("Step5\n");
 		  npair++;
 		  printf("Trying next pulsar pair\n");
