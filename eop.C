@@ -159,7 +159,8 @@ get_EOP(double mjd, double *xp, double *yp, double *dut1,
     {
       char msg2[1000];
       sprintf(msg2,"%.2f. Using %.1lf instead",mjd,samp[proxy].mjd);
-      displayMsg(1,"EPH1","No Earth orientation parameters for MJD ",msg2,dispWarnings);      
+      if( dispWarnings != 2 )
+        displayMsg(1,"EPH1","No Earth orientation parameters for MJD ",msg2,dispWarnings);      
     }
     // GHOBBS: Added next line (and removed the 'return' after) otherwise dut1dot never gets set!
     mjd = samp[proxy].mjd;

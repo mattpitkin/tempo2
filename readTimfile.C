@@ -450,7 +450,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	  if (time!=0.0) 
 	    {
 	      psr->obsn[nObs].sat += time/60.0/60.0/24.0;
-	      printf("psr %s adding time >%g<\n",psr->name,time);
+	      if( debugFlag ) printf("psr %s adding time >%g<\n",psr->name,time);
 	    }
 	  if (efloor!=-1 && psr->obsn[nObs].toaErr < efloor) psr->obsn[nObs].toaErr = efloor;
 	  if (emax!=-1 && psr->obsn[nObs].toaErr > emax) psr->obsn[nObs].deleted = 1;
@@ -539,7 +539,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 		  double dtime;
 		  sscanf(line,"%s %lf",param1,&dtime);
 		  time+=dtime;
-		  printf("Updating time: %g %g\n",dtime,time);
+		  if( debugFlag ) printf("Updating time: %g %g\n",dtime,time);
 
 		}
 	      else if (strcasecmp(param1,"MODE")==0) /* Fit with errors */

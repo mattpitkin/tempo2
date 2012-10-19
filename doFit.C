@@ -837,31 +837,33 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
   else if (i==param_f)         /* Rotational frequency */
     {
       if (k==0)
-	afunc = x*24.0L*3600.0L/psr->param[param_f].val[0];
+        afunc = x*24.0L*3600.0L/psr->param[param_f].val[0];
       else if (k==1)    /* Rotational frequency derivative */
-	afunc = 0.5L*x*x;
+        afunc = 0.5L*x*x;
       else if (k==2)    /* Rotational frequency second derivative */
-	afunc = 1.0L/6.0L*x*x*x/1.0e9L;
+        afunc = 1.0L/6.0L*x*x*x/1.0e9L;
       else if (k==3)
-	afunc = 1.0L/24.0L*x/1.0e18L*x*x*x;
+        afunc = 1.0L/24.0L*x/1.0e18L*x*x*x;
       else if (k==4)
-	afunc = 1.0L/120.0L*x*x*x*x*x/1.0e18L;
+        afunc = 1.0L/120.0L*x*x*x*x*x/1.0e18L;
       else if (k==5)
-	afunc = 1.0L/720.0L*powl(x,6.0L)/1.0e18L;
+        afunc = 1.0L/720.0L*powl(x,6.0L)/1.0e18L;
       else if (k==6)
-	afunc = 1.0L/5040.0L*powl(x,7.0L)/1.0e18L;
+        afunc = 1.0L/5040.0L*powl(x,7.0L)/1.0e18L;
       else if (k==7)
-	afunc = 1.0L/40320.0L*powl(x,8.0L)/1.0e18L;
+        afunc = 1.0L/40320.0L*powl(x,8.0L)/1.0e18L;
       else if (k==8)
-	afunc = 1.0L/362880.0L*powl(x,9.0L)/1.0e18L;
+        afunc = 1.0L/362880.0L*powl(x,9.0L)/1.0e18L;
       else if (k==9)
-	afunc = 1.0L/3628800.0L*powl(x,10.0L)/1.0e18L;
+        afunc = 1.0L/3628800.0L*powl(x,10.0L)/1.0e18L;
       else if (k==10)
-	afunc = 1.0L/3628800.0L/11.0L*powl(x,11.0L)/1.0e23L;
+        afunc = 1.0L/3628800.0L/11.0L*powl(x,11.0L)/1.0e23L;
       else if (k==11)
-	afunc = 1.0L/3628800.0L/11.0L/12.0L*powl(x,12.0L)/1.0e23L;
+        afunc = 1.0L/3628800.0L/11.0L/12.0L*powl(x,12.0L)/1.0e23L;
       else if (k==12)
-	afunc = 1.0L/3628800.0L/11.0L/12.0L/13.0L*powl(x,13.0L)/1.0e23L;
+        afunc = 1.0L/3628800.0L/11.0L/12.0L/13.0L*powl(x,13.0L)/1.0e23L;
+      else if (k==13)
+        afunc = 1.0L/3628800.0L/11.0L/12.0L/13.0L/14.0L*powl(x,14.0L)/1.0e23L;
     }
   else if (i==param_dshk)
     {
@@ -1899,7 +1901,6 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 void updateParameters(pulsar *psr,int p,double *val,double *error)
 {
   int i,j,k;
-  printf("UPDATING PARAMETERS !!!!\n");
   if (debugFlag==1) printf("Updating parameters\n");
   psr[p].offset = val[0];
   psr[p].offset_e = error[0];

@@ -13,11 +13,11 @@ else
 ifeq ($(UNAME), SunOS)
  DSO =  $(CXX)  -shared -fPIC -o
  LDSO = -fPIC -ldl -lf2c
- CXXFLAGS := $(CXXFLAGS) -fPIC
+ CXXFLAGS := $(CXXFLAGS) -fPIC -Wno-unused-result
 else
  DSO =  $(CXX)  -shared -o
  LDSO = -fPIC -Wl,--export-dynamic -ldl 
- CXXFLAGS := $(CXXFLAGS) -fPIC
+ CXXFLAGS := $(CXXFLAGS) -fPIC -Wno-unused-result
 endif
 endif
 
