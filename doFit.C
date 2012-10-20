@@ -58,6 +58,8 @@ void doFit(pulsar *psr,int npsr,int writeModel)
   if (debugFlag==1) printf("Entering doFit\n");
   if (debugFlag==1) printf("Fitting with function: %s\n",psr[0].fitFunc);
 
+  computeConstraintWeights(psr,npsr);
+
   if (strcmp(psr[0].fitFunc,"default")!=0)
     {
       char *(*entry)(pulsar *,int,int);
@@ -277,6 +279,8 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   //  printf("WARNING: Switching weighting off for the fit\n");
   //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
   clk=clock();  
+
+  computeConstraintWeights(psr,npsr);
   //  printf("Tcheck: Starting Cholesky fit (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (strcmp(psr[0].fitFunc,"default")!=0)
     {

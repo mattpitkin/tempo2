@@ -3,6 +3,8 @@
 
 std::string get_constraint_name(enum constraint c);
 
+void computeConstraintWeights(pulsar *psr,int npsr);
+
 /*
  * Constraints must be specified in the constraint enum in tempo2.h
  *

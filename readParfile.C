@@ -764,6 +764,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       sscanf(str+5,"%d",&number);
 
       fscanf(fin,"%lf %lf %lf",&psr->ifuncT[number-1],&psr->ifuncV[number-1],&psr->ifuncE[number-1]);
+      psr->ifunc_weights[number-1]=1.0;
       if (psr->ifuncN < number) psr->ifuncN = number;
     }
   else if ((strstr(str,"TEL_CLK_OFFS")!=NULL || strstr(str,"tel_clk_offs")!=NULL) &&

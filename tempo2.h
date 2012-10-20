@@ -445,7 +445,7 @@ typedef struct pulsar {
 
   // IFUNC
 
-  double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC];
+  double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC],ifunc_weights[MAX_IFUNC];
   int    ifuncN;
 
   double clk_offsT[MAX_TEL_CLK_OFFS], clk_offsV[MAX_TEL_CLK_OFFS];

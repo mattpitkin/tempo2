@@ -75,6 +75,40 @@ std::string get_constraint_name(enum constraint c){
 	}
 }
 
+
+/*
+ * Derive the weighting functions for the constraints, based upon the ToA errors.
+ *
+ */
+void computeConstraintWeights(pulsar *psr, int npsr){
+	for (int p=0; p<npsr; p++){
+		for (int k=0; k < psr[p].ifuncN; k++){
+			psr[p].ifunc_weights[k]=1.0;
+		}
+		for (int i=0; i < psr[p].nobs; i++){
+			if (psr[p].obsn[i].deleted==0){
+				// compute the weight that this ToA applies to each IFUNC
+				for (int k=0;k<psr[p].ifuncN-1;k++)
+				{
+					if ((double)psr[p].obsn[i].sat >= psr[p].ifuncT[k] &&
+							(double)psr[p].obsn[i].sat < psr[p].ifuncT[k+1])
+					{
+						double w=1.0/psr[p].obsn[i].toaErr;
+						double dt=(psr[p].ifuncT[k+1]-psr[p].ifuncT[k]);
+						double t=(double)psr[p].obsn[i].sat-psr[p].ifuncT[k];
+						printf("%d %d %lf %lf %lf %lf\n",i,k,w,dt,t,psr[p].ifunc_weights[k]);
+						psr[p].ifunc_weights[k+1]+=w*t/dt;
+						psr[p].ifunc_weights[k]+=w*(1.0-t/dt);
+						break;
+					}
+				}
+
+			}
+		}
+	}
+	return;
+}
+
 double consFunc_dmmodel_mean(pulsar *psr,int i,int k){
 	/*
 	 * Only operate on param=dmmodel and when fit parameter is 
@@ -129,41 +163,41 @@ double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k,int order){
 
 
 double consFunc_tel_dx(pulsar *psr,int i,int k,int order){
-  if(i==param_tel_dx){
-    long double epoch = psr->param[param_pepoch].val[0];
-    return pow(psr->telDX_t[k]-epoch,order);
-  }
-  else return 0;
+	if(i==param_tel_dx){
+		long double epoch = psr->param[param_pepoch].val[0];
+		return pow(psr->telDX_t[k]-epoch,order);
+	}
+	else return 0;
 }
 
 double consFunc_tel_dy(pulsar *psr,int i,int k,int order){
-  if(i==param_tel_dy){
-    long double epoch = psr->param[param_pepoch].val[0];
-    return pow(psr->telDY_t[k]-epoch,order);
-  }
-  else return 0;
+	if(i==param_tel_dy){
+		long double epoch = psr->param[param_pepoch].val[0];
+		return pow(psr->telDY_t[k]-epoch,order);
+	}
+	else return 0;
 }
 
 double consFunc_tel_dz(pulsar *psr,int i,int k,int order){
-  if(i==param_tel_dz){
-    printf("In contraint with k = %d, order = %d\n",k,order); 
-    long double epoch = psr->param[param_pepoch].val[0];
-    return pow(psr->telDZ_t[k]-epoch,order);
-  }
-  else return 0;
+	if(i==param_tel_dz){
+		printf("In contraint with k = %d, order = %d\n",k,order); 
+		long double epoch = psr->param[param_pepoch].val[0];
+		return pow(psr->telDZ_t[k]-epoch,order);
+	}
+	else return 0;
 }
 
 double consFunc_ifunc(pulsar *psr,int i,int k,int order){
-  /*
-   * Only operate on param=ifunc and when fit parameter is 
-   * one of the frequency independant parts (i.e. last ifuncN).
-   */
-  if(i==param_ifunc){
-    long double epoch = psr->param[param_pepoch].val[0];
-      return 1*pow(psr->ifuncT[k]-epoch,order);
+	/*
+	 * Only operate on param=ifunc and when fit parameter is 
+	 * one of the frequency independant parts (i.e. last ifuncN).
+	 */
+	if(i==param_ifunc){
+		long double epoch = psr->param[param_pepoch].val[0];
+		return psr->ifunc_weights[k]*pow(psr->ifuncT[k]-epoch,order);
 
-  }
-  else return 0;
+	}
+	else return 0;
 }
 
 double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
@@ -171,50 +205,50 @@ double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
 	 * Only operate on param=dmmodel and when fit parameter is 
 	 * one of the frequency independant parts (i.e. last dmoffsNum).
 	 */
-  if(i==param_ifunc && k < psr->ifuncN){
-    long double epoch = psr->param[param_pepoch].val[0];
-    long double t = psr->ifuncT[k%psr->ifuncN]-epoch;
-    long double x = 2.0*M_PI*t/365.25;
-    switch (order){
-    case 0:
-      return sin(x);
-    case 1:
-      return cos(x);
-    case 2:
-      return x*sin(x);
-    case 3:
-      return x*cos(x);
-    case 4:
-      return sin(2*x);
-    case 5:
-      return cos(2*x);
-      
-    default:
-      return 0;
-    }
-  } else return 0;
+	if(i==param_ifunc && k < psr->ifuncN){
+		long double epoch = psr->param[param_pepoch].val[0];
+		long double t = psr->ifuncT[k%psr->ifuncN]-epoch;
+		long double x = 2.0*M_PI*t/365.25;
+		switch (order){
+			case 0:
+				return psr->ifunc_weights[k]*sin(x);
+			case 1:
+				return psr->ifunc_weights[k]*cos(x);
+			case 2:
+				return psr->ifunc_weights[k]*x*sin(x);
+			case 3:
+				return psr->ifunc_weights[k]*x*cos(x);
+			case 4:
+				return psr->ifunc_weights[k]*sin(2*x);
+			case 5:
+				return psr->ifunc_weights[k]*cos(2*x);
+
+			default:
+				return 0;
+		}
+	} else return 0;
 }
 
 
 double consFunc_quad_ifunc_p(pulsar *psr,int i,int k,int order){
-  /*
-   * Only operate on param=ifunc and when fit parameter is 
-   * one of the frequency independant parts (i.e. last ifuncN).
-   */
-  if(i==param_quad_ifunc_p){
-    long double epoch = psr->param[param_pepoch].val[0];
-    return pow(psr->quad_ifuncT_p[k]-epoch,order);
-  }
-  else return 0;
+	/*
+	 * Only operate on param=ifunc and when fit parameter is 
+	 * one of the frequency independant parts (i.e. last ifuncN).
+	 */
+	if(i==param_quad_ifunc_p){
+		long double epoch = psr->param[param_pepoch].val[0];
+		return pow(psr->quad_ifuncT_p[k]-epoch,order);
+	}
+	else return 0;
 }
 double consFunc_quad_ifunc_c(pulsar *psr,int i,int k,int order){
-  /*
-   * Only operate on param=ifunc and when fit parameter is 
-   * one of the frequency independant parts (i.e. last ifuncN).
-   */
-  if(i==param_quad_ifunc_c){
-    long double epoch = psr->param[param_pepoch].val[0];
-    return pow(psr->quad_ifuncT_c[k]-epoch,order);
-  }
-  else return 0;
+	/*
+	 * Only operate on param=ifunc and when fit parameter is 
+	 * one of the frequency independant parts (i.e. last ifuncN).
+	 */
+	if(i==param_quad_ifunc_c){
+		long double epoch = psr->param[param_pepoch].val[0];
+		return pow(psr->quad_ifuncT_c[k]-epoch,order);
+	}
+	else return 0;
 }
