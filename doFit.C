@@ -131,13 +131,13 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	/*
 	 * Check for "broken" combinations of fit parameters
 	 */
-	if (psr->param[param_dmmodel].paramSet[0] &&
-			psr->param[param_dm].fitFlag[0]!= 0 &&
-			psr->param[param_dmmodel].linkTo[0] != param_dm){
+	if (psr[p].param[param_dmmodel].paramSet[0] &&
+			psr[p].param[param_dm].fitFlag[0]!= 0 &&
+			psr[p].param[param_dmmodel].linkTo[0] != param_dm){
 		// if we are using DMMODEL, and we want to fit for DM then
 		// DMMODEL must be linked to DM... otherwise badness will occur!
 		printf("WARNING: DM cannot be fit with DMMODEL\n         unless you set 'DMMODEL DM 1' in par file.\n");
-		psr->param[param_dm].fitFlag[0]=0;
+		psr[p].param[param_dm].fitFlag[0]=0;
 	}
 
 
@@ -345,13 +345,13 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       /*
        * Check for "broken" combinations of fit parameters
        */
-      if (psr->param[param_dmmodel].paramSet[0] &&
-		      psr->param[param_dm].fitFlag[0]!= 0 &&
-		      psr->param[param_dmmodel].linkTo[0] != param_dm){
+      if (psr[p].param[param_dmmodel].paramSet[0] &&
+		      psr[p].param[param_dm].fitFlag[0]!= 0 &&
+		      psr[p].param[param_dmmodel].linkTo[0] != param_dm){
 	      // if we are using DMMODEL, and we want to fit for DM then
 	      // DMMODEL must be linked to DM... otherwise badness will occur!
 	      printf("WARNING: DM cannot be fit with DMMODEL\n         unless you set 'DMMODEL DM 1' in par file.\n");
-	      psr->param[param_dm].fitFlag[0]=0;
+	      psr[p].param[param_dm].fitFlag[0]=0;
       }
 
       strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
