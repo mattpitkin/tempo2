@@ -1,2 +1,3 @@
 spectralModel_plug.C
 interpolate_plug.C
+analyticChol_plug.C

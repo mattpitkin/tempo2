@@ -1242,6 +1242,18 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 				break;
 		}
 	}
+	else if (key=='"'){
+		for(i=0; i < psr[0].dmoffsNum; i++){
+			cpgsci(6);
+			cpgsls(3);
+			cpgmove((float)(psr[0].dmoffsMJD[i]-centreEpoch),-1e-5);
+			cpgdraw((float)(psr[0].dmoffsMJD[i]-centreEpoch),1e-5);
+			cpgsls(1);
+		}
+		noreplot=1;
+		continue;
+	}
+
 	else if (key=='P') /* New parameter file */
 	  {
 	    textOutput(psr,npsr,0,0,0,1,"");

@@ -325,6 +325,7 @@ int main(int argc, char *argv[])
 	    fprintf(stderr, "dlerror() = %s\n",dlerror());
 	    return -1;
 	  }
+	  if (debugFlag==1) printf("--ENTER GRAPHICAL PLUGIN--\n");
 	  entry(argc,commandLine,psr,&npsr);
 	  return 0;
 	}

@@ -59,29 +59,29 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char dofFile[128]="";
   FILE *fout,*fin,*fout2;
   int  nSpec,nSpec1,nSpec2;
-  double px1[1024],py_r1[1024],py_i1[1024];
-  double px2[1024],py_r2[1024],py_i2[1024];
-  double crossX[1024],crossY_r[1024],crossY_i[1024];
+  double px1[4096],py_r1[4096],py_i1[4096];
+  double px2[4096],py_r2[4096],py_i2[4096];
+  double crossX[4096],crossY_r[4096],crossY_i[4096];
   double toverlap;
   
-  double angle[1024];
-  double a2zeta[1024],a2zeta_im[1024],a2zeta_e[1024];
+  double angle[4096];
+  double a2zeta[4096],a2zeta_im[4096],a2zeta_e[4096];
   long double sum1,sum2,sum3,sum4,weight1;
   double cx,zeta;
   int    npair=0;
-  char fname[1024];
+  char fname[4096];
 
   startMJD = 53000.0;
   endMJD   = 54806.0;
   stepMJD  = 100.0;
 
-  char dummy[1024];
+  char dummy[4096];
   double alpha1,fc1,amp1,pw1,alpha2,fc2,amp2,pw2;
 
   double guessGWamp = -1;
   double alpha_res = -13.0/3.0;
   double pg,modelPwr1,modelPwr2;
-  double crossPowerErr[1024];
+  double crossPowerErr[4096];
   double startOverlap,endOverlap;
 
   double red_alpha1,red_pwr1;
@@ -182,12 +182,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_0;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_1;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_2;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin;
+/*      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xsin;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xcos;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin2;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos2;
+      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos2;*/
       sprintf(newname,"%s.new.par",psr[p].name);
       if(write_debug_files)textOutput(psr+p,1,0,0,0,1,newname);
     }
@@ -209,6 +209,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	if(write_debug_files){
       sprintf(newname,"%s.afterfit.par",psr[p].name);
       textOutput(psr+p,1,0,0,0,1,newname);
+	}
 
       sprintf(tstr,"%s.ifuncDGW",psr[p].name);
       fout = fopen(tstr,"w");
@@ -216,7 +217,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			fprintf(fout,"%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
 
       fclose(fout);
-	}
     }
 
   // Now get a spectrum of each pulsar (should do this pairwise using the same
@@ -352,7 +352,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  //
 		  //	      crossPowerErr[i] = sqrt((0.5+zeta*zeta)*modelPwr1*modelPwr2);
 		  crossPowerErr[i] = sqrt(modelPwr1*modelPwr2);
-		  printf("In here with %s-%s %g %g %g %g %g %g\n",psr[p1].name,psr[p2].name,pg,pw1,pw2,guessGWamp,crossX[i],crossPowerErr[i]);
+//		  printf("In here with %s-%s %g %g %g %g %g %g\n",psr[p1].name,psr[p2].name,pg,pw1,pw2,guessGWamp,crossX[i],crossPowerErr[i]);
 		}
 	      
 	      nSpec = nSpecNdof+specStart;

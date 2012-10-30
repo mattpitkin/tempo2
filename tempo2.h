@@ -30,7 +30,7 @@
 #define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
 #define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
-#define MAX_PSR_VAL          23    /* Maximum number of pulsars                        */             
+#define MAX_PSR_VAL          40    /* Maximum number of pulsars                        */             
 #define MAX_COMPANIONS       4     /* Maximum number of binary companions              */
 #define NE_SW_DEFAULT        4     /* Default value for electron density (cm-3) at 1AU due to solar wind */
 #define ECLIPTIC_OBLIQUITY_VAL 84381.4059 /* mean obliquity of ecliptic in arcsec        */
@@ -345,6 +345,7 @@ typedef struct pulsar {
   double dmoffsDMe[MAX_IFUNC];
   double dmoffsOffset[MAX_IFUNC];
   double dmoffsError[MAX_IFUNC];
+  double dmoffsCWeights[2*MAX_IFUNC];
 
   // Single source gravitational wave information
   double gwsrc_ra;

@@ -94,10 +94,14 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 
 
 		{
+				printf("tt\n");
 			p=0;
 			dmf=fopen("dm.model","w");
 			for (i=0;i<(int)psr[p].dmoffsNum;i++){
-				fprintf(dmf,"%lf %.15lg %.15lg %.15lg %.15lg\n",(double)psr[p].dmoffsMJD[i],(double)psr[p].dmoffsDM[i],(double)psr[p].dmoffsDMe[i],(double)psr[p].dmoffsOffset[i],(double)psr[p].dmoffsError[i]);
+				fprintf(dmf,"%lf %.15lg %.15lg %.15lg %.15lg\n",
+								(double)psr[p].dmoffsMJD[i],
+								(double)psr[p].dmoffsDM[i],(double)psr[p].dmoffsDMe[i],
+								(double)psr[p].dmoffsOffset[i],(double)psr[p].dmoffsError[i]);
 			}
 			fclose(dmf);
 			dmf=fopen("dm.toas","w");
