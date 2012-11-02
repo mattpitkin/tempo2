@@ -404,14 +404,61 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
    int *goodvals;
    int i,j;
 
-   logdbg("Adding matrix m to mm (MJD range: %f -> %f)",mjd_start,mjd_end);
+   int istart=0;
+   int iend=0;
 
+   logdbg("Adding matrix m to mm (MJD range: %f -> %f)",mjd_start,mjd_end);
    for(i=0;i<np-nc;i++){
-	  if(psr->obsn[ip[i]].sat > mjd_start && psr->obsn[ip[i]].sat < mjd_end){
-		 for(j=0;j<np-nc;j++){
-			if(psr->obsn[ip[j]].sat > mjd_start && psr->obsn[ip[j]].sat < mjd_end)
-			   m[i][j]+=mm[i][j];
+	  if(psr->obsn[ip[i]].sat>mjd_start){
+		 istart=i;
+		 break;
+	  }
+   }
+   for(i=np-nc-1; i>=0;i--){
+	  if(psr->obsn[ip[i]].sat < mjd_end){
+		 iend=i;
+		 break;
+	  }
+   }
+
+   logdbg("istart=%d iend=%d (%d)",istart,iend,np-nc);
+
+   /****
+	*
+	* TODO: Need to fix this - should not have 200 in it.
+	*
+	* Needs to have point closest to start/end as reference point for each way.
+	*
+	*
+	*/
+   for(i=0;i<np-nc;i++){
+	  for(j=0;j<np-nc;j++){
+		 if( (psr->obsn[ip[j]].sat > mjd_start && psr->obsn[ip[j]].sat < mjd_end)
+			   && (psr->obsn[ip[i]].sat > mjd_start && psr->obsn[ip[i]].sat < mjd_end))
+			m[i][j]+=mm[i][j]; // 1
+		 else{
+			if((psr->obsn[ip[j]].sat < mjd_start) && (psr->obsn[ip[i]].sat < mjd_start))
+			   m[i][j]+=mm[istart][istart]; // 2
+			else if((psr->obsn[ip[j]].sat > mjd_end) && (psr->obsn[ip[i]].sat > mjd_end))
+			   m[i][j]+=mm[iend][iend]; // 3
+			else if((psr->obsn[ip[j]].sat < mjd_start) && (psr->obsn[ip[i]].sat > mjd_end))
+			   m[i][j]+=mm[istart][iend]; //4
+			else if((psr->obsn[ip[j]].sat > mjd_end) && (psr->obsn[ip[i]].sat < mjd_start))
+			   m[i][j]+=mm[istart][iend]; //5
+			else if((psr->obsn[ip[j]].sat > mjd_end)
+				&& ((psr->obsn[ip[i]].sat > mjd_start ) && (psr->obsn[ip[i]].sat < mjd_end)))
+			   m[i][j]+=mm[i][iend]; // 6
+			else if((psr->obsn[ip[j]].sat < mjd_start)
+				&& ((psr->obsn[ip[i]].sat > mjd_start ) && (psr->obsn[ip[i]].sat < mjd_end)))
+			   m[i][j]+=mm[i][istart]; // 7
+			else if((psr->obsn[ip[i]].sat > mjd_end)
+				&& ((psr->obsn[ip[j]].sat > mjd_start ) && (psr->obsn[ip[j]].sat < mjd_end)))
+			   m[i][j]+=mm[iend][j]; // 8
+			else if((psr->obsn[ip[i]].sat < mjd_start)
+				&& ((psr->obsn[ip[j]].sat > mjd_start ) && (psr->obsn[ip[j]].sat < mjd_end)))
+			   m[i][j]+=mm[istart][j]; // 9
 		 }
+
 	  }
    }
 }

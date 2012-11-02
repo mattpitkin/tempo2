@@ -111,6 +111,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		}
 
 
+		if (strcmp(argv[i],"-debug")==0){
+			writeTextFiles=1;
+		}
 
 
 		else if (strcmp(argv[i],"-seed")==0){
@@ -237,6 +240,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				sum+=dms[j];
 			}
 			sum/=psr[p].nobs;
+			int mm=-1;
 			for (j=0;j<psr[p].nobs;j++){
 				dms[j]-=sum;
 				double ofreq=psr[p].obsn[j].freqSSB;

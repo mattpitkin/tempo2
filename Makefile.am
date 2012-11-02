@@ -61,7 +61,12 @@ unsupported:
 unsupported-install: unsupported
 	$(MAKE) -C unsupported_plugins install
 
-.PHONY: plugins-install plugins unsupported_plugins
+complete: all unsupported plugins
+	@echo "Built all, plugins, unsupported"
+complete-install: install unsupported-install plugins-install
+	@echo "Installed tempo2, plugins, unsupported"
+
+.PHONY: plugins-install plugins unsupported unsupported-install complete complete-install
 
 install-data-hook:
 	@echo ""

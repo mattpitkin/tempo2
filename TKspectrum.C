@@ -1823,15 +1823,16 @@ int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *spec
       GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
       logdbg("Doing leastSquares fit, k=%d",k);
       TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
+	  if (k%32==0)printf("\n");
 	  printf(".");
 	  fflush(stdout);
-	  if (k%32==0)printf("\n");
       logdbg("Done leastSquares fit");
       v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
       specX[k] = GLOBAL_OMEGA/2.0/M_PI;
       specY_R[k] = sqrt(v[k])*param[1];
       specY_I[k] = sqrt(v[k])*param[2];
     }
+  printf("\n");
 
   //  for (i=0;i<nfit;i++)
   //    free(cvm[i]);

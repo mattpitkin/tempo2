@@ -252,6 +252,14 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
 	}
     }
   multMatrixVec(uinv,b,n,bout);
+  if(debugFlag==1){
+	 logdbg("Writing out whitened residuals");
+	 FILE* wFile=fopen("white.res","w");
+	 for (i=0;i<n;i++)
+		fprintf(wFile,"%lg %lg %lg\n",x[i],bout[i],b[i]);
+	 fclose(wFile);
+  }
+
   for (i=0;i<n;i++)
     b[i] = bout[i];
   /* Now carry out the singular value decomposition */
