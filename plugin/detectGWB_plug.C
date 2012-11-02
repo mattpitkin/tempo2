@@ -76,6 +76,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   stepMJD  = 100.0;
 
   char dummy[4096];
+
   double alpha1,fc1,amp1,pw1,alpha2,fc2,amp2,pw2;
 
   double guessGWamp = -1;
@@ -182,12 +183,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_0;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_1;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_2;
-/*      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin;
+
+      /*      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xsin;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xcos;
       psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin2;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos2;*/
+      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos2; */
       sprintf(newname,"%s.new.par",psr[p].name);
       if(write_debug_files)textOutput(psr+p,1,0,0,0,1,newname);
     }
@@ -259,8 +261,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      printf("Processing pair: %s--%s\n",psr[p1].name,psr[p2].name);
 	      getSpectrum(&psr[p1],px1,py_r1,py_i1,&nSpec1,toffset,startOverlap,endOverlap,stepMJD,dofFile);
 	      getSpectrum(&psr[p2],px2,py_r2,py_i2,&nSpec2,toffset,startOverlap,endOverlap,stepMJD,dofFile);
+
+
 	      if (nSpec1 < nSpec2) nSpec = nSpec1;
 	      else nSpec = nSpec2;
+
 
 	      sprintf(tstr,"%s-%s.crossSpecDGW",psr[p1].name,psr[p2].name);
 	      if (write_debug_files) fout2 = fopen(tstr,"w");
@@ -291,8 +296,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      fscanf(fin,"%s %lf",dummy,&alpha1);
 	      fscanf(fin,"%s %lf",dummy,&fc1);
 	      fscanf(fin,"%s %lf",dummy,&amp1);
-	      fscanf(fin,"%s %lf",dummy,&pw1);
-	      fclose(fin);
+	      if (fscanf(fin,"%s %lf",dummy,&pw1)!=2)
+		{
+		  printf("Unable to read whitenoise level >%s<\n",fname);
+		  exit(1);
+		}
+	      fclose(fin); 
 	      
 	      sprintf(fname,"%s.model",psr[p2].name);
 	      fin = fopen(fname,"r");
@@ -382,7 +391,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  printf("Step4\n");
 		  printf("v1 = %g\n",angle[npair]);
 		  printf("v2 = %g\n",a2zeta[npair]);
-		  fprintf(fout,"%g %g %g %s %s %g %g %g %g %d %d %d\n",angle[npair],a2zeta[npair],a2zeta_e[npair],psr[p1].name,psr[p2].name,(double)sum1,(double)sum2,(double)weight1,(double)toverlap,nSpec,specStart,nSpecNdof);
+
+		  fprintf(fout,"%g %g %g %s %s %g %g %g %g %d %d %d %s %s\n",angle[npair],a2zeta[npair],a2zeta_e[npair],psr[p1].name,psr[p2].name,(double)sum1,(double)sum2,(double)weight1,(double)toverlap,nSpec,nSpec1,nSpec2,timFile[p1],timFile[p2]);
 		  printf("Step5\n");
 		  npair++;
 		  printf("Trying next pulsar pair\n");
@@ -462,9 +472,12 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
 
   // Have 8 originally
   //  *nSpec = 20;
-  *nSpec = (int)((((endOverlap-startOverlap)/(double)(stepMJD))-1)/2.0);
-  //      *nSpec = 10;
-  
+    *nSpec = (int)((((endOverlap-startOverlap)/(double)(stepMJD))-1)/2.0);
+  //  *nSpec = 10;
+  //  *nSpec=20;
+
+  //  *nSpec = 5;
+
   printf("Number of spectral channels = %d\n",*nSpec);
   uinv = (double **)malloc(sizeof(double *)*n);
   for (i=0;i<n;i++)
