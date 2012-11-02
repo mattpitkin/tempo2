@@ -133,7 +133,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	    gr=1;
 	  else if (strcmp(argv[i],"-dcm")==0)
 	    strcpy(dcmFile,argv[++i]);
-	  else if (strcmp(argv[i],"-dcf")==0)
+	  else if ((strcmp(argv[i],"-dcf")==0) || (strcmp(argv[i],"-chol")==0))
 	    strcpy(covarFuncFile,argv[++i]);
 	  else if (strcmp(argv[i],"-filter")==0)
 	    {

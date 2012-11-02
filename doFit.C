@@ -55,8 +55,8 @@ void doFit(pulsar *psr,int npsr,int writeModel)
   int count;
 
   if (displayCVSversion == 1) CVSdisplayVersion("doFit.C","doFit()",CVS_verNum);
-  if (debugFlag==1) printf("Entering doFit\n");
-  if (debugFlag==1) printf("Fitting with function: %s\n",psr[0].fitFunc);
+  logdbg("Entering doFit");
+  logdbg("Fitting with function: %s",psr[0].fitFunc);
 
   computeConstraintWeights(psr,npsr);
 
@@ -187,12 +187,13 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 		}
 	    }
 	}
+	  int last=count-1;
      // add constraints as extra pseudo observations
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
      for (i=0; i < psr[p].nconstraints; i++){
        ip[count] = psr[p].nobs+i;  // This was a mistake -- originally had psr->nobs 
-	x[count]=0;
+	x[count]=x[last];
 	y[count]=0;
 	sig[count]=1e-12;
 	count++;
@@ -207,13 +208,13 @@ void doFit(pulsar *psr,int npsr,int writeModel)
       if (npol!=0) /* Are we actually  doing any fitting? */ 
 	{ 
 
-	  if (debugFlag==1) printf("Doing the fit\n");
+	  logdbg("Doing the fit");
 	  TKleastSquares_svd_psr(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip);
 	  //	  for (i=0;i<npol;i++)
 	  //	    printf("Val: %g %g\n",val[i],error[i]);
 	  //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
-	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
+	  logdbg("Complete fit: chisq = %f",(double)chisq);
 	  //
 	  // Display the covariance matrix 
 	  //	  for (i=0;i<npol;i++)
@@ -228,11 +229,11 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	  psr[p].fitNfree = psr[p].nFit-npol;
 	  //	  printf("Chisq = %g, reduced chisq = %g\n",(double)psr[p].fitChisq,(double)(psr[p].fitChisq/psr[p].fitNfree));
 	  /* Now update the parameters */
-	  if (debugFlag==1) printf("Updating the parameters\n");
+	  logdbg("Updating the parameters");
 	  //	  for (i=0;i<npol;i++)
 	  //	    printf("Fit values and errors are %g %g\n",val[i],error[i]);
 	  updateParameters(psr,p,val,error);
-	  if (debugFlag==1) printf("Completed updating the parameters\n");
+	  logdbg("Completed updating the parameters");
 	}
       /* Free the vectors and matrices */
       free(error);
@@ -255,7 +256,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 	  bootstrap(psr,p,npsr);
 	}
     }
-  if (debugFlag==1) printf("Leaving doFit\n");
+  logdbg("Leaving doFit");
 }
 
 /* Fitting routine with input data covariance matrix */
@@ -281,7 +282,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   clk=clock();  
 
   computeConstraintWeights(psr,npsr);
-  //  printf("Tcheck: Starting Cholesky fit (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  //  logtchk("Starting Cholesky fit (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (strcmp(psr[0].fitFunc,"default")!=0)
     {
       char *(*entry)(pulsar *,int,int);
@@ -339,7 +340,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
     {
       nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
-      printf("Tcheck: Processing pulsar %d\n",p);
+      logtchk("Processing pulsar %d",p);
       psr[p].fitMode = 0;
 
       /*
@@ -357,7 +358,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
       /* How many parameters are we fitting for */
-      printf("Tcheck: Determining which parameters we are fitting for  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      logtchk("Determining which parameters we are fitting for  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
       npol = getNparams(psr[p]);
       x     = (double *)malloc(nobs_and_constraints*sizeof(double));
       y     = (double *)malloc(nobs_and_constraints*sizeof(double));
@@ -400,18 +401,19 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 		}
 	    }
 	}
+	  int last=count-1;
       // add constraints as extra pseudo observations
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
      for (i=0; i < psr[p].nconstraints; i++){
 	ip[count] = psr[p].nobs+i;
-	x[count]=0;
+	x[count]=x[last];
 	y[count]=0;
 	sig[count]=1e-12;
 	count++;
       }
 
-     printf("Tcheck: Complete determining which parameters we are fitting for  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+     logtchk("Complete determining which parameters we are fitting for  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
       //      printf("Count = %d\n",count);
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
@@ -419,19 +421,19 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       psr[p].param[param_start].paramSet[0] = 1;
       psr[p].param[param_finish].paramSet[0] = 1; 
       
-      printf("Tcheck: removing mean from the residuals??  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      logtchk("removing mean from the residuals??  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
       for (i=0;i<psr[p].nobs;i++)
 	meanRes+=(long double)psr[p].obsn[i].residual;
       meanRes/=(long double)psr[p].nobs;
       for (i=0;i<psr[p].nobs;i++)
 	psr[p].obsn[i].residual-=meanRes;
-      printf("Tcheck: complete removing mean from the residuals??  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
-      printf("Tcheck: allocating memory for uinv  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      logtchk("complete removing mean from the residuals??  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      logtchk("allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
       uinv = (double **)malloc(sizeof(double *)*nobs_and_constraints);
 
       for (i=0;i<nobs_and_constraints;i++)
 	uinv[i] = (double *)malloc(sizeof(double)*nobs_and_constraints);
-      printf("Tcheck: complete allocating memory for uinv  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      logtchk("complete allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
       // If we have the data covariance matrix on disk
       if (strcmp(dcmFile,"NULL")!=0)
 	{
@@ -483,47 +485,9 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	}
       else // Use data covariance function and calculate the covariance matrix
 	{
-	  int ndays = ceil((x[count-1-psr[p].nconstraints]-x[0]));
-	  double covarFunc[ndays+1];
-	  double escaleFactor = 1.0;
-	  
-	  printf("Tcheck: reading covariance function from disk  (%.2f), ndays = %d\n",(clock()-clk)/(float)CLOCKS_PER_SEC,ndays);
-	  strcpy(fname,covarFuncFile);
-	  if (npsr>1)
-	    {
-	      sprintf(temp,"%s_%d",fname,p+1);
-	      strcpy(fname,temp);
-	      if (strcmp(covarFuncFile,"PSRJ")==0)
-		sprintf(fname,"covarFunc.dat_%s",psr[p].name);
-	    }
-	  //	  printf("Opening >%s<\n",fname);
-	  if (!(fin = fopen(fname,"r")))
-	    {
-	      printf("Unable to open covariance function file: %s\n",fname);
-	      exit(1);
-	    }
-	  if (debugFlag==1) printf("ndays = %d\n",ndays);
-	  fscanf(fin,"%lf",&escaleFactor);
-	  for (i=0;i<=ndays;i++)
-	    {
-	      if (fscanf(fin,"%lf",&covarFunc[i])!=1)
-		{
-		  printf("ERROR: Incorrect number of days in the Cholesky matrix: %s, trying to read %d days, pulsar %s, p = %d\n",fname,ndays,psr[p].name,p);
-		  exit(1);
-		}
-	    }
-	  fclose(fin);
-	  //	  printf("Read covariance function\n");
-	  //	  printf("WARNING: scaling all errors by: %g\n",escaleFactor);
-	  for (i=0;i<count;i++)
-	    sig[i]*=escaleFactor;
-	  printf("Tcheck: complete reading covariance function from disk  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
-	  // Form the data covariance matrix
-	  printf("Tcheck: forming Cholesky matrix  (%.2f) %s\n",(clock()-clk)/(float)CLOCKS_PER_SEC,psr[p].name);
-	  formCholeskyMatrix(covarFunc,ndays,x,y,sig,count,psr[p].nconstraints,uinv);
-	  printf("Tcheck: complete forming Cholesky matrix  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	   getCholeskyMatrix(uinv,covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip);
 	}
-      printf("Tcheck: writing debug info to disk\n");
+      logtchk("writing debug info to disk");
       sprintf(fname,"whitedata_%d.dat",p+1);
       fout = fopen(fname,"w");
       for (i=0;i<psr[p].nobs;i++)
@@ -537,28 +501,28 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 		  whiteres[i],(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr);
 	}
       fclose(fout);
-      printf("Tcheck: complete writing debug info to disk (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      logtchk("complete writing debug info to disk (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 
       /* Do the fit */
       if (npol!=0) /* Are we actually  doing any fitting? */ 
 	{ 
-	  if (debugFlag==1) printf("Doing the fit\n");
-	  printf("Tcheck: doing the fit  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logdbg("Doing the fit");
+	  logtchk("doing the fit  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  TKleastSquares_svd_psr_dcm(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip,uinv);
-	  printf("Tcheck: complete doing the fit  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("complete doing the fit  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
-	  if (debugFlag==1) printf("Complete fit: chisq = %f\n",(double)chisq);
+	  logdbg("Complete fit: chisq = %f",(double)chisq);
 	  //	  printf("chisq = %g\n",chisq);
 	  psr[p].fitChisq = chisq; 
 	  psr[p].fitNfree = psr[p].nFit-npol;
 	  
 	  /* Now update the parameters */
-	  if (debugFlag==1) printf("Updating the parameters\n");
-	  printf("Tcheck: updating the parameter values  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logdbg("Updating the parameters");
+	  logtchk("updating the parameter values  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  updateParameters(psr,p,val,error);
-	  printf("Tcheck: complete updating the parameter values  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
-	  if (debugFlag==1) printf("Completed updating the parameters\n");
+	  logtchk("complete updating the parameter values  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logdbg("Completed updating the parameters");
 	}   
       /* Free the vectors and matrices */
       free(error);
@@ -580,11 +544,11 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  printf("Calculating uncertainties on fitted parameters using a Monte-Carlo bootstrap method (%d)\n",psr[p].bootStrap);
 	  bootstrap(psr,p,npsr);
 	}
-      printf("Tcheck: freeing memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      logtchk("freeing memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
       for (i=0;i<nobs_and_constraints;i++)
 	free(uinv[i]);
       free(uinv);
-      printf("Tcheck: complete freeing memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+      logtchk("complete freeing memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
     }
 }
 
@@ -681,7 +645,7 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 	      if (i!=param_start && i!=param_finish)
 		{
 
-		  if (debugFlag==1) printf("Fitting for %d (%s)\n",i,psr->param[i].label[k]);
+		  logdbg("Fitting for %d (%s)",i,psr->param[i].label[k]);
 		  if (i==param_wave_om)
 		    {
 		      if (psr->waveScale==2)
@@ -1106,7 +1070,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  rr    = dotproduct(rca,rca);
 	  rcos1 = dotproduct(psr->posPulsar,rca);
 	  afunc = 0.5*pxConv*(rr-rcos1*rcos1)/AULTSC;
-	  if (debugFlag==1) printf("output fitting %g %g\n",(double)psr->obsn[ipos].bat,(double)afunc);
+	  logdbg("output fitting %g %g",(double)psr->obsn[ipos].bat,(double)afunc);
 	  /* Now consider adding the effects of other distance determinations */
 	  if (psr->param[i].nLinkFrom == 1 &&
 	      psr->param[i].linkFrom[0] == param_dshk)
@@ -1905,7 +1869,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 void updateParameters(pulsar *psr,int p,double *val,double *error)
 {
   int i,j,k;
-  if (debugFlag==1) printf("Updating parameters\n");
+  logdbg("Updating parameters");
   psr[p].offset = val[0];
   psr[p].offset_e = error[0];
   j=1;
@@ -2247,23 +2211,23 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
   if (strcmp(psr[p].binaryModel,"DDGR")==0) 
     DDGRmodel(psr,0,0,-2);  /* Update GR parameters */	  
   
-  if (debugFlag==1) printf("Updating jumps; nJumps = %d\n",psr[p].nJumps);
+  logdbg("Updating jumps; nJumps = %d",psr[p].nJumps);
   /* Now check jumps */
   for (i=1;i<=psr[p].nJumps;i++)
     {
-      if (debugFlag==1) printf("%d fitJump = %d\n",i,psr[p].fitJump[i]);
+      logdbg("%d fitJump = %d",i,psr[p].fitJump[i]);
       if (psr[p].fitJump[i]==1)
 	{
-	  if (debugFlag==1) printf("%d Jump changes\n",i);
-	  if (debugFlag==1) printf("value = %g\n",(double)val[j]);
-	  if (debugFlag==1) printf("error = %g\n",(double)error[j]);
+	  logdbg("%d Jump changes",i);
+	  logdbg("value = %g",(double)val[j]);
+	  logdbg("error = %g",(double)error[j]);
 	  psr[p].jumpVal[i] += -val[j];
 	  psr[p].jumpValErr[i] = error[j];
 	  j++;
 	}
       /*	      printf("Have jumps %g %g\n",(double)val[j],error[j][j]); */
     }
-  if (debugFlag==1) printf("Complete updating parameters\n");
+  logdbg("Complete updating parameters");
 }
 
 
@@ -2279,7 +2243,7 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
 
   clk = clock();
   printf("Starting with np = %d and nc = %d\n",np,nc);
-  printf("Tcheck: forming Cholesky matrix ... allocating memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... allocating memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 //  printf("Getting the covariance matrix in doFit\n");
   m = (double **)malloc(sizeof(double *)*(np+1));
   u= (double **)malloc(sizeof(double *)*(np+1));
@@ -2290,14 +2254,14 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
       m[i] = (double *)malloc(sizeof(double)*(np+1));
       u[i] = (double *)malloc(sizeof(double)*(np+1));
     }
-  printf("Tcheck: forming Cholesky matrix ... complete allocating memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
-  printf("Tcheck: forming Cholesky matrix ... determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... complete allocating memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (ix=0;ix<(np);ix++)
     {
       for (iy=0;iy<(np);iy++)
 	m[ix][iy] = fabs(resx[ix]-resx[iy]);
     }
-  printf("Tcheck: forming Cholesky matrix ... complete determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... complete determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (debug==1)
     {
       printf("First m = \n");
@@ -2312,7 +2276,7 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
   // Linearly interpolate between elements on the covariance function because
   // valid covariance matrix must have decreasing off diagonal elements.
   //  printf("Inserting into the covariance matrix\n");
-  printf("Tcheck: forming Cholesky matrix ... determing covariance based on time difference  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... determing covariance based on time difference  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (ix=0;ix<(np);ix++)
     {
       for (iy=0;iy<(np);iy++)
@@ -2337,7 +2301,7 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
 	    }
 	}
     }
-  printf("Tcheck: forming Cholesky matrix ... complete determing covariance based on time difference  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... complete determing covariance based on time difference  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 
   // add the values for the constraints
   // Constraints are not covariant with anything so it's all zero!
@@ -2350,10 +2314,10 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
 
 
   //  printf("Multiplying by errors\n");
-  printf("Tcheck: forming Cholesky matrix ... multiplying by errors  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... multiplying by errors  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (ix=0;ix<np;ix++)
     m[ix][ix]+=rese[ix]*rese[ix];
-  printf("Tcheck: forming Cholesky matrix ... complete multiplying by errors  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... complete multiplying by errors  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (debug==1)
     {
       printf("m = \n\n");
@@ -2366,11 +2330,11 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
 
   
   // Do the Cholesky
-  printf("Tcheck: forming Cholesky matrix ... do Cholesky decomposition  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   TKcholDecomposition(m,np,cholp);
-  printf("Tcheck: forming Cholesky matrix ... complete do Cholesky decomposition  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... complete do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   // Now calculate uinv
-  printf("Tcheck: forming Cholesky matrix ... calculate uinv  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
     for (i=0;i<np;i++)
     {
       m[i][i] = 1.0/cholp[i];
@@ -2398,7 +2362,7 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
       }
       }*/
  
-  printf("Tcheck: forming Cholesky matrix ... complete calculate uinv  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... complete calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (debug==1)
     {
       printf("uinv = \n\n");
@@ -2413,7 +2377,7 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
 
   // Should free memory not required
   // (note: not freeing uinv)
-  printf("Tcheck: forming Cholesky matrix ... free memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   for (i=0;i<np+1;i++)
     {
       free(m[i]);
@@ -2422,7 +2386,7 @@ void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *r
   free(m);
   free(u);
   free(cholp);
-  printf("Tcheck: forming Cholesky matrix ... complete free memory  (%.2f)\n",(clock()-clk)/(float)CLOCKS_PER_SEC);
+  logtchk("forming Cholesky matrix ... complete free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 }
 
 

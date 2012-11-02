@@ -120,7 +120,7 @@ load_EOP(DynamicArray *EOPsamples)
       else if (strstr(line,"FORMAT(3(I4),I7,2(F11.6),2(F12.7),2(F11.6),2(F11.6),2(F11.7),2F12.6)")!=NULL)
 	{
 	  format=1;
-	  if (debugFlag==1) printf("Using new format for $TEMPO2/eopc04_IAU2000.62-now\n");
+	  logdbg("Using new format for $TEMPO2/eopc04_IAU2000.62-now");
 	}
     }
   }

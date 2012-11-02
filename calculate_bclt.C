@@ -46,7 +46,7 @@ void calculate_bclt(pulsar *psr,int npsr)
 
   if (displayCVSversion == 1) CVSdisplayVersion("calculate_bclt.C","calculate_bclt()",CVS_verNum);
 
-  if (debugFlag==1) printf("In calculate_bclt with number of psr = %d, nobs (psr[0]) = %d\n",npsr,psr[0].nobs);
+  logdbg("In calculate_bclt with number of psr = %d, nobs (psr[0]) = %d",npsr,psr[0].nobs);
 
   /* Conversion of mas to radians for parallax */
   pxConv = 1.74532925199432958E-2/3600.0e3;
@@ -61,7 +61,7 @@ void calculate_bclt(pulsar *psr,int npsr)
       for (i=0;i<psr[p].nobs;i++)	
 	{
 	  if (psr[p].correctTroposphere==0) psr[0].obsn[i].troposphericDelay=0;
-	  if (debugFlag==1)printf("In tdis2 calculate_bclt with observation %d %d\n",i,psr[p].obsn[i].delayCorr);
+	  logdbg("In tdis2 calculate_bclt with observation %d %d",i,psr[p].obsn[i].delayCorr);
 	  if (psr[p].obsn[i].delayCorr==0) /* No correction */
 	    {
 	      psr[p].obsn[i].freqSSB = psr[p].obsn[i].freq;
@@ -112,10 +112,10 @@ void calculate_bclt(pulsar *psr,int npsr)
 		/* dt_pmtr = transverse velocity */
 		dt_pmtr = -pow((delt),2)*pmrvrad*pmtrans_rcos2;
 
-		if (debugFlag==1) printf("Calculating roemer using %g %g %g %g %g (delt = %g; dt_SSB = %g)\n",(double)rcos1,(double)dt_pm, (double)dt_pmtt,(double)dt_px,(double)dt_pmtr,(double)delt,(double)dt_SSB);		
+		logdbg("Calculating roemer using %g %g %g %g %g (delt = %g; dt_SSB = %g)",(double)rcos1,(double)dt_pm, (double)dt_pmtt,(double)dt_px,(double)dt_pmtr,(double)delt,(double)dt_SSB);		
 		psr[p].obsn[i].roemer = rcos1 + dt_pm + dt_pmtt + dt_px + dt_pmtr;		
 		shapiro_delay(psr,npsr,p,i,delt,dt_SSB); /* Now calculate the Shapiro delay */
-		if (debugFlag==1)printf("In tdis2 calculate_bclt with observation %d %d calling dmdelays\n",i,psr[p].obsn[i].delayCorr);
+		logdbg("In tdis2 calculate_bclt with observation %d %d calling dmdelays",i,psr[p].obsn[i].delayCorr);
 		dm_delays(psr,npsr,p,i,delt,dt_SSB);     /* Now calculate the dispersion measure delays */
 		dt_SSB = psr[p].obsn[i].roemer-(psr[p].obsn[i].tdis1+psr[p].obsn[i].tdis2)-
 		  (psr[p].obsn[i].shapiroDelaySun+psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter); 

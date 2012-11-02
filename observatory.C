@@ -137,8 +137,7 @@ readObservatoryFile(char *fname)
     }
   }
 
-  if (debugFlag)
-    fprintf (stderr, "readObservatoryFile: %d entries\n", observatories.nelem);
+    logdbg( "readObservatoryFile: %d entries\n", observatories.nelem);
 
   fclose(f);  /* Added by GH */
 }
@@ -194,38 +193,38 @@ initObservatories()
   char **pfname;
   int ret;
 
-  if (debugFlag==1) printf("In initObservatories\n");
+  logdbg("In initObservatories");
   DynamicArray_init(&observatories, sizeof(observatory));
 	
   /* load observatories.dat first */
   sprintf(fname, "%s/observatory/observatories.dat", getenv(TEMPO2_ENVIRON));
 
-  if (debugFlag==1) printf("Reading observatories file >%s<\n",fname);
+  logdbg("Reading observatories file >%s<",fname);
   readObservatoryFile(fname);
-  if (debugFlag==1) printf("Reading other .dat files\n");
+  logdbg("Reading other .dat files");
   /* now load other .dat files in that directory */
   sprintf(pattern, "%s/observatory/*.dat", getenv(TEMPO2_ENVIRON));
-  if (debugFlag==1) printf("Reading individual files >%s<\n",pattern);
+  logdbg("Reading individual files >%s<",pattern);
 
   ret = glob(pattern, 0, NULL, &g);
-  if (debugFlag==1) printf("Return from glob = %d\n",ret);
-  if (debugFlag==1) printf("Glob success\n");
+  logdbg("Return from glob = %d",ret);
+  logdbg("Glob success");
   for (pfname = g.gl_pathv; *pfname != NULL; pfname++)
   {
     if (strcmp(*pfname, fname))
     {
-      if (debugFlag==1) printf("Reading >%s<\n",*pfname);
+      logdbg("Reading >%s<",*pfname);
       readObservatoryFile(*pfname);
     }
   }
   globfree(&g);
-  if (debugFlag==1) printf("Reading aliases file\n");
+  logdbg("Reading aliases file");
   /* and load aliases list */
   sprintf(fname, "%s/observatory/aliases", getenv(TEMPO2_ENVIRON));
   readAliases(fname);
 
   observatories_initialised = 1;
-  //  if (debugFlag==1) printf("Leaving initObservatories\n");
+  //  logdbg("Leaving initObservatories");
 		   
 }
 
@@ -235,10 +234,10 @@ void lookup_observatory_alias(char *incode, char *outcode)
   char *alias;
   ObservatoryAliasList *list;
 
-  //  if (debugFlag==1) printf("In lookup_observatory_alias with >%s< >%d<\n",incode,observatories_initialised);
+  //  logdbg("In lookup_observatory_alias with >%s< >%d<",incode,observatories_initialised);
   if (observatories_initialised != 1)
     initObservatories();
-  //  if (debugFlag==1) printf("Initialised observatories \n",incode);
+  //  logdbg("Initialised observatories ",incode);
   for (ilist=0; ilist < observatoryAliasLists.nelem; ilist++)
   {
     list = ((ObservatoryAliasList*)observatoryAliasLists.data)+ilist;
@@ -258,12 +257,11 @@ void lookup_observatory_alias(char *incode, char *outcode)
     strcpy(outcode, list->code);
   }
   else if (outcode!=incode) {
-    if (debugFlag)
-      fprintf (stderr, "Copying incode = '%s' over outcode\n", incode);
+      logdbg("Copying incode = '%s' over outcode\n", incode);
     strcpy(outcode, incode);
   }
 
-  //  if (debugFlag==1) printf("Leaving lookup_observatory_alias\n");
+  //  logdbg("Leaving lookup_observatory_alias");
 }
 
 observatory *
@@ -273,13 +271,13 @@ getObservatory(char *code)
   observatory *obs;
   char alias[1024];
 
-  //  if (debugFlag==1) printf("In getObservatory code='%s'\n", code);
+  //  logdbg("In getObservatory code='%s'", code);
   /* Replace site alias if necessary */
   lookup_observatory_alias(code, alias);
-  //  if (debugFlag==1) printf("Checked observatory alias='%s'\n", alias);
+  //  logdbg("Checked observatory alias='%s'", alias);
   if (observatories_initialised != 1)
     initObservatories();
-  //  if (debugFlag==1) printf("Initialised observatory\n");
+  //  logdbg("Initialised observatory");
 
   for (io=0; io < (int)observatories.nelem; io++)
   {
@@ -291,7 +289,7 @@ getObservatory(char *code)
 
     if (!strcasecmp(obs->code, alias) || !strcasecmp(obs->name, alias))
       {
-	//	if (debugFlag==1) printf("leaving getObservatory\n");
+	//	logdbg("leaving getObservatory");
   
 	return obs;
       }

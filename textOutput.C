@@ -66,8 +66,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
   if (displayCVSversion == 1) CVSdisplayVersion((char *)"textOutput.C",(char *)"textOutput()",CVS_verNum);
 	
 
-  if (debugFlag==1)
-    printf("In textOutput\n");
+    logdbg("In textOutput");
 
   for (p=0;p<npsr;p++)
     {
@@ -1035,15 +1034,13 @@ double calcRMS(pulsar *psr,int p)
 	  count++;
 	}
     }
-  if (debugFlag==1)
-    printf("textOutput %g %g %d\n",mean_pre,mean_post,count);
+    logdbg("textOutput %g %g %d",mean_pre,mean_post,count);
   mean_pre/=count;
   mean_post/=count;
   
   rms_pre = sqrt((sumsq_pre-sum_pre*sum_pre/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
   rms_post = sqrt((sumsq_post-sum_post*sum_post/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
-  if (debugFlag==1)
-    printf("textOutput %g %g %g %G %d\n",rms_pre,rms_post,sumsq_pre,sum_pre,count);
+    logdbg("textOutput %g %g %g %G %d",rms_pre,rms_post,sumsq_pre,sum_pre,count);
 
 
   psr[p].rmsPre  = rms_pre;

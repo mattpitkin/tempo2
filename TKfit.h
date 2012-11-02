@@ -1,5 +1,7 @@
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
+#ifndef __TKfit_h
+#define __TKfit_h
 /*
 *    This file is part of TEMPO2. 
 * 
@@ -39,3 +41,4 @@ void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double 
 void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x,int n,int nf);
 
 
+#endif

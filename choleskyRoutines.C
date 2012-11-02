@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "TKfit.h"
-#include "fftw3.h"
+#include "TKspectrum.h"
 
 // Automatic determination of the covariance function
 // R. Shannon
@@ -977,6 +977,70 @@ int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,d
   return 1;
 }
 
+
+
+/*
+ * New algorithm for computing the 
+ *
+ *
+ */
+int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *covFunc,double *resx,double *resy,double *rese,int np){
+   int ndays;
+   int npts,i;
+   double *p_r,*p_i;
+   double freq;
+   double P;
+   double varScaleFactor=0.6;
+
+   ndays=ceil((resx[np-1])-(resx[0]));
+   npts=128;
+   while(npts<(ndays+1)*2)npts*=2;
+
+   p_r=(double*)malloc(sizeof(double)*npts);
+   p_i=(double*)malloc(sizeof(double)*npts);
+
+   logmsg("Generating powerlaw model covariance function. nday=%d npts=%d",ndays,npts);
+
+
+   for (i=1;i<npts;i++){
+	  p_r[i]=0;
+	  p_i[i]=0;
+   }
+
+   double delta=1.0/365.25;
+   double N=(double)npts;
+
+   p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
+   for (i=1;i<=npts/2;i++){
+	  freq=double(i)/(N*delta);
+	  P=modelA/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
+	  p_r[i]=P;
+	  p_r[npts-i]=P;
+	  p_i[i]=0;
+	  p_i[npts-i]=0;
+   }
+
+   TK_fft(1,npts,p_r,p_i);
+
+   for (i=0; i <= ndays; i++){
+	covFunc[i]=p_r[i]*pow(86400.0*365.25,2)*365.25*varScaleFactor;
+   }
+
+   free(p_r);
+   free(p_i);
+   return ndays;
+
+}
+   /*
+	* I am pretty sure this routine is broken - i.e. computes the covariance function incorrectly
+	* because it uses the 1-sided PSD rather than a symetric function.
+	*
+	* I have also re-written it to use TKspectrum rather than fftw so that it can be moved to be
+	* part of libtempo2.
+	*
+	* M.Keith 2012. Code checked by W.Coles.
+	*
+	*
 int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *covFunc,double *resx,double *resy,double *rese,int np,double fitVar)
 {
   int i,j;
@@ -1003,33 +1067,13 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
   printf("Number of days = %d\n",ndays);
 
 
-  //  for (i=0;i<ndays+1;i++)
-  //  for (i=0;i<ndays;i++)
   for (i=0;i<=2*ndays;i++)
     {
-      //    f[i] = i*1.0/(resx[np-1]-resx[0])*365.25;
-      //  f[i] = (double)(i+1)/(double)(2*ndays)*365.25;
-      //      f[i] = (double)(i+1)/(double)(2*ndays)*365.25;
       f[i] = (double)(i)/(double)(2*ndays)*365.25;
-      
-      // CHANGED TO THIS ...
-      // BIG CHANGE HERE ........
-      //p[i] = 1.0/(pow((1.0+pow(f[i]/(modelFc*2),2)),(modelAlpha)/2.0));
-      //p[i] = modelA/pow(1.0+pow(f[i]/modelFc,modelAlpha/2.0),2);
-      //pf[i] = p[i];
-      pf[i] = modelA/pow(1.0+pow(f[i]/modelFc,modelAlpha/2.0),2);
+            pf[i] = modelA/pow(1.0+pow(f[i]/modelFc,modelAlpha/2.0),2);
     }
-  /*    j = ndays;
-    for (i=ndays-1;i>0;i--)
-    {
-      f[j] = -f[i];
-      pf[j] = 1.0/(pow((1.0+pow(f[j]/(modelFc*2),2)),modelAlpha/2.0));
-      j++;
-      }*/
-
 
   ndays *= 2;  
-  //  ndays--;
   
   printf("Obtaining covariance function from analytic model\n");
   {
@@ -1043,23 +1087,14 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
     fftw_execute(transform_plan);    
     fftw_destroy_plan(transform_plan);  
     for (i=0;i<=ceil((resx[np-1])-(resx[0]));i++) 
-    //    for (i=0;i<j/2;i++) 
       {
 	// Xinping does not have the varScale factor
-	//	covFunc[i] = opf[2*i]; ///ndays*pow(86400.0*365.25,2)*365.25*varScaleFactor;
 	covFunc[i] = opf[2*i]/ndays*pow(86400.0*365.25,2)*365.25*varScaleFactor;
-	//	printf("CovFunc[%d] = %g\n",i,covFunc[i]);
+	printf("AAAA %lg %lg\n",opf[2*i],opf[2*i+1]);
       }
-    //  actVar = pow(10,modelA);
-    //  tt = covFunc[0];
-  //  printf("actvar = %g, weightVarRes = %g, weightVarHighFreqRes = %g, scale = %g, fitVar = %g\n",actVar*pow(86400.0*365.25,2),weightVarRes,weightVarHighFreqRes,weightVarRes-weightVarHighFreqRes,fitVar);
 
   printf("WARNING: varScaleFactor = %g (used to deal with quadratic removal)\n",varScaleFactor);
-  //  for (i=0;i<=j/2;i++)
-  //    covFunc[i] = covFunc[i]*fitVar*varScaleFactor/tt;
-
   }
-
 
   free(p);              
   free(f);
@@ -1068,7 +1103,7 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
   free(pe);
 
   return ceil((resx[np-1])-(resx[0])); 
-}
+}*/
 
 void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
 double fitVar,double **uinv,double *covFunc,double *resx,double *resy,
@@ -1077,7 +1112,7 @@ int dcmflag)
 {
   int i,j,nc;
   printf("choleskyRoutines: calculateCholesky\n");
-  nc = T2calculateCovarFunc(modelAlpha,modelFc,modelA,covFunc,resx,resy,rese,np,fitVar);
+  nc = T2calculateCovarFunc(modelAlpha,modelFc,modelA,covFunc,resx,resy,rese,np);
   T2formCholeskyMatrix_pl(covFunc,nc,resx,resy,rese,np,uinv);
   printf("Complete calculateCholesky\n");
 }

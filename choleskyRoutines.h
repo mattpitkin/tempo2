@@ -1,6 +1,8 @@
 #include "tempo2.h"
 
 
+void T2writeCovarFuncModel(double alpha,double fc,double val,double white,char *fname);
+void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, double *fc_w,double *fc_r, double *modelAlpha_out, double *modelVal, double *whiteNoiseLevel, int realflag, int dcmflag);
 // Functions borrowed from spectralModel plugin
 void T2cubicFit(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *cubicErr);
 
@@ -29,4 +31,4 @@ int T2guess_vals(double *x, double *y, int n, double *alpha, double *amp,   doub
 void T2getWhiteNoiseLevel(int n, double *y, int nlast, double *av);
 
 // some global variables that Ryan is still using for diagnostic purposes
-double FCALPHA, WNLEVEL, EXPSMOOTH, UPW, NFIT, FCFINAL;
+extern double FCALPHA, WNLEVEL, EXPSMOOTH, UPW, NFIT, FCFINAL;

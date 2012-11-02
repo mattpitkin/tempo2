@@ -45,7 +45,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
   const char *CVS_verNum = "$Revision$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("dm_delays.C","dm_delays()",CVS_verNum);
-  if (debugFlag==1) printf("In dm_delays with pulsar %d; number of obs = %d\n",p,psr[p].nobs);
+  logdbg("with pulsar %d; number of obs = %d",p,psr[p].nobs);
 
   if (psr[p].obsn[i].delayCorr==0) /* No correction */
     {
@@ -59,7 +59,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       pospos = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
       for (k=0;k<3;k++)
 	pos[k] /= pospos;
-      if (debugFlag==1) printf("In dm_delays with pos = %f %f %f\n",pos[0],pos[1],pos[2]);      
+      logdbg("with pos = %f %f %f",pos[0],pos[1],pos[2]);      
       
       /* Calculate position of observatory from Sun */
       for (j=0;j<3;j++)
@@ -71,8 +71,8 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	  else
 	    rsa[j] = -psr[p].obsn[i].sun_ssb[j] + psr[p].obsn[i].earth_ssb[j] + psr[p].obsn[i].observatory_earth[j];
 	}
-      if (debugFlag==1) printf("In dm_delays with rsa = %f %f %f\n",rsa[0],rsa[1],rsa[2]);            
-      //      printf("In dm_delays with rsa = %s %f %f %f\n",psr[p].obsn[i].fname,rsa[0],rsa[1],rsa[2]);            
+      logdbg("with rsa = %f %f %f",rsa[0],rsa[1],rsa[2]);            
+      //      printf("with rsa = %s %f %f %f\n",psr[p].obsn[i].fname,rsa[0],rsa[1],rsa[2]);            
       /* What about Sun from SSB? */
       for (j=0;j<3;j++)
 	{
@@ -89,7 +89,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 		}
 	      else
 		{
-		  if (debugFlag==1) printf("WARNING: setting vobs = 0, this can give a large error!\n");
+		  logdbg("WARNING: setting vobs = 0, this can give a large error!");
 		  vobs[j] = 0.0;
 		}
 	    }
@@ -98,8 +98,8 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	}
 	/*	vobs[j] = psr[p].obsn[i].earthMoonBary_ssb[j+3] - psr[p].obsn[i].earthMoonBary_earth[j+3] + 
 		psr[p].obsn[i].siteVel[j];*/
-      if (debugFlag==1) printf("In dm_delays with vobs = %f %f %f\n",vobs[0],vobs[1],vobs[2]);      
-      // printf("In dm_delays with vobs = %s %g %g %g\n",psr[p].obsn[i].fname,vobs[0],vobs[1],vobs[2]);      
+      logdbg("with vobs = %f %f %f",vobs[0],vobs[1],vobs[2]);      
+      // printf("with vobs = %s %g %g %g\n",psr[p].obsn[i].fname,vobs[0],vobs[1],vobs[2]);      
       r = sqrt(dotproduct(rsa,rsa));
       ctheta = dotproduct(pos,rsa)/r;
       voverc = dotproduct(pos,vobs);
@@ -109,10 +109,10 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       if (psr[p].dilateFreq && freqf > 0 && psr[p].obsn[i].einsteinRate != 0.0)
       	freqf /= psr[p].obsn[i].einsteinRate;
 
-      if (debugFlag==1) printf("In dm_delays: Transforming frequency due to Einstein delay\n");      
+      logdbg("Transforming frequency due to Einstein delay");      
       
       psr[p].obsn[i].freqSSB = freqf; /* Record observing frequency in barycentric frame */
-      if (debugFlag==1) printf("In dm_delays: set freqSSB\n");      
+      logdbg("set freqSSB");      
       yrs = (psr[p].obsn[i].sat - psr[p].param[param_dmepoch].val[0])/365.25;
       dmDot=0.0;
       
@@ -125,9 +125,9 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	  if (psr[p].param[param_dm].paramSet[k]==1)
 	    dmDot+=(double)(psr[p].param[param_dm].val[k]*arg); 
 	}
-      if (debugFlag==1) printf("In dm_delays: calculated dmDot %Lg\n",psr[p].param[param_dm].val[0]);
+      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
       dmval = psr[p].param[param_dm].val[0]+dmDot;
-      if (debugFlag==1) printf("In dm_delays: calculating dmval\n");      
+      logdbg("calculating dmval");      
       // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
 
 
@@ -219,7 +219,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 		  dmval+=(dmval2+psr[p].dmOffset);
 		}
 	    }
-	  if (debugFlag==1) printf("In dm_delays: Looked for flags\n");      
+	  logdbg("Looked for flags");      
 	}
       if (freqf<=1) /* Have infinitive frequency */
 	psr[p].obsn[i].tdis1 = 0.0;
@@ -231,7 +231,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 //	psr[p].obsn[i].tdis1 += dmval/pow(freqf/1e6,4.4); 
       }
 
-      if (debugFlag==1) printf("In dm_delays: calculate tdis1\n");      
+      logdbg("calculate tdis1");      
       /* Add frequency dependent delay term */
       if (psr[p].param[param_fddc].paramSet[0]==1 && freqf>1)
 	psr[p].obsn[i].tdis1 += (double)(psr[p].param[param_fddc].val[0]/pow(freqf*1.0e-6,(double)psr[p].param[param_fddi].val[0]));
@@ -255,8 +255,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	    //	    psr[p].obsn[i].tdis2 = 1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr[p].ne_sw*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/freqf/freqf; 	    
 	}
 
-            if (debugFlag==1) 
-	  printf("[%d/%d] In dm_delays with tdis2 = %g, freqf = %g %g %g %d %g\n",i,
+	  logdbg("[%d/%d] with tdis2 = %g, freqf = %g %g %g %d %g",i,
 		 psr[p].nobs,(double)psr[p].obsn[i].tdis2,(double)freqf,psr[p].obsn[i].freq,
 		 (1.0-voverc),psr[p].dilateFreq,psr[p].obsn[i].einsteinRate);      
 
@@ -265,8 +264,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       /* printf("Dispersion delay = %g\n",(double)(psr[p].obsn[i].tdis1+psr[p].obsn[i].tdis2));  */
 
     }
-  if (debugFlag==1) 
-      printf("Exiting dm_delays with pulsar %d; number of obs = %d\n",p,psr[p].nobs);
+      logdbg("Exiting dm_delays with pulsar %d; number of obs = %d",p,psr[p].nobs);
 
 }
 

@@ -73,7 +73,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 
   if (displayCVSversion == 1) CVSdisplayVersion("preProcess.C","preProcess()",CVS_verNum);
   
-  if (debugFlag==1) printf("In preProcess\n");
+  logdbg("In preProcess");
 
   //MAX_PSR   = MAX_PSR_VAL;    /* Maximum number of pulsars to fit simultaneously  */
   //MAX_OBSN  = MAX_OBSN_VAL;
@@ -452,8 +452,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	      sscanf(line,"%c",&hashcheck);
 	      if (hashcheck == '#') {
 		//do nothing, perhaps give a debug message
-		if (debugFlag)
-		  printf("preProces():skipping line in dmfile\n");
+		  logdbg("preProces():skipping line in dmfile\n");
 	      }
 	      else if (sscanf(line,"%f %f",&tt,&dmvals[ndm])==2)
 		{

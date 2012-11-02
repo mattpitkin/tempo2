@@ -124,6 +124,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		if (strcmp(argv[i],"-a")==0){
 			alpha=atof(argv[++i]);
+			if(alpha > 0){
+			   logmsg("Warning: alpha should normally be negative!!");
+			}
 		}
 
 		if (strcmp(argv[i],"-txt")==0){

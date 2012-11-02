@@ -41,6 +41,7 @@ int MAX_PSR   = MAX_PSR_VAL;    /* Maximum number of pulsars to fit simultaneous
 int MAX_OBSN  = MAX_OBSN_VAL;
 double ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
 int debugFlag = 0;
+int tcheck = 0;
 int veryFast = 0;
 int displayCVSversion = 0;
 char tempo2MachineType[MAX_FILELEN] = "";
@@ -49,6 +50,12 @@ char dcmFile[MAX_FILELEN]="NULL";
 char covarFuncFile[MAX_FILELEN]="NULL";
 char tempo2_plug_path[32][MAX_STRLEN];
 int tempo2_plug_path_len=0;
+
+// From choleskyRoutines.h ... "some global variables that Ryan is still using for diagnostic purposes"
+double FCALPHA, WNLEVEL, EXPSMOOTH, UPW, NFIT, FCFINAL;
+
+
+
 
 #define MAX_FUNCTIONS 1024 /* Maximum functions in tempo2 */
 
@@ -67,15 +74,15 @@ void clock_corrections(pulsar *psr,int npsr)
   const char *CVS_verNum = "$Revision$";
   if (displayCVSversion == 1) CVSdisplayVersion("global.C","clock_corrections()",CVS_verNum);
 
-  if (debugFlag==1) printf("Calling toa2utc\n");
+  logdbg("Calling toa2utc");
   toa2utc(psr,npsr);        /* 1. UTC(Observatory) -> UTC(NIST) */
-  if (debugFlag==1) printf("Calling tai2ut1\n");
+  logdbg("Calling tai2ut1");
 //   utc2tai(psr,npsr);     /* 2. UTC(NIST) -> TAI              */
   tai2ut1(psr,npsr);        /* 3. TAI -> UT1                    */
 //   tai2tt(psr,npsr);      /* 4. TAI -> TT                     */
-  if (debugFlag==1) printf("Calling tt2tb\n");
+  logdbg("Calling tt2tb");
   tt2tb(psr,npsr);          /* 5. Rough estimate of TT-TB (+-2.2 microsec) */
-  if (debugFlag==1) printf("Done clock corrections\n");
+  logdbg("Done clock corrections");
 }
 
 void ephemeris_routines(pulsar *psr,int npsr)
@@ -95,11 +102,11 @@ void formBatsAll(pulsar *psr,int npsr)
   const char *CVS_verNum = "$Revision$";
   if (displayCVSversion == 1) CVSdisplayVersion("global.C","formBatsAll()",CVS_verNum);
 
-  if (debugFlag==1) printf("Calling clock corrections\n");
+  logdbg("Calling clock corrections");
   clock_corrections(psr,npsr);          /* Clock corrections  ... */  
-  if (debugFlag==1) printf("Reading ephemeris routines\n");
+  logdbg("Reading ephemeris routines");
   ephemeris_routines(psr,npsr);         /* Ephemeris routines ... */
-  if (debugFlag==1) printf("Reading extra delays\n");
+  logdbg("Reading extra delays");
   extra_delays(psr,npsr);               /* Other time delays  ... */
   formBats(psr,npsr);                   /* Form Barycentric arrival times */
   secularMotion(psr,npsr); 
@@ -144,3 +151,5 @@ void CVSdisplayVersion(char *file,char *func,const char *verNum)
       counter++;
     }
 }
+
+

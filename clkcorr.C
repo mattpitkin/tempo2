@@ -528,12 +528,12 @@ getClockCorrections(observation *obs, char *clockFrom,
   obs->nclock_correction = 0;
 
   char *clockFromOrig; 
-  //  if (debugFlag==1) printf("In getClockCorrections\n");
+  //  logdbg("In getClockCorrections");
 
-  //if (debugFlag==1) printf("Getting clockFrom >%s<\n",obs->telID);
+  //logdbg("Getting clockFrom >%s<",obs->telID);
   if (clockFrom[0]=='\0') // get from observatory instead
     clockFrom = getObservatory(obs->telID)->clock_name;
-  //  if (debugFlag==1) printf("Got clockFrom\n");
+  //  logdbg("Got clockFrom");
   clockFromOrig = clockFrom;
 
   if (!strcasecmp(clockTo, clockFrom))
@@ -541,7 +541,7 @@ getClockCorrections(observation *obs, char *clockFrom,
     obs->nclock_correction = 0;
     return;
   }
-  //  if (debugFlag==1) printf("In getClockCorrections calling sequence 1\n");
+  //  logdbg("In getClockCorrections calling sequence 1");
   // Memory leak here
   sequence = getClockCorrectionSequence(clockFrom, clockTo, obs->sat,warnings);
 
@@ -557,7 +557,7 @@ getClockCorrections(observation *obs, char *clockFrom,
       obs->nclock_correction = 0;
       return;
     }
-    if (debugFlag==1) printf("In getClockCorrections calling sequence 2\n");
+    logdbg("In getClockCorrections calling sequence 2");
     sequence = getClockCorrectionSequence(clockFrom, clockTo, obs->sat,
 					  warnings); 
     if (sequence == NULL)
@@ -573,7 +573,7 @@ getClockCorrections(observation *obs, char *clockFrom,
 	obs->nclock_correction = 0;
 	return;
       }
-      if (debugFlag==1) printf("In getClockCorrections calling sequence 3\n");
+      logdbg("In getClockCorrections calling sequence 3");
       sequence = getClockCorrectionSequence(clockFrom, clockTo, obs->sat,
 					    warnings); 
      if (sequence == NULL)
@@ -585,7 +585,7 @@ getClockCorrections(observation *obs, char *clockFrom,
 	  obs->nclock_correction = 0;
 	  return;
 	}
-	if (debugFlag==1) printf("In getClockCorrections calling sequence 4\n");
+	logdbg("In getClockCorrections calling sequence 4");
 	sequence = getClockCorrectionSequence(clockFrom, clockTo, obs->sat,
 					      warnings); 
 
@@ -623,7 +623,7 @@ getClockCorrections(observation *obs, char *clockFrom,
     obs->nclock_correction++;
     currClock = (backwards ? func->clockFrom : func->clockTo);
   }
-  //  if (debugFlag==1) printf("leaving getClockCorrections\n");
+  //  logdbg("leaving getClockCorrections");
 /*   printf("Correction: %lg\n", correction); */
 }
 

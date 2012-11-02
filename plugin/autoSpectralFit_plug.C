@@ -29,11 +29,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include "tempo2.h"
-#include "fftw3.h"
 #include <TKspectrum.h>
 #include "T2toolkit.h"
 #include "TKfit.h"
-#include "choleskyRoutines.C"
+#include "choleskyRoutines.h"
 
 using namespace std;
 

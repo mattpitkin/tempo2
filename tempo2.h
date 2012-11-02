@@ -106,6 +106,23 @@
 #define T2C_TEMPO   2
 
 
+/* define some functions for log message 
+ * M.Keith 2012 - let me know if this fails to compile anywhere.
+ * mkeith@pulsarastronomy.net
+ **/
+#define LOG_OUTFILE stdout
+#define WHERESTR  "[%s:%d] "
+#define WHEREARG  __FILE__, __LINE__
+#define ENDL "\n"
+#define WHEREERR "******\nERROR [%s:%d] "
+#define WHERETCHK "[%s:%d] Tcheck: "
+#define _LOG(...) fprintf(LOG_OUTFILE,__VA_ARGS__)
+#define logmsg(_fmt, ...) _LOG(WHERESTR _fmt ENDL, WHEREARG,##__VA_ARGS__)
+#define logdbg(_fmt, ...)  if(debugFlag)logmsg(_fmt,##__VA_ARGS__)
+#define logerr(_fmt, ...) _LOG(WHEREERR _fmt ENDL, WHEREARG,##__VA_ARGS__)
+#define logtchk(_fmt, ...) if(tcheck)_LOG(WHERETCHK _fmt ENDL, WHEREARG,##__VA_ARGS__)
+
+
 
 /* Type for doing extra precision computations: longdouble */
 
@@ -218,6 +235,7 @@ extern int MAX_OBSN;
 extern double ECLIPTIC_OBLIQUITY;
 
 extern int debugFlag;   /* Global = 1 if debug mode is running */
+extern int tcheck;   /* Global = 1 if time check message should be printed is running */
 extern int veryFast;    /* Global to run the code fast */
 extern char tempo2MachineType[MAX_FILELEN];
 extern int displayCVSversion; /* Display CVS version */
@@ -534,6 +552,7 @@ int  bootstrap(pulsar *psr,int p,int npsr);
 void doFit(pulsar *psr,int npsr,int writeModel);
 void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeModel);
 void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel); 
+void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
 void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname);
 int  graphicalInterface(pulsar *psr,int *ip,int flag,int axis,int recalc);
@@ -691,5 +710,7 @@ void get_EOP(double mjd, double *xp, double *yp, double *dut1,
 void compute_tropospheric_delays(pulsar *psr,int npsr);
 
 #endif /* Defined __Tempo2_h */
+
+
 
 

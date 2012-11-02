@@ -61,7 +61,7 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
 
   if (displayCVSversion == 1) CVSdisplayVersion("readTimfile.C","readTimfile()",CVS_verNum);
 
-  if (debugFlag==1) printf("In reading tim file\n");
+  logdbg("In reading tim file");
 
   for (p=0;p<npsr;p++)
     {
@@ -80,12 +80,12 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
 	readJBO_bat(timFile[p],&psr[p],p);
       else
 	readTim(timFile[p],&psr[p],&jumpVal);
-      if (debugFlag==1) printf("Checking for deleted points >%s<\n",psr[0].deleteFileName);
+      logdbg("Checking for deleted points >%s<",psr[0].deleteFileName);
 
       /* Check for deleted points in separate file */
       if (strcmp(psr[0].deleteFileName,"NONE")!=0)
 	{
-	  if (debugFlag==1) printf("In checking for deleted points\n");
+	  logdbg("In checking for deleted points");
 	  if (!(fin = fopen(psr[0].deleteFileName,"r")))
 	    printf("Warning: unable to open %s\n",psr[0].deleteFileName);
 	  else
@@ -107,7 +107,7 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
 	    }
 	}
     }
-  if (debugFlag==1) printf("Leaving readTimfile\n");  
+  logdbg("Leaving readTimfile");  
 }
 
 void readTim(char *timname,pulsar *psr,int *jumpVal)
@@ -450,7 +450,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	  if (time!=0.0) 
 	    {
 	      psr->obsn[nObs].sat += time/60.0/60.0/24.0;
-	      if( debugFlag ) printf("psr %s adding time >%g<\n",psr->name,time);
+	      logdbg("psr %s adding time >%g<",psr->name,time);
 	    }
 	  if (efloor!=-1 && psr->obsn[nObs].toaErr < efloor) psr->obsn[nObs].toaErr = efloor;
 	  if (emax!=-1 && psr->obsn[nObs].toaErr > emax) psr->obsn[nObs].deleted = 1;
@@ -539,7 +539,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 		  double dtime;
 		  sscanf(line,"%s %lf",param1,&dtime);
 		  time+=dtime;
-		  if( debugFlag ) printf("Updating time: %g %g\n",dtime,time);
+		  logdbg("Updating time: %g %g",dtime,time);
 
 		}
 	      else if (strcasecmp(param1,"MODE")==0) /* Fit with errors */

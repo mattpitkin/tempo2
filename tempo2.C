@@ -104,8 +104,12 @@ int main(int argc, char *argv[])
 	displayCVSversion = 1;
       else if (strcasecmp(argv[i],"-nobs")==0)
 	sscanf(argv[i+1],"%d",&MAX_OBSN);
-      else if (strcasecmp(argv[i],"-debug")==0)
+      else if (strcasecmp(argv[i],"-debug")==0){
 	debugFlag=1;
+	tcheck=1;
+	  }
+	  else if (strcasecmp(argv[i],"-tcheck")==0)
+	tcheck=1;
       else if (strcasecmp(argv[i],"-veryfast")==0)
 	veryFast=1;
 
@@ -119,7 +123,7 @@ int main(int argc, char *argv[])
       printf("Please decrease the value of MAX_PSR_VAL in tempo2.h\n"); 
       exit(1); 
     }
-  if (debugFlag==1) printf("Have allocated memory for pulsar\n");
+  logdbg("Have allocated memory for pulsar");
   psr[0].jboFormat = 0;
 
   for (i=1;i<argc;i++)
@@ -227,9 +231,9 @@ int main(int argc, char *argv[])
 
 
   /* If running from the command line ... */
-  if (debugFlag==1) printf("Running initialise\n");
+  logdbg("Running initialise");
   initialise(psr,noWarnings); /* Initialise all */
-  if (debugFlag==1) printf("Completed running initialise %d\n",psr[0].nits);
+  logdbg("Completed running initialise %d",psr[0].nits);
   /* Obtain login architecture */
   if (strlen(tempo2MachineType)==0)
     {
@@ -269,10 +273,10 @@ int main(int argc, char *argv[])
   displayParams=0;
   nGlobal=0;
   /* Obtain command line arguments */
-  if (debugFlag==1) printf("Running getInputs %d\n",psr[0].nits);
+  logdbg("Running getInputs %d",psr[0].nits);
   getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
 	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile);
-  if (debugFlag==1) printf("Completed getInputs\n");
+  logdbg("Completed getInputs");
 
   for (i=1;i<argc;i++)
     {
@@ -325,24 +329,24 @@ int main(int argc, char *argv[])
 	    fprintf(stderr, "dlerror() = %s\n",dlerror());
 	    return -1;
 	  }
-	  if (debugFlag==1) printf("--ENTER GRAPHICAL PLUGIN--\n");
+	  logdbg("--ENTER GRAPHICAL PLUGIN--");
 	  entry(argc,commandLine,psr,&npsr);
 	  return 0;
 	}
     }
-  if (debugFlag==1) printf("Reading par file\n");
+  logdbg("Reading par file");
   readParfile(psr,parFile,timFile,npsr); /* Read .par file to define the pulsar's initial parameters */  
-  if (debugFlag==1) printf("Finished reading par file %d\n",psr[0].nits);
+  logdbg("Finished reading par file %d",psr[0].nits);
   if (flagPolyco==0)
     {
-      if (debugFlag==1) printf("Running readTimfile\n");
+      logdbg("Running readTimfile");
       readTimfile(psr,timFile,npsr); /* Read .tim file to define the site-arrival-times */
-      if (debugFlag==1) printf("Completed readTimfile %d\n",psr[0].param[param_ecc].paramSet[1]);
+      logdbg("Completed readTimfile %d",psr[0].param[param_ecc].paramSet[1]);
     }
 
-  if (debugFlag==1) printf("Running preProcess %d\n",psr[0].nits);
+  logdbg("Running preProcess %d",psr[0].nits);
   preProcess(psr,npsr,argc,commandLine);
-  if (debugFlag==1) printf("Completed preProcess %d\n",psr[0].nits);
+  logdbg("Completed preProcess %d",psr[0].nits);
   if (flagPolyco> 0)  /* Running tempo2 in polyco mode? */
   {
     if (flagPolyco == 1)
@@ -454,9 +458,9 @@ int main(int argc, char *argv[])
   }
   if (debugFlag==1)
     {
-      printf("Number of iterations = %d\n",psr[0].nits);
-      printf("Maximum number of parameters = %d\n",MAX_PARAMS);
-      printf("Number of pulsars = %d\n",npsr);
+      logdbg("Number of iterations = %d",psr[0].nits);
+      logdbg("Maximum number of parameters = %d",MAX_PARAMS);
+      logdbg("Number of pulsars = %d",npsr);
     }
   for (it=0;it<psr[0].nits;it++) /* Why pulsar 0 should select the iterations? */
     {
@@ -477,11 +481,11 @@ int main(int argc, char *argv[])
       //      long seed = TKsetSeed();
       for (iteration=0;iteration<2;iteration++) /* Do pre- and post- fit analysis */
 	{
-	  if (debugFlag==1) printf("iteration %d\n",iteration);
-	  if (debugFlag==1) printf("calling formBatsAll\n");
+	  logdbg("iteration %d",iteration);
+	  logdbg("calling formBatsAll");
 	  //	  printf("Calling formBats\n");
 	  formBatsAll(psr,npsr);                /* Form Barycentric arrival times */
-	  if (debugFlag==1) printf("calling formResiduals\n");
+	  logdbg("calling formResiduals");
 	  formResiduals(psr,npsr,1);       /* Form residuals */
 	  // 
 	  //	  printf("WARNING: SIMULATING GAUSSIAN NOISE\n");
@@ -506,7 +510,7 @@ int main(int argc, char *argv[])
 	  if (listparms==1 && iteration==0)displayParameters(13,timFile,parFile,psr,npsr); /* List out all the parameters */  
 	  if (iteration==0)          /* Only fit to pre-fit residuals */
 	    {
-	      if (debugFlag==1) printf("calling doFit\n");
+	      logdbg("calling doFit");
 
 	      if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
 		doFit(psr,npsr,writeModel); /* Fit to the residuals to obtain updated parameters */
@@ -514,7 +518,7 @@ int main(int argc, char *argv[])
 		doFitDCM(psr,dcmFile,covarFuncFile,npsr,writeModel);
 	      printf("Complete return\n");
 	      /* doFitGlobal(psr,npsr,&globalParameter,nGlobal,writeModel);*/ /* Fit to the residuals to obtain updated parameters  */
-	      if (debugFlag==1) printf("completed doFit\n");
+	      logdbg("completed doFit");
 	    }
 	  if (iteration==1 || onlypre==1)
 	    {
@@ -572,6 +576,11 @@ int main(int argc, char *argv[])
   printf("Finishing off: time taken = %.2f (s)\n",(endClock-startClock)/(float)CLOCKS_PER_SEC);
   exit(EXIT_SUCCESS);
 } 
+
+
+
+
+
 
 // redwards function to force linkage with library functions used by
 // plugins

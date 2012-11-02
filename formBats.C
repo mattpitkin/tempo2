@@ -42,7 +42,7 @@ void formBats(pulsar *psr,int npsr)
 
   if (displayCVSversion == 1) CVSdisplayVersion("formBats.C","formBats()",CVS_verNum);
 
-  if (debugFlag==1)printf("In formBats\n");
+  logdbg("In formBats");
 
   for (p=0;p<npsr;p++)
     {
@@ -74,6 +74,6 @@ void formBats(pulsar *psr,int npsr)
 	    }
 	}
     }
-  if (debugFlag==1)printf("Leaving formBats\n");
+  logdbg("Leaving formBats");
 }
 

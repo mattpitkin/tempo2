@@ -43,7 +43,7 @@ void preProcessSimple (pulsar *psr)
 
 void preProcessSimple1 (pulsar *psr, int tempo1, double thelast)
 {  
-  if (debugFlag==1) printf("In preProcessSimple1\n");
+  logdbg("In preProcessSimple1");
 
   ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
 
@@ -118,7 +118,7 @@ void preProcessSimple1 (pulsar *psr, int tempo1, double thelast)
 void preProcessSimple2 (pulsar *psr,
 			float startdmmjd, int ndm, float* dmvals, int trimonly)
 {  
-  if (debugFlag==1) printf("In preProcessSimple2\n");
+  logdbg("In preProcessSimple2");
 
   int i=0, j=0, k=0;
 
@@ -325,13 +325,13 @@ void preProcessSimple2 (pulsar *psr,
 	    }
 	}
     }
-  if (debugFlag==1) printf("Complete preProcessSimple2\n");
+  logdbg("Complete preProcessSimple2");
 }
 
 void preProcessSimple3 (pulsar *psr)
 {  
   int  i,j,k,l;
-  if (debugFlag==1) printf("Start preProcessSimple3\n");      
+  logdbg("Start preProcessSimple3");      
   //
   // Check fjump
   //
@@ -408,5 +408,5 @@ void preProcessSimple3 (pulsar *psr)
 	    }
 	}
     }
-  if (debugFlag==1) printf("Complete preProcessSimple3\n");
+  logdbg("Complete preProcessSimple3");
 }

@@ -102,8 +102,8 @@ void matrixDMConstraintWeights(pulsar *psr){
 				// but in practice probably doesn't matter.
 				if (psr->obsn[i].deleted==0)
 				{
-						fitMatrix[i]=(double*)malloc(sizeof(double)*nfit);
-						u[i]=(double*)malloc(sizeof(double)*nfit);
+						fitMatrix[nobs]=(double*)malloc(sizeof(double)*nfit);
+						u[nobs]=(double*)malloc(sizeof(double)*nfit);
 						char okay=1;
 
 						/* Check for START and FINISH flags */
@@ -149,7 +149,6 @@ void matrixDMConstraintWeights(pulsar *psr){
 				else
 						sum_wCM+=psr->dmoffsCWeights[i];
 
-				printf("## %d %d %lg %lg\n",(int)(i/psr->dmoffsNum),i%psr->dmoffsNum,e[i],psr->dmoffsCWeights[i]);
 		}
 		//normalise the weights
 		sum_wDM/=(double)psr->dmoffsNum;
@@ -163,7 +162,7 @@ void matrixDMConstraintWeights(pulsar *psr){
 
 
 		// free everything .
-		for(i=0; i < psr->nobs; i++){
+		for(i=0; i < nobs; i++){
 				free(fitMatrix[i]);
 				free(u[i]);
 		}
