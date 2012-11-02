@@ -304,12 +304,12 @@ double consFunc_tel_dy(pulsar *psr,int i,int k,int order){
 }
 
 double consFunc_tel_dz(pulsar *psr,int i,int k,int order){
-		if(i==param_tel_dz){
-				printf("In contraint with k = %d, order = %d\n",k,order); 
-				long double epoch = psr->param[param_pepoch].val[0];
-				return pow(psr->telDZ_t[k]-epoch,order);
-		}
-		else return 0;
+  if(i==param_tel_dz){
+    //    printf("In contraint with k = %d, order = %d\n",k,order); 
+    long double epoch = psr->param[param_pepoch].val[0];
+    return pow(psr->telDZ_t[k]-epoch,order);
+  }
+  else return 0;
 }
 
 double consFunc_ifunc(pulsar *psr,int i,int k,int order){
