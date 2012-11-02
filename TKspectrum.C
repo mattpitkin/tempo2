@@ -1825,7 +1825,7 @@ int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *spec
       TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
 	  printf(".");
 	  fflush(stdout);
-	  if (k%32)printf("\n");
+	  if (k%32==0)printf("\n");
       logdbg("Done leastSquares fit");
       v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
       specX[k] = GLOBAL_OMEGA/2.0/M_PI;
