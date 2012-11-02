@@ -47,6 +47,9 @@ dist-hook:
 	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
 
 
+clean-local:
+	$(MAKE) -C plugin clean
+	$(MAKE) -C unsupported_plugins clean
 
 plugins-install: all
 	$(MAKE) -C plugin plugins-install
