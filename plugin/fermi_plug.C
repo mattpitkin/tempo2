@@ -934,7 +934,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
 				else fprintf(outputf,"%d\t",event + 1);
 			
-				fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%d\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event],(int)intpart);
+				fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%.0lf\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event],intpart);
 			}
 	
 			event++;
@@ -958,7 +958,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		// ------------------------------------------------- //		
 
 		formResiduals(psr,*npsr,0.0);
-	
+		
 		if ((time_MET_TT[psr[0].nobs-1] < minFT2time) || (time_MET_TT[psr[0].nobs-1] > maxFT2time))
 		{
 			phase[event] = -1.;
@@ -1003,7 +1003,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			if (graph == 0) fprintf(outputf,"%d\t",event + rows_status);
 			else fprintf(outputf,"%d\t",event + 1);
 			
-			fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%d\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event],(int)intpart);
+			fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%.0lf\n",psr[0].obsn[1].sat,psr[0].obsn[1].bat,phase[event],intpart);
 		}
 
 		// ------------------------------------------------- //
@@ -1224,7 +1224,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		cpgsci(1);
 
-		cpgbox("ABCNTS",0.5,5,"ABCNTS1",pow(10,int(log10(tmax-tmin))),10);
+		cpgbox("ABCNTS",0.5,5,"ABCNTS1",0.,10);
 
 		if (ophase == 0) cpglab("Pulse phase","Event time (MJD)","");
 		else			 cpglab("Orbital phase","Event time (MJD)","");
@@ -1242,7 +1242,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		cpgsci(1);
 		cpgslw(linewidth);
-		cpgbox("ABCNTS1",2*pow(10,int(log10(tmax-tmin))),10,"ABCNTS",pow(10,int(log10(hmax-hmin))),5);
+		cpgbox("ABCNTS1",0.,10,"ABCNTS",0.,5);
 		cpglab("Event time (MJD)","H-test TS","");
 		cpgsci(2);
 		cpgslw(5);
