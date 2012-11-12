@@ -1,4 +1,5 @@
-
+#define MODE_T2CHOL 1
+#define MODE_SIMPLE 0
 
 
 typedef struct rednoisemodel {
@@ -12,6 +13,7 @@ typedef struct rednoisemodel {
 	float flatten; // model is flat below 'flatten'(yr^-1)
 	float* data;   // data
 	float tres;
+	char mode;
 } rednoisemodel_t;
 
 
