@@ -47,15 +47,15 @@ dist-hook:
 	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
 
 
-clean-local:
-	$(MAKE) -C plugin clean
-	$(MAKE) -C unsupported_plugins clean
-
-plugins-install: all
-	$(MAKE) -C plugin plugins-install
 
 plugins: all
 	$(MAKE) -C plugin
+
+plugins-clean:
+	$(MAKE) -C plugin clean
+
+plugins-install: plugins
+	$(MAKE) -C plugin plugins-install
 
 
 unsupported:
@@ -64,12 +64,25 @@ unsupported:
 unsupported-install: unsupported
 	$(MAKE) -C unsupported_plugins install
 
-complete: all unsupported plugins
-	@echo "Built all, plugins, unsupported"
-complete-install: install unsupported-install plugins-install
-	@echo "Installed tempo2, plugins, unsupported"
+unsupported-clean:
+	$(MAKE) -C unsupported_plugins clean
 
-.PHONY: plugins-install plugins unsupported unsupported-install complete complete-install
+core: all
+core-install: install
+core-clean: clean
+
+complete: core unsupported plugins
+	@echo "Built core, plugins, unsupported"
+complete-install: core-install unsupported-install plugins-install
+	@echo "Installed tempo2, plugins, unsupported"
+complete-clean: plugins-clean unsupported-clean core-clean
+	@echo "Clean core, plugins, unsupported"
+
+
+.PHONY: plugins-install plugins plugins-clean \
+   unsupported unsupported-install unsupported-clean \
+   complete complete-install complete-clean \
+   core core-install core-clean
 
 install-data-hook:
 	@echo ""
