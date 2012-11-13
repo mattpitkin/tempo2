@@ -118,6 +118,14 @@ AC_MSG_RESULT($have_gsl)
 AM_CONDITIONAL(HAVE_GSL, [test x"$have_gsl" = xyes])
 
 
+
+AC_F77_WRAPPERS
+
+ACX_BLAS(have_blas=yes,have_blas=no)
+AC_MSG_CHECKING([for BLAS])
+AC_MSG_RESULT($have_blas)
+AM_CONDITIONAL(HAVE_BLAS, [test x"$have_blas" = xyes])
+
 # test for LAPACK acceleration
 ACX_LAPACK(have_lapack=yes, have_lapack=no)
 AC_MSG_CHECKING([for LAPACK])
@@ -186,8 +194,12 @@ if test X$have_cfitsio != Xyes; then
 	AC_MSG_NOTICE(Plugins: cfitsio was not found - plugins requiring cfitsio will not be compiled)
 fi
 
-if test X$have_lapack == Xyes; then
+if test X$have_lapack = Xyes; then
 	AC_MSG_NOTICE(Using LAPACK library for Cholesky decomposition)
+fi
+
+if test X$have_blas = Xyes; then
+	AC_MSG_NOTICE(Using BLAS library for matrix multiplication)
 fi
 
 

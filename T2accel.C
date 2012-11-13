@@ -6,9 +6,12 @@
 
 
 #ifdef HAVE_LAPACK
+#define F77_dpotf2 F77_FUNC (dpotf2, DPOTF2)
+#define F77_dtptri F77_FUNC (dtptri, DTPTRI)
+
 extern "C" {
-   extern void dpotf2_(char* uplo, int* n, double* a, int* lda, int* info);
-   extern void dtptri_(char* uplo,char* diag, int* n, double* a, int* info);
+   extern void F77_dpotf2(char* uplo, int* n, double* a, int* lda, int* info);
+   extern void F77_dtptri(char* uplo,char* diag, int* n, double* a, int* info);
 }
 
 void accel_uinv(double* _m, int n){
@@ -18,7 +21,7 @@ void accel_uinv(double* _m, int n){
    double* _uinv=_m;
    double* _t=(double*)malloc(sizeof(double)*(n*(n+1))/2);
 
-   dpotf2_("L",&n,_u,&n,&i);
+   F77_dpotf2("L",&n,_u,&n,&i);
    if(i!=0){
 	  logerr("Error in Cholesky Decomp i=%d",i);
 	  exit(1);
@@ -37,7 +40,7 @@ void accel_uinv(double* _m, int n){
    }
 
    logmsg("Done CholDecomp... Inverting...",i);
-dtptri_("U","N",&n,_t,&i);
+   F77_dtptri("U","N",&n,_t,&i);
    if(i!=0){
 	  logerr("Error in Invert i=%d",i);
 	  exit(1);
@@ -63,12 +66,13 @@ dtptri_("U","N",&n,_t,&i);
 
 #endif
 
-   
+
 
 #ifdef HAVE_BLAS
 
+#define F77_dgemm F77_FUNC(dgemm,DGEMM)
 extern "C" {
-   extern void dgemm_(char* ta, char* tb, int* m, int* n, int* k, double* alpha, 
+   extern void F77_dgemm(char* ta, char* tb, int* m, int* n, int* k, double* alpha, 
 		 double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
 }
 
@@ -77,20 +81,20 @@ void accel_multMatrix(double* m1,double* m2, int ndata,int npol, double* out){
    int m,n,k;
    double alpha=1.0,beta=0;
 
-  m=npol;
+   m=npol;
    n=ndata;
    k=ndata;
 
-   dgemm_("N","T",&m,&n,&k,&alpha,m2,&m,m1,&n,&beta,out,&m);
+   F77_dgemm("N","T",&m,&n,&k,&alpha,m2,&m,m1,&n,&beta,out,&m);
 
 
-/*
-   m=ndata;
-   n=npol;
-   k=ndata;
+   /*
+	  m=ndata;
+	  n=npol;
+	  k=ndata;
 
-   dgemm_("N","T",&m,&n,&k,&alpha,m1,&m,m2,&n,&beta,out,&m);
-*/
+	  F77_dgemm("N","T",&m,&n,&k,&alpha,m1,&m,m2,&n,&beta,out,&m);
+	  */
 }
 
 

@@ -24,6 +24,10 @@ if HAVE_LAPACK
 libtempo2_la_LIBADD+=@LIBS_LAPACK@
 endif
 
+if HAVE_BLAS
+libtempo2_la_LIBADD+=@BLAS_LIBS@
+endif
+
 libtempo2_la_includedir=$(includedir)
 libtempo2_la_include_HEADERS = tempo2.h
 
@@ -63,7 +67,7 @@ plugins-install: plugins
 	$(MAKE) -C plugin plugins-install
 
 
-unsupported:
+unsupported: all
 	$(MAKE) -C unsupported_plugins
 
 unsupported-install: unsupported
