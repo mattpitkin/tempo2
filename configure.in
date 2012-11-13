@@ -110,10 +110,20 @@ AC_CHECK_LIB([m],[cos])
 #AC_CHECK_LIB([gslcblas],[cblas_dgemm])
 AC_CHECK_LIB([gsl],[gsl_blas_dgemm],have_gsl=yes, have_gsl=no)
 
+
+
 AC_MSG_CHECKING([for GSL])
 AC_MSG_RESULT($have_gsl)
 
 AM_CONDITIONAL(HAVE_GSL, [test x"$have_gsl" = xyes])
+
+
+# test for LAPACK acceleration
+ACX_LAPACK(have_lapack=yes, have_lapack=no)
+AC_MSG_CHECKING([for LAPACK])
+AC_MSG_RESULT($have_lapack)
+AM_CONDITIONAL(HAVE_LAPACK, [test x"$have_lapack" = xyes])
+
 
 AC_MSG_CHECKING([for LOGIN_ARCH variable])
 if test -n "$LOGIN_ARCH" ; then
@@ -175,6 +185,12 @@ fi
 if test X$have_cfitsio != Xyes; then
 	AC_MSG_NOTICE(Plugins: cfitsio was not found - plugins requiring cfitsio will not be compiled)
 fi
+
+if test X$have_lapack == Xyes; then
+	AC_MSG_NOTICE(Using LAPACK library for Cholesky decomposition)
+fi
+
+
 
 
 if test $can_build_shared == no ; then

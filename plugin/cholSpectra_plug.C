@@ -142,9 +142,8 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
    long double toffset = 52601.0L;
 
    //  printf("Calculating the spectrum\n");
-   uinv = (double **)malloc(sizeof(double *)*psr->nobs);
-   for (i=0;i<psr->nobs;i++)
-	  uinv[i] = (double *)malloc(sizeof(double)*psr->nobs);
+   uinv = malloc_uinv(psr->nobs);
+
 
    sprintf(fname,"%s.res",psr->name);
    if (!(fout = fopen(fname,"w")))
@@ -192,9 +191,7 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
 	  fprintf(fout,"%g %g\n",px[i],py_r[i]*py_r[i]+py_i[i]*py_i[i]);
    fclose(fout);
    // Free uinv
-   for (i=0;i<psr->nobs;i++)
-	  free(uinv[i]);
-   free(uinv);
+   free_uinv(uinv);
 }
 
 

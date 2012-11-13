@@ -266,6 +266,13 @@ int main(int argc, char *argv[])
       for (i=0; i < tempo2_plug_path_len; i++){
 	      printf(" -- %s/*.t2\n",tempo2_plug_path[i]);
       }
+	  printf("\n");
+#ifdef HAVE_LAPACK
+	  printf("* Using LAPACK acceleration for Cholesky decomposition\n");
+#endif
+#ifdef HAVE_BLAS
+	  printf("* Using BLAS acceleration for matrix mulitplication\n");
+#endif
       printf("\nFor more help, use %s -h\n",argv[0]);
       exit(1);
     }

@@ -33,6 +33,8 @@
 #include "tempo2.h" // If you need to remove this then delete TKleastSquares_svd_psr
 #include "T2toolkit.h"
 #include "TKfit.h"
+#include "T2accel.h"
+#include <string.h>
 
 double TKpythag(double a,double b);
 void TKbidiagonal(double **a,double *anorm,int ndata,int nfit,double **v,double *w,double **u,double *rv1);
@@ -212,6 +214,19 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   double **v,**u,**uout;
   double w[nf],wt[nf],sum,wmax,*bout;
   int    i,j,k;
+
+
+  // store memory in BLAS compatible format for accelerator code.
+  double* _designMatrix=(double*)malloc(sizeof(double)*n*nf);
+  double* _v=(double*)malloc(sizeof(double)*nf*nf);
+  double* _u=(double*)malloc(sizeof(double)*n*nf);
+  double* _uout=(double*)malloc(sizeof(double)*n*nf);
+
+  if((_designMatrix == NULL)||(_v==NULL)||(_u==NULL)||(_uout==NULL)){
+	 logerr("OUT OF MEMORY");
+	 exit(1);
+  }
+
   designMatrix = (double **)malloc(n*sizeof(double *)); // malloc-TKleastSquares_svd_psr_dcm-designMatrix**
   v = (double **)malloc(nf*sizeof(double *));   // malloc-TKleastSquares_svd_psr_dcm-v**
   u = (double **)malloc(n*sizeof(double *));    // malloc-TKleastSquares_svd_psr_dcm-u**
@@ -219,14 +234,15 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   bout = (double *)malloc(n*sizeof(double));    // malloc-TKleastSquares_svd_psr_dcm-bout*
 
 
+  // create "C" style pointers to arrays for ease of use
   for (i=0;i<n;i++) 
-    {
-      if ((designMatrix[i] = (double *)malloc(nf*sizeof(double))) == NULL) {printf("OUT OF MEMORY\n"); exit(1);} // malloc-TKleastSquares_svd_psr_dcm-designMatrix*
-      if ((u[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);} // malloc-TKleastSquares_svd_psr_dcm-u*
-      if ((uout[i] = (double *)malloc(nf*sizeof(double))) == NULL)  {printf("OUT OF MEMORY\n"); exit(1);} // malloc-TKleastSquares_svd_psr_dcm-uout*
-      if (weight==0) sig[i]=1.0;
-    }
-  for (i=0;i<nf;i++) v[i] = (double *)malloc(nf*sizeof(double)); // malloc-TKleastSquares_svd_psr_dcm-v*
+  {
+	 designMatrix[i]=_designMatrix + nf*i;
+	 u[i]=_u+nf*i;
+	 uout[i]=_uout+nf*i;
+	 if (weight==0) sig[i]=1.0;
+  }
+  for (i=0;i<nf;i++) v[i] = _v+nf*i;
   /* This routine has been developed from Section 15 in Numerical Recipes */
   
   /* Determine the design matrix - eq 15.4.4 
@@ -322,15 +338,11 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   	e[j] *= sqrt(*chisq/(n-nf));
     }
  
-  for (j=0;j<nf;j++){
-	  free(v[j]);       // free-TKleastSquares_svd_psr_dcm-v*
-  }
-  for (j=0;j<n;j++)
-    {
-      free(uout[j]);         // free-TKleastSquares_svd_psr_dcm-uout*
-      free(designMatrix[j]); // free-TKleastSquares_svd_psr_dcm-designMatrix*
-      free(u[j]);            // free-TKleastSquares_svd_psr_dcm-u*
-    }
+  // this funny method of freeing is because of the BLAS style matricies. M.Keith 2012
+	  free(v[0]);       // free-TKleastSquares_svd_psr_dcm-v*
+      free(uout[0]);         // free-TKleastSquares_svd_psr_dcm-uout*
+      free(designMatrix[0]); // free-TKleastSquares_svd_psr_dcm-designMatrix*
+      free(u[0]);            // free-TKleastSquares_svd_psr_dcm-u*
 
   free(uout);  // free-TKleastSquares_svd_psr_dcm-uout**
   free(bout);  // free-TKleastSquares_svd_psr_dcm-bout*
@@ -914,6 +926,11 @@ double TKpythag(double a,double b)
 //}
 void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
 {
+#ifdef ACCEL_MULTMATRIX
+   logdbg("Using ACCELERATED multmatrix (M.Keith 2012)");
+   accel_multMatrix(idcm[0],u[0],ndata,npol,uout[0]);
+#else
+   logdbg("Using SLOW multmatrix");
 	int i,j,k;
 	for (j=0;j<npol;j++)
 	{
@@ -929,10 +946,16 @@ void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
 			}
 		}
 	}
+#endif
 }
 
 void multMatrixVec(double **idcm,double *b,int ndata,double *bout)
 {
+#ifdef ACCEL_MULTMATRIX
+   logdbg("Using ACCELERATED multmatrix (M.Keith 2012)");
+   accel_multMatrix(idcm[0],b,ndata,1,bout);
+#else
+
 	int i,j;
 	for (i=0;i<ndata;i++)
 	{
@@ -944,6 +967,7 @@ void multMatrixVec(double **idcm,double *b,int ndata,double *bout)
 		for (i=0;i<ndata;i++)
 			bout[i]+=idcm[j][i]*b[j];
 	}
+#endif
 }
 
 void TKcholDecomposition(double **a, int n, double *p)

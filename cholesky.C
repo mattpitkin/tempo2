@@ -7,6 +7,7 @@
 #include <TKfit.h>
 #include <TKspectrum.h>
 #include <choleskyRoutines.h>
+#include "T2accel.h"
 
 #define LINE_LENGTH 2048
 
@@ -40,6 +41,15 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
    char tmp[1024];
    double **m;
    int i,j;
+
+	if(uinv[np-1] != uinv[0]+(np-1)*np){
+	   logerr("uinv matrix not declared as consecutive memory.");
+	   logmsg("Please use malloc_uinv() and free_uinv() from cholesky.C");
+#ifdef ACCEL_UINV
+	   // if we are using the accelerated code then it will crash... otherwise it's just a warning
+	   exit(1);
+#endif
+	}
 
    logmsg("Reading Cholesky model '%s' for pulsar %s",fname,psr->name);
 
@@ -87,7 +97,7 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
 		 fprintf(LOG_OUTFILE,"\n");
 	  }
 	  fprintf(LOG_OUTFILE,"\n");
-	  FILE* mFile = fopen("cholMatrix","w");
+	  FILE* mFile = fopen("chol.covarMatrix","w");
 	  for (i=0;i<np;i++)
 	  { 
 		 for (j=0;j<np;j++) fprintf(mFile,"%d %d %g\n",i,j,m[i][j]); 
@@ -105,6 +115,32 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
    free(m);
 }
 
+
+/**
+ * Allocate uinv in a "BLAS/LAPACK" compatile way
+ */
+double **malloc_uinv(int n){
+   double *memory;
+   double** uinv;
+   int i;
+   logdbg("Allocate uinv");
+   memory=(double*)malloc(sizeof(double)*n*n);
+   uinv=(double**)malloc(sizeof(double*)*n);
+   if(memory==NULL || uinv==NULL){
+	  logerr("Cannot allocate enough memory for uinv");
+	  return NULL;
+   }
+   logdbg("uinv... 0x%016x -> 0x%016x",memory,memory+n*n);
+   for(i=0;i<n;i++){
+	  uinv[i]=memory+n*i;
+   }
+   return uinv;
+}
+
+void free_uinv(double** uinv){
+   free(uinv[0]);
+   free(uinv);
+}
 
 
 void cholesky_readT2CholModel_R(double **m, double **mm, char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr,char *_psrJ,double _mjd_start,double _mjd_end,int recursion){
@@ -309,14 +345,25 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
 }
 
 void cholesky_formUinv(double **uinv,double** m,int np){
-   clock_t clk=clock();
    int i,j,k;
+   clock_t clk=clock();
+   logtchk("forming Cholesky matrix ... do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+#ifdef ACCEL_UINV
+   logmsg("Doing ACCELERATED Chol Decomp (M.Keith/LAPACK method)");
+   for(i =0;i<np;i++){
+	  memcpy(uinv[i],m[i],np*sizeof(double));
+   }
+   accel_uinv(uinv[0],np);
+
+   logtchk("forming Cholesky matrix ... complete calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+#else
+
+
    double sum;
 
    double *cholp  = (double *)malloc(sizeof(double)*(np+1));
-   logmsg("Doing Cholesky decomp and inverting matrix");
+   logmsg("Doing Cholesky decomp and inverting matrix (SLOW method)");
    if(!cholp)logerr("Could not allocate enough memory");
-   logtchk("forming Cholesky matrix ... do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 
    TKcholDecomposition(m,np,cholp);
    logtchk("forming Cholesky matrix ... complete do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
@@ -353,6 +400,19 @@ void cholesky_formUinv(double **uinv,double** m,int np){
    logtchk("forming Cholesky matrix ... free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
    free(cholp);
    logtchk("forming Cholesky matrix ... complete free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+#endif
+
+   if(debugFlag){
+	  logdbg("Write uinv");
+	  FILE* file=fopen("chol.uinv","w");
+	  for(i =0;i<np;i++){
+		 for(j =0;j<np;j++){
+			fprintf(file,"%d %d %lg\n",i,j,uinv[i][j]);
+		 }
+		 fprintf(file,"\n");
+	  }
+	  fclose(file);
+   }
 
 }
 
@@ -446,16 +506,16 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
 			else if((psr->obsn[ip[j]].sat > mjd_end) && (psr->obsn[ip[i]].sat < mjd_start))
 			   m[i][j]+=mm[istart][iend]; //5
 			else if((psr->obsn[ip[j]].sat > mjd_end)
-				&& ((psr->obsn[ip[i]].sat > mjd_start ) && (psr->obsn[ip[i]].sat < mjd_end)))
+				  && ((psr->obsn[ip[i]].sat > mjd_start ) && (psr->obsn[ip[i]].sat < mjd_end)))
 			   m[i][j]+=mm[i][iend]; // 6
 			else if((psr->obsn[ip[j]].sat < mjd_start)
-				&& ((psr->obsn[ip[i]].sat > mjd_start ) && (psr->obsn[ip[i]].sat < mjd_end)))
+				  && ((psr->obsn[ip[i]].sat > mjd_start ) && (psr->obsn[ip[i]].sat < mjd_end)))
 			   m[i][j]+=mm[i][istart]; // 7
 			else if((psr->obsn[ip[i]].sat > mjd_end)
-				&& ((psr->obsn[ip[j]].sat > mjd_start ) && (psr->obsn[ip[j]].sat < mjd_end)))
+				  && ((psr->obsn[ip[j]].sat > mjd_start ) && (psr->obsn[ip[j]].sat < mjd_end)))
 			   m[i][j]+=mm[iend][j]; // 8
 			else if((psr->obsn[ip[i]].sat < mjd_start)
-				&& ((psr->obsn[ip[j]].sat > mjd_start ) && (psr->obsn[ip[j]].sat < mjd_end)))
+				  && ((psr->obsn[ip[j]].sat > mjd_start ) && (psr->obsn[ip[j]].sat < mjd_end)))
 			   m[i][j]+=mm[istart][j]; // 9
 		 }
 
