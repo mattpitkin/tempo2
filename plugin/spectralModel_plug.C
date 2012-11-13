@@ -299,9 +299,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
     if (tempTime==1)
       {
-	uinv= (double **)malloc(sizeof(double *)*(nres+1));
+	uinv=malloc_uinv(nres);
 	covFunc = (double *)malloc(sizeof(double)*((int)(resx[nres-1]-resx[0])+5));
-	for (i=0;i<nres+1;i++)uinv[i] = (double *)malloc(sizeof(double)*(nres+1));      
 	tempTime=2;
       }
 	// Step 1c: fit a cubic to the timing residuals
@@ -359,8 +358,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   // Errors are ignored
   //  nSmoothSpec0 = calculateSpectra(interpX,interpY,rese,nInterp,0,0,2,
   //  				  smoothSpecX0,smoothSpecY0);
-  uinvI = (double **)malloc(sizeof(double *)*(nInterp+1));
-  for (i=0;i<nInterp+1;i++) uinvI[i] = (double *)malloc(sizeof(double)*(nInterp+1));      
+  uinvI = malloc_uinv(nInterp);
   for (i=0;i<nInterp;i++)
     {
       for (j=0;j<nInterp;j++)
@@ -549,10 +547,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   //    outputMatrix(uinv,nres);
   
   // Deallocate memory 
-  for (i=0;i<nres+1;i++) free(uinv[i]);
-  free(uinv);
-  for (i=0;i<nInterp+1;i++) free(uinvI[i]);
-  free(uinvI);
+  free_uinv(uinv);
+  free_uinv(uinvI);
   free(covFunc);
 }
 
@@ -1283,113 +1279,7 @@ void plot4(double *resx,double *resy,double *rese,int nres,double *cholWhiteY,
 
 
 
-void formCholeskyMatrix_pl(double *c,double *resx,double *resy,double *rese,int np,double **uinv)
-{
-  double **m,**u,sum;
-  double *cholp;
-  int i,j,k,ix,iy;
-  double t0,cint,t;
-  int t1,t2;
-  int debug=1;
 
-  printf("Getting the covariance matrix\n");
-  m = (double **)malloc(sizeof(double *)*(np+1));
-  u= (double **)malloc(sizeof(double *)*(np+1));
-  cholp  = (double *)malloc(sizeof(double)*(np+1));  // Was ndays
-
-  for (i=0;i<np+1;i++)
-    {
-      m[i] = (double *)malloc(sizeof(double)*(np+1));
-      u[i] = (double *)malloc(sizeof(double)*(np+1));
-    }
-  
-  for (ix=0;ix<np;ix++)
-    {
-      for (iy=0;iy<np;iy++)
-	m[ix][iy] = fabs(resx[ix]-resx[iy]);
-    }
-  if (debug==1)
-    {
-      printf("First m = \n");
-      for (i=0;i<5;i++)
-	{ 
-	  for (j=0;j<5;j++) printf("%10g ",m[i][j]); 
-	  printf("\n");
-	}
-
-    }
-  // Insert the covariance which depends only on the time difference.
-  // Linearly interpolate between elements on the covariance function because
-  // valid covariance matrix must have decreasing off diagonal elements.
-  printf("Inserting into the covariance matrix\n");
-  for (ix=0;ix<np;ix++)
-    {
-      for (iy=0;iy<np;iy++)
-	{
-	  t0 = m[ix][iy];
-	  t1 = (int)floor(t0);
-	  t2 = t1+1;
-	  t  = t0-t1;
-	  cint = c[t1]*(1-t)+c[t2]*t; // Linear interpolation
-	  m[ix][iy] = cint;
-	}
-    }
-  printf("Multiplying by errors\n");
-  for (ix=0;ix<np;ix++)
-    m[ix][ix]+=rese[ix]*rese[ix];
-
-  if (debug==1)
-    {
-      printf("m = \n\n");
-      for (i=0;i<5;i++)
-	{ 
-	  for (j=0;j<5;j++) printf("%10g ",m[i][j]); 
-	  printf("\n");
-	}
-    }
-
-  // Do the Cholesky
-  TKcholDecomposition(m,np,cholp);
-  // Now calculate uinv
-  for (i=0;i<np;i++)
-    {
-      m[i][i] = 1.0/cholp[i];
-      uinv[i][i] = m[i][i];
-      for (j=0;j<i;j++)
-      	uinv[i][j] = 0.0;
-      for (j=i+1;j<np;j++)
-	{
-	  sum=0.0;
-	  for (k=i;k<j;k++) sum-=m[j][k]*m[k][i];
-	  m[j][i]=sum/cholp[j];
-	  uinv[i][j] = m[j][i];
-	}
-    } 
-
-  if (debug==1)
-    {
-      printf("uinv = \n\n");
-      for (i=0;i<5;i++)
-	{ 
-	  for (j=0;j<5;j++) printf("%10g ",uinv[i][j]); 
-	  printf("\n");
-	}
-    }
-
-  printf("Completed inverting the matrix\n");
-
-  // Should free memory not required
-  // (note: not freeing uinv)
-
-  for (i=0;i<np+1;i++)
-    {
-      free(m[i]);
-      free(u[i]);
-    }
-  free(m);
-  free(u);
-  free(cholp);
-}
 
 
 void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,

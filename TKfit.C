@@ -215,6 +215,15 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   double w[nf],wt[nf],sum,wmax,*bout;
   int    i,j,k;
 
+  if(uinv[n-1] != uinv[0]+(n-1)*n){
+	   logerr("uinv matrix not declared as consecutive memory.");
+	   logmsg("Please use malloc_uinv() and free_uinv() from cholesky.C");
+	   logmsg("and - ensure that uinv is %d by %d",n,n);
+#ifdef ACCEL_MULTMATRIX
+	   // if we are using the accelerated code then it will crash... otherwise it's just a warning
+	   exit(1);
+#endif
+	}
 
   // store memory in BLAS compatible format for accelerator code.
   double* _designMatrix=(double*)malloc(sizeof(double)*n*nf);
