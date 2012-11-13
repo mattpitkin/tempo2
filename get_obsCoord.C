@@ -70,7 +70,7 @@ get_obsCoord_IAU2000B(double observatory_trs[3],
   if (displayCVSversion == 1) CVSdisplayVersion("get_obsCoord.C","get_obsCoord_IAU2000B()",CVS_verNum);
 
   // Get Earth orientation parameters
-  get_EOP((double)utc_mjd, &xp, &yp, &dut1, &dut1dot, 1);
+  get_EOP((double)utc_mjd, &xp, &yp, &dut1, &dut1dot, 2);
   ut1_jd = utc_mjd + dut1/86400.0 + (longdouble)2400000.5;
   ut1_jd1 = (int)ut1_jd;
   ut1_jd2 = ut1_jd-ut1_jd1;
@@ -373,6 +373,10 @@ void get_obsCoord(pulsar *psr,int npsr)
 					    psr[p].obsn[i].observatory_earth,
 					    psr[p].obsn[i].zenith,
 					    psr[p].obsn[i].siteVel);
+          if( psr[p].eclCoord == 1 ){
+            equ2ecl( psr[p].obsn[i].observatory_earth );
+            equ2ecl( psr[p].obsn[i].siteVel );
+          }
 		    }
 		  else {
 		    psr[p].obsn[i].zenith[0]=psr[p].obsn[i].zenith[1]=psr[p].obsn[i].zenith[2]=0.0; // Only calc'd by IAU code
