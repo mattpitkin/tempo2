@@ -43,9 +43,8 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
   double *covFunc;
   int dspan=ceil(resx[nres-1]-resx[0]);
   
-  uinv= (double **)malloc(sizeof(double *)*(nres+1));
+  uinv=malloc_uinv(nres);
   covFunc = (double *)malloc(sizeof(double)*((int)(resx[nres-1]-resx[0])+5));
-  for (i=0;i<nres+1;i++)uinv[i] = (double *)malloc(sizeof(double)*(nres+1));      
   
   int nHighFreqSpec;
   double *highFreqSpecX, *highFreqSpecY;
@@ -530,8 +529,7 @@ fprintf(stderr,"fc_white %.3e expsmooth %.3e\n", fc_white, expSmooth);
    free(smoothModel);
    free(highFreqRes);
 
-    for (i=0;i<nres+1;i++) free(uinv[i]);
-    free(uinv);
+    free_uinv(uinv);
     
     free(covFunc);
 
