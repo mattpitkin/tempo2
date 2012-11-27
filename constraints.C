@@ -151,8 +151,6 @@ void matrixDMConstraintWeights(pulsar *psr){
 
 		}
 		//normalise the weights
-		sum_wDM/=(double)psr->dmoffsNum;
-		sum_wCM/=(double)psr->dmoffsNum;
 		for (i=0;i<nfit;i++){
 				if((int)(i/psr->dmoffsNum)==0)
 						psr->dmoffsCWeights[i]/=sum_wDM;
