@@ -120,7 +120,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (modelFc == -1)
     {
       int ndays = ceil(resx[np-1]-resx[0]);
-      modelFc = 1.0/(ndays/365.25*2.0);
+      modelFc = 1.0/(ndays/365.25);
     }
   if (modelA == -1)
     {
