@@ -40,5 +40,7 @@ void TKleastSquares_svd_passN(double *x,double *y,double *sig2,int n,double *p,d
 void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double **v,double *w,double **u);
 void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x,int n,int nf);
 
+void TKmultMatrix(double **idcm,double **u,int ndata,int npol,double **uout);
+void TKmultMatrixVec(double **idcm,double *b,int ndata,double *bout);
 
 #endif

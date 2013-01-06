@@ -11,3 +11,4 @@ simulDM_plug.C
 fixData_plug.C
 clock_plug.C
 GWbkgrd_plug.C
+spectralModel_plug.C

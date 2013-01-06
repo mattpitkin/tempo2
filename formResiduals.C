@@ -926,9 +926,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     }
 	   if ((double)psr[p].param[param_track].val[0] == -2) // Track on pulse number
 	     {
-	       int pnNew;
-	       int pnAct;
-	       int addPhase;
+	       long long pnNew;
+	       long long pnAct;
+	       long long addPhase;
 
 	       nf0  = (int)psr[p].param[param_f].val[0];
 	       ntpd = ((int)psr[p].obsn[i].bbat-(int)psr[p].param[param_pepoch].val[0]);
@@ -941,17 +941,17 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	       else
 		 pnNew -= pn0;
-	       printf("Have %g %d\n",(double)psr[p].obsn[i].sat,pnNew);
+	       printf("Have %g %lld\n",(double)psr[p].obsn[i].sat,pnNew);
 	       // Compare with flag
 	       for (int kk=0;kk<psr[p].obsn[i].nFlags;kk++)
 		 {
 		   if (strcmp(psr[p].obsn[i].flagID[kk],"-pn")==0)
 		     {
-		       sscanf(psr[p].obsn[i].flagVal[kk],"%d",&pnAct);
+		       sscanf(psr[p].obsn[i].flagVal[kk],"%lld",&pnAct);
 		       addPhase = pnNew-pnAct;
 		       residual += addPhase;
 		       ntrk += addPhase;
-		       printf("*** Adding phase %d ***\n",addPhase);
+		       printf("*** Adding phase %lld ***\n",addPhase);
 		     }
 		 }
 	     }

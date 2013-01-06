@@ -38,8 +38,6 @@
 
 double TKpythag(double a,double b);
 void TKbidiagonal(double **a,double *anorm,int ndata,int nfit,double **v,double *w,double **u,double *rv1);
-void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout);
-void multMatrixVec(double **idcm,double *b,int ndata,double *bout);
 
 void TKremovePoly_f(float *px,float *py,int n,int m)
 {
@@ -177,9 +175,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
 	  cvm[i][j] = cvm[j][i] = sum;
 	}
       e[i] = sqrt(cvm[i][i]);
-      //      printf("At this point %g %g\n",e[i],cvm[i][i]);
     }
-  //  printf("chisq\n");
   *chisq = 0.0;
   for (j=0;j<n;j++)
     {
@@ -267,7 +263,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
       //      	printf("Designmatrix = %g %g %g\n",designMatrix[i][j],basisFunc[j],sig[i]);
     }
   // Take into account the data covariance matrix
-  multMatrix(uinv,designMatrix,n,nf,uout);  
+  TKmultMatrix(uinv,designMatrix,n,nf,uout);  
   for (i=0;i<n;i++)
     {
       for (j=0;j<nf;j++)
@@ -276,7 +272,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
 	  //	  printf("%g %g\n",designMatrix[i][j],uout[i][j]);
 	}
     }
-  multMatrixVec(uinv,b,n,bout);
+  TKmultMatrixVec(uinv,b,n,bout);
   if(debugFlag==1){
 	 logdbg("Writing out whitened residuals");
 	 FILE* wFile=fopen("white.res","w");
@@ -321,13 +317,13 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
       for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j];
       b[i] = y[i];
     }
-  multMatrix(uinv,designMatrix,n,nf,uout);  
+  TKmultMatrix(uinv,designMatrix,n,nf,uout);  
   for (i=0;i<n;i++)
     {
       for (j=0;j<nf;j++)
 	  designMatrix[i][j] = uout[i][j];
     }
-  multMatrixVec(uinv,b,n,bout);
+  TKmultMatrixVec(uinv,b,n,bout);
   for (i=0;i<n;i++) b[i] = bout[i];
   for (j=0;j<n;j++)
     {
@@ -920,20 +916,7 @@ double TKpythag(double a,double b)
 }
 
 
-//
-// This call would allow us to use the "cblas" matrix multiplication code.
-// It requires that you allocate your memory in one chunk (fortran style).
-// So we can't use it yet.
-//
-// I couldn't get it to work exactly right, but I'm sure that the parameters
-// given here do in fact get the BLAS call right for this function.
-//
-// MJK 2011-07-27
-//
-//void multMatrix_BLAS(double **idcm,double **u,int ndata,int npol,double **uout){
-//	cblas_dgemm(CblasRowMajor,CblasTrans,CblasNoTrans,ndata,npol,ndata,1,*idcm,ndata,*u,npol,0,*uout,npol);
-//}
-void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
+void TKmultMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
 {
 #ifdef ACCEL_MULTMATRIX
    logdbg("Using ACCELERATED multmatrix (M.Keith 2012)");
@@ -958,7 +941,7 @@ void multMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
 #endif
 }
 
-void multMatrixVec(double **idcm,double *b,int ndata,double *bout)
+void TKmultMatrixVec(double **idcm,double *b,int ndata,double *bout)
 {
 #ifdef ACCEL_MULTMATRIX
    logdbg("Using ACCELERATED multmatrix (M.Keith 2012)");

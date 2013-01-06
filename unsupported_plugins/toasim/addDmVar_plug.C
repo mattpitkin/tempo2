@@ -179,7 +179,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  d*=86400.0;  // convert days to seconds.
 
 
-	  double pism = (2.0/189.0) * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
+	  double pism = 0.0112 * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
 
 	  printf("pism(1yr)  = %g (yr^3) \n",pism );
 

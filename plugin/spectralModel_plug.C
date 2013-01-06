@@ -35,7 +35,6 @@
 #include "T2toolkit.h"
 #include "TKspectrum.h"
 #include "TKfit.h"
-#include "fftw3.h"
 #include "choleskyRoutines.h"
 
 using namespace std;

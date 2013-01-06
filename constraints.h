@@ -3,7 +3,8 @@
 
 std::string get_constraint_name(enum constraint c);
 
-void computeConstraintWeights(pulsar *psr,int npsr);
+// uinv can be set to NULL when DCM is not used
+void computeConstraintWeights(pulsar *psr,double** uinv);
 
 /*
  * Constraints must be specified in the constraint enum in tempo2.h
@@ -24,3 +25,5 @@ double consFunc_tel_dz(pulsar *psr,int i,int k, int order);
 double consFunc_quad_ifunc_p(pulsar *psr,int i,int k, int order);
 double consFunc_quad_ifunc_c(pulsar *psr,int i,int k, int order);
 
+
+void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double end, bool fixCMgrid);

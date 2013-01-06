@@ -990,7 +990,7 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
    double P;
    double varScaleFactor=0.6;
 
-   ndays=ceil((resx[np-1])-(resx[0]));
+   ndays=ceil((resx[np-1])-(resx[0])+1e-10);
    npts=128;
    while(npts<(ndays+1)*2)npts*=2;
 

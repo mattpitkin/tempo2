@@ -58,7 +58,6 @@ void doFit(pulsar *psr,int npsr,int writeModel)
   logdbg("Entering doFit");
   logdbg("Fitting with function: %s",psr[0].fitFunc);
 
-  computeConstraintWeights(psr,npsr);
 
   if (strcmp(psr[0].fitFunc,"default")!=0)
     {
@@ -191,13 +190,14 @@ void doFit(pulsar *psr,int npsr,int writeModel)
      // add constraints as extra pseudo observations
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
-     for (i=0; i < psr[p].nconstraints; i++){
-       ip[count] = psr[p].nobs+i;  // This was a mistake -- originally had psr->nobs 
-	x[count]=x[last];
-	y[count]=0;
-	sig[count]=1e-12;
-	count++;
-      }
+	 
+	  for (i=0; i < psr[p].nconstraints; i++){
+		 ip[count] = psr[p].nobs+i;  // This was a mistake -- originally had psr->nobs 
+		 x[count]=x[last];
+		 y[count]=0;
+		 sig[count]=1e-12;
+		 count++;
+	  }
 
       psr[p].nFit = count;
       psr[p].param[param_start].val[0] = newStart-0.001; 
@@ -208,6 +208,8 @@ void doFit(pulsar *psr,int npsr,int writeModel)
       if (npol!=0) /* Are we actually  doing any fitting? */ 
 	{ 
 
+	   logdbg("Get constraint weights");
+	   computeConstraintWeights(psr+p,NULL);
 	  logdbg("Doing the fit");
 	  TKleastSquares_svd_psr(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
 				 FITfuncs,psr[p].fitMode,&psr[p],tol,ip);
@@ -281,7 +283,6 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
   clk=clock();  
 
-  computeConstraintWeights(psr,npsr);
   //  logtchk("Starting Cholesky fit (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
   if (strcmp(psr[0].fitFunc,"default")!=0)
     {
@@ -505,6 +506,10 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       /* Do the fit */
       if (npol!=0) /* Are we actually  doing any fitting? */ 
 	{ 
+
+	   logdbg("Get constraint weghts");
+	  logtchk("Get Constraint weights  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  computeConstraintWeights(psr+p,uinv);
 	  logdbg("Doing the fit");
 	  logtchk("doing the fit  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  TKleastSquares_svd_psr_dcm(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
@@ -608,8 +613,10 @@ int getNparams(pulsar psr)
       npol+=(psr.quad_ifuncN_c-1);
 
   /* Add extra parameters for DMMODEL fitting */
-  if (psr.param[param_dmmodel].fitFlag[0]==1)
-    npol+=(int)((psr.dmoffsNum)*2); // *2 because we fit for the DM and constant offset
+  if (psr.param[param_dmmodel].fitFlag[0]==1){
+	 npol+=psr.dmoffsDMnum;
+	 npol+=psr.dmoffsCMnum;
+  }
   /* Add extra parameters for GW single source fitting */
   if (psr.param[param_gwsingle].fitFlag[0]==1)
     npol+=4; 
@@ -733,14 +740,11 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos)
 
 		    double dmf = 1;
 			if (ipos < psr->nobs)dmf = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
-//		    if (ipos < psr->nobs)dmf = 1.0/(powl(psr->obsn[ipos].freqSSB/1.0e6,4.4)); // FAKE SCATTERING TEST
 
-		      for (j=0;j<(int)psr->dmoffsNum;j++)
-			{
-			  // This is for the actual frequency-dep fit
-			  afunc[n++] = dmf*getParamDeriv(psr,ipos,x,i,j);
-			  afunc[n++] =     getParamDeriv(psr,ipos,x,i,j+psr->dmoffsNum);
-			}
+			for (j=0;j<(int)psr->dmoffsDMnum;j++)
+				 afunc[n++] = dmf*getParamDeriv(psr,ipos,x,i,j);
+			for (j=0;j<(int)psr->dmoffsCMnum;j++)
+				 afunc[n++] =     getParamDeriv(psr,ipos,x,i,j+psr->dmoffsDMnum);
 		    }
 		  else
 		    {
@@ -1779,28 +1783,39 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     }
   else if (i==param_dmmodel)
     {
+	   int N=psr->dmoffsDMnum;
       double sat = (double)psr->obsn[ipos].sat;
-      double yoffs[MAX_IFUNC*2];
-      for (int ioff =0;ioff<psr->dmoffsNum;ioff++){
-	      if (ioff==(k%psr->dmoffsNum)){ // we use modulo to get both the DM and CM signal.
+      double yoffs[MAX_IFUNC];
+	  double* mjd=psr->dmoffsDM_mjd;
+	  if (k >= N){
+		 // if we are at k >= N, then we are in the CM, not the DM
+		 // so swap the variables over.
+		 mjd=psr->dmoffsCM_mjd;
+		 k-=N;
+		 N=psr->dmoffsCMnum;
+	  }
+
+
+      for (int ioff =0;ioff<N;ioff++){
+	      if (ioff==k){
 		      yoffs[ioff]=1;
 	      } else {
-		      yoffs[ioff]=0;//-1.0/(double)(psr->dmoffsNum-1);
+		      yoffs[ioff]=0;
 	      }
       }
 
-      if (sat < (double)psr->dmoffsMJD[0]){
+      if (sat < mjd[0]){
 	      // we are before the first jump
 	      // so our gradient is just the zeroth offset.
 	      afunc = yoffs[0];
-      } else if(sat > (double)psr->dmoffsMJD[(int)psr->dmoffsNum-1]){
-	      afunc = yoffs[(int)psr->dmoffsNum-1];
+      } else if(sat > mjd[N-1]){
+	      afunc = yoffs[N-1];
       } else{
 	      // find the pair we are between...
-	      for (int ioff =0;ioff<psr->dmoffsNum;ioff++){
-		      if(sat >= psr->dmoffsMJD[ioff] && sat < psr->dmoffsMJD[ioff+1]){
-			      double x1 = psr->dmoffsMJD[ioff];
-			      double x2 = psr->dmoffsMJD[ioff+1];
+	      for (int ioff =0;ioff<N;ioff++){
+		      if(sat >= mjd[ioff] && sat < mjd[ioff+1]){
+			      double x1 = mjd[ioff];
+			      double x2 = mjd[ioff+1];
 			      double x = (sat-x1)/(x2-x1);
 			      double y1=yoffs[ioff];
 			      double y2=yoffs[ioff+1];
@@ -1810,23 +1825,6 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	      }
       }
           
-/*
-      double ti = (double)psr->obsn[ipos].sat;
-      double tm1 = (double)psr->dmoffsMJD[k-1];
-      double t0 = (double)psr->dmoffsMJD[k];
-      double t1 = (double)psr->dmoffsMJD[k+1];
-      if (ti >= t0 && ti < t1)
-	{
-	  afunc=1.0-(1.0/(t1-t0))*(ti-t0);
-	}
-      else if (ti >= tm1 && ti < t0)
-	{
-	  afunc=(1.0/(t0-tm1))*(ti-tm1);
-	}
-      else
-	afunc = 0;
-	*/
-//      if(fabs(af2-afunc) > 1e-2)printf("XX %lf\t%lf\t%lf\n",sat,af2,afunc);
     }
   else if (i==param_dmassplanet)
     {
@@ -2149,25 +2147,17 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 		}
 	      else if (i==param_dmmodel)
 		{
-// These commented lines will install the CM into a set of IFUNCs
-//		psr[p].ifuncN = psr[p].dmoffsNum;
-//		psr[p].param[param_ifunc].val[0]=2;
-//		psr[p].param[param_ifunc].paramSet[0]=1;
-		  for (k=0;k<psr[p].dmoffsNum;k++)
+		  for (k=0;k<psr[p].dmoffsDMnum;k++)
 		    {
-		      //		      printf("Updating %g by %g\n",psr[p].dmvalsDM[k],val[j]);
-		      //
-		      psr[p].dmoffsDM[k] += val[j];
-		      psr[p].dmoffsDMe[k] = error[j];
-		      j++;
+				  psr[p].dmoffsDM[k] += val[j];
+				  psr[p].dmoffsDM_error[k] = error[j];
+				  j++;
+			}
+		 for (k=0;k<psr[p].dmoffsCMnum;k++){
 
-		      psr[p].dmoffsOffset[k] = val[j];
-		      psr[p].dmoffsError[k] =  error[j];
-//		      psr[p].ifuncT[k]=psr[p].dmoffsMJD[k];
-//		      psr[p].ifuncV[k] -= val[j];
-//		      psr[p].ifuncE[k] =  error[j];
-
-		      j++;
+				  psr[p].dmoffsCM[k] = val[j];
+				  psr[p].dmoffsCM_error[k] =  error[j];
+				  j++;
 		    }
 		  j--;
 		}
@@ -2446,6 +2436,8 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 			return consFunc_quad_ifunc_c(psr,i,k,order);
 
 		// DMMODEL annual terms
+		case constraint_dmmodel_cw_px:
+			order++;
 		case constraint_dmmodel_cw_year_cos2:
 			order++;
 		case constraint_dmmodel_cw_year_sin2:

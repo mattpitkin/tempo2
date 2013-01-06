@@ -153,13 +153,13 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	  // set the mean DMOFF to zero.
 	  if(t&0x00F0){
 		  double mean_dmoff=0;
-		  for (k=0;k<psr[p].dmoffsNum;k++){
+		  for (k=0;k<psr[p].dmoffsDMnum;k++){
 			  mean_dmoff+=psr[p].dmoffsDM[k];
 		  }
-		  mean_dmoff /= (double)psr[p].dmoffsNum;
+		  mean_dmoff /= (double)psr[p].dmoffsDMnum;
 		  if(mean_dmoff > 1e-12){
 			  printf("WARNING: Mean DMOFF = %lg\n",mean_dmoff);
-			  for(k=0;i < psr[p].nconstraints; k++){
+/*			  for(k=0;i < psr[p].nconstraints; k++){
 				  if (psr[p].constraints[k]==constraint_dmmodel_mean){
 					  printf("         Removing mean to keep DMMODEL constraint correct.\n");
 					  for (k=0;k<psr[p].dmoffsNum;k++){
@@ -167,28 +167,28 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 					  }
 					  break;
 				  }
-			  }
+			  }*/
 		  }
 		  t = t & 0xFF0F;
 	  }
 
-	  if ((double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[0])
+	  if ((double)psr[p].obsn[i].sat < psr[p].dmoffsDM_mjd[0])
 	    dmval = meanDM + psr[p].dmoffsDM[0];
-	  else if ((double)psr[p].obsn[i].sat > psr[p].dmoffsMJD[psr[p].dmoffsNum-1])
-	    dmval = meanDM+psr[p].dmoffsDM[psr[p].dmoffsNum-1];
+	  else if ((double)psr[p].obsn[i].sat > psr[p].dmoffsDM_mjd[psr[p].dmoffsDMnum-1])
+	    dmval = meanDM+psr[p].dmoffsDM[psr[p].dmoffsDMnum-1];
 	  else
 	    {
-	      for (k=0;k<psr[p].dmoffsNum-1;k++)
+	      for (k=0;k<psr[p].dmoffsDMnum-1;k++)
 		{
-		  if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsMJD[k] &&
-		      (double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[k+1])
+		  if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsDM_mjd[k] &&
+		      (double)psr[p].obsn[i].sat < psr[p].dmoffsDM_mjd[k+1])
 		    {
 		      // Do linear interpolation
 		      // Note: this is also used at various points in the 
 		      // code (e.g., textOutput.C - if any changes are 
 		      // made here then these changes should be made throughout!
-		      m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
-		      c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsMJD[k];
+		      m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsDM_mjd[k]-psr[p].dmoffsDM_mjd[k+1]);
+		      c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsDM_mjd[k];
 		      dmval = m*(double)psr[p].obsn[i].sat+c + meanDM;
 		      break;
 		    }

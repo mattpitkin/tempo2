@@ -1243,13 +1243,22 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		}
 	}
 	else if (key=='"'){
-		for(i=0; i < psr[0].dmoffsNum; i++){
-			cpgsci(6);
-			cpgsls(3);
-			cpgmove((float)(psr[0].dmoffsMJD[i]-centreEpoch),-1e-5);
-			cpgdraw((float)(psr[0].dmoffsMJD[i]-centreEpoch),1e-5);
+		for(i=0; i < psr[0].dmoffsCMnum; i++){
+			cpgsci(7);
+			cpgsls(4);
+			cpgmove((float)(psr[0].dmoffsCM_mjd[i]-centreEpoch),-1e-2);
+			cpgdraw((float)(psr[0].dmoffsCM_mjd[i]-centreEpoch),1e-2);
 			cpgsls(1);
 		}
+		for(i=0; i < psr[0].dmoffsDMnum; i++){
+			cpgsci(6);
+			cpgsls(3);
+			cpgmove((float)(psr[0].dmoffsDM_mjd[i]-centreEpoch),-1e-2);
+			cpgdraw((float)(psr[0].dmoffsDM_mjd[i]-centreEpoch),1e-2);
+			cpgsls(1);
+		}
+
+
 		noreplot=1;
 		continue;
 	}
@@ -1502,7 +1511,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      {
 		printf("%g %g\n",(double)psr[0].obsn[i].sat,(double)(psr[0].obsn[i].pulseN - psr[0].obsn[0].pulseN));
 		strcpy(psr[0].obsn[i].flagID[psr[0].obsn[i].nFlags],"-pn");
-		sprintf(psr[0].obsn[i].flagVal[psr[0].obsn[i].nFlags],"%Lg",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
+		sprintf(psr[0].obsn[i].flagVal[psr[0].obsn[i].nFlags],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
 		psr[0].obsn[i].nFlags++;
 	      }
 	    writeTim("withpn.tim",psr,"tempo2");

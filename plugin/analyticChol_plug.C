@@ -30,7 +30,6 @@
 #include <math.h>
 #include "tempo2.h"
 #include "TKspectrum.h"
-#include "fftw3.h"
 #include "TKfit.h"
 #include "T2toolkit.h"
 #include <cpgplot.h>

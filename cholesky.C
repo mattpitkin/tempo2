@@ -72,7 +72,13 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
 	  cholesky_readT2CholModel(m,fname,resx,resy,rese,np,nc,ip,psr);
    }
 
-
+   if(psr->ToAextraCovar!=NULL){
+	  logmsg("adding extra covar function to m");
+	  for (i=0;i<np;i++)
+	  {
+		 for (j=0;j<np;j++)if(i!=j) m[i][j]+=psr->ToAextraCovar[i][j];
+	  }
+   }
 
 
    // make sure constraints are not covariant with anything.
@@ -105,7 +111,6 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
 	  }
 	  fclose(mFile);
    }
-
 
 
 
@@ -243,7 +248,7 @@ void cholesky_readT2CholModel_R(double **m, double **mm, char* fname,double *res
 }
 
 void cholesky_readFromCovarianceFunction(double **m, char* fname,double *resx,double *resy,double *rese,int np, int nc){
-   int ndays = ceil((resx[np-1-nc]-resx[0]));
+   int ndays = ceil((resx[np-1-nc]-resx[0])+1e-10);
    double covarFunc[ndays+1];
    double escaleFactor = 1.0;
    clock_t clk=clock();
@@ -556,7 +561,7 @@ void cholesky_powerlawModel(double **m, double modelAlpha, double modelFc, doubl
    int ndays,i;
    double *covarFunc;
    logmsg("Generate covar matrix from powerlaw model (a=%lf fc=%lf A=%lg)",modelAlpha,modelFc,modelA);
-   ndays=ceil((resx[np-1])-(resx[0]));
+   ndays=ceil((resx[np-1])-(resx[0])+1e-10);
    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
    int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,covarFunc,resx,resy,rese,np);
    if(ndays!=ndays_out){

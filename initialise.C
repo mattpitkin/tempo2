@@ -43,6 +43,7 @@ void initialise(pulsar *psr,int noWarnings)
 
   // allocate space for covar arrays
   int fullSetup = 1;
+  logdbg("Initialise");
 
   for (p=0;p<MAX_PSR;p++)
     //    if (psr[p].obsn == NULL)
@@ -142,7 +143,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->fjumpID,"");
   strcpy(psr->deleteFileName,"NONE");
   strcpy(psr->tzrsite,"NULL");
-  psr->dmoffsNum = 0;
+  psr->ToAextraCovar=NULL;
+  psr->dmoffsDMnum=0;
+  psr->dmoffsCMnum = 0;
   psr->calcShapiro=1;
   psr->dmOffset = 0;
   psr->ipm = 1;
@@ -568,3 +571,7 @@ void destroyMemory (pulsar *psr)
 
     }
 }
+
+
+
+

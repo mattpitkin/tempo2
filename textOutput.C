@@ -40,7 +40,6 @@
 double m2(longdouble mf, longdouble sini, longdouble m1);
 void printGlitch(pulsar psr);
 double dglep(pulsar psr,int gn,double fph);
-void updateDMvals(pulsar *psr,int p);
 
 /* ******************************************** */
 /* textOutput                                   */
@@ -327,14 +326,34 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	{
 	  printf("\n");
-	  updateDMvals(psr,p);
 	  printf("Dispersion measure values:\n");
+	  char dmfname[MAX_STRLEN];
+	  sprintf(dmfname,"%s.dm",psr[p].name);
+	  FILE *dmfile=fopen(dmfname,"w");
 	  double sum=0;
-	  for (i=0;i<(int)psr[p].dmoffsNum;i++){
-	    printf("DMOFF\t %.15g %.15g %.15g %.15g %.15g\n",psr[p].dmoffsMJD[i],psr[p].dmoffsDM[i],psr[p].dmoffsDMe[i],psr[p].dmoffsOffset[i],psr[p].dmoffsError[i]);
-	  sum+=psr[p].dmoffsDM[i];
+	  for (i=0;i<(int)psr[p].dmoffsDMnum;i++){
+	    printf("_DM\t % 7.1f % 10.3g % 10.3g % 5.2f\n",psr[p].dmoffsDM_mjd[i],psr[p].dmoffsDM[i],psr[p].dmoffsDM_error[i],psr[p].dmoffsDM_weight[i]);
+		if(dmfile)fprintf(dmfile,"% 7.1f % 15.7g % 15.7g % 7.4f\n",psr[p].dmoffsDM_mjd[i],psr[p].dmoffsDM[i],psr[p].dmoffsDM_error[i],psr[p].dmoffsDM_weight[i]);
+		sum+=psr[p].dmoffsDM[i];
 	  }
-      printf("Mean DMOFF = %lg\n",sum/(double)psr[p].dmoffsNum);
+	  if(dmfile)fclose(dmfile);
+      printf("Mean DMOFF = %lg\n",sum/(double)psr[p].dmoffsDMnum);
+
+	  sprintf(dmfname,"%s.cm",psr[p].name);
+	  dmfile=fopen(dmfname,"w");
+	  sum=0;
+	  double eee;
+	  for (i=0;i<(int)psr[p].dmoffsCMnum;i++){
+	    printf("_CM\t % 7.1f % 10.3g % 10.3g % 5.2f\n",psr[p].dmoffsCM_mjd[i],psr[p].dmoffsCM[i],psr[p].dmoffsCM_error[i],psr[p].dmoffsCM_weight[i]);
+		if(dmfile)fprintf(dmfile,"% 7.1f % 15.7g % 15.7g % 7.4f\n",psr[p].dmoffsCM_mjd[i],psr[p].dmoffsCM[i],psr[p].dmoffsCM_error[i],psr[p].dmoffsCM_weight[i]);
+		eee=psr[p].dmoffsCM_error[i]/86400.0/365.25;
+		sum+=1.0/(eee*eee);
+	  }
+	  double tobs=(psr[p].dmoffsCM_mjd[psr[p].dmoffsCMnum-1]-psr[p].dmoffsCM_mjd[0])/365.25;
+	  if(sum > 0)
+	  printf("CM white PSD estimate: %lg\n",2*tobs/sum);
+	  if(dmfile)fclose(dmfile);
+
 	}
       if (psr[p].param[param_clk_offs].paramSet[0]==1)
 	{
@@ -352,7 +371,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    {
 	      printf("Interpolated function\n");
 	      for (i=0;i<psr[p].ifuncN;i++)
-		printf("%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
+		printf("%.2f %.10g %.10g %.3f\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i],psr[p].ifunc_weights[i]);
 	    }
 	  if (psr[p].param[param_tel_dx].paramSet[0]==1)
 	    {
@@ -975,9 +994,22 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      } else {
 		      fprintf(fout2,"DMMODEL %.14Lg %d\n",psr[p].param[param_dmmodel].val[0],(int)psr[p].param[param_dmmodel].fitFlag[0]);
 	      }
-	      for (i=0;i<psr[p].dmoffsNum;i++)
-		fprintf(fout2,"DMOFF\t %.15g %.15g %.15g\n",psr[p].dmoffsMJD[i],psr[p].dmoffsDM[i],psr[p].dmoffsDMe[i]);
-	    }
+		  bool useDMOFF=psr[p].dmoffsDMnum==psr[p].dmoffsCMnum;
+		  if(useDMOFF)for (i=0;i<psr[p].dmoffsDMnum;i++){
+			 if(psr[p].dmoffsDM_mjd[i]!=psr[p].dmoffsCM_mjd[i])useDMOFF=false;
+			 break;
+		  }
+		  if(useDMOFF){
+		  for (i=0;i<psr[p].dmoffsDMnum;i++)
+			 fprintf(fout2,"DMOFF\t %.15g %.15g %.15g\n",psr[p].dmoffsDM_mjd[i],psr[p].dmoffsDM[i],psr[p].dmoffsDM_error[i]);
+
+		  }else{
+			 for (i=0;i<psr[p].dmoffsDMnum;i++)
+				fprintf(fout2,"_DM\t %.15g %.15g %.15g\n",psr[p].dmoffsDM_mjd[i],psr[p].dmoffsDM[i],psr[p].dmoffsDM_error[i]);
+			 for (i=0;i<psr[p].dmoffsCMnum;i++)
+				fprintf(fout2,"_CM\t %.15g %.15g %.15g\n",psr[p].dmoffsCM_mjd[i],psr[p].dmoffsCM[i],psr[p].dmoffsCM_error[i]);
+		  }
+		}
 
 	  // add constraints
 	  for (int i = 0; i < psr[p].nconstraints; i++){
@@ -1144,90 +1176,3 @@ double dglep(pulsar psr,int gn,double fph)
 // Function to determine the error in the DM estimations and apply this to the 
 // uncertainty on the TOAs
 //
-void updateDMvals(pulsar *psr,int p)
-{
-	int i,k,j;
-	double dm,dme,m,c;
-	int iflag,jflag;
-	printf("Updating DM vals\n");
-
-	if(psr[p].dmoffsNum > 0){
-		for (i=0;i<psr[p].nobs;i++)
-		{
-			if ((double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[0]){
-				dm = psr[p].dmoffsDM[0] + (double)psr[p].param[param_dmmodel].val[0];
-				dme = psr[p].dmoffsDMe[0];
-
-			} else if ((double)psr[p].obsn[i].sat > psr[p].dmoffsMJD[psr[p].dmoffsNum-1]){
-				dm = psr[p].dmoffsDM[psr[p].dmoffsNum-1]+(double)psr[p].param[param_dmmodel].val[0];
-				dme = psr[p].dmoffsDMe[psr[p].dmoffsNum-1];
-			} else {
-				// Do linear interpolation
-				for (k=0;k<psr[p].dmoffsNum;k++)
-				{
-					if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsMJD[k] &&
-							(double)psr[p].obsn[i].sat < psr[p].dmoffsMJD[k+1])
-					{	      
-						// Calculate DM
-						m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
-						c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsMJD[k];
-						dm = m*(double)psr[p].obsn[i].sat+c + (double)psr[p].param[param_dmmodel].val[0];
-
-
-						// Calculate error in DM
-//						if (k==0){
-//							dme = psr[p].dmoffsDMe[k+1];
-//						} else {
-							m = (psr[p].dmoffsDMe[k]-psr[p].dmoffsDMe[k+1])/(psr[p].dmoffsMJD[k]-psr[p].dmoffsMJD[k+1]);
-							c = psr[p].dmoffsDMe[k]-m*psr[p].dmoffsMJD[k];
-							dme = m*(double)psr[p].obsn[i].sat+c;
-//						}
-						break;
-					}
-				}
-			}
-			// update the DM error in the toa
-			psr[p].obsn[i].toaDMErr = 1e6*dme/DM_CONST/psr[p].obsn[i].freq/psr[p].obsn[i].freq;
-
-			/*			
-			* Removed this because we don't want the DM error added to the TOA error.
-			* Mike & George Nov 2011
-			*
-			psr[p].obsn[i].toaErr = sqrt(pow(psr[p].obsn[i].origErr,2)+pow(psr[p].obsn[i].toaDMErr,2));
-
-			iflag=jflag=-1;
-			for (j=0;j<psr[p].obsn[i].nFlags;j++)
-			{
-				if (strcmp(psr[p].obsn[i].flagID[j],"-dm")==0)
-					iflag=j;
-				else if (strcmp(psr[p].obsn[i].flagID[j],"-dme")==0)
-					jflag=j;
-			}
-			if (iflag==-1)
-			{
-				strcpy(psr[p].obsn[i].flagID[psr[p].obsn[i].nFlags],"-dm");
-				sprintf(psr[p].obsn[i].flagVal[psr[p].obsn[i].nFlags],"%.6f",dm);
-				psr[p].obsn[i].nFlags++;
-			}
-			else
-			{
-				strcpy(psr[p].obsn[i].flagID[iflag],"-dm");
-				sprintf(psr[p].obsn[i].flagVal[iflag],"%.6f",dm);
-			}
-			if (jflag==-1)
-			{
-				strcpy(psr[p].obsn[i].flagID[psr[p].obsn[i].nFlags],"-dme");
-				sprintf(psr[p].obsn[i].flagVal[psr[p].obsn[i].nFlags],"%.6g",dme);
-				psr[p].obsn[i].nFlags++;
-			}
-			else
-			{
-				strcpy(psr[p].obsn[i].flagID[jflag],"-dme");
-				sprintf(psr[p].obsn[i].flagVal[jflag],"%.6g",dme);
-			}
-			*/
-		}
-	}
-}
-
-

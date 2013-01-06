@@ -16,3 +16,5 @@ bary_plug.C
 detectGWB_plug.C
 autoSpectralFit_plug.C
 cholSpectra_plug.C
+analyticChol_plug.C
+detectGWBnew_plug.C

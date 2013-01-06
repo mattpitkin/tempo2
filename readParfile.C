@@ -640,21 +640,70 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
   else if (strcasecmp(str,"DMMODEL")==0) 
     {
       readValue(psr,str,fin,&(psr->param[param_dmmodel]),0);
-      psr->dmoffsNum=0;
+      psr->dmoffsCMnum=0;
+      psr->dmoffsDMnum=0;
     }
   //  else if (strstr(str,"DMVAL")!=NULL || strstr(str,"dmval")!=NULL)
   else if (strcasecmp(str,"DMOFF")==0)
     {
-      int number = psr->dmoffsNum;
-      fscanf(fin,"%lf %lf %lf",&psr->dmoffsMJD[number],&psr->dmoffsDM[number],&psr->dmoffsDMe[number]);
-      psr->dmoffsOffset[number] = 0;
-      psr->dmoffsError[number] = 0;
-      (psr->dmoffsNum)++;
-      if (psr->dmoffsNum > MAX_IFUNC){
-	fprintf(stderr,"ERROR: Too many DMOFF values - need to increase MAX_IFUNC\n");
-	exit(1);
+      int nDM = psr->dmoffsDMnum;
+      int nCM = psr->dmoffsCMnum;
+	  double mjd,val,err;
+      fscanf(fin,"%lf %lf %lf",&mjd,&val,&err);
+	  psr->dmoffsDM_mjd[nDM]=mjd;
+	  psr->dmoffsDM[nDM]=val;
+      psr->dmoffsDM_error[nDM] = 0;
+      psr->dmoffsDM_weight[nDM] = 1;
+	  psr->dmoffsCM_mjd[nCM]=mjd;
+	  psr->dmoffsCM[nCM]=val;
+      psr->dmoffsCM_error[nCM] = 0;
+      psr->dmoffsCM_weight[nCM] = 1;
+
+	  (psr->dmoffsDMnum)++;
+	  (psr->dmoffsCMnum)++;
+	  if (psr->dmoffsDMnum > MAX_IFUNC){
+		 fprintf(stderr,"ERROR: Too many DMMODEL DM values - need to increase MAX_IFUNC\n");
+		 exit(1);
+      } 
+	  if (psr->dmoffsCMnum > MAX_IFUNC){
+		 fprintf(stderr,"ERROR: Too many DMMODEL CM values - need to increase MAX_IFUNC\n");
+		 exit(1);
       } 
     }
+else if (strcasecmp(str,"_DM")==0)
+    {
+      int nDM = psr->dmoffsDMnum;
+	  double mjd,val,err;
+      fscanf(fin,"%lf %lf %lf",&mjd,&val,&err);
+	  psr->dmoffsDM_mjd[nDM]=mjd;
+	  psr->dmoffsDM[nDM]=val;
+      psr->dmoffsDM_error[nDM] = 0;
+      psr->dmoffsDM_weight[nDM] = 1;
+
+	  (psr->dmoffsDMnum)++;
+	  if (psr->dmoffsDMnum > MAX_IFUNC){
+		 fprintf(stderr,"ERROR: Too many DMMODEL DM values - need to increase MAX_IFUNC\n");
+		 exit(1);
+      } 
+    }
+  else if (strcasecmp(str,"_CM")==0)
+    {
+      int nCM = psr->dmoffsCMnum;
+	  double mjd,val,err;
+      fscanf(fin,"%lf %lf %lf",&mjd,&val,&err);
+	  psr->dmoffsCM_mjd[nCM]=mjd;
+	  psr->dmoffsCM[nCM]=val;
+      psr->dmoffsCM_error[nCM] = 0;
+      psr->dmoffsCM_weight[nCM] = 1;
+
+	  (psr->dmoffsCMnum)++;
+	  if (psr->dmoffsCMnum > MAX_IFUNC){
+		 fprintf(stderr,"ERROR: Too many CMMODEL CM values - need to increase MAX_IFUNC\n");
+		 exit(1);
+      } 
+    }
+
+
   /*
    * Specify fitting constraints
    */
@@ -672,6 +721,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       if((strcasecmp(cname,"DMMODEL_CUBIC")==0)){
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_3;
       }
+      if((strcasecmp(cname,"DMMODEL_PX")==0)){
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_px;
+      }
+
       if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_OLD")==0)){
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
@@ -683,8 +736,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xsin;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xcos;
-	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin2;
-	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos2;
+//	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_px;
       }
 
       if(strcasecmp(cname,"IFUNC_ONLYF0F1")==0){

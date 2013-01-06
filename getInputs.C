@@ -52,7 +52,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *list,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,
 	       int *polyco, char *polyco_args,
-	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile)
+	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,char* newparname)
 {
   int i,p;
   int gr=0;
@@ -155,8 +155,14 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	    strcpy(psr[0].deleteFileName,argv[++i]);	  
 	  else if (strcmp(argv[i],"-model")==0)
 	    *writeModel = 1;
-	  else if (strcmp(argv[i],"-newpar")==0)
+	  else if (strcmp(argv[i],"-newpar")==0){
+		 strcpy(newparname,"new.par");
 	    *newpar=1;
+	  }
+	  else if (strcmp(argv[i],"-outpar")==0){
+	    *newpar=1;
+		strcpy(newparname,argv[++i]);
+	  }
 	  else if (strcmp(argv[i],"-pre")==0) /* Don't iterate to form post-fit residuals */
 	    *onlypre = 1;
 	  else if (strcmp(argv[i],"-pred")==0)
@@ -252,4 +258,29 @@ void printplugs(bool full){
 			printf("(none or all hidden)\n");
 		}
 	}
+}
+
+
+void setPlugPath(){
+   int i;
+  if (getenv("TEMPO2_PLUG_PATH")!=NULL){
+    char *p_path = (char*)malloc(MAX_STRLEN*32);
+    strcpy(p_path,getenv("TEMPO2_PLUG_PATH"));
+    int len= strlen(p_path);
+    for (i=0; i < len; i++){
+      if (p_path[i] == ':')p_path[i]='\0';
+    }
+    i=0;
+    while(i < len){
+      strcpy(tempo2_plug_path[tempo2_plug_path_len++],p_path+i);
+      i+=strlen(p_path+i)+1;
+    }
+    free(p_path);
+  }
+#ifdef TEMPO2_CONFIGURE_PLUG  
+  // If tempo2 was compiled with a non-standard plugin path, add it to the default search path
+  strcpy(tempo2_plug_path[tempo2_plug_path_len++],TEMPO2_CONFIGURE_PLUG);
+#endif
+  sprintf(tempo2_plug_path[tempo2_plug_path_len++],"%s/plugins/",getenv(TEMPO2_ENVIRON));
+
 }

@@ -221,6 +221,7 @@ enum constraint {
 	constraint_dmmodel_cw_year_xcos,
 	constraint_dmmodel_cw_year_sin2,
 	constraint_dmmodel_cw_year_cos2,
+	constraint_dmmodel_cw_px,
 	constraint_ifunc_year_sin,
 	constraint_ifunc_year_cos,
 	constraint_ifunc_year_xsin,
@@ -335,7 +336,7 @@ typedef struct observation {
   longdouble torb;                /* Combined binary delays */
   longdouble nphase;              /* allows the pulse number to be determined                   */
   longdouble phase;               
-  longdouble pulseN;                    /* Pulse number */
+  unsigned long long pulseN;                    /* Pulse number */
 
   char flagID[MAX_FLAGS][16];     /* Flags in .tim file                                         */
   char flagVal[MAX_FLAGS][16];
@@ -357,13 +358,19 @@ typedef struct pulsar {
   char rajStrPost[100],decjStrPost[100]; /* String containing RAJ and DECJ  (postfit)           */
   char binaryModel[100];                 /* Binary model e.g. BT/ELL1/BT2P etc.                        */
 
-  int    dmoffsNum;
-  double dmoffsMJD[MAX_IFUNC]; 
+
+  double **ToAextraCovar;
+
+  int    dmoffsDMnum;
+  int    dmoffsCMnum;
+  double dmoffsDM_mjd[MAX_IFUNC]; 
   double dmoffsDM[MAX_IFUNC];
-  double dmoffsDMe[MAX_IFUNC];
-  double dmoffsOffset[MAX_IFUNC];
-  double dmoffsError[MAX_IFUNC];
-  double dmoffsCWeights[2*MAX_IFUNC];
+  double dmoffsDM_error[MAX_IFUNC];
+  double dmoffsDM_weight[MAX_IFUNC];
+  double dmoffsCM_mjd[MAX_IFUNC]; 
+  double dmoffsCM[MAX_IFUNC];
+  double dmoffsCM_error[MAX_IFUNC];
+  double dmoffsCM_weight[MAX_IFUNC];
 
   // Single source gravitational wave information
   double gwsrc_ra;
@@ -519,15 +526,20 @@ typedef struct pulsar {
   enum constraint constraints[MAX_PARAMS];/* Which constraints are specified */
 } pulsar;
 
+// PLUGIN FUNCTIONS
+
 
 /* FUNCTION DEFINITIONS */
+#ifdef __cplusplus
+extern "C" {
+#endif
 int id_residual(float xcurs,float ycurs);
 float setStart(float xcurs,float ycurs,int flag);
 int zoom_graphics(float xcurs2,float ycurs2,int flag);
 void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *displayParams,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,int *polyco,
-	       char *polyco_args, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile);
+	       char *polyco_args, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,char* newparname);
 void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,int nspan,int ncoeff,
 	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM);
 void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILELEN],int npsr);
@@ -557,16 +569,12 @@ double** malloc_uinv(int n);
 void free_uinv(double** uinv);
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
 void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname);
-int  graphicalInterface(pulsar *psr,int *ip,int flag,int axis,int recalc);
-#ifdef __cplusplus
-extern "C" int  tempoOutput(int argc,char *argv[],pulsar *psr,int npsr);
-#else
-int  tempoOutput(int argc,char *argv[],pulsar *psr,int npsr);
-#endif
 void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void calculate_bclt(pulsar *psr,int npsr);
 void secularMotion(pulsar *psr,int npsr);
+
+void setPlugPath();
 
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[]);
 
@@ -584,6 +592,8 @@ void preProcessSimple2 (pulsar *psr,
 			int trimonly);
 
 void preProcessSimple3 (pulsar *psr);
+
+
 
 void useSelectFile(char *fname,pulsar *psr,int npsr);
 void processSimultaneous(char *line,pulsar *psr, int npsr);
@@ -710,6 +720,11 @@ void get_EOP(double mjd, double *xp, double *yp, double *dut1,
 	     double *dut1dot, int dispWarnings);
 /* ... and tropospheric delays ... */
 void compute_tropospheric_delays(pulsar *psr,int npsr);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* Defined __Tempo2_h */
 

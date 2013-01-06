@@ -31,17 +31,19 @@
 #include "tempo2.h"
 #include "T2toolkit.h"
 #include "TKspectrum.h"
+#include "constraints.h"
 
 using namespace std;
 
 bool write_debug_files=true;
 double OMEGA0=0;
 
-void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char* covarFuncFile);
+double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char* covarFuncFile);
 void formCholeskyMatrixPlugin(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
 int calcSpectra_plugin(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit);
 double psrangle(double centre_long,double centre_lat,double psr_long,double psr_lat);
 void hdfunc(double x,double *p,int ma);
+int offsetToCM(pulsar* psr);
 
 void help() /* Display help */
 {
@@ -62,6 +64,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double px2[4096],py_r2[4096],py_i2[4096];
   double crossX[4096],crossY_r[4096],crossY_i[4096];
   double toverlap;
+  double whitePSD[MAX_PSR];
   
   double angle[4096];
   double a2zeta[4096],a2zeta_im[4096],a2zeta_e[4096];
@@ -87,6 +90,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double red_alpha1,red_pwr1;
   double red_alpha2,red_pwr2;
 
+  double dmStep=1e100;
   double toffset;
   double maxOverlap = 500; // Only consider pairs where the overlap is larger than this value
   char dcmFile[128];
@@ -128,8 +132,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%lf",&stepMJD);
       else if (strcmp(argv[i],"-dcf")==0)
 	strcpy(covarFuncFile,argv[++i]);
-      else if (strcasecmp(argv[i],"-usered")==0)
-	useRed=1;
+      else if (strcasecmp(argv[i],"-dm")==0)
+	dmStep=stepMJD;
       else if (strcasecmp(argv[i],"-fast")==0)
 	write_debug_files=false;
     }
@@ -150,60 +154,58 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   readTimfile(psr,timFile,*npsr);         /* Load the arrival times    */
   printf("Here: %d\n",psr[0].nobs);
   preProcess(psr,*npsr,argc,argv);
+
+  formBatsAll(psr,*npsr);             /* Form the barycentric arrival times */
+  formResiduals(psr,*npsr,1);         /* Form the residuals                 */
   printf("Here 2: %d\n",psr[0].nobs);
   // Create some IFUNCs that will represent the low frequency signal
   // ensure that these IFUNCs are constrained not to include 
   // the quadratic etc.
-  for (p=0;p<*npsr;p++)
-    {
-      // Check if IFUNCs already exist
-      if (psr[p].ifuncN > 0)
-	{
-	  printf("Pulsar: %s already has IFUNC parameters\n",psr[p].name);
-	  exit(1);
-	}
-      n=0;
-      for (t = startMJD; t<=endMJD;t+=stepMJD)
-	{
-	  if (t+stepMJD >= psr[p].obsn[0].sat && t-stepMJD <= psr[p].obsn[psr[p].nobs-1].sat)
-	  //	  if (t >= psr[p].obsn[0].sat && t <= psr[p].obsn[psr[p].nobs-1].sat)
-	    {
-	      psr[p].ifuncT[n] = t;
-	      psr[p].ifuncV[n] = 0.0;
-	      psr[p].ifuncE[n] = 0.0;
-	      n++;
-	    }
-	}
-      psr[p].ifuncN = n;
-      psr[p].param[param_ifunc].fitFlag[0] = 1;
-      psr[p].param[param_ifunc].paramSet[0] = 1;
-      psr[p].param[param_ifunc].val[0] = 2;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_0;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_1;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_2;
+  for (p=0;p<*npsr;p++) {
+	 n=0;
+	 /*for (t = startMJD; t<=endMJD;t+=stepMJD) {
+		if (t+stepMJD >= psr[p].obsn[0].sat && t-stepMJD <= psr[p].obsn[psr[p].nobs-1].sat) {
+		   psr[p].dmoffsCM_mjd[n] = t;
+		   psr[p].dmoffsCM[n] = 0.0;
+		   psr[p].dmoffsCM_error[n] = 0.0;
+		   n++;
+		}
+	 }
+	 psr[p].dmoffsCMnum = n;
+	 
+	 psr[p].dmoffsDMnum = 1;
+	 psr[p].dmoffsDM_mjd[0] = startMJD+(endMJD-startMJD)/2.0;
+	 psr[p].dmoffsDM[0] = 0.0;
+	 psr[p].dmoffsDM_error[0] = 0.0;*/
 
-      /*      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xsin;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xcos;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin2;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos2; */
-      sprintf(newname,"%s.new.par",psr[p].name);
-      if(write_debug_files)textOutput(psr+p,1,0,0,0,1,newname);
-    }
+	 psr[p].param[param_dmmodel].fitFlag[0] = 1;
+	 psr[p].param[param_dmmodel].paramSet[0] = 1;
+	 psr[p].param[param_dmmodel].val[0] = 2;
+	 psr[p].param[param_dmmodel].linkTo[(psr[p].param[param_dmmodel].nLinkTo)++] = param_dm;
+	 psr[p].param[param_dm].linkFrom[(psr[p].param[param_dm].nLinkFrom)++]=param_dmmodel;
+
+	 autosetDMCM(psr+p,dmStep,stepMJD,startMJD,endMJD,true);
+
+	 psr[p].constraints[psr[p].nconstraints++] = constraint_dmmodel_mean;
+	 psr[p].constraints[psr[p].nconstraints++] = constraint_dmmodel_cw_0;
+	 psr[p].constraints[psr[p].nconstraints++] = constraint_dmmodel_cw_1;
+	 psr[p].constraints[psr[p].nconstraints++] = constraint_dmmodel_cw_2;
+
+	 sprintf(newname,"%s.new.par",psr[p].name);
+	 if(write_debug_files)textOutput(psr+p,1,0,0,0,1,newname);
+  }
 
   //
   // Do the standard pulsar fits and get record the IFUNCs
   //    
   printf("Currently npts = %d\n",psr[0].nobs);
-  for (i=0;i<2;i++)                       /* Do two iterations for pre- and post-fit residuals*/
-     {
-      formBatsAll(psr,*npsr);             /* Form the barycentric arrival times */
-      formResiduals(psr,*npsr,1);         /* Form the residuals                 */
-//      if (i==0) doFitDCM(psr,dcmFile,covarFuncFile,*npsr,0);       /* Do the fitting     */
-      if (i==0) doFit(psr,*npsr,0);       /* Do the fitting     */
-      else if (write_debug_files)textOutput(psr,*npsr,globalParameter,0,0,0,tstr);  /* Display the output */
-    }
+  doFit(psr,*npsr,0);       /* Do the fitting     */
+  if (write_debug_files){
+	 formBatsAll(psr,*npsr);             /* Form the barycentric arrival times */
+	 formResiduals(psr,*npsr,1);         /* Form the residuals                 */
+	 textOutput(psr,*npsr,globalParameter,0,0,0,tstr);  /* Display the output */
+  }
+  
   for (p=0;p<*npsr;p++)
     {
 	if(write_debug_files){
@@ -211,10 +213,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       textOutput(psr+p,1,0,0,0,1,newname);
 	}
 
+	double sss=0;
+	double eee;
       sprintf(tstr,"%s.ifuncDGW",psr[p].name);
       fout = fopen(tstr,"w");
-      for (i=0;i<psr[p].ifuncN;i++)
-			fprintf(fout,"%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
+      for (i=0;i<psr[p].dmoffsCMnum;i++){
+			fprintf(fout,"%.2f %.10g %.10g\n",psr[p].dmoffsCM_mjd[i],psr[p].dmoffsCM[i],psr[p].dmoffsCM_error[i]);
+			eee=psr[p].dmoffsCM_error[i]/86400.0/365.25;
+			sss+=1.0/(eee*eee);
+	  }
+	  double tobs=(psr[p].dmoffsCM_mjd[psr[p].dmoffsCMnum-1]-psr[p].dmoffsCM_mjd[0])/365.25;
+	  whitePSD[p]=2*tobs/sss;
+	  logmsg("White %s = %g",psr[p].name,whitePSD[p]);
 
       fclose(fout);
     }
@@ -223,7 +233,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   // frequency channels -- for now assume identical sampling)
   /*  for (p=0;p<*npsr;p++)
     {
-    OMEGA0 = (double)(2.0*M_PI/(psr[p].ifuncT[n-1]-psr[p].ifuncT[0]));
+    OMEGA0 = (double)(2.0*M_PI/(psr[p].dmoffsCM_mjd[n-1]-psr[p].dmoffsCM_mjd[0]));
       sprintf(tstr,"%s.specDGW",psr[p].name);
       fout = fopen(tstr,"w");
       getSpectrum(&psr[p],px1,py_r1,py_i1,&nSpec,toffset);
@@ -240,25 +250,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       for (p2 = p1+1;p2 < *npsr;p2++)
 	{
 	  // Find overlap region
-	  if (psr[p1].ifuncT[0] > psr[p2].ifuncT[0])
-	    startOverlap = psr[p1].ifuncT[0];
+	  if (psr[p1].dmoffsCM_mjd[0] > psr[p2].dmoffsCM_mjd[0])
+	    startOverlap = psr[p1].dmoffsCM_mjd[0];
 	  else
-	    startOverlap = psr[p2].ifuncT[0];
+	    startOverlap = psr[p2].dmoffsCM_mjd[0];
 
-	  if (psr[p1].ifuncT[psr[p1].ifuncN-1] > psr[p2].ifuncT[psr[p2].ifuncN-1])
-	    endOverlap = psr[p2].ifuncT[psr[p2].ifuncN-1];
+	  if (psr[p1].dmoffsCM_mjd[psr[p1].dmoffsCMnum-1] > psr[p2].dmoffsCM_mjd[psr[p2].dmoffsCMnum-1])
+	    endOverlap = psr[p2].dmoffsCM_mjd[psr[p2].dmoffsCMnum-1];
 	  else
-	    endOverlap = psr[p1].ifuncT[psr[p1].ifuncN-1];
+	    endOverlap = psr[p1].dmoffsCM_mjd[psr[p1].dmoffsCMnum-1];
 
 
 	  toverlap = endOverlap-startOverlap;
+	  logmsg("%s %s overlap=%lf days (%lf yr)",psr[p1].name,psr[p2].name,toverlap,toverlap/365.25);
 	  if (toverlap > maxOverlap)
 	    {
 	      OMEGA0 = (double)(2.0*M_PI/toverlap);
 	      
 	      printf("Processing pair: %s--%s\n",psr[p1].name,psr[p2].name);
-	      getSpectrum(&psr[p1],px1,py_r1,py_i1,&nSpec1,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
-	      getSpectrum(&psr[p2],px2,py_r2,py_i2,&nSpec2,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
+	      whitePSD[p1]=getSpectrum(&psr[p1],px1,py_r1,py_i1,&nSpec1,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
+	      whitePSD[p2]=getSpectrum(&psr[p2],px2,py_r2,py_i2,&nSpec2,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
 
 
 	      if (nSpec1 < nSpec2) nSpec = nSpec1;
@@ -328,21 +339,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  fclose(fin);
 		}
 
-		  double pwe=0;
-		  for (i=nSpec-10;i<nSpec;i++){
-			pwe+=py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i];
-		  }
-		  pwe/=10.0;
-		  logmsg("pw1=%lg pwE=%lg",pw1,pwe);
-//		  pw1*=3.0;
-		  pwe=0;
-		  for (i=nSpec-10;i<nSpec;i++){
-			pwe+=py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i];
-		  }
-		  pwe/=10.0;
-		  logmsg("pw2=%lg pwe=%lg",pw2,pwe);
-//		  pw2*=3.0;
-//
+		  logmsg("pwA=%lg pwB=%lg %lg",pw1,whitePSD[p1],whitePSD[p1]/pw1);
+		  pw1=whitePSD[p1];
+		  pw2=whitePSD[p2];
+
 	      nSpecNdof=nSpec;
 	      specStart=0;
 	      if(useRed==1)nSpecNdof=0;
@@ -474,7 +474,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char *covarFuncFile)
+double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char *covarFuncFile)
 {
 
 
@@ -482,22 +482,22 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
 	* spectral analysis code
 	*/
    int nobs=0;
-   int i;
+   int i,j;
    longdouble peopoch=toffset;
    pulsar* fakepsr = (pulsar*)malloc(sizeof(pulsar));
-   fakepsr->obsn = (observation*) malloc(sizeof(observation)*psr->ifuncN);
+   fakepsr->obsn = (observation*) malloc(sizeof(observation)*psr->dmoffsCMnum);
    strcpy(fakepsr->name,psr->name);
 
    *nSpec = (int)((((endOverlap-startOverlap)/(double)(stepMJD))-1)/2.0);
 
    fakepsr->param[param_pepoch].val=&peopoch;
-   for(i=0; i < psr->ifuncN;i++){
-      if (psr->ifuncT[i] >= startOverlap && psr->ifuncT[i] <= endOverlap){
-		 fakepsr->obsn[nobs].sat=psr->ifuncT[i];
-		 fakepsr->obsn[nobs].bat=psr->ifuncT[i];
-		 fakepsr->obsn[nobs].bbat=psr->ifuncT[i];
-		 fakepsr->obsn[nobs].residual=psr->ifuncV[i];
-		 fakepsr->obsn[nobs].toaErr=psr->ifuncE[i]*1e6; // convert to us
+   for(i=0; i < psr->dmoffsCMnum;i++){
+      if (psr->dmoffsCM_mjd[i] >= startOverlap && psr->dmoffsCM_mjd[i] <= endOverlap){
+		 fakepsr->obsn[nobs].sat=psr->dmoffsCM_mjd[i];
+		 fakepsr->obsn[nobs].bat=psr->dmoffsCM_mjd[i];
+		 fakepsr->obsn[nobs].bbat=psr->dmoffsCM_mjd[i];
+		 fakepsr->obsn[nobs].residual=psr->dmoffsCM[i];
+		 fakepsr->obsn[nobs].toaErr=psr->dmoffsCM_error[i]*1e6; // convert to us
 		 nobs++;
 	  }
    }
@@ -516,7 +516,18 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
 
    //  printf("Calculating the spectrum\n");
    uinv = malloc_uinv(fakepsr->nobs);
+   fakepsr->ToAextraCovar = malloc_uinv(fakepsr->nobs);
 
+   int CMoffset=offsetToCM(psr);
+   for (i=0;i<fakepsr->nobs;i++){
+	  for (j=0;j<i;j++){
+		 fakepsr->ToAextraCovar[i][j]=psr->covar[i+CMoffset][j+CMoffset];
+		 fakepsr->ToAextraCovar[j][i]=psr->covar[i+CMoffset][j+CMoffset];
+//		 fakepsr->ToAextraCovar[i][j]=0;
+//		 fakepsr->ToAextraCovar[j][i]=0;
+
+	  }
+   }
 
    logmsg("Nspec=%d, nobs=%d",*nSpec,fakepsr->nobs);
    for (i=0;i<fakepsr->nobs;i++)
@@ -535,9 +546,18 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
 
    // Free uinv
    free_uinv(uinv);
+   free_uinv(fakepsr->ToAextraCovar);
 
    free(fakepsr->obsn);
    free(fakepsr);
+
+   int o=10;
+   double avg=0;
+   if (*nSpec < 10) o=*nSpec/2;
+   for (i=*nSpec-o;i < *nSpec;i++){
+	  avg+=py_r[i]*py_r[i]+py_i[i]*py_i[i];
+   }
+   return avg/(double)o;
 }
 
 
@@ -576,3 +596,53 @@ void hdfunc(double x,double *p,int ma)
 
 
 
+
+
+int offsetToCM(pulsar* psr){
+	int i,j,k;
+	int n=0;
+	n++;
+	for (i=0;i<MAX_PARAMS;i++)
+	{
+		for (k=0;k<psr->param[i].aSize;k++)
+		{
+			if (psr->param[i].fitFlag[k]==1) /* If we are fitting for this parameter */
+			{
+				if (i!=param_start && i!=param_finish)
+				{
+					if (i==param_wave_om)
+					{
+						if (psr->waveScale==2)
+						{
+							//                      for (j=0;j<psr->nWhite*2;j++)                           
+							for (j=0;j<psr->nWhite*4;j++)n++;
+						}
+						else
+						{
+							for (j=0;j<psr->nWhite*2;j++)n++;
+						}
+					}
+					else if (i==param_quad_om)
+					{
+						for (j=0;j<psr->nQuad*4;j++)n++;
+					}
+					else if (i==param_ifunc)
+					{
+						for (j=0;j<psr->ifuncN;j++)n++;
+					}
+					else if (i==param_gwsingle)
+					{
+					   n+=4;
+					}
+					else if (i==param_dmmodel)
+					{
+						for (j=0;j<(int)psr->dmoffsDMnum;j++)n++;
+						return n;
+					}
+					else
+					   n++;
+				}
+			}
+		}
+	}
+}

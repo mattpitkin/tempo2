@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
   char timFile[MAX_PSR][MAX_FILELEN],parFile[MAX_PSR][MAX_FILELEN];
   char outputSO[MAX_FILELEN];
   char str[MAX_FILELEN];
+  char newparname[MAX_FILELEN];
   longdouble coeff[MAX_COEFF]; /* For polynomial coefficients in polyco */
   int npsr;      /* The number of pulsars */
   int noWarnings=1;
@@ -208,26 +209,7 @@ int main(int argc, char *argv[])
     }
 
   /* get path to look for plugins */
-  if (getenv("TEMPO2_PLUG_PATH")!=NULL){
-    char *p_path = (char*)malloc(MAX_STRLEN*32);
-    strcpy(p_path,getenv("TEMPO2_PLUG_PATH"));
-    int len= strlen(p_path);
-    for (i=0; i < len; i++){
-      if (p_path[i] == ':')p_path[i]='\0';
-    }
-    i=0;
-    while(i < len){
-      strcpy(tempo2_plug_path[tempo2_plug_path_len++],p_path+i);
-      i+=strlen(p_path+i)+1;
-    }
-    free(p_path);
-  }
-#ifdef TEMPO2_CONFIGURE_PLUG  
-  // If tempo2 was compiled with a non-standard plugin path, add it to the default search path
-  strcpy(tempo2_plug_path[tempo2_plug_path_len++],TEMPO2_CONFIGURE_PLUG);
-#endif
-  sprintf(tempo2_plug_path[tempo2_plug_path_len++],"%s/plugins/",getenv(TEMPO2_ENVIRON));
-
+  setPlugPath();
 
 
   /* If running from the command line ... */
@@ -282,7 +264,7 @@ int main(int argc, char *argv[])
   /* Obtain command line arguments */
   logdbg("Running getInputs %d",psr[0].nits);
   getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
-	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile);
+	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,newparname);
   logdbg("Completed getInputs");
 
   for (i=1;i<argc;i++)
@@ -530,7 +512,7 @@ int main(int argc, char *argv[])
 	  if (iteration==1 || onlypre==1)
 	    {
 	      if (strlen(outputSO)==0)
-		textOutput(psr,npsr,globalParameter,nGlobal,outRes,newpar,"new.par"); /* Output results to the screen */
+		textOutput(psr,npsr,globalParameter,nGlobal,outRes,newpar,newparname); /* Output results to the screen */
 	      else  /* Use a plug in for the output */
 		{
 		  char *(*entry)(int,char **,pulsar *,int);

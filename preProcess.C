@@ -35,7 +35,7 @@
 #include <dlfcn.h>
 
 
-void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
+void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 {
   int p,i,k,fitN=0,setN=0,j;
   char fitStr[10][100];
@@ -79,6 +79,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
   //MAX_OBSN  = MAX_OBSN_VAL;
   ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
   //  debugFlag = 0;
+
 
   for (i=0;i<argc;i++)
     {
@@ -129,7 +130,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  for (p=0;p<npsr;p++)
 	    strcpy(psr[p].clock,argv[i+1]);
 	}
-    }
+  }
+  logdbg("Parsed command line");
   for (p=0;p<npsr;p++)
     {
       for (i=0;i<MAX_PARAMS;i++){
@@ -544,7 +546,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char *argv[])
 	  for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
 	    sprintf(str,"%s/%s_%s_splug.t2",tempo2_plug_path[iplug],
 		    selectPlugName,tempo2MachineType);
-	    printf("Looking for %s\n",str);
+	    logmsg("Looking for %s",str);
 	    module = dlopen(str, RTLD_NOW); 
 	    if(module==NULL){	  
 	      printf("dlerror() = %s\n",dlerror());
