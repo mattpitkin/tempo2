@@ -736,6 +736,8 @@ else if (strcasecmp(str,"_DM")==0)
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xsin;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xcos;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos2;
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin2;
 //	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_px;
       }
 
