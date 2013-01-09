@@ -50,6 +50,7 @@
 #define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DZ           500   /* Maximum number of parameters for interpolation function  */
+#define MAX_FIT              1000  /* Maximum number of parameters to fit for */
 #define MAX_T2EFAC           50    /* Maximum number of T2EFACs allowed                */
 #define MAX_T2QUAD           50    /* Maximum number of T2EQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
@@ -417,6 +418,9 @@ typedef struct pulsar {
   double fitChisq;                /* Chisq value from the fit */
   int    fitNfree;                /* Number of degrees of freedom in fit */
   int    nFit;                    /* Number of points in the fit */
+  int    nParam;                  /* Number of parameters in the fit */
+  int    fitParamI[MAX_FIT];
+  int    fitParamK[MAX_FIT];
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
   int    rescaleErrChisq;         /* = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
   double offset;                  /* Offset, always fitted for */

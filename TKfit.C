@@ -298,17 +298,32 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
       if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
       else wt[i] = 0.0;     
     }
-  for (i=0;i<nf;i++)
-    {
-      for (j=0;j<=i;j++)
-	{
-	  sum=0.0;
-	  for (k=0;k<nf;k++)
-	    sum+=v[i][k]*v[j][k]*wt[k];
-	  cvm[i][j] = cvm[j][i] = sum;
-	}
-      e[i] = sqrt(cvm[i][i]);
-    }
+    for (i=0;i<nf;i++)
+      {
+	for (j=0;j<=i;j++)
+	  {
+	    sum=0.0;
+	    for (k=0;k<nf;k++)
+	      sum+=v[i][k]*v[j][k]*wt[k];
+	    cvm[i][j] = cvm[j][i] = sum;
+	  }
+	e[i] = sqrt(cvm[i][i]);
+    } 
+
+  {
+    FILE *fout;
+    fout = fopen("cvm.matrix","w");
+    for (i=0;i<nf;i++)
+      {
+	for (j=0;j<=i;j++)
+	  {
+	       fprintf(fout,"%+.8f ",cvm[i][j]/sqrt(cvm[i][i]*cvm[j][j]));
+	       // fprintf(fout,"%g ",cvm[i][j]); ///sqrt(cvm[i][i]*cvm[j][j]));
+	  }
+	fprintf(fout,"\n");
+      }
+    fclose(fout);
+  }
   *chisq = 0.0;
   for (i=0;i<n;i++)
     {
@@ -334,7 +349,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
 	}
       (*chisq) += pow((b[j]-sum)/sig[j],2);
     }
-
+  printf("chisq = %g %g\n",*chisq,*chisq/(n-nf));
 
 
   if (weight==0 || (weight==1 && psr->rescaleErrChisq==1))

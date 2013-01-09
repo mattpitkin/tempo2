@@ -39,7 +39,7 @@
 
 
 
-int getNparams(pulsar psr);
+int getNparams(pulsar *psr);
 void formCholeskyMatrix(double *c,int ncovar,double *resx,double *resy,double *rese,int np, int nc,double **uinv);
 double getConstraintDeriv(pulsar *psr,int ipos,int i,int k);
 
@@ -143,7 +143,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
       strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
       /* How many parameters are we fitting for */
-      npol = getNparams(psr[p]);
+      npol = getNparams(&psr[p]);
       //      printf("Number of parameters in fit = %d\n",npol);
       x     = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double)); // max fit data size is nobs+nconstraints
       y     = (double *)malloc((psr[p].nobs+psr[p].nconstraints)*sizeof(double));
@@ -228,6 +228,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 
 
 	  psr[p].fitChisq = chisq; 
+	  psr[p].nParam = npol;
 	  psr[p].fitNfree = psr[p].nFit-npol;
 	  //	  printf("Chisq = %g, reduced chisq = %g\n",(double)psr[p].fitChisq,(double)(psr[p].fitChisq/psr[p].fitNfree));
 	  /* Now update the parameters */
@@ -272,7 +273,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
   int p,npol,okay,ip[MAX_OBSN];
   double *x,*y,*sig,*val,chisq;
   double *error;
-  double tol = 1.0e-40;  /* Tolerence for singular value decomposition routine */
+  double tol = 1.0e-27;  /* Tolerence for singular value decomposition routine */
   double newStart=-1.0,newFinish=-1.0;
   long double meanRes=0.0;
   int count;
@@ -360,7 +361,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
       /* How many parameters are we fitting for */
       logtchk("Determining which parameters we are fitting for  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-      npol = getNparams(psr[p]);
+      npol = getNparams(&psr[p]);
       x     = (double *)malloc(nobs_and_constraints*sizeof(double));
       y     = (double *)malloc(nobs_and_constraints*sizeof(double));
       sig   = (double *)malloc(nobs_and_constraints*sizeof(double));
@@ -519,6 +520,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	  logdbg("Complete fit: chisq = %f",(double)chisq);
 	  //	  printf("chisq = %g\n",chisq);
 	  psr[p].fitChisq = chisq; 
+	  psr[p].nParam = npol;
 	  psr[p].fitNfree = psr[p].nFit-npol;
 	  
 	  /* Now update the parameters */
@@ -555,7 +557,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 }
 
 
-int getNparams(pulsar psr)
+int getNparams(pulsar *psr)
 {
   int npol;
   int i,k;
@@ -563,63 +565,148 @@ int getNparams(pulsar psr)
   npol = 1;
   for (i=0;i<MAX_PARAMS;i++)
     {
-      for (k=0;k<psr.param[i].aSize;k++)
+      for (k=0;k<psr->param[i].aSize;k++)
 	{
-	  if (psr.param[i].paramSet[k]==1 && psr.param[i].fitFlag[k]==1) {
+	  if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]==1) {
 	    if (i!=param_start && i!=param_finish && i!=param_dmmodel && i!=param_gwsingle)
-	      npol++;
+	      {
+		psr->fitParamI[npol]  = i;
+		psr->fitParamK[npol]  = k;
+		npol++;
+	      }
 	  }
 	}
     }
   /* Add extra parameters for jumps */
-  for (i=1;i<=psr.nJumps;i++)
+  for (i=1;i<=psr->nJumps;i++)
     {
-      if (psr.fitJump[i]==1)
-	npol++;
+      if (psr->fitJump[i]==1)
+	{
+	  psr->fitParamI[npol]  = -1;
+	  psr->fitParamK[npol]  = 0;
+	  npol++;
+	}
     }
   /* Add extra parameters for sinusoidal whitening */
-  if (psr.param[param_wave_om].fitFlag[0]==1)
+  if (psr->param[param_wave_om].fitFlag[0]==1)
     {
-      printf("waveScale at this point = %d\n",psr.waveScale);
-      if (psr.waveScale==1)
-	npol+=psr.nWhite*2-1;
-      else if (psr.waveScale==2)
-	npol+=psr.nWhite*4-1;
+      printf("waveScale at this point = %d\n",psr->waveScale);
+      if (psr->waveScale==1)
+	{
+	  for (i=0;i<psr->nWhite*2-1;i++)
+	    {psr->fitParamI[npol+i]  = param_wave_om; psr->fitParamK[npol+i]  = i;}
+	  npol+=psr->nWhite*2-1;
+
+	}
+      else if (psr->waveScale==2)
+	{
+	  for (i=0;i<psr->nWhite*4-1;i++)
+	    {psr->fitParamI[npol+i]  = param_wave_om; psr->fitParamK[npol+i]  = i;}
+
+	  npol+=psr->nWhite*4-1;
+	}
       else
-	npol+=psr.nWhite*2-1;      
+	{
+	  for (i=0;i<psr->nWhite*2-1;i++)
+	    {psr->fitParamI[npol+i]  = param_wave_om; psr->fitParamK[npol+i]  = i;}
+	  npol+=psr->nWhite*2-1;      
+	}
     }
-  if (psr.param[param_quad_om].fitFlag[0]==1)
-    npol+=(psr.nQuad*4)-1;
-  if (psr.param[param_ifunc].fitFlag[0]==1)
-      npol+=(psr.ifuncN-1);
-  if (psr.param[param_clk_offs].fitFlag[0]==1)
-      npol+=(psr.clkOffsN-1);
-  if (psr.param[param_tel_dx].fitFlag[0]==1 && psr.param[param_tel_dx].val[0] < 2)
-      npol+=(psr.nTelDX-1);
-  else if (psr.param[param_tel_dx].fitFlag[0]==1 && psr.param[param_tel_dx].val[0] == 2)
-      npol+=(psr.nTelDX-2);
-  if (psr.param[param_tel_dy].fitFlag[0]==1 && psr.param[param_tel_dy].val[0] < 2)
-      npol+=(psr.nTelDY-1);
-  else if (psr.param[param_tel_dy].fitFlag[0]==1 && psr.param[param_tel_dy].val[0] == 2)
-      npol+=(psr.nTelDY-2);
+  if (psr->param[param_quad_om].fitFlag[0]==1)
+    {
+      for (i=0;i<psr->nQuad*4-1;i++)
+	{psr->fitParamI[npol+i]  = param_quad_om; psr->fitParamK[npol+i]  = i;}
 
-  if (psr.param[param_tel_dz].fitFlag[0]==1 && psr.param[param_tel_dz].val[0] < 2)
-      npol+=(psr.nTelDZ-1);
-  else if (psr.param[param_tel_dz].fitFlag[0]==1 && psr.param[param_tel_dz].val[0] == 2)
-    npol+=(psr.nTelDZ-2);
-  if (psr.param[param_quad_ifunc_p].fitFlag[0]==1)
-      npol+=(psr.quad_ifuncN_p-1);
-  if (psr.param[param_quad_ifunc_c].fitFlag[0]==1)
-      npol+=(psr.quad_ifuncN_c-1);
+      npol+=(psr->nQuad*4)-1;
+    }
+  if (psr->param[param_ifunc].fitFlag[0]==1)
+    {
+      for (i=0;i<psr->ifuncN-1;i++)
+	{psr->fitParamI[npol+i]  = param_ifunc; psr->fitParamK[npol+i]  = i;}
 
+      npol+=(psr->ifuncN-1);
+    }
+  if (psr->param[param_clk_offs].fitFlag[0]==1)
+    {
+      for (i=0;i<psr->clkOffsN-1;i++)
+	{psr->fitParamI[npol+i]  = param_clk_offs; psr->fitParamK[npol+i]  = i;}
+
+      npol+=(psr->clkOffsN-1);
+    }
+  if (psr->param[param_tel_dx].fitFlag[0]==1 && psr->param[param_tel_dx].val[0] < 2)
+    {
+      for (i=0;i<psr->nTelDX-1;i++)
+	{psr->fitParamI[npol+i]  = param_tel_dx; psr->fitParamK[npol+i]  = i;}
+
+      npol+=(psr->nTelDX-1);
+    }
+  else if (psr->param[param_tel_dx].fitFlag[0]==1 && psr->param[param_tel_dx].val[0] == 2)
+    {
+      for (i=0;i<psr->nTelDX-2;i++)
+	{psr->fitParamI[npol+i]  = param_tel_dx; psr->fitParamK[npol+i]  = i;}
+      npol+=(psr->nTelDX-2);
+    }
+  if (psr->param[param_tel_dy].fitFlag[0]==1 && psr->param[param_tel_dy].val[0] < 2)
+    {
+      for (i=0;i<psr->nTelDY-1;i++)
+	{psr->fitParamI[npol+i]  = param_tel_dy; psr->fitParamK[npol+i]  = i;}
+
+      npol+=(psr->nTelDY-1);
+    }
+  else if (psr->param[param_tel_dy].fitFlag[0]==1 && psr->param[param_tel_dy].val[0] == 2)
+    {
+      for (i=0;i<psr->nTelDY-2;i++)
+	{psr->fitParamI[npol+i]  = param_tel_dy; psr->fitParamK[npol+i]  = i;}
+
+
+      npol+=(psr->nTelDY-2);
+    }
+  if (psr->param[param_tel_dz].fitFlag[0]==1 && psr->param[param_tel_dz].val[0] < 2)
+    {
+      for (i=0;i<psr->nTelDZ-1;i++)
+	{psr->fitParamI[npol+i]  = param_tel_dz; psr->fitParamK[npol+i]  = i;}
+
+      npol+=(psr->nTelDZ-1);
+    }
+  else if (psr->param[param_tel_dz].fitFlag[0]==1 && psr->param[param_tel_dz].val[0] == 2)
+    {
+      for (i=0;i<psr->nTelDZ-2;i++)
+	{psr->fitParamI[npol+i]  = param_tel_dz; psr->fitParamK[npol+i]  = i;}
+
+      npol+=(psr->nTelDZ-2);
+    }
+  if (psr->param[param_quad_ifunc_p].fitFlag[0]==1)
+    {
+      for (i=0;i<psr->quad_ifuncN_p-1;i++)
+	{psr->fitParamI[npol+i]  = param_quad_ifunc_p; psr->fitParamK[npol+i]  = i;}
+
+      npol+=(psr->quad_ifuncN_p-1);
+    }
+  if (psr->param[param_quad_ifunc_c].fitFlag[0]==1)
+    {
+      for (i=0;i<psr->quad_ifuncN_c-1;i++)
+	{psr->fitParamI[npol+i]  = param_quad_ifunc_c; psr->fitParamK[npol+i]  = i;}
+
+      npol+=(psr->quad_ifuncN_c-1);
+    }
   /* Add extra parameters for DMMODEL fitting */
-  if (psr.param[param_dmmodel].fitFlag[0]==1){
-	 npol+=psr.dmoffsDMnum;
-	 npol+=psr.dmoffsCMnum;
+  if (psr->param[param_dmmodel].fitFlag[0]==1){
+      for (i=0;i<psr->dmoffsDMnum;i++)
+	{psr->fitParamI[npol+i]  = -2; psr->fitParamK[npol+i]  = i;}
+
+	 npol+=psr->dmoffsDMnum;
+      for (i=0;i<psr->dmoffsCMnum;i++)
+	{psr->fitParamI[npol+i]  = -3; psr->fitParamK[npol+i]  = i;}
+
+	 npol+=psr->dmoffsCMnum;
   }
   /* Add extra parameters for GW single source fitting */
-  if (psr.param[param_gwsingle].fitFlag[0]==1)
-    npol+=4; 
+  if (psr->param[param_gwsingle].fitFlag[0]==1)
+    {
+      for (i=0;i<4;i++)
+	{psr->fitParamI[npol+i]  = param_gwsingle; psr->fitParamK[npol+i]  = i;}
+      npol+=4; 
+    }
   return npol;
 }
 
@@ -1783,48 +1870,48 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
     }
   else if (i==param_dmmodel)
     {
-	   int N=psr->dmoffsDMnum;
+      int N=psr->dmoffsDMnum;
       double sat = (double)psr->obsn[ipos].sat;
       double yoffs[MAX_IFUNC];
-	  double* mjd=psr->dmoffsDM_mjd;
-	  if (k >= N){
-		 // if we are at k >= N, then we are in the CM, not the DM
-		 // so swap the variables over.
-		 mjd=psr->dmoffsCM_mjd;
-		 k-=N;
-		 N=psr->dmoffsCMnum;
-	  }
+      double* mjd=psr->dmoffsDM_mjd;
+      if (k >= N){
+	// if we are at k >= N, then we are in the CM, not the DM
+	// so swap the variables over.
+	mjd=psr->dmoffsCM_mjd;
+	k-=N;
+	N=psr->dmoffsCMnum;
+      }
 
 
       for (int ioff =0;ioff<N;ioff++){
-	      if (ioff==k){
-		      yoffs[ioff]=1;
-	      } else {
-		      yoffs[ioff]=0;
-	      }
+	if (ioff==k){
+	  yoffs[ioff]=1;
+	} else {
+	  yoffs[ioff]=0;
+	}
       }
-
+      
       if (sat < mjd[0]){
-	      // we are before the first jump
-	      // so our gradient is just the zeroth offset.
-	      afunc = yoffs[0];
+	// we are before the first jump
+	// so our gradient is just the zeroth offset.
+	afunc = yoffs[0];
       } else if(sat > mjd[N-1]){
-	      afunc = yoffs[N-1];
+	afunc = yoffs[N-1];
       } else{
-	      // find the pair we are between...
-	      for (int ioff =0;ioff<N;ioff++){
-		      if(sat >= mjd[ioff] && sat < mjd[ioff+1]){
-			      double x1 = mjd[ioff];
-			      double x2 = mjd[ioff+1];
-			      double x = (sat-x1)/(x2-x1);
-			      double y1=yoffs[ioff];
-			      double y2=yoffs[ioff+1];
-			      afunc = (y2-y1)*x + y1;
-			      break;
-		      }
-	      }
+	// find the pair we are between...
+	for (int ioff =0;ioff<N;ioff++){
+	  if(sat >= mjd[ioff] && sat < mjd[ioff+1]){
+	    double x1 = mjd[ioff];
+	    double x2 = mjd[ioff+1];
+	    double x = (sat-x1)/(x2-x1);
+	    double y1=yoffs[ioff];
+	    double y2=yoffs[ioff+1];
+	    afunc = (y2-y1)*x + y1;
+	    break;
+	  }
+	}
       }
-          
+      
     }
   else if (i==param_dmassplanet)
     {
@@ -2143,6 +2230,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 	      else if (i==param_gwm_amp)
 		{
 		  psr[p].param[i].val[0] -= val[j];
+		  psr[p].param[i].err[0] = error[j];
 		  j++;
 		}
 	      else if (i==param_dmmodel)
