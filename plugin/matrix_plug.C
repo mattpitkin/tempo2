@@ -30,262 +30,106 @@
 #include <math.h>
 #include "tempo2.h"
 
-void matinv(double **array,int norder,double *det);
+void getLabel(pulsar *psr,char *lab,int i);
 
 extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr) 
 {  
-  int i,j,npol=0;
-  int ip[1000],term[1000];
-  //  double **error,**cpyError,**invErr,*col;
-  char p1[128],p2[128];
-  int  setParam=0;
-  double cvm[MAX_PARAMS][MAX_PARAMS];
-  double d,err,det;
-  int k;
+  int p,i,j;
+  char lab1[128],lab2[128];
+  int resultType=1;
+  double tol = 0.9;
+  char useParam[128];
 
   for (i=0;i<argc;i++)
     {
-      if (strcmp(argv[i],"-p")==0)
-	{
-	  setParam=1;
-	  strcpy(p1,argv[++i]);
-	  strcpy(p2,argv[++i]);
-	}
+      if (strcmp(argv[i],"-result")==0)
+	sscanf(argv[++i],"%d",&resultType);
+      else if (strcmp(argv[i],"-tol")==0)
+	sscanf(argv[++i],"%lf",&tol);
+      else if (strcmp(argv[i],"-param")==0)
+	strcpy(useParam,argv[++i]);
     }
 
-  if (setParam==0)
+  printf("\n\n");
+  for (p=0;p<npsr;p++)
     {
-      printf("\n\n Correlation matrix ... \n\n");
-      
-      printf("\t");
-    }
-  for (i=0;i<MAX_PARAMS;i++)
-    {
-      for (k=0;k<psr[0].param[i].aSize;k++)
+      printf("Pulsar: %s\n",psr[p].name);
+      printf("\n");
+      printf("Number of parameters in the fit: %d\n",psr[p].nParam);
+      printf("Number of data points in the fit: %d\n",psr[p].nFit);
+      printf("chisq of fit: %g\n",psr[p].fitChisq);
+      printf("reduced chisq of fit: %g\n",psr[p].fitChisq/psr[p].fitNfree);
+
+      // Print top headers
+      if (resultType==1)
 	{
-	  if (psr[0].param[i].fitFlag[k]==1)
+	  printf("Param\t");
+	  for (j=0;j<psr[p].nParam;j++)
 	    {
-	      if (i!=param_start && i!=param_finish)
+	      getLabel(&psr[p],lab2,j);
+	      printf("%s\t",lab2);
+	    }
+	  printf("\n");
+	  
+	  for (i=0;i<psr[p].nParam;i++)
+	    {
+	      getLabel(&psr[p],lab1,i);
+	      printf("%s\t",lab1);
+	      for (j=0;j<=i;j++)
 		{
-		  if (setParam==0)
+		  printf("%+.8f\t",psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]));
+		}
+	      printf("\n");
+	    }
+	  
+	}
+
+      if (resultType==2)
+	{
+	  for (i=0;i<psr[p].nParam;i++)
+	    {
+	      for (j=0;j<i;j++)
+		{
+		  if (psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]) > tol ||
+		      psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]) < -tol)
 		    {
-		      printf("%-9.9s\t",psr[0].param[i].shortlabel[k]);
+		      getLabel(&psr[p],lab1,i);
+		      getLabel(&psr[p],lab2,j);
+		  printf("%s %s %+.8f\n",lab1,lab2,psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]));
 		    }
-		  ip[npol] = i;
-		  term[npol] = k;
-		  npol++;
 		}
 	    }
 	}
+      if (resultType==3)
+	{
+	  int iuse=-1;
+	  for (i=0;i<psr[p].nParam;i++)
+	    {
+	      getLabel(&psr[p],lab1,i);
+	      if (strcasecmp(lab1,useParam)==0)
+		iuse = i;	      
+	    }
+	  if (iuse!=-1)
+	    {
+	      for (j=0;j<psr[p].nParam;j++)
+		{
+		  getLabel(&psr[p],lab2,j);
+		  printf("%s-%s: %+.8f\n",useParam,lab2,psr[p].covar[iuse][j]/sqrt(psr[p].covar[iuse][iuse]*psr[p].covar[j][j]));
+		}
+
+	    }
+	}
     }
-  
-  for (i=1;i<=npol;i++)
-    {
-      for (j=1;j<=npol;j++)
-	cvm[i-1][j-1]=psr[0].covar[i][j];
-    }
-  
   printf("\n");
-  for (i=0;i<npol;i++){
-    if (setParam==0)
-      {
-	printf("%s\t",psr[0].param[ip[i]].shortlabel[term[i]]);
-      }
-    for (j=0;j<npol;j++){
-      if (j<=i){
-	if (setParam==0)
-	  printf("%+.8f\t",((cvm[i][j])/sqrt((cvm[j][j])*(cvm[i][i]))));  
-	else if (strcmp(psr[0].param[ip[i]].shortlabel[term[i]],p1)==0 &&
-		 strcmp(psr[0].param[ip[j]].shortlabel[term[j]],p2)==0)
-	  printf("%+.8f\t",((cvm[i][j])/sqrt((cvm[j][j])*(cvm[i][i]))));  
-	else if (strcmp(psr[0].param[ip[j]].shortlabel[term[j]],p1)==0 &&
-		 strcmp(psr[0].param[ip[i]].shortlabel[term[i]],p2)==0)
-	  printf("%+.8f\t",((cvm[i][j])/sqrt((cvm[j][j])*(cvm[i][i]))));  
-      }	
-    }
-    if (setParam==0)
-      printf("\n");
-  }
-  if (setParam==1) printf("\n");
-  if (setParam==0)
-    {
-      double **error;
-      double **cpyError;
-      double **invErr;
-      int indx[npol];
-      double col[npol];
-      
-      
-      error = (double **)malloc(npol*sizeof(double *));
-      cpyError = (double **)malloc(npol*sizeof(double *));
-      invErr = (double **)malloc(npol*sizeof(double *));
-      for (i=0;i<npol;i++)
-	{
-	  error[i] = (double *)malloc(npol*sizeof(double));
-	  cpyError[i] = (double *)malloc(npol*sizeof(double));
-	  invErr[i] = (double *)malloc(npol*sizeof(double));
-	}
-      
-      /* Determine the inverse matrix */
-      for (i=0;i<npol;i++){
-	for (j=0;j<npol;j++){
-	  invErr[i][j]=(cvm[i][j]/sqrt((cvm[j][j])*(cvm[i][i])));
-	}
-      }
-      
-      matinv(invErr,npol,&det);
-      
-      
-      
-      /*   ludcmp(cpyError,npol,indx,&d);
-	   
-      for (j=1;j<=npol;j++)
-      {
-      for (i=1;i<=npol;i++) col[i]=0.0;
-      col[j]=1.0;
-      lubksb(cpyError,npol,indx,col);
-      for (i=1;i<=npol;i++){
-      invErr[i][j]=col[i];
-      }
-      }	  */
-      printf("\n"); 
-      printf("gcor\t") ;
-      for (i=0;i<npol;i++) 
-	{
-	  //              err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
-	  //              printf("%+.8f\t",sqrt(fabs(1.0-1.0/(err*invErr[i][i]))));
-	  
-	  
-	  //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
-	  printf("%+.8f\t",sqrt(fabs(1.0-1.0/invErr[i][i])));
-	}    
-      printf("\n");
-      printf("dp\t"); /* See 1991ApJ 371 739,Ryba & Taylor */
-      for (i=0;i<npol;i++)
-	{
-	  //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
-	  //       printf("%+8.1f\t",-log10(1-fabs(sqrt(1.0-1.0/(err*invErr[i][i])))));
-	  
-	  //       err = (cvm[i][i])/sqrt((cvm[i][i])*(cvm[i][i]));
-	  printf("%+8.1f\t",-log10(1-fabs(sqrt(1.0-1.0/(invErr[i][i])))));
-	}    
-      printf("\n");
-      for (i=0;i<npol;i++)
-	{
-	  free(error[i]);
-	  free(cpyError[i]);
-	  free(invErr[i]);
-	}
-      free(error);
-      free(cpyError);
-      free(invErr);
-    }
- }
- /* Inverse square matrix routine copied from the original matinv.f in tempo1 */
- void matinv(double **array,int norder,double *det)
- {
-   int ik[norder],jk[norder];
-   int i,j,k;
-   double ss;
-   double amax;
-   int l;
+}
 
-   *det = 1.0;
-   for (k=0;k<norder;k++)
-     {
-       amax=0.0;
-     pos21:
-       for (i=k;i<norder;i++)
-	 {
-	   for (j=k;j<norder;j++)
-	     {
-	       if (fabs(amax) <= fabs(array[i][j])) 
-		 {
-		   amax = array[i][j];
-		   ik[k] = i;
-		   jk[k] = j;
-		 }	      
-	     } // 30
-	 } // 30
-
-       // Interchange rows and columns to put amax in array(k,k)
-       if (amax == 0)
-	 {
-	   *det = 0;
-	   return;
-	 }
-       i = ik[k];
-       if (i-k < 0) goto pos21;
-       else if (i-k > 0)
-	 {
-	   for (j=0;j<norder;j++)
-	     {
-	       ss = array[k][j];
-	       array[k][j] = array[i][j];
-	       array[i][j] = -ss;
-	     }
-	 }
-       j=jk[k];
-       if (j-k < 0) goto pos21;
-       else if (j-k > 0)
-	 {
-	   for (i=0;i<norder;i++)
-	     {
-	       ss = array[i][k];
-	       array[i][k] = array[i][j];
-	       array[i][j] = -ss;
-	     }
-	 }
-       // Accumulate elements of inverse matrix
-       for (i=0;i<norder;i++)
-	 {
-	   if (i!=k) array[i][k] = -array[i][k]/amax;
-	 }
-       for (i=0;i<norder;i++)
-	 {
-	   if (i!=k)
-	     {
-	       for (j=0;j<norder;j++)
-		 {
-		   if (j!=k)
-		     array[i][j] += array[i][k]*array[k][j];
-		 }
-	     }
-	 }
-       for (j=0;j<norder;j++)
-	 {
-	   if (j!=k) array[k][j] = array[k][j]/amax;
-	 }
-       array[k][k]=1.0/amax;
-
-       *det=(*det)*amax;
-     } //  100
-
-   // Restore normal ordering of matrix
-   for (l=0;l<norder;l++)
-     {
-       k = norder-(l+1);
-       j=ik[k];
-       if (j >  k)
-	 {
-	   for (i=0;i<norder;i++)
-	     {
-	       ss = array[i][k];
-	       array[i][k] = -array[i][j];
-	       array[i][j] = ss;
-	     }
-	 }
-       i = jk[k];
-       if (i > k)
-	 {
-	   for (j=0;j<norder;j++)
-	     {
-	       ss = array[k][j];
-	       array[k][j] = -array[i][j];
-	       array[i][j] = ss;
-	     }
-	 }
-     }
+void getLabel(pulsar *psr,char *lab,int i)
+{
+  if (psr->fitParamI[i]==-1) strcpy(lab,"JUMP");
+  else if (psr->fitParamI[i]==-2) sprintf(lab,"_DM_%.1f",(float)(psr->dmoffsDM_mjd[psr->fitParamK[i]]));
+  else if (psr->fitParamI[i]==-3) sprintf(lab,"_CM_%.1f",(float)(psr->dmoffsCM_mjd[psr->fitParamK[i]]));
+  else strcpy(lab,psr->param[psr->fitParamI[i]].shortlabel[psr->fitParamK[i]]);
+  
 }
 
 char * plugVersionCheck = TEMPO2_h_VER;
