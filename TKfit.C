@@ -143,6 +143,28 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
 	}
       b[i] = y[i]/sig[i];
     }
+
+
+  if(debugFlag==1){
+	 logdbg("Writing out prefit residuals");
+	 FILE* wFile=fopen("white.res","w");
+	 for (i=0;i<n;i++)
+		fprintf(wFile,"%lg %lg\n",x[i],b[i]);
+	 fclose(wFile);
+
+	 wFile=fopen("design.matrix","w");
+	 for (i=0;i<n;i++) {
+		for (j=0;j<nf;j++){
+		   fprintf(wFile,"%d %d %lg\n",i,j,designMatrix[i][j]);
+		}
+		fprintf(wFile,"\n");
+	 }
+	 fclose(wFile);
+
+  }
+
+
+
   /* Now carry out the singular value decomposition */
   //  printf("Decomposition\n");
   //  printf("Got this far 4\n");
@@ -150,9 +172,14 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
   TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
   //  printf("Weights\n");
   wmax = TKfindMax_d(w,nf);
+  if (wmax > pow(2,55)){
+	 logerr("Warning: wmax very large. Precision issues likely to break fit\nwmax=%lf\ngood=%lf",wmax,pow(2,55));
+  }
+
   for (i=0;i<nf;i++)
     {
       if (w[i] < tol*wmax) w[i]=0.0;
+	  logmsg("W %lf",w[i]);
     }
   //  printf("Back substitution\n");
   /* Back substitution */
@@ -279,6 +306,16 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
 	 for (i=0;i<n;i++)
 		fprintf(wFile,"%lg %lg %lg\n",x[i],bout[i],b[i]);
 	 fclose(wFile);
+
+	 wFile=fopen("design.matrix","w");
+	 for (i=0;i<n;i++) {
+		for (j=0;j<nf;j++){
+		   fprintf(wFile,"%d %d %lg\n",i,j,designMatrix[i][j]);
+		}
+		fprintf(wFile,"\n");
+	 }
+	 fclose(wFile);
+
   }
 
   for (i=0;i<n;i++)
@@ -286,6 +323,10 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
   /* Now carry out the singular value decomposition */
   TKsingularValueDecomposition_lsq(designMatrix,n,nf,v,w,u);
   wmax = TKfindMax_d(w,nf);
+  if (wmax > pow(2,55)){
+	 logerr("Warning: wmax very large. Precision issues likely to break fit\nwmax=%lf\ngood=%lf",wmax,pow(2,55));
+  }
+
   for (i=0;i<nf;i++)
     {
       if (w[i] < tol*wmax) w[i]=0.0;
