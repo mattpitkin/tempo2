@@ -179,7 +179,6 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
   for (i=0;i<nf;i++)
     {
       if (w[i] < tol*wmax) w[i]=0.0;
-	  logmsg("W %lf",w[i]);
     }
   //  printf("Back substitution\n");
   /* Back substitution */
