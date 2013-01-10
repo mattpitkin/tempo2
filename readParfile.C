@@ -654,8 +654,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	  psr->dmoffsDM[nDM]=val;
       psr->dmoffsDM_error[nDM] = 0;
       psr->dmoffsDM_weight[nDM] = 1;
-	  psr->dmoffsCM_mjd[nCM]=mjd;
-	  psr->dmoffsCM[nCM]=val;
+      psr->dmoffsCM_mjd[nCM]=mjd;
+      psr->dmoffsCM[nCM]=0;
       psr->dmoffsCM_error[nCM] = 0;
       psr->dmoffsCM_weight[nCM] = 1;
 
