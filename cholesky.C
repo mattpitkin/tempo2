@@ -529,7 +529,7 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
 }
 
 void cholesky_dmModel(double **m, double D_d, double d, double ref_freq,double *resx,double *resy,double *rese,int np, int nc){
-   double secperyear=365*86400.0;
+   double secperyear=365.25*86400.0;
    double tobs=ceil((resx[np-1])-(resx[0]))/365.25;
    double alpha=8.0/3.0;
    D_d *=1e-12; // convert us to seconds
@@ -541,7 +541,8 @@ void cholesky_dmModel(double **m, double D_d, double d, double ref_freq,double *
 
 
    //power at 1 year
-   double pism = (2.0/189.0) * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
+   //Equation 12 from Keith et al. (2012)
+   double pism = 0.0112 * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
    logdbg("pism(1yr^-1)  = %g (yr^3)",pism);
 
    double fc=1/tobs;
