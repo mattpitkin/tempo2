@@ -29,20 +29,19 @@ include build_settings/pgplot.am
 
 if HAVE_FFTW3
 include build_settings/pgplot_fftw.am
-
-if HAVE_GSL
-include build_settings/gsl.am
-endif
-
 endif
 
 if HAVE_CFITSIO
 include build_settings/pgplot_cfitsio.am
 endif
 
+#END OF PGPLOT
 endif
 
-AM_CPPFLAGS = @PGPLOT_CFLAGS@ @FFTW_CFLAGS@ 
+
+if HAVE_CFITSIO
+include build_settings/cfitsio.am
+endif
 
 #
 # GSL plugins
@@ -52,6 +51,7 @@ include build_settings/gsl.am
 endif
 
 
+AM_CPPFLAGS = @PGPLOT_CFLAGS@ @FFTW_CFLAGS@ 
 .PHONY: $(PLUGINS) $(PLUGINSTALLS) plugins plugins-install
 
 plugins: $(PLUGINS)

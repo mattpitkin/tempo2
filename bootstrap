@@ -12,6 +12,7 @@ chmod +x make_build_settings.sh
 ./make_build_settings.sh ./plugin_lists/pgplot_fftw.plugins "@PGPLOT_LIBS@ @FFTW_LIBS@" "@PGPLOT_CFLAGS@ @FFTW_CFLAGS@" > ./build_settings/pgplot_fftw.am
 ./make_build_settings.sh ./plugin_lists/pgplot_cfitsio.plugins "@PGPLOT_LIBS@ @CFITSIO_LIBS@" "@PGPLOT_CFLAGS@ @CFITSIO_CFLAGS@" > ./build_settings/pgplot_cfitsio.am
 ./make_build_settings.sh ./plugin_lists/gsl.plugins "@GSL_LIBS@" "@GSL_CFLAGS@" > ./build_settings/gsl.am
+./make_build_settings.sh ./plugin_lists/cfitsio.plugins "@CFITSIO_LIBS@" "@CFITSIO_CFLAGS@" > ./build_settings/cfitsio.am
 cd ..
 
 \rm -rf ./autoconf
