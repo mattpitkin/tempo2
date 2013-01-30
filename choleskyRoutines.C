@@ -948,7 +948,10 @@ int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,d
       for (i=0;i<*modelNfit;i++)
 	{
 	  //	  m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
-	  m = 1.0/pow(1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),*modelAlpha/2.0),2);
+//	  m = 1.0/pow(1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),*modelAlpha/2.0),2); // MJK OLD CODE
+
+	  m=1.0/pow(1.0+pow(fabs(preWhiteSpecX[i]*365.25)/(*modelFc),2),*modelAlpha/2.0);
+
 	  v1 += preWhiteSpecY[i]/m;
 	  printf("Here with %g %g %g %d\n",v1,preWhiteSpecY[i],m,*modelNfit);
 
