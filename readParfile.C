@@ -214,6 +214,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       char unit[1000];
       fscanf(fin,"%s", unit);
       if (strcasecmp(unit,"TDB")==0) psr->units = TDB_UNITS;
+      else if (strcasecmp(unit,"TCB")==0) psr->units = SI_UNITS;
       else if (strcasecmp(unit,"SI")==0) psr->units = SI_UNITS;
     }
   else if (strcasecmp(str,"NE1AU")==0 || strcasecmp(str,"NE_SW")==0 ||
