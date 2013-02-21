@@ -413,8 +413,9 @@ void ChebyModel_Write(const ChebyModel *cm, FILE *f)
     fprintf(f, "COEFFS");
     for (iy=0; iy < cm->cheby.ny; iy++)
       {
-	fprintf(f, " %.34Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
-	if ((iy+1)%26==0) fprintf(f, "\n");  // Every 26 coefficients put a new line
+	//	fprintf(f, " %.34Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
+	fprintf(f, " %.25Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
+	if ((iy+1)%3==0) fprintf(f, "\n");  // Every 3 coefficients put a new line
       }
     fprintf(f, "\n");
   }
