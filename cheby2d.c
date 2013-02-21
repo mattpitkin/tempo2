@@ -487,7 +487,7 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
 	return -9; // too many coefficient lines!!
 
       sscanf(line, "%*s %n", &ichar);
-      if (ny<26) // All on one line
+      if (ny<4) // All on one line
 	{
 	  for (iy=0; iy < cm->cheby.ny; iy++)
 	    {
