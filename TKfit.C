@@ -350,7 +350,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
 	e[i] = sqrt(cvm[i][i]);
     } 
 
-  {
+   if(debugFlag==1) {
     FILE *fout;
     fout = fopen("cvm.matrix","w");
     for (i=0;i<nf;i++)
@@ -389,7 +389,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
 	}
       (*chisq) += pow((b[j]-sum)/sig[j],2);
     }
-  printf("chisq = %g %g\n",*chisq,*chisq/(n-nf));
+//  printf("chisq = %g %g\n",*chisq,*chisq/(n-nf));
 
 
   if (weight==0 || (weight==1 && psr->rescaleErrChisq==1))
