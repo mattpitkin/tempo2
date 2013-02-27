@@ -7,6 +7,7 @@
 #include <complex.h>
 #include <T2toolkit.h>
 #include <fftw3.h>
+#include "tempo2.h"
 #include "makeRedNoise.h"
 
 float CubicInterpolate( float y0,float y1, float y2,float y3, float mu);
@@ -40,8 +41,8 @@ void freeRedNoiseModel(rednoisemodel_t* model){
 void populateRedNoiseModel(rednoisemodel_t* model,long seed){
 	int t_npts;
 	int i;
-	float freq,A,index;
-	float t_samp,f_bin,t_span;
+	double freq,A,index;
+	double t_samp,f_bin,t_span;
 	float *data;
 	fftwf_plan plan;
 	fftwf_complex *spectrum;
@@ -71,27 +72,33 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
 
 	index=model->index/2.0; // index is in power spectrum
 
-	if(model->mode==MODE_SIMPLE)
-	   A = sqrt(model->pwr_1yr) / (sqrt(2.0*model->nreal)*2.0); // the 2.0 is a normalisaiton factor.
+    // convert PSD to FFT power, multiply by N^2/T.
+	// M. Keith 2013.
+	A=model->pwr_1yr * t_npts*t_npts/(2*t_span*model->nreal);
 
-	if(model->mode==MODE_T2CHOL)
-	   A=model->pwr_1yr / (8.0*model->nreal); // no idea what the 86400 is for, but it makes the PSD match the cholesky PSD!
+	if(model->mode==MODE_SIMPLE){
+	   // this mode uses sqrt of power
+	   A = sqrt(A);
+	}
 
 	spectrum[0]=0;
 	for (i=1; i < t_npts/2+1; i++){
-	   freq=(float)i*f_bin;
+	   freq=(double)i*f_bin;
 	   double scale=0;
 	   if(model->mode==MODE_T2CHOL){
 		  scale=sqrt(A/pow(1.0+pow(fabs(freq)/model->flatten,2),-index));
 	   }
 	   if(model->mode==MODE_SIMPLE){
+	   logerr("TT");
 		  if (freq < model->flatten)
 			 freq=model->flatten;
 
 		  scale = A*pow(freq,index);
 		  if (freq < model->cutoff)scale=0;
 	   }
-	   spectrum[i]=(scale*TKgaussDev(&seed) + I*scale*TKgaussDev(&seed))/M_PI;
+	   // Need to scale A by 1/npts for FFTW. 
+	   // M. Keith Feb 2013.
+	   spectrum[i]=(scale*TKgaussDev(&seed) + I*scale*TKgaussDev(&seed))/(float)(t_npts);
 	}
 	
 	plan=fftwf_plan_dft_c2r_1d(t_npts,spectrum,data,FFTW_ESTIMATE);
