@@ -237,6 +237,7 @@ extern int MAX_OBSN;
 extern double ECLIPTIC_OBLIQUITY;
 
 extern int debugFlag;   /* Global = 1 if debug mode is running */
+extern int writeResiduals;   /* Global = 1 if we are writing out post-fit residuals */
 extern int tcheck;   /* Global = 1 if time check message should be printed is running */
 extern int veryFast;    /* Global to run the code fast */
 extern char tempo2MachineType[MAX_FILELEN];

@@ -108,9 +108,12 @@ int main(int argc, char *argv[])
       else if (strcasecmp(argv[i],"-debug")==0){
 	debugFlag=1;
 	tcheck=1;
+	writeResiduals=1;
 	  }
 	  else if (strcasecmp(argv[i],"-tcheck")==0)
 	tcheck=1;
+	  else if (strcasecmp(argv[i],"-writeres")==0)
+	writeResiduals=1;
       else if (strcasecmp(argv[i],"-veryfast")==0)
 	veryFast=1;
 

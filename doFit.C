@@ -488,21 +488,6 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	{
 	   getCholeskyMatrix(uinv,covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip);
 	}
-      logtchk("writing debug info to disk");
-      sprintf(fname,"whitedata_%d.dat",p+1);
-      fout = fopen(fname,"w");
-      for (i=0;i<psr[p].nobs;i++)
-	{
-	  sum=0.0;
-	  for (j=0;j<psr[p].nobs;j++)
-	    sum+=uinv[j][i]*psr[p].obsn[j].residual;
-	  whiteres[i] = sum;
-	  //            fprintf(fout,"%g %g %g\n",(double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[i].residual,(double)psr[0].obsn[i].toaErr);
-	  fprintf(fout,"%g %g %g %g\n",(double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]),
-		  whiteres[i],(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr);
-	}
-      fclose(fout);
-      logtchk("complete writing debug info to disk (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 
       /* Do the fit */
       if (npol!=0) /* Are we actually  doing any fitting? */ 
@@ -510,7 +495,8 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 
 	   logdbg("Get constraint weghts");
 	  logtchk("Get Constraint weights  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-	  computeConstraintWeights(psr+p,uinv);
+	  computeConstraintWeights(psr+p,NULL);
+	  //computeConstraintWeights(psr+p,uinv);
 	  logdbg("Doing the fit");
 	  logtchk("doing the fit  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  TKleastSquares_svd_psr_dcm(x,y,sig,psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
