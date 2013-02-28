@@ -89,7 +89,6 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
 		  scale=sqrt(A/pow(1.0+pow(fabs(freq)/model->flatten,2),-index));
 	   }
 	   if(model->mode==MODE_SIMPLE){
-	   logerr("TT");
 		  if (freq < model->flatten)
 			 freq=model->flatten;
 

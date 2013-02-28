@@ -460,12 +460,18 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
    double mjd;
    bool ok;
 
+   
+   double psrstart=(double)(psr->obsn[0].sat)-dmstep/2.0;
+   double psrend=(double)(psr->obsn[psr->nobs-1].sat)+dmstep/2.0;
+
    i=0;
    mjd=start;
    while (mjd <= end){
-	  psr->dmoffsDM_mjd[i]=mjd;
-	  psr->dmoffsDM[i]=0;
-	  i++;
+	  if (mjd > psrstart && mjd < psrend){
+		 psr->dmoffsDM_mjd[i]=mjd;
+		 psr->dmoffsDM[i]=0;
+		 i++;
+	  }
 	  mjd+=dmstep;
    }
    psr->dmoffsDMnum=i;
@@ -474,12 +480,16 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
 	  exit(1);
    }
 
+   psrstart=(double)(psr->obsn[0].sat)-cmstep/2.0;
+   psrend=(double)(psr->obsn[psr->nobs-1].sat)+cmstep/2.0;
    i=0;
    mjd=start;
    while (mjd <= end){
-	  psr->dmoffsCM_mjd[i]=mjd;
-	  psr->dmoffsCM[i]=0;
-	  i++;
+	  if (mjd > psrstart && mjd < psrend){
+		 psr->dmoffsCM_mjd[i]=mjd;
+		 psr->dmoffsCM[i]=0;
+		 i++;
+	  }
 	  mjd+=cmstep;
    }
    psr->dmoffsCMnum=i;
@@ -504,7 +514,7 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
 		 if(psr->dmoffsDM_weight[j]>threshold)i++;
 		 else{
 			logmsg("Skip %lf %lg",psr->dmoffsDM_mjd[j],psr->dmoffsDM_weight[i]);
-		   	ok=false;
+			ok=false;
 		 }
 		 mjd+=dmstep;
 	  }
@@ -525,7 +535,7 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
 		 if(psr->dmoffsCM_weight[j]>threshold)i++;
 		 else{
 			logmsg("Skip %lf %lg",psr->dmoffsCM_mjd[j],psr->dmoffsCM_weight[i]);
-		   	ok=false;
+			ok=false;
 		 }
 		 mjd+=cmstep;
 	  }

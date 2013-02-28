@@ -76,7 +76,9 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
 	  logmsg("adding extra covar function to m");
 	  for (i=0;i<np;i++)
 	  {
-		 for (j=0;j<np;j++)if(i!=j) m[i][j]+=psr->ToAextraCovar[i][j];
+		 for (j=0;j<np;j++){
+			   m[i][j]+=psr->ToAextraCovar[i][j];
+		 }
 	  }
    }
 

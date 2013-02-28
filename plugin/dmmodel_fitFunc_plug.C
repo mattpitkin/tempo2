@@ -89,7 +89,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			for (j=0;j<i;j++){
 				double cv=fabs(cvm[i][j]/sqrt((cvm[j][j])*(cvm[i][i])));
 				fprintf(cvfile,"% 7.3lf",cv);
-				if(cv > 0.5 || strcmp(labels[i],"PX")==0 || strcmp(labels[j],"PX")==0){
+				if(cv > 0.5){// || strcmp(labels[i],"PX")==0 || strcmp(labels[j],"PX")==0){
 					if(!warn){
 						printf(" <DMMODEL> Warning: highly covariant parameters in fit!\n");
 						warn=true;
