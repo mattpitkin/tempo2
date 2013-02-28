@@ -475,7 +475,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	  if (valid==1)(psr->nobs)++;
 	  if (psr->nobs > MAX_OBSN-2)
 	    {
-	      fprintf(stderr, "Too many TOAs! Change tempo.h and recompile!\n");
+	      fprintf(stderr, "Too many TOAs! Use the -npsr and -nobs command line arguments!\n");
 	      exit(1);
 	    }
 	}
