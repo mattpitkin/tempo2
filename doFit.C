@@ -343,7 +343,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
     {
       nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
       logtchk("Processing pulsar %d",p);
-      psr[p].fitMode = 0;
+      psr[p].fitMode = 1; // Note: forcing this to 1 as the Cholesky fit is a weighted fit
 
       /*
        * Check for "broken" combinations of fit parameters

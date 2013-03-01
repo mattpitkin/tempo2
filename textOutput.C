@@ -158,6 +158,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("Number of points in fit = %d\n",psr[p].nFit);
       if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
 	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
+      printf("Offset: %g %g\n",psr->offset,psr->offset_e);
       printf("\n\n");
       printf("PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit\n");
       printf("---------------------------------------------------------------------------------------------------\n");
