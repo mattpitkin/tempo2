@@ -291,7 +291,7 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
 	  designMatrix[i]=_designMatrix + nf*i;
 	  u[i]=_u+nf*i;
 	  uout[i]=_uout+nf*i;
-	  if (weight==0) sig[i]=1.0;
+	  sig[i]=1.0;
    }
    for (i=0;i<nf;i++) v[i] = _v+nf*i;
    /* This routine has been developed from Section 15 in Numerical Recipes */
