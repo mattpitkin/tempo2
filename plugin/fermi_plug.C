@@ -8,6 +8,8 @@
 #include <fitsio.h>
 #include <time.h>
 
+#define SECDAY 86400.0
+
 using namespace std;
 
 void extra_delays_fermi(pulsar *psr,int npsr);
@@ -57,8 +59,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             2 April 2012\n");
-	printf("Version:             5.6\n");
+	printf("Updated:             12 March 2013\n");
+	printf("Version:             5.7\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -154,7 +156,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	longdouble lasttime, tzrmjd_bary;
 	double lastpos[3];
 	
-	double tpb;
+	double tt0, tpb, fac;
 
 	/* ------------------------------------------------- //
 	// cpgplot definitions
@@ -603,7 +605,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	readParfile(psr,parFile,timFile,*npsr);
 	readTimfile(psr,timFile,*npsr);
 	
-	if (ophase && (psr[0].param[param_pb].paramSet[0] == 0))
+	if (ophase && (strcmp(psr[0].binaryModel,"NONE")==0))
 	{
 		printf("Error: no binary parameters found in %s !\n",parFile[0]);
 		sprintf(command,"rm -f %s",timFile[0]);
@@ -911,16 +913,32 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				}
 				else
 				{
-					if (psr[0].param[param_tasc].paramSet[0])
+					if (strcmp(psr[0].binaryModel,"BTX")==0)
+					{
+						tt0 = (psr[0].obsn[i].bat-psr[0].param[param_t0].val[0])*SECDAY;
+						tpb = psr[0].param[param_fb].val[0]*tt0;
+						fac = 1.0;
+						
+						for (j=1;j<psr[0].param[param_fb].aSize;j++)
+						{
+							fac = fac/(double)(j+1);
+							if (psr[0].param[param_fb].paramSet[j]==1) tpb += fac*psr[0].param[param_fb].val[j]*powl(tt0,j+1);
+						}
+					}
+					else if (psr[0].param[param_pb].paramSet[0] && psr[0].param[param_tasc].paramSet[0])
 					{
 						tpb = (psr[0].obsn[i].bat-psr[0].param[param_tasc].val[0])/(psr[0].param[param_pb].val[0]);
 					}
-					else if (psr[0].param[param_t0].paramSet[0])
+					else if (psr[0].param[param_pb].paramSet[0] && psr[0].param[param_t0].paramSet[0])
 					{
 						tpb = (psr[0].obsn[i].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
 					}
+					else
+					{
+						printf("Warning: PB, or T0, or TASC not set.\n");
+					}
 					
-					phase[event] = modf(tpb+1000000.0,&intpart);;
+					phase[event] = modf(tpb+1000000.0,&intpart);
 					if (phase[event] < 0.) phase[event]++;
 				}
 	
@@ -980,16 +998,32 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			}
 			else
 			{
-				if (psr[0].param[param_tasc].paramSet[0])
+				if (strcmp(psr[0].binaryModel,"BTX")==0)
+				{
+					tt0 = (psr[0].obsn[1].bat-psr[0].param[param_t0].val[0])*SECDAY;
+					tpb = psr[0].param[param_fb].val[0]*tt0;
+					fac = 1.0;
+					
+					for (j=1;j<psr[0].param[param_fb].aSize;j++)
+					{
+						fac = fac/(double)(j+1);
+						if (psr[0].param[param_fb].paramSet[j]==1) tpb += fac*psr[0].param[param_fb].val[j]*powl(tt0,j+1);
+					}
+				}
+				else if (psr[0].param[param_pb].paramSet[0] && psr[0].param[param_tasc].paramSet[0])
 				{
 					tpb = (psr[0].obsn[1].bat-psr[0].param[param_tasc].val[0])/(psr[0].param[param_pb].val[0]);
 				}
-				else if (psr[0].param[param_t0].paramSet[0])
+				else if (psr[0].param[param_pb].paramSet[0] && psr[0].param[param_t0].paramSet[0])
 				{
 					tpb = (psr[0].obsn[1].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
 				}
+				else
+				{
+					printf("Warning: PB, or T0, or TASC not set.\n");
+				}
 				
-				phase[event] = modf(tpb+1000000.0,&intpart);;
+				phase[event] = modf(tpb+1000000.0,&intpart);
 				if (phase[event] < 0.) phase[event]++;
 			}
 		
