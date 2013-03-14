@@ -415,6 +415,10 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 	count++;
       }
 
+
+      logtchk("allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+		uinv=malloc_uinv(count);
+
      logtchk("Complete determining which parameters we are fitting for  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
       //      printf("Count = %d\n",count);
       psr[p].nFit = count;
@@ -430,9 +434,6 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
       for (i=0;i<psr[p].nobs;i++)
 	psr[p].obsn[i].residual-=meanRes;
       logtchk("complete removing mean from the residuals??  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-      logtchk("allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-//      uinv = (double **)malloc(sizeof(double *)*nobs_and_constraints); -- New CBLAS way of doing this below...
-		uinv=malloc_uinv(nobs_and_constraints);
 
       logtchk("complete allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
       // If we have the data covariance matrix on disk
