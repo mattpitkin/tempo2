@@ -70,23 +70,31 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
 	model->tres=t_samp*365.25;
 	f_bin=1.0/(t_span*model->nreal); // frequency in yr^-1
 
-	index=model->index/2.0; // index is in power spectrum
 
-    // convert PSD to FFT power, multiply by N^2/T.
+    // To convert PSD to FFT power, need to multiply by N^2/T.
+	// BUT FFTW does not divide by N^2 on inverse transform
+	// so we need to divide by N^2.
+	// The factor of 4, converts one-sided P to 2-sided P as
+	// we input one-sided, and FFTW expected 2-sided.
+	//
+	// I am now 99% sure this is correct. George looked at it too!
 	// M. Keith 2013.
-	A=model->pwr_1yr * t_npts*t_npts/(2*t_span*model->nreal);
+	A=model->pwr_1yr /(4*t_span*model->nreal);
 
-	if(model->mode==MODE_SIMPLE){
-	   // this mode uses sqrt of power
-	   A = sqrt(A);
-	}
 
+	// we are forming "amplitudes" not powers
+	// so square root.
+	index=model->index/2.0;
+	A = sqrt(A);
+
+	// form a complex spectrum, then do a c2r transform.
 	spectrum[0]=0;
 	for (i=1; i < t_npts/2+1; i++){
 	   freq=(double)i*f_bin;
 	   double scale=0;
 	   if(model->mode==MODE_T2CHOL){
-		  scale=sqrt(A/pow(1.0+pow(fabs(freq)/model->flatten,2),-index));
+		  // same definition as the Cholesky code (except index is negative)
+		  scale=A*pow(1.0+pow(fabs(freq)/model->flatten,2),index/2.0);
 	   }
 	   if(model->mode==MODE_SIMPLE){
 		  if (freq < model->flatten)
@@ -95,17 +103,14 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
 		  scale = A*pow(freq,index);
 		  if (freq < model->cutoff)scale=0;
 	   }
-	   // Need to scale A by 1/npts for FFTW. 
-	   // M. Keith Feb 2013.
-	   spectrum[i]=(scale*TKgaussDev(&seed) + I*scale*TKgaussDev(&seed))/(float)(t_npts);
+	   // complex spectrum
+	   spectrum[i]=(scale*TKgaussDev(&seed) + I*scale*TKgaussDev(&seed));
 	}
 	
 	plan=fftwf_plan_dft_c2r_1d(t_npts,spectrum,data,FFTW_ESTIMATE);
 	fftwf_execute(plan);
 	fftwf_destroy_plan(plan);
 	fftwf_free(spectrum);
-
-
 
 	model->data=data;
 }
