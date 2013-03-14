@@ -255,12 +255,13 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
 // NEW FEATURE:
 // set nfit < 0 to automatically set it to nres/2-1
 int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit);
-int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T);
+int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char useCM,pulsar* psr);
 
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored
 void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
+void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival);
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored

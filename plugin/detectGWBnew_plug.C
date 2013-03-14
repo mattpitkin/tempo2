@@ -31,6 +31,7 @@
 #include "tempo2.h"
 #include "T2toolkit.h"
 #include "TKspectrum.h"
+#include "TKfit.h"
 #include "constraints.h"
 
 using namespace std;
@@ -294,7 +295,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			whitePSD[p1]= getSpectrum(&psr[p1],px1,py_r1,py_i1,&nSpec1,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile,toverlap);
 			whitePSD[p2]= getSpectrum(&psr[p2],px2,py_r2,py_i2,&nSpec2,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile,toverlap);
 
-			
+
 
 			if (nSpec1 < nSpec2) nSpec = nSpec1;
 			else nSpec = nSpec2;
@@ -526,11 +527,394 @@ void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
 
 }
 
+
+
+
+
 double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char *covarFuncFile,double T)
 {
    /* We make a fake pulsar to allow us to re-use the 'standard' tempo2
 	* spectral analysis code
 	*/
+   int i,j;
+   FILE *f;
+
+   longdouble peopoch=toffset;
+   pulsar* fakepsr = (pulsar*)malloc(sizeof(pulsar));
+   if (*nSpec < 1){
+	  *nSpec = (int)((((endOverlap-startOverlap)/(double)(stepMJD))-1)/2.0);
+   }
+
+   const int ninObs = psr->dmoffsCMnum;
+   const int nfakeObs = (int)(4*((endOverlap-startOverlap)/(double)(stepMJD)+0.5));
+   const double dt=(endOverlap-startOverlap)/(double)(nfakeObs-1); // this should be the same as stepMJD/4, but just in case.
+
+   double *ifunc_in = (double*)malloc(sizeof(double)*ninObs);
+   double *ifunc_out = (double*)malloc(sizeof(double)*nfakeObs);
+   double **M = malloc_blas(nfakeObs,ninObs);
+   double **Mt= malloc_blas(ninObs,nfakeObs);
+   double **MC= malloc_blas(nfakeObs,ninObs);
+   double **ifunc_CVM= malloc_uinv(ninObs);
+   double ** CVM=malloc_uinv(nfakeObs);
+
+   logmsg("dt=%lf stepMJD=%lf stepMJD/dt=%lf Nin=%d Nout=%d\n",dt,stepMJD,stepMJD/dt,ninObs,nfakeObs);
+
+   fakepsr->param[param_pepoch].val=&peopoch;
+   int k=0;
+
+   for(i=0; i < nfakeObs ;i++){
+	  ifunc_out[i]=0;
+	  for(k=0;k < ninObs;k++){
+		 M[i][k]=0;
+		 Mt[k][i]=0;
+	  }
+   }
+   // compute the matrix that translates the IFUNC to the finely sampled region.
+   double t=startOverlap; // time
+   k=0;
+   for(i=0; i < nfakeObs ;i++){
+	  while (k < ninObs){
+		 if(t >=psr->dmoffsCM_mjd[k] && t < psr->dmoffsCM_mjd[k+1]){
+			double v = (t-psr->dmoffsCM_mjd[k]) / (psr->dmoffsCM_mjd[k+1]-psr->dmoffsCM_mjd[k]); // fractional way through
+			M[i][k] = 1-v;
+			M[i][k+1] = v;
+			Mt[k][i] = 1-v;
+			Mt[k+1][i] = v;
+			break;
+		 } else{
+			k+=1;
+		 }
+	  }
+	  if (k == psr->dmoffsCMnum){
+		 // we are "off the end"
+		 M[i][k-1] = 1.0;
+		 Mt[k-1][i] = 1.0;
+	  }
+	  t+=dt;
+   }
+
+   for (i=0;i<psr->dmoffsCMnum;i++){
+	  ifunc_in[i]=psr->dmoffsCM[i];
+   }
+
+   fakepsr->obsn = (observation*) malloc(sizeof(observation)*nfakeObs);
+   strcpy(fakepsr->name,psr->name);
+   fakepsr->nobs=nfakeObs;
+   fakepsr->nconstraints=0;
+
+   // compute the interpolated function
+   logmsg("M * ifunc");
+   TKmultMatrixVec2(M,ifunc_in,nfakeObs,ninObs,ifunc_out);
+   logmsg("Get ifCVM");
+
+   // Get the CVM for the input IFUNC.
+   double r_chisq = psr->fitChisq / (float)(psr->fitNfree);
+   int CMoffset=offsetToCM(psr);
+   logdbg("CMoffset=%d\n",CMoffset);
+   for (i=0;i<ninObs;i++){
+	  for (j=0;j<=i;j++){
+		 if(i==j){
+			ifunc_CVM[i][j]=psr->covar[i+CMoffset][j+CMoffset]*r_chisq;
+			ifunc_CVM[j][i]=psr->covar[i+CMoffset][j+CMoffset]*r_chisq;
+		 } else {
+			ifunc_CVM[i][j]=0;
+			ifunc_CVM[j][i]=0;
+		 }
+	  }
+   }
+
+   // compute the covarince function of the new function.
+   logmsg("MC=M * ifCVM");
+   TKmultMatrix2(M,ifunc_CVM,nfakeObs,ninObs,ninObs,MC);
+
+   // finally compute the covariance function.
+   logmsg("CVM = ifCVM * Mt");
+   TKmultMatrix2(MC,Mt,nfakeObs,ninObs,nfakeObs,CVM);
+
+   // unfortunately we have to throw away the non-diagonal CVM.
+
+   t=startOverlap;
+   for(i=0; i < nfakeObs ;i++){
+	  fakepsr->obsn[i].sat=t;
+	  fakepsr->obsn[i].bat=t;
+	  fakepsr->obsn[i].bbat=t;
+	  fakepsr->obsn[i].residual=ifunc_out[i];
+	  fakepsr->obsn[i].toaErr=sqrt(CVM[i][i]);
+	  t+=dt;
+   }
+
+   logmsg("%lf %lf, %llf %llf, %s",startOverlap,endOverlap,fakepsr->obsn[0].sat,fakepsr->obsn[fakepsr->nobs-1].sat,fakepsr->name);
+   /* From here on in we copy the cholSpectra plugin
+   */
+   double **uinv;
+   FILE *fin;
+   char fname[128];
+   int ndays=0;
+   double resx[fakepsr->nobs],resy[fakepsr->nobs],rese[fakepsr->nobs],sig[fakepsr->nobs];
+   int ip[fakepsr->nobs];
+   FILE *fout;
+
+   //  printf("Calculating the spectrum\n");
+   uinv = malloc_uinv(fakepsr->nobs);
+   double sss=0;
+   double eee;
+
+   logmsg("Nspec=%d, nobs=%d",*nSpec,fakepsr->nobs);
+   for (i=0;i<fakepsr->nobs;i++)
+   {
+	  resx[i] = (double)(fakepsr->obsn[i].sat-toffset);
+	  resy[i] = (double)(fakepsr->obsn[i].residual);
+	  rese[i] = fakepsr->obsn[i].toaErr;
+	  sig[i]=1.0;
+	  ip[i]=i;
+	  eee=fakepsr->obsn[i].toaErr/1e6/86400.0/365.25;
+	  sss+=1.0/(eee*eee);
+   }
+   logmsg("Get Cholesky 'uinv' matrix from '%s'",covarFuncFile);
+   getCholeskyMatrix(uinv,covarFuncFile,fakepsr,resx,resy,rese,fakepsr->nobs,0,ip);
+
+   logmsg("Remove polynomial");
+   double param[99];
+   double error[99];
+   double chisq;
+   double** cvm = (double **)alloca(sizeof(double *)*99);
+   for (i=0;i<99;i++){
+	  cvm[i] = (double *)alloca(sizeof(double)*99);
+	  param[i]=0;
+   }
+
+   TKleastSquares_svd_psr_dcm(resx,resy,sig,fakepsr->nobs,param,error,3,cvm,&chisq,fitPolyFunc,0,fakepsr,1.0e-40,ip,uinv);
+
+   logmsg("Poly: %lg %lg %lg",param[0],param[1],param[2]);
+
+   for (i=0;i<fakepsr->nobs;i++){
+	  double x=resx[i];
+	  resy[i]-=param[0]*1e-6+x*param[1]*1e-10+x*x*param[2]*1e-20;
+   }
+   logdbg("Got uinv, now compute spectrum.");
+
+   // Must calculate uinv for the pulsar
+   calcSpectra_ri_T(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec,T,'N',fakepsr);
+
+   double tspan = (resx[fakepsr->nobs-1]-resx[0])/365.25;
+   // Free uinv
+   free_blas(M);
+   free_blas(Mt);
+   free_blas(MC);
+   free_blas(uinv);
+   free_blas(ifunc_CVM);
+   free_blas(CVM);
+
+   free(fakepsr->obsn);
+   free(fakepsr);
+   return 2*tspan/sss;
+}
+
+
+double psrangle(double centre_long,double centre_lat,double psr_long,double psr_lat)
+{
+   double dlon,dlat,a,c;
+   double deg2rad = M_PI/180.0;
+
+   /* Apply the Haversine formula */
+   dlon = (psr_long - centre_long);
+   dlat = (psr_lat  - centre_lat);
+   a = pow(sin(dlat/2.0),2) + cos(centre_lat) * 
+	  cos(psr_lat)*pow(sin(dlon/2.0),2);
+   if (a==1)
+	  c = M_PI/deg2rad;
+   else
+	  c = 2.0 * atan2(sqrt(a),sqrt(1.0-a))/deg2rad;  
+   return c;
+}
+
+void hdfunc(double x,double *p,int ma)
+{
+   double ctheta,cx;
+
+   ctheta = cos(x*M_PI/180.0);
+   cx = (1.0-ctheta)/2.0;
+   p[0] = (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0;
+
+}
+
+int offsetToCM(pulsar* psr){
+   int i,j,k;
+   int n=0;
+   n++;
+   for (i=0;i<MAX_PARAMS;i++)
+   {
+	  for (k=0;k<psr->param[i].aSize;k++)
+	  {
+		 if (psr->param[i].fitFlag[k]==1) /* If we are fitting for this parameter */
+		 {
+			if (i!=param_start && i!=param_finish)
+			{
+			   if (i==param_wave_om)
+			   {
+				  if (psr->waveScale==2)
+				  {
+					 //                      for (j=0;j<psr->nWhite*2;j++)                           
+					 for (j=0;j<psr->nWhite*4;j++)n++;
+				  }
+				  else
+				  {
+					 for (j=0;j<psr->nWhite*2;j++)n++;
+				  }
+			   }
+			   else if (i==param_quad_om)
+			   {
+				  for (j=0;j<psr->nQuad*4;j++)n++;
+			   }
+			   else if (i==param_ifunc)
+			   {
+				  for (j=0;j<psr->ifuncN;j++)n++;
+			   }
+			   else if (i==param_gwsingle)
+			   {
+				  n+=4;
+			   }
+			   else if (i==param_dmmodel)
+			   {
+				  for (j=0;j<(int)psr->dmoffsDMnum;j++)n++;
+				  return n;
+			   }
+			   else
+				  n++;
+			}
+		 }
+	  }
+   }
+}
+
+
+
+
+
+/**
+ *
+ *
+ *  These commented out functions are many attempts to compute the spectrum without the wierd aliasing effects of the ifuncs.
+ *  M. Keith 2013.
+ *
+ double getSpectrumTRY2(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char *covarFuncFile,double T)
+ {
+
+ int nobs=0;
+ int i,j;
+ int ii,jj;
+ longdouble peopoch=toffset;
+ pulsar* fakepsr = (pulsar*)malloc(sizeof(pulsar));
+ if (*nSpec < 1){
+ *nSpec = (int)((((endOverlap-startOverlap)/(double)(stepMJD))-1)/2.0);
+ }
+
+
+
+ fakepsr->obsn = (observation*) malloc(sizeof(observation)*psr->dmoffsCMnum);
+ strcpy(fakepsr->name,psr->name);
+
+
+ fakepsr->param[param_pepoch].val=&peopoch;
+ for(i=0; i < psr->dmoffsCMnum;i++){
+ if (psr->dmoffsCM_mjd[i] >= startOverlap && psr->dmoffsCM_mjd[i] <= endOverlap){
+ fakepsr->obsn[nobs].sat=psr->dmoffsCM_mjd[i];
+ fakepsr->obsn[nobs].bat=psr->dmoffsCM_mjd[i];
+ fakepsr->obsn[nobs].bbat=psr->dmoffsCM_mjd[i];
+ fakepsr->obsn[nobs].residual=psr->dmoffsCM[i];
+ fakepsr->obsn[nobs].toaErr=psr->dmoffsCM_error[i]*1e6; // convert to us
+ nobs++;
+ }
+ }
+ fakepsr->nobs=nobs;
+ fakepsr->ToAextraCovar = malloc_uinv(fakepsr->nobs);
+
+ double r_chisq = psr->fitChisq / (float)(psr->fitNfree);
+
+ int CMoffset=offsetToCM(psr);
+ ii=0;
+ for (i=0;i<psr->dmoffsCMnum;i++){
+ if (psr->dmoffsCM_mjd[i] >= startOverlap && psr->dmoffsCM_mjd[i] <= endOverlap){
+ jj=0;
+ for (j=0;j<=i;j++){
+ if (psr->dmoffsCM_mjd[j] >= startOverlap && psr->dmoffsCM_mjd[j] <= endOverlap){
+ fakepsr->ToAextraCovar[ii][jj]=psr->covar[i+CMoffset][j+CMoffset]*r_chisq;
+ fakepsr->ToAextraCovar[jj][ii]=psr->covar[i+CMoffset][j+CMoffset]*r_chisq;
+ jj++;
+ }
+ }
+ ii++;
+ }
+ }
+
+ logmsg("%lf %lf, %llf %llf, %s",startOverlap,endOverlap,fakepsr->obsn[0].sat,fakepsr->obsn[fakepsr->nobs-1].sat,fakepsr->name);
+ double **uinv;
+ FILE *fin;
+ char fname[128];
+ int ndays=0;
+ double resx[fakepsr->nobs],resy[fakepsr->nobs],rese[fakepsr->nobs],sig[fakepsr->nobs];
+ int ip[fakepsr->nobs];
+ FILE *fout;
+
+//  printf("Calculating the spectrum\n");
+uinv = malloc_uinv(fakepsr->nobs);
+double sss=0;
+double eee;
+
+logmsg("Nspec=%d, nobs=%d",*nSpec,fakepsr->nobs);
+for (i=0;i<fakepsr->nobs;i++)
+{
+   resx[i] = (double)(fakepsr->obsn[i].sat-toffset);
+   resy[i] = (double)(fakepsr->obsn[i].residual);
+   rese[i] = 0; // The error here is already included in the covariance function.
+   sig[i]=1.0;
+   ip[i]=i;
+   eee=fakepsr->obsn[i].toaErr/1e6/86400.0/365.25;
+   sss+=1.0/(eee*eee);
+}
+logmsg("Get Cholesky 'uinv' matrix from '%s'",covarFuncFile);
+getCholeskyMatrix(uinv,covarFuncFile,fakepsr,resx,resy,rese,fakepsr->nobs,0,ip);
+logmsg("Remove polynomial");
+double param[99];
+double error[99];
+double chisq;
+double** cvm = (double **)alloca(sizeof(double *)*99);
+for (i=0;i<99;i++){
+   cvm[i] = (double *)alloca(sizeof(double)*99);
+   param[i]=0;
+}
+
+TKleastSquares_svd_psr_dcm(resx,resy,sig,fakepsr->nobs,param,error,3,cvm,&chisq,fitPolyFunc,0,fakepsr,1.0e-40,ip,uinv);
+logmsg("Poly: %lg %lg %lg",param[0],param[1],param[2]);
+
+for (i=0;i<fakepsr->nobs;i++){
+   double x=resx[i];
+   resy[i]-=param[0]*1e-6+x*param[1]*1e-10+x*x*param[2]*1e-20;
+}
+logdbg("Got uinv, now compute spectrum.");
+
+// Must calculate uinv for the pulsar
+calcSpectra_ri_T(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec,T,'I',fakepsr);
+
+double tspan = (resx[fakepsr->nobs-1]-resx[0])/365.25;
+// Free uinv
+free_uinv(uinv);
+if(fakepsr->ToAextraCovar!=NULL){
+   free_uinv(fakepsr->ToAextraCovar);
+}
+
+free(fakepsr->obsn);
+free(fakepsr);
+
+return 2*tspan/sss;
+
+}
+
+
+
+
+double getSpectrumSTUIPD(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char *covarFuncFile,double T)
+{
    int i,j;
    FILE *f;
 
@@ -609,35 +993,10 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
    logdbg("CMoffset=%d\n",CMoffset);
    for (i=0;i<ninObs;i++){
 	  for (j=0;j<=i;j++){
-			ifunc_CVM[i][j]=psr->covar[i+CMoffset][j+CMoffset]*r_chisq;
-			ifunc_CVM[j][i]=psr->covar[i+CMoffset][j+CMoffset]*r_chisq;
+		 ifunc_CVM[i][j]=psr->covar[i+CMoffset][j+CMoffset]*r_chisq;
+		 ifunc_CVM[j][i]=psr->covar[i+CMoffset][j+CMoffset]*r_chisq;
 	  }
    }
-   /*
-
-	  f=fopen("dump.iCVM","w");
-	  for (i=0;i<ninObs;i++){
-	  for (j=0;j<ninObs;j++){
-	  fprintf(f,"%d %d %lg\n",i,j,ifunc_CVM[i][j]);
-	  }
-	  fprintf(f,"\n");
-	  }
-	  fclose(f);
-	  f=fopen("dump.in","w");
-	  for (i=0;i<ninObs;i++){
-	  fprintf(f,"%d %lg\n",i,ifunc_in[i]);
-	  }
-	  fclose(f);
-	  f=fopen("dump.M","w");
-	  for (j=0;j<nfakeObs;j++){
-	  for (i=0;i<ninObs;i++){
-	  fprintf(f,"%d %d %lg\n",j,i,M[j][i]);
-	  }
-	  fprintf(f,"\n");
-	  }
-	  fclose(f);
-
-*/
 
    // compute the covarince function of the new function.
    logmsg("MC=M * ifCVM");
@@ -650,10 +1009,10 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
    logmsg("CVM = ifCVM * Mt");
    TKmultMatrix2(MC,Mt,nfakeObs,ninObs,nfakeObs,CVM);
 
-//   for(i=0; i < nfakeObs ;i++){
-//	  fakepsr->ToAextraCovar[i][i]*=1.001; // this is to ensure that any rounding errors don't stop it being positive definite.
-//   }
-//
+   //   for(i=0; i < nfakeObs ;i++){
+   //	  fakepsr->ToAextraCovar[i][i]*=1.001; // this is to ensure that any rounding errors don't stop it being positive definite.
+   //   }
+   //
    double FF=0;
    for(i=0; i < nfakeObs ;i++){
 	  for(j=0; j < nfakeObs ;j++){
@@ -664,7 +1023,7 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
    }
 
    f=fopen("IFo","w");
-    FILE*   ff=fopen("ttCVM","w");
+   FILE*   ff=fopen("ttCVM","w");
    t=startOverlap;
    for(i=0; i < nfakeObs ;i++){
 	  fakepsr->obsn[i].sat=t;
@@ -675,18 +1034,16 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
 	  fakepsr->obsn[i].toaErr=0;//sqrt(CVM[i][i]);
 	  fprintf(f,"%lf %llg %lg\n",t,fakepsr->obsn[i].residual,fakepsr->obsn[i].toaErr);
 
-	  	  for(j=0; j < nfakeObs ;j++){
-	  	 fprintf(ff,"%d %d %lg\n",i,j,fakepsr->ToAextraCovar[i][j]);
-	  	  }
-	  	  fprintf(ff,"\n");
+	  for(j=0; j < nfakeObs ;j++){
+		 fprintf(ff,"%d %d %lg\n",i,j,fakepsr->ToAextraCovar[i][j]);
+	  }
+	  fprintf(ff,"\n");
 	  t+=dt;
    }
-      fclose(ff);
-  fclose(f);
+   fclose(ff);
+   fclose(f);
 
    logmsg("%lf %lf, %llf %llf, %s",startOverlap,endOverlap,fakepsr->obsn[0].sat,fakepsr->obsn[fakepsr->nobs-1].sat,fakepsr->name);
-   /* From here on in we copy the cholSpectra plugin
-   */
    double **uinv;
    FILE *fin;
    char fname[128];
@@ -715,15 +1072,6 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
    logmsg("Get Cholesky 'uinv' matrix from '%s'",covarFuncFile);
    getCholeskyMatrix(uinv,covarFuncFile,fakepsr,resx,resy,rese,fakepsr->nobs,0,ip);
 
-   /*      f=fopen("dump.uinv","w");
-		   for (j=0;j<nfakeObs;j++){
-		   for (i=0;i<nfakeObs;i++){
-		   fprintf(f,"%d %d %lg\n",j,i,uinv[j][i]);
-		   }
-		   fprintf(f,"\n");
-		   }
-		   fclose(f);
-		   */
 
 
    logmsg("Remove polynomial");
@@ -748,7 +1096,7 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
    logdbg("Got uinv, now compute spectrum.");
 
    // Must calculate uinv for the pulsar
-   calcSpectra_ri_T(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec,T);
+   calcSpectra_ri_T(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec,T,'N',fakepsr);
 
    double tspan = (resx[fakepsr->nobs-1]-resx[0])/365.25;
    // Free uinv
@@ -768,16 +1116,9 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
 
 
 
-/**
- * THIS IS THE OLD CODE.
- *
- */
 double getSpectrumOLD(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char *covarFuncFile,double T)
 {
 
-   /* We make a fake pulsar to allow us to re-use the 'standard' tempo2
-	* spectral analysis code
-	*/
    int nobs=0;
    int i,j;
    int ii,jj;
@@ -826,8 +1167,6 @@ double getSpectrumOLD(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpe
    }
 
    logmsg("%lf %lf, %llf %llf, %s",startOverlap,endOverlap,fakepsr->obsn[0].sat,fakepsr->obsn[fakepsr->nobs-1].sat,fakepsr->name);
-   /* From here on in we copy the cholSpectra plugin
-   */
    double **uinv;
    FILE *fin;
    char fname[128];
@@ -874,7 +1213,7 @@ double getSpectrumOLD(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpe
    logdbg("Got uinv, now compute spectrum.");
 
    // Must calculate uinv for the pulsar
-   calcSpectra_ri_T(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec,T);
+   calcSpectra_ri_T(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec,T,'N',fakepsr);
    // multiply by sinc^2 to account for ifunc smoothing feature MKeith 2013
    for (i=0;i<*nSpec;i++){
 	  py_r[i]*=pow(sin(px[i]*M_PI*stepMJD)/M_PI/px[i]/stepMJD,2);
@@ -890,227 +1229,9 @@ double getSpectrumOLD(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpe
 
    free(fakepsr->obsn);
    free(fakepsr);
-   /*
-	  int o=10;
-	  double avg=0;
-	  if (*nSpec < 10) o=*nSpec/2;
-	  for (i=*nSpec-o;i < *nSpec;i++){
-	  avg+=py_r[i]*py_r[i]+py_i[i]*py_i[i];
-	  }
-	  return avg/(double)o;
-	  */
 
    return 2*tspan/sss;
 
 }
 
 
-double psrangle(double centre_long,double centre_lat,double psr_long,double psr_lat)
-{
-   double dlon,dlat,a,c;
-   double deg2rad = M_PI/180.0;
-
-   /* Apply the Haversine formula */
-   dlon = (psr_long - centre_long);
-   dlat = (psr_lat  - centre_lat);
-   a = pow(sin(dlat/2.0),2) + cos(centre_lat) * 
-	  cos(psr_lat)*pow(sin(dlon/2.0),2);
-   if (a==1)
-	  c = M_PI/deg2rad;
-   else
-	  c = 2.0 * atan2(sqrt(a),sqrt(1.0-a))/deg2rad;  
-   return c;
-}
-
-void hdfunc(double x,double *p,int ma)
-{
-   double ctheta,cx;
-
-   ctheta = cos(x*M_PI/180.0);
-   cx = (1.0-ctheta)/2.0;
-   p[0] = (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0;
-
-}
-
-
-
-
-
-
-
-
-
-
-
-int offsetToCM(pulsar* psr){
-   int i,j,k;
-   int n=0;
-   n++;
-   for (i=0;i<MAX_PARAMS;i++)
-   {
-	  for (k=0;k<psr->param[i].aSize;k++)
-	  {
-		 if (psr->param[i].fitFlag[k]==1) /* If we are fitting for this parameter */
-		 {
-			if (i!=param_start && i!=param_finish)
-			{
-			   if (i==param_wave_om)
-			   {
-				  if (psr->waveScale==2)
-				  {
-					 //                      for (j=0;j<psr->nWhite*2;j++)                           
-					 for (j=0;j<psr->nWhite*4;j++)n++;
-				  }
-				  else
-				  {
-					 for (j=0;j<psr->nWhite*2;j++)n++;
-				  }
-			   }
-			   else if (i==param_quad_om)
-			   {
-				  for (j=0;j<psr->nQuad*4;j++)n++;
-			   }
-			   else if (i==param_ifunc)
-			   {
-				  for (j=0;j<psr->ifuncN;j++)n++;
-			   }
-			   else if (i==param_gwsingle)
-			   {
-				  n+=4;
-			   }
-			   else if (i==param_dmmodel)
-			   {
-				  for (j=0;j<(int)psr->dmoffsDMnum;j++)n++;
-				  return n;
-			   }
-			   else
-				  n++;
-			}
-		 }
-	  }
-   }
-}
-
-
-
-/*
- * NOT USED
- *
- */
-void compute_window_functions(pulsar *psr,int p1,int p2,
-	  double *px1, double *py_r1,double *py_i1, int nSpec1,
-	  double *px2,double *py_r2, double *py_i2, int nSpec2,
-	  double toffset, double startOverlap, double endOverlap,
-	  double stepMJD, char* covarFuncFile){
-
-
-
-   pulsar *psr1=(pulsar*)malloc(sizeof(pulsar));
-   pulsar *psr2=(pulsar*)malloc(sizeof(pulsar));
-   memcpy(psr1,psr+p1,sizeof(pulsar));
-   memcpy(psr2,psr+p2,sizeof(pulsar));
-
-   psr1->obsn = (observation*)malloc(sizeof(observation)*psr1->nobs);
-   psr2->obsn = (observation*)malloc(sizeof(observation)*psr2->nobs);
-   memcpy(psr1->obsn,psr[p1].obsn,sizeof(observation)*psr1->nobs);
-   memcpy(psr2->obsn,psr[p2].obsn,sizeof(observation)*psr2->nobs);
-
-
-
-   int iS,iF,iO;
-   char fname[128];
-   FILE *fout;
-   double df = OMEGA0/2.0/M_PI;
-   double freq;
-   double cfreq;
-   double windowRange=df*12.0;
-   int nWindowBins=48;
-   double A=1e-6;
-   int n=1;
-
-   double *fx1 = (double*)malloc(sizeof(double)*(nWindowBins*2+1));
-   double *fy_r1 = (double*)malloc(sizeof(double)*(nWindowBins*2+1));
-   double *fy_i1 = (double*)malloc(sizeof(double)*(nWindowBins*2+1));
-   // increment these as the array has a negative index.
-   fx1+=nWindowBins;
-   fy_r1+=nWindowBins;
-   fy_i1+=nWindowBins;
-
-   double *fx2 = (double*)malloc(sizeof(double)*(nWindowBins*2+1));
-   double *fy_r2 = (double*)malloc(sizeof(double)*(nWindowBins*2+1));
-   double *fy_i2 = (double*)malloc(sizeof(double)*(nWindowBins*2+1));
-   // increment these as the array has a negative index.
-   fx2+=nWindowBins;
-   fy_r2+=nWindowBins;
-   fy_i2+=nWindowBins;
-
-
-
-   // We are going to try and compute the spectral window function by injectinc sinusoids
-   for (iS=0;iS<nSpec1;iS++){
-	  double sum=0;
-	  cfreq = df * (iS+1); // centre frequency of the bin we are working on.
-	  sprintf(fname,"%s-%s.%d.wdw",psr1->name,psr2->name,iS);
-	  fout=fopen(fname,"w");
-	  for (iF=-nWindowBins; iF < nWindowBins; iF++){
-		 freq=cfreq+iF*windowRange/(double)nWindowBins;
-		 if (freq < 0)continue;
-		 double omega=freq*M_PI*2.0;
-		 for (iO=0;iO<psr1->nobs;iO++) {
-			psr1->obsn[iO].residual = psr[p1].obsn[iO].residual + (longdouble)(A*sin((psr1->obsn[iO].bbat-toffset)*omega));
-		 }
-		 for (iO=0;iO<psr2->nobs;iO++){
-			psr2->obsn[iO].residual = psr[p2].obsn[iO].residual + (longdouble)(A*sin((psr2->obsn[iO].bbat-toffset)*omega));
-		 }
-		 for(iO=0; iO < psr1->dmoffsCMnum;iO++){
-			psr1->dmoffsCM[iO]=0;
-		 }
-		 for(iO=0; iO < psr2->dmoffsCMnum;iO++){
-			psr2->dmoffsCM[iO]=0;
-		 }
-
-		 double T=(endOverlap-startOverlap)/(double)(iS+1);
-		 logmsg("FIT 1 %d %d",iF,iS);
-		 doFit(psr1,n,0);       /* Do the fitting     */
-		 logmsg("FIT 2");
-		 doFit(psr2,n,0);       /* Do the fitting     */
-
-		 getSpectrum(psr1,fx1+iF,fy_r1+iF,fy_i1+iF,&n,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile,T);
-		 getSpectrum(psr2,fx2+iF,fy_r2+iF,fy_i2+iF,&n,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile,T);
-
-		 //		 double P=pow(fy_r1[iF]-py_r1[iS],2)+pow(fy_i1[iF]-py_r1[iS],2);
-		 double P= (fy_r1[iF]-py_r1[iS])*(fy_r2[iF]-py_r2[iS])+(fy_i1[iF]*py_i1[iS])*(fy_i2[iF]*py_i2[iS]);
-		 sum+=P;
-	  }
-	  sum=1.0;
-	  for (iF=-nWindowBins; iF < nWindowBins; iF++){
-		 freq=cfreq+iF*windowRange/(double)nWindowBins;
-		 if (freq < 0)continue;
-		 //		 double P=(pow(fy_r1[iF]-py_r1[iS],2)+pow(fy_i1[iF]-py_r1[iS],2))/sum;
-		 //		 double P= ((fy_r1[iF]-py_r1[iS])*(fy_r2[iF]-py_r2[iS])+(fy_i1[iF]*py_i1[iS])*(fy_i2[iF]*py_i2[iS]))/sum;
-		 double P=(fy_r1[iF]*fy_r2[iF]+fy_i1[iF]*fy_i2[iF]) - (py_r1[iS]*py_r2[iS]+py_i1[iS]*py_i2[iS]);
-		 fprintf(fout,"%g %g %g %g\n",freq,P,(pow(fy_r1[iF]-py_r1[iS],2)+pow(fy_i1[iF]-py_r1[iS],2)),(pow(fy_r2[iF]-py_r2[iS],2)+pow(fy_i2[iF]-py_r2[iS],2)));
-	  }
-	  fclose(fout);
-   }
-
-   fx1-=nWindowBins;
-   fy_r1-=nWindowBins;
-   fy_i1-=nWindowBins;
-   fx2-=nWindowBins;
-   fy_r2-=nWindowBins;
-   fy_i2-=nWindowBins;
-
-
-   free(fx1);
-   free(fx2);
-   free(fy_r1);
-   free(fy_i1);
-   free(fy_r2);
-   free(fy_i2);
-
-   free(psr1->obsn);
-   free(psr2->obsn);
-   free(psr1);
-   free(psr2);
-}

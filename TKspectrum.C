@@ -1788,12 +1788,13 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
 // NEW FEATURE:
 // set nfit < 0 to automatically set it to nres/2-1
 int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit) {
-   return calcSpectra_ri_T(uinv,resx,resy,nres,specX,specY_R,specY_I,nfit,(resx[nres-1]-resx[0]));
+
+  pulsar *psr=NULL;
+   return calcSpectra_ri_T(uinv,resx,resy,nres,specX,specY_R,specY_I,nfit,(resx[nres-1]-resx[0]),'N',psr);
 }
 
-int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T) {
+int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr) {
   int i,j,k;
-  //  int nfit=nres/2-1;
   int nSpec;
 
   if (nfit < 0)
@@ -1804,43 +1805,42 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
   double **newUinv;
   double **cvm;
   double chisq;
-  pulsar *psr;
   int ip[nres];
   double param[3],error[3];
 
+  // to allow for computing the spectrum of IFUNC/CM etc we need different fit functions.
+  void (*FIT_FUNC)(double, double [], int,pulsar *,int); // the fit function we will use
+  FIT_FUNC=fitMeanSineFunc; // this is the standard periodogram/
+  if(fitfuncMode=='I'){
+	 if (psr==NULL){
+		logerr("ERROR: cannot use IFUNC spectral estimation without a real pulsar\nCheck call to calcSpectra_ri_T()");
+		return -1;
+	 }
+	 FIT_FUNC=fitMeanSineFunc_IFUNC; // this accounts for smoothing of the CM/IFUNC
+  }
+
   cvm = (double **)alloca(sizeof(double *)*3);
   for (i=0;i<3;i++)
-    cvm[i] = (double *)alloca(sizeof(double)*3);
+	 cvm[i] = (double *)alloca(sizeof(double)*3);
 
   // Should fit independently to all frequencies
   for (i=0;i<nres;i++)
-    {
-      sig[i] = 1.0; // The errors are built into the uinv matrix
-      ip[i] = 0;
-    }
+  {
+	 sig[i] = 1.0; // The errors are built into the uinv matrix
+	 ip[i] = i;
+  }
   logmsg("Computing %d spectral channels",nfit);
   for (k=0;k<nfit;k++)
-    {
-      //      printf("%5.2g\%\r",(double)k/(double)nfit*100.0);
-      //      fflush(stdout);
-      GLOBAL_OMEGA = 2.0*M_PI/(T*(double)nres/(double)(nres-1))*(k+1);
-    //  logdbg("Doing leastSquares fit, k=%d",k);
-      TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
-	//  if (k%32==0)printf("\n");
-	//  printf(".");
-	//  fflush(stdout);
-    //  logdbg("Done leastSquares fit");
-      v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
-      specX[k] = GLOBAL_OMEGA/2.0/M_PI;
-      specY_R[k] = sqrt(v[k])*param[1];
-      specY_I[k] = sqrt(v[k])*param[2];
-    }
-//  printf("\n");
+  {
+	 GLOBAL_OMEGA = 2.0*M_PI/(T*(double)nres/(double)(nres-1))*(k+1);
 
-  //  for (i=0;i<nfit;i++)
-  //    free(cvm[i]);
-  //  free(cvm);
-  //  printf("Complete spectra\n");
+	 TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,FIT_FUNC,0,psr,1.0e-40,ip,uinv);
+
+	 v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
+	 specX[k] = GLOBAL_OMEGA/2.0/M_PI;
+	 specY_R[k] = sqrt(v[k])*param[1];
+	 specY_I[k] = sqrt(v[k])*param[2];
+  }
   return nfit;
 }
 
@@ -1848,19 +1848,87 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
 // The psr and ival parameters are ignored
 void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
 {
-  int i;
-  v[0] = 1; // Fit for mean
-  v[1] = cos(GLOBAL_OMEGA*x);
-  v[2] = sin(GLOBAL_OMEGA*x);
+   int i;
+   v[0] = 1; // Fit for mean
+   v[1] = cos(GLOBAL_OMEGA*x);
+   v[2] = sin(GLOBAL_OMEGA*x);
 
 }
+
+/*
+ * This only works for residuals faked from an IFUNC.
+ * Note that ival must be in order.
+ */
+void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival)
+{
+   double m,c; // for the straight line.
+   double x0,x1;
+   double i0,i1;
+   double w = GLOBAL_OMEGA;
+   double A=0;
+
+//   logmsg("%lf %lf %d %d",x,w,ival,psr->nobs);
+   v[0] = 0; // Fit for mean
+   v[1]=0; // will be cos
+   v[2]=0; // will be sin
+
+   x0 = x;
+   if (ival< psr->nobs-1){
+	  x1 = x0 + (psr->obsn[ival+1].sat-psr->obsn[ival].sat); // this is the next x-val, under the assumptions.
+	  m=-1/pow(x0-x1,2);
+	  c=x1/pow(x0-x1,2);
+
+	  //logmsg("R) x0=%lf x1=%lf m=%lg c=%lg",x0,x1,m,c);
+	  i0=m*x0*x0/2.0 + c*x0;
+	  i1=m*x1*x1/2.0 + c*x1;
+	  v[0]+=i1-i0;
+
+	  // integrate the right side of the triangle.
+	  i0=(m*cos(w*x0) - w*(c+m*x0)*sin(w*x0))/w/w; // integral of (m*x+c).cos(w*x)
+	  i1=(m*cos(w*x1) - w*(c+m*x1)*sin(w*x1))/w/w; // integral of (m*x+c).sin(w*x)
+	  v[1]+=i1-i0;
+
+	  i0=(m*sin(w*x0) - w*(c+m*x0)*cos(w*x0))/w/w;
+	  i1=(m*sin(w*x1) - w*(c+m*x1)*cos(w*x1))/w/w;
+	  v[2]+=i1-i0;
+	  A+=0.5; // area
+   }
+   if (ival > 0){
+	  x1 = x0 + (psr->obsn[ival-1].sat-psr->obsn[ival].sat); // this is the next x-val, under the assumptions.
+	  m=1/pow(x0-x1,2);
+	  c=-x1/pow(x0-x1,2);
+
+//	  logmsg("L) x0=%lf x1=%lf m=%lg c=%lg",x0,x1,m,c);
+	  i0=m*x0*x0/2.0 + c*x0;
+	  i1=m*x1*x1/2.0 + c*x1;
+	  v[0]+=i0-i1;
+
+	  // integrate the right side of the triangle.
+	  i0=(m*cos(w*x0) - w*(c+m*x0)*sin(w*x0))/w/w;
+	  i1=(m*cos(w*x1) - w*(c+m*x1)*sin(w*x1))/w/w;
+	  v[1]+=i0-i1;
+
+	  i0=(m*sin(w*x0) - w*(c+m*x0)*cos(w*x0))/w/w;
+	  i1=(m*sin(w*x1) - w*(c+m*x1)*cos(w*x1))/w/w;
+	  v[2]+=i0-i1;
+	  A+=0.5; // area
+   }
+   v[0]/=A; // normalise to 1 in case we only had half the triangle.
+   v[1]/=A; // normalise to 1 in case we only had half the triangle.
+   v[2]/=A;
+
+ //  double old[3];
+ //  fitMeanSineFunc(x, old,nfit,psr,ival);
+//   logmsg("%lg %lg --  %lg %lg -- %lg %lg\n",v[0],old[0],v[1],old[1],v[2],old[2]);
+}
+
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored
 void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
 {
-  int i;
-  v[0] = cos(GLOBAL_OMEGA*x);
-  v[1] = sin(GLOBAL_OMEGA*x);
+   int i;
+   v[0] = cos(GLOBAL_OMEGA*x);
+   v[1] = sin(GLOBAL_OMEGA*x);
 
 }
