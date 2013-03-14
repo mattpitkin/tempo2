@@ -119,11 +119,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (modelFc == -1)
     {
       int ndays = ceil(resx[np-1]-resx[0]);
-      modelFc = 1.0/(ndays/365.25);
+      modelFc = 0.5/(ndays/365.25);
     }
   if (modelA == -1)
     {
-      modelA = gwamp*gwamp/12.0/M_PI/M_PI*pow(1.0/modelFc,modelAlpha);
+	//modelA = gwamp*gwamp/12.0/M_PI/M_PI*pow(1.0+pow(1.0/modelFc,2),modelAlpha/2.0);
+      modelA = gwamp*gwamp/12.0/M_PI/M_PI*pow(modelFc,-modelAlpha);
     }
   if (whiteNoise == -1)
     {

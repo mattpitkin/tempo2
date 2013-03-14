@@ -144,8 +144,8 @@ LIBS="$acx_blas_save_LIBS"
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test x"$acx_blas_ok" = xyes; then
-        ifelse([$1],,AC_DEFINE(HAVE_BLAS,1,[Define if you have a BLAS library.]),[$1])
-        :
+   AC_DEFINE(HAVE_BLAS,1,[Define if you have a BLAS library.])
+   $1
 else
         acx_blas_ok=no
         $2

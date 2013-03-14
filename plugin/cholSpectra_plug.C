@@ -46,13 +46,15 @@
 #include "TKspectrum.h"
 #include "TKfit.h"
 #include "T2toolkit.h"
+#include "constraints.h"
 
 using namespace std;
 
 #define MAX_SPEC_BINS 1024
 double OMEGA0=0; 
 
-void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec);
+long double toffset = 52601.0L;
+void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,bool compute_spectral_window);
 
 void help() /* Display help */
 {
@@ -68,9 +70,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    double py_i[MAX_SPEC_BINS];
    double tspan,minx,maxx;
    int nSpec=0;
+   int newpar=0;
+   char newparname[MAX_FILELEN];
+
    int i;
    double globalParameter;
    const char *CVS_verNum = "$Revision$";
+   bool compute_spectral_window=false;
 
    if (displayCVSversion == 1) CVSdisplayVersion("grTemplate.C","plugin",CVS_verNum);
 
@@ -84,13 +90,24 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    /* Obtain all parameters from the command line */
    for (i=2;i<argc;i++)
    {
-	  if (strcmp(argv[i],"-f")==0)
-	  {
+	  if (strcmp(argv[i],"-f")==0) {
 		 strcpy(parFile[0],argv[++i]); 
 		 strcpy(timFile[0],argv[++i]);
 	  }
-	  if ((strcmp(argv[i],"-dcf")==0) || (strcmp(argv[i],"-chol")==0))
+	  if ((strcmp(argv[i],"-dcf")==0) || (strcmp(argv[i],"-chol")==0)){
 		 strcpy(covarFuncFile,argv[++i]);
+	  }
+	  if (strcmp(argv[i],"-nspec")==0) {
+		 nSpec=atoi(argv[++i]);
+	  }
+	  if (strcmp(argv[i],"-window")==0) {
+		 compute_spectral_window=true;
+	  }
+	  else if (strcmp(argv[i],"-outpar")==0){
+	    newpar=1;
+		strcpy(newparname,argv[++i]);
+	  }
+
    }
 
    readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -101,8 +118,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    {
 	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
 	  formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-	  if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
-	  else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
+	  if (i==0) doFitDCM(psr,"NULL",covarFuncFile,*npsr,0);   /* Do the fitting     */
+	  else textOutput(psr,*npsr,globalParameter,0,0,newpar,newparname);  /* Display the output */
    }
    logmsg("Producing spectra");
    for (i=0;i<psr[0].nobs;i++)
@@ -120,16 +137,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    tspan = maxx-minx;
    OMEGA0 = (double)(2*M_PI/tspan);
    logmsg("Doing the calculation\n");
-verbose_calc_spectra=true;
-   calculateSpectrum(psr,px,py_r,py_i,&nSpec);
+   verbose_calc_spectra=true;
+   calculateSpectrum(psr,px,py_r,py_i,&nSpec,compute_spectral_window);
    logmsg("Finished\n");
    return 0;
 }
 
 char * plugVersionCheck = TEMPO2_h_VER;
 
-void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec)
-{
+void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,bool compute_spectral_window) {
    int i;
    double pe[MAX_SPEC_BINS];
    double **uinv;
@@ -139,7 +155,6 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
    double resx[psr->nobs],resy[psr->nobs],rese[psr->nobs];
    int ip[psr->nobs];
    FILE *fout;
-   long double toffset = 52601.0L;
 
    //  printf("Calculating the spectrum\n");
    uinv = malloc_uinv(psr->nobs);
@@ -179,8 +194,10 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
    getCholeskyMatrix(uinv,covarFuncFile,psr,resx,resy,rese,psr->nobs,0,ip);
    logdbg("Got uinv, now compute spectrum.");
 
-   *nSpec = 124;
-   logdbg("nSpec hardcoded to %d",*nSpec);
+   if(*nSpec < 1){
+	  *nSpec = 124;
+	  logdbg("nSpec hardcoded to %d",*nSpec);
+   }
 
    // Must calculate uinv for the pulsar
    calcSpectra_ri(uinv,resx,resy,psr->nobs,px,py_r,py_i,*nSpec);
@@ -188,7 +205,7 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
    sprintf(fname,"%s.spec",psr->name);
    fout = fopen(fname,"w");
    for (i=0;i<*nSpec;i++)
-	  fprintf(fout,"%g %g\n",px[i],py_r[i]*py_r[i]+py_i[i]*py_i[i]);
+	  fprintf(fout,"%g %g %g %g\n",px[i],py_r[i]*py_r[i]+py_i[i]*py_i[i],py_r[i],py_i[i]);
    fclose(fout);
    // Free uinv
    free_uinv(uinv);

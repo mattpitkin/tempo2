@@ -1779,7 +1779,7 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
 }
 
 
-int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit){
+int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit) {
 	return calcSpectraErr(uinv,resx,resy,nres,specX,specY,NULL,nfit);
 }
 
@@ -1787,8 +1787,11 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
 // note: uinv array must start from 0, not 1
 // NEW FEATURE:
 // set nfit < 0 to automatically set it to nres/2-1
-int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit)
-{
+int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit) {
+   return calcSpectra_ri_T(uinv,resx,resy,nres,specX,specY_R,specY_I,nfit,(resx[nres-1]-resx[0]));
+}
+
+int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T) {
   int i,j,k;
   //  int nfit=nres/2-1;
   int nSpec;
@@ -1803,11 +1806,11 @@ int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *spec
   double chisq;
   pulsar *psr;
   int ip[nres];
-  double param[nfit],error[nfit];
+  double param[3],error[3];
 
-  cvm = (double **)alloca(sizeof(double *)*nfit);
-  for (i=0;i<nfit;i++)
-    cvm[i] = (double *)alloca(sizeof(double)*nfit);
+  cvm = (double **)alloca(sizeof(double *)*3);
+  for (i=0;i<3;i++)
+    cvm[i] = (double *)alloca(sizeof(double)*3);
 
   // Should fit independently to all frequencies
   for (i=0;i<nres;i++)
@@ -1820,7 +1823,7 @@ int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *spec
     {
       //      printf("%5.2g\%\r",(double)k/(double)nfit*100.0);
       //      fflush(stdout);
-      GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
+      GLOBAL_OMEGA = 2.0*M_PI/(T*(double)nres/(double)(nres-1))*(k+1);
     //  logdbg("Doing leastSquares fit, k=%d",k);
       TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
 	//  if (k%32==0)printf("\n");
@@ -1832,7 +1835,7 @@ int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *spec
       specY_R[k] = sqrt(v[k])*param[1];
       specY_I[k] = sqrt(v[k])*param[2];
     }
-  printf("\n");
+//  printf("\n");
 
   //  for (i=0;i<nfit;i++)
   //    free(cvm[i]);

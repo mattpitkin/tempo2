@@ -48,6 +48,7 @@
 #include "tempo2Util.h"
 #include "tempo2pred.h"
 #include "tempo2pred_int.h"
+#include "T2accel.h"
 #include <dlfcn.h>
 // #include "T2toolkit.h"
 
@@ -112,6 +113,8 @@ int main(int argc, char *argv[])
 	  }
 	  else if (strcasecmp(argv[i],"-tcheck")==0)
 	tcheck=1;
+	  else if (strcasecmp(argv[i],"-noaccel")==0)
+	useT2accel=0;
 	  else if (strcasecmp(argv[i],"-writeres")==0)
 	writeResiduals=1;
       else if (strcasecmp(argv[i],"-veryfast")==0)

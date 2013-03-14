@@ -43,4 +43,6 @@ void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x
 void TKmultMatrix(double **idcm,double **u,int ndata,int npol,double **uout);
 void TKmultMatrixVec(double **idcm,double *b,int ndata,double *bout);
 
+void TKmultMatrix2(double **idcm,double **u,int ndata,int ndata2,int npol,double **uout);
+void TKmultMatrixVec2(double **idcm,double *b,int ndata,int ndata2,double *bout);
 #endif

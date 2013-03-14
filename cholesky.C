@@ -127,11 +127,17 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
  * Allocate uinv in a "BLAS/LAPACK" compatile way
  */
 double **malloc_uinv(int n){
+   return malloc_blas(n,n);
+}
+/**
+ * Allocate uinv in a "BLAS/LAPACK" compatile way
+ */
+double **malloc_blas(int n,int m){
    double *memory;
    double** uinv;
    int i;
    logdbg("Allocate uinv");
-   memory=(double*)malloc(sizeof(double)*n*n);
+   memory=(double*)malloc(sizeof(double)*n*m);
    uinv=(double**)malloc(sizeof(double*)*n);
    if(memory==NULL || uinv==NULL){
 	  logerr("Cannot allocate enough memory for uinv");
@@ -139,14 +145,19 @@ double **malloc_uinv(int n){
    }
    logdbg("uinv... 0x%016x -> 0x%016x",memory,memory+n*n);
    for(i=0;i<n;i++){
-	  uinv[i]=memory+n*i;
+	  uinv[i]=memory+m*i;
    }
    return uinv;
 }
 
+void free_blas(double** m){
+   free(m[0]);
+   free(m);
+}
+
+
 void free_uinv(double** uinv){
-   free(uinv[0]);
-   free(uinv);
+   free_blas(uinv);
 }
 
 
@@ -351,62 +362,72 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
    }
 }
 
+/**
+ * UINV is a lower triangluar matrix.
+ * Matricies are row-major order, i.e. uinv[r][c].
+ *
+ */
 void cholesky_formUinv(double **uinv,double** m,int np){
    int i,j,k;
    clock_t clk=clock();
    logtchk("forming Cholesky matrix ... do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 #ifdef ACCEL_UINV
-   logmsg("Doing ACCELERATED Chol Decomp (M.Keith/LAPACK method)");
-   for(i =0;i<np;i++){
-	  memcpy(uinv[i],m[i],np*sizeof(double));
-   }
-   accel_uinv(uinv[0],np);
-
-   logtchk("forming Cholesky matrix ... complete calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-#else
-
-
-   double sum;
-
-   double *cholp  = (double *)malloc(sizeof(double)*(np+1));
-   logmsg("Doing Cholesky decomp and inverting matrix (SLOW method)");
-   if(!cholp)logerr("Could not allocate enough memory");
-
-   TKcholDecomposition(m,np,cholp);
-   logtchk("forming Cholesky matrix ... complete do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-   // Now calculate uinv
-   logtchk("forming Cholesky matrix ... calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-   for (i=0;i<np;i++)
-   {
-	  m[i][i] = 1.0/cholp[i];
-	  uinv[i][i] = m[i][i];
-	  for (j=0;j<i;j++)
-		 uinv[i][j] = 0.0;
-	  for (j=i+1;j<np;j++)
-	  {
-		 sum=0.0;
-		 for (k=i;k<j;k++) sum-=m[j][k]*m[k][i];
-		 m[j][i]=sum/cholp[j];
-		 uinv[i][j] = m[j][i];
+   if(useT2accel){
+	  logmsg("Doing ACCELERATED Chol Decomp (M.Keith/LAPACK method)");
+	  for(i =0;i<np;i++){
+		 memcpy(uinv[i],m[i],np*sizeof(double));
 	  }
-   }
+	  accel_uinv(uinv[0],np);
 
-   logtchk("forming Cholesky matrix ... complete calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-   if (debugFlag)
-   {
-	  logdbg("uinv = ");
-	  for (i=0;i<5;i++)
-	  { 
-		 for (j=0;j<5;j++) fprintf(LOG_OUTFILE,"%10g ",uinv[i][j]); 
+	  logtchk("forming Cholesky matrix ... complete calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+   } else {
+#endif
+
+
+	  double sum;
+
+	  double *cholp  = (double *)malloc(sizeof(double)*(np+1));
+	  logmsg("Doing Cholesky decomp and inverting matrix (SLOW method)");
+	  if(!cholp)logerr("Could not allocate enough memory");
+
+	  TKcholDecomposition(m,np,cholp);
+	  logtchk("forming Cholesky matrix ... complete do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  // Now calculate uinv
+	  logtchk("forming Cholesky matrix ... calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  for (i=0;i<np;i++)
+	  {
+		 m[i][i] = 1.0/cholp[i];
+		 uinv[i][i] = m[i][i];
+		 for (j=0;j<i;j++)
+			uinv[j][i] = 0.0;
+		 for (j=i+1;j<np;j++)
+		 {
+			sum=0.0;
+			for (k=i;k<j;k++) sum-=m[j][k]*m[k][i];
+			m[j][i]=sum/cholp[j];
+			uinv[j][i] = m[j][i];
+		 }
+	  }
+
+	  logtchk("forming Cholesky matrix ... complete calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  if (debugFlag)
+	  {
+		 logdbg("uinv = ");
+		 for (i=0;i<5;i++)
+		 { 
+			for (j=0;j<5;j++) fprintf(LOG_OUTFILE,"%10g ",uinv[i][j]); 
+			fprintf(LOG_OUTFILE,"\n");
+		 }
 		 fprintf(LOG_OUTFILE,"\n");
 	  }
-	  fprintf(LOG_OUTFILE,"\n");
-   }
 
 
-   logtchk("forming Cholesky matrix ... free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
-   free(cholp);
-   logtchk("forming Cholesky matrix ... complete free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("forming Cholesky matrix ... free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  free(cholp);
+	  logtchk("forming Cholesky matrix ... complete free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+
+#ifdef ACCEL_UINV
+   } // end the if clause when we have the option of accelerated cholesky.
 #endif
 
    if(debugFlag){

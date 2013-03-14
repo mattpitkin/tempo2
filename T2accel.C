@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+char useT2accel=1;
 
 #ifdef HAVE_LAPACK
 #define F77_dpotf2 F77_FUNC (dpotf2, DPOTF2)
@@ -14,6 +15,11 @@ extern "C" {
    extern void F77_dtptri(char* uplo,char* diag, int* n, double* a, int* info);
 }
 
+
+/**
+ * An accelerated cholesky decomposion to form uinv in plac.
+ * uinv is a lower triangular, row-major, matrix.
+ */
 void accel_uinv(double* _m, int n){
    int i,j;
 
@@ -21,42 +27,49 @@ void accel_uinv(double* _m, int n){
    double* _uinv=_m;
    double* _t=(double*)malloc(sizeof(double)*(n*(n+1))/2);
 
+
+   // LAPACK Cholesky factorisation.
+   // _u is a symetric matrix.
    F77_dpotf2("L",&n,_u,&n,&i);
    if(i!=0){
 	  logerr("Error in Cholesky Decomp i=%d",i);
 	  exit(1);
    }
 
-   double* pp=_t;
-   for (i=0;i<n;i++){
-	  for (j=0;j<n;j++){
-		 if(j>i){
-			_u[j*n+i]=0;
-		 } else{
-			*pp=_u[j*n+i];
-			pp++;
-		 }
+   // This code taken from the LAPACK documentation
+   // to pack a triangular matrix.
+   int jc=0;
+   for (j=0;j<n;j++){ // cols
+	  for (i=j;i<n;i++){ //rows
+		 // note that at this point _u is ordered column major
+		 // because the LAPACK routine is a FORTRAN code.
+		 _t[jc+i-j] = _u[j*n+i];
 	  }
+	  jc=jc+n-j;
    }
 
    logmsg("Done CholDecomp... Inverting...",i);
-   F77_dtptri("U","N",&n,_t,&i);
+   F77_dtptri("L","N",&n,_t,&i);
    if(i!=0){
 	  logerr("Error in Invert i=%d",i);
 	  exit(1);
    }
 
-
-
-   pp=_t;
-   for (i=0;i<n;i++){
-	  for (j=0;j<n;j++){
-		 if(j>i)_uinv[j*n+i]=0;
-		 else {
-			_uinv[j*n+i]= *pp;
-			pp++;
-		 }
+   // Unpack the triangular matrix using reverse
+   // of code above, but unpacking into a row-major matrix
+   // for C compatibility.
+   jc=0;
+   for (j=0;j<n;j++){ // cols
+	  for (i=0; i < j; i++){
+		 // when unpacking we need to zero out the strict upper triangle.
+		 _u[i*n+j]=0;
 	  }
+	  for (i=j;i<n;i++){ //rows
+		 // here we arange _u in row-major order
+		 // to be C compatible on return.
+		 _u[i*n+j]=_t[jc+i-j];
+	  }
+	  jc=jc+n-j;
    }
    free(_t);
 
@@ -76,16 +89,25 @@ extern "C" {
 		 double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
 }
 
-void accel_multMatrix(double* m1,double* m2, int ndata,int npol, double* out){
+
+void accel_multMatrix(double* m1,double* m2, int ndata,int ndata2,int npol, double* out){
 
    int m,n,k;
    double alpha=1.0,beta=0;
 
    m=npol;
    n=ndata;
-   k=ndata;
-
-   F77_dgemm("N","T",&m,&n,&k,&alpha,m2,&m,m1,&n,&beta,out,&m);
+   k=ndata2;
+   /*
+	* An important note about this. FORTRAN effectively transposes all matricies becaue
+	* the memory is ordered differently.
+	*
+	* Therefore, to compute C=A.B we do C=B.A where there is an implicit transpose of all three
+	* matricies.
+	*
+	* M.Keith 2013.
+	*/
+   F77_dgemm("N","N",&m,&n,&k,&alpha,m2,&m,m1,&k,&beta,out,&m);
 
 
    /*

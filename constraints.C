@@ -501,7 +501,6 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
 
    ok=false;
    while (!ok){
-	  logmsg("psr: %s ndm=%d",psr->name,psr->dmoffsDMnum);
 	  matrixDMConstraintWeights(psr,NULL);
 	  ok=true;
 	  double threshold = 0.1/(double)psr->dmoffsDMnum;
@@ -511,7 +510,7 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
 	  for (j=0; j < psr->dmoffsDMnum; j++){
 		 psr->dmoffsDM_mjd[i]=psr->dmoffsDM_mjd[j];
 		 psr->dmoffsDM[i]=0;
-		 if(psr->dmoffsDM_weight[j]>threshold)i++;
+		 if(!ok || psr->dmoffsDM_weight[j]>threshold)i++;
 		 else{
 			logmsg("Skip %lf %lg",psr->dmoffsDM_mjd[j],psr->dmoffsDM_weight[i]);
 			ok=false;
@@ -520,28 +519,33 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
 	  }
 	  psr->dmoffsDMnum=i;
    }
+
+   logmsg("psr: %s ndm=%d",psr->name,psr->dmoffsDMnum);
    ok=fixCMgrid; // only do the CM if we are not fixing the grid
    while (!ok){
-	  logmsg("psr: %s ncm=%d",psr->name,psr->dmoffsCMnum);
 	  matrixDMConstraintWeights(psr,NULL);
 	  ok=true;
-	  double threshold = 0.1/(double)psr->dmoffsCMnum;
+	  double threshold = 0.05/(double)psr->dmoffsCMnum;
 	  i=0;
 	  j=0;
 	  mjd=start;
+	  bool bb=false;
 	  for (j=0; j < psr->dmoffsCMnum; j++){
 		 psr->dmoffsCM_mjd[i]=psr->dmoffsCM_mjd[j];
 		 psr->dmoffsCM[i]=0;
-		 if(psr->dmoffsCM_weight[j]>threshold)i++;
-		 else{
-			logmsg("Skip %lf %lg",psr->dmoffsCM_mjd[j],psr->dmoffsCM_weight[i]);
+		 if(psr->dmoffsCM_weight[j]>threshold){
+			i++;
+			bb=false;
+		 } else{
+			if (bb) i++; // don't delete multiple points in a row
+			else logmsg("Skip %lf %lg",psr->dmoffsCM_mjd[j],psr->dmoffsCM_weight[i]);
 			ok=false;
+			bb=true;
 		 }
 		 mjd+=cmstep;
 	  }
 	  psr->dmoffsCMnum=i;
-
    }
-
+   logmsg("psr: %s ncm=%d",psr->name,psr->dmoffsCMnum);
 }
 

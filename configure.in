@@ -114,7 +114,7 @@ AC_F77_WRAPPERS
 ACX_BLAS(have_blas=yes,have_blas=no)
 AC_MSG_CHECKING([for BLAS])
 AC_MSG_RESULT($have_blas)
-AM_CONDITIONAL(HAVE_BLAS, [test x"$have_blas" = xyes])
+AM_CONDITIONAL(HAVE_BLAS, [test x$have_blas = xyes])
 
 # test for LAPACK acceleration
 ACX_LAPACK(have_lapack=yes, have_lapack=no)

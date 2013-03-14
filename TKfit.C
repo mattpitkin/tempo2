@@ -310,14 +310,6 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
    }
    // Take into account the data covariance matrix
    TKmultMatrix(uinv,designMatrix,n,nf,uout);  
-   for (i=0;i<n;i++)
-   {
-	  for (j=0;j<nf;j++)
-	  {
-		 designMatrix[i][j] = uout[i][j];
-		 //	  printf("%g %g\n",designMatrix[i][j],uout[i][j]);
-	  }
-   }
    TKmultMatrixVec(uinv,b,n,bout);
    if(writeResiduals==1){
 	  logdbg("Writing out whitened residuals");
@@ -329,13 +321,22 @@ void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,
 	  wFile=fopen("design.matrix","w");
 	  for (i=0;i<n;i++) {
 		 for (j=0;j<nf;j++){
-			fprintf(wFile,"%d %d %lg\n",i,j,designMatrix[i][j]);
+			fprintf(wFile,"%d %d %lg %lg\n",i,j,designMatrix[i][j],uout[i][j]);
 		 }
 		 fprintf(wFile,"\n");
 	  }
 	  fclose(wFile);
 
    }
+   //replace things by their whitened versions
+   for (i=0;i<n;i++)
+   {
+	  for (j=0;j<nf;j++)
+	  {
+		 designMatrix[i][j] = uout[i][j];
+	  }
+   }
+
 
    for (i=0;i<n;i++)
 	  b[i] = bout[i];
@@ -1012,50 +1013,72 @@ double TKpythag(double a,double b)
 }
 
 
-void TKmultMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
+
+
+void TKmultMatrix2(double **idcm,double **u,int ndata,int ndata2,int npol,double **uout)
 {
 #ifdef ACCEL_MULTMATRIX
-   logdbg("Using ACCELERATED multmatrix (M.Keith 2012)");
-   accel_multMatrix(idcm[0],u[0],ndata,npol,uout[0]);
-#else
-   logdbg("Using SLOW multmatrix");
-   int i,j,k;
-   for (j=0;j<npol;j++)
-   {
-	  for (i=0;i<ndata;i++)
+   if(useT2accel){
+	  logdbg("Using ACCELERATED multmatrix (M.Keith 2012)");
+	  accel_multMatrix(idcm[0],u[0],ndata,ndata2,npol,uout[0]);
+   } else {
+#endif
+	  logdbg("Using SLOW multmatrix");
+	  int i,j,k;
+	  for (j=0;j<npol;j++)
 	  {
-		 uout[i][j]=0.0;
-	  }
-   }
-   for (k=0;k<ndata;k++) {
-	  for (i=0;i<ndata;i++){
-		 for (j=0;j<npol;j++){
-			uout[i][j]+=idcm[k][i]*u[k][j];
+		 for (i=0;i<ndata;i++)
+		 {
+			uout[i][j]=0.0;
 		 }
 	  }
+	  for (k=0;k<ndata2;k++) {
+		 for (i=0;i<ndata;i++){
+			for (j=0;j<npol;j++){
+			   uout[i][j]+=idcm[i][k]*u[k][j];
+			}
+		 }
+	  }
+
+#ifdef ACCEL_MULTMATRIX
    }
 #endif
 }
 
-void TKmultMatrixVec(double **idcm,double *b,int ndata,double *bout)
+
+void TKmultMatrix(double **idcm,double **u,int ndata,int npol,double **uout)
+{
+   TKmultMatrix2(idcm,u,ndata,ndata,npol,uout);
+}
+void TKmultMatrixVec2(double **idcm,double *b,int ndata,int ndata2,double *bout)
 {
 #ifdef ACCEL_MULTMATRIX
-   logdbg("Using ACCELERATED multmatrix (M.Keith 2012)");
-   accel_multMatrix(idcm[0],b,ndata,1,bout);
-#else
-
-   int i,j;
-   for (i=0;i<ndata;i++)
-   {
-	  bout[i] = 0.0;
-   }
-
-   for (j=0;j<ndata;j++)
-   {
+   if (useT2accel){
+	  logdbg("using accelerated multmatrix (m.keith 2012)");
+	  accel_multMatrix(idcm[0],b,ndata,ndata2,1,bout);
+   }else{
+#endif
+	  int i,j;
 	  for (i=0;i<ndata;i++)
-		 bout[i]+=idcm[j][i]*b[j];
+	  {
+		 bout[i] = 0.0;
+	  }
+
+	  for (j=0;j<ndata2;j++)
+	  {
+		 for (i=0;i<ndata;i++)
+			bout[i]+=idcm[i][j]*b[j];
+	  }
+
+#ifdef ACCEL_MULTMATRIX
    }
 #endif
+}
+
+
+void TKmultMatrixVec(double **idcm,double *b,int ndata,double *bout)
+{
+   TKmultMatrixVec2(idcm,b,ndata,ndata,bout);
 }
 
 void TKcholDecomposition(double **a, int n, double *p)

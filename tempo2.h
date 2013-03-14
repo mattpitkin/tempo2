@@ -571,6 +571,8 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel); 
 void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
 double** malloc_uinv(int n);
+double **malloc_blas(int n,int m);
+void free_blas(double** matrix);
 void free_uinv(double** uinv);
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
 void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname);
