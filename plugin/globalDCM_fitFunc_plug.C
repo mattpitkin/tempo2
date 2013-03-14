@@ -13,19 +13,19 @@ void multMatrixVec2(double **idcm,double *b,int ndata,double *bout);
 void TKsingularValueDecomposition_lsq2(double **designMatrix,int n,int nf,double **v,double *w,double **u);
 void TKbacksubstitution_svd2(double **V, double *w,double **U,double *b,double *x,int n,int nf);
 double TKpythag2(double a,double b);
-void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,int count,int nconstr);
+void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,int count,int nconstraints,int *ip);
 void TKbidiagonal2(double **a,double *anorm,int ndata,int nfit,double **v,double *w,double **u,double *rv1);
 void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np,int nconstraints,double **uinv);
 
 extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel) 
 {
-  int i,j,k,p;
+  int i,j,k,p,c0;
   double tol = 1.0e-27;  /* Tolerence for singular value decomposition routine */
   int npol=1,n,nf;
   int ip[MAX_OBSN];
   int nFitP[MAX_PSR];
   double *val,*error;
-  double *x,*y,*sig,*sigOrig,**covar,**uinv;
+  double *x,*y,*sig,*sigOrig,**covar,***uinv;
   double whiteres[MAX_OBSN];
   long double toffset;
   double chisq;
@@ -34,12 +34,15 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   FILE *fin,*fout;
   char fname[1000];
   int weightfit=0;
-  double **v,**u,**uout;
+  double **v,**u,***uout;
   double sum,wmax;
 
-  printf("Setting weighting off\n");
+  uinv = (double ***)malloc(sizeof(double **)*npsr);
+  uout = (double ***)malloc(sizeof(double **)*npsr);
+
+  //  printf("Setting weighting off\n");
   for (p=0;p<npsr;p++)
-    psr[p].fitMode=0;
+    psr[p].fitMode=1;  // Cholesky is a weighted fit
 
   gnpsr = npsr;
 
@@ -50,31 +53,27 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   printf("HELLO\n");
   printf("About to undertake a global fit with whitening, number of pulsars = %d\n",npsr);
 
+
   // Whiten all the data sets
   int maxN=0;
   for (p=0;p<npsr;p++)
     {
+      uinv[p] = malloc_uinv(psr[p].nobs+psr[p].nconstraints);      
+      uout[p] = malloc_uinv(psr[p].nobs+psr[p].nconstraints);
       if (psr[p].nobs > maxN) maxN = psr[p].nobs+psr[p].nconstraints;
+      printf("At this point: %d %d %d\n",p,psr[p].nobs,psr[p].nconstraints);
     }
 
   printf("Setting up matrices n(psr0)=%d\n",psr[0].nobs);
   p=0;
-  if ((uinv = (double **)malloc(sizeof(double *)*maxN))==NULL)
-    {
-      printf("Out of memory setting up uinv\n");
-      exit(1);
-    }
-  if ((uout = (double **)malloc(sizeof(double *)*maxN))==NULL)
-    {
-      printf("Out of memory setting up uinv\n");
-      exit(1);
-    }
 
-  for (i=0;i<maxN;i++)
-    {
-      uinv[i] = (double *)malloc(sizeof(double)*maxN);
-      uout[i] = (double *)malloc(sizeof(double)*maxN);
-    }
+
+  //  for (i=0;i<maxN;i++)
+  //    {
+  //      uout[i] = (double *)malloc(sizeof(double)*maxN);
+  //    }
+  //      exit(1);
+
   printf("Done setting up matrices\n");
   // 
   /*  printf("Whitening the data\n");
@@ -93,9 +92,9 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   // Form pre-fit residuals
   for (p=0;p<npsr;p++)
     {
-      if (psr[p].fitMode==1) weightfit=1;
-      if (weightfit==1 && psr[p].fitMode==0)  
-	printf("WARNING: A weighted fit is being carried out, but PSR %s does not have MODE 1 in the parameter file\n",psr[p].name);
+      //      if (psr[p].fitMode==1) weightfit=1;
+      //      if (weightfit==1 && psr[p].fitMode==0)  
+      //	printf("WARNING: A weighted fit is being carried out, but PSR %s does not have MODE 1 in the parameter file\n",psr[p].name);
       for (i=0;i<psr[p].nobs;i++)
 	{
 	  if (psr[p].obsn[i].deleted!=0)
@@ -106,20 +105,21 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	  psr[p].obsn[i].prefitResidual = psr[p].obsn[i].residual;
 	  x[count] = (double)(psr[p].obsn[i].bbat-psr[p].param[param_pepoch].val[0]);
 	  y[count] = (double)(psr[p].obsn[i].prefitResidual);
+	  ip[count] = i;
 	  //	  if (psr[p].fitMode==0) sig[count] = 1.0;
 	  //else sig[count] = 
 	  sigOrig[count] = psr[p].obsn[i].toaErr*1.0e-6;
 	  sig[count] =  1.0;
 	  //	  printf("psr = %d: Reading in %g\n",p,sig[count]);
-	  ip[count]=count;
 	  count++;
 	}
+      c0 = count;
            // add constraints as extra pseudo observations
      // These point to non-existant observations after the nobs array
      // These are later caught by getParamDeriv.
      for (i=0; i < psr[p].nconstraints; i++){
-       ip[count] = count; // psr->nobs+i;
-	x[count]=0;
+       ip[count] = psr[p].nobs+i; // psr->nobs+i;
+	x[count]=x[c0-1];
 	y[count]=0;
 	sigOrig[count]=1e-12;
 	sig[count]=1.0;    // Remember for the Cholesky that we switch off weighted fitting
@@ -199,6 +199,9 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       nGlobal+=(4-1);
     }
   printf("Number of global parameters = %d\n",nGlobal);
+
+
+
   // Add non-global parameters
   for (p=0;p<npsr;p++)
     {
@@ -280,7 +283,6 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   for (i=0;i<npol;i++)
     covar[i] = (double *)malloc(npol*sizeof(double));
 
-
   // Create design matrix
   n = count;
   nf = npol;
@@ -317,10 +319,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   for (p=0;p<npsr;p++)
     {
       int nobs_and_constraints = psr[p].nobs+psr[p].nconstraints;
+      printf("Pulsar %d, %d and %d offset = %d, nGlobal = %d, nFitP = %d\n",p,psr[p].nobs,psr[p].nconstraints,offset,nGlobal,nFitP[p]);
       for (i=0;i<nobs_and_constraints;i++)
 	{
 	  //	  printf("Here with %d %d\n",p,i);
-	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,ip[i+offset]);
+	  // i was ip[i]
+	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,i);
 	  //	  for (j=0;j<nf;j++)
 	  //	    printf("Have %d %d %g [%d %d %d]\n",p,j,basisFunc[j],koff,nGlobal,nFitP[p]);
 
@@ -340,19 +344,23 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       // Pre-whiten the model using the data covariance matrix
       printf("Attempting uinv1, count = %d\n",count);
       printf("ERROR: not checking for deleted points\n");
-      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,nobs_and_constraints,psr[p].nconstraints);
+      readUinv(p,uinv[p],psr,x+offset,y+offset,sigOrig+offset,psr[p].nobs+psr[p].nconstraints,psr[p].nconstraints,ip+offset);
       printf("Read uinv1\n");
-      multMatrix2(uinv,designMatrixT,nobs_and_constraints,nFitP[p]+nGlobal,uout);
+      multMatrix2(uinv[p],designMatrixT,nobs_and_constraints,nFitP[p]+nGlobal,uout[p]);
       printf("Finished multMatrix\n");
       for (i=0;i<nobs_and_constraints;i++)
 	{
-	  for (j=0;j<nGlobal;j++) designMatrix[i+offset][j] = uout[i][j];
+	  for (j=0;j<nGlobal;j++) designMatrix[i+offset][j] = uout[p][i][j];
 	  for (j=0;j<nFitP[p];j++)
-	    designMatrix[i+offset][j+joff+nGlobal] = uout[i][j+nGlobal];
+	    {
+	      designMatrix[i+offset][j+joff+nGlobal] = uout[p][i][j+nGlobal];
+	      //	      printf("design: %g\n",uout[p][i][j+nGlobal]);
+	    }
 	}
       joff+=nFitP[p];
       offset+=nobs_and_constraints;
     }
+  //  exit(1);
   /*  for (i=0;i<n;i++)
     {
       for (j=0;j<nf;j++)
@@ -367,14 +375,14 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     {
       int nobs_and_constraints = psr[p].nobs+psr[p].nconstraints;
       printf("Mult vec\n");
-      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,nobs_and_constraints,psr[p].nconstraints);
+      readUinv(p,uinv[p],psr,x+offset,y+offset,sigOrig+offset,psr[p].nobs+psr[p].nconstraints,psr[p].nconstraints,ip+offset);
       printf("Read uinv2\n");
-      multMatrixVec2(uinv,b+offset,nobs_and_constraints,bout);
+      multMatrixVec2(uinv[p],b+offset,nobs_and_constraints,bout);
       printf("Done mult vec\n");
       for (i=0;i<nobs_and_constraints;i++)
 	{
 	  b[i+offset] = bout[i];
-	  //	  printf("Have finished with %g\n",b[i+offset]);
+	  //printf("Have finished with %g\n",b[i+offset]);
 	}
       offset+=nobs_and_constraints;
     }
@@ -437,7 +445,8 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       int nobs_and_constraints = psr[p].nobs+psr[p].nconstraints;
       for (i=0;i<nobs_and_constraints;i++)
 	{
-	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,ip[i+offset]);
+	  // ip -> i
+	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,i);
 	  for (j=0;j<nGlobal;j++)
 	    designMatrixT[i][j]=basisFunc[j];
 	  for (j=0;j<nFitP[p];j++)
@@ -447,14 +456,14 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       koff+=nFitP[p];
       // Pre-whiten the model using the data covariance matrix
       printf("Trying uinv3\n");
-      readUinv(p,uinv,psr,x+offset,y+offset,sigOrig+offset,nobs_and_constraints,psr[p].nconstraints);
+      readUinv(p,uinv[p],psr,x+offset,y+offset,sigOrig+offset,psr[p].nobs+psr[p].nconstraints,psr[p].nconstraints,ip+offset);
       printf("Read uinv3\n");
-      multMatrix2(uinv,designMatrixT,nobs_and_constraints,nFitP[p]+nGlobal,uout);
+      multMatrix2(uinv[p],designMatrixT,nobs_and_constraints,nFitP[p]+nGlobal,uout[p]);
       for (i=0;i<psr[p].nobs;i++)
 	{
-	  for (j=0;j<nGlobal;j++) designMatrix[i+offset][j] = uout[i][j];
+	  for (j=0;j<nGlobal;j++) designMatrix[i+offset][j] = uout[p][i][j];
 	  for (j=0;j<nFitP[p];j++)
-	    designMatrix[i+offset][j+joff+nGlobal] = uout[i][j+nGlobal];
+	    designMatrix[i+offset][j+joff+nGlobal] = uout[p][i][j+nGlobal];
 	}
       joff+=nFitP[p];
       offset+=nobs_and_constraints;
@@ -724,16 +733,19 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   free(y);      
   free(x);
   //  free(bout);
-  for (i=0;i<maxN;i++)
-    {
-      free(uinv[i]);
-      free(uout[i]);
+  for (i=0;i<npsr;i++)
+    {    
+      free_uinv(uinv[i]);
+      free_uinv(uout[i]);
     }
+  //  for (i=0;i<maxN;i++)
+  //    {
+  //      free(uout[i]);
+  //    }
   for (i=0;i<npol;i++)
     free(covar[i]);
   free(covar);
-  free(uinv);
-  free(uout);
+  //  free(uout);
   for (i=0;i<n;i++) 
     {
       free(designMatrix[i]);
@@ -806,28 +818,35 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     free(covar);*/
 }
 
-void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,int count,int nconstraints)
+void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,int count,int nconstraints,int *ip)
 {
   int i,j;
   FILE *fin,*fout;
   char fname[1000];
   int ndays = (int)(x[count-nconstraints-1]-x[0])+2;
   double covarFunc[ndays];
-  double whiteres[MAX_OBSN];
+  double whiteres[count];
   double sum;
   double escaleFactor = 1.0;
   char temp[1000];
+  //  double **uinv2;
 
+  //  uinv2=malloc_uinv(psr[p].nobs+psr[p].nconstraints);     
+  //  printf("Using uinv2\n");
   // Read and obtain the covariance function
   printf("Getting covariance function for pulsar %d\n",p);
-  
   
   //  strcpy(fname,covarFuncFile);
   strcpy(fname,"covarFunc.dat");
   sprintf(temp,"%s_%s",fname,psr[p].name);
   strcpy(fname,temp);
-
-  printf("Opening >%s<\n",fname);
+  //  for (i=0;i<count;i++)
+  //    printf("Have %g %g %g %d\n",x[i],y[i],sig[i],ip[i]);
+  printf("Using: %d %d %d\n",count,count-nconstraints,nconstraints);
+  getCholeskyMatrix(uinv,fname,psr+p,x,y,sig,count,nconstraints,ip);
+  //  if (p==1) exit(0);
+  //  free_uinv(uinv2);
+  /*  printf("Opening >%s<\n",fname);
   if (!(fin = fopen(fname,"r")))
     {
       printf("Unable to open covariance function file: %s\n",fname);
@@ -845,24 +864,27 @@ void readUinv(int p,double **uinv,pulsar *psr,double *x,double *y,double *sig,in
       //      printf("sig after correction = %g\n",sig[i]);
     }
   // Form the data covariance matrix
-  formCholeskyMatrix2(covarFunc,x,y,sig,count,nconstraints,uinv);
+  formCholeskyMatrix2(covarFunc,x,y,sig,count,nconstraints,uinv); */
 
   sprintf(fname,"whitedata_%d.dat",p+1);
-  fout = fopen(fname,"w");
-  for (i=0;i<psr[p].nobs;i++)
+  //  if (p==1)
     {
-      sum=0.0;
-      for (j=0;j<psr[p].nobs;j++)
-	sum+=uinv[j][i]*psr[p].obsn[j].residual;
-      whiteres[i] = sum;
-      //            fprintf(fout,"%g %g %g\n",(double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[i].residual,(double)psr[0].obsn[i].toaErr);
-      fprintf(fout,"%g %g %g %g\n",(double)(psr[p].obsn[i].sat-psr[p].param[param_pepoch].val[0]),
-	      whiteres[i],(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr);
+      fout = fopen(fname,"w");
+      for (i=0;i<count;i++)
+	{
+	  sum=0.0;
+	  for (j=0;j<count;j++)
+	    sum+=uinv[i][j]*psr[p].obsn[j].residual;
+	  whiteres[i] = sum;
+	  //            fprintf(fout,"%g %g %g\n",(double)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[i].residual,(double)psr[0].obsn[i].toaErr);
+	  fprintf(fout,"%g %g %g %g\n",x[i],
+		  whiteres[i],y[i],sig[i]);
+	}
+      fclose(fout);
+      
+      //      exit(1);
     }
-  fclose(fout);
-
-
-
+    //    exit(1);
   /*
   strcpy(fname,"/DATA/BRAHE_1/hob044/idcm.dat_");
   strcat(fname,psr[p].name);
@@ -1146,14 +1168,14 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
 void multMatrix2(double **idcm,double **u,int ndata,int npol,double **uout)
 {
   int i,j,k;
-  
+  printf("HELLO MIKE\n");
   for (i=0;i<ndata;i++)
     {
       for (j=0;j<npol;j++)
 	{
 	  uout[i][j]=0.0;
 	  for (k=0;k<ndata;k++)
-	    uout[i][j]+=idcm[k][i]*u[k][j];
+	    uout[i][j]+=idcm[i][k]*u[k][j];
 	}
     }
 }
@@ -1165,7 +1187,7 @@ void multMatrixVec2(double **idcm,double *b,int ndata,double *bout)
     {
       bout[i] = 0.0;
       for (j=0;j<ndata;j++)
-	bout[i]+=idcm[j][i]*b[j];
+	bout[i]+=idcm[i][j]*b[j];
     }
 }
 
