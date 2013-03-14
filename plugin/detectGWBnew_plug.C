@@ -1234,4 +1234,4 @@ double getSpectrumOLD(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpe
 
 }
 
-
+*/
