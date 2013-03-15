@@ -27,22 +27,37 @@
 */
 
 #include "tempo2.h"
+#include "TKmatrix.h"
+double TKleastSquares(double* b, double* white_b,
+	  double** designMatrix, double** white_designMatrix,
+	  int n,int nf, double tol, char rescale_errors,
+	  double* outP, double* e, double** CVM);
 
-void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int),int weight,pulsar *psr,double tol, int *ip);
-void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int),int weight);
+void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,
+	  void (*fitFuncs)(double, double [], int,pulsar *,int,int),
+	  pulsar *psr,int *ip, double **uinv, int ipsr,
+	  double ***OUT_designMatrix,double ***OUT_white_designMatrix,
+	  double** OUT_b, double** OUT_wb);
+
+void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int, int),pulsar *psr,double tol, int *ip,char rescale_errors, double **uinv);
+
+void TKleastSquares_global_pulsar(double **x,double **y,int *n,
+	  double *outP,double *e,int* nf, int nglobal,double **cvm,
+	  double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int,int),
+	  pulsar *psr,double tol, int **ip,char rescale_errors, double ***uinv, int npsr) ;
+
+
+
+longdouble TKfindMax_Ld(longdouble *x,int n);
 void TKremovePoly_f(float *px,float *py,int n,int m);
 void TKremovePoly_d(double *px,double *py,int n,int m);
-void TKleastSquares_svd_noErr(double *x,double *y,int n,double *p,int nf, void (*fitFuncs)(double, double [], int));     
 void TKfitPoly(double x,double *v,int m);
-void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int),int weight,pulsar *psr,double tol, int *ip,double **uinv);
-void TKcholDecomposition(double **a, int n,double *p);
-void TKleastSquares_svd_passN(double *x,double *y,double *sig2,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,int),int weight);
-void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double **v,double *w,double **u);
-void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x,int n,int nf);
 
-void TKmultMatrix(double **idcm,double **u,int ndata,int npol,double **uout);
-void TKmultMatrixVec(double **idcm,double *b,int ndata,double *bout);
 
-void TKmultMatrix2(double **idcm,double **u,int ndata,int ndata2,int npol,double **uout);
-void TKmultMatrixVec2(double **idcm,double *b,int ndata,int ndata2,double *bout);
+// legacy methods
+void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int),int weight);
+void TKleastSquares_svd_noErr(double *x,double *y,int n,double *p,int nf, void (*fitFuncs)(double, double [], int));     
+
+void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int, int),int weight,pulsar *psr,double tol, int *ip,double **uinv);
+void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int,int),int weight,pulsar *psr,double tol, int *ip);
 #endif

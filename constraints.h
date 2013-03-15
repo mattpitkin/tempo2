@@ -4,7 +4,7 @@
 std::string get_constraint_name(enum constraint c);
 
 // uinv can be set to NULL when DCM is not used
-void computeConstraintWeights(pulsar *psr,double** uinv);
+void computeConstraintWeights(pulsar *psr);
 
 /*
  * Constraints must be specified in the constraint enum in tempo2.h

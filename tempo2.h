@@ -25,6 +25,7 @@
 */
 
 #ifndef __Tempo2_h
+#include <stdio.h>
 #define __Tempo2_h
 #define TEMPO2_h_VER "$Revision$"
 #define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
@@ -420,6 +421,7 @@ typedef struct pulsar {
   int    fitNfree;                /* Number of degrees of freedom in fit */
   int    nFit;                    /* Number of points in the fit */
   int    nParam;                  /* Number of parameters in the fit */
+  int    nGlobal;                 /* Number of global parameters in the fit */
   int    fitParamI[MAX_FIT];
   int    fitParamK[MAX_FIT];
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
@@ -566,14 +568,11 @@ void formBatsAll(pulsar *psr,int npsr);
 void updateBatsAll(pulsar *psr,int npsr);
 void formResiduals(pulsar *psr,int npsr,int removeMean);
 int  bootstrap(pulsar *psr,int p,int npsr);
+void doFitAll(pulsar *psr,int npsr,char *covarFuncFile);
 void doFit(pulsar *psr,int npsr,int writeModel);
 void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeModel);
 void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel); 
 void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
-double** malloc_uinv(int n);
-double **malloc_blas(int n,int m);
-void free_blas(double** matrix);
-void free_uinv(double** uinv);
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
 void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname);
 void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
@@ -677,7 +676,7 @@ void CVSdisplayVersion(char *file,char *func,const char *verNum);
 void transform_units(struct pulsar *psr, int from, int to);
 
 /* This function uses the numerical recipes svdfit for the fitting */
-void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos);
+void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
 void updateParameters(pulsar *psr,int p,double *val,double *error);
 
 /* defineClockCorrectionSequence: call to provide the clock correction

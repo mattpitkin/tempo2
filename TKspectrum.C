@@ -1801,15 +1801,12 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
     nfit=nres/2-1;
 
   double v[nfit];
-  double sig[nres];
-  double **newUinv;
-  double **cvm;
   double chisq;
   int ip[nres];
-  double param[3],error[3];
+  double param[3];
 
   // to allow for computing the spectrum of IFUNC/CM etc we need different fit functions.
-  void (*FIT_FUNC)(double, double [], int,pulsar *,int); // the fit function we will use
+  void (*FIT_FUNC)(double, double [], int,pulsar *,int,int); // the fit function we will use
   FIT_FUNC=fitMeanSineFunc; // this is the standard periodogram/
   if(fitfuncMode=='I'){
 	 if (psr==NULL){
@@ -1819,14 +1816,9 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
 	 FIT_FUNC=fitMeanSineFunc_IFUNC; // this accounts for smoothing of the CM/IFUNC
   }
 
-  cvm = (double **)alloca(sizeof(double *)*3);
-  for (i=0;i<3;i++)
-	 cvm[i] = (double *)alloca(sizeof(double)*3);
-
   // Should fit independently to all frequencies
   for (i=0;i<nres;i++)
   {
-	 sig[i] = 1.0; // The errors are built into the uinv matrix
 	 ip[i] = i;
   }
   logmsg("Computing %d spectral channels",nfit);
@@ -1834,7 +1826,7 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
   {
 	 GLOBAL_OMEGA = 2.0*M_PI/(T*(double)nres/(double)(nres-1))*(k+1);
 
-	 TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,FIT_FUNC,0,psr,1.0e-40,ip,uinv);
+	 TKleastSquares_single_pulsar(resx,resy,nres,param,NULL,3,NULL,&chisq,FIT_FUNC,psr,1.0e-40,ip,1,uinv);
 
 	 v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
 	 specX[k] = GLOBAL_OMEGA/2.0/M_PI;
@@ -1846,7 +1838,7 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored
-void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
+void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
 {
    int i;
    v[0] = 1; // Fit for mean
@@ -1859,7 +1851,7 @@ void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
  * This only works for residuals faked from an IFUNC.
  * Note that ival must be in order.
  */
-void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival)
+void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
 {
    double m,c; // for the straight line.
    double x0,x1;
@@ -1925,7 +1917,7 @@ void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival)
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored
-void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
+void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
 {
    int i;
    v[0] = cos(GLOBAL_OMEGA*x);

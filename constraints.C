@@ -85,7 +85,7 @@ std::string get_constraint_name(enum constraint c){
 
 
 
-void matrixDMConstraintWeights(pulsar *psr,double** uinv){
+void matrixDMConstraintWeights(pulsar *psr){
 		int i,j,k;
 		int nobs=0;
 		int nfit=psr->dmoffsDMnum+psr->dmoffsCMnum;
@@ -95,7 +95,6 @@ void matrixDMConstraintWeights(pulsar *psr,double** uinv){
 
 
 		logdbg("Getting DM constraints for %s",psr->name);
-		if(uinv!=NULL)logdbg("Using UINV for weighting");
 
 
 		// find out how many obs we have.
@@ -117,25 +116,9 @@ void matrixDMConstraintWeights(pulsar *psr,double** uinv){
 				}
 		}
 
-		double* _designMatrix=(double*)malloc(sizeof(double)*nobs*nfit);
-		double* _v=(double*)malloc(sizeof(double)*nfit*nfit);
-		double* _u=(double*)malloc(sizeof(double)*nobs*nfit);
-		double* _uout=(double*)malloc(sizeof(double)*nobs*nfit);
+		double ** designMatrix=(double**)malloc_uinv(sizeof(double*)*nobs);
 
-		double ** designMatrix=(double**)malloc(sizeof(double*)*nobs);
-		double ** u=(double**)malloc(sizeof(double*)*nobs);
-		double ** uout=(double**)malloc(sizeof(double*)*nobs);
-		double ** v=(double**)malloc(sizeof(double*)*nfit);
-		double  * w=(double*)malloc(sizeof(double)*nfit);
-		for (k=0; k < nfit;k++){
-				v[k]=_v+nfit*k;
-		}
-		for (k=0; k < nobs;k++){
-		   designMatrix[k]=_designMatrix+nfit*k;
-		   u[k]=_u+nfit*k;
-		   uout[k]=_uout+nfit*k;
-		}
-
+		double *e=(double*)malloc(sizeof(double)*nobs);
 		
 		nobs=0;
 		for(i=0; i < psr->nobs; i++){
@@ -156,9 +139,7 @@ void matrixDMConstraintWeights(pulsar *psr,double** uinv){
 						if (okay==1)
 						{
 								x   = (double)(psr->obsn[i].bbat-psr->param[param_pepoch].val[0]);
-								double sig;
-								if(uinv==NULL) sig=psr->obsn[i].toaErr*1e-6;
-								else sig=1;
+								double sig=psr->obsn[i].toaErr*1e-6;
 								double dmf = 1.0/(DM_CONST*powl(psr->obsn[i].freqSSB/1.0e6,2));
 								for (k=0; k < nfit;k++){
 								   	
@@ -174,39 +155,18 @@ void matrixDMConstraintWeights(pulsar *psr,double** uinv){
 				}
 		}
 
-		if(uinv!=NULL){
-		   // if we are using a covariance matrix.
-		   // do pre-whitening of data and model
-			  TKmultMatrix(uinv,designMatrix,nobs,nfit,uout);
-			  for (i=0;i<nobs;i++)
-			  {
-				 for (j=0;j<nfit;j++)
-				 {
-					designMatrix[i][j] = uout[i][j];
-				 }
-			  }
-		}
 
-
-		TKsingularValueDecomposition_lsq(designMatrix,nobs,nfit,v,w,u);
-		double *wt = (double*)malloc(sizeof(double)*nfit);
-		for (i=0;i<nfit;i++)
-		{
-		   if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
-		   else wt[i] = 0.0;
-		}
+		TKleastSquares(NULL,NULL,designMatrix,designMatrix,nobs,nfit,1e-20,0,NULL,e,NULL);
 		double sum_wDM=0;
 		double sum_wCM=0;
 		for (i=0;i<nfit;i++)
 		{
 		   double sum=0.0;
-		   for (k=0;k<nfit;k++)
-			  sum+=v[i][k]*v[i][k]*wt[k];
 		   if(i < nDM){
-			  psr->dmoffsDM_weight[i]=1.0/(sum);
+			  psr->dmoffsDM_weight[i]=1.0/e[i]/e[i];
 			  sum_wDM+=psr->dmoffsDM_weight[i];
 		   } else {
-			  psr->dmoffsCM_weight[i-nDM]=1.0/(sum);
+			  psr->dmoffsCM_weight[i-nDM]=1.0/e[i]/e[i];
 			  sum_wCM+=psr->dmoffsCM_weight[i-nDM];
 		   }
 
@@ -223,16 +183,8 @@ void matrixDMConstraintWeights(pulsar *psr,double** uinv){
 
 
 		// free everything .
-		free(u);
-		free(uout);
-		free(designMatrix);
-		free(v);
-		free(w);
-		free(wt);
-		free(_u);
-		free(_uout);
-		free(_designMatrix);
-		free(_v);
+		free_uinv(designMatrix);
+		free(e);
 
 }
 
@@ -241,7 +193,7 @@ void matrixDMConstraintWeights(pulsar *psr,double** uinv){
  * Derive the weighting functions for the constraints, based upon the ToA errors.
  *
  */
-void computeConstraintWeights(pulsar *psr, double** uinv){
+void computeConstraintWeights(pulsar *psr){
    for (int k=0; k < psr->ifuncN; k++){
 	  psr->ifunc_weights[k]=1.0/(double)psr->ifuncN;
    }
@@ -253,7 +205,7 @@ void computeConstraintWeights(pulsar *psr, double** uinv){
 
 #ifdef CONSTRAINT_WEIGHTS
    if(psr->dmoffsDMnum>0 || psr->dmoffsCMnum>0) {
-	  matrixDMConstraintWeights(psr,uinv);
+	  matrixDMConstraintWeights(psr);
    }
    /*
 	* Derive weights for ifuncs
@@ -501,7 +453,7 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
 
    ok=false;
    while (!ok){
-	  matrixDMConstraintWeights(psr,NULL);
+	  matrixDMConstraintWeights(psr);
 	  ok=true;
 	  double threshold = 0.1/(double)psr->dmoffsDMnum;
 	  i=0;
@@ -523,7 +475,7 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
    logmsg("psr: %s ndm=%d",psr->name,psr->dmoffsDMnum);
    ok=fixCMgrid; // only do the CM if we are not fixing the grid
    while (!ok){
-	  matrixDMConstraintWeights(psr,NULL);
+	  matrixDMConstraintWeights(psr);
 	  ok=true;
 	  double threshold = 0.05/(double)psr->dmoffsCMnum;
 	  i=0;

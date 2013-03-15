@@ -244,6 +244,7 @@ double TKfindMax_d(double *x,int n)
   return ret;
 }
 
+
 double TKmean_d(double *x,int n)
 {
   double mean=0.0;

@@ -46,12 +46,12 @@ float TKfindRMSweight_d(double *x,double *e,int n);
 float  TKfindMax_f(float *x,int n);
 float  TKmean_f(float *x,int n);
 double TKmean_d(double *x,int n);
-
 double TKvariance_d(double *x,int n);
 double TKrange_d(double *x,int n);
 float TKrange_f(float *x,int n);
 double TKfindMin_d(double *x,int n);
 double TKfindMax_d(double *x,int n);
+
 double TKmean_d(double *x,int n);
 double TKfindMin_d(double *x,int n);
 double TKsign_d(double a,double b);

@@ -59,8 +59,8 @@ int TK_fft(short int dir,long n,double *x,double *y);
 void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
-void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
-void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
+void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
+void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
 
 int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit);
 
@@ -260,8 +260,8 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored
-void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
-void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival);
+void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
+void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored

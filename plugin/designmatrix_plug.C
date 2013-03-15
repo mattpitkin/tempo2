@@ -205,7 +205,7 @@ void WriteDesignMatrix(const char *strFileName, pulsar *pPsr, int nTargetPulsar)
 
   /* Write the parameter derivatives (design matrix row) for each observation */
   for(i=0; i<nObservations; i++) {
-    FITfuncs(pPsr[nTargetPulsar].obsn[i].bat - pPsr[nTargetPulsar].param[param_pepoch].val[0], pdParamDeriv, nParameters, pPsr+nTargetPulsar, i);
+    FITfuncs(pPsr[nTargetPulsar].obsn[i].bat - pPsr[nTargetPulsar].param[param_pepoch].val[0], pdParamDeriv, nParameters, pPsr+nTargetPulsar, i,0);
     for(j=0; j<nParameters; j++) {
       fprintf(pFile, "%22.20e", pdParamDeriv[j]);
       if(j!=nParameters-1) {

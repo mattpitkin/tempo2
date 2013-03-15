@@ -48,7 +48,7 @@ void accel_uinv(double* _m, int n){
 	  jc=jc+n-j;
    }
 
-   logmsg("Done CholDecomp... Inverting...",i);
+   logdbg("Done CholDecomp... Inverting...",i);
    F77_dtptri("L","N",&n,_t,&i);
    if(i!=0){
 	  logerr("Error in Invert i=%d",i);
@@ -73,7 +73,7 @@ void accel_uinv(double* _m, int n){
    }
    free(_t);
 
-   logmsg("Done Invert.",i);
+   logdbg("Done Invert.",i);
 }
 
 

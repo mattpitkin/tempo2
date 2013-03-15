@@ -4,6 +4,7 @@
 #include <math.h>
 #include "TKfit.h"
 #include "T2toolkit.h"
+#include "choleskyRoutines.h"
 #include "constraints.h"
 
 void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos);
@@ -1582,7 +1583,7 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
 
   // Do the Cholesky
   printf("Doing the Cholesky decomposition\n");
-  TKcholDecomposition(m,np,cholp);
+  T2cholDecomposition(m,np,cholp);
   printf("Done the Cholesky decompositon\n");
   // Now calculate uinv
   for (i=0;i<np;i++)

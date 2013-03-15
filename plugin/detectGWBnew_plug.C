@@ -510,7 +510,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
    return 0;
 }
-void fitPolyFunc(double x,double *v,int nfit,pulsar *psr,int ival)
+void fitPolyFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
 {
    int i;
    v[0] = 1e-6; // Fit for mean
@@ -518,7 +518,7 @@ void fitPolyFunc(double x,double *v,int nfit,pulsar *psr,int ival)
    v[2] = x*x*1e-20;
 }
 
-void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival)
+void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
 {
    int i;
    v[0] = 1; // Fit for mean
@@ -604,7 +604,7 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
 
    // compute the interpolated function
    logmsg("M * ifunc");
-   TKmultMatrixVec2(M,ifunc_in,nfakeObs,ninObs,ifunc_out);
+   TKmultMatrixVec(M,ifunc_in,nfakeObs,ninObs,ifunc_out);
    logmsg("Get ifCVM");
 
    // Get the CVM for the input IFUNC.
@@ -625,11 +625,11 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
 
    // compute the covarince function of the new function.
    logmsg("MC=M * ifCVM");
-   TKmultMatrix2(M,ifunc_CVM,nfakeObs,ninObs,ninObs,MC);
+   TKmultMatrix(M,ifunc_CVM,nfakeObs,ninObs,ninObs,MC);
 
    // finally compute the covariance function.
    logmsg("CVM = ifCVM * Mt");
-   TKmultMatrix2(MC,Mt,nfakeObs,ninObs,nfakeObs,CVM);
+   TKmultMatrix(MC,Mt,nfakeObs,ninObs,nfakeObs,CVM);
 
    // unfortunately we have to throw away the non-diagonal CVM.
 

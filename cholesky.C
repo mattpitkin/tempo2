@@ -18,6 +18,7 @@ void cholesky_powerlawModel(double **m, double modelAlpha, double modelFc, doubl
 void cholesky_readT2Model1(double **m, FILE* file,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
 void cholesky_formUinv(double **uinv,double** m,int np);
 void cholesky_dmModel(double **m, double D, double d, double ref_freq,double *resx,double *resy,double *rese,int np, int nc);
+void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip);
 
 void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr,double mjd_start,double mjd_end);
 
@@ -42,14 +43,34 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
    double **m;
    int i,j;
 
-	if(uinv[np-1] != uinv[0]+(np-1)*np){
-	   logerr("uinv matrix not declared as consecutive memory.");
-	   logmsg("Please use malloc_uinv() and free_uinv() from cholesky.C");
+   int nrows=get_blas_rows(uinv);
+   int ncols=get_blas_cols(uinv);
+
+   if (ncols!=np){
+	  logmsg("np=%d ncols=%d",ncols,np);
+	  logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=ncols");
+	  exit(1);
+   }
+
+   if (nrows==1){
+	  // we are just adding the errors to a diagonal matrix.
+	  getCholeskyDiagonals(uinv,psr,resx,resy, rese, np, nc,ip);
+	  return;
+   }
+   if (nrows!=np){
+	  logmsg("np=%d nrows=%d",ncols,np);
+	  logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=nrows");
+	  exit(1);
+   }
+
+   if(uinv[np-1] != uinv[0]+(np-1)*np){
+	  logerr("uinv matrix not declared as consecutive memory.");
+	  logmsg("Please use malloc_uinv() and free_uinv() from cholesky.C");
 #ifdef ACCEL_UINV
-	   // if we are using the accelerated code then it will crash... otherwise it's just a warning
-	   exit(1);
+	  // if we are using the accelerated code then it will crash... otherwise it's just a warning
+	  exit(1);
 #endif
-	}
+   }
 
    logmsg("Reading Cholesky model '%s' for pulsar %s",fname,psr->name);
 
@@ -77,7 +98,7 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
 	  for (i=0;i<np;i++)
 	  {
 		 for (j=0;j<np;j++){
-			   m[i][j]+=psr->ToAextraCovar[i][j];
+			m[i][j]+=psr->ToAextraCovar[i][j];
 		 }
 	  }
    }
@@ -120,44 +141,6 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
    cholesky_formUinv(uinv,m,np);
    for(i=0;i<np+1;i++)free(m[i]);
    free(m);
-}
-
-
-/**
- * Allocate uinv in a "BLAS/LAPACK" compatile way
- */
-double **malloc_uinv(int n){
-   return malloc_blas(n,n);
-}
-/**
- * Allocate uinv in a "BLAS/LAPACK" compatile way
- */
-double **malloc_blas(int n,int m){
-   double *memory;
-   double** uinv;
-   int i;
-   logdbg("Allocate uinv");
-   memory=(double*)malloc(sizeof(double)*n*m);
-   uinv=(double**)malloc(sizeof(double*)*n);
-   if(memory==NULL || uinv==NULL){
-	  logerr("Cannot allocate enough memory for uinv");
-	  return NULL;
-   }
-   logdbg("uinv... 0x%016x -> 0x%016x",memory,memory+n*n);
-   for(i=0;i<n;i++){
-	  uinv[i]=memory+m*i;
-   }
-   return uinv;
-}
-
-void free_blas(double** m){
-   free(m[0]);
-   free(m);
-}
-
-
-void free_uinv(double** uinv){
-   free_blas(uinv);
 }
 
 
@@ -362,6 +345,16 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
    }
 }
 
+
+
+void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
+   int i;
+   for(i=0;i<np;i++){
+	  uinv[0][i]=1.0/rese[i];
+   }
+}
+
+
 /**
  * UINV is a lower triangluar matrix.
  * Matricies are row-major order, i.e. uinv[r][c].
@@ -390,7 +383,7 @@ void cholesky_formUinv(double **uinv,double** m,int np){
 	  logmsg("Doing Cholesky decomp and inverting matrix (SLOW method)");
 	  if(!cholp)logerr("Could not allocate enough memory");
 
-	  TKcholDecomposition(m,np,cholp);
+	  T2cholDecomposition(m,np,cholp);
 	  logtchk("forming Cholesky matrix ... complete do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  // Now calculate uinv
 	  logtchk("forming Cholesky matrix ... calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);

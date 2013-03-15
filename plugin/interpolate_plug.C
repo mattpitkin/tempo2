@@ -34,6 +34,7 @@
 #include "TKspectrum.h"
 #include "TKfit.h"
 #include "fftw3.h"
+#include "choleskyRoutines.C"
 
 using namespace std;
 
@@ -319,7 +320,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       printf("\n");
       }*/
-  TKcholDecomposition(cn,nSampleTimes,cholp);
+  T2cholDecomposition(cn,nSampleTimes,cholp);
   // Now calculate inverse
   for (i=0;i<nSampleTimes;i++)
     {

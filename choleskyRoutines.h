@@ -29,6 +29,7 @@ int T2obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese);
 
 int T2guess_vals(double *x, double *y, int n, double *alpha, double *amp,   double *fc,  int *nfit, double wn, double *fc_white, int prewhite);
 void T2getWhiteNoiseLevel(int n, double *y, int nlast, double *av);
+void T2cholDecomposition(double **a, int n, double *p);
 
 // some global variables that Ryan is still using for diagnostic purposes
 extern double FCALPHA, WNLEVEL, EXPSMOOTH, UPW, NFIT, FCFINAL;

@@ -1247,7 +1247,7 @@ void T2formCholeskyMatrix_pl(double *c,int cSize,double *resx,double *resy,doubl
     }
   printf("Doing the Cholesky Decomposition\n");
   // Do the Cholesky
-  TKcholDecomposition(m,np,cholp);
+  T2cholDecomposition(m,np,cholp);
   printf("Done the Cholesky decomposition\n");
   // Now calculate uinv
   for (i=0;i<np;i++)
@@ -1334,4 +1334,51 @@ void T2writeCovarFuncModel(double alpha,double fc,double val,double white,char *
   fprintf(fout,"AMP %g\n",val);
   fprintf(fout,"WHITENOISE %g\n",white);
   fclose(fout);
+}
+
+
+
+
+void T2cholDecomposition(double **a, int n, double *p)
+{
+   int i,j,k;
+   long double sum;
+   // float sum;
+   /*  for (i=0;i<n;i++)
+	   {
+	   for (j=0;j<n;j++)
+	   printf("i=%d, j=%d, a=%g\n",i,j,a[i][j]);
+	   }*/
+   for (i=0;i<n;i++)
+   {
+	  for (j=i;j<n;j++)
+	  {
+		 for (sum=a[i][j],k=i-1;k>=0;k--) sum-=a[i][k]*a[j][k]; 
+		 if (i==j)
+		 {
+			//	      printf("Currently have %d %d %Lg\n",i,j,sum);
+			if (sum <= 0.0)
+			{
+			   printf("Here with %d %d %g %Lg\n",i,j,a[i][j],sum);
+			   for (sum=a[i][j],k=i-1;k>=0;k--)
+			   {
+				  sum-=a[i][k]*a[j][k];
+				  printf("Failed: %d %d %d %g %g %Lg\n",i,j,k,a[i][k],a[j][k],sum);
+			   }
+			   printf("Failed - the matrix is not positive definite\n");
+			   exit(1);
+			}
+			p[i] = sqrt(sum);
+			//	      printf("Currently have %d %d %Lg %g\n",i,j,sum,p[i]);
+		 }
+		 else
+		 {
+			a[j][i] = (double)(sum/p[i]);
+			/*	      if (j==120)
+					  printf("j=120, setting %g %Lg %g %d\n",a[j][i],sum,p[i],i);
+					  if (j==130)
+					  printf("j=130, setting %g %Lg %g %d\n",a[j][i],sum,p[i],i);*/
+		 }
+	  }
+   }
 }

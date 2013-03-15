@@ -3490,7 +3490,7 @@ void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeM
             px[i] = (float)fmod((float)(double)psr[0].obsn[id[i]].bat,365.25);
 		      }
 		      pxt[i] = px[i];
-		      FITfuncs(xval,afunc,2,&psr[1],id[i]); 
+		      FITfuncs(xval,afunc,2,&psr[1],id[i],0); 
 		      py[i] = (double)(afunc[2]*diff+(double)psr[0].offset);
 		      pyt[i] += (double)(afunc[2]*diff);		  
 		      if (removeMean==1) py[i]-=mean;

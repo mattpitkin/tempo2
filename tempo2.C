@@ -507,11 +507,12 @@ int main(int argc, char *argv[])
 	    {
 	      logdbg("calling doFit");
 
-	      if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
-		doFit(psr,npsr,writeModel); /* Fit to the residuals to obtain updated parameters */
-	      else
-		doFitDCM(psr,dcmFile,covarFuncFile,npsr,writeModel);
-	      printf("Complete return\n");
+//	      if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
+//		doFit(psr,npsr,writeModel); /* Fit to the residuals to obtain updated parameters */
+//	      else
+//		doFitDCM(psr,dcmFile,covarFuncFile,npsr,writeModel);
+		  doFitAll(psr,npsr,covarFuncFile);
+	      logmsg("Complete fit");
 	      /* doFitGlobal(psr,npsr,&globalParameter,nGlobal,writeModel);*/ /* Fit to the residuals to obtain updated parameters  */
 	      logdbg("completed doFit");
 	    }
