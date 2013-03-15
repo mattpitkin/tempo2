@@ -324,9 +324,9 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 	{
 	  //	  printf("Here with %d %d\n",p,i);
 	  // i was ip[i]
-	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,i);
-	  //	  for (j=0;j<nf;j++)
-	  //	    printf("Have %d %d %g [%d %d %d]\n",p,j,basisFunc[j],koff,nGlobal,nFitP[p]);
+	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,i+offset);
+	  //	  	  for (j=0;j<nf;j++)
+	  //	  	    printf("Have %d %d %g [%d %d %d]\n",p,j,basisFunc[j],koff,nGlobal,nFitP[p]);
 
 	  for (j=0;j<nGlobal;j++)
 	    designMatrixT[i][j]=basisFunc[j]/sig[i+offset];
@@ -446,7 +446,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
       for (i=0;i<nobs_and_constraints;i++)
 	{
 	  // ip -> i
-	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,i);
+	  globalFITfuncs(x[i+offset],basisFunc,nf,psr,i+offset);
 	  for (j=0;j<nGlobal;j++)
 	    designMatrixT[i][j]=basisFunc[j];
 	  for (j=0;j<nFitP[p];j++)
@@ -949,7 +949,7 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
     }
   //  printf("In globalFit p = %d\n",p);
   ipos = counter-tot;
-
+  //  printf("In glboalFit p = %d, ipos = %d, counter = %d, tot = %d\n",p,ipos,counter,tot);
   new_ma=1;
   // Add global parameters
   for (i=0;i<MAX_PARAMS;i++)
