@@ -92,10 +92,15 @@ void ephemeris_routines(pulsar *psr,int npsr)
   const char *CVS_verNum = "$Revision$";
   if (displayCVSversion == 1) CVSdisplayVersion("global.C","ephemeris_routines()",CVS_verNum);
 
+  logtchk("call vectorPulsar()");
   vectorPulsar(psr,npsr);   /* 1. Form a vector pointing at the pulsar */
+  logtchk("call readEphemeris()");
   readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+  logtchk("call get_obsCoord()");
   get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
+  logtchk("call tt2tb()");
   tt2tb(psr,npsr);          /* Observatory/time-dependent part of TT-TB */
+  logtchk("call readEphemeris()");
   readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
 }
 
