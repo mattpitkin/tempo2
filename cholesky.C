@@ -247,12 +247,11 @@ void cholesky_readFromCovarianceFunction(double **m, char* fname,double *resx,do
    int ndays = ceil((resx[np-1-nc]-resx[0])+1e-10);
    double covarFunc[ndays+1];
    double escaleFactor = 1.0;
-   clock_t clk=clock();
    int i;
    FILE* fin;
    logmsg("Parsing '%s' as covariance function",fname);
 
-   logtchk("reading covariance function from disk  (%.2f), ndays = %d",(clock()-clk)/(float)CLOCKS_PER_SEC,ndays);
+   logtchk("reading covariance function from disk, ndays = %d",ndays);
    if (!(fin = fopen(fname,"r")))
    {
 	  logerr("Unable to open covariance function file: %s",fname);
@@ -272,7 +271,7 @@ void cholesky_readFromCovarianceFunction(double **m, char* fname,double *resx,do
    if(escaleFactor!=1.0){
 	  logerr("Ignoring 'error scale factor': %g",escaleFactor);
    }
-   logtchk("complete reading covariance function from disk  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+   logtchk("complete reading covariance function from disk");
 
    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
 
@@ -280,20 +279,19 @@ void cholesky_readFromCovarianceFunction(double **m, char* fname,double *resx,do
 
 void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *resx,double *resy,double *rese,int np, int nc){
    double escaleFactor = 1.0;
-   clock_t clk=clock();
    int i,j,k;
    int ix,iy;
    double t0,cint,t;
    int t1,t2;
 
 
-   logtchk("forming Cholesky matrix ... determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+   logtchk("forming Cholesky matrix ... determing m[ix][iy] = fabs(resx[ix]-resx[iy])");
    for (ix=0;ix<(np);ix++)
    {
 	  for (iy=0;iy<(np);iy++)
 		 m[ix][iy] = fabs(resx[ix]-resx[iy]);
    }
-   logtchk("forming Cholesky matrix ... complete determing m[ix][iy] = fabs(resx[ix]-resx[iy])  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+   logtchk("forming Cholesky matrix ... complete determing m[ix][iy] = fabs(resx[ix]-resx[iy])");
    if (debugFlag==1)
    {
 	  logdbg("First m = ");
@@ -309,7 +307,7 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
    // Linearly interpolate between elements on the covariance function because
    // valid covariance matrix must have decreasing off diagonal elements.
    // logdbg("Inserting into the covariance matrix");
-   logtchk("forming Cholesky matrix ... determing covariance based on time difference  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+   logtchk("forming Cholesky matrix ... determing covariance based on time difference");
    for (ix=0;ix<(np);ix++)
    {
 	  for (iy=0;iy<(np);iy++)
@@ -334,7 +332,7 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
 		 }
 	  }
    }
-   logtchk("forming Cholesky matrix ... complete determing covariance based on time difference  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+   logtchk("forming Cholesky matrix ... complete determing covariance based on time difference");
    // add the values for the constraints
    // Constraints are not covariant with anything so it's all zero!
    for (i=np-nc; i < np; i++){
@@ -362,8 +360,7 @@ void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,
  */
 void cholesky_formUinv(double **uinv,double** m,int np){
    int i,j,k;
-   clock_t clk=clock();
-   logtchk("forming Cholesky matrix ... do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+   logtchk("forming Cholesky matrix ... do Cholesky decomposition");
 #ifdef ACCEL_UINV
    if(useT2accel){
 	  logmsg("Doing ACCELERATED Chol Decomp (M.Keith/LAPACK method)");
@@ -372,7 +369,7 @@ void cholesky_formUinv(double **uinv,double** m,int np){
 	  }
 	  accel_uinv(uinv[0],np);
 
-	  logtchk("forming Cholesky matrix ... complete calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("forming Cholesky matrix ... complete calculate uinv");
    } else {
 #endif
 
@@ -384,9 +381,9 @@ void cholesky_formUinv(double **uinv,double** m,int np){
 	  if(!cholp)logerr("Could not allocate enough memory");
 
 	  T2cholDecomposition(m,np,cholp);
-	  logtchk("forming Cholesky matrix ... complete do Cholesky decomposition  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("forming Cholesky matrix ... complete do Cholesky decomposition");
 	  // Now calculate uinv
-	  logtchk("forming Cholesky matrix ... calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("forming Cholesky matrix ... calculate uinv");
 	  for (i=0;i<np;i++)
 	  {
 		 m[i][i] = 1.0/cholp[i];
@@ -402,7 +399,7 @@ void cholesky_formUinv(double **uinv,double** m,int np){
 		 }
 	  }
 
-	  logtchk("forming Cholesky matrix ... complete calculate uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("forming Cholesky matrix ... complete calculate uinv");
 	  if (debugFlag)
 	  {
 		 logdbg("uinv = ");
@@ -415,9 +412,9 @@ void cholesky_formUinv(double **uinv,double** m,int np){
 	  }
 
 
-	  logtchk("forming Cholesky matrix ... free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("forming Cholesky matrix ... free memory");
 	  free(cholp);
-	  logtchk("forming Cholesky matrix ... complete free memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("forming Cholesky matrix ... complete free memory");
 
 #ifdef ACCEL_UINV
    } // end the if clause when we have the option of accelerated cholesky.

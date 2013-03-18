@@ -79,9 +79,8 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    double newStart=-1.0,newFinish=-1.0;
    long double meanRes=0.0;
    int count;
-   clock_t clk;
    int nobs_and_constraints;
-   bool DO_GLOBAL_FIT=true;
+   bool DO_GLOBAL_FIT=false;
 
    double **xx = (double**)malloc(sizeof(double*)*npsr);;
    double **yy = (double**)malloc(sizeof(double*)*npsr);;
@@ -92,9 +91,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
    //  printf("WARNING: Switching weighting off for the fit\n");
    //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
-   clk=clock();  
 
-   //  logtchk("Starting Cholesky fit (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
    if (strcmp(psr[0].fitFunc,"default")!=0)
    {
 	  char *(*entry)(pulsar *,int,int);
@@ -150,6 +147,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
    nglobal=getNglobal(psr,npsr);
    if(nglobal > 0){
+	  DO_GLOBAL_FIT=true;
 	  logmsg("GLOBAL fit enabled. Number of global fit parameters = %d",nglobal);
    }
 
@@ -174,10 +172,10 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
 	  strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
 	  /* How many parameters are we fitting for */
-	  logtchk("Determining which parameters we are fitting for  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("Determining which parameters we are fitting for");
 	  npol = getNparams(psr+p);
 	  
-	  logtchk("Complete determining which parameters we are fitting for  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("Complete determining which parameters we are fitting for");
 
 	  x     = (double *)malloc(nobs_and_constraints*sizeof(double));
 	  y     = (double *)malloc(nobs_and_constraints*sizeof(double));
@@ -238,16 +236,16 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 	  if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL")){
 		 // fit with a covariance function.
-		 logtchk("allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+		 logtchk("allocating memory for uinv ");
 		 uinvs[p]=malloc_uinv(count);
-		 logtchk("complete allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+		 logtchk("complete allocating memory for uinv");
 		 psr[p].fitMode = 1; // Note: forcing this to 1 as the Cholesky fit is a weighted fit
 		 logmsg("Doing a FULL COVARIANCE MATRIX fit");
 	  } else {
 		 // fit without covariance function.
-		 logtchk("allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+		 logtchk("allocating memory for uinv");
 		 uinvs[p]=malloc_blas(1,count); // store diagonal matrix as a 1xN
-		 logtchk("complete allocating memory for uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+		 logtchk("complete allocating memory for uinv");
 		 if(psr[p].fitMode == 0){
 			logmsg("Doing an UNWEIGHTED fit");
 			// unweighted fit - set sigma to 1 (except for constraints)
@@ -259,10 +257,10 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 }
 	  }
 
-	  logtchk("Compute uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("Compute uinv");
 	  // note that this works even for a non-cholesky fit.
 	  getCholeskyMatrix(uinvs[p],covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip[p]);
-	  logtchk("Completed computing uinv  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+	  logtchk("Completed computing uinv");
 
 	  psr[p].nFit = count;
 	  psr[p].param[param_start].val[0] = newStart-0.001; 
@@ -280,7 +278,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  logtchk("complete removing mean from the residuals??  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  */
 		 logdbg("Get constraint weghts");
-		 logtchk("Get Constraint weights  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+		 logtchk("Get Constraint weights");
 		 computeConstraintWeights(psr+p);
 		 psr[p].nParam = npol;
 		 psr[p].nGlobal = nglobal;
@@ -315,6 +313,8 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 	  int offset=nglobal;
 	  for (p=0;p<npsr;p++) {
+		 psr[p].fitChisq = chisq; 
+		 psr[p].fitNfree = n[p]-nf[p]-nglobal;
 		 logmsg("Update normal parameters for %s",psr->name);
 		 updateParameters(psr,p,val+offset,error+offset);
 		 offset+=nf[p];
@@ -340,10 +340,10 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 { 
 
 			logdbg("Doing the fit");
-			logtchk("doing the fit  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+			logtchk("doing the fit");
 			TKleastSquares_single_pulsar(xx[p],yy[p],psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
 				  FITfuncs,psr+p,tol,ip[p],1,uinvs[p]);
-			logtchk("complete doing the fit  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+			logtchk("complete doing the fit");
 			//	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
 			logdbg("Complete fit: chisq = %f",(double)chisq);
 			//	  printf("chisq = %g\n",chisq);
@@ -352,9 +352,9 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 			/* Now update the parameters */
 			logdbg("Updating the parameters");
-			logtchk("updating the parameter values  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+			logtchk("updating the parameter values");
 			updateParameters(psr,p,val,error);
-			logtchk("complete updating the parameter values  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+			logtchk("complete updating the parameter values");
 			logdbg("Completed updating the parameters");
 		 }   
 		 /* Free the vectors and matrices */
@@ -377,9 +377,9 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			printf("Calculating uncertainties on fitted parameters using a Monte-Carlo bootstrap method (%d)\n",psr[p].bootStrap);
 			bootstrap(psr,p,npsr);
 		 }
-		 logtchk("freeing memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+		 logtchk("freeing memory");
 		 free_uinv(uinvs[p]);
-		 logtchk("complete freeing memory  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
+		 logtchk("complete freeing memory");
 	  }
    }
    free(ip);

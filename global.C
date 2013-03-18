@@ -43,6 +43,7 @@ double ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
 int debugFlag = 0;
 int writeResiduals=0;
 int tcheck = 0;
+clock_t timer_clk = 0;
 int veryFast = 0;
 int displayCVSversion = 0;
 char tempo2MachineType[MAX_FILELEN] = "";
@@ -103,14 +104,21 @@ void formBatsAll(pulsar *psr,int npsr)
   const char *CVS_verNum = "$Revision$";
   if (displayCVSversion == 1) CVSdisplayVersion("global.C","formBatsAll()",CVS_verNum);
 
+  logtchk("enter formBatsAll()");
   logdbg("Calling clock corrections");
+  logtchk("call clock_corrections()");
   clock_corrections(psr,npsr);          /* Clock corrections  ... */  
   logdbg("Reading ephemeris routines");
+  logtchk("call ephemeris_routines()");
   ephemeris_routines(psr,npsr);         /* Ephemeris routines ... */
   logdbg("Reading extra delays");
+  logtchk("call extra_delays()");
   extra_delays(psr,npsr);               /* Other time delays  ... */
+  logtchk("call formBats()");
   formBats(psr,npsr);                   /* Form Barycentric arrival times */
+  logtchk("call secularMotion()");
   secularMotion(psr,npsr); 
+  logtchk("exit formBatsAll()");
 }
 
 // Only recalculate that which is likely

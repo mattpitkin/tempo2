@@ -57,6 +57,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    const char *CVS_verNum = "$Revision$";
    
    if (displayCVSversion == 1) CVSdisplayVersion("formResiduals.C","formResiduals()",CVS_verNum);
+   logtchk("Enter formresiduals()");
 
    for (p=0;p<npsr;p++)
      {
@@ -1006,5 +1007,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	 }
 
      }
+
+   logtchk("Leave formresiduals()");
 }
 

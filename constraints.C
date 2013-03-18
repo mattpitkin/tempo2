@@ -1,5 +1,6 @@
 #include "constraints.h"
 #include "TKfit.h"
+#include "T2toolkit.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -411,27 +412,12 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
    int i,j;
    double mjd;
    bool ok;
+   double psrstart,psrend;
 
-   
-   double psrstart=(double)(psr->obsn[0].sat)-dmstep/2.0;
-   double psrend=(double)(psr->obsn[psr->nobs-1].sat)+dmstep/2.0;
+   double D[MAX_IFUNC];
+   double C[MAX_IFUNC];
 
-   i=0;
-   mjd=start;
-   while (mjd <= end){
-	  if (mjd > psrstart && mjd < psrend){
-		 psr->dmoffsDM_mjd[i]=mjd;
-		 psr->dmoffsDM[i]=0;
-		 i++;
-	  }
-	  mjd+=dmstep;
-   }
-   psr->dmoffsDMnum=i;
-   if (psr->dmoffsDMnum > MAX_IFUNC){
-	  logerr("too many DM steps!");
-	  exit(1);
-   }
-
+   psr->dmoffsDMnum=0;
    psrstart=(double)(psr->obsn[0].sat)-cmstep/2.0;
    psrend=(double)(psr->obsn[psr->nobs-1].sat)+cmstep/2.0;
    i=0;
@@ -451,53 +437,133 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
    }
 
 
-   ok=false;
-   while (!ok){
-	  matrixDMConstraintWeights(psr);
-	  ok=true;
-	  double threshold = 0.1/(double)psr->dmoffsDMnum;
-	  i=0;
-	  j=0;
-	  mjd=start;
-	  for (j=0; j < psr->dmoffsDMnum; j++){
-		 psr->dmoffsDM_mjd[i]=psr->dmoffsDM_mjd[j];
-		 psr->dmoffsDM[i]=0;
-		 if(!ok || psr->dmoffsDM_weight[j]>threshold)i++;
-		 else{
-			logmsg("Skip %lf %lg",psr->dmoffsDM_mjd[j],psr->dmoffsDM_weight[i]);
-			ok=false;
-		 }
-		 mjd+=dmstep;
-	  }
-	  psr->dmoffsDMnum=i;
-   }
-
-   logmsg("psr: %s ndm=%d",psr->name,psr->dmoffsDMnum);
    ok=fixCMgrid; // only do the CM if we are not fixing the grid
    while (!ok){
 	  matrixDMConstraintWeights(psr);
 	  ok=true;
 	  double threshold = 0.05/(double)psr->dmoffsCMnum;
-	  i=0;
 	  j=0;
 	  mjd=start;
 	  bool bb=false;
 	  for (j=0; j < psr->dmoffsCMnum; j++){
-		 psr->dmoffsCM_mjd[i]=psr->dmoffsCM_mjd[j];
-		 psr->dmoffsCM[i]=0;
-		 if(psr->dmoffsCM_weight[j]>threshold){
-			i++;
-			bb=false;
-		 } else{
-			if (bb) i++; // don't delete multiple points in a row
-			else logmsg("Skip %lf %lg",psr->dmoffsCM_mjd[j],psr->dmoffsCM_weight[i]);
-			ok=false;
-			bb=true;
-		 }
-		 mjd+=cmstep;
+		 C[j]=psr->dmoffsCM_weight[j];
 	  }
-	  psr->dmoffsCMnum=i;
+	  double min=TKfindMin_d(C,psr->dmoffsCMnum);
+	  if(min < threshold){
+		 i=0;
+		 logmsg("min=%lg / %lg",min,threshold);
+		 for (j=0; j < psr->dmoffsCMnum; j++){
+			psr->dmoffsCM_mjd[i]=psr->dmoffsCM_mjd[j];
+			psr->dmoffsCM[i]=0;
+			if(psr->dmoffsCM_weight[j]>min){
+			   i++;
+			   bb=false;
+			} else{
+			   if (bb) i++; // don't delete multiple points in a row
+			   else logmsg("CM Skip %lf %lg",psr->dmoffsCM_mjd[j],psr->dmoffsCM_weight[i]);
+			   ok=false;
+			   bb=true;
+			}
+			mjd+=cmstep;
+		 }
+		 psr->dmoffsCMnum=i;
+	  }
    }
+
    logmsg("psr: %s ncm=%d",psr->name,psr->dmoffsCMnum);
+
+
+   psrstart=(double)(psr->obsn[0].sat)-dmstep/2.0;
+   psrend=(double)(psr->obsn[psr->nobs-1].sat)+dmstep/2.0;
+
+   i=0;
+   mjd=start;
+   while (mjd <= end){
+	  if (mjd > psrstart && mjd < psrend){
+		 psr->dmoffsDM_mjd[i]=mjd;
+		 psr->dmoffsDM[i]=0;
+		 i++;
+	  }
+	  mjd+=dmstep;
+   }
+   psr->dmoffsDMnum=i;
+   if (psr->dmoffsDMnum > MAX_IFUNC){
+	  logerr("too many DM steps!");
+	  exit(1);
+   }
+
+
+   ok=false;
+   while (!ok){
+	  matrixDMConstraintWeights(psr);
+	  ok=true;
+	  double threshold = 0.01/(double)psr->dmoffsDMnum;
+	  j=0;
+	  mjd=start;
+	  bool bb=false;
+	  for (j=0; j < psr->dmoffsDMnum; j++){
+		 D[j]=psr->dmoffsDM_weight[j];
+	  }
+	  double min=TKfindMin_d(D,psr->dmoffsDMnum);
+	  if(min < threshold){
+		 i=0;
+		 logmsg("min=%lg / %lg",min,threshold);
+		 for (j=0; j < psr->dmoffsDMnum; j++){
+			psr->dmoffsDM_mjd[i]=psr->dmoffsDM_mjd[j];
+			psr->dmoffsDM[i]=0;
+			if(psr->dmoffsDM_weight[j]>min){
+			   i++;
+			   bb=false;
+			} else{
+			   if (bb) i++; // don't delete multiple points in a row
+			   else logmsg("DM Skip %lf %lg",psr->dmoffsDM_mjd[j],psr->dmoffsDM_weight[i]);
+			   ok=false;
+			   bb=true;
+			}
+			mjd+=cmstep;
+		 }
+		 psr->dmoffsDMnum=i;
+	  }
+   }
+
+   logmsg("psr: %s ndm=%d",psr->name,psr->dmoffsDMnum);
+
+   ok=fixCMgrid; // only do the CM if we are not fixing the grid
+   while (!ok){
+	  matrixDMConstraintWeights(psr);
+	  ok=true;
+	  double threshold = 0.05/(double)psr->dmoffsCMnum;
+	  j=0;
+	  mjd=start;
+	  bool bb=false;
+	  for (j=0; j < psr->dmoffsCMnum; j++){
+		 C[j]=psr->dmoffsCM_weight[j];
+	  }
+	  double min=TKfindMin_d(C,psr->dmoffsCMnum);
+	  if(min < threshold){
+		 i=0;
+		 logmsg("min=%lg / %lg",min,threshold);
+		 for (j=0; j < psr->dmoffsCMnum; j++){
+			psr->dmoffsCM_mjd[i]=psr->dmoffsCM_mjd[j];
+			psr->dmoffsCM[i]=0;
+			if(psr->dmoffsCM_weight[j]>min){
+			   i++;
+			   bb=false;
+			} else{
+			   if (bb) i++; // don't delete multiple points in a row
+			   else logmsg("CM Skip %lf %lg",psr->dmoffsCM_mjd[j],psr->dmoffsCM_weight[i]);
+			   ok=false;
+			   bb=true;
+			}
+			mjd+=cmstep;
+		 }
+		 psr->dmoffsCMnum=i;
+	  }
+   }
+
+   logmsg("psr: %s ncm=%d",psr->name,psr->dmoffsCMnum);
+
+
+
 }
 

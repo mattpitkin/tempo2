@@ -82,12 +82,12 @@ int main(int argc, char *argv[])
   clock_t startClock,endClock;
   const char *CVS_verNum = "$Revision$";
 
+  timer_clk=clock();  
 
   printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
   printf("This is free software, and you are welcome to redistribute it\n");
   printf("under conditions of GPL license.\n\n");
 
-  //
   startClock = clock();
 
   pulsar *psr;
@@ -325,7 +325,9 @@ int main(int argc, char *argv[])
 	    return -1;
 	  }
 	  logdbg("--ENTER GRAPHICAL PLUGIN--");
+	  logtchk("Start graphical plugin");
 	  entry(argc,commandLine,psr,&npsr);
+	  logtchk("End graphical plugin");
 	  return 0;
 	}
     }
@@ -449,6 +451,7 @@ int main(int argc, char *argv[])
       ChebyModelSet_Destroy(&cms);
     }
 
+	logtchk("Return from main()");
     return 0;
   }
   if (debugFlag==1)
@@ -478,9 +481,11 @@ int main(int argc, char *argv[])
 	{
 	  logdbg("iteration %d",iteration);
 	  logdbg("calling formBatsAll");
+	  logtchk("call formBatsAll()");
 	  //	  printf("Calling formBats\n");
 	  formBatsAll(psr,npsr);                /* Form Barycentric arrival times */
 	  logdbg("calling formResiduals");
+	  logtchk("call formResiduals()");
 	  formResiduals(psr,npsr,1);       /* Form residuals */
 	  // 
 	  //	  printf("WARNING: SIMULATING GAUSSIAN NOISE\n");
@@ -507,10 +512,7 @@ int main(int argc, char *argv[])
 	    {
 	      logdbg("calling doFit");
 
-//	      if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
-//		doFit(psr,npsr,writeModel); /* Fit to the residuals to obtain updated parameters */
-//	      else
-//		doFitDCM(psr,dcmFile,covarFuncFile,npsr,writeModel);
+	      logtchk("calling doFitAll");
 		  doFitAll(psr,npsr,covarFuncFile);
 	      logmsg("Complete fit");
 	      /* doFitGlobal(psr,npsr,&globalParameter,nGlobal,writeModel);*/ /* Fit to the residuals to obtain updated parameters  */
@@ -570,6 +572,7 @@ int main(int argc, char *argv[])
     }
   endClock = clock();
   printf("Finishing off: time taken = %.2f (s)\n",(endClock-startClock)/(float)CLOCKS_PER_SEC);
+  logtchk("Exit from main()");
   exit(EXIT_SUCCESS);
 } 
 

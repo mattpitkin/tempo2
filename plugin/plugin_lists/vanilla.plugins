@@ -16,3 +16,4 @@ autoSpectralFit_plug.C
 cholSpectra_plug.C
 analyticChol_plug.C
 detectGWBnew_plug.C
+autoDM_plug.C
