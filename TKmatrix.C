@@ -78,7 +78,7 @@ longdouble** malloc_2dLL(int rows,int cols){
    longdouble** m;
    logdbg("Allocate %d x %d longdouble array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(longdouble)/1024.0));
 
-   m=(longdouble**) malloc(sizeof(longdouble*)*rows);
+   m=(longdouble**) calloc(rows,sizeof(longdouble*));
    memory=(longdouble*)malloc(sizeof(longdouble)*rows*cols);
 
    if(memory==NULL || m==NULL){
@@ -136,7 +136,7 @@ double **malloc_blas(int rows,int cols){
       exit(1);
    }
    logdbg("Allocate %d x %d double array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(double)/1024.0));
-   memory=(double*)malloc(sizeof(double)*(rows*cols+2)); // we add 2 to store dimensions
+   memory=(double*)calloc((rows*cols+2),sizeof(double)); // we add 2 to store dimensions
    uinv=(double**)malloc(sizeof(double*)*rows);
    if(memory==NULL || uinv==NULL){
    logdbg("Could not allocate %d x %d double array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(double)/1024.0));

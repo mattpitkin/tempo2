@@ -99,8 +99,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	sscanf(argv[++i],"%s",selectFname);
       else if (strcmp(argv[i],"-splug")==0)
 	sscanf(argv[++i],"%s",selectPlugName);
-      else if (strcmp(argv[i],"-global")==0)
-	sscanf(argv[++i],"%s",globalFname);
+      else if (strcmp(argv[i],"-global")==0){
+		 forceGlobalFit=1;
+		 sscanf(argv[++i],"%s",globalFname);
+	  }
       else if (strcmp(argv[i],"-modify")==0)
 	{
 	  modify=1;

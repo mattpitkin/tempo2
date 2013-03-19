@@ -239,6 +239,7 @@ extern int MAX_OBSN;
 extern double ECLIPTIC_OBLIQUITY;
 
 extern int debugFlag;   /* Global = 1 if debug mode is running */
+extern int forceGlobalFit;   /* Global = 1 if we are forcing a global fit */
 extern int writeResiduals;   /* Global = 1 if we are writing out post-fit residuals */
 extern int tcheck;   /* Global = 1 if time check message should be printed is running */
 extern clock_t timer_clk;

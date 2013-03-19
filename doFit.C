@@ -64,8 +64,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 }
 
 /**
- * Master fitting routine with or without cholesky.
- * Does not yet do global fitting.
+ * Master fitting routine with or without cholesky, global or not.
  */
 void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    int i,j,k;
@@ -146,7 +145,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    }
 
    nglobal=getNglobal(psr,npsr);
-   if(nglobal > 0){
+   if(nglobal > 0 || forceGlobalFit){
 	  DO_GLOBAL_FIT=true;
 	  logmsg("GLOBAL fit enabled. Number of global fit parameters = %d",nglobal);
    }

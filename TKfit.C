@@ -247,7 +247,7 @@ double TKleastSquares(double* b, double* white_b,
 			   sum += designMatrix[i][j]*p[j];
 			   sum_w += white_designMatrix[i][j]*p[j];
 			}
-			fprintf(wFile,"%d %lg %lg\n",i,b[i]-sum,white_b[i]-sum_w);
+			fprintf(wFile,"%d %lg %lg\n",i,(double)(b[i]-sum),(double)(white_b[i]-sum_w));
 		 }
 		 fclose(wFile);
 	  }
@@ -306,11 +306,11 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
 
    white_designMatrix=malloc_blas(totalObs,totalFit);
    designMatrix=malloc_blas(totalObs,totalFit);
-   b=(double*)malloc(sizeof(double)*totalObs);
-   white_b=(double*)malloc(sizeof(double)*totalObs);
+   b=(double*)calloc(totalObs,sizeof(double));
+   white_b=(double*)calloc(totalObs,sizeof(double));
 
    for (ipsr=0; ipsr < npsr; ipsr++){
-	  logdbg("Getting design matrix / whitened residuals for psr %d",ipsr);
+	  logdbg("Getting design matrix / whitened residuals for psr %d    off_r=%d off_f=%d nglobal=%d",ipsr,off_r,off_f,nglobal);
 	  TKfit_getPulsarDesignMatrix(x[ipsr],y[ipsr],n[ipsr],nf[ipsr]+nglobal,fitFuncs,psr,ip[ipsr],uinv[ipsr],ipsr,&psr_DM,&psr_wDM,&psr_b,&psr_wb);
 
 	  // the global fit parameters
@@ -405,7 +405,9 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
 	  // we have only diagonal elements
 	  for (i=0;i<n;i++){
 		 white_b[i]=b[i]*uinv[0][i];
-		 for (j=0;j<nf;j++) white_designMatrix[i][j] = designMatrix[i][j]*uinv[0][i];
+		 for (j=0;j<nf;j++){
+			white_designMatrix[i][j] = designMatrix[i][j]*uinv[0][i];
+		 }
 	  }
    } else {
 	  TKmultMatrix_sq(uinv,designMatrix,n,nf,white_designMatrix);  
@@ -448,14 +450,55 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
 
 void TKleastSquares_svd_noErr(double *x,double *y,int n,double *p,int nf, void (*fitFuncs)(double, double [], int))
 {
-   logerr("Not implemented");
-   exit(-1);
+   double chisq=0;
+   TKleastSquares_svd(x,y,NULL,n,p,NULL,nf,NULL,&chisq,fitFuncs,0);
 }
 
-void TKleastSquares_svd(double *x,double *y,double *sig2,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int),int weight)
+// Non-pulsar fit. No cholesky yet though...
+void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int),int weight)
 {
-   logerr("Not implemented");
-   exit(-1);
+   double **designMatrix, **white_designMatrix;
+   double basisFunc[nf];
+   double *b,*white_b;
+   int    i,j,k;
+
+   // double arrays
+   white_designMatrix=malloc_blas(n,nf);
+   designMatrix=malloc_blas(n,nf);
+   b=(double*)malloc(sizeof(double)*n);
+   white_b=(double*)malloc(sizeof(double)*n);
+
+   /* Determine the design matrix - eq 15.4.4 
+	* and the vector 'b' - eq 15.4.5 
+	*/
+   for (i=0;i<n;i++)
+   {
+	  // fitFuncs is not threadsafe!
+	  fitFuncs(x[i],basisFunc,nf);
+	  for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j];
+	  b[i] = y[i];
+   }
+
+   // deal with the weights if we are doing a weighted fit.
+   if(weight==1 && sig!=NULL){
+	  for (i=0;i<n;i++){
+		 white_b[i]=b[i]/sig[i];
+		 for (j=0;j<nf;j++) white_designMatrix[i][j] = designMatrix[i][j]/sig[i];
+	  }
+   }
+
+   // go ahead and do the fit!
+
+   *chisq = TKleastSquares(b,white_b,designMatrix,white_designMatrix,
+		 n,nf,1e-10,1,
+		 p,e,cvm);
+
+   free_blas(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
+   free_blas(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
+   free(b);
+   free(white_b);
+
+
 }
 
 void TKleastSquares_svd_passN(double *x,double *y,double *sig2,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,int),int weight)

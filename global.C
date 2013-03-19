@@ -41,6 +41,7 @@ int MAX_PSR   = MAX_PSR_VAL;    /* Maximum number of pulsars to fit simultaneous
 int MAX_OBSN  = MAX_OBSN_VAL;
 double ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
 int debugFlag = 0;
+int forceGlobalFit = 0;
 int writeResiduals=0;
 int tcheck = 0;
 clock_t timer_clk = 0;
