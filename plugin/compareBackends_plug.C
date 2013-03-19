@@ -84,6 +84,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
+  printf("\n\n");
+  printf("Please type in the flag ID and value for the two backends that should be compared\n");
+  printf("e.g., -f MULTI_PDFB4\n");
+  printf("\n\n");
   printf("Backend 1: enter flagID flagVal ");
   scanf("%s %s",flagID1,flagVal1);
   printf("Backend 2: enter flagID flagVal ");
@@ -116,9 +120,22 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
   float miny,maxy;
   int it=0;
   int xaxis=1;
+  int zoom=0;
+  float zoomX1,zoomX2,zoomY1,zoomY2;
+  float mouseX,mouseY,mouseX2,mouseY2;
 
   cpgbeg(0,"/xs",1,1);
   cpgask(0);
+  printf("\n\nYou should now see a pgplot display that shows the difference between the two backends\n");
+  printf("Also a file: output.dat has been written to disk giving:\n");
+  printf(" - filenames, residual difference, error bar on ToA 1, error bar on ToA 2\n");
+  printf("\n\n");
+  printf("Use the following keys in the pgplot window\n\n");
+  printf("q = quit\n");
+  printf("z = zoom in a region using the mouse cursor\n");
+  printf("u = unzoom\n");
+  printf("s = provide statistics on the data points within the zoomed region\n");
+  printf("r = define a new set of backends to compare\n\n");
   do {
     if (recalc==1)
       {
@@ -126,6 +143,7 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
 	n[it]=0;
 	for (i=0;i<psr[0].nobs;i++)
 	  {
+	    //	    printf("Processing observation: %d out of %d\n",i+1,psr[0].nobs);
 	    found1=found2=-1;
 	    for (k=0;k<psr[0].obsn[i].nFlags;k++)
 	      {
@@ -193,6 +211,13 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
 	      }
 	  }    
 	cpgsci(1);
+	if (zoom==1)
+	  {
+	    minx = zoomX1;
+	    miny = zoomY1;
+	    maxx = zoomX2;
+	    maxy = zoomY2;
+	  }
 	cpgenv(minx,maxx,miny,maxy,0,1);
 	cpglab("MJD","Difference (sec)","");
 	//	drawAxis=0;
@@ -215,6 +240,43 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
 	scanf("%s %s",flagID2,flagVal2);
 	it++;
       }
+    else if (key=='z')
+      {
+	cpgband(2,0,mx,my,&mouseX2,&mouseY2,&key);
+	zoom=1;
+	zoomX1 = TKretMin_f(mx,mouseX2);
+	zoomX2 = TKretMax_f(mx,mouseX2);
+	zoomY1 = TKretMin_f(my,mouseY2);
+	zoomY2 = TKretMax_f(my,mouseY2);	
+      }
+    else if (key=='s') // Statistics
+      {
+	double meanX=0.0,meanY=0.0;
+	double y2=0.0;
+	int nc=0,k;
+	for (k=0;k<=it;k++)
+	  {
+	    meanX = meanY = y2 = 0.0;
+	    nc  = 0;
+	    for (j=0;j<=n[k];j++)
+	      {
+		if (xval[k][j] > minx && xval[k][j] < maxx && yval[k][j] > miny && yval[k][j] < maxy)
+		  {
+		    meanX += xval[k][j];
+		    meanY += yval[k][j];
+		    y2 += pow(yval[k][j],2);
+		    nc++;
+		  }
+	      }
+	    printf("[%d] Range processed: minx = %g, maxx = %g, miny = %g, maxy = %g\n",k+1,minx,maxx,miny,maxy); 
+	    printf("[%d] MeanX = %g\n",k+1,meanX/(double)nc);
+	    printf("[%d] MeanY = %g (s) = %g (us) = %g (ns)\n",k+1,meanY/(double)nc,meanY/(double)nc*1e6,meanY/(double)nc*1e9);
+	    printf("[%d] Standard deviation in Y = %g (s) = %g (ns)\n",k+1,sqrt(y2/nc-pow(meanY/nc,2)),sqrt(y2/nc-pow(meanY/nc,2))*1e9);
+	  }
+	printf("-----------------------\n");
+      }
+    else if (key=='u')
+      zoom=0;
   } while (key!='q');
   cpgend();
 
