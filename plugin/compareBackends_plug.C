@@ -35,7 +35,7 @@
 using namespace std;
 
 
-void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,char *flagVal2);
+void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,char *flagVal2,char *grDev);
 
 void help() /* Display help */
 {
@@ -50,6 +50,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double globalParameter;
   char flagID1[128],flagID2[128];
   char flagVal1[128],flagVal2[128];
+  char grDev[128]="/xs";
 
   strcpy(flagID1,"-f");
   strcpy(flagID2,"-f");
@@ -71,6 +72,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
  	  strcpy(parFile[0],argv[++i]); 
 	  strcpy(timFile[0],argv[++i]);
 	}
+      else if (strcmp(argv[i],"-grDev")==0)
+	strcpy(grDev,argv[++i]);
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -93,13 +96,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   printf("Backend 2: enter flagID flagVal ");
   scanf("%s %s",flagID2,flagVal2);
 
-  runPlugin(psr,*npsr,flagID1,flagID2,flagVal1,flagVal2);
+  runPlugin(psr,*npsr,flagID1,flagID2,flagVal1,flagVal2,grDev);
 
 
   return 0;
 }
 
-void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,char *flagVal2)
+void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,char *flagVal2,char *grDev)
 {
   int i;
   int j,k;
@@ -124,7 +127,7 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
   float zoomX1,zoomX2,zoomY1,zoomY2;
   float mouseX,mouseY,mouseX2,mouseY2;
 
-  cpgbeg(0,"/xs",1,1);
+  cpgbeg(0,grDev,1,1);
   cpgask(0);
   printf("\n\nYou should now see a pgplot display that shows the difference between the two backends\n");
   printf("Also a file: output.dat has been written to disk giving:\n");
