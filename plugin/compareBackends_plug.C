@@ -72,7 +72,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
  	  strcpy(parFile[0],argv[++i]); 
 	  strcpy(timFile[0],argv[++i]);
 	}
-      else if (strcmp(argv[i],"-grDev")==0)
+      else if (strcasecmp(argv[i],"-grDev")==0)
 	strcpy(grDev,argv[++i]);
     }
 
