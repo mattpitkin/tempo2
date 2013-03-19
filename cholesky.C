@@ -189,6 +189,8 @@ void cholesky_readT2CholModel_R(double **m, double **mm, char* fname,double *res
 		 //
 		 if (strcmp(key,"CLEAR")==0 || strcmp(key,"END")==0){
 			psrJ[0]='\0';
+			mjd_start=0.0;
+			mjd_end=99999.0;
 			continue;
 		 }
 
@@ -469,7 +471,7 @@ void cholesky_readT2CholModel(double **m, char* fname,double *resx,double *resy,
    }
 
 
-   cholesky_readT2CholModel_R(m,mm,fname,resx,resy,rese,np,nc,ip,psr,psrJ,0.0,90000.0,0);
+   cholesky_readT2CholModel_R(m,mm,fname,resx,resy,rese,np,nc,ip,psr,psrJ,0.0,99999.0,0);
    for(i=0;i<np;i++)free(mm[i]);
    free(mm);
 
