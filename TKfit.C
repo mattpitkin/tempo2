@@ -67,6 +67,7 @@ void TKremovePoly_d(double *x,double *y,int n,int m)
    double chisq;
    double v[m];
 
+   logdbg("Remove polynomial n=%d m=%d",n,m);
    TKleastSquares_svd_noErr(x,y,n, p, m, TKfitPoly);  
 
    for (i=0;i<n;i++)
@@ -468,6 +469,7 @@ void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *
    b=(double*)malloc(sizeof(double)*n);
    white_b=(double*)malloc(sizeof(double)*n);
 
+   logdbg("Non pulsar least-squares fit. n=%d nf=%d",n,nf);
    /* Determine the design matrix - eq 15.4.4 
 	* and the vector 'b' - eq 15.4.5 
 	*/
@@ -481,10 +483,17 @@ void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *
 
    // deal with the weights if we are doing a weighted fit.
    if(weight==1 && sig!=NULL){
+	  logdbg("Divide by errors");
 	  for (i=0;i<n;i++){
 		 white_b[i]=b[i]/sig[i];
 		 for (j=0;j<nf;j++) white_designMatrix[i][j] = designMatrix[i][j]/sig[i];
 	  }
+   } else {
+	  for (i=0;i<n;i++){
+		 white_b[i]=b[i];
+		 for (j=0;j<nf;j++) white_designMatrix[i][j] = designMatrix[i][j];
+	  }
+
    }
 
    // go ahead and do the fit!

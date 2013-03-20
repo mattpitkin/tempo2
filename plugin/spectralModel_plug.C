@@ -173,11 +173,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
       if (i==0) {
-		 if (dcf_file[0]=='\0'){
-		   doFit(psr,*npsr,0);   /* Do the fitting     */
-		 } else {
-		   doFitDCM(psr,"NULL",dcf_file,*npsr,0);   /* Do the fitting     */
-		 }
+		 doFitAll(psr,*npsr,"NULL");
 	  }
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
