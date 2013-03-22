@@ -24,6 +24,7 @@ double consFunc_tel_dz(pulsar *psr,int i,int k, int order);
 
 double consFunc_quad_ifunc_p(pulsar *psr,int i,int k, int order);
 double consFunc_quad_ifunc_c(pulsar *psr,int i,int k, int order);
-
+double consFunc_qifunc_p_year(pulsar *psr,int i,int k,int order);
+double consFunc_qifunc_c_year(pulsar *psr,int i,int k,int order);
 
 void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double end, bool fixCMgrid);

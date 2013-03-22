@@ -34,6 +34,12 @@ std::string get_constraint_name(enum constraint c){
 			return "QIFUNC_p linear(C) = 0";
 		case constraint_quad_ifunc_p_2:
 			return "QIFUNC_p quadratic(C) = 0";
+		case constraint_quad_ifunc_c_0:
+			return "QIFUNC_c mean(C) = 0";
+		case constraint_quad_ifunc_c_1:
+			return "QIFUNC_c linear(C) = 0";
+		case constraint_quad_ifunc_c_2:
+			return "QIFUNC_c quadratic(C) = 0";
 		case constraint_tel_dx_0:
 			return "TEL_DX mean(C) = 0";
 		case constraint_tel_dx_1:
@@ -78,6 +84,30 @@ std::string get_constraint_name(enum constraint c){
 			return "IFUNC_YEAR C.sin(2t) = 0";
 		case constraint_ifunc_year_cos2:
 			return "IFUNC_YEAR C.cos(2t) = 0";
+		case constraint_qifunc_p_year_sin:
+			return "QIFUNC_p_YEAR C.sin(t) = 0";
+		case constraint_qifunc_p_year_cos:
+			return "QIFUNC_p_YEAR C.cos(t) = 0";
+		case constraint_qifunc_p_year_xsin:
+			return "QIFUNC_p_YEAR C.t.sin(t) = 0";
+		case constraint_qifunc_p_year_xcos:
+			return "QIFUNC_p_YEAR C.t.cos(t) = 0";
+		case constraint_qifunc_p_year_sin2:
+			return "QIFUNC_p_YEAR C.sin(2t) = 0";
+		case constraint_qifunc_p_year_cos2:
+			return "QIFUNC_p_YEAR C.cos(2t) = 0";
+		case constraint_qifunc_c_year_sin:
+			return "QIFUNC_c_YEAR C.sin(t) = 0";
+		case constraint_qifunc_c_year_cos:
+			return "QIFUNC_c_YEAR C.cos(t) = 0";
+		case constraint_qifunc_c_year_xsin:
+			return "QIFUNC_c_YEAR C.t.sin(t) = 0";
+		case constraint_qifunc_c_year_xcos:
+			return "QIFUNC_c_YEAR C.t.cos(t) = 0";
+		case constraint_qifunc_c_year_sin2:
+			return "QIFUNC_c_YEAR C.sin(2t) = 0";
+		case constraint_qifunc_c_year_cos2:
+			return "QIFUNC_c_YEAR C.cos(2t) = 0";
 
 		default:
 			return "UNKNOWN!";
@@ -348,6 +378,63 @@ double consFunc_ifunc(pulsar *psr,int i,int k,int order){
 
    }
    else return 0;
+}
+
+double consFunc_qifunc_p_year(pulsar *psr,int i,int k,int order){
+   /*
+	* Only operate on param=dmmodel and when fit parameter is 
+	* one of the frequency independant parts (i.e. last dmoffsNum).
+	*/
+   if(i==param_quad_ifunc_p && k < psr->quad_ifuncN_p){
+	  long double epoch = psr->param[param_pepoch].val[0];
+	  long double t = psr->quad_ifuncT_p[k%psr->quad_ifuncN_p]-epoch;
+	  long double x = 2.0*M_PI*t/365.25;
+	  switch (order){
+		 case 0:
+			return sin(x);
+		 case 1:
+			return cos(x);
+		 case 2:
+			return x*sin(x);
+		 case 3:
+			return x*cos(x);
+		 case 4:
+			return sin(2*x);
+		 case 5:
+			return cos(2*x);
+
+		 default:
+			return 0;
+	  }
+   } else return 0;
+}
+
+double consFunc_qifunc_c_year(pulsar *psr,int i,int k,int order){
+   /*
+	* Only operate on param=dmmodel and when fit parameter is 
+	* one of the frequency independant parts (i.e. last dmoffsNum).
+	*/
+   if(i==param_quad_ifunc_c && k < psr->quad_ifuncN_c){
+	  long double epoch = psr->param[param_pepoch].val[0];
+	  long double t = psr->quad_ifuncT_c[k%psr->quad_ifuncN_c]-epoch;
+	  long double x = 2.0*M_PI*t/365.25;
+	  switch (order){
+		 case 0:
+			return sin(x);
+		 case 1:
+			return cos(x);
+		 case 2:
+			return x*sin(x);
+		 case 3:
+			return x*cos(x);
+		 case 4:
+			return sin(2*x);
+		 case 5:
+			return cos(2*x);
+		 default:
+			return 0;
+	  }
+   } else return 0;
 }
 
 double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){

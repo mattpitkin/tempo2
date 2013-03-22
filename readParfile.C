@@ -779,11 +779,23 @@ else if (strcasecmp(str,"_DM")==0)
 	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_0;
 	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_1;
 	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_2;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_xsin;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_xcos;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin2;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos2;
       }
       if(strcasecmp(cname,"QIFUNC_c")==0){
 	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_0;
 	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_1;
 	      psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_2;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_xsin;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_xcos;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin2;
+	      psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos2;
       }
 
   }

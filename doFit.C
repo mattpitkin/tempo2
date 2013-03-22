@@ -2558,6 +2558,34 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 	  case constraint_ifunc_year_sin:
 		 return consFunc_ifunc_year(psr,i,k,order);
 
+		 // QIFUNC_p annual terms
+	  case constraint_qifunc_p_year_cos2:
+		 order++;
+	  case constraint_qifunc_p_year_sin2:
+		 order++;
+	  case constraint_qifunc_p_year_xcos:
+		 order++;
+	  case constraint_qifunc_p_year_xsin:
+		 order++;
+	  case constraint_qifunc_p_year_cos:
+		 order++;
+	  case constraint_qifunc_p_year_sin:
+		 return consFunc_qifunc_p_year(psr,i,k,order);
+
+		 // QIFUNC_c annual terms
+	  case constraint_qifunc_c_year_cos2:
+		 order++;
+	  case constraint_qifunc_c_year_sin2:
+		 order++;
+	  case constraint_qifunc_c_year_xcos:
+		 order++;
+	  case constraint_qifunc_c_year_xsin:
+		 order++;
+	  case constraint_qifunc_c_year_cos:
+		 order++;
+	  case constraint_qifunc_c_year_sin:
+		 return consFunc_qifunc_c_year(psr,i,k,order);
+
 	  default:
 		 return 0;
    }

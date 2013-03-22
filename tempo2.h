@@ -231,6 +231,18 @@ enum constraint {
 	constraint_ifunc_year_xcos,
 	constraint_ifunc_year_sin2,
 	constraint_ifunc_year_cos2,
+	constraint_qifunc_p_year_sin,
+	constraint_qifunc_p_year_cos,
+	constraint_qifunc_p_year_xsin,
+	constraint_qifunc_p_year_xcos,
+	constraint_qifunc_p_year_sin2,
+	constraint_qifunc_p_year_cos2,
+	constraint_qifunc_c_year_sin,
+	constraint_qifunc_c_year_cos,
+	constraint_qifunc_c_year_xsin,
+	constraint_qifunc_c_year_xcos,
+	constraint_qifunc_c_year_sin2,
+	constraint_qifunc_c_year_cos2,
 };
 
 
