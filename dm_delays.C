@@ -45,7 +45,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
   const char *CVS_verNum = "$Revision$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("dm_delays.C","dm_delays()",CVS_verNum);
-  logdbg("with pulsar %d; number of obs = %d",p,psr[p].nobs);
+  //  logdbg("with pulsar %d; number of obs = %d",p,psr[p].nobs);
 
   if (psr[p].obsn[i].delayCorr==0) /* No correction */
     {
@@ -59,7 +59,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       pospos = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
       for (k=0;k<3;k++)
 	pos[k] /= pospos;
-      logdbg("with pos = %f %f %f",pos[0],pos[1],pos[2]);      
+      //      logdbg("with pos = %f %f %f",pos[0],pos[1],pos[2]);      
       
       /* Calculate position of observatory from Sun */
       for (j=0;j<3;j++)
@@ -71,7 +71,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	  else
 	    rsa[j] = -psr[p].obsn[i].sun_ssb[j] + psr[p].obsn[i].earth_ssb[j] + psr[p].obsn[i].observatory_earth[j];
 	}
-      logdbg("with rsa = %f %f %f",rsa[0],rsa[1],rsa[2]);            
+      //      logdbg("with rsa = %f %f %f",rsa[0],rsa[1],rsa[2]);            
       //      printf("with rsa = %s %f %f %f\n",psr[p].obsn[i].fname,rsa[0],rsa[1],rsa[2]);            
       /* What about Sun from SSB? */
       for (j=0;j<3;j++)
@@ -98,7 +98,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	}
 	/*	vobs[j] = psr[p].obsn[i].earthMoonBary_ssb[j+3] - psr[p].obsn[i].earthMoonBary_earth[j+3] + 
 		psr[p].obsn[i].siteVel[j];*/
-      logdbg("with vobs = %f %f %f",vobs[0],vobs[1],vobs[2]);      
+      //      logdbg("with vobs = %f %f %f",vobs[0],vobs[1],vobs[2]);      
       // printf("with vobs = %s %g %g %g\n",psr[p].obsn[i].fname,vobs[0],vobs[1],vobs[2]);      
       r = sqrt(dotproduct(rsa,rsa));
       ctheta = dotproduct(pos,rsa)/r;
@@ -109,10 +109,10 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       if (psr[p].dilateFreq && freqf > 0 && psr[p].obsn[i].einsteinRate != 0.0)
       	freqf /= psr[p].obsn[i].einsteinRate;
 
-      logdbg("Transforming frequency due to Einstein delay");      
+      //      logdbg("Transforming frequency due to Einstein delay");      
       
       psr[p].obsn[i].freqSSB = freqf; /* Record observing frequency in barycentric frame */
-      logdbg("set freqSSB");      
+      //      logdbg("set freqSSB");      
       yrs = (psr[p].obsn[i].sat - psr[p].param[param_dmepoch].val[0])/365.25;
       dmDot=0.0;
       
@@ -125,9 +125,9 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	  if (psr[p].param[param_dm].paramSet[k]==1)
 	    dmDot+=(double)(psr[p].param[param_dm].val[k]*arg); 
 	}
-      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
+      //      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
       dmval = psr[p].param[param_dm].val[0]+dmDot;
-      logdbg("calculating dmval");      
+      //      logdbg("calculating dmval");      
       // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
 
 
@@ -219,7 +219,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 		  dmval+=(dmval2+psr[p].dmOffset);
 		}
 	    }
-	  logdbg("Looked for flags");      
+	  //	  logdbg("Looked for flags");      
 	}
       if (freqf<=1) /* Have infinitive frequency */
 	psr[p].obsn[i].tdis1 = 0.0;
@@ -231,7 +231,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 //	psr[p].obsn[i].tdis1 += dmval/pow(freqf/1e6,4.4); 
       }
 
-      logdbg("calculate tdis1");      
+      //      logdbg("calculate tdis1");      
       /* Add frequency dependent delay term */
       if (psr[p].param[param_fddc].paramSet[0]==1 && freqf>1)
 	psr[p].obsn[i].tdis1 += (double)(psr[p].param[param_fddc].val[0]/pow(freqf*1.0e-6,(double)psr[p].param[param_fddi].val[0]));
@@ -255,16 +255,16 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	    //	    psr[p].obsn[i].tdis2 = 1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr[p].ne_sw*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/freqf/freqf; 	    
 	}
 
-	  logdbg("[%d/%d] with tdis2 = %g, freqf = %g %g %g %d %g",i,
-		 psr[p].nobs,(double)psr[p].obsn[i].tdis2,(double)freqf,psr[p].obsn[i].freq,
-		 (1.0-voverc),psr[p].dilateFreq,psr[p].obsn[i].einsteinRate);      
+      //	  logdbg("[%d/%d] with tdis2 = %g, freqf = %g %g %g %d %g",i,
+      //	 psr[p].nobs,(double)psr[p].obsn[i].tdis2,(double)freqf,psr[p].obsn[i].freq,
+      //	 (1.0-voverc),psr[p].dilateFreq,psr[p].obsn[i].einsteinRate);      
 
       /* psr[p].obsn[i].tdis = (psr[p].param[param_dm].val/2.41e-16 +
 	 2.0e14*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/2.0)/freqf/freqf; */
       /* printf("Dispersion delay = %g\n",(double)(psr[p].obsn[i].tdis1+psr[p].obsn[i].tdis2));  */
 
     }
-      logdbg("Exiting dm_delays with pulsar %d; number of obs = %d",p,psr[p].nobs);
+  //        logdbg("Exiting dm_delays with pulsar %d; number of obs = %d",p,psr[p].nobs);
 
 }
 

@@ -224,7 +224,7 @@ initObservatories()
   readAliases(fname);
 
   observatories_initialised = 1;
-  //  logdbg("Leaving initObservatories");
+  logdbg("Leaving initObservatories");
 		   
 }
 
@@ -257,7 +257,7 @@ void lookup_observatory_alias(char *incode, char *outcode)
     strcpy(outcode, list->code);
   }
   else if (outcode!=incode) {
-      logdbg("Copying incode = '%s' over outcode\n", incode);
+    //      logdbg("Copying incode = '%s' over outcode\n", incode);
     strcpy(outcode, incode);
   }
 
