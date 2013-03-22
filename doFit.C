@@ -289,9 +289,11 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    if (DO_GLOBAL_FIT){
 	  int n[npsr],nf[npsr];
 	  int ntot=0;
+	  int nobs=0;
 
 	  for (p=0;p<npsr;p++) {
 		 n[p]=psr[p].nFit;
+		 nobs+=n[p];
 		 nf[p]=psr[p].nParam;
 		 ntot+=nf[p];
 	  }
@@ -313,7 +315,9 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  int offset=nglobal;
 	  for (p=0;p<npsr;p++) {
 		 psr[p].fitChisq = chisq; 
-		 psr[p].fitNfree = n[p]-nf[p]-nglobal;
+		 // G. Hobbs, update so that the global fitting 
+		 // gives the same reduced chisq for each pulsar
+		 psr[p].fitNfree = nobs-ntot;//n[p]-nf[p]-nglobal;
 		 logmsg("Update normal parameters for %s",psr->name);
 		 updateParameters(psr,p,val+offset,error+offset);
 		 offset+=nf[p];
