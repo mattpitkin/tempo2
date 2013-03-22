@@ -137,7 +137,7 @@ void callFit(pulsar *psr,int npsr)
       formBatsAll(psr,npsr);
       formResiduals(psr,npsr,1);
       /* Do the fitting */
-      if (iteration==0) doFit(psr,npsr,0);
+      if (iteration==0) doFitAll(psr,npsr,covarFuncFile);
       else textOutput(psr,npsr,globalParameter,0,0,0,"");
     }
 
