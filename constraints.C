@@ -127,66 +127,67 @@ void matrixDMConstraintWeights(pulsar *psr){
 
 		logdbg("Getting DM constraints for %s",psr->name);
 
-
+		printf("AT THIS POINT %d\n",psr->nobs);
 		// find out how many obs we have.
 		for(i=0; i < psr->nobs; i++){
-				if (psr->obsn[i].deleted==0)
-				{
-						char okay=1;
-						/* Check for START and FINISH flags */
-						if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
-										(psr->param[param_start].val[0] > psr->obsn[i].sat))
-								okay=0;
-						if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
-										psr->param[param_finish].val[0] < psr->obsn[i].sat)
-								okay=0;
-						if (okay==1)
-						{
-						   nobs++;
-						}
-				}
+		  if (psr->obsn[i].deleted==0)
+		    {
+		      char okay=1;
+		      /* Check for START and FINISH flags */
+		      if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+			  (psr->param[param_start].val[0] > psr->obsn[i].sat))
+			okay=0;
+		      if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+			  psr->param[param_finish].val[0] < psr->obsn[i].sat)
+			okay=0;
+		      if (okay==1)
+			{
+			  nobs++;
+			}
+		    }
 		}
-
-		double ** designMatrix=(double**)malloc_uinv(sizeof(double*)*nobs);
+		printf("AT THIS POINT 2 %d %d\n",psr->nobs,nobs);
+		// originally was sizeof(double*)*nobs.
+		double ** designMatrix=(double**)malloc_uinv(nobs);
 
 		double *e=(double*)malloc(sizeof(double)*nobs);
-		
+		printf("Allocated memory\n");
 		nobs=0;
 		for(i=0; i < psr->nobs; i++){
-				// Check for "ok" and start/finish coppied from dofit.
-				// Needs to be the same so that the weighting is the same as the fit,
-				// but in practice probably doesn't matter.
-				if (psr->obsn[i].deleted==0)
-				{
-						char okay=1;
-
-						/* Check for START and FINISH flags */
-						if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
-										(psr->param[param_start].val[0] > psr->obsn[i].sat))
-								okay=0;
-						if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
-										psr->param[param_finish].val[0] < psr->obsn[i].sat)
-								okay=0;
-						if (okay==1)
-						{
-								x   = (double)(psr->obsn[i].bbat-psr->param[param_pepoch].val[0]);
-								double sig=psr->obsn[i].toaErr*1e-6;
-								double dmf = 1.0/(DM_CONST*powl(psr->obsn[i].freqSSB/1.0e6,2));
-								for (k=0; k < nfit;k++){
-								   	
-								   if(k<nDM)
-									  designMatrix[nobs][k]=dmf*getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
-								   else
-									  designMatrix[nobs][k]=getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
-								   
-								}
-								nobs++;
-
-						}
-				}
+		  // Check for "ok" and start/finish coppied from dofit.
+		  // Needs to be the same so that the weighting is the same as the fit,
+		  // but in practice probably doesn't matter.
+		  if (psr->obsn[i].deleted==0)
+		    {
+		      char okay=1;
+		      
+		      /* Check for START and FINISH flags */
+		      if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+			  (psr->param[param_start].val[0] > psr->obsn[i].sat))
+			okay=0;
+		      if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+			  psr->param[param_finish].val[0] < psr->obsn[i].sat)
+			okay=0;
+		      if (okay==1)
+			{
+			  x   = (double)(psr->obsn[i].bbat-psr->param[param_pepoch].val[0]);
+			  double sig=psr->obsn[i].toaErr*1e-6;
+			  double dmf = 1.0/(DM_CONST*powl(psr->obsn[i].freqSSB/1.0e6,2));
+			  for (k=0; k < nfit;k++){
+			    
+			    if(k<nDM)
+			      designMatrix[nobs][k]=dmf*getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
+			    else
+			      designMatrix[nobs][k]=getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
+			    
+			  }
+			  nobs++;
+			  
+			}
+		    }
 		}
 
-
+		printf("HERE with %d %d\b",nobs,nfit);
 		TKleastSquares(NULL,NULL,designMatrix,designMatrix,nobs,nfit,1e-20,0,NULL,e,NULL);
 		double sum_wDM=0;
 		double sum_wCM=0;
