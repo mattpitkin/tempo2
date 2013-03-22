@@ -69,7 +69,7 @@ void toa2utc(pulsar *psr,int npsr)
 	{
 	  if (psr[p].obsn[i].clockCorr!=0 && psr[p].obsn[i].clockCorr!=2)
 	  {
-	    logdbg("Getting clock corrections for %d",i);
+	    //	    logdbg("Getting clock corrections for %d",i);
 	    getClockCorrections(psr[p].obsn+i, psr[p].clockFromOverride,
 				psr[p].clock, psr[p].noWarnings);
 	  }
