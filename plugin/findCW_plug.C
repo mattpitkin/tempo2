@@ -43,10 +43,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
+  char covarFuncFile[128];
   int i;
   double globalParameter;
   const char *CVS_verNum = "$Revision$";
   FILE *fout;
+
+  strcpy(covarFuncFile,"NULL");
 
   if (displayCVSversion == 1) CVSdisplayVersion((char *)"findCW.C",(char *)"plugin",CVS_verNum);
 
@@ -66,6 +69,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  strcpy(timFile[*npsr],argv[++i]);
 	  (*npsr)++;
 	}
+      else if (strcmp(argv[i],"-dcf")==0)
+	strcpy(covarFuncFile,argv[++i]);
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -80,7 +85,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       logdbg("Calling formResiduals");
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
       logdbg("Calling doFit");
-      if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
+      if (i==0) doFitAll(psr,*npsr,covarFuncFile);   /* Do the fitting     */
       else textOutput(psr,*npsr,globalParameter,0,0,0,(char *)"");  /* Display the output */
     }
 
