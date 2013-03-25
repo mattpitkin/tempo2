@@ -72,6 +72,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    FILE *fin,*fout;
    char fname[100],temp[100];
    int p,okay;
+   int nobs_noconstrain=0;
    double *x,*y,*sig,*val,chisq;
    double *error;
    double tol = 1.0e-27;  /* Tolerence for singular value decomposition routine */
@@ -153,6 +154,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
    {
 	  nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
+	  nobs_noconstrain += psr[p].nobs;
 	  ip[p]=(int*)malloc(sizeof(int)*nobs_and_constraints);
 	  logtchk("Processing pulsar %d",p);
 
@@ -318,6 +320,8 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 // G. Hobbs, update so that the global fitting 
 		 // gives the same reduced chisq for each pulsar
 		 psr[p].fitNfree = nobs-ntot;//n[p]-nf[p]-nglobal;
+		 psr[p].globalNfit = ntot;
+		 psr[p].globalNoConstrain = nobs_noconstrain;
 		 logmsg("Update normal parameters for %s",psr->name);
 		 updateParameters(psr,p,val+offset,error+offset);
 		 offset+=nf[p];

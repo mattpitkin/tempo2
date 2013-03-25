@@ -147,7 +147,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("Chisqr/nfree = %.2f/%d = %g\t",chisqr,psr[p].fitNfree,chisqr/(double)psr[p].fitNfree);
 	  printf("pre/post = %g\n",psr[p].rmsPre/psr[p].rmsPost);
 	}
-
+      if (psr[0].nGlobal > 0)
+	{
+	  printf("\nGlobal fit:\n\n");
+	  printf("Number of fit parameters in total, nt: %d\n",psr[p].globalNfit);
+	  printf("Number of observations without constraints, no: %d\n",psr[p].globalNoConstrain);
+	  printf("chisq/(nt-no) = %g\n",chisqr/(psr[p].globalNoConstrain-psr[p].globalNfit));
+	  printf("\n");
+	}
       if (psr[p].nconstraints > 0)
 	{
 	  printf("Number of points in fit (including constraint points) = %d\n",psr[p].nFit);
@@ -158,7 +165,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("Number of points in fit = %d\n",psr[p].nFit);
       if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
 	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
-      printf("Offset: %g %g\n",psr->offset,psr->offset_e);
+      printf("Offset: %g %g offset_e*sqrt(n) = %g n = %d\n",psr->offset,psr->offset_e,psr->offset_e*sqrt(psr[p].nFit-psr[p].nconstraints),psr[p].nFit-psr[p].nconstraints);
       printf("\n\n");
       printf("PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit\n");
       printf("---------------------------------------------------------------------------------------------------\n");
