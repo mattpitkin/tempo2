@@ -434,6 +434,8 @@ typedef struct pulsar {
   int    ndmx;                    /* Number of DM steps */
   double fitChisq;                /* Chisq value from the fit */
   int    fitNfree;                /* Number of degrees of freedom in fit */
+  int    globalNfit;              /* Total number of parameters in the fit */
+  int    globalNoConstrain;       /* Total number of points without constraints */
   int    nFit;                    /* Number of points in the fit */
   int    nParam;                  /* Number of parameters in the fit */
   int    nGlobal;                 /* Number of global parameters in the fit */
