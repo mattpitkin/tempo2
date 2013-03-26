@@ -147,6 +147,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("Chisqr/nfree = %.2f/%d = %g\t",chisqr,psr[p].fitNfree,chisqr/(double)psr[p].fitNfree);
 	  printf("pre/post = %g\n",psr[p].rmsPre/psr[p].rmsPost);
 	}
+      printf("Number of fit parameters: %d\n",psr[p].nParam);
       if (psr[0].nGlobal > 0)
 	{
 	  printf("\nGlobal fit:\n\n");

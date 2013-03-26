@@ -346,7 +346,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 if (npol!=0) /* Are we actually  doing any fitting? */ 
 		 { 
 
-			logdbg("Doing the fit");
+			logdbg("Doing the fit, npol = %d, nfit = %d",npol,psr[p].nFit);
 			logtchk("doing the fit");
 			TKleastSquares_single_pulsar(xx[p],yy[p],psr[p].nFit,val,error,npol,psr[p].covar,&chisq,
 				  FITfuncs,psr+p,tol,ip[p],1,uinvs[p]);
@@ -355,7 +355,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			logdbg("Complete fit: chisq = %f",(double)chisq);
 			//	  printf("chisq = %g\n",chisq);
 			psr[p].fitChisq = chisq; 
-			psr[p].fitNfree = psr[p].nFit-npol;
+			psr[p].fitNfree = (psr[p].nFit-psr[p].nconstraints)-npol;
 
 			/* Now update the parameters */
 			logdbg("Updating the parameters");
