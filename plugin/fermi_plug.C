@@ -21,6 +21,7 @@ static char random_letter(int is_cap);
 static char random_number();
 static void random_string(int length, char *str);
 float HTest(int Nphotons, float phases[]);
+void cpgpt(int n, const float *xpts, const longdouble *ypts, int symbol);
 
 // met2mjd: conversion of Mission Elapsed Time in TT to MJD
 longdouble met2mjd(double met)
@@ -59,8 +60,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             12 March 2013\n");
-	printf("Version:             5.7\n");
+	printf("Updated:             5 April 2013\n");
+	printf("Version:             5.8\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -90,13 +91,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	char output_prof_file[MAX_FILELEN];
 	char phasecol[32];
 	strcpy(phasecol,"PULSE_PHASE");
+    char barycol[32];
+    strcpy(barycol,"BARY_TIME");
 	char command[128];
 	
     char error_buffer[128];
-    char history[128];
+    char history[128+MAX_FILELEN];
 	int  par_file        = 0;
 	int  FT1_file	     = 0;
 	int  FT2_file	     = 0;
+    int  using_tt        = 1;
 	
 	int  ophase          = 0;
 	int  graph	         = 1;
@@ -106,8 +110,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	int  phase_replace   = 0;
     int  phasecol_set    = 0;
     int  phasecol_exists = 0;
+    int  bary_replace    = 0;
+    int  barycol_set     = 0;
+    int  barycol_exists  = 0;
     int  mint_set        = 0;
     int  maxt_set        = 0;
+
 
 	double intpart;
 
@@ -125,7 +133,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	long nrows_FT1,nrows_FT2;
 	double nulval = 0.;
 
-	int FT1_time_col,FT1_phase_col,FT2_time_col1,FT2_time_col2,FT2_pos_col;
+	int FT1_time_col,FT1_phase_col,FT1_bary_col,FT2_time_col1,FT2_time_col2,FT2_pos_col;
 	int nrows2, nrows3, rows_status, rows_left;
 	int max_rows = MAX_OBSN_VAL / 2;
 
@@ -259,6 +267,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			maxt_set = 1;
 			i++;
 		}
+		else if (strcmp(argv[i],"-bary")==0)
+		{
+			bary_replace = 1;
+		}
+		else if (strcmp(argv[i],"-barycol")==0)
+		{
+			strcpy(barycol,argv[i+1]);
+			barycol_set = 1;
+			i++;
+		}
 		else if (strcmp(argv[i],"-h")==0)
 		{
 			printf("\n TEMPO2 fermi plugin\n");
@@ -277,6 +295,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			printf("\t -col XXX: phases will be stored in column XXX. Default is PULSE_PHASE\n");
 			printf("\t -tmin XXX: event times smaller than MJD XXX will be skipped.\n");
 			printf("\t -tmax XXX: event times larger than MJD XXX will be skipped.\n");
+			printf("\t -bary: write out barycenter arrival times.\n");
+			printf("\t -barycol XXX: bats will be stored in column XXX. Default is BARY_TIME.\n");
 			printf("\t -h: this help.\n");
 			printf("===============================================");
 			printf("===============================================\n");
@@ -365,15 +385,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         
         if (kw_status <= 0)
         {
-            if (strcmp(value,"TT"))
+            if (strcmp(value,"TDB")==0) {
+                fprintf(stdout,"FT1 file has already been barycentered; will disable clock and delay corrections in phase computation.\n");
+                using_tt = 0;
+            }
+
+            else if (strcmp(value,"TT"))
             {
-                fprintf(stderr,"Error: TIMESYS is %s rather than TT; input file seems to have been barycentered.\n", value);
+                fprintf(stderr,"Error: TIMESYS is %s rather than TT or TDB; unable to proceed.\n", value);
                 exit(2);
             }
         }
         else
         {
-            fprintf(stderr, "Warning: unable to determine whether data have been barycentered (plugin will give wrong results if they have).\n");
+            fprintf(stderr, "Warning: unable to determine whether data are in a compatible time format; assuming TT. (Plugin will give wrong results if this is not the case!).\n");
         }
         
         // Load photon arrival times.
@@ -407,6 +432,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             {
                 phasecol_exists = 1;
             }
+    	}
+
+		if (bary_replace)
+		{
+            status = 0; // reset status in case added phase column above
+		    fits_get_colname(ft1,CASESEN,barycol,colname,&FT1_bary_col,&status);
+            barycol_exists = (status == 0);
+            
     	}
 	}
 	
@@ -450,6 +483,67 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             if (fits_movabs_hdu(ft1,2,NULL,&status) || fits_get_colname(ft1,CASEINSEN,phasecol,colname,&FT1_phase_col,&status))
             {
                 fprintf(stderr, "Unable to find column %s even after trying to create it.\n", phasecol);
+                exit(-1);
+            }
+            
+            status = 0;
+            
+            if (!fits_create_file(&ft_out, tempfits,  &status))
+            {
+                // Copy all HDUs one-by-one. In the process, make room for more header comments
+                status = 0;
+                i      = 1;
+                
+                while (!fits_movabs_hdu(ft1, i++, NULL, &status)) fits_copy_hdu(ft1, ft_out, 5, &status);
+        
+                if (status==END_OF_FILE) status=0;
+                else printf("Error happened while transferring\n");
+        
+                fits_close_file(ft_out, &status);
+            }
+            
+            fits_close_file(ft1, &status);
+        }
+        
+        if (status != 0)
+        {
+            fits_report_error(stderr, status);
+            exit(-1);
+        }
+        
+        if (rename(tempfits,FT1))
+        {
+            if (errno != ENOENT)
+            {
+                perror("Problem renaming temporary fits file");
+                exit(-1);
+            }
+        }
+    }
+
+	if (bary_replace)
+    {
+        char FT_in_filter[MAX_FILELEN+20];
+        status = 0; 
+        int ii = 1;
+        
+        if (barycol_exists)
+        {
+            printf("Replacing existing column %s.\n\n", barycol);
+            strcpy(FT_in_filter, FT1);
+        } 
+        else 
+        {
+            printf("Adding new column %s.\n\n", barycol);
+            sprintf(FT_in_filter, "%s[%d][col *;%s = -1.0]", FT1, 1, barycol);
+        }
+        
+        if (!fits_open_file(&ft1, FT_in_filter, READONLY, &open_status))
+        {
+            // Record the column number for later
+            if (fits_movabs_hdu(ft1,2,NULL,&status) || fits_get_colname(ft1,CASEINSEN,barycol,colname,&FT1_bary_col,&status))
+            {
+                fprintf(stderr, "Unable to find column %s even after trying to create it.\n", barycol);
                 exit(-1);
             }
             
@@ -567,27 +661,24 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	nrows2 		= min(rows_left,max_rows);
 
 	float *phase;
-	float *times;
-        
-	if (graph == 0)
-	{
-		phase  = (float *)calloc(max_rows,sizeof(float));
-		times  = (float *)calloc(max_rows,sizeof(float));
-	}
-	else if (nrows_FT1 > 300000)		// To avoid core dumps
-	{
-		printf("WARNING: large FT1 file, turning off graphical output.\n");
-		graph = 0;
-		
-		phase  = (float *)calloc(max_rows,sizeof(float));
-		times  = (float *)calloc(max_rows,sizeof(float));
-	}
-	else
-	{
-		phase  = (float *)calloc(nrows_FT1,sizeof(float));
-		times  = (float *)calloc(nrows_FT1,sizeof(float));
-	}	
-	
+	longdouble *times;
+    int arr_size = max_rows;
+
+    if (graph == 1)
+    {
+        if (nrows_FT1 > 300000)         // To avoid core dumps
+        {
+            printf("WARNING: large FT1 file, turning off graphical output.\n");
+            graph = 0;
+        }
+        else
+        {
+            arr_size = nrows_FT1;
+        }
+    }
+         
+    phase  = (float *)calloc(arr_size,sizeof(float));
+    times  = (longdouble *)calloc(arr_size,sizeof(longdouble));
 	float tmin   = 100000., tmax   = -100000.;
 	
 	
@@ -840,8 +931,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		{
 			psr->obsn[i].deleted = 0;
 			psr->obsn[i].nFlags = 0;
-			psr->obsn[i].delayCorr = 1;	// Correct delays for event i
-			psr->obsn[i].clockCorr = 1;	// Also make clock correction TT -> TDB
+			psr->obsn[i].delayCorr = using_tt;	// Correct delays for event i
+			psr->obsn[i].clockCorr = using_tt;	// Also make clock correction TT -> TDB
 
 			// Position replacements
 			for (k=0;k<3;k++) 
@@ -1062,6 +1153,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			fits_close_file(ft1, &status);		
 		}
 
+		if (bary_replace)
+		{
+  			if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
+    		{
+				fits_movabs_hdu(ft1,2,NULL,&status);
+				
+				for (event2=rows_status;event2<rows_status+nrows2;event2++)
+				{
+					if (graph == 0) i = event2 - rows_status;
+					else i = event2 - 1;
+
+                    // write out -1 for out-of-bounds events
+                    double met_TDB = phase[i]<0?-1:mjd2met(times[i]);
+					fits_write_col_dbl(ft1,FT1_bary_col,event2,1,1,&met_TDB,&status);
+				}
+			}
+
+			fits_close_file(ft1, &status);		
+		}
+
 		/* ------------------------------------------------- //
 		// End of the loop
 		// ------------------------------------------------- */	
@@ -1104,6 +1215,44 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		fits_close_file(ft1, &status);
 	}
+
+    if (bary_replace) 
+    {
+		sprintf(history,"Barycenter arrival times calculated with the TEMPO2 Fermi plugin using ephemeris %s",parFile[0]);
+		if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
+        {
+            // change TIMESYS and TIMEREF if we have clobbered the TIME column
+            if (strcasecmp(barycol,"TIME")==0)
+            {
+                char value[80];
+                char comment[80];
+                for(int hdr_ct=1;hdr_ct<3;hdr_ct++) {
+                    fits_movabs_hdu(ft1,hdr_ct,NULL,&status);
+                    status = 0;
+                    strcpy(value,"TDB");
+                    strcpy(comment,"type of time system that is used");
+                    fits_update_key(ft1,TSTRING,"TIMESYS",value,comment,&status);
+                    strcpy(value,"SOLARSYSTEM");
+                    strcpy(comment,"reference frame used for times");
+                    fits_update_key(ft1,TSTRING,"TIMEREF",value,comment,&status);
+                }
+            }
+
+            // now write history
+			fits_movabs_hdu(ft1,2,NULL,&status);
+			fits_write_history(ft1,history,&status);
+
+			if (status != 0)
+			{
+				fits_get_errstatus(status,error_buffer);
+				printf( "fits_insert_col: %s\n", error_buffer);
+				exit(-1);
+			}
+        }
+
+        fits_close_file(ft1, &status);
+    }
+        
 
 	if (output_file) fclose(outputf);
 	if (output_pos)  fclose(output_posf);
@@ -1441,6 +1590,17 @@ float HTest(int Nphotons, float phases[])
         }
 
         return max_h;
+}
+
+// version of cpgpt that handles longdouble arrays via copy
+void cpgpt(int n, const float *xpts, const longdouble *ypts, int symbol)
+{
+    float farray[n];
+    for (int cpy_ctr=0; cpy_ctr < n; cpy_ctr++)
+    {
+        farray[cpy_ctr] = float(ypts[cpy_ctr]);
+    }
+    cpgpt(n,xpts,farray,symbol);
 }
 
 char * plugVersionCheck = TEMPO2_h_VER;
