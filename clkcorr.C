@@ -318,6 +318,7 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
 	    clockFrom);
     sprintf(msg2,"%.1f",mjd);
     displayMsg(1,"CLK3",msg,msg2,warnings);
+	//logerr("no clock corrections available for clock %s -> %s for MJD %.1f",clockFrom,clockTo,mjd);
     //    printf("EXITING 1\n");
     free(edges); edges = NULL;
     DynamicArray_free(&names);
@@ -330,6 +331,7 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
 	    clockTo);
     sprintf(msg2,"%.1f",mjd);
     displayMsg(1,"CLK3",msg,msg2,warnings);
+	//logerr("no clock corrections available for clock %s -> %s for MJD %.1f",clockFrom,clockTo,mjd);
 
     //    printf("EXITING 2\n");
     free(edges); edges = NULL;
@@ -402,6 +404,7 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
     sprintf(msg,"no clock corrections available from %s to %s for MJD",
 	    clockFrom,clockTo);
     sprintf(msg2,"%.1f",mjd);
+	//logerr("no clock corrections available for clock %s -> %s for MJD %.1f",clockFrom,clockTo,mjd);
     displayMsg(1,"CLK7",msg,msg2,warnings);
     //    printf("EXITING 3\n");
     free(edges); edges = NULL;

@@ -934,7 +934,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       nf0  = (int)psr[p].param[param_f].val[0];
 	       ntpd = ((int)psr[p].obsn[i].bbat-(int)psr[p].param[param_pepoch].val[0]);
 	       phaseint = nf0*ntpd*86400.0;
-	       pnNew = (int)(phaseint + fortran_nint(phase5[i]));
+	       pnNew = (long long)(phaseint + fortran_nint(phase5[i]));
 	       if (pn0 == -1)
 		 {
 		   pn0 = pnNew;
