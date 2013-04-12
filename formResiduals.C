@@ -713,8 +713,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 {
 		   lambda_p = (double)psr[p].param[param_raj].val[0];
 		   beta_p   = (double)psr[p].param[param_decj].val[0];
-		   lambda   = psr[p].quad_ifunc_p_RA;
-		   beta     = psr[p].quad_ifunc_p_DEC;
+		   lambda   = psr[p].quad_ifunc_c_RA;
+		   beta     = psr[p].quad_ifunc_c_DEC;
 		   
 		   // Pulsar vector
 		   n1 = cosl(lambda_p)*cosl(beta_p);
