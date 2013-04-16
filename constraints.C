@@ -492,14 +492,16 @@ double consFunc_quad_ifunc_c(pulsar *psr,int i,int k,int order){
 }
 
 
-
-void autoConstraints(pulsar* psr){
+void autoConstraints(pulsar* psr_array, int ipsr,int npsr){
+   pulsar* psr = psr_array+ipsr;
    psr->nconstraints=0;
+
    char dmmodel = psr->param[param_dmmodel].fitFlag[0] && psr->dmoffsDMnum > 1;
    char cmmodel = psr->param[param_dmmodel].fitFlag[0] && psr->dmoffsCMnum > 1;
-   char ifunc = psr->param[param_ifunc].fitFlag[0];
-   char qifunc_p = psr->param[param_quad_ifunc_p].fitFlag[0];
-   char qifunc_c = psr->param[param_quad_ifunc_c].fitFlag[0];
+   // If these are global fits, only add the constraints to the first pulsar.
+   char ifunc = psr->param[param_ifunc].fitFlag[0]==1 || (ipsr==0 && psr->param[param_ifunc].fitFlag[0]==2);
+   char qifunc_p = psr->param[param_quad_ifunc_p].fitFlag[0] ==1 || (ipsr==0 && psr->param[param_quad_ifunc_p].fitFlag[0] ==2);
+   char qifunc_c = psr->param[param_quad_ifunc_c].fitFlag[0] ==1 || (ipsr==0 && psr->param[param_quad_ifunc_c].fitFlag[0] ==2);
    
 
    // offset

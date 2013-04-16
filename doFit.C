@@ -153,7 +153,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
    for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
    {
-	  if (psr[p].auto_constraints)autoConstraints(psr+p);
+	  if (psr[p].auto_constraints)autoConstraints(psr,p,npsr);
 	  nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
 	  nobs_noconstrain += psr[p].nobs;
 	  ip[p]=(int*)malloc(sizeof(int)*nobs_and_constraints);

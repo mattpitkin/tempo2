@@ -598,7 +598,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void calculate_bclt(pulsar *psr,int npsr);
 void secularMotion(pulsar *psr,int npsr);
 
-void autoConstraints(pulsar* psr);
+void autoConstraints(pulsar* psr, int ipsr,int npsr);
 void setPlugPath();
 
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[]);
