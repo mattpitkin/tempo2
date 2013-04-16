@@ -328,14 +328,10 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 offset+=nf[p];
 	  }
 
+	  /* Free the arrays created inside this section */
 	  free_uinv(cvm);
 	  free(val);
 	  free(error);
-	  for (p=0;p<npsr;p++) {
-		 free(yy[p]);      
-		 free(xx[p]);
-		 free(ip[p]);
-	  }
 
    } else {
 	  for (p=0;p<npsr;p++) { /* Loop over all the pulsars */
@@ -365,12 +361,9 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			logtchk("complete updating the parameter values");
 			logdbg("Completed updating the parameters");
 		 }   
-		 /* Free the vectors and matrices */
+		 /* Free the arrays created inside this section */
 		 free(error);
 		 free(val);
-		 free(yy[p]);      
-		 free(xx[p]);
-		 free(ip[p]);
 
 		 if (psr[p].param[param_track].paramSet[0]==1 && psr[p].param[param_track].val[0]==20)
 			psr[p].param[param_track].val[0]=40;
@@ -385,15 +378,22 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			printf("Calculating uncertainties on fitted parameters using a Monte-Carlo bootstrap method (%d)\n",psr[p].bootStrap);
 			bootstrap(psr,p,npsr);
 		 }
-		 logtchk("freeing memory");
-		 free_uinv(uinvs[p]);
-		 logtchk("complete freeing memory");
 	  }
+   }
+
+   logtchk("freeing memory");
+   for (p=0;p<npsr;p++) {
+	  free(yy[p]);      
+	  free(xx[p]);
+	  free(ip[p]);
+	  free_uinv(uinvs[p]);
    }
    free(ip);
    free(xx);
    free(yy);
    free(uinvs);
+
+   logtchk("complete freeing memory");
 }
 
 
