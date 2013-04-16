@@ -711,6 +711,10 @@ else if (strcasecmp(str,"_DM")==0)
   else if (strcasecmp(str,"CONSTRAIN")==0){
       char cname[1024];
       fscanf(fin, "%s",cname);
+
+      if((strcasecmp(cname,"AUTO")==0)){
+		 psr->auto_constraints=1;
+	  }
       /*
        * Constraints for DMMODEL.
        * The DMMODEL constraint affects 4 constraints.

@@ -161,6 +161,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nToffset = 0;
   psr->ndmx = 0;
   psr->nconstraints = 0;
+  psr->auto_constraints = 0;
   psr->jboFormat=0;
   for (i=0;i<MAX_JUMPS;i++)
     {

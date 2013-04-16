@@ -548,6 +548,7 @@ typedef struct pulsar {
 
   int nconstraints;                       /* Number of fit constraints specified                      */
   enum constraint constraints[MAX_PARAMS];/* Which constraints are specified */
+  char auto_constraints;
 } pulsar;
 
 // PLUGIN FUNCTIONS
@@ -597,6 +598,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void calculate_bclt(pulsar *psr,int npsr);
 void secularMotion(pulsar *psr,int npsr);
 
+void autoConstraints(pulsar* psr);
 void setPlugPath();
 
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[]);

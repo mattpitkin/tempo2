@@ -1040,165 +1040,169 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		}
 
 	  // add constraints
-	  for (int i = 0; i < psr[p].nconstraints; i++){
-		  if (psr[p].constraints[i]==constraint_dmmodel_mean){
-			fprintf(fout2,"CONSTRAIN DMMODEL\n");
-		  }
+	  if (psr[p].auto_constraints){
+		 fprintf(fout2,"CONSTRAIN AUTO\n");
+	  } else {
+		 for (int i = 0; i < psr[p].nconstraints; i++){
+			if (psr[p].constraints[i]==constraint_dmmodel_mean){
+			   fprintf(fout2,"CONSTRAIN DMMODEL\n");
+			}
+		 }
 	  }
 	  fclose(fout2);	 
-	    }
+		}
 	}
-      /* printf("Precision: routine, precision, comment\n");
-	 for (i=0;i<psr[p].nStorePrecision;i++)
-	 {
-	 printf("%s\t%Lg\t%s\n",psr[p].storePrec[i].routine,psr[p].storePrec[i].minPrec,
-	 psr[p].storePrec[i].comment);
-	 } */
-    }
-  
+	  /* printf("Precision: routine, precision, comment\n");
+		 for (i=0;i<psr[p].nStorePrecision;i++)
+		 {
+		 printf("%s\t%Lg\t%s\n",psr[p].storePrec[i].routine,psr[p].storePrec[i].minPrec,
+		 psr[p].storePrec[i].comment);
+		 } */
+	}
+
   if (nGlobal > 0)
-    { 
-      printf("Global Parameters:\n\n");
-      printf("Global term = %g\n",globalParameter);
-      printf("------------------------------------------------------------------------------------\n");
-    }
+  { 
+	 printf("Global Parameters:\n\n");
+	 printf("Global term = %g\n",globalParameter);
+	 printf("------------------------------------------------------------------------------------\n");
+  }
 }
 
 double calcRMS(pulsar *psr,int p)
 {
-  double sumwt=0.0,rms_pre=0.0,rms_post=0.0,wgt=0.0,sumsq_post=0.0;
-  double sumsq_pre=0.0,sum_pre=0.0,sum_post=0.0,mean_post=0.0,mean_pre=0.0;
-  int i,count=0;
+   double sumwt=0.0,rms_pre=0.0,rms_post=0.0,wgt=0.0,sumsq_post=0.0;
+   double sumsq_pre=0.0,sum_pre=0.0,sum_post=0.0,mean_post=0.0,mean_pre=0.0;
+   int i,count=0;
 
-  for (i=0;i<psr[p].nobs;i++)
-    {
-      if (psr[p].obsn[i].deleted==0 &&
-	  (psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]!=1 ||	  
-	   psr[p].param[param_start].val[0] < psr[p].obsn[i].bat) &&
-	  (psr[p].param[param_finish].paramSet[0]!=1 || psr[p].param[param_finish].fitFlag[0]!=1 ||
-	   psr[p].param[param_finish].val[0] > psr[p].obsn[i].bat))
-	{
-	  mean_pre += (double)psr[p].obsn[i].prefitResidual;	  
-	  if (psr[p].fitMode==1) 
-	    wgt = 1.0 /
-	      (1.0e-6*psr[p].obsn[i].toaErr*psr[p].param[param_f].val[0]*
-		1.0e-6*psr[p].obsn[i].toaErr*psr[p].param[param_f].val[0]);
-	  else wgt=1.0/(1.0e-6*psr[p].param[param_f].val[0]*1.0e-6*psr[p].param[param_f].val[0]);
-	  sumsq_pre += (double)(wgt*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]);
-	  sum_pre   += (double)(wgt*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]);
-	  
-	  sumsq_post += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
-	  sum_post   += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
-	  sumwt += wgt;
-	  mean_post += (double)psr[p].obsn[i].residual;
-	  count++;
-	}
-    }
-    logdbg("textOutput %g %g %d",mean_pre,mean_post,count);
-  mean_pre/=count;
-  mean_post/=count;
-  
-  rms_pre = sqrt((sumsq_pre-sum_pre*sum_pre/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
-  rms_post = sqrt((sumsq_post-sum_post*sum_post/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
-    logdbg("textOutput %g %g %g %G %d",rms_pre,rms_post,sumsq_pre,sum_pre,count);
+   for (i=0;i<psr[p].nobs;i++)
+   {
+	  if (psr[p].obsn[i].deleted==0 &&
+			(psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]!=1 ||	  
+			 psr[p].param[param_start].val[0] < psr[p].obsn[i].bat) &&
+			(psr[p].param[param_finish].paramSet[0]!=1 || psr[p].param[param_finish].fitFlag[0]!=1 ||
+			 psr[p].param[param_finish].val[0] > psr[p].obsn[i].bat))
+	  {
+		 mean_pre += (double)psr[p].obsn[i].prefitResidual;	  
+		 if (psr[p].fitMode==1) 
+			wgt = 1.0 /
+			   (1.0e-6*psr[p].obsn[i].toaErr*psr[p].param[param_f].val[0]*
+				1.0e-6*psr[p].obsn[i].toaErr*psr[p].param[param_f].val[0]);
+		 else wgt=1.0/(1.0e-6*psr[p].param[param_f].val[0]*1.0e-6*psr[p].param[param_f].val[0]);
+		 sumsq_pre += (double)(wgt*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]);
+		 sum_pre   += (double)(wgt*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]);
+
+		 sumsq_post += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
+		 sum_post   += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
+		 sumwt += wgt;
+		 mean_post += (double)psr[p].obsn[i].residual;
+		 count++;
+	  }
+   }
+   logdbg("textOutput %g %g %d",mean_pre,mean_post,count);
+   mean_pre/=count;
+   mean_post/=count;
+
+   rms_pre = sqrt((sumsq_pre-sum_pre*sum_pre/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
+   rms_post = sqrt((sumsq_post-sum_post*sum_post/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
+   logdbg("textOutput %g %g %g %G %d",rms_pre,rms_post,sumsq_pre,sum_pre,count);
 
 
-  psr[p].rmsPre  = rms_pre;
-  psr[p].rmsPost = rms_post;
-  psr[p].param[param_tres].val[0] = rms_post;
-  psr[p].param[param_tres].paramSet[0] = 1;
-  return sumwt;
+   psr[p].rmsPre  = rms_pre;
+   psr[p].rmsPost = rms_post;
+   psr[p].param[param_tres].val[0] = rms_post;
+   psr[p].param[param_tres].paramSet[0] = 1;
+   return sumwt;
 }
 
 /* ************************************************************************
    m2 - solves mass function for m2, using the Newton-Raphson method
-   
-   where:  mf = mass function
-   m1 = primary mass
-   si = sin(i) (i = inclination angle)
-   
-   solves: (m1+m2)^2 = (m2*si)^3 / mf
-   
-   returns -1 on error
-   
-   WVS Jan 2000
-************************************************************************ */
+
+where:  mf = mass function
+m1 = primary mass
+si = sin(i) (i = inclination angle)
+
+solves: (m1+m2)^2 = (m2*si)^3 / mf
+
+returns -1 on error
+
+WVS Jan 2000
+ ************************************************************************ */
 
 double m2(longdouble mf, longdouble sini, longdouble m1)
 {
-  double guess = m1;
-  double dx = 0.0;
-  double eq = 0.0;
-  double deq_dm2 = 0.0;
-  int gi = 0;
+   double guess = m1;
+   double dx = 0.0;
+   double eq = 0.0;
+   double deq_dm2 = 0.0;
+   int gi = 0;
 
-  for (gi=0; gi<10000; gi++) {
-    eq = pow(m1+guess,2) - pow(guess*sini,3) / mf;
-    deq_dm2 = 2.0*(m1+guess) - 3.0 * pow(guess*sini,2) / mf;
+   for (gi=0; gi<10000; gi++) {
+	  eq = pow(m1+guess,2) - pow(guess*sini,3) / mf;
+	  deq_dm2 = 2.0*(m1+guess) - 3.0 * pow(guess*sini,2) / mf;
 
-    dx = eq / deq_dm2;
-    guess -= dx;
+	  dx = eq / deq_dm2;
+	  guess -= dx;
 
-    if (fabs (dx) <= fabs(guess)*1e-10)
-      return guess;
-  }
-  fprintf (stdout,"m2: maximum iterations exceeded - %lf\n", fabs(dx/guess));
-  return -1.0;
+	  if (fabs (dx) <= fabs(guess)*1e-10)
+		 return guess;
+   }
+   fprintf (stdout,"m2: maximum iterations exceeded - %lf\n", fabs(dx/guess));
+   return -1.0;
 }
 
 void printGlitch(pulsar psr)
 {
-  double glep1z,glep2z,glepe;
-  int iph;
-  double fph;
-  double dfof,edfof;
-  double df1of1,edf1of1;
+   double glep1z,glep2z,glepe;
+   int iph;
+   double fph;
+   double dfof,edfof;
+   double df1of1,edf1of1;
 
-  iph = fortran_nint((double)psr.param[param_glph].val[0]);
-  fph = (double)psr.param[param_glph].val[0]-iph;
+   iph = fortran_nint((double)psr.param[param_glph].val[0]);
+   fph = (double)psr.param[param_glph].val[0]-iph;
 
-  glep1z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph);
-  if (fph >= 0)
-    glep2z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph-1);
-  else
-    glep2z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph+1);
+   glep1z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph);
+   if (fph >= 0)
+	  glep2z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph-1);
+   else
+	  glep2z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph+1);
 
-  //  glepe=ferr(NPAR1+(i-1)*NGLP+1)/
-  glepe = (double)psr.param[param_glph].err[0]/(double)(fabs(psr.param[param_glf0].val[0]+psr.param[param_glf0d].val[0])*86400.0);
+   //  glepe=ferr(NPAR1+(i-1)*NGLP+1)/
+   glepe = (double)psr.param[param_glph].err[0]/(double)(fabs(psr.param[param_glf0].val[0]+psr.param[param_glf0d].val[0])*86400.0);
 
-  printf("MJD for zero glitch phase = %.6f or %.6f, error = %g\n",glep1z,glep2z,glepe);
+   printf("MJD for zero glitch phase = %.6f or %.6f, error = %g\n",glep1z,glep2z,glepe);
 
-  dfof = (double)(psr.param[param_glf0].val[0]/psr.param[param_f].val[0]);
-  edfof = (double)(psr.param[param_glf0].err[0]/psr.param[param_f].val[0]);
-  printf("Delta f/f = %g +/- %g\n",dfof,edfof);
+   dfof = (double)(psr.param[param_glf0].val[0]/psr.param[param_f].val[0]);
+   edfof = (double)(psr.param[param_glf0].err[0]/psr.param[param_f].val[0]);
+   printf("Delta f/f = %g +/- %g\n",dfof,edfof);
 
-  df1of1 = (double)(psr.param[param_glf1].val[0]/psr.param[param_f].val[1]);
-  edf1of1 = (double)(psr.param[param_glf1].err[0]/fabs(psr.param[param_f].val[1]));
-  printf("Delta f1/f1 = %g +/- %g\n",df1of1,edf1of1);
+   df1of1 = (double)(psr.param[param_glf1].val[0]/psr.param[param_f].val[1]);
+   edf1of1 = (double)(psr.param[param_glf1].err[0]/fabs(psr.param[param_f].val[1]));
+   printf("Delta f1/f1 = %g +/- %g\n",df1of1,edf1of1);
 }
 
 double dglep(pulsar psr,int gn,double fph)
 {
-  double tds,plim,dph,t1;
-  int niter;
-  
-  tds = psr.param[param_gltd].val[gn]*86400.0;
-  niter=0;
-  plim=1.0e-6;
-  dph = 1000.0;
-  t1 = -fph/(psr.param[param_glf0].val[gn]+psr.param[param_glf0d].val[gn]);
-  do {
-    dph = fph + psr.param[param_glf0].val[gn]*t1 + 0.5*psr.param[param_glf1].val[gn]*t1*t1;
-    if (tds > 0.0) dph=dph+psr.param[param_glf0d].val[gn]*tds*(1.0-exp(-t1/tds));
-    t1=t1-dph/(psr.param[param_glf0].val[gn]+psr.param[param_glf0d].val[gn]);
-    niter++;
-    if (niter>1000)
-      {
-	printf("WARNING: Glitch epoch convergence failed\n");
-	return 0;
-      }
-  }while (fabs(dph) > plim);
-  return t1/86400.0;
+   double tds,plim,dph,t1;
+   int niter;
+
+   tds = psr.param[param_gltd].val[gn]*86400.0;
+   niter=0;
+   plim=1.0e-6;
+   dph = 1000.0;
+   t1 = -fph/(psr.param[param_glf0].val[gn]+psr.param[param_glf0d].val[gn]);
+   do {
+	  dph = fph + psr.param[param_glf0].val[gn]*t1 + 0.5*psr.param[param_glf1].val[gn]*t1*t1;
+	  if (tds > 0.0) dph=dph+psr.param[param_glf0d].val[gn]*tds*(1.0-exp(-t1/tds));
+	  t1=t1-dph/(psr.param[param_glf0].val[gn]+psr.param[param_glf0d].val[gn]);
+	  niter++;
+	  if (niter>1000)
+	  {
+		 printf("WARNING: Glitch epoch convergence failed\n");
+		 return 0;
+	  }
+   }while (fabs(dph) > plim);
+   return t1/86400.0;
 }
 //
 // Function to determine the error in the DM estimations and apply this to the 

@@ -493,6 +493,100 @@ double consFunc_quad_ifunc_c(pulsar *psr,int i,int k,int order){
 
 
 
+void autoConstraints(pulsar* psr){
+   psr->nconstraints=0;
+   char dmmodel = psr->param[param_dmmodel].fitFlag[0] && psr->dmoffsDMnum > 1;
+   char cmmodel = psr->param[param_dmmodel].fitFlag[0] && psr->dmoffsCMnum > 1;
+   char ifunc = psr->param[param_ifunc].fitFlag[0];
+   char qifunc_p = psr->param[param_quad_ifunc_p].fitFlag[0];
+   char qifunc_c = psr->param[param_quad_ifunc_c].fitFlag[0];
+   
+
+   // offset
+   if (cmmodel) psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
+   if (dmmodel) psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
+   if (ifunc) psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+   if (qifunc_p) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_0;
+   if (qifunc_c) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_0;
+
+   // F0
+   if(psr->param[param_f].fitFlag[0]){
+	  if(dmmodel)psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_1;
+	  if (ifunc) psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
+	  if (qifunc_p) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_1;
+	  if (qifunc_c) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_1;
+   }
+   //F1
+   if(psr->param[param_f].fitFlag[1]){
+	  if(dmmodel)psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_2;
+	  if (ifunc) psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
+	  if (qifunc_p) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_2;
+	  if (qifunc_c) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_2;
+
+   }
+   //F2
+   if(psr->param[param_f].fitFlag[2]){
+	  if(dmmodel)psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_3;
+   }
+
+   // RA/DEC
+   if (psr->param[param_raj].fitFlag[0] || psr->param[param_decj].fitFlag[0]){
+	  if(dmmodel){
+		 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin;
+		 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos;
+	  }
+	  if (ifunc){
+		 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin;
+		 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos;
+	  }
+	  if (qifunc_p){
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin;
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos;
+	  }
+	  if (qifunc_c){
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin;
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos;
+	  }
+   }
+   if (psr->param[param_pmra].fitFlag[0] || psr->param[param_pmdec].fitFlag[0]){
+	  if(dmmodel){
+		 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xsin;
+		 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xcos;
+	  }
+	  if (ifunc){
+		 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xsin;
+		 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xcos;
+	  }
+	  if (qifunc_p){
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_xsin;
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_xcos;
+	  }
+	  if (qifunc_c){
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_xsin;
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_xcos;
+	  }
+   }
+   if (psr->param[param_px].fitFlag[0]){
+	  if(dmmodel){
+		 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin2;
+		 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos2;
+	  }
+	  if (ifunc){
+		 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin2;
+		 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos2;
+	  }
+	  if (qifunc_p){
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin2;
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos2;
+	  }
+	  if (qifunc_c){
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin2;
+		 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos2;
+	  }
+   }
+
+
+}
 
 
 
