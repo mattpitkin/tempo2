@@ -1,3 +1,4 @@
+aicc_plug.C
 plk_plug.C
 splk_plug.C
 plotMany_plug.C
@@ -12,3 +13,4 @@ fixData_plug.C
 clock_plug.C
 GWbkgrd_plug.C
 spectralModel_plug.C
+findCW_plug.C
