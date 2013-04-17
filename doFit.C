@@ -226,11 +226,13 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  // add constraints as extra pseudo observations
 	  // These point to non-existant observations after the nobs array
 	  // These are later caught by getParamDeriv.
+	  double constraint_sigma=1e-12;
+	  if (psr[p].fitMode == 0) constraint_sigma=1e-6;
 	  for (i=0; i < psr[p].nconstraints; i++){
 		 ip[p][count] = psr[p].nobs+i;
 		 x[count]=x[last];
 		 y[count]=0;
-		 sig[count]=1e-12;
+		 sig[count]=constraint_sigma;
 		 count++;
 	  }
 
