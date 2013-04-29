@@ -50,7 +50,7 @@
 
 using namespace std;
 
-#define MAX_SPEC_BINS 1024
+#define MAX_SPEC_BINS 10000
 double OMEGA0=0; 
 
 long double toffset = 52601.0L;
@@ -100,6 +100,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  if (strcmp(argv[i],"-nspec")==0) {
 		 nSpec=atoi(argv[++i]);
 	  }
+
 	  if (strcmp(argv[i],"-window")==0) {
 		 compute_spectral_window=true;
 	  }
@@ -199,7 +200,15 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
 	  logdbg("nSpec hardcoded to %d",*nSpec);
    }
 
+   if (*nSpec >= MAX_SPEC_BINS){
+	  logerr("nSpec too large! %d > %d",*nSpec,MAX_SPEC_BINS);
+	  logmsg("Change MAX_SPEC_BINS in cholSpectra");
+	  exit(1);
+   }
+
    // Must calculate uinv for the pulsar
+   //
+//   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
    calcSpectra_ri(uinv,resx,resy,psr->nobs,px,py_r,py_i,*nSpec);
 
    sprintf(fname,"%s.spec",psr->name);
