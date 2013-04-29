@@ -504,7 +504,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			      +  4.0*pow(sqrt(psr[p].covar[c2][c2])/pb,2) 
 			      - 12.0*psr[p].covar[c1][c2]*SPEED_LIGHT/(a1*pb));
 	      printf(" +- %.12f solar masses \n",err);
-	      printf("Minimum, median and maximum companion mass: %.4f < %.4f < %.4f solar masses\n",
+	      printf("Minimum, median and maximum companion mass: %.4g < %.4f < %.4f solar masses\n",
 		     m2(fn,1.0,1.35),m2(fn,0.866025403,1.35),m2(fn,0.4358898944,1.35));
 
 	      

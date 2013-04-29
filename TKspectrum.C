@@ -1859,7 +1859,7 @@ void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int 
    double w = GLOBAL_OMEGA;
    double A=0;
 
-//   logmsg("%lf %lf %d %d",x,w,ival,psr->nobs);
+   //   logmsg("%lf %lf %d %d",x,w,ival,psr->nobs);
    v[0] = 0; // Fit for mean
    v[1]=0; // will be cos
    v[2]=0; // will be sin
@@ -1890,7 +1890,7 @@ void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int 
 	  m=1/pow(x0-x1,2);
 	  c=-x1/pow(x0-x1,2);
 
-//	  logmsg("L) x0=%lf x1=%lf m=%lg c=%lg",x0,x1,m,c);
+	  //	  logmsg("L) x0=%lf x1=%lf m=%lg c=%lg",x0,x1,m,c);
 	  i0=m*x0*x0/2.0 + c*x0;
 	  i1=m*x1*x1/2.0 + c*x1;
 	  v[0]+=i0-i1;
@@ -1909,9 +1909,9 @@ void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int 
    v[1]/=A; // normalise to 1 in case we only had half the triangle.
    v[2]/=A;
 
- //  double old[3];
- //  fitMeanSineFunc(x, old,nfit,psr,ival);
-//   logmsg("%lg %lg --  %lg %lg -- %lg %lg\n",v[0],old[0],v[1],old[1],v[2],old[2]);
+   //  double old[3];
+   //  fitMeanSineFunc(x, old,nfit,psr,ival);
+   //   logmsg("%lg %lg --  %lg %lg -- %lg %lg\n",v[0],old[0],v[1],old[1],v[2],old[2]);
 }
 
 

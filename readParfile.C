@@ -691,10 +691,11 @@ else if (strcasecmp(str,"_DM")==0)
     {
       int nCM = psr->dmoffsCMnum;
 	  double mjd,val,err;
+	  err=0;
       fscanf(fin,"%lf %lf %lf",&mjd,&val,&err);
 	  psr->dmoffsCM_mjd[nCM]=mjd;
 	  psr->dmoffsCM[nCM]=val;
-      psr->dmoffsCM_error[nCM] = 0;
+      psr->dmoffsCM_error[nCM] = err;
       psr->dmoffsCM_weight[nCM] = 1;
 
 	  (psr->dmoffsCMnum)++;
