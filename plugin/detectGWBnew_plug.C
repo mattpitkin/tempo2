@@ -564,13 +564,15 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
    }
 
    const int ninObs = psr->dmoffsCMnum;
+   int nfakeObs;
+   double dt;
    if (notim==0){
-   const int nfakeObs = (int)(4*((endOverlap-startOverlap)/(double)(stepMJD)+0.5));
-   const double dt=(endOverlap-startOverlap)/(double)(nfakeObs-1); // this should be the same as stepMJD/4, but just in case.
+	  nfakeObs = (int)(4*((endOverlap-startOverlap)/(double)(stepMJD)+0.5));
+	  dt=(endOverlap-startOverlap)/(double)(nfakeObs-1); // this should be the same as stepMJD/4, but just in case.
    } else {
 	  // if I simulated the CM then don't interpolate
-   const int nfakeObs = ninObs;
-   const double dt=stepMJD;
+	  nfakeObs = ninObs;
+	  dt=stepMJD;
    }
 
    double *ifunc_in = (double*)malloc(sizeof(double)*ninObs);
