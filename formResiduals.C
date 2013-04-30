@@ -502,9 +502,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                  //  a2 = (g1*d3-d1*g3)/(d1*g2-g1*d2);
                  //  a3 =1.0; 
 		 // }
-                   a1 = -(d2*g3-d3*g2);
-                   a2 = -(d3*g1-d1*g3);
-                   a3 = -(d1*g2-d2*g1);
+                   a1 =  (d2*g3-d3*g2);
+                   a2 =  (d3*g1-d1*g3);
+                   a3 =  (d1*g2-d2*g1);
 		   /* conver it to unit vector */
 		   ma = sqrt(a1*a1 +a2*a2 + a3*a3);
 		   a1 = a1/ma;
