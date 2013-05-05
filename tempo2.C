@@ -374,7 +374,7 @@ int main(int argc, char *argv[])
 	  psr[0].param[param_tzrfrq].paramSet[0]=1;
 	  psr[0].param[param_tzrfrq].val[0] = 1400.0;
 	}
-      if (strlen(psr[0].tzrsite)<1)
+      if (strcmp(psr[0].tzrsite,"NULL")==0)
 	{
 	  printf("WARNING: tzrsite not set.  Setting to %s\n",sitename);
 	  strcpy(psr[0].tzrsite,sitename);
@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
       char sitename[64];
       long double mjd_start, mjd_end;
       long double freq_start, freq_end;
-
+      printf("Calculating predictor >%s<\n",psr[0].tzrsite);
       if (sscanf(polyco_args, "%s %Lf %Lf %Lf %Lf %d %d %Lf", sitename,
 		 &mjd_start, &mjd_end, &freq_start, &freq_end,
 		 &ntimecoeff, &nfreqcoeff, &seg_length)!=8)

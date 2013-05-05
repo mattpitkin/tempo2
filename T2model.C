@@ -176,10 +176,10 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
         printf("ERROR [T2] T0 or TASC needs to be set in the parameter file\n");
         exit(1);
       }
-      logdbg("going to update Parameters");
+      //      logdbg("going to update Parameters");
       /* Update parameters with their time derivatives */
       updateParameters(edot,xdot,eps1dot,eps2dot,tt0,&ecc,&x,&eps1,&eps2);
-      logdbg("updated parameters");
+      //      logdbg("updated parameters");
 
       /* Do some checks */
       if (ecc < 0.0 || ecc > 1.0)
@@ -200,10 +200,10 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
       
       if (psr[p].param[param_ecc].paramSet[com]==1)
         {
-          logdbg("going to compute U");
+	  //          logdbg("going to compute U");
           /* Compute eccentric anomaly u by iterating Kepler's equation */	 
           computeU(phase,ecc,&u);
-          logdbg("computed U");
+	  //          logdbg("computed U");
           /*  DD equations 17b and 17c */
           su=sin(u); cu=cos(u);
           onemecu=1.0-ecc*cu;
@@ -215,11 +215,11 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
           omega=omz/rad2deg + omdot*ae;
           sw=sin(omega);
           cw=cos(omega);
-          logdbg("In the middle of DD");
+	  //          logdbg("In the middle of DD");
           /* DD equations 26, 27, 57: */
           sqr1me2=sqrt(1-pow(ecc,2));
           cume=cu-ecc;
-          logdbg("going to Kopeikin");
+	  //          logdbg("going to Kopeikin");
           /* Update parameters due to proper motion - Kopeikin 1996 */
           /* And annual-orbital and orbital parallax - Kopeikin 1995 */
           if (psr[p].param[param_kin].paramSet[com]==1 && 
@@ -227,12 +227,12 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
               (psr[p].param[param_pmra].paramSet[com]==1 || 
                psr[p].param[param_pmdec].paramSet[com]==1))
             {
-              logdbg("going to do KopeikinTerms");
+	      //              logdbg("going to do KopeikinTerms");
               KopeikinTerms(&psr[p],ipos,ki,pmra,sin_omega,pmdec,cos_omega,tt0,
                             dpara,daop,si,&x,&DK011,&DK012,&DK021,&DK022,
                             &DK031,&DK032,&DK041,&DK042,&DK013,&DK014,&DK023,
                             &DK024,&DK033,&DK034,&DK043,&DK044);
-              logdbg("did KopeikinTerms");
+	      //              logdbg("did KopeikinTerms");
               C = (longdouble)(cw*(cu-er)-sqrt(1.0-pow(eth,2.0))*sw*su);
               S = (longdouble)(sw*(cu-er)+cw*sqrt(1.0-pow(eth,2.0))*su);
               DAOP = (DK011+DK012)*C-(DK021+DK022)*S;
@@ -245,9 +245,9 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
                   ( cos( 2.0 * omega ) + pow( ecc, 2.0 ) * 
                     ( pow( sin( ki ), -2.0 ) + pow( cu, 2.0 ) ) ) *
                   cos( 2.0 * u ) );
-                logdbg("DAOP is %g and DSR is %g\n", (double)DAOP, (double)DSR);
-                logdbg("DAOP is %g, DK011 and DK021 are %f and %f\n",
-                       (double)DAOP,(double)DK011,(double)DK021);
+	      //                logdbg("DAOP is %g and DSR is %g\n", (double)DAOP, (double)DSR);
+	      //                logdbg("DAOP is %g, DK011 and DK021 are %f and %f\n",
+	      //                       (double)DAOP,(double)DK011,(double)DK021);
             }
 	  
 	  
@@ -276,7 +276,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
           dre  = x*(sin(phase)-0.5*(eps1*cos(2.0*phase)-eps2*sin(2.0*phase)));
           drep = x*cos(phase);
           drepp=-x*sin(phase);
-          logdbg("going to Kopeikin");
+	  //          logdbg("going to Kopeikin");
           /* Update parameters due to proper motion - Kopeikin 1996 */
           if (psr[p].param[param_kin].paramSet[com]==1 && 
               psr[p].param[param_kom].paramSet[com]==1 &&
@@ -606,7 +606,7 @@ void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
   double pxConv = M_PI/180.0/3600*1e-3; // converts mas to rad
   double daopConv = 3.08568025e16;//pc in m
 
-  logdbg("Going to get parameters");
+  //  logdbg("Going to get parameters");
   *si      = getParameter(psr,param_sini,com);
   if (*si > 1.0)
     {
@@ -719,7 +719,7 @@ void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,
   /* Equations 18 and 19 in Kopeikin 1995 */
 
   if(psr->param[param_daop].paramSet[0]==1){
-    logdbg("Using daop for par file for Kopeikin delays!");
+    //    logdbg("Using daop for par file for Kopeikin delays!");
       
     *DK011 = (longdouble)(-(*x)/daop/si*delta_i0*sin_omega);
     *DK012 = (longdouble)(-(*x)/daop/si*delta_j0*cos_omega);
@@ -753,10 +753,10 @@ void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,
   *DK044 = (longdouble)(-(*x)*tt0/tani*pmdec*cos_omega);
     
     
-  logdbg("DK011 %g, DK021 %g, x %f, dpara %g, ypr %f and si %f and tani %f, xpr %f",
-                         (double)(*DK011),(double)(*DK021),(double)(*x),
-                         (double)(dpara),(double)(ypr),(double)(si),
-                         (double)(tani),(double)(xpr));
+  //  logdbg("DK011 %g, DK021 %g, x %f, dpara %g, ypr %f and si %f and tani %f, xpr %f",
+  //                         (double)(*DK011),(double)(*DK021),(double)(*x),
+  //                         (double)(dpara),(double)(ypr),(double)(si),
+  //                         (double)(tani),(double)(xpr));
 }  
 
 

@@ -609,6 +609,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
       sprintf(tpar[0],globalFname);
       printf("Setting global parameters\n");
       readParfileGlobal(psr,npsr,tpar,ttim);
+      printf("Complete setting global parameters\n");
     }
 
 } 

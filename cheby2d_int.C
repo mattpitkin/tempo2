@@ -53,7 +53,7 @@ chebyModelFunc(long double *x, long double *y,
   ChebyModelInfo *info = (ChebyModelInfo *)info_in;
   pulsar *psr = const_cast<pulsar*>( info->psr );
   int ix, iy, iobs=1;
-
+  //  printf("In chebymodelfunc with %d %d\n",nx,ny);
   if (psr->param[param_tzrmjd].paramSet[0] == 0) {
     fprintf (stderr, "chebyModelFunc: TZRMJD not set in pulsar parameters\n");
     exit(-1);
@@ -74,6 +74,8 @@ chebyModelFunc(long double *x, long double *y,
 	(x[ix]+1.0L)*0.5L*(info->model->mjd_end-info->model->mjd_start);
       psr->obsn[iobs].freq =  info->model->freq_start + 
        (y[iy]+1.0L)*0.5L*(info->model->freq_end-info->model->freq_start);
+      //      printf("Setting freq to %g %g %d\n",(double)psr->obsn[iobs].freq,
+      //	     (double)y[iy],iy);
       psr->obsn[iobs].deleted = 0;
       psr->obsn[iobs].nFlags = 0;
       psr->obsn[iobs].efac = 1;

@@ -102,10 +102,16 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
 		 }
 	  }
    }
-
+ logdbg("mbefore = ");
+	  for (i=0;i<5;i++)
+	  { 
+		 for (j=0;j<5;j++) fprintf(LOG_OUTFILE,"%10g ",m[i][j]); 
+		 fprintf(LOG_OUTFILE,"\n");
+	  }
+	  fprintf(LOG_OUTFILE,"\n");
 
    // make sure constraints are not covariant with anything.
-   logdbg("Ensuring constraints have zero co-variance");
+   logdbg("Ensuring constraints have zero co-variance, np = %d, nc = %d",np,nc);
    for (i=np-nc; i < np; i++){
 	  for (j=0; j < np; j++){
 		 m[i][j]=0;
@@ -120,9 +126,9 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
    if (debugFlag)
    {
 	  logdbg("m = ");
-	  for (i=np-5;i<np;i++)
+	  for (i=0;i<5;i++)
 	  { 
-		 for (j=np-5;j<np;j++) fprintf(LOG_OUTFILE,"%10g ",m[i][j]); 
+		 for (j=0;j<5;j++) fprintf(LOG_OUTFILE,"%10g ",m[i][j]); 
 		 fprintf(LOG_OUTFILE,"\n");
 	  }
 	  fprintf(LOG_OUTFILE,"\n");
@@ -303,6 +309,12 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
 		 fprintf(LOG_OUTFILE,"\n");
 	  }
 	  fprintf(LOG_OUTFILE,"\n");
+	  logdbg("CovarFunc = ");
+	  for (i=0;i<10;i++)
+	  { 
+		 fprintf(LOG_OUTFILE,"%10g\n",covarFunc[i]); 
+	  }
+
    }
 
    // Insert the covariance which depends only on the time difference.
@@ -487,7 +499,7 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
    int istart=0;
    int iend=0;
 
-   logdbg("Adding matrix m to mm (MJD range: %f -> %f)",mjd_start,mjd_end);
+   logdbg("Adding matrix m to mm (MJD range: %lf -> %lf) %Lf %Lf",mjd_start,mjd_end,psr->obsn[ip[0]].sat,psr->obsn[ip[np-nc-1]].sat);
    for(i=0;i<np-nc;i++){
 	  if(psr->obsn[ip[i]].sat>mjd_start){
 		 istart=i;

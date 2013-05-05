@@ -247,7 +247,7 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
   int istep, nsteps;
   DynamicArray seq;
 
-  //  printf("HERE\n");
+  //  printf("HERE %s %s %lf %d\n",clockFrom,clockTo,mjd,warnings);
 
   DynamicArray_init(&names, slen);
 
@@ -277,7 +277,7 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
 	{
 	  from_present = 1;
 	  edges[iedge].from = iclock;
-/* 	  printf("%s present already\n", func->clockFrom); */
+	  // 	  printf("%s present already\n", func->clockFrom); 
 	}
 /* 	else */
 /* 	  printf("%s != %s!\n", clock, func->clockFrom); */
@@ -293,8 +293,8 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
 	DynamicArray_push_back(&names, func->clockFrom);
 	edges[iedge].from = names.nelem-1;
       }
-/*        printf("Add edge %d <%s> <%s> %d %d\n", iedge, func->clockTo, func->clockFrom,  */
-/*  	     edges[iedge].to, edges[iedge].from);  */
+      //        printf("Add edge %d <%s> <%s> %d %d\n", iedge, func->clockTo, func->clockFrom,  
+      //  	     edges[iedge].to, edges[iedge].from);  
       edges[iedge].func = func;
       iedge++;
     }
@@ -383,9 +383,9 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
 	else
 	  v = edges[iedge].from;
 	/* use this edge  if it is better */
-/* 	printf("Try %s %s badness %f\n", */
-/* 	       edges[iedge].func->clockFrom, edges[iedge].func->clockTo,  */
-/* 	       edges[iedge].func->badness); */
+	// 	printf("Try %s %s badness %f\n", 
+	// 	       edges[iedge].func->clockFrom, edges[iedge].func->clockTo,  
+	// 	       edges[iedge].func->badness); 
 	if (d[v] > d[ibest] + edges[iedge].func->badness)
 	{
 	  d[v] = d[ibest] + edges[iedge].func->badness;
@@ -397,7 +397,7 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
       }
   }
   
-  /**  printf("Badness total = %f\n", best);*/
+  //    printf("Badness total = %f\n", best);
   if (ibest == -1)
   {
     char msg[1000],msg2[1000];
