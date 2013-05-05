@@ -41,7 +41,7 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr
 
 void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error);
 
-int getNparams(pulsar *psr);
+int getNparams(pulsar *psr,int offset);
 int getNglobal(pulsar *psr,int npsr);
 double getConstraintDeriv(pulsar *psr,int ipos,int i,int k);
 
@@ -80,7 +80,8 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    long double meanRes=0.0;
    int count;
    int nobs_and_constraints;
-   bool DO_GLOBAL_FIT=false;
+   int offsetNp = 0;
+  bool DO_GLOBAL_FIT=false;
 
    double **xx = (double**)malloc(sizeof(double*)*npsr);;
    double **yy = (double**)malloc(sizeof(double*)*npsr);;
@@ -146,6 +147,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    }
 
    nglobal=getNglobal(psr,npsr);
+   offsetNp += nglobal;
    if(nglobal > 0 || forceGlobalFit){
 	  DO_GLOBAL_FIT=true;
 	  logmsg("GLOBAL fit enabled. Number of global fit parameters = %d",nglobal);
@@ -175,8 +177,9 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
 	  /* How many parameters are we fitting for */
 	  logtchk("Determining which parameters we are fitting for");
-	  npol = getNparams(psr+p);
-	  
+	  npol = getNparams(psr+p,offsetNp);
+	  offsetNp += npol;
+
 	  logtchk("Complete determining which parameters we are fitting for");
 
 	  x     = (double *)malloc(nobs_and_constraints*sizeof(double));
@@ -330,6 +333,13 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 offset+=nf[p];
 	  }
 
+	  // Record the covariance matrix
+	  for (i=0;i<nglobal;i++)
+	    {
+	      for (j=0;j<nglobal;j++)
+		psr[0].covar[i][j] = cvm[i][j];
+	    }
+
 	  /* Free the arrays created inside this section */
 	  free_uinv(cvm);
 	  free(val);
@@ -405,57 +415,81 @@ int getNglobal(pulsar *psr,int npsr){
    // Add global parameters
    for (i=0;i<MAX_PARAMS;i++)
    {
-	  for (k=0;k<psr[0].param[i].aSize;k++)
-	  {
-		 if (psr[0].param[i].fitFlag[k]==2) {
-			{
-			   nGlobal++;
-			}
-		 }
-	  }
+     for (k=0;k<psr[0].param[i].aSize;k++)
+       {
+	 if (psr[0].param[i].fitFlag[k]==2) {
+	   {
+	     psr->fitParamI[nGlobal]  = i;
+	     psr->fitParamK[nGlobal]  = k;
+	     
+	     nGlobal++;
+	   }
+	 }
+       }
    }
    /* Add extra parameters for sinusoidal whitening */
    if (psr[0].param[param_wave_om].fitFlag[0]==2)
    {
-	  nGlobal+=psr[0].nWhite*2-1;
+     for (i=0;i<psr->nWhite*2-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_wave_om; psr->fitParamK[nGlobal+i]  = i;}
+     nGlobal+=psr[0].nWhite*2-1;
    }
 
    if (psr[0].param[param_ifunc].fitFlag[0]==2){
+     for (i=0;i<psr->ifuncN-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_ifunc; psr->fitParamK[nGlobal+i]  = i;}
 	  nGlobal+=psr[0].ifuncN-1;
    }
    if (psr[0].param[param_quad_om].fitFlag[0]==2){
+     for (i=0;i<psr->nQuad*4-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_quad_om; psr->fitParamK[nGlobal+i]  = i;}
 	  nGlobal+=psr[0].nQuad*4-1;
    }
 
    if (psr[0].param[param_tel_dx].fitFlag[0]==2)
    {
-	  nGlobal+=(psr[0].nTelDX-1);
+     for (i=0;i<psr->nTelDX-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_tel_dx; psr->fitParamK[nGlobal+i]  = i;}
+     nGlobal+=(psr[0].nTelDX-1);
    }
    if (psr[0].param[param_tel_dy].fitFlag[0]==2)
-   {
-	  nGlobal+=(psr[0].nTelDY-1);
+   {     
+     for (i=0;i<psr->nTelDY-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_tel_dy; psr->fitParamK[nGlobal+i]  = i;}
+     nGlobal+=(psr[0].nTelDY-1);
    }
    if (psr[0].param[param_tel_dz].fitFlag[0]==2)
    {
+     for (i=0;i<psr->nTelDZ-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_tel_dz; psr->fitParamK[nGlobal+i]  = i;}
+     
 	  nGlobal+=(psr[0].nTelDZ-1);
    }
    if (psr->param[param_quad_ifunc_p].fitFlag[0]==2)
    {
-	  nGlobal+=(psr->quad_ifuncN_p-1);
+     for (i=0;i<psr->quad_ifuncN_p-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_quad_ifunc_p; psr->fitParamK[nGlobal+i]  = i;}
+
+     nGlobal+=(psr->quad_ifuncN_p-1);
    }
    if (psr->param[param_quad_ifunc_c].fitFlag[0]==2)
    {
-	  nGlobal+=(psr->quad_ifuncN_c-1);
+     for (i=0;i<psr->quad_ifuncN_c-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_quad_ifunc_c; psr->fitParamK[nGlobal+i]  = i;}
+     nGlobal+=(psr->quad_ifuncN_c-1);
    }
    if (psr[0].param[param_gwsingle].fitFlag[0]==2)
    {
-	  nGlobal+=(4-1);
+     for (i=0;i<4-1;i++)
+       {psr->fitParamI[nGlobal+i]  = param_gwsingle; psr->fitParamK[nGlobal+i]  = i;}
+
+     nGlobal+=(4-1);
    }
    return nGlobal;
 
 }
 
-int getNparams(pulsar *psr)
+int getNparams(pulsar *psr,int offset)
 {
    int npol;
    int i,k;
@@ -468,8 +502,8 @@ int getNparams(pulsar *psr)
 		 if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]==1) {
 			if (i!=param_start && i!=param_finish && i!=param_dmmodel && i!=param_gwsingle)
 			{
-			   psr->fitParamI[npol]  = i;
-			   psr->fitParamK[npol]  = k;
+			   psr->fitParamI[npol+offset]  = i;
+			   psr->fitParamK[npol+offset]  = k;
 			   npol++;
 			}
 		 }
@@ -480,8 +514,8 @@ int getNparams(pulsar *psr)
    {
 	  if (psr->fitJump[i]==1)
 	  {
-		 psr->fitParamI[npol]  = -1;
-		 psr->fitParamK[npol]  = 0;
+		 psr->fitParamI[npol+offset]  = -1;
+		 psr->fitParamK[npol+offset]  = 0;
 		 npol++;
 	  }
    }
@@ -492,69 +526,69 @@ int getNparams(pulsar *psr)
 	  if (psr->waveScale==1)
 	  {
 		 for (i=0;i<psr->nWhite*2-1;i++)
-		 {psr->fitParamI[npol+i]  = param_wave_om; psr->fitParamK[npol+i]  = i;}
+		 {psr->fitParamI[npol+i+offset]  = param_wave_om; psr->fitParamK[npol+i+offset]  = i;}
 		 npol+=psr->nWhite*2-1;
 
 	  }
 	  else if (psr->waveScale==2)
 	  {
 		 for (i=0;i<psr->nWhite*4-1;i++)
-		 {psr->fitParamI[npol+i]  = param_wave_om; psr->fitParamK[npol+i]  = i;}
+		 {psr->fitParamI[npol+i+offset]  = param_wave_om; psr->fitParamK[npol+i+offset]  = i;}
 
 		 npol+=psr->nWhite*4-1;
 	  }
 	  else
 	  {
 		 for (i=0;i<psr->nWhite*2-1;i++)
-		 {psr->fitParamI[npol+i]  = param_wave_om; psr->fitParamK[npol+i]  = i;}
+		 {psr->fitParamI[npol+i+offset]  = param_wave_om; psr->fitParamK[npol+i+offset]  = i;}
 		 npol+=psr->nWhite*2-1;      
 	  }
    }
    if (psr->param[param_quad_om].fitFlag[0]==1)
    {
 	  for (i=0;i<psr->nQuad*4-1;i++)
-	  {psr->fitParamI[npol+i]  = param_quad_om; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_quad_om; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->nQuad*4)-1;
    }
    if (psr->param[param_ifunc].fitFlag[0]==1)
    {
 	  for (i=0;i<psr->ifuncN-1;i++)
-	  {psr->fitParamI[npol+i]  = param_ifunc; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_ifunc; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->ifuncN-1);
    }
    if (psr->param[param_clk_offs].fitFlag[0]==1)
    {
 	  for (i=0;i<psr->clkOffsN-1;i++)
-	  {psr->fitParamI[npol+i]  = param_clk_offs; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_clk_offs; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->clkOffsN-1);
    }
    if (psr->param[param_tel_dx].fitFlag[0]==1 && psr->param[param_tel_dx].val[0] < 2)
    {
 	  for (i=0;i<psr->nTelDX-1;i++)
-	  {psr->fitParamI[npol+i]  = param_tel_dx; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_tel_dx; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->nTelDX-1);
    }
    else if (psr->param[param_tel_dx].fitFlag[0]==1 && psr->param[param_tel_dx].val[0] == 2)
    {
 	  for (i=0;i<psr->nTelDX-2;i++)
-	  {psr->fitParamI[npol+i]  = param_tel_dx; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_tel_dx; psr->fitParamK[npol+i+offset]  = i;}
 	  npol+=(psr->nTelDX-2);
    }
    if (psr->param[param_tel_dy].fitFlag[0]==1 && psr->param[param_tel_dy].val[0] < 2)
    {
 	  for (i=0;i<psr->nTelDY-1;i++)
-	  {psr->fitParamI[npol+i]  = param_tel_dy; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_tel_dy; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->nTelDY-1);
    }
    else if (psr->param[param_tel_dy].fitFlag[0]==1 && psr->param[param_tel_dy].val[0] == 2)
    {
 	  for (i=0;i<psr->nTelDY-2;i++)
-	  {psr->fitParamI[npol+i]  = param_tel_dy; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_tel_dy; psr->fitParamK[npol+i+offset]  = i;}
 
 
 	  npol+=(psr->nTelDY-2);
@@ -562,39 +596,39 @@ int getNparams(pulsar *psr)
    if (psr->param[param_tel_dz].fitFlag[0]==1 && psr->param[param_tel_dz].val[0] < 2)
    {
 	  for (i=0;i<psr->nTelDZ-1;i++)
-	  {psr->fitParamI[npol+i]  = param_tel_dz; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_tel_dz; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->nTelDZ-1);
    }
    else if (psr->param[param_tel_dz].fitFlag[0]==1 && psr->param[param_tel_dz].val[0] == 2)
    {
 	  for (i=0;i<psr->nTelDZ-2;i++)
-	  {psr->fitParamI[npol+i]  = param_tel_dz; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_tel_dz; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->nTelDZ-2);
    }
    if (psr->param[param_quad_ifunc_p].fitFlag[0]==1)
    {
 	  for (i=0;i<psr->quad_ifuncN_p-1;i++)
-	  {psr->fitParamI[npol+i]  = param_quad_ifunc_p; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_quad_ifunc_p; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->quad_ifuncN_p-1);
    }
    if (psr->param[param_quad_ifunc_c].fitFlag[0]==1)
    {
 	  for (i=0;i<psr->quad_ifuncN_c-1;i++)
-	  {psr->fitParamI[npol+i]  = param_quad_ifunc_c; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_quad_ifunc_c; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=(psr->quad_ifuncN_c-1);
    }
    /* Add extra parameters for DMMODEL fitting */
    if (psr->param[param_dmmodel].fitFlag[0]==1){
 	  for (i=0;i<psr->dmoffsDMnum;i++)
-	  {psr->fitParamI[npol+i]  = -2; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = -2; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=psr->dmoffsDMnum;
 	  for (i=0;i<psr->dmoffsCMnum;i++)
-	  {psr->fitParamI[npol+i]  = -3; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = -3; psr->fitParamK[npol+i+offset]  = i;}
 
 	  npol+=psr->dmoffsCMnum;
    }
@@ -602,7 +636,7 @@ int getNparams(pulsar *psr)
    if (psr->param[param_gwsingle].fitFlag[0]==1)
    {
 	  for (i=0;i<4;i++)
-	  {psr->fitParamI[npol+i]  = param_gwsingle; psr->fitParamK[npol+i]  = i;}
+	  {psr->fitParamI[npol+i+offset]  = param_gwsingle; psr->fitParamK[npol+i+offset]  = i;}
 	  npol+=4; 
    }
    return npol;
@@ -1770,108 +1804,108 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  /* Only has effect after the glitch epoch */
 	  if (psr->obsn[ipos].sat >= psr->gwm_epoch)
 	  {
-		 long double dt,scale;
-		 double cos2Phi;
-		 double cosPhi;
-		 double l1,l2,l3,n5,m1,m2,m3;
-		 double beta_m;
-		 double d1,d2,d3,md;
-		 double a1,a2,a3,ma;
-
-		 //   if  (g3 != 0) 
-		 //	   {beta_m = atan2(-cos(beta)*cos(lambda-psr->gwm_phi),sin(beta));}
-		 //  else  
-		 //      {beta_m = atan2(sinl(psr->gwm_phi),cosl(psr->gwm_phi));
-		 //       psr->gwm_phi = lambda + 1.5708;}
-		 //  m1 = cosl(psr->gwm_phi)*cosl(beta_m);
-		 //  m2 = sinl(psr->gwm_phi)*cosl(beta_m);
-		 //  m3 = sinl(beta_m);
-
-		 if (beta == 0.0 )
-		 {
-			d1 = 0.0;
-			d2 = 0.0;
-			d3 = 1.0;
-		 }
-
-		 if ( beta > 0)
-		 {
-			d1 = g1*cosl(0.5*M_PI - beta);
-			d2 = g2*cosl(0.5*M_PI - beta);
-			d3 = 1.0 + g3*cos(0.5*M_PI - beta);
-			md = sqrt(d1*d1 + d2*d2 + d3*d3);
-			d1 = d1/md;
-			d2 = d2/md;
-			d3 = d3/md;
-			/*covert d to unit vector */
-		 } 
-		 else if (beta < 0) 
-		 {
-			d1 = g1*cosl(-0.5*M_PI - beta);
-			d2 = g2*cosl(-0.5*M_PI - beta);
-			d3 = -1.0 + g3*cos(-0.5*M_PI - beta);
-			md = sqrt(d1*d1 + d2*d2 + d3*d3);
-			d1 = d1/md;
-			d2 = d2/md;
-			d3 = d3/md;
-		 } 
-
-		 //if (g2*d3-d2*g3 != 0)
-		 // {
-		 //  a1 = 1.0; 
-		 //  a2 = (d1*g3-g1*d3)/(g2*d3-d2*g3);
-		 //  a3 = (g2*d1-g1*d2)/(g3*d2-g2*d3); 
-		 // }
-		 //else if (g1*d3-d1*g3 != 0)
-		 // {
-		 //  a1 = (g3*d2-d3*g2)/(g1*d3-g3*d1); 
-		 //  a2 = 1.0;
-		 //  a3 = (g1*d2-d1*g2)/(g3*d1-d1*d3);
-		 // }
-		 //else if (d2*g1-g2*d1 != 0)			
-		 // {
-		 //  a1 = (g2*d3-d2*g3)/(d2*g1-g2*d1); 
-		 //  a2 = (g1*d3-d1*g3)/(d1*g2-g1*d2);
-		 //  a3 =1.0; 
-		 // }
-		 a1 =  (d2*g3-d3*g2);
-		 a2 =  (d3*g1-d1*g3);
-		 a3 =  (d1*g2-d2*g1);
-
-		 /* conver it to unit vector */
-		 ma = sqrt(a1*a1 +a2*a2 + a3*a3);
-		 a1 = a1/ma;
-		 a2 = a2/ma;
-		 a3 = a3/ma;
-
-		 /* polarisation vector of GW source */
-		 m1 = d1*cosl(psr->gwm_phi)	+ a1*sinl(psr->gwm_phi);   
-		 m2 = d2*cosl(psr->gwm_phi)	+ a2*sinl(psr->gwm_phi);
-		 m3 = d3*cosl(psr->gwm_phi)	+ a3*sinl(psr->gwm_phi);
-
-		 if  (cosTheta != 1.0 && cosTheta != -1.0)
-		 {g1 = g1*cosTheta; 
-			g2 = g2*cosTheta;
-			g3 = g3*cosTheta;
-			l1 = n1 - g1;
-			l2 = n2 - g2;
-			l3 = n3 - g3;
-			cosPhi = (l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1 + l2*l2 + l3*l3);
-			//		 if  (cosPhi >= 1.0/sqrt(2.0))
-			cos2Phi = 2*cosPhi*cosPhi - 1.0;
-			//		 else
-			//		     cos2Phi = 2*sqrt(1.0 - cosPhi*cosPhi)*sqrt(1.0 - cosPhi*cosPhi) - 1.0;
-		 }
-		 else 
-		 {cos2Phi = 0;}
-
-		 dt = (psr->obsn[ipos].sat - psr->gwm_epoch)*86400.0;
-		 scale = -0.5*cos2Phi*(1-cosTheta);
-
-		 afunc = scale*dt;
+	    long double dt,scale;
+	    double cos2Phi;
+	    double cosPhi;
+	    double l1,l2,l3,n5,m1,m2,m3;
+	    double beta_m;
+	    double d1,d2,d3,md;
+	    double a1,a2,a3,ma;
+	    
+	    //   if  (g3 != 0) 
+	    //	   {beta_m = atan2(-cos(beta)*cos(lambda-psr->gwm_phi),sin(beta));}
+	    //  else  
+	    //      {beta_m = atan2(sinl(psr->gwm_phi),cosl(psr->gwm_phi));
+	    //       psr->gwm_phi = lambda + 1.5708;}
+	    //  m1 = cosl(psr->gwm_phi)*cosl(beta_m);
+	    //  m2 = sinl(psr->gwm_phi)*cosl(beta_m);
+	    //  m3 = sinl(beta_m);
+	    
+	    if (beta == 0.0 )
+	      {
+		d1 = 0.0;
+		d2 = 0.0;
+		d3 = 1.0;
+	      }
+	    
+	    if ( beta > 0)
+	      {
+		d1 = g1*cosl(0.5*M_PI - beta);
+		d2 = g2*cosl(0.5*M_PI - beta);
+		d3 = 1.0 + g3*cos(0.5*M_PI - beta);
+		md = sqrt(d1*d1 + d2*d2 + d3*d3);
+		d1 = d1/md;
+		d2 = d2/md;
+		d3 = d3/md;
+		/*covert d to unit vector */
+	      } 
+	    else if (beta < 0) 
+	      {
+		d1 = g1*cosl(-0.5*M_PI - beta);
+		d2 = g2*cosl(-0.5*M_PI - beta);
+		d3 = -1.0 + g3*cos(-0.5*M_PI - beta);
+		md = sqrt(d1*d1 + d2*d2 + d3*d3);
+		d1 = d1/md;
+		d2 = d2/md;
+		d3 = d3/md;
+	      } 
+	    
+	    //if (g2*d3-d2*g3 != 0)
+	    // {
+	    //  a1 = 1.0; 
+	    //  a2 = (d1*g3-g1*d3)/(g2*d3-d2*g3);
+	    //  a3 = (g2*d1-g1*d2)/(g3*d2-g2*d3); 
+	    // }
+	    //else if (g1*d3-d1*g3 != 0)
+	    // {
+	    //  a1 = (g3*d2-d3*g2)/(g1*d3-g3*d1); 
+	    //  a2 = 1.0;
+	    //  a3 = (g1*d2-d1*g2)/(g3*d1-d1*d3);
+	    // }
+	    //else if (d2*g1-g2*d1 != 0)			
+	    // {
+	    //  a1 = (g2*d3-d2*g3)/(d2*g1-g2*d1); 
+	    //  a2 = (g1*d3-d1*g3)/(d1*g2-g1*d2);
+	    //  a3 =1.0; 
+	    // }
+	    a1 =  (d2*g3-d3*g2);
+	    a2 =  (d3*g1-d1*g3);
+	    a3 =  (d1*g2-d2*g1);
+	    
+	    /* conver it to unit vector */
+	    ma = sqrt(a1*a1 +a2*a2 + a3*a3);
+	    a1 = a1/ma;
+	    a2 = a2/ma;
+	    a3 = a3/ma;
+	    
+	    /* polarisation vector of GW source */
+	    m1 = d1*cosl(psr->gwm_phi)	+ a1*sinl(psr->gwm_phi);   
+	    m2 = d2*cosl(psr->gwm_phi)	+ a2*sinl(psr->gwm_phi);
+	    m3 = d3*cosl(psr->gwm_phi)	+ a3*sinl(psr->gwm_phi);
+	    
+	    if  (cosTheta != 1.0 && cosTheta != -1.0)
+	      {g1 = g1*cosTheta; 
+	      g2 = g2*cosTheta;
+	      g3 = g3*cosTheta;
+	      l1 = n1 - g1;
+	      l2 = n2 - g2;
+	      l3 = n3 - g3;
+	      cosPhi = (l1*m1 + l2*m2 + l3*m3)/sqrt(l1*l1 + l2*l2 + l3*l3);
+	      //		 if  (cosPhi >= 1.0/sqrt(2.0))
+	      cos2Phi = 2*cosPhi*cosPhi - 1.0;
+	      //		 else
+	      //		     cos2Phi = 2*sqrt(1.0 - cosPhi*cosPhi)*sqrt(1.0 - cosPhi*cosPhi) - 1.0;
+	      }
+	    else 
+	      {cos2Phi = 0;}
+	    
+	    dt = (psr->obsn[ipos].sat - psr->gwm_epoch)*86400.0;
+	    scale = -0.5*cos2Phi*(1-cosTheta);
+	    
+	    afunc = scale*dt;
 	  }
 	  else
-		 afunc = 0;
+	    afunc = 0;
    }
    else if (i==param_dmmodel)
    {
@@ -2287,7 +2321,6 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			else if (i==param_tel_dx) 
 			{
 			   int k;
-			   printf("HERE --- hello\n");
 			   if (psr[p].param[param_tel_dx].val[0] == -1)
 			   {
 				  printf("Updating with %g %g\n",val[j],error[j]);

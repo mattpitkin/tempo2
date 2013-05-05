@@ -794,6 +794,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      printf("DE200 Jupiter mass not set\n");
 	    }
 	}
+      if (psr[p].quad_ifuncN_p > 0)
+	{
+	  printf("Geometrical factor for pulsar %d (%s) = %g %g\n",p,psr[p].name,psr[p].quad_ifunc_geom_p,psr[p].quad_ifunc_geom_c);
+	}
 
       // Calculate time span
       {
@@ -820,6 +824,38 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  }
 	printf("Total time span = %.3f days = %.3f years\n",end-start,(end-start)/365.25);
       }
+
+      // Write covariance matrix for A+ and Ax
+      if (psr[p].param[param_quad_ifunc_p].paramSet[0]==1 || psr[p].param[param_quad_ifunc_c].paramSet[0]==1)
+	  {
+	    if (p==0)
+	      {		
+		FILE *fout = fopen("aplus_across.cvm","w");
+		if (!fout){
+		  printf("Unable to open aplus_across.cvm for writing\n");
+		}
+		else
+		  {
+		    int ii,jj,kk;
+		    double cv;
+		    for (ii=0;ii<psr[0].globalNfit;ii++)
+		      {
+			for (jj=0;jj<psr[0].globalNfit;jj++)
+			  {
+			    //			    fprintf(fout,"Checking %d %d %d %d\n",psr[0].fitParamI[ii],psr[0].fitParamI[jj],param_quad_ifunc_p,param_quad_ifunc_c);
+			    if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c) && 
+				(psr[0].fitParamI[jj] == param_quad_ifunc_p || psr[0].fitParamI[jj] == param_quad_ifunc_c))
+			      {
+				fprintf(fout,"%g ",psr[0].covar[ii][jj]);
+			      }
+			  }
+			if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c))
+			  fprintf(fout,"\n");
+		      }
+		  }
+	      }
+	  }  
+
     
       if (newpar==1)  /* Write a new .par file */
 	{
