@@ -24,6 +24,23 @@
 *    timing model.
 */
 
+
+/**************
+ *
+ * A NOTICE TO THE PUBLIC
+ *
+ * This plugin is now depricated and does not need to be complied ever.
+ *
+ * Global fitting now works directly within tempo2, just use the -global
+ * option as normal without needing to specify a fitfunc.
+ *
+ * If you have checked out from CVS and are having build problems because
+ * of this file - try redoing the ./bootstrap command.
+ *
+ * Michael Keith 2013. mkeith@pulsarastronomy.net
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <tempo2.h>
