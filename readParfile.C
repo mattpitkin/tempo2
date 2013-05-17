@@ -817,6 +817,8 @@ else if (strcasecmp(str,"_DM")==0)
   /*
    * Single source graviational waves (GWs)
    */
+  else if (strcasecmp(str,"CGW_FREQ")==0) 
+	 readValue(psr,str,fin,&(psr->param[param_cgw]),0);
   else if (strcasecmp(str,"GW_SINGLE")==0) 
 	 readValue(psr,str,fin,&(psr->param[param_gwsingle]),0);
   else if (strcasecmp(str,"GW_POSITION")==0)
@@ -829,6 +831,12 @@ else if (strcasecmp(str,"_DM")==0)
 	 fscanf(fin,"%lf",&psr->gwsrc_epoch);
   else if (strcasecmp(str,"GW_PSR_DIST")==0)
 	 fscanf(fin,"%lf",&psr->gwsrc_psrdist);
+  else if (strcasecmp(str,"CGW_H0")==0)
+	 fscanf(fin,"%lf",&psr->cgw_h0);
+  else if (strcasecmp(str,"CGW_COSINC")==0)
+	 fscanf(fin,"%lf",&psr->cgw_cosinc);
+  else if (strcasecmp(str,"CGW_ANGPOL")==0)
+	 fscanf(fin,"%lf",&psr->cgw_angpol);
   //* Gravitational wave memory
   else if (strcasecmp(str,"GWM_AMP")==0)
 	 readValue(psr,str,fin,&(psr->param[param_gwm_amp]),0);

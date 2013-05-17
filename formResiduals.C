@@ -299,7 +299,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 
 	   /* Add in extra phase due to gravitational wave signal */
-	   if (psr[p].param[param_gwsingle].paramSet[0]==1)
+	   if (psr[p].param[param_gwsingle].paramSet[0]==1 || psr[p].param[param_cgw].paramSet[0]==1)
 	     {
 	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 	       //	       double res_e,res_i;
@@ -348,8 +348,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       //	       printf("ex3p = %g %g %g\n",e13p,e23p,e33p);
 	       //	       exit(1);
 
-	       omega_g = (double)psr[p].param[param_gwsingle].val[0];
-	       
+
+	       if (psr[p].param[param_gwsingle].paramSet[0]==1)
+		 omega_g = (double)psr[p].param[param_gwsingle].val[0];
+	       else if (psr[p].param[param_cgw].paramSet[0]==1)
+		 omega_g = (double)psr[p].param[param_cgw].val[0];
+
 	       resp = (n1*(n1*e11p+n2*e12p+n3*e13p)+
 		       n2*(n1*e21p+n2*e22p+n3*e23p)+
 		       n3*(n1*e31p+n2*e32p+n3*e33p));
@@ -373,26 +377,53 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		       n2*(n1*e21c+n2*e22c+n3*e23c)+
 		       n3*(n1*e31c+n2*e32c+n3*e33c));
 
-	       res_r = (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time);
-	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cosl(omega_g*time));
-	       //	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time)-1);
-	       if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term
+	       if (psr[p].param[param_gwsingle].paramSet[0]==1)
 		 {
-		   res_r += (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g);
-		   //		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)-1);
-		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cosl(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g));
+		   res_r = (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time);
+		   res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cosl(omega_g*time));
+		   //	       res_i = (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time)-1);
+		   if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term
+		     {
+		       res_r += (psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g);
+		       //		   res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)-1);
+		       res_i += (psr[p].gwsrc_aplus_i*resp+psr[p].gwsrc_across_i*resc)*(cosl(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g));
+		     }
+		   if ((1-cosTheta)==0.0)
+		     {
+		       res_r = 0.0;
+		       res_i = 0.0;
+		     }
+		   else
+		     {
+		       res_r = 1.0L/(2.0L*omega_g*(1.0L-cosTheta))*(res_r); 
+		       res_i = 1.0L/(2.0L*omega_g*(1.0L-cosTheta))*(res_i); 
+		     }
+		 }
+	       else if (psr[p].param[param_cgw].paramSet[0]==1)
+		 {
+		   res_r = (psr[p].cgw_h0/omega_g*((1+pow(psr[p].cgw_cosinc,2))*cos(2*psr[p].cgw_angpol)*sin(omega_g*time)+2*psr[p].cgw_cosinc*sin(2*psr[p].cgw_angpol)*cos(omega_g*time)))*resp 
+		     + (psr[p].cgw_h0/omega_g*((1+pow(psr[p].cgw_cosinc,2))*sin(2*psr[p].cgw_angpol)*sin(omega_g*time)-2*psr[p].cgw_cosinc*cos(2*psr[p].cgw_angpol)*cos(omega_g*time)))*resc; 
+		   //(psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time);
+		   res_i = 0.0;
+
+		   if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term
+		     {
+		       res_r += (psr[p].cgw_h0/omega_g*((1+pow(psr[p].cgw_cosinc,2))*cos(2*psr[p].cgw_angpol)*sin(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)+2*psr[p].cgw_cosinc*sin(2*psr[p].cgw_angpol)*cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)))*resp 
+			 + (psr[p].cgw_h0/omega_g*((1+pow(psr[p].cgw_cosinc,2))*sin(2*psr[p].cgw_angpol)*sin(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)-2*psr[p].cgw_cosinc*cos(2*psr[p].cgw_angpol)*cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)))*resc; 
+		     }
+
+		   if ((1-cosTheta)==0.0)
+		     {
+		       res_r = 0.0;
+		       res_i = 0.0;
+		     }
+		   else
+		     {
+		       res_r = -1.0L/(2.0L*(1.0L-cosTheta))*(res_r); 
+		       res_i = -1.0L/(2.0L*(1.0L-cosTheta))*(res_i); 
+		     }
 		 }
 
-	       if ((1-cosTheta)==0.0)
-		 {
-		   res_r = 0.0;
-		   res_i = 0.0;
-		 }
-	       else
-		 {
-		   res_r = 1.0L/(2.0L*omega_g*(1.0L-cosTheta))*(res_r); 
-		   res_i = 1.0L/(2.0L*omega_g*(1.0L-cosTheta))*(res_i); 
-		 }
 	       phaseW += (res_r+res_i)*psr[p].param[param_f].val[0];
 	       //	       printf("Res = %g\n",(double)res);
 	     }

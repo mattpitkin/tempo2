@@ -185,7 +185,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,param_clk_offs,
-            param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_quad_om,
+            param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_cgw,param_quad_om,
 	    param_h3,param_h4,param_nharm,param_stig,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
@@ -399,6 +399,11 @@ typedef struct pulsar {
   double gwsrc_across_r_e,gwsrc_across_i_e;
   double gwsrc_epoch;
   double gwsrc_psrdist;
+
+  // Extra parameters for Xingjiang's updates to the continuous wave sources
+  double cgw_h0;
+  double cgw_cosinc;
+  double cgw_angpol;
 
   // Gravitational wave memory information
   double gwm_raj;
