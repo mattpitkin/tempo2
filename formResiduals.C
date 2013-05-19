@@ -413,8 +413,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 		       if (psr[p].cgw_mc == 0) {omega_prime_g = omega_g; h0_prime = psr[p].cgw_h0;}
 		       else {
-			 omega_prime_g = omega_g - 2*M_PI*2.77e-8*pow(psr[p].cgw_mc/1e8,5.0/3.0)*pow(omega_g/2.0/M_PI/1e-7,11.0/3.0)*(psr[p].gwsrc_psrdist/PCM/1000.0)*(1-cosTheta);
+			 //			 omega_prime_g = omega_g - 2*M_PI*2.77e-8*pow(psr[p].cgw_mc/1e8,5.0/3.0)*pow(omega_g/2.0/M_PI/1e-7,11.0/3.0)*(psr[p].gwsrc_psrdist/PCM/1000.0)*(1-cosTheta);
+
+			 omega_prime_g = 2*M_PI*pow((1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*256.0/5.0/pow(SPEED_LIGHT,5)*pow(M_PI,8.0/3.0)*pow(GM*psr[p].cgw_mc,5.0/3.0)+pow(omega_g/2.0/M_PI,-8.0/3.0),-3.0/8.0);
+
 			 h0_prime = psr[p].cgw_h0*pow(omega_prime_g/omega_g,2.0/3.0);
+			 printf("Using: omega_prime_g = %g, omega_g = %g, h0_prime = %g, h0 = %g\n",omega_prime_g,omega_g,h0_prime,psr[p].cgw_h0);
 		       }
 		       res_r -= ((h0_prime/omega_prime_g*((1+pow(psr[p].cgw_cosinc,2))*cos(2*psr[p].cgw_angpol)*sin(omega_prime_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_prime_g)+2*psr[p].cgw_cosinc*sin(2*psr[p].cgw_angpol)*cos(omega_prime_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_prime_g)))*resp 
 			 + (h0_prime/omega_prime_g*((1+pow(psr[p].cgw_cosinc,2))*sin(2*psr[p].cgw_angpol)*sin(omega_prime_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_prime_g)-2*psr[p].cgw_cosinc*cos(2*psr[p].cgw_angpol)*cos(omega_prime_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_prime_g)))*resc); 
