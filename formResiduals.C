@@ -406,10 +406,18 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   //(psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time);
 		   res_i = 0.0;
 
-		   if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term
+		   if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term  (NOTE: using subtraction here)
 		     {
-		       res_r += (psr[p].cgw_h0/omega_g*((1+pow(psr[p].cgw_cosinc,2))*cos(2*psr[p].cgw_angpol)*sin(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)+2*psr[p].cgw_cosinc*sin(2*psr[p].cgw_angpol)*cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)))*resp 
-			 + (psr[p].cgw_h0/omega_g*((1+pow(psr[p].cgw_cosinc,2))*sin(2*psr[p].cgw_angpol)*sin(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)-2*psr[p].cgw_cosinc*cos(2*psr[p].cgw_angpol)*cos(omega_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_g)))*resc; 
+		       double omega_prime_g;
+		       double h0_prime;
+
+		       if (psr[p].cgw_mc == 0) {omega_prime_g = omega_g; h0_prime = psr[p].cgw_h0;}
+		       else {
+			 omega_prime_g = omega_g - 2*M_PI*2.77e-8*pow(psr[p].cgw_mc/1e8,5.0/3.0)*pow(omega_g/2.0/M_PI/1e-7,11.0/3.0)*(psr[p].gwsrc_psrdist/PCM/1000.0)*(1-cosTheta);
+			 h0_prime = psr[p].cgw_h0*pow(omega_prime_g/omega_g,2.0/3.0);
+		       }
+		       res_r -= ((h0_prime/omega_prime_g*((1+pow(psr[p].cgw_cosinc,2))*cos(2*psr[p].cgw_angpol)*sin(omega_prime_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_prime_g)+2*psr[p].cgw_cosinc*sin(2*psr[p].cgw_angpol)*cos(omega_prime_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_prime_g)))*resp 
+			 + (h0_prime/omega_prime_g*((1+pow(psr[p].cgw_cosinc,2))*sin(2*psr[p].cgw_angpol)*sin(omega_prime_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_prime_g)-2*psr[p].cgw_cosinc*cos(2*psr[p].cgw_angpol)*cos(omega_prime_g*time-(1-cosTheta)*psr[p].gwsrc_psrdist/SPEED_LIGHT*omega_prime_g)))*resc); 
 		     }
 
 		   if ((1-cosTheta)==0.0)

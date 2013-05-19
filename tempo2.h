@@ -404,6 +404,7 @@ typedef struct pulsar {
   double cgw_h0;
   double cgw_cosinc;
   double cgw_angpol;
+  double cgw_mc;
 
   // Gravitational wave memory information
   double gwm_raj;

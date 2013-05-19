@@ -132,7 +132,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->quad_ifuncN_c = 0;
   psr->quad_ifunc_geom_p = 0;
   psr->quad_ifunc_geom_c = 0;
-
+  psr->cgw_mc = 0;
+ 
   psr->timeEphemeris = IF99_TIMEEPH;
   psr->dilateFreq = 1;
   psr->planetShapiro = 1;
