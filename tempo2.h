@@ -60,6 +60,7 @@
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX              64    /* Max number of DM steps allowed */
 #define MAX_FLAGS            20    /* Maximum number of flags in .tim file/observation */
+#define MAX_FLAG_LEN         32    /* Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /* Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /* Number of seconds in 1 day                 */
 #define SPEED_LIGHT          299792458.0 /* Speed of light (m/s)                       */
@@ -356,8 +357,8 @@ typedef struct observation {
   longdouble phase;               
   unsigned long long pulseN;                    /* Pulse number */
 
-  char flagID[MAX_FLAGS][16];     /* Flags in .tim file                                         */
-  char flagVal[MAX_FLAGS][16];
+  char flagID[MAX_FLAGS][MAX_FLAG_LEN];     /* Flags in .tim file                                         */
+  char flagVal[MAX_FLAGS][MAX_FLAG_LEN];
   int  nFlags;                   
   int  jump[MAX_FLAGS];           /* Jump region */
   int  obsNjump;                  /* Number of jumps for this observation */
