@@ -1,5 +1,5 @@
 #include "T2accel.h"
-#include <tempo2.h>
+#include "tempo2.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
