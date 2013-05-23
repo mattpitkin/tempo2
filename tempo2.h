@@ -52,9 +52,9 @@
 #define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DZ           500   /* Maximum number of parameters for interpolation function  */
-#define MAX_FIT              1000  /* Maximum number of parameters to fit for */
+#define MAX_FIT              10000  /* Maximum number of parameters to fit for */
 #define MAX_T2EFAC           50    /* Maximum number of T2EFACs allowed                */
-#define MAX_T2QUAD           50    /* Maximum number of T2EQUADs allowed               */
+#define MAX_T2EQUAD          50    /* Maximum number of T2EQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
@@ -542,10 +542,10 @@ typedef struct pulsar {
 
   // T2EFAC/T2EQUAD
   int    nT2efac,nT2equad;
-  char   T2efacFlagID[MAX_T2EFAC][16],T2efacFlagVal[MAX_T2EFAC][16];
+  char   T2efacFlagID[MAX_T2EFAC][MAX_FLAG_LEN],T2efacFlagVal[MAX_T2EFAC][MAX_FLAG_LEN];
   double T2efacVal[MAX_T2EFAC];
-  char   T2equadFlagID[MAX_T2EFAC][16],T2equadFlagVal[MAX_T2EFAC][16];
-  double T2equadVal[MAX_T2EFAC];
+  char   T2equadFlagID[MAX_T2EQUAD][MAX_FLAG_LEN],T2equadFlagVal[MAX_T2EQUAD][MAX_FLAG_LEN];
+  double T2equadVal[MAX_T2EQUAD];
   double T2globalEfac;
   
 
