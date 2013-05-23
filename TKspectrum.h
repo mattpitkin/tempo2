@@ -2,7 +2,7 @@
 
 #ifndef __TKspectrum_h
 #define __TKspectrum_h
-#include <TKfit.h>
+#include "TKfit.h"
 /*
 *    This file is part of TEMPO2. 
 * 
