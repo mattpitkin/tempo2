@@ -170,6 +170,8 @@ void free_blas(double** m){
    logdbg("free 0x%016x",m);
    fflush(stdout);
    free(m);
+   logdbg("leaving free_blas");
+      fflush(stdout);
 }
 
 

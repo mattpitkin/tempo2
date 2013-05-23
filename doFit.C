@@ -83,9 +83,9 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    int offsetNp = 0;
   bool DO_GLOBAL_FIT=false;
 
-   double **xx = (double**)malloc(sizeof(double*)*npsr);;
-   double **yy = (double**)malloc(sizeof(double*)*npsr);;
-   double ***uinvs = (double***)malloc(sizeof(double**)*npsr);;
+   double **xx = (double**)malloc(sizeof(double*)*npsr);
+   double **yy = (double**)malloc(sizeof(double*)*npsr);
+   double ***uinvs = (double***)malloc(sizeof(double**)*npsr);
    int npol;
    int nglobal;
    int **ip=(int**)malloc(sizeof(int*)*npsr);
@@ -148,6 +148,11 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
    nglobal=getNglobal(psr,npsr);
    offsetNp += nglobal;
+    if (offsetNp > MAX_FIT)
+     {
+       printf("ERROR1: number of fitted parameters > MAX_FIT (%d)\n",MAX_FIT);
+       exit(1);
+     }
    if(nglobal > 0 || forceGlobalFit){
 	  DO_GLOBAL_FIT=true;
 	  logmsg("GLOBAL fit enabled. Number of global fit parameters = %d",nglobal);
@@ -159,6 +164,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
 	  nobs_noconstrain += psr[p].nobs;
 	  ip[p]=(int*)malloc(sizeof(int)*nobs_and_constraints);
+	  if (ip[p]==NULL) {printf("Unable to allocate memory in doFit.C (ip[p])\n"); exit(1);}
 	  logtchk("Processing pulsar %d",p);
 
 	  /*
@@ -172,22 +178,28 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 printf("WARNING: DM cannot be fit with DMMODEL\n         unless you set 'DMMODEL DM 1' in par file.\n");
 		 psr[p].param[param_dm].fitFlag[0]=0;
 	  }
-
 	  strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
 	  strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
 	  /* How many parameters are we fitting for */
 	  logtchk("Determining which parameters we are fitting for");
 	  npol = getNparams(psr+p,offsetNp);
 	  offsetNp += npol;
+	  if (offsetNp > MAX_FIT)
+	    {
+	      printf("ERROR2: number of fitted parameters > MAX_FIT (%d)\n",MAX_FIT);
+	      exit(1);
+	    }
 
 	  logtchk("Complete determining which parameters we are fitting for");
-
+	  // Note that x gets free'd as xx
 	  x     = (double *)malloc(nobs_and_constraints*sizeof(double));
+	  if (x == NULL) {printf("Unable to allocate memory in doFit.C (x)\n"); exit(1);}
 	  y     = (double *)malloc(nobs_and_constraints*sizeof(double));
+	  if (y == NULL) {printf("Unable to allocate memory in doFit.C (y)\n"); exit(1);}
 	  xx[p]=x;
 	  yy[p]=y;
 	  sig   = (double *)malloc(nobs_and_constraints*sizeof(double));
-
+	  if (sig == NULL) {printf("Unable to allocate memory in doFit.C (sig)\n"); exit(1);}
 	  count=0;
 	  for (i=0;i<psr[p].nobs;i++)
 	  {	  
@@ -195,7 +207,6 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 if (psr[p].obsn[i].deleted==0)
 		 {
 			okay=1;
-
 			/* Check for START and FINISH flags */
 			if (psr[p].param[param_start].paramSet[0]==1 && psr[p].param[param_start].fitFlag[0]==1 &&
 				  (psr[p].param[param_start].val[0] > psr[p].obsn[i].sat))
@@ -240,7 +251,6 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  }
 
 
-
 	  if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL")){
 		 // fit with a covariance function.
 		 logtchk("allocating memory for uinv ");
@@ -263,18 +273,15 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			logmsg("Doing a WEIGHTED fit");
 		 }
 	  }
-
 	  logtchk("Compute uinv");
 	  // note that this works even for a non-cholesky fit.
 	  getCholeskyMatrix(uinvs[p],covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip[p]);
 	  logtchk("Completed computing uinv");
-
 	  psr[p].nFit = count;
 	  psr[p].param[param_start].val[0] = newStart-0.001; 
 	  psr[p].param[param_finish].val[0] = newFinish+0.001;
 	  psr[p].param[param_start].paramSet[0] = 1;
 	  psr[p].param[param_finish].paramSet[0] = 1; 
-
 	  /*
 	  logtchk("removing mean from the residuals??  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 	  for (i=0;i<psr[p].nobs;i++)
@@ -289,15 +296,14 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 computeConstraintWeights(psr+p);
 		 psr[p].nParam = npol;
 		 psr[p].nGlobal = nglobal;
-
 		 free(sig);
    }
-
 
    if (DO_GLOBAL_FIT){
 	  int n[npsr],nf[npsr];
 	  int ntot=0;
 	  int nobs=0;
+
 
 	  for (p=0;p<npsr;p++) {
 		 n[p]=psr[p].nFit;
@@ -344,7 +350,6 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  free_uinv(cvm);
 	  free(val);
 	  free(error);
-
    } else {
 	  for (p=0;p<npsr;p++) { /* Loop over all the pulsars */
 		 /* Do the fit */
@@ -392,7 +397,6 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 }
 	  }
    }
-
    logtchk("freeing memory");
    for (p=0;p<npsr;p++) {
 	  free(yy[p]);      
