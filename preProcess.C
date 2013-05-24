@@ -152,8 +152,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	{
 	  for (i=0;i<MAX_PARAMS;i++)
 	    {
-	      for (k=0;k<psr[p].param[i].aSize;k++)
-		psr[p].param[i].fitFlag[k] = 0;
+	      if (i!=param_start && i!=param_finish){
+		for (k=0;k<psr[p].param[i].aSize;k++)
+		  psr[p].param[i].fitFlag[k] = 0;
+	      }
 	    }
 	  // Turn off fitting for jumps
 	  for (i=0;i<=psr[p].nJumps;i++)
