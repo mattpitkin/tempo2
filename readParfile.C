@@ -1021,8 +1021,14 @@ else if (strcasecmp(str,"_DM")==0)
 	  if (val-1<psr->param[param_om].aSize)
 	  readValue(psr,str,fin,&(psr->param[param_om]),val);
 	  }
-	  }*/       
-	  else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') && 
+	  }*/    
+  else if  (strcasecmp(str,"OM2DOT")==0)
+    {
+      readValue(psr,str,fin,&(psr->param[param_om2dot]),0);
+      
+    }
+	
+  else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') && 
 			(str[1]=='M' || str[1]=='m'))
 	  {
 		 int val;
@@ -1031,7 +1037,12 @@ else if (strcasecmp(str,"_DM")==0)
 			if (val-1<psr->param[param_om].aSize)
 			   readValue(psr,str,fin,&(psr->param[param_om]),val-1);
 		 }
+	  
+	
 	  }
+	  else if  (strcasecmp(str,"ORBPX")==0)
+	    readValue(psr,str,fin,&(psr->param[param_orbpx]),0);
+
 	  else if (strcasecmp(str,"PB")==0)
 	  {
 		 readValue(psr,str,fin,&(psr->param[param_pb]),0);
@@ -1103,18 +1114,33 @@ else if (strcasecmp(str,"_DM")==0)
 			psr->param[param_a1dot].val[0]*=1.0e-12;
 		 psr->param[param_a1dot].prefit[0] = psr->param[param_a1dot].val[0];
 	  }
-	  else if (strcasecmp(str,"A2DOT")==0 || strcasecmp(str,"X2DOT")==0)
-	  {
+	
+  
+	  else if ( strcasecmp(str,"X2DOT")==0) 
+		   {
+		     // Ryan: set this value which is used in THE MSS model plugin
+		     // These shouldn't be used in the same place, so hopefully this doesn't cause anything to crash!
+		     readValue(psr,str,fin,&(psr->param[param_a2dot]),0);
+		    
+		     psr->param[param_a2dot].prefit[0] = psr->param[param_a2dot].val[0];
+		   }
+
+	  else if ((strcasecmp(str,"A2DOT")==0) ||  (strcasecmp(str,"X2DOT")==0))
+	    {
 		 readValue(psr,str,fin,&(psr->param[param_a1dot]),1);
 		 psr->param[param_a1dot].prefit[1] = psr->param[param_a1dot].val[1];
-	  }
+	    
+  
+	    }
+  
 	  else if (strcasecmp(str,"TASC")==0)
 		 readValue(psr,str,fin,&(psr->param[param_tasc]),0);
 	  else if (strcasecmp(str,"EPS1")==0)
 		 readValue(psr,str,fin,&(psr->param[param_eps1]),0);
 	  else if (strcasecmp(str,"EPS1DOT")==0)
 	  {
-		 readValue(psr,str,fin,&(psr->param[param_eps1dot]),0);
+	
+	    readValue(psr,str,fin,&(psr->param[param_eps1dot]),0);
 		 if (fabs(psr->param[param_eps1dot].val[0]) > 1e-7) 
 			psr->param[param_eps1dot].val[0] *= 1.0e-12;
 		 psr->param[param_eps1dot].prefit[0] = psr->param[param_eps1dot].val[0];

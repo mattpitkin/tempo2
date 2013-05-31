@@ -177,8 +177,8 @@ extern char TEMPO2_ERROR[];
 enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
 	    param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
-	    param_ecc,param_edot,param_xpbdot,param_pbdot,param_a1dot,
-	    param_omdot,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
+	    param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_a1dot,
+	    param_a2dot,param_omdot,param_om2dot,param_orbpx,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
 	    param_mtot,param_glep,param_glph,param_glf0,param_glf1,param_glf2,
 	    param_glf0d,param_gltd,param_start,param_finish,param_track,param_bp,param_bpp,
 	    param_tzrmjd,param_tzrfrq,param_fddc,param_fddi,param_dr,param_dtheta,param_tspan,
@@ -547,7 +547,10 @@ typedef struct pulsar {
   char   T2equadFlagID[MAX_T2EQUAD][MAX_FLAG_LEN],T2equadFlagVal[MAX_T2EQUAD][MAX_FLAG_LEN];
   double T2equadVal[MAX_T2EQUAD];
   double T2globalEfac;
-  
+  //some parameters for Ryan Shannon's simulations
+  double rasim, decsim;
+  int simflag;
+
 
   /* Which fit function are we using */
   char fitFunc[MAX_FILELEN];

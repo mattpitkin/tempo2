@@ -1,3 +1,4 @@
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -362,6 +363,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_om].label[0],"OM (deg)");
   strcpy(psr->param[param_om].shortlabel[0],"OM");
   strcpy(psr->param[param_ecc].label[0],"ECC");
+    strcpy(psr->param[param_e2dot].shortlabel[0],"E2DOT");
+  strcpy(psr->param[param_e2dot].label[0],"E2DOT");
   strcpy(psr->param[param_edot].shortlabel[0],"EDOT");
   strcpy(psr->param[param_edot].label[0],"EDOT");
   strcpy(psr->param[param_ecc].shortlabel[0],"ECC");
@@ -403,12 +406,18 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_xpbdot].shortlabel[0],"XPBDOT");
   strcpy(psr->param[param_a1dot].label[0],"XDOT");
   strcpy(psr->param[param_a1dot].shortlabel[0],"XDOT");
+  strcpy(psr->param[param_a2dot].label[0],"X2DOT");
+  strcpy(psr->param[param_a2dot].shortlabel[0],"X2DOT");
   strcpy(psr->param[param_xomdot].label[0],"XOMDOT");
   strcpy(psr->param[param_xomdot].shortlabel[0],"XOMDOT");
   strcpy(psr->param[param_afac].label[0],"AFAC");
   strcpy(psr->param[param_afac].shortlabel[0],"AFAC");
   strcpy(psr->param[param_omdot].label[0],"OMDOT (deg/yr)");
   strcpy(psr->param[param_omdot].shortlabel[0],"OMDOT");
+  strcpy(psr->param[param_om2dot].label[0],"OM2DOT(1e-20 rad/yr^2)");
+  strcpy(psr->param[param_om2dot].shortlabel[0],"OM2DOT");
+  strcpy(psr->param[param_orbpx].label[0],"ORBPX (kpc^-1)");
+  strcpy(psr->param[param_orbpx].shortlabel[0],"ORBPX");
   strcpy(psr->param[param_tasc].label[0],"TASC (MJD)");
   strcpy(psr->param[param_tasc].shortlabel[0],"TASC");
   strcpy(psr->param[param_eps1].label[0],"EPS1");
