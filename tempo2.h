@@ -446,6 +446,8 @@ typedef struct pulsar {
   int    nFit;                    /* Number of points in the fit */
   int    nParam;                  /* Number of parameters in the fit */
   int    nGlobal;                 /* Number of global parameters in the fit */
+  int fitParamGlobalI[MAX_FIT];   // number of global parameters in fit
+  int fitParamGlobalK[MAX_FIT];    // number of global parameters in fit
   int    fitParamI[MAX_FIT];
   int    fitParamK[MAX_FIT];
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */

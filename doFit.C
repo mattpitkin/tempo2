@@ -339,6 +339,60 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 offset+=nf[p];
 	  }
 
+	  	  // Ryan:  trying to output covariance matrix etc
+	  
+	  FILE *paramout;
+	  paramout = fopen("cvm.param", "w");
+	 
+	  int ii,jj;
+
+	  // global variables are always assigned first
+
+	  int iglobal, kglobal;
+	  int pglobal, qglobal;
+	  // print out covariance matrix of qifunc?
+
+	  //fprintf(stderr, "%d %d\n",nglobal, psr[0].nGlobal);
+	  for (ii=0;ii<nglobal;ii++)
+	    {
+
+	      iglobal = psr[0].fitParamGlobalI[ii];
+	      kglobal = psr[0].fitParamGlobalK[ii];
+	      //fprintf(stderr, "%d %d %d\n", ii,param_quad_ifunc_p, param_quad_ifunc_c);
+
+	      if ((iglobal == param_quad_ifunc_p) || (iglobal == param_quad_ifunc_c))
+		{
+		  
+		  for(jj=0;jj<nglobal;jj++)
+		    {
+		      pglobal =  psr[0].fitParamGlobalI[jj];
+		      qglobal = psr[0].fitParamGlobalK[jj];
+		      
+		      if ((pglobal == param_quad_ifunc_p) || (pglobal  == param_quad_ifunc_c))
+			{
+			  // let's not normalize it for now
+			  //fprintf(paramout, "%.3e ", cvm[ii][jj]/sqrt(cvm[ii][ii]*cvm[jj][jj]));
+			  fprintf(paramout, "%.3e \n", cvm[ii][jj]);
+
+			  //fprintf(stderr, "%d %d %d %s %.3e %.3e\n",ii,iglobal, kglobal,psr[0].param[iglobal].label[0], (float) psr[0].quad_ifuncV_p[kglobal], val[ii]);
+			}
+		    }
+		  //		  fprintf(paramout, "\n");
+		}
+		
+	    }
+		
+		
+
+	  // all of the non-global parameters are named
+
+
+	  fclose(paramout);
+	  //exit(0);
+
+
+
+
 	  // Record the covariance matrix
 	  for (i=0;i<nglobal;i++)
 	    {
