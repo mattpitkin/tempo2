@@ -735,6 +735,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	       phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_p); 				
 	     }
+
 	   // Cross term
 	   if (psr[p].param[param_quad_ifunc_c].paramSet[0] == 1)
 	     {
@@ -807,6 +808,246 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	       phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_c); 				
 	     }
+
+	   
+
+
+	   
+	   // Ryan's Geometricral fitting function for plus
+	   
+	   if (psr[p].param[param_quad_ifunc_p].paramSet[0] ==2)
+	     {
+	       double lp, bp;
+	       double lg, bg;
+
+
+	       if (psr[p].quad_ifunc_geom_p == 0)
+		 {
+		  
+		   
+		   
+		   if(psr[p].simflag==1)
+		     {
+		       lp = psr[p].rasim;
+		       bp = psr[p].decsim;
+		       
+		     }
+		   else
+		     {
+		       lp = (double)psr[p].param[param_raj].val[0];
+		       bp   = (double)psr[p].param[param_decj].val[0];  
+		     }
+		   
+		   lg= psr[p].quad_ifunc_p_RA;
+		   bg = psr[p].quad_ifunc_p_DEC; 
+		   
+		   double px, py,pz,gx,gy,gz;
+		   
+		   px = cos(bp)*cos(lp);
+		   py = cos(bp)*sin(lp);
+		   pz = sin(bp);
+		   
+		   gx = cos(bg)*cos(lg);
+		   gy = cos(bg)*sin(lg);
+		   gz = sin(bg);
+ 
+		   
+
+		   
+	
+
+		   double ctheta;
+		   
+		   ctheta = px*gx + py*gy + pz*gz;
+	       
+		   // phi is the angle between the direction of principle polarization
+		   // the projection of  the pulsar onto the plane of polarization
+		   
+		 
+
+		   double rho, rhox, rhoy, rhoz;
+
+		   rhox = px - ctheta*gx;
+		   rhoy = py - ctheta*gy;
+		   rhoz = pz - ctheta*gz;
+
+		   double pol,polx, poly, polz;
+		   // polarization vector is projection of vector pointing to NCP on plane
+		   
+		   
+		   // plus polarization in \hat theta direction? 
+		   // this ought to point to NCP
+		   
+		   polx = sin(bg)*cos(lg);
+		   poly = sin(bg)*sin(lg);
+		   polz = -cos(bg);
+
+
+		   
+
+	
+		   rho = sqrt(rhox*rhox + rhoy*rhoy + rhoz*rhoz);
+		   pol = sqrt(polx*polx + poly*poly+ polz*polz);
+		  
+		   
+
+		   
+		   double phi;
+		   phi = acos((rhox*polx+ rhoy*poly+rhoz*polz)/(rho*pol));
+
+		   fprintf(stderr, "%.3e\n", phi);
+		  
+
+		   long double resp;
+
+		   resp =0.5*(1-ctheta)*cos(2*phi);
+	       
+	      
+		   psr[p].quad_ifunc_geom_p = resp;
+		 }
+	     
+	       double m,c, ival;
+  
+
+	       for (k=0;k<psr[p].quad_ifuncN_p-1;k++)
+		 {
+		   if ((double)psr[p].obsn[i].sat >= psr[p].quad_ifuncT_p[k] &&
+		       (double)psr[p].obsn[i].sat < psr[p].quad_ifuncT_p[k+1])
+		     {
+		       m = (psr[p].quad_ifuncV_p[k]-psr[p].quad_ifuncV_p[k+1])/(psr[p].quad_ifuncT_p[k]-psr[p].quad_ifuncT_p[k+1]);
+		       c = psr[p].quad_ifuncV_p[k]-m*psr[p].quad_ifuncT_p[k];
+		       
+		       ival = m*(double)psr[p].obsn[i].sat+c;
+		       break;
+		     }
+		 }
+	       phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_p); 	
+	       
+
+	     }
+
+
+	   // Ryan's geometrical fitting function for cross
+
+	   if (psr[p].param[param_quad_ifunc_c].paramSet[0] ==2)
+	     {
+	       double lp, bp;
+	       double lg, bg;
+
+
+	       if (psr[p].quad_ifunc_geom_c == 0)
+		 {
+		  
+		   
+		   
+		   if(psr[p].simflag==1)
+		     {
+		       lp = psr[p].rasim;
+		       bp = psr[p].decsim;
+		       
+		     }
+		   else
+		     {
+		       lp = (double)psr[p].param[param_raj].val[0];
+		       bp   = (double)psr[p].param[param_decj].val[0];  
+		     }
+		   
+		   lg= psr[p].quad_ifunc_c_RA;
+		   bg = psr[p].quad_ifunc_c_DEC; 
+		 
+		   double px, py,pz,gx,gy,gz;
+		   
+		   px = cos(bp)*cos(lp);
+		   py = cos(bp)*sin(lp);
+		   pz = sin(bp);
+		   
+		   gx = cos(bg)*cos(lg);
+		   gy = cos(bg)*sin(lg);
+		   gz = sin(bg);
+
+		   
+		   
+		   double ctheta;
+		   
+		   ctheta = px*gx + py*gy + pz*gz;
+	       
+		   // phi is the angle between the direction of principle polarization
+		   // direction of principle polarizatino of cross???
+		   // the projection of  the pulsar onto the plane of polarization
+		 
+
+		   double rho, rhox, rhoy, rhoz;
+
+		   rhox = px - ctheta*gx;
+		   rhoy = py - ctheta*gy;
+		   rhoz = pz - ctheta*gz;
+		   
+		   
+		   double pol, polx, poly, polz;
+		   double thetax, thetay, thetaz;
+		   double phix, phiy, phiz;
+
+		   thetax = sin(bg)*cos(lg);
+		   thetay = sin(bg)*sin(lg);
+		   thetaz - -cos(bg);
+		   
+		   phix = -sin(lg);
+		   phiy = cos(lg);
+		   phiz =0;
+
+		   // polarization 45 degrees from theta towards phi?
+		   
+		   polx = thetax+phix;
+		   poly = thetay+phiy;
+		   polz = thetaz+phiz;
+
+
+				  
+		   pol = sqrt(polx*polx + poly*poly+ polz*polz);
+
+
+		   rho = sqrt(rhox*rhox + rhoy*rhoy + rhoz*rhoz);
+		   
+		  
+		   
+		   double phi;
+		   phi = acos((rhox*polx + rhoy*poly + rhoz*polz)/rho/pol);
+
+
+		   long double resc;
+
+		   resc =0.5*(1-ctheta)*cos(2*phi);
+	       
+	      
+		   psr[p].quad_ifunc_geom_c = resc;
+		 }
+	     
+	       double m,c, ival;
+  
+
+	       for (k=0;k<psr[p].quad_ifuncN_c-1;k++)
+		 {
+		   if ((double)psr[p].obsn[i].sat >= psr[p].quad_ifuncT_c[k] &&
+		       (double)psr[p].obsn[i].sat < psr[p].quad_ifuncT_c[k+1])
+		     {
+		       m = (psr[p].quad_ifuncV_c[k]-psr[p].quad_ifuncV_c[k+1])/(psr[p].quad_ifuncT_c[k]-psr[p].quad_ifuncT_c[k+1]);
+		       c = psr[p].quad_ifuncV_c[k]-m*psr[p].quad_ifuncT_c[k];
+		       
+		       ival = m*(double)psr[p].obsn[i].sat+c;
+		       break;
+		     }
+		 }
+	       phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_c); 	
+	       
+
+	     }
+
+
+
+
+
+
+
 	   
 
 
