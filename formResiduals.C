@@ -678,7 +678,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 	       double cosTheta;
 
-	       if (psr[p].quad_ifunc_geom_p == 0)
+	       if ((psr[p].quad_ifunc_geom_p == 0) &&  (psr[p].param[param_quad_ifunc_p].val[0] > 1.5))
 		 {
 		   lambda_p = (double)psr[p].param[param_raj].val[0];
 		   beta_p   = (double)psr[p].param[param_decj].val[0];
@@ -753,7 +753,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 	       double cosTheta;
 
-	       if (psr[p].quad_ifunc_geom_c == 0)
+	       if ((psr[p].quad_ifunc_geom_c == 0) &&  (psr[p].param[param_quad_ifunc_p].val[0] < 1.5))
 		 {
 		   lambda_p = (double)psr[p].param[param_raj].val[0];
 		   beta_p   = (double)psr[p].param[param_decj].val[0];
@@ -811,12 +811,14 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 	   
 
-
+	  
 	   
 	   // Ryan's Geometricral fitting function for plus
 	   
-	   if (psr[p].param[param_quad_ifunc_p].paramSet[0] ==2)
+	   if ((psr[p].param[param_quad_ifunc_p].paramSet[0] ==1) &&  (psr[p].param[param_quad_ifunc_p].val[0] > 1.5))
 	     {
+
+	       
 	       double lp, bp;
 	       double lg, bg;
 
@@ -929,7 +931,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 	   // Ryan's geometrical fitting function for cross
 
-	   if (psr[p].param[param_quad_ifunc_c].paramSet[0] ==2)
+	   if ((psr[p].param[param_quad_ifunc_c].paramSet[0] ==2) &&  (psr[p].param[param_quad_ifunc_p].val[0] > 1.5))
 	     {
 	       double lp, bp;
 	       double lg, bg;
