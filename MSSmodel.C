@@ -56,6 +56,9 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
   int norbits;  
   double pb,eccentricity,a1,omega,omdot,xdot,am2,pbdot,tt0;
+  double shapmax;
+  double e2dot;
+  double orbpx;
   const char *CVS_verNum = "$Revision$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("MSSmodel.C","MSSmodel()",CVS_verNum);
@@ -70,9 +73,18 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
 
   if (psr[p].param[param_a1dot].paramSet[0] == 1) xdot = psr[p].param[param_a1dot].val[0];
   else xdot = 0.0;
-  if (psr[p].param[param_a1dot].paramSet[1] == 1) x2dot = psr[p].param[param_a1dot].val[1];
+  if (psr[p].param[param_a2dot].paramSet[0] == 1) x2dot = psr[p].param[param_a2dot].val[0];
   else x2dot = 0.0;
 
+  if (psr[p].param[param_e2dot].paramSet[0] == 1) e2dot = 1e-20*psr[p].param[param_e2dot].val[0];
+  else e2dot = 0.0;
+    
+  if(psr[p].param[param_orbpx].paramSet[0] ==1) orbpx = 1./3.086e21*psr[p].param[param_orbpx].val[0];
+  else orbpx = 0.0;
+
+
+  //fprintf(stderr, "AAAAAA %.3e\n", x2dot);
+  //exit(0);
 
   if (psr[p].param[param_dtheta].paramSet[0] == 1) dth = psr[p].param[param_dtheta].val[0];
   else dth=0.0;
@@ -95,11 +107,14 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   if (psr[p].param[param_gamma].paramSet[0]==1) gamma = psr[p].param[param_gamma].val[0];
   else gamma  = 0.0;
 
-  if (psr[p].param[param_om].paramSet[2]==1) om2dot = psr[p].param[param_om].val[2];
+  if (psr[p].param[param_om2dot].paramSet[0]==1) om2dot = psr[p].param[param_om2dot].val[0];
   else om2dot  = 0.0;
 
   if (psr[p].param[param_edot].paramSet[0]==1) edot = psr[p].param[param_edot].val[0];
   else edot  = 0.0;
+
+  if (psr[p].param[param_shapmax].paramSet[0]==1) shapmax = psr[p].param[param_shapmax].val[0];
+   else shapmax  = 0.0;
 
 
   pb  = psr[p].param[param_pb].val[0] * SECDAY;
@@ -121,7 +136,7 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   norbits=(int)orbits;
   if(orbits<0.0) norbits=norbits-1;
   phase=2.0*M_PI*(orbits-norbits);
-  ecc=ecc0 + edot*tt0;
+  ecc=ecc0 + edot*tt0  +0.5*e2dot*tt0*tt0;
   er =ecc*(1.0+dr);
   eth=ecc*(1.0+dth);
   /*  Compute eccentric anomaly u by iterating Kepler's equation.*/
@@ -132,7 +147,7 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
     {
       du=(phase-(u-ecc*sin(u)))/(1.0-ecc*cos(u));
       u=u+du;
-    } while (fabs(du)>1.0e-12);
+    } while (fabs(du)>1.0e-14);
 
   /* DD equations 17b, 17c, 29, and 46 through 52 */
   su=sin(u);
@@ -144,8 +159,21 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   if(ae < 0.0) ae=ae+2.0*M_PI;
   ae=2.0*M_PI*orbits + ae - phase;
 
-  omega = omega0 +  k*ae + 0.5*om2dot*pow(tt0,2); /* Wex 1998 */
-  x     = x0     + xi*ae + 0.5* x2dot*pow(tt0,2); /* Wex 1998 */
+  //  omega = omega0 +  k*ae + 0.5*om2dot*pow(tt0,2); /* Wex 1998 */
+  //x = x0+xi*ae+0.5*x2dot*pow(tt0,2);
+
+  double xii =  1e-20*x2dot/an/an;
+  double oii =  1e-20*om2dot/an/an; ///RAD/pow(365.25*SECDAY,2.);
+
+  x = x0+xi*ae+0.5*xii*pow(ae,2); 
+  omega = omega0+k*ae +0.5*oii*pow(ae,2.);
+
+  //
+  //omega = omega0 +  k*ae + 0.5*om2dot*tt0*tt0; /* Wex 1998 */
+  //x = x0+xi*ae+0.5*x2dot*tt0*tt0;
+  
+
+
 
   sw=sin(omega);
   cw=cos(omega);
@@ -169,6 +197,44 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   d2bar=dre*(1-anhat*drep+(pow(anhat,2))*(pow(drep,2) + 0.5*dre*drepp -
 					  +    0.5*ecc*su*dre*drep/onemecu)) + ds + da;
   torb=-d2bar;
+
+  double shapparam;
+  shapparam = -log(1-ecc*cu-(sin(omega)*(cu-ecc)+ sqrt(1-ecc*ecc)*cos(omega)*su)*si);
+
+  torb -= shapmax*shapparam;
+
+
+ 
+
+  // add in orbital parallax
+
+ 
+  
+  double so = sin(omega);
+  double co  = cos(omega);
+  double cpx; 
+
+  
+
+  cpx= 1e2*SPEED_LIGHT*x*x/2.*(  1./si/si-0.5+0.5*ecc*ecc*(1 + so*so -3/si/si) 
+			       -2*ecc*(1./si/si- so*so)*(cu  -ecc)
+			       + sqrt(1-ecc*ecc)*sin(2*omega)*(ecc*su-0.5*sin(2*u))
+			       +0.5*( cos(2*omega) +  ecc*ecc*(1./si/si+ co*co))*cos(2*u));
+
+  //csi = 1e2*SPEED_LIGHT*x*x/2.*orbpx*( -2*ecc*(-2./si/si/si)*cu + 0.5*ecc*ecc*(-2./si/si/si)*cos(2*u));
+
+  //cpx = 1e2*SPEED_LIGHT*x0*x0/2.*(0.5*(cos(2*omega) + ecc*ecc*(1./si/si+ co*co))*cos(2*u));
+ 
+
+  if( orbpx != 0)
+    {
+      
+      torb -= cpx*orbpx;
+    }      
+  
+ 
+  
+  
   /*  printf("MSS here: %.20g %.20g %.20g %.20g\n",dlogbr,ds,da,torb);*/
 
   if (param==-1) return torb;
@@ -181,21 +247,34 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   cgamma=su;
   cdth=-ecc*ecc*x*cw*su/sqr1me2;
   cm2=-2*dlogbr;
-  csi=2*m2*(sw*cume+sqr1me2*cw*su)/brace;
+  //csi=2*m2*(sw*cume+sqr1me2*cw*su)/brace;
 
 
   /* Otherwise here for fitting */
   if (param==param_a1) return cx;
   else if (param==param_ecc) return ce;
   else if (param==param_om) return comega;
-  else if (param==param_omdot) return ae*comega/(an);
+  else if (param==param_omdot) return comega*ae/an;
   else if (param==param_pb) return -csigma*an*SECDAY*tt0/(pb*SECDAY);
   else if (param==param_t0) return -csigma*an*SECDAY;  
+  else if (param==param_a1dot) return cx*ae/an;
+  else if (param==param_pbdot) return  0.5*tt0*(-csigma*an*SECDAY*tt0/(pb*SECDAY));
+  else if (param==param_a2dot) return 1e-20*0.5*cx*ae/an*ae/an;   
+  else if (param==param_om2dot) return  1e-20*0.5*comega*ae/an*ae/an;    
+  else if (param==param_shapmax) return shapparam;
+  else if (param==param_m2) return cm2*SUNMASS;
+
+  else if (param==param_sini) return csi;
+  else if (param==param_edot) return ce*tt0;
+  else if (param==param_e2dot) return 1e-20*0.5*ce*tt0*tt0;
+  else if (param==param_orbpx) return 1./3.086e21*cpx;
   return 0.0;
 }
 
 void updateMSS(pulsar *psr,double val,double err,int pos)
 {
+  
+ 
   if (pos==param_pb)
     {
       psr->param[param_pb].val[0] += val/SECDAY;
@@ -218,12 +297,56 @@ void updateMSS(pulsar *psr,double val,double err,int pos)
     }
   else if (pos==param_omdot)
     {
-      psr->param[pos].val[0] += val*(SECDAY*365.25)*180.0/M_PI;
-      psr->param[pos].err[0]  = err*(SECDAY*365.25)*180.0/M_PI;
+      psr->param[pos].val[0] += val*180/M_PI*365.25*SECDAY;
+      psr->param[pos].err[0]  = err*180/M_PI*365.25*SECDAY;
     }
   else if (pos==param_a1dot)
     {
       psr->param[pos].val[0] += val;
       psr->param[pos].err[0]  = err;
     }
+   else if (pos==param_a2dot)
+    {
+      psr->param[pos].val[0] += val;
+      psr->param[pos].err[0]  = err;
+    }
+   else if (pos==param_om2dot)
+    {
+      psr->param[pos].val[0] += val;
+      psr->param[pos].err[0]  = err;
+    }
+   else if(pos==param_shapmax)
+     {
+       psr->param[pos].val[0] += val;
+       psr->param[pos].err[0]  = err;
+     }
+   else if (pos==param_m2)
+     {
+       psr->param[pos].val[0] += val;
+       psr->param[pos].err[0] = err;
+     }
+
+  else if (pos==param_sini)
+    {
+     psr->param[pos].val[0] += val;
+    psr->param[pos].err[0]  = err;
+    }
+    else if (pos==param_edot)
+    {
+     psr->param[pos].val[0] += val;
+    psr->param[pos].err[0]  = err;
+    }
+   else if (pos==param_e2dot)
+    {
+     psr->param[pos].val[0] += val;
+    psr->param[pos].err[0]  = err;
+    }
+else if (pos==param_orbpx)
+    {
+     psr->param[pos].val[0] += val;
+    psr->param[pos].err[0]  = err;
+    }
+  
+
+
 }
