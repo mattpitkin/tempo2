@@ -678,7 +678,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 	       double cosTheta;
 
-	       if ((psr[p].quad_ifunc_geom_p == 0) &&  (psr[p].param[param_quad_ifunc_p].val[0] > 1.5))
+	       if ((psr[p].quad_ifunc_geom_p == 0) && psr[p].param[param_quad_ifunc_p].val[0] == 1) 
 		 {
 		   lambda_p = (double)psr[p].param[param_raj].val[0];
 		   beta_p   = (double)psr[p].param[param_decj].val[0];
@@ -737,7 +737,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     }
 
 	   // Cross term
-	   if (psr[p].param[param_quad_ifunc_c].paramSet[0] == 1)
+	   if (psr[p].param[param_quad_ifunc_c].paramSet[0] == 1 && psr[p].param[param_quad_ifunc_c].val[0] == 1)
 	     {
 	       long double wi,t1,t2;
 	       long double dt,speriod,tt;
@@ -753,7 +753,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 	       double cosTheta;
 
-	       if ((psr[p].quad_ifunc_geom_c == 0) &&  (psr[p].param[param_quad_ifunc_p].val[0] < 1.5))
+	       if ((psr[p].quad_ifunc_geom_c == 0))
 		 {
 		   lambda_p = (double)psr[p].param[param_raj].val[0];
 		   beta_p   = (double)psr[p].param[param_decj].val[0];
@@ -808,7 +808,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	       phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_c); 				
 	     }
-
+	 
 	   
 
 	  
@@ -931,7 +931,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 	   // Ryan's geometrical fitting function for cross
 
-	   if ((psr[p].param[param_quad_ifunc_c].paramSet[0] ==2) &&  (psr[p].param[param_quad_ifunc_p].val[0] > 1.5))
+	   if ((psr[p].param[param_quad_ifunc_c].paramSet[0] ==1) &&  (psr[p].param[param_quad_ifunc_c].val[0] > 1.5))
 	     {
 	       double lp, bp;
 	       double lg, bg;
