@@ -116,6 +116,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->filterStr,"");
   strcpy(psr->passStr,"");
   strcpy(psr->fitFunc,"default");
+  psr->simflag=0;
   psr->nits=1;
   psr->clockFromOverride[0] = '\0';
   psr->nCompanion = 0;

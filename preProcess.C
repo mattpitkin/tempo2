@@ -80,7 +80,6 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
   ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
   //  debugFlag = 0;
 
-
   for (i=0;i<argc;i++)
     {
       if (strcmp(argv[i],"-epoch")==0)
@@ -142,7 +141,6 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	  psr[p].param[i].prefit[0] = getParameterValue(&psr[p],i,0);
 	}
       }
-
       if (setName==1)
 	strcpy(psr[p].name,name);
       if (nojump==1)
@@ -224,7 +222,6 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 		}
 	    }
 	    } */
-
       /* Select command line parameter setting */
       for (i=0;i<setN;i++)
 	{
@@ -244,9 +241,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 		}
 	    }
 	}
-
       preProcessSimple1 (psr + p, tempo1, last);
-
       /* Update period epoch if necessary */
       if (strcmp(newEpoch,"NONE")!=0)
 	{	  
@@ -436,7 +431,6 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 
 	    }
 	}    
-
       if (psr[p].param[param_pepoch].paramSet[0]==1 && psr[p].param[param_pepoch].fitFlag[0]==1)
 	{printf("Warning: Cannot fit for pepoch\n"); psr[p].param[param_pepoch].fitFlag[0]=0;}
       if (psr[p].param[param_posepoch].paramSet[0]==1 && psr[p].param[param_posepoch].fitFlag[0]==1)
@@ -469,7 +463,6 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	    }
 	  fclose(fdmin);
 	}
-
       // Check efacs and equads
       if (psr[p].nT2efac > 0 || psr[p].nT2equad > 0 || psr[p].T2globalEfac!=1.0)
 	{
@@ -504,7 +497,6 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	    }
 	}
 
-
       // Modify TOA flags if required
       if (modify==1)
 	{
@@ -535,9 +527,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	    }
 	  fclose(fin);
 	}
-      
       preProcessSimple2 (psr + p, startdmmjd, ndm, dmvals, trimonly);
-
       // Check for select file
       if (strlen(selectPlugName) > 0)
 	{
@@ -597,9 +587,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	  if (strlen(selectFname) > 0)
 	    useSelectFile(selectFname,psr,npsr);
 	}
-      
       preProcessSimple3 (psr + p);
-    
     }
 
   // Now check for global parameters
@@ -613,7 +601,6 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
       readParfileGlobal(psr,npsr,tpar,ttim);
       printf("Complete setting global parameters\n");
     }
-
 } 
 
 void useSelectFile(char *fname,pulsar *psr,int npsr)

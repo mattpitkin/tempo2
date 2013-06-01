@@ -125,29 +125,29 @@ void matrixDMConstraintWeights(pulsar *psr){
 		double x;
 
 
-		logdbg("Getting DM constraints for %s",psr->name);
-
-		// find out how many obs we have.
-		for(i=0; i < psr->nobs; i++){
-		  if (psr->obsn[i].deleted==0)
-		    {
-		      char okay=1;
-	      /* Check for START and FINISH flags */
-		      if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
-			  (psr->param[param_start].val[0] > psr->obsn[i].sat))
-			okay=0;
-		      if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
-			  psr->param[param_finish].val[0] < psr->obsn[i].sat)
-			okay=0;
-		      if (okay==1)
+		if (psr->param[param_dmmodel].fitFlag[0]==1)
+		  {
+		    logdbg("Getting DM constraints for %s",psr->name);
+		    // find out how many obs we have.
+		    for(i=0; i < psr->nobs; i++){
+		      if (psr->obsn[i].deleted==0)
 			{
-			  nobs++;
+			  char okay=1;
+			  /* Check for START and FINISH flags */
+			  if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+			      (psr->param[param_start].val[0] > psr->obsn[i].sat))
+			    okay=0;
+			  if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+			      psr->param[param_finish].val[0] < psr->obsn[i].sat)
+			    okay=0;
+			  if (okay==1)
+			    {
+			      nobs++;
+			    }
 			}
 		    }
-		}
 		// originally was sizeof(double*)*nobs.
 		double ** designMatrix=(double**)malloc_uinv(nobs);
-
 		double *e=(double*)malloc(sizeof(double)*nobs);
 
 		nobs=0;
@@ -181,41 +181,41 @@ void matrixDMConstraintWeights(pulsar *psr){
 			      designMatrix[nobs][k]=dmf*getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
 			    else
 			      designMatrix[nobs][k]=getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
-			    
 			  }
 			  nobs++;
 			  
 			}
 		    }
-		}
-
+		} 
+		printf("Calling TKleastSquares %d %d\n",nobs,nfit); fflush(stdout);
 		TKleastSquares(NULL,NULL,designMatrix,designMatrix,nobs,nfit,1e-20,0,NULL,e,NULL);
+		printf("Returning from calling TKleastSquares\n"); fflush(stdout);
 		double sum_wDM=0;
 		double sum_wCM=0;
 		for (i=0;i<nfit;i++)
-		{
-		   double sum=0.0;
-		   if(i < nDM){
-			  psr->dmoffsDM_weight[i]=1.0/e[i]/e[i];
-			  sum_wDM+=psr->dmoffsDM_weight[i];
-		   } else {
-			  psr->dmoffsCM_weight[i-nDM]=1.0/e[i]/e[i];
-			  sum_wCM+=psr->dmoffsCM_weight[i-nDM];
-		   }
-
-
-
-		}
+		  {
+		    double sum=0.0;
+		    if(i < nDM){
+		      psr->dmoffsDM_weight[i]=1.0/e[i]/e[i];
+		      sum_wDM+=psr->dmoffsDM_weight[i];
+		    } else {
+		      psr->dmoffsCM_weight[i-nDM]=1.0/e[i]/e[i];
+		      sum_wCM+=psr->dmoffsCM_weight[i-nDM];
+		    }
+		    
+		    
+		    
+		  }
 		//normalise the weights
 		for (i=0;i<psr->dmoffsDMnum;i++)
-		   psr->dmoffsDM_weight[i]/=sum_wDM;
+		  psr->dmoffsDM_weight[i]/=sum_wDM;
 		for (i=0;i<psr->dmoffsCMnum;i++)
-		   psr->dmoffsCM_weight[i]/=sum_wCM;
-
-
+		  psr->dmoffsCM_weight[i]/=sum_wCM;
+		
 		// free everything .
 		free_uinv(designMatrix);
 		free(e);
+		  }
 }
 
 

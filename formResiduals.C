@@ -810,9 +810,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     }
 	 
 	   
-
-	  
-	   
 	   // Ryan's Geometricral fitting function for plus
 	   
 	   if ((psr[p].param[param_quad_ifunc_p].paramSet[0] ==1) &&  (psr[p].param[param_quad_ifunc_p].val[0] > 1.5))
