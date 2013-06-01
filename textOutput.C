@@ -164,9 +164,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	}
       else
 	  printf("Number of points in fit = %d\n",psr[p].nFit);
-      if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
+      if (psr[p].rescaleErrChisq == 1 && psr[p].fitMode==1)
 	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
-      printf("Offset: %g %g offset_e*sqrt(n) = %g n = %d\n",psr->offset,psr->offset_e,psr->offset_e*sqrt(psr[p].nFit-psr[p].nconstraints),psr[p].nFit-psr[p].nconstraints);
+      printf("Offset: %g %g offset_e*sqrt(n) = %g n = %d\n",psr[p].offset,psr[p].offset_e,psr[p].offset_e*sqrt(psr[p].nFit-psr[p].nconstraints),psr[p].nFit-psr[p].nconstraints);
       printf("\n\n");
       printf("PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit\n");
       printf("---------------------------------------------------------------------------------------------------\n");
@@ -263,7 +263,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    }
 	}      
       printf("---------------------------------------------------------------------------------------------------\n");
-      if (psr->rescaleErrChisq == 1 && psr->fitMode==1)
+      if (psr[p].rescaleErrChisq == 1 && psr[p].fitMode==1)
 	printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
 
       if (psr[p].nconstraints>0){
@@ -1053,7 +1053,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	    {
 
-	      if (psr->param[param_dmmodel].linkTo[0] == param_dm){
+	      if (psr[p].param[param_dmmodel].linkTo[0] == param_dm){
 		      fprintf(fout2,"DMMODEL DM %d\n",(int)psr[p].param[param_dmmodel].fitFlag[0]);
 	      } else {
 		      fprintf(fout2,"DMMODEL %.14Lg %d\n",psr[p].param[param_dmmodel].val[0],(int)psr[p].param[param_dmmodel].fitFlag[0]);

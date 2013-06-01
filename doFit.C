@@ -2338,7 +2338,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			else if (i==param_wave_om) /* Whitening procedure using sinusoids */
 			{
 			   int k;
-			   for (k=0;k<psr->nWhite;k++)
+			   for (k=0;k<psr[p].nWhite;k++)
 			   {
 				  psr[p].wave_cos[k]  -= val[j]; 
 				  psr[p].wave_cos_err[k] = error[j]; j++;
@@ -2347,7 +2347,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			   }
 			   if (psr->waveScale==2) // Ignore the non-frequency derivative terms
 			   {
-				  for (k=0;k<psr->nWhite;k++)
+				  for (k=0;k<psr[p].nWhite;k++)
 				  {
 					 printf("Ignoring cos %g %g\n",val[j],error[j]); j++;
 					 printf("Ignoring sin %g %g\n",val[j],error[j]); j++;
@@ -2359,7 +2359,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			else if (i==param_ifunc) 
 			{
 			   int k;
-			   for (k=0;k<psr->ifuncN;k++)
+			   for (k=0;k<psr[p].ifuncN;k++)
 			   {
 				  psr[p].ifuncV[k] -= val[j];
 				  psr[p].ifuncE[k] = error[j];
@@ -2369,7 +2369,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			else if (i==param_clk_offs) 
 			{
 			   int k;
-			   for (k=0;k<psr->clkOffsN;k++)
+			   for (k=0;k<psr[p].clkOffsN;k++)
 			   {
 				  psr[p].clk_offsV[k] -= val[j];
 				  psr[p].clk_offsE[k] = error[j];
@@ -2387,7 +2387,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			   }
 			   else if (psr[p].param[param_tel_dx].val[0] < 2)
 			   {
-				  for (k=0;k<psr->nTelDX;k++)
+				  for (k=0;k<psr[p].nTelDX;k++)
 				  {
 					 psr[p].telDX_v[k] -= val[j];
 					 psr[p].telDX_e[k] = error[j];
@@ -2396,7 +2396,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			   }
 			   else
 			   {
-				  for (k=0;k<psr->nTelDX-1;k++)
+				  for (k=0;k<psr[p].nTelDX-1;k++)
 				  {
 					 psr[p].telDX_v[k] -= val[j];
 					 psr[p].telDX_e[k] = error[j];
@@ -2414,7 +2414,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			   }
 			   else if (psr[p].param[param_tel_dy].val[0] < 2)
 			   {
-				  for (k=0;k<psr->nTelDY;k++)
+				  for (k=0;k<psr[p].nTelDY;k++)
 				  {
 					 psr[p].telDY_v[k] -= val[j];
 					 psr[p].telDY_e[k] = error[j];
@@ -2423,7 +2423,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			   }
 			   else
 			   {
-				  for (k=0;k<psr->nTelDY-1;k++)
+				  for (k=0;k<psr[p].nTelDY-1;k++)
 				  {
 					 psr[p].telDY_v[k] -= val[j];
 					 psr[p].telDY_e[k] = error[j];
@@ -2443,7 +2443,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			   }
 			   else if (psr[p].param[param_tel_dz].val[0] < 2)
 			   {
-				  for (k=0;k<psr->nTelDZ;k++)
+				  for (k=0;k<psr[p].nTelDZ;k++)
 				  {
 					 psr[p].telDZ_v[k] -= val[j];
 					 psr[p].telDZ_e[k] = error[j];
@@ -2452,7 +2452,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			   }
 			   else
 			   {
-				  for (k=0;k<psr->nTelDZ-1;k++)
+				  for (k=0;k<psr[p].nTelDZ-1;k++)
 				  {
 					 psr[p].telDZ_v[k] -= val[j];
 					 psr[p].telDZ_e[k] = error[j];
@@ -2463,7 +2463,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			else if (i==param_quad_ifunc_p) 
 			{
 			   int k;
-			   for (k=0;k<psr->quad_ifuncN_p;k++)
+			   for (k=0;k<psr[p].quad_ifuncN_p;k++)
 			   {
 				  psr[p].quad_ifuncV_p[k] -= val[j];
 				  psr[p].quad_ifuncE_p[k] = error[j];
@@ -2473,7 +2473,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			else if (i==param_quad_ifunc_c) 
 			{
 			   int k;
-			   for (k=0;k<psr->quad_ifuncN_c;k++)
+			   for (k=0;k<psr[p].quad_ifuncN_c;k++)
 			   {
 				  psr[p].quad_ifuncV_c[k] -= val[j];
 				  psr[p].quad_ifuncE_c[k] = error[j];
