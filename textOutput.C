@@ -852,10 +852,12 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c))
 			  fprintf(fout,"\n");
 		      }
+		    fprintf(fout,"# globalNfit = %d\n",psr[0].globalNfit);
 		  }
+		fclose(fout);
 	      }
 	  }  
-
+    
     
       if (newpar==1)  /* Write a new .par file */
 	{
