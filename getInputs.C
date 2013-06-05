@@ -93,6 +93,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  printf("-reminder         Saves the command line to T2command.input for future reference.\n");
 	  printf("-norescale        Do not rescale parameter uncertainties by the sqrt(red. chisq)\n");
 	  printf("-displayVersion   Display detailed CVS version number of every file used.\n");
+	  printf("-v                Print verson number.\n");
 	  printf("\n\n");
 	  printf("Available plugins\n");
 	  printplugs(false);
@@ -100,7 +101,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  printf("-----------------\n");
 	  exit(1);
 	}	    
-      strcpy(timFile[timfile_num],argv[1]);
+            strcpy(timFile[timfile_num],argv[1]);
       strcpy(parFile[parfile_num],argv[1]);
       strcpy(parFile[parfile_num]+strlen(parFile[parfile_num])-3,"par");
       timfile_num++; parfile_num++;
