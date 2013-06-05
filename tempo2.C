@@ -83,12 +83,10 @@ int main(int argc, char *argv[])
   const char *CVS_verNum = "$Revision$";
 
   timer_clk=clock();  
-
-  if (strcmp(argv[1],"-version") | strcmp(argv[1],"-v") == 0){
+  if (argc > 1 && (strcmp(argv[1],"-version") == 0 ) && (strcmp(argv[1],"-v") == 0)){
          printf("%s\n",VERSION);
          exit(1);
   }
-
   printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
   printf("This is free software, and you are welcome to redistribute it\n");
   printf("under conditions of GPL license.\n\n");
