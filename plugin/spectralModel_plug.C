@@ -1784,6 +1784,7 @@ int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese,int
 {
   int i;
   int nres=0;
+  sortToAs(psr);
 
   for (i=0;i<psr[0].nobs;i++)
     {
@@ -1793,7 +1794,8 @@ int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese,int
 	  // Check to make sure that the data are time sorted
 	  if (nres>0 && resx[nres] < resx[nres-1])
 	    {
-	      printf("ERROR: Data are not time sorted\n");
+		   logmsg("i=%d x[i]=%lg, x[i-1]=%lg",nres,resx[nres],resx[nres-1]);
+	      logerr("ERROR: Data are not time sorted");
 	      exit(1);
 	    }
 	  resy[nres] = (double)(psr[0].obsn[i].residual);

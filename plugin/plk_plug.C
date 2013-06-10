@@ -2534,7 +2534,7 @@ float deletePoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,f
 
 int idPoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float mouseY)
 {
-   int i,iclosest;
+   int i,iclosest,l;
    float closest,x1,x2,x3,x4,y1,y2,y3,y4,xscale,yscale,xpos,ypos;
 
    cpgqvp(3,&x1,&x2,&y1,&y2);
@@ -2573,6 +2573,13 @@ int idPoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float m
    printf("Flags = ");
    for (i=0;i<psr[0].obsn[iclosest].nFlags;i++)
 	  printf(" \"%s\" %s ",psr[0].obsn[iclosest].flagID[i],psr[0].obsn[iclosest].flagVal[i]);
+   printf("\n");
+
+	  printf(psr[0].obsn[iclosest].telID);
+   for (l=0;l<psr[0].obsn[iclosest].nclock_correction;l++){
+	  printf(" -> ");
+	  printf(psr[0].obsn[iclosest].correctionsTT[l].corrects_to);
+   }	
    printf("\n");
    printf("---------------------------------------------------\n");
 

@@ -175,6 +175,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nT2equad = 0; // Number of T2EQUADs
   psr->T2globalEfac = 1; // A global multiplying factor
 
+  psr->sorted=0;
   allocateMemory(psr,0);
   /*  psr->param[param_track].paramSet[0]=1;
   psr->param[param_track].val[0]=0.0;

@@ -160,6 +160,8 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
    for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
    {
+	  // if we are doing a Cholesky fit, we need to sort the data or it will fail!
+	  if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL"))sortToAs(psr+p);
 	  if (psr[p].auto_constraints)autoConstraints(psr,p,npsr);
 	  nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
 	  nobs_noconstrain += psr[p].nobs;

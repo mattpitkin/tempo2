@@ -115,6 +115,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
    preProcess(psr,*npsr,argc,argv);
 
+   sortToAs(psr); // sort the ToAs
+
    for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
    {
 	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */

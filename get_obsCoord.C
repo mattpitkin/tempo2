@@ -174,7 +174,7 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[2] == 1) pos += (0.5*psr[p].param[param_telx].val[2]*arg);
 		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_telx].val[3]*arg);
 		      psr[p].obsn[i].observatory_earth[0] = (double)pos;
-		      //		      printf("Setting x to %g\n",(double)psr[p].obsn[i].observatory_earth[0]);
+		      //logdbg("Setting x to %g",(double)psr[p].obsn[i].observatory_earth[0]);
 		    }
 		  if (psr[p].param[param_tely].paramSet[0] == 1)
 		    {

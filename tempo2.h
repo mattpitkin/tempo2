@@ -470,6 +470,7 @@ typedef struct pulsar {
   int t2cMethod;  /* How to transform from terrestrial to celestial coords */
   int correctTroposphere;     /* whether or not do correct for tropospheric delay */
   int noWarnings;                 /* = 1, do not display warning messages                       */
+  char sorted; /* ToAs sorted */
   /* Path for the file containing the corrections between observatory clocks and UTC(NIST)      */
   /* - set in readParfile.C                                                                     */
 /*   char OBSERVATORY_CLOCK_2_UTC_NIST[MAX_FILELEN];  */
@@ -613,6 +614,7 @@ void secularMotion(pulsar *psr,int npsr);
 void autoConstraints(pulsar* psr, int ipsr,int npsr);
 void setPlugPath();
 
+void sortToAs(pulsar* psr);
 void preProcess(pulsar *psr,int npsr,int argc,char *argv[]);
 
 /* used by psrchive to initialize a single psr struct */
