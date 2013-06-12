@@ -856,17 +856,29 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		{
 		  for (jj=0;jj<psr[0].globalNfit;jj++)
 		    {
-		      if (psr[0].param[psr[0].fitParamI[ii]].fitFlag[0] == 2 && psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
-			{			  
-			  fprintf(fout,"%d %d %g\n",ii,jj,psr[0].covar[ii][jj]/sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
+		      if (psr[0].fitParamI[ii] >=0 && psr[0].fitParamI[jj] >= 0)
+			{
+			  if (psr[0].param[psr[0].fitParamI[ii]].fitFlag[0] == 2 && psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
+			    {			  
+			      if (psr[0].covar[ii][ii] == 0 || psr[0].covar[jj][jj] == 0)
+				{
+				  printf("Diagonal element of covariance matrix = 0\n");
+				  fprintf(fout,"%d %d nan\n",ii,jj);
+				}
+			      else
+				fprintf(fout,"%d %d %g\n",ii,jj,psr[0].covar[ii][jj]/sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
+			    }
 			}
 		    }
 		}
 	      for (jj=0;jj<psr[0].globalNfit;jj++)
 		{
-		  if (psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
-		    {			  
-		      fprintf(fout,"# %d %d %d %s\n",jj,psr[0].fitParamI[jj],psr[0].fitParamK[jj],psr[0].param[psr[0].fitParamI[jj]].label[0]);
+		  if (psr[0].fitParamI[jj] >= 0)
+		    {
+		      if (psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
+			{			  
+			  fprintf(fout,"# %d %d %d %s\n",jj,psr[0].fitParamI[jj],psr[0].fitParamK[jj],psr[0].param[psr[0].fitParamI[jj]].label[0]);
+			}
 		    }
 		}
 	      
