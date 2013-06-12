@@ -130,21 +130,33 @@ double TKleastSquares(double* b, double* white_b,
    if(writeResiduals==1 && white_b!=NULL && b!=NULL){
 	  logdbg("Writing out whitened residuals");
 	  FILE* wFile=fopen("prefit.res","w");
-	  for (i=0;i<n;i++)
-		 fprintf(wFile,"%d %lg %lg\n",i,b[i],white_b[i]);
-	  fclose(wFile);
+	  if (!wFile){
+	    printf("Unable to write out whitened residuals: cannot open file prefit.res\n");
+	  }
+	  else
+	    {
+	      for (i=0;i<n;i++)
+		fprintf(wFile,"%d %lg %lg\n",i,b[i],white_b[i]);
+	      fclose(wFile);
+	    }
 
    }
    if(writeResiduals==1){
 	  logdbg("Writing out design matrix");
 	  FILE * wFile=fopen("design.matrix","w");
-	  for (i=0;i<n;i++) {
-		 for (j=0;j<nf;j++){
-			fprintf(wFile,"%d %d %lg %lg\n",i,j,designMatrix[i][j],white_designMatrix[i][j]);
-		 }
-		 fprintf(wFile,"\n");
+	  if (!wFile){
+	    printf("Unable to write out design matrix: cannot open file design.matrix\n");
 	  }
-	  fclose(wFile);
+	  else
+	    {
+	      for (i=0;i<n;i++) {
+		for (j=0;j<nf;j++){
+		  fprintf(wFile,"%d %d %lg %lg\n",i,j,designMatrix[i][j],white_designMatrix[i][j]);
+		}
+		fprintf(wFile,"\n");
+	      }
+	      fclose(wFile);
+	    }
    }
 
    // Now go to longdouble precision!
@@ -192,19 +204,24 @@ double TKleastSquares(double* b, double* white_b,
 	  if(debugFlag==1) {
 		 FILE *fout;
 		 fout = fopen("cvm.matrix","w");
-		 for (i=0;i<nf;i++)
-		 {
-			for (j=0;j<=i;j++)
-			{
-			   fprintf(fout,"%+.8f ",cvm[i][j]/sqrt(cvm[i][i]*cvm[j][j]));
-			}
-			fprintf(fout,"\n");
+		 if (!fout){
+		   printf("Unable to open file cvm.matrix for writing\n");
 		 }
-		 fclose(fout);
+		 else{
+		   for (i=0;i<nf;i++)
+		     {
+		       for (j=0;j<=i;j++)
+			 {
+			   fprintf(fout,"%+.8f ",cvm[i][j]/sqrt(cvm[i][i]*cvm[j][j]));
+			 }
+		       fprintf(fout,"\n");
+		     }
+		   fclose(fout);
+		 }
 	  }
 	  if(computeErrors){
 	  logdbg("Compute Errors");
-		 for (i=0;i<nf;i++)e[i]=sqrt(cvm[i][i]);
+	  for (i=0;i<nf;i++){e[i]=sqrt(cvm[i][i]);}
 	  }
 
    }
@@ -234,23 +251,30 @@ double TKleastSquares(double* b, double* white_b,
 	  }
 
 	  if(computeErrors && rescale_errors){
+	    printf("Error scaling = %g\n",sqrt(chisq/(n-nf)));
 		 for (j=0;j<nf;j++)
 			e[j] *= sqrt(chisq/(n-nf));
 	  }
 
 	  if (writeResiduals){
 		 FILE* wFile=fopen("postfit.res","w");
-		 for (i=0;i<n;i++)
-		 {
-			sum=0;
-			sum_w=0;
-			for (j=0;j<nf;j++){
+		 if (!wFile){
+		   printf("Unable to open file postfit.res for writing\n");
+		 }
+		 else
+		   {
+		     for (i=0;i<n;i++)
+		       {
+			 sum=0;
+			 sum_w=0;
+			 for (j=0;j<nf;j++){
 			   sum += designMatrix[i][j]*p[j];
 			   sum_w += white_designMatrix[i][j]*p[j];
-			}
-			fprintf(wFile,"%d %lg %lg\n",i,(double)(b[i]-sum),(double)(white_b[i]-sum_w));
-		 }
-		 fclose(wFile);
+			 }
+			 fprintf(wFile,"%d %lg %lg\n",i,(double)(b[i]-sum),(double)(white_b[i]-sum_w));
+		       }
+		     fclose(wFile);
+		   }
 	  }
    } // computeParam
 

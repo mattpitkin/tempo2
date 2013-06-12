@@ -79,16 +79,22 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       if (outRes==1) 
 	{
 	  fout = fopen("residuals.dat","w");
-	  for (i=0;i<psr[p].nobs;i++)
-	    fprintf(fout,"%.10g %.10g %.10g\n",(double)(psr[p].obsn[i].bat-psr[p].param[param_pepoch].val[0]),
-		    (double)(psr[p].obsn[i].residual),(double)(psr[p].obsn[i].toaErr*1.0e-6));
-	  //	  for (i=0;i<psr[p].nobs;i++)
-	  //	    fprintf(fout,"%s %s %s\n",
-	  //		    print_longdouble(psr[p].obsn[i].bat-psr[p].param[param_pepoch].val[0]).c_str(),
-	  //		    print_longdouble(psr[p].obsn[i].residual).c_str(),
-	  //		    print_longdouble(psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f].val[0]).c_str());
-// 	    fprintf(fout,"%Lf %Lg %Lg\n",psr[p].obsn[i].bat-psr[p].param[param_pepoch].val,psr[p].obsn[i].residual,psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f0].val);
-	  fclose(fout);
+	  if (!fout){
+	    printf("Unable to open file residuals.dat for writing\n");
+	  }
+	  else
+	    {
+	      for (i=0;i<psr[p].nobs;i++)
+		fprintf(fout,"%.10g %.10g %.10g\n",(double)(psr[p].obsn[i].bat-psr[p].param[param_pepoch].val[0]),
+			(double)(psr[p].obsn[i].residual),(double)(psr[p].obsn[i].toaErr*1.0e-6));
+	      //	  for (i=0;i<psr[p].nobs;i++)
+	      //	    fprintf(fout,"%s %s %s\n",
+	      //		    print_longdouble(psr[p].obsn[i].bat-psr[p].param[param_pepoch].val[0]).c_str(),
+	      //		    print_longdouble(psr[p].obsn[i].residual).c_str(),
+	      //		    print_longdouble(psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f].val[0]).c_str());
+	      // 	    fprintf(fout,"%Lf %Lg %Lg\n",psr[p].obsn[i].bat-psr[p].param[param_pepoch].val,psr[p].obsn[i].residual,psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f0].val);
+	      fclose(fout);
+	    }
 	}
       calcRMS(psr,p);
 
@@ -371,10 +377,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  for (i=0;i<psr[p].clkOffsN;i++)
 	    printf("%.2f %.10g %.10g\n",psr[p].clk_offsT[i],psr[p].clk_offsV[i],psr[p].clk_offsE[i]);
 	  fout = fopen("clockOffset.dat","w");
-	  for (i=0;i<psr[p].clkOffsN;i++)
-	    fprintf(fout,"%.2f %.10g %.10g\n",psr[p].clk_offsT[i],psr[p].clk_offsV[i],psr[p].clk_offsE[i]);
-	  fclose(fout);
-	  
+	  if (!fout){
+	    printf("Unable to open file clockOffset.dat for writing\n");
+	  }
+	  else
+	    {
+	      for (i=0;i<psr[p].clkOffsN;i++)
+		fprintf(fout,"%.2f %.10g %.10g\n",psr[p].clk_offsT[i],psr[p].clk_offsV[i],psr[p].clk_offsE[i]);
+	      fclose(fout);
+	    }
 	}
 	  if (psr[p].param[param_ifunc].paramSet[0]==1)
 	    {
@@ -389,10 +400,16 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      for (i=0;i<psr[p].nTelDX;i++)
 		printf("%.2f %.10g %.10g\n",psr[p].telDX_t[i],psr[p].telDX_v[i],psr[p].telDX_e[i]);
 	      fout = fopen("telescopeXYZ.dat","w");
-	      for (i=0;i<psr[p].nTelDX;i++)
-		fprintf(fout,"%.2f %.10g %.10g %.10g %.10g %.10g %.10g\n",psr[p].telDX_t[i],psr[p].telDX_v[i],psr[p].telDX_e[i],psr[p].telDY_v[i],psr[p].telDY_e[i],psr[p].telDZ_v[i],psr[p].telDZ_e[i]);
-	      fclose(fout);
-	    }
+	      if (!fout){
+		printf("Unable to open file telescopeXYZ.dat for writing\n");
+	      }
+	      else
+		{
+		  for (i=0;i<psr[p].nTelDX;i++)
+		    fprintf(fout,"%.2f %.10g %.10g %.10g %.10g %.10g %.10g\n",psr[p].telDX_t[i],psr[p].telDX_v[i],psr[p].telDX_e[i],psr[p].telDY_v[i],psr[p].telDY_e[i],psr[p].telDZ_v[i],psr[p].telDZ_e[i]);
+		  fclose(fout);
+		}
+		}
 	  if (psr[p].param[param_tel_dy].paramSet[0]==1)
 	    {
 	      printf("Telescope y function\n");
@@ -824,6 +841,38 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  }
 	printf("Total time span = %.3f days = %.3f years\n",end-start,(end-start)/365.25);
       }
+      // Write out covariance matrix for global parameters
+      if (p==0 && psr[0].globalNfit > 0)
+	{
+	  FILE *fout = fopen("global_covar.cvm","w");
+	  if (!fout){
+	    printf("Unable to open aplus_across.cvm for writing\n");
+	  }
+	  else
+	    {
+	      int ii,jj,kk;
+	      double cv;
+	      for (ii=0;ii<psr[0].globalNfit;ii++)
+		{
+		  for (jj=0;jj<psr[0].globalNfit;jj++)
+		    {
+		      if (psr[0].param[psr[0].fitParamI[ii]].fitFlag[0] == 2 && psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
+			{			  
+			  fprintf(fout,"%d %d %g\n",ii,jj,psr[0].covar[ii][jj]/sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
+			}
+		    }
+		}
+	      for (jj=0;jj<psr[0].globalNfit;jj++)
+		{
+		  if (psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
+		    {			  
+		      fprintf(fout,"# %d %d %d %s\n",jj,psr[0].fitParamI[jj],psr[0].fitParamK[jj],psr[0].param[psr[0].fitParamI[jj]].label[0]);
+		    }
+		}
+	      
+	      fclose(fout);
+	    }
+	}
 
       // Write covariance matrix for A+ and Ax
       if (psr[p].param[param_quad_ifunc_p].paramSet[0]==1 || psr[p].param[param_quad_ifunc_c].paramSet[0]==1)
@@ -846,15 +895,16 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			    if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c) && 
 				(psr[0].fitParamI[jj] == param_quad_ifunc_p || psr[0].fitParamI[jj] == param_quad_ifunc_c))
 			      {
-				fprintf(fout,"%g ",psr[0].covar[ii][jj]);
+				//				fprintf(fout,"%g ",psr[0].covar[ii][jj]);
+				fprintf(fout,"%d %d %g\n",ii,jj,psr[0].covar[ii][jj]/sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
 			      }
 			  }
-			if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c))
-			  fprintf(fout,"\n");
+			//			if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c))
+			//			  fprintf(fout,"\n");
 		      }
 		    fprintf(fout,"# globalNfit = %d\n",psr[0].globalNfit);
+		    fclose(fout);
 		  }
-		fclose(fout);
 	      }
 	  }  
     

@@ -295,6 +295,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  */
 		 logdbg("Get constraint weghts");
 		 logtchk("Get Constraint weights");
+		 //		 printf("COMPUTING constraint weights for PSR %d %s\n",p,psr[p].name);
 		 computeConstraintWeights(psr+p);
 		 psr[p].nParam = npol;
 		 psr[p].nGlobal = nglobal;
@@ -374,7 +375,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			{
 			  // let's not normalize it for now
 			  //fprintf(paramout, "%.3e ", cvm[ii][jj]/sqrt(cvm[ii][ii]*cvm[jj][jj]));
-			  fprintf(paramout, "%.3e \n", cvm[ii][jj]);
+			  if (paramout) fprintf(paramout, "%.3e \n", cvm[ii][jj]);
 
 			  //fprintf(stderr, "%d %d %d %s %.3e %.3e\n",ii,iglobal, kglobal,psr[0].param[iglobal].label[0], (float) psr[0].quad_ifuncV_p[kglobal], val[ii]);
 			}
@@ -389,7 +390,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  // all of the non-global parameters are named
 
 
-	  fclose(paramout);
+	  if (paramout) fclose(paramout);
 	  //exit(0);
 
 
@@ -399,7 +400,10 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  for (i=0;i<nglobal;i++)
 	    {
 	      for (j=0;j<nglobal;j++)
-		psr[0].covar[i][j] = cvm[i][j];
+		{
+		  psr[0].covar[i][j] = cvm[i][j];
+		  //		  printf("COVAR STUFF %g\n",psr[0].covar[i][j]);
+		}
 	    }
 
 	  /* Free the arrays created inside this section */
@@ -433,7 +437,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			updateParameters(psr,p,val,error);
 			logtchk("complete updating the parameter values");
 			logdbg("Completed updating the parameters");
-		 }   
+		 }
 		 /* Free the arrays created inside this section */
 		 free(error);
 		 free(val);
@@ -471,7 +475,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 int getNglobal(pulsar *psr,int npsr){
    int nGlobal=0;
-   int i,k;
+   int i,k,j;
    // Add global parameters
    for (i=0;i<MAX_PARAMS;i++)
    {
@@ -479,10 +483,15 @@ int getNglobal(pulsar *psr,int npsr){
        {
 	 if (psr[0].param[i].fitFlag[k]==2) {
 	   {
-	     psr->fitParamI[nGlobal]  = i;
-	     psr->fitParamK[nGlobal]  = k;
+	     if (i!=param_wave_om && i!= param_ifunc && i!=param_quad_om &&
+		 i!=param_tel_dx && i!= param_tel_dy && i!=param_tel_dz &&
+		 i!=param_quad_ifunc_p && i!=param_quad_ifunc_c && i!=param_gwsingle)
+	       {
+		 psr->fitParamI[nGlobal]  = i;
+		 psr->fitParamK[nGlobal]  = k;
 	     
-	     nGlobal++;
+		 nGlobal++;
+	       }
 	   }
 	 }
        }
@@ -490,60 +499,60 @@ int getNglobal(pulsar *psr,int npsr){
    /* Add extra parameters for sinusoidal whitening */
    if (psr[0].param[param_wave_om].fitFlag[0]==2)
    {
-     for (i=0;i<psr->nWhite*2-1;i++)
+     for (i=0;i<psr->nWhite*2;i++)
        {psr->fitParamI[nGlobal+i]  = param_wave_om; psr->fitParamK[nGlobal+i]  = i;}
-     nGlobal+=psr[0].nWhite*2-1;
+     nGlobal+=psr[0].nWhite*2;
    }
 
    if (psr[0].param[param_ifunc].fitFlag[0]==2){
-     for (i=0;i<psr->ifuncN-1;i++)
+     for (i=0;i<psr->ifuncN;i++)
        {psr->fitParamI[nGlobal+i]  = param_ifunc; psr->fitParamK[nGlobal+i]  = i;}
-	  nGlobal+=psr[0].ifuncN-1;
+	  nGlobal+=psr[0].ifuncN;
    }
    if (psr[0].param[param_quad_om].fitFlag[0]==2){
-     for (i=0;i<psr->nQuad*4-1;i++)
+     for (i=0;i<psr->nQuad*4;i++)
        {psr->fitParamI[nGlobal+i]  = param_quad_om; psr->fitParamK[nGlobal+i]  = i;}
-	  nGlobal+=psr[0].nQuad*4-1;
+	  nGlobal+=psr[0].nQuad*4;
    }
 
    if (psr[0].param[param_tel_dx].fitFlag[0]==2)
    {
-     for (i=0;i<psr->nTelDX-1;i++)
+     for (i=0;i<psr->nTelDX;i++)
        {psr->fitParamI[nGlobal+i]  = param_tel_dx; psr->fitParamK[nGlobal+i]  = i;}
-     nGlobal+=(psr[0].nTelDX-1);
+     nGlobal+=(psr[0].nTelDX);
    }
    if (psr[0].param[param_tel_dy].fitFlag[0]==2)
    {     
-     for (i=0;i<psr->nTelDY-1;i++)
+     for (i=0;i<psr->nTelDY;i++)
        {psr->fitParamI[nGlobal+i]  = param_tel_dy; psr->fitParamK[nGlobal+i]  = i;}
-     nGlobal+=(psr[0].nTelDY-1);
+     nGlobal+=(psr[0].nTelDY);
    }
    if (psr[0].param[param_tel_dz].fitFlag[0]==2)
    {
-     for (i=0;i<psr->nTelDZ-1;i++)
+     for (i=0;i<psr->nTelDZ;i++)
        {psr->fitParamI[nGlobal+i]  = param_tel_dz; psr->fitParamK[nGlobal+i]  = i;}
      
-	  nGlobal+=(psr[0].nTelDZ-1);
+	  nGlobal+=(psr[0].nTelDZ);
    }
    if (psr->param[param_quad_ifunc_p].fitFlag[0]==2)
    {
-     for (i=0;i<psr->quad_ifuncN_p-1;i++)
+     for (i=0;i<psr->quad_ifuncN_p;i++)
        {psr->fitParamI[nGlobal+i]  = param_quad_ifunc_p; psr->fitParamK[nGlobal+i]  = i;}
 
-     nGlobal+=(psr->quad_ifuncN_p-1);
+     nGlobal+=(psr->quad_ifuncN_p);
    }
    if (psr->param[param_quad_ifunc_c].fitFlag[0]==2)
    {
-     for (i=0;i<psr->quad_ifuncN_c-1;i++)
+     for (i=0;i<psr->quad_ifuncN_c;i++)
        {psr->fitParamI[nGlobal+i]  = param_quad_ifunc_c; psr->fitParamK[nGlobal+i]  = i;}
-     nGlobal+=(psr->quad_ifuncN_c-1);
+     nGlobal+=(psr->quad_ifuncN_c);
    }
    if (psr[0].param[param_gwsingle].fitFlag[0]==2)
    {
-     for (i=0;i<4-1;i++)
+     for (i=0;i<4;i++)
        {psr->fitParamI[nGlobal+i]  = param_gwsingle; psr->fitParamK[nGlobal+i]  = i;}
 
-     nGlobal+=(4-1);
+     nGlobal+=(4);
    }
    return nGlobal;
 
