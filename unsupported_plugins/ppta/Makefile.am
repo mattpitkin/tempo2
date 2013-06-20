@@ -9,7 +9,7 @@ plugin_LTLIBRARIES=ppta_dr1_@T2ARCH@_splug.la
 #
 ####
 LDFLAGS+= -shared -module -avoid-version -shrext .t2
-INCLUDES=-I@top_srcdir@/
+AM_CPPFLAGS=-I@top_srcdir@/
 
 
 pluginINSTALLS=ppta_dr1-install

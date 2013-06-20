@@ -5,7 +5,7 @@ plugindir=@TEMPO2_PLUG_INSTALL@
 #
 ###
 LDFLAGS+= -shared -module -avoid-version -shrext .t2
-INCLUDES=-I@top_srcdir@/
+AM_CPPFLAGS=-I@top_srcdir@/
 
 ##
 # These values are set by the includes below, so don't change them from being blank!
@@ -51,7 +51,7 @@ include build_settings/gsl.am
 endif
 
 
-AM_CPPFLAGS = @PGPLOT_CFLAGS@ @FFTW_CFLAGS@ 
+AM_CPPFLAGS += @PGPLOT_CFLAGS@ @FFTW_CFLAGS@ 
 .PHONY: $(PLUGINS) $(PLUGINSTALLS) plugins plugins-install
 
 plugins: $(PLUGINS)

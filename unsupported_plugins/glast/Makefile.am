@@ -9,7 +9,7 @@ plugin_LTLIBRARIES=glast_@T2ARCH@_plug.la
 #
 ####
 LDFLAGS+= -shared -module -avoid-version -shrext .t2
-INCLUDES=-I@top_srcdir@/
+AM_CPPFLAGS=-I@top_srcdir@/
 
 
 pluginINSTALLS=glast-install

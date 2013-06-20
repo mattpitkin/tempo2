@@ -9,7 +9,7 @@ plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian
 #
 ####
 LDFLAGS+= -shared -module -avoid-version -shrext .t2 -lfftw3f
-INCLUDES=-I@top_srcdir@/
+AM_CPPFLAGS=-I@top_srcdir@/
 
 CFLAGS+=@FFTW_CFLAGS@
 

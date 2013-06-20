@@ -11,8 +11,8 @@ if test -n "${CXXFLAGS}"; then
 	user_set_cxxflags=yes
 fi
 
+AC_CONFIG_MACRO_DIR([autoconf])
 AC_CONFIG_AUX_DIR([config])
-#AC_CONFIG_SRCDIR([Makefile.am])
 
 # Enable large-file support
 AC_SYS_LARGEFILE
@@ -29,6 +29,7 @@ AM_PROG_CC_C_O
 AC_PROG_F77
 AC_PROG_F77_C_O
 AC_F77_LIBRARY_LDFLAGS
+AC_PROG_FC
 
 if test -n "${CXXFLAGS}"; then
 	user_set_cxxflags=yes
@@ -149,7 +150,7 @@ AC_SUBST(T2ARCH)
 
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile
 		 unsupported_plugins/Makefile
 		 unsupported_plugins/toasim/Makefile
