@@ -198,7 +198,10 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
    logdbg("Got uinv, now compute spectrum.");
 
    if(*nSpec < 1){
-	  *nSpec = 124;
+	 *nSpec=psr->nobs/2;
+	 if (*nSpec > 124){
+		 *nSpec = 124;
+	  }
 	  logdbg("nSpec hardcoded to %d",*nSpec);
    }
 
@@ -210,7 +213,7 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
 
    // Must calculate uinv for the pulsar
    //
-//   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
+   //   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
    calcSpectra_ri(uinv,resx,resy,psr->nobs,px,py_r,py_i,*nSpec);
 
    sprintf(fname,"%s.spec",psr->name);
