@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
   const char *CVS_verNum = "$Revision$";
 
   timer_clk=clock();  
-  if (argc > 1 && (strcmp(argv[1],"-version") == 0 ) && (strcmp(argv[1],"-v") == 0)){
+  if (argc > 1 && ((strcmp(argv[1],"-version") == 0 ) || (strcmp(argv[1],"-v") == 0))){
          printf("%s\n",VERSION);
          exit(1);
   }
