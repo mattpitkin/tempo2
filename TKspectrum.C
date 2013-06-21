@@ -1746,8 +1746,7 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
   for (k=0;k<nfit;k++)
     {
 	    if(verbose_calc_spectra){
-		    printf("\b\b\b\b\b\b\b\b");
-		    printf("%5.1f%%",(double)k/(double)nfit*100.0);
+		    printf("%5.1f%%   \r",(double)k/(double)nfit*100.0);
 		    fflush(stdout);
 	    }
       GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
