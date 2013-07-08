@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "TKfit.h"
 #include "TKspectrum.h"
+#include "cholesky.h"
 
 // Automatic determination of the covariance function
 // R. Shannon
@@ -1011,15 +1012,20 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
    double delta=1.0/365.25;
    double N=(double)npts;
 
+   FILE* tf = fopen("testf","w");
    p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
+
+   fprintf(tf,"%g %g\n",0,p_r[0]);
    for (i=1;i<=npts/2;i++){
 	  freq=double(i)/(N*delta);
 	  P=modelA/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
+	  fprintf(tf,"%g %g\n",freq,P);
 	  p_r[i]=P;
 	  p_r[npts-i]=P;
 	  p_i[i]=0;
 	  p_i[npts-i]=0;
    }
+   fclose(tf);
 
    TK_fft(1,npts,p_r,p_i);
 
@@ -1107,15 +1113,29 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
 }*/
 
 void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
-double fitVar,double **uinv,double *covFunc,double *resx,double *resy,
+double fitVar,double **uinv,double *covarFunc,double *resx,double *resy,
 double *rese,int np,double *highFreqRes,double *errorScaleFactor, 
 int dcmflag)
 {
-  int i,j,nc;
-  printf("choleskyRoutines: calculateCholesky\n");
-  nc = T2calculateCovarFunc(modelAlpha,modelFc,modelA,covFunc,resx,resy,rese,np);
-  T2formCholeskyMatrix_pl(covFunc,nc,resx,resy,rese,np,uinv);
-  printf("Complete calculateCholesky\n");
+   int i,j,ndays;
+   double** m=malloc_uinv(np);
+   
+   printf("choleskyRoutines: calculateCholesky\n");
+   ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+   covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+   int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,covarFunc,resx,resy,rese,np);
+   if(ndays!=ndays_out){
+	  logerr("Ndays in != Ndays out!");
+   }
+   cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,0);
+   for(i=0;i<np;i++){
+	  m[i][i]+=rese[i]*rese[i];
+   }
+
+   cholesky_formUinv(uinv,m,np);
+
+   free_uinv(m);
+   printf("Complete calculateCholesky\n");
 }
 
 void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,int *in,double *zl,int usewt)
@@ -1174,120 +1194,6 @@ void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,i
 
 }
 
-void T2formCholeskyMatrix_pl(double *c,int cSize,double *resx,double *resy,double *rese,int np,double **uinv)
-{
-  double **m,**u,sum;
-  double *cholp;
-  int i,j,k,ix,iy;
-  double t0,cint,t;
-  int t1,t2;
-  int debug=1;
-
-  printf("choleskyRoutines: formCholeskyMatrix_pl\n");
-  printf("Getting the covariance matrix, np = %d\n",np);
-  m = (double **)malloc(sizeof(double *)*(np));
-  u= (double **)malloc(sizeof(double *)*(np));
-  cholp  = (double *)malloc(sizeof(double)*(np));  // Was ndays
-
-  for (i=0;i<np;i++)
-    {
-      m[i] = (double *)malloc(sizeof(double)*(np));
-      u[i] = (double *)malloc(sizeof(double)*(np));
-    }
-  
-  for (ix=0;ix<np;ix++)
-    {
-      for (iy=0;iy<np;iy++)
-	m[ix][iy] = fabs(resx[ix]-resx[iy]);
-    }
-  if (debug==1)
-    {
-      printf("First m = \n");
-      for (i=0;i<5;i++)
-	{ 
-	  for (j=0;j<5;j++) printf("%10g ",m[i][j]); 
-	  printf("\n");
-	}
-
-    }
-  // Insert the covariance which depends only on the time difference.
-  // Linearly interpolate between elements on the covariance function because
-  // valid covariance matrix must have decreasing off diagonal elements.
-  printf("Inserting into the covariance matrix\n");
-  for (ix=0;ix<np;ix++)
-    {
-      for (iy=0;iy<np;iy++)
-	{
-	  t0 = m[ix][iy];
-	  t1 = (int)floor(t0);
-	  t2 = t1+1;
-	  t  = t0-t1;
-	  if (t1 > cSize || t2 > cSize)
-	    {
-	      printf("ERROR: Something wrong in the Cholesky - requesting covariance function value greater than array size\n");
-	      exit(1);
-	    }
-	  cint = c[t1]*(1-t)+c[t2]*t; // Linear interpolation
-	  m[ix][iy] = cint;
-	  //	  printf("searching for t1 = %d, t2 = %d, cint = %g\n",t1,t2,cint);
-	}
-    }
-  printf("Multiplying by errors\n");
-  for (ix=0;ix<np;ix++)
-    m[ix][ix]+=(rese[ix]*rese[ix]);
-
-  if (debug==1)
-    {
-      printf("m = \n\n");
-      //      for (i=125;i<131;i++)
-      //	{ 
-      //	  for (j=125;j<131;j++) printf("%10g ",m[i][j]); 
-      //	  printf("\n");
-      //	}
-    }
-  printf("Doing the Cholesky Decomposition\n");
-  // Do the Cholesky
-  T2cholDecomposition(m,np,cholp);
-  printf("Done the Cholesky decomposition\n");
-  // Now calculate uinv
-  for (i=0;i<np;i++)
-    {
-      m[i][i] = 1.0/cholp[i];
-      uinv[i][i] = m[i][i];
-      for (j=0;j<i;j++)
-      	uinv[i][j] = 0.0;
-      for (j=i+1;j<np;j++)
-	{
-	  sum=0.0;
-	  for (k=i;k<j;k++) sum-=m[j][k]*m[k][i];
-	  m[j][i]=sum/cholp[j];
-	  uinv[i][j] = m[j][i];
-	}
-    } 
-
-  if (debug==1)
-    {
-      printf("uinv = \n\n");
-      for (i=0;i<5;i++)
-	{ 
-	  for (j=0;j<5;j++) printf("%10g ",uinv[i][j]); 
-	  printf("\n");
-	}
-    }
-
-  printf("Completed inverting the matrix\n");
-  // Should free memory not required
-  // (note: not freeing uinv)
-
-  for (i=0;i<np;i++)
-    {
-      free(m[i]);
-      free(u[i]);
-    }
-  free(m);
-  free(u);
-  free(cholp);
-}
 
 // Fill resx with the SATs (in days), resy with post-fit residuals (s) and rese
 // with TOA errors (s)

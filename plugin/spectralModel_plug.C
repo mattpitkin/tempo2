@@ -36,6 +36,7 @@
 #include "TKspectrum.h"
 #include "TKfit.h"
 #include "choleskyRoutines.h"
+#include "cholesky.h"
 
 using namespace std;
 
@@ -100,6 +101,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   char dcf_file[MAX_FILELEN];
+  char covarFuncFile[MAX_FILELEN];
   int i;
   double globalParameter;
   double idt=0;
@@ -119,6 +121,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   printf(" --- type 'h' for help information\n");
 
   dcf_file[0]='\0';
+  strcpy(covarFuncFile,"NULL");
 
   /* Obtain the .par and the .tim file from the command line */
   if (argc==4) /* Only provided .tim name */
@@ -142,8 +145,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%lf",&idt);
       else if (strcmp(argv[i],"-g")==0)
 	strcpy(pgdevice,argv[++i]);
-      else if (strcmp(argv[i],"-dcf")==0)
+      else if (strcmp(argv[i],"-dcf")==0){
 	strcpy(dcf_file,argv[++i]);
+	strcpy(covarFuncFile,dcf_file);
+	  }
       else if (strcmp(argv[i],"-fc")==0)
 	sscanf(argv[++i],"%lf",&ifc);
       else if (strcmp(argv[i],"-exp")==0)
@@ -173,7 +178,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
       if (i==0) {
-		 doFitAll(psr,*npsr,"NULL");
+		 doFitAll(psr,*npsr,covarFuncFile);
 	  }
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
@@ -626,8 +631,15 @@ void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,doubl
 	fprintf(fout,"%g %g\n",(double)(i+1),covarFunc[i]);
       fclose(fout);
     }
-  //      c[i]=c[i]*pow(86400.0*365.25,2)/tt*actVar; 
-  T2formCholeskyMatrix_pl(covarFunc,ndays,resx,resy,rese,nres,uinv);
+  double** m=malloc_uinv(nres);
+  cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,nres,0);
+  for(i=0;i<nres;i++){
+	 m[i][i]+=rese[i]*rese[i];
+  }
+
+  cholesky_formUinv(uinv,m,nres);
+  free_uinv(m);
+
 }
 
 // Do a grid search for minimum in chisq for fitting an exponential function

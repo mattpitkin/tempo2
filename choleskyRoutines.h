@@ -23,7 +23,6 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
 
 void T2getWhiteRes(double *resx,double *resy,double *rese,int nres,double **uinv,double *cholWhiteY);
 void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,int *in,double *zl,int usewt);
-void T2formCholeskyMatrix_pl(double *c,int cSize,double *resx,double *resy,double *rese,int np,double **uinv);
 int T2obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese);
 
 
