@@ -1122,8 +1122,8 @@ int dcmflag)
    
    printf("choleskyRoutines: calculateCholesky\n");
    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
-   covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
    int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,covarFunc,resx,resy,rese,np);
+
    if(ndays!=ndays_out){
 	  logerr("Ndays in != Ndays out!");
    }
