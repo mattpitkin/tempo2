@@ -32,7 +32,6 @@
 #include "TKspectrum.h"
 #include "TKfit.h"
 #include "T2toolkit.h"
-#include <cpgplot.h>
 #include "choleskyRoutines.h"
 
 using namespace std;

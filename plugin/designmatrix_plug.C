@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "tempo2.h"
-#include <cpgplot.h>
 
 using namespace std;
 
