@@ -28,7 +28,7 @@ for lib in `grep -v -e '^#' $list` ; do
 		/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1_@T2ARCH@_\2_la_SOURCES=../tempo2.h '"$lib"':'
 		/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1_@T2ARCH@_\2_la_LIBADD=../libtempo2.la ../sofa/libsofa.la '"$libextra"':'
 		if [ -n "$incextra" ] ; then
-			/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1_@T2ARCH@_\2_la_INCLUDES='"$incextra"':'
+			/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1_@T2ARCH@_\2_la_CPPFLAGS='"$incextra"':'
 		fi
 		plugname=`/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\1:'`
 		plugtype=`/bin/echo $lib | sed -e 's:\(.*\)_\(s\{0,1\}plug\)\..*:\2:'`
