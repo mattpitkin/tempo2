@@ -846,7 +846,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	{
 	  FILE *fout = fopen("global_covar.cvm","w");
 	  if (!fout){
-	    printf("Unable to open aplus_across.cvm for writing\n");
+	    printf("Unable to open global_covar.cvm for writing\n");
 	  }
 	  else
 	    {
@@ -908,7 +908,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 				(psr[0].fitParamI[jj] == param_quad_ifunc_p || psr[0].fitParamI[jj] == param_quad_ifunc_c))
 			      {
 				//				fprintf(fout,"%g ",psr[0].covar[ii][jj]);
-				fprintf(fout,"%d %d %g\n",ii,jj,psr[0].covar[ii][jj]/sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
+				fprintf(fout,"%d %d %.15g\n",ii,jj,psr[0].covar[ii][jj]); ///sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
 			      }
 			  }
 			//			if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c))

@@ -550,6 +550,11 @@ typedef struct pulsar {
   char   T2equadFlagID[MAX_T2EQUAD][MAX_FLAG_LEN],T2equadFlagVal[MAX_T2EQUAD][MAX_FLAG_LEN];
   double T2equadVal[MAX_T2EQUAD];
   double T2globalEfac;
+  
+  // White noise models
+  char whiteNoiseModelFile[MAX_STRLEN];
+
+
   //some parameters for Ryan Shannon's simulations
   double rasim, decsim;
   int simflag;

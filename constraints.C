@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define CONSTRAINT_WEIGHTS
+//#define CONSTRAINT_WEIGHTS
 
 std::string get_constraint_name(enum constraint c){
 #ifdef CONSTRAINT_WEIGHTS
@@ -224,6 +224,7 @@ void matrixDMConstraintWeights(pulsar *psr){
  *
  */
 void computeConstraintWeights(pulsar *psr){
+  //  printf("GH: in computeConstraintWeights with %s\n",psr->name);
    for (int k=0; k < psr->ifuncN; k++){
 	  psr->ifunc_weights[k]=1.0/(double)psr->ifuncN;
    }
@@ -241,6 +242,7 @@ void computeConstraintWeights(pulsar *psr){
 	* Derive weights for ifuncs
 	*/
    if(psr->ifuncN>0) {
+     //  printf("GH: in computeConstraintWeights part 2 with %s\n",psr->name);
 	  for (int i=0; i < psr->nobs; i++){
 		 if (psr->obsn[i].deleted==0){
 			// compute the weight that this ToA applies to each IFUNC
@@ -267,6 +269,7 @@ void computeConstraintWeights(pulsar *psr){
 	  }
 	  for (int k=0; k < psr->ifuncN; k++){
 		 psr->ifunc_weights[k]/=sum;
+		 //  printf("GH: in computeConstraintWeights with %s setting %g\n",psr->name,psr->ifunc_weights[k]);
 	  }
    }
 #endif
@@ -373,6 +376,7 @@ double consFunc_ifunc(pulsar *psr,int i,int k,int order){
 	*/
    if(i==param_ifunc){
 	  long double epoch = psr->param[param_pepoch].val[0];
+	  //	  printf("IFUNC: CONSTRAINT: %s %g %g %d\n",psr->name,psr->ifunc_weights[k],(double)epoch,order);
 	  return psr->ifunc_weights[k]*pow(psr->ifuncT[k]-epoch,order);
 
    }
@@ -500,6 +504,9 @@ void autoConstraints(pulsar* psr_array, int ipsr,int npsr){
    char ifunc = psr->param[param_ifunc].fitFlag[0]==1 || (ipsr==0 && psr->param[param_ifunc].fitFlag[0]==2);
    char qifunc_p = psr->param[param_quad_ifunc_p].fitFlag[0] ==1 || (ipsr==0 && psr->param[param_quad_ifunc_p].fitFlag[0] ==2);
    char qifunc_c = psr->param[param_quad_ifunc_c].fitFlag[0] ==1 || (ipsr==0 && psr->param[param_quad_ifunc_c].fitFlag[0] ==2);
+   char tel_dx = psr->param[param_tel_dx].fitFlag[0] ==1 || (ipsr==0 && psr->param[param_tel_dx].fitFlag[0] ==2);
+   char tel_dy = psr->param[param_tel_dy].fitFlag[0] ==1 || (ipsr==0 && psr->param[param_tel_dy].fitFlag[0] ==2);
+   char tel_dz = psr->param[param_tel_dz].fitFlag[0] ==1 || (ipsr==0 && psr->param[param_tel_dz].fitFlag[0] ==2);
    
 
    // offset
@@ -508,6 +515,9 @@ void autoConstraints(pulsar* psr_array, int ipsr,int npsr){
    if (ifunc) psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
    if (qifunc_p) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_0;
    if (qifunc_c) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_0;
+   if (tel_dx) psr->constraints[psr->nconstraints++] = constraint_tel_dx_0;
+   if (tel_dy) psr->constraints[psr->nconstraints++] = constraint_tel_dy_0;
+   if (tel_dz) psr->constraints[psr->nconstraints++] = constraint_tel_dz_0;
 
    // F0
    if(psr->param[param_f].fitFlag[0]){
@@ -515,6 +525,9 @@ void autoConstraints(pulsar* psr_array, int ipsr,int npsr){
 	  if (ifunc) psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
 	  if (qifunc_p) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_1;
 	  if (qifunc_c) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_1;
+	  if (tel_dx) psr->constraints[psr->nconstraints++] = constraint_tel_dx_1;
+	  if (tel_dy) psr->constraints[psr->nconstraints++] = constraint_tel_dy_1;
+	  if (tel_dz) psr->constraints[psr->nconstraints++] = constraint_tel_dz_1;
    }
    //F1
    if(psr->param[param_f].fitFlag[1]){
@@ -522,6 +535,9 @@ void autoConstraints(pulsar* psr_array, int ipsr,int npsr){
 	  if (ifunc) psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
 	  if (qifunc_p) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_2;
 	  if (qifunc_c) psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_2;
+	  if (tel_dx) psr->constraints[psr->nconstraints++] = constraint_tel_dx_2;
+	  if (tel_dy) psr->constraints[psr->nconstraints++] = constraint_tel_dy_2;
+	  if (tel_dz) psr->constraints[psr->nconstraints++] = constraint_tel_dz_2;
 
    }
    //F2

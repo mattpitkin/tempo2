@@ -34,6 +34,7 @@
 #include <string.h>
 #include <dlfcn.h>
 
+void readWhiteNoiseModelFile(pulsar *psr,int p);
 
 void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 {
@@ -145,7 +146,12 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	strcpy(psr[p].name,name);
       if (nojump==1)
 	psr[p].nJumps=0;
-
+      // Check using white noise model file
+      if (strcmp(psr[p].whiteNoiseModelFile,"NULL")!=0)
+	{
+	  readWhiteNoiseModelFile(psr,p);
+	}
+      
       if (nofit==1)
 	{
 	  for (i=0;i<MAX_PARAMS;i++)
@@ -939,4 +945,105 @@ void processSimultaneous(char *line,pulsar *psr, int npsr)
 	    }
 	}
     }
+}
+
+void readWhiteNoiseModelFile(pulsar *psr,int p)
+{
+  int i,j,k;
+  FILE *fin;
+  char str[128];
+  int ival;
+  char f1_id[128];
+  char f1_val[128];
+  char f2_id[128];
+  char f2_val[128];
+  double e0;
+  double tobs;
+
+  if (!(fin = fopen(psr[p].whiteNoiseModelFile,"r")))
+    {
+      printf("ERROR: Unable to open file white noise model file >%s<\n",psr[p].whiteNoiseModelFile);
+      exit(1);
+    }
+  printf("Reading white noise model from >%s<\n",psr[p].whiteNoiseModelFile);
+  while (!feof(fin))
+    {
+      if (fscanf(fin,"%s",str)==1)
+	{
+	  if (strcmp(str,"JITTER")==0)
+	    {
+	      double t0,w0,wn;
+	      int process;
+	      fscanf(fin,"%s",f1_id);
+	      fscanf(fin,"%s",f1_val);
+	      fscanf(fin,"%s",f2_id);
+	      fscanf(fin,"%lf",&w0);
+	      fscanf(fin,"%lf",&t0);
+	      for (i=0;i<psr[p].nobs;i++)
+		{
+		  // Check if we should process
+		  process = 0;
+		  for (j=0;j<psr[p].obsn[i].nFlags;j++)
+		    {
+		      if (strcmp(psr[p].obsn[i].flagID[j],f1_id)==0 &&
+			  strcmp(psr[p].obsn[i].flagVal[j],f1_val)==0)
+			{
+			  process=1; 
+			  break;
+			}
+		    }
+		  if (process==1)
+		    {
+		      // Calculate TOBS
+		      tobs = -1;
+		      for (j=0;j<psr[p].obsn[i].nFlags;j++)
+			{
+			  if (strcmp(psr[p].obsn[i].flagID[j],f2_id)==0)
+			    sscanf(psr[p].obsn[i].flagVal[j],"%lf",&tobs); 
+			}
+		      if (tobs > -1)
+			{
+			  e0 = psr[p].obsn[i].toaErr*1e-6;
+			  wn = w0*sqrt(t0/tobs);
+			  psr[p].obsn[i].toaErr = sqrt(pow(e0,2)+pow(wn,2))/1e-6; 
+			}
+		    }
+		}
+	    }
+	  else if (strcmp(str,"START_TIME_JITTER")==0)
+	    {
+	      double t0,w0,wn;
+	      int process;
+	      fscanf(fin,"%s",f1_id);
+	      fscanf(fin,"%s",f1_val);
+	      fscanf(fin,"%lf",&w0);
+	      for (i=0;i<psr[p].nobs;i++)
+		{
+		  // Check if we should process
+		  process = 0;
+		  for (j=0;j<psr[p].obsn[i].nFlags;j++)
+		    {
+		      if (strcmp(psr[p].obsn[i].flagID[j],f1_id)==0 &&
+			  strcmp(psr[p].obsn[i].flagVal[j],f1_val)==0)
+			{
+			  process=1; 
+			  break;
+			}
+		    }
+		  if (process==1)
+		    {
+		      e0 = psr[p].obsn[i].toaErr*1e-6;
+		      psr[p].obsn[i].toaErr = sqrt(pow(e0,2)+pow(w0,2))/1e-6; 
+		    }
+		}
+	    }
+	  else if (strcmp(str,"TOAERR_ZERO")==0)
+	    {
+	      for (i=0;i<psr[p].nobs;i++)
+		psr[p].obsn[i].toaErr = 0.0;
+	    }
+	}
+    }
+  fclose(fin);
+  
 }
