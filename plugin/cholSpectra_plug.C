@@ -69,7 +69,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    double py_r[MAX_SPEC_BINS];
    double py_i[MAX_SPEC_BINS];
    double tspan = -1;
-	  double minx,maxx;
+   double minx,maxx;
    int nSpec=0;
    int newpar=0;
    char newparname[MAX_FILELEN];
@@ -143,8 +143,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    }
    if (tspan < 0)
 	  tspan = maxx-minx;
-   else
+   else{
 	  printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
+	  tspan=-tspan;
+   }
    logmsg("Doing the calculation\n");
    verbose_calc_spectra=true;
    calculateSpectrum(psr,px,py_r,py_i,&nSpec,compute_spectral_window,tspan);
@@ -220,7 +222,12 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
    // Must calculate uinv for the pulsar
    //
    //   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
-   calcSpectra_ri_T(uinv,resx,resy,psr->nobs,px,py_r,py_i,*nSpec,T,'N',psr);
+   char mde = 'N';
+   if (T < 0){
+	  mde='T';
+	  T=-T;
+   }
+   calcSpectra_ri_T(uinv,resx,resy,psr->nobs,px,py_r,py_i,*nSpec,T,mde,psr);
 
    sprintf(fname,"%s.spec",psr->name);
    fout = fopen(fname,"w");

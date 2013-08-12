@@ -74,6 +74,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 
   if (displayCVSversion == 1) CVSdisplayVersion("preProcess.C","preProcess()",CVS_verNum);
   
+  logmsg("PreProcess");
   logdbg("In preProcess");
 
   //MAX_PSR   = MAX_PSR_VAL;    /* Maximum number of pulsars to fit simultaneously  */
@@ -97,8 +98,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	nojump=1;
       else if (strcmp(argv[i],"-select")==0)
 	sscanf(argv[++i],"%s",selectFname);
-      else if (strcmp(argv[i],"-splug")==0)
+      else if (strcmp(argv[i],"-splug")==0){
 	sscanf(argv[++i],"%s",selectPlugName);
+	logdbg("Splug = %s\n",selectPlugName);
+	  }
       else if (strcmp(argv[i],"-global")==0){
 		 forceGlobalFit=1;
 		 sscanf(argv[++i],"%s",globalFname);

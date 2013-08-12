@@ -1814,6 +1814,10 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
 	 }
 	 FIT_FUNC=fitMeanSineFunc_IFUNC; // this accounts for smoothing of the CM/IFUNC
   }
+  double binfactor = (double)nres/(double)(nres-1);
+  if(fitfuncMode=='T'){
+	 binfactor=1.0;
+  }
 
   // Should fit independently to all frequencies
   for (i=0;i<nres;i++)
@@ -1823,7 +1827,7 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
   logmsg("Computing %d spectral channels",nfit);
   for (k=0;k<nfit;k++)
   {
-	 GLOBAL_OMEGA = 2.0*M_PI/(T*(double)nres/(double)(nres-1))*(k+1);
+	 GLOBAL_OMEGA = 2.0*M_PI/(T*binfactor)*(k+1);
 
 	 TKleastSquares_single_pulsar(resx,resy,nres,param,NULL,3,NULL,&chisq,FIT_FUNC,psr,1.0e-40,ip,1,uinv);
 

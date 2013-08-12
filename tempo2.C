@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
   int listparms;
   int outRes=0;
   int writeModel=0;
+  int writeTimFile=0;
   char timFile[MAX_PSR][MAX_FILELEN],parFile[MAX_PSR][MAX_FILELEN];
   char outputSO[MAX_FILELEN];
   char str[MAX_FILELEN];
@@ -120,6 +121,8 @@ int main(int argc, char *argv[])
 	useT2accel=0;
 	  else if (strcasecmp(argv[i],"-writeres")==0)
 	writeResiduals=1;
+	  else if (strcasecmp(argv[i],"-writetim")==0)
+	writeTimFile=1;
       else if (strcasecmp(argv[i],"-veryfast")==0)
 	veryFast=1;
 
@@ -338,15 +341,21 @@ int main(int argc, char *argv[])
   readParfile(psr,parFile,timFile,npsr); /* Read .par file to define the pulsar's initial parameters */  
   logdbg("Finished reading par file %d",psr[0].nits);
   if (flagPolyco==0)
-    {
-      logdbg("Running readTimfile");
-      readTimfile(psr,timFile,npsr); /* Read .tim file to define the site-arrival-times */
-      logdbg("Completed readTimfile %d",psr[0].param[param_ecc].paramSet[1]);
-    }
+  {
+	 logdbg("Running readTimfile");
+	 readTimfile(psr,timFile,npsr); /* Read .tim file to define the site-arrival-times */
+	 logdbg("Completed readTimfile %d",psr[0].param[param_ecc].paramSet[1]);
+  }
 
   logdbg("Running preProcess %d",psr[0].nits);
   preProcess(psr,npsr,argc,commandLine);
   logdbg("Completed preProcess %d",psr[0].nits);
+  if(writeTimFile) {
+	 logmsg("write out.tim");
+	 writeTim("out.tim",psr,"tempo2");
+  }
+
+
   if (flagPolyco> 0)  /* Running tempo2 in polyco mode? */
   {
     if (flagPolyco == 1)
@@ -510,7 +519,7 @@ int main(int argc, char *argv[])
 	  //	      }
 	  //	    fclose(fin);
 	  //	  }
-	  if (listparms==1 && iteration==0)displayParameters(13,timFile,parFile,psr,npsr); /* List out all the parameters */  
+		  if (listparms==1 && iteration==0)displayParameters(13,timFile,parFile,psr,npsr); /* List out all the parameters */  
 	  if (iteration==0)          /* Only fit to pre-fit residuals */
 	    {
 	      logdbg("calling doFit");
