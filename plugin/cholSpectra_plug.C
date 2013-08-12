@@ -54,7 +54,7 @@ using namespace std;
 double OMEGA0=0; 
 
 long double toffset = 52601.0L;
-void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,bool compute_spectral_window);
+void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,bool compute_spectral_window, double T);
 
 void help() /* Display help */
 {
@@ -145,17 +145,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  tspan = maxx-minx;
    else
 	  printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
-   OMEGA0 = (double)(2*M_PI/tspan);
    logmsg("Doing the calculation\n");
    verbose_calc_spectra=true;
-   calculateSpectrum(psr,px,py_r,py_i,&nSpec,compute_spectral_window);
+   calculateSpectrum(psr,px,py_r,py_i,&nSpec,compute_spectral_window,tspan);
    logmsg("Finished\n");
    return 0;
 }
 
 char * plugVersionCheck = TEMPO2_h_VER;
 
-void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,bool compute_spectral_window) {
+void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,bool compute_spectral_window,double T) {
    int i;
    double pe[MAX_SPEC_BINS];
    double **uinv;
@@ -221,7 +220,7 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
    // Must calculate uinv for the pulsar
    //
    //   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
-   calcSpectra_ri(uinv,resx,resy,psr->nobs,px,py_r,py_i,*nSpec);
+   calcSpectra_ri_T(uinv,resx,resy,psr->nobs,px,py_r,py_i,*nSpec,T,'N',psr);
 
    sprintf(fname,"%s.spec",psr->name);
    fout = fopen(fname,"w");
