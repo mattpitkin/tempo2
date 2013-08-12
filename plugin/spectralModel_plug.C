@@ -534,12 +534,14 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
     }
   else
-    plot6(cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,highFreqSpecX,highFreqSpecY,nHighFreqSpec,makeps);
-
   // Step 6: output the covariance function
   outputCovarianceFunction(covFunc,(int)(resx[nres-1]-resx[0])+2,errorScaleFactor,psr);
   //    outputMatrix(uinv,nres);
   
+  
+  T2getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY);
+  if(writeFiles)fileOutput3("cholWhiteRes.dat",resx,cholWhiteY,rese,nres);
+
   // Deallocate memory 
   free_uinv(uinv);
 //  free_uinv(uinvI);
