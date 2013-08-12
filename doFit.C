@@ -326,6 +326,8 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 	  if(nglobal > 0){
 		 logmsg("Update global parameters");
+		 //		 for (int i=0;i<nglobal;i++)
+		 //		   printf("PARAM: %g %g\n",val[i],error[i]);
 		 updateGlobalParameters(psr,npsr,val,error);
 	  }
 
@@ -1833,6 +1835,21 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
    }
    else if (i==param_gwm_amp)
    {
+     long double dt;
+
+     if (psr->param[param_gwm_amp].paramSet[1]==1){
+       dt = (psr->obsn[ipos].bbat - psr->gwm_epoch)*86400.0L;
+       if (dt > 0)
+	 {
+	   if (k==0)
+	     afunc = psr->quad_ifunc_geom_p*dt;
+	   else if (k==1)
+	     afunc = psr->quad_ifunc_geom_c*dt;
+	 }
+       else afunc = 0;
+     }
+     else
+       {
 	  double n1,n2,n3;
 	  double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 	  double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
@@ -1975,6 +1992,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  }
 	  else
 	    afunc = 0;
+       }
    }
    else if (i==param_dmmodel)
    {
@@ -2066,7 +2084,7 @@ void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error){
 	  {
 		 if (psr[0].param[i].fitFlag[k] == 2)
 		 {
-			printf("Have global parameter %d %d %d\n",i,param_wave_om,param_ifunc);
+		   //			printf("Have global parameter %d %d %d %g %g\n",i,param_wave_om,param_ifunc,val[offset],error[offset]);
 			if (i==param_wave_om)
 			{
 			   int kk;
@@ -2088,6 +2106,27 @@ void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error){
 			   }
 			   offset--;
 			}
+			else if (i==param_gwm_amp)
+			{
+			  //			  printf("In here with offset = %d\n",offset);
+			  for (p=0;p<npsr;p++)
+			    {			      
+			      if (psr[p].param[param_gwm_amp].paramSet[1]==1)
+				{
+				  psr[p].param[i].val[k] -= val[offset];
+				  psr[p].param[i].err[k] = error[offset];
+				}
+			      else
+				{
+				  psr[p].param[i].val[0] -= val[offset];
+				  psr[p].param[i].err[0] = error[offset];
+				}
+			    }
+			  //			  printf("Setting %d %g %g\n",offset,val[offset],error[offset]);
+			  //			  offset++;
+
+			}
+
 			else if(i==param_ifunc) {
 			   printf("Updating %d point\n",psr[0].ifuncN);
 			   for (j=0;j<psr[0].ifuncN;j++)
@@ -2211,7 +2250,7 @@ void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error){
 			{
 			   for (p=0;p<npsr;p++)
 			   {
-				  if (i==param_telx || i==param_tely || i==param_telz || i==param_gwm_amp)
+				  if (i==param_telx || i==param_tely || i==param_telz)
 					 psr[p].param[i].val[k] -= val[offset];
 				  else
 					 psr[p].param[i].val[k] += val[offset];
@@ -2505,19 +2544,29 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			}
 			else if (i==param_gwm_amp)
 			{
-			   psr[p].param[i].val[0] -= val[j];
-			   psr[p].param[i].err[0] = error[j];
-			   j++;
+			  printf("Should I be in here???\n");
+			  if (psr[p].param[param_gwm_amp].paramSet[1]==1)
+			    {
+			      psr[p].param[i].val[k] -= val[j];
+			      psr[p].param[i].err[k] = error[j];
+			      j++;
+			    }
+			  else
+			    {
+			      psr[p].param[i].val[0] -= val[j];
+			      psr[p].param[i].err[0] = error[j];
+			      j++;
+			    }
 			}
 			else if (i==param_dmmodel)
 			{
-			   for (k=0;k<psr[p].dmoffsDMnum;k++)
+			   for (int k=0;k<psr[p].dmoffsDMnum;k++)
 			   {
 				  psr[p].dmoffsDM[k] += val[j];
 				  psr[p].dmoffsDM_error[k] = error[j];
 				  j++;
 			   }
-			   for (k=0;k<psr[p].dmoffsCMnum;k++){
+			   for (int k=0;k<psr[p].dmoffsCMnum;k++){
 
 				  psr[p].dmoffsCM[k] = val[j];
 				  psr[p].dmoffsCM_error[k] =  error[j];

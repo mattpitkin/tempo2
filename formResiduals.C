@@ -440,7 +440,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       //	       printf("Res = %g\n",(double)res);
 	     }
 
-	   if (psr[p].param[param_gwm_amp].paramSet[0]==1)
+	   // Jingbo Wang's method for GWM modelling
+	   // Uses an amplitude and phase
+	   // See below for method that uses two amplitudes and no phase
+	   //
+	   if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&
+	       psr[p].param[param_gwm_amp].paramSet[1]==0)
 	     {
 	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 	       //	       double res_e,res_i;
@@ -594,7 +599,100 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	       //	       printf("Res = %g\n",(double)res);
 	     }
-	 
+	   // GWM model that includes two amplitudes
+	   if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&
+	       psr[p].param[param_gwm_amp].paramSet[1]==1)
+	     {
+	       if (psr[p].obsn[i].bbat >= psr[p].gwm_epoch)
+		 {
+		   long double wi,t1,t2;
+		   long double dt,speriod,tt;
+		   int k;
+		   double m,c,ival;
+		   double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+		   //	       double res_e,res_i;
+		   long double resp,resc,res_r,res_i;
+		   double theta_p,theta_g,phi_p,phi_g;
+		   double lambda_p,beta_p,lambda,beta;
+		   double n1,n2,n3;
+		   double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+		   double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+		   double cosTheta;
+
+		   lambda_p = (double)psr[p].param[param_raj].val[0];
+		   beta_p   = (double)psr[p].param[param_decj].val[0];
+		   lambda   = psr[p].gwm_raj;
+		   beta     = psr[p].gwm_decj;
+		   
+		   // Pulsar vector
+		   n1 = cosl(lambda_p)*cosl(beta_p);
+		   n2 = sinl(lambda_p)*cosl(beta_p);
+		   n3 = sinl(beta_p);
+		   
+		   cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+		     sinl(beta)*sinl(beta_p);
+		   
+		   // From KJ's paper
+		   // Gravitational wave matrix
+		   
+		   // NOTE: This is for the plus terms.  For cross should use different terms
+		   e11p = pow(sinl(lambda),2)-pow(cosl(lambda),2)*pow(sinl(beta),2);
+		   e21p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+		   e31p = cosl(lambda)*sinl(beta)*cosl(beta);
+		   
+		   e12p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+		   e22p = pow(cosl(lambda),2)-pow(sinl(lambda),2)*pow(sinl(beta),2);
+		   e32p = sinl(lambda)*sinl(beta)*cosl(beta);
+		   
+		   e13p = cosl(lambda)*sinl(beta)*cosl(beta);
+		   e23p = sinl(lambda)*sinl(beta)*cosl(beta);
+		   e33p = -powl(cosl(beta),2);
+		   
+		   resp = (n1*(n1*e11p+n2*e12p+n3*e13p)+
+			   n2*(n1*e21p+n2*e22p+n3*e23p)+
+			   n3*(n1*e31p+n2*e32p+n3*e33p));
+
+		   if ((1-cosTheta)==0.0)
+		     resp = 0.0;  // Check if this is sensible
+		   else
+		     resp = 1.0L/(2.0L*(1.0L-cosTheta))*(resp); 
+
+		   psr[p].quad_ifunc_geom_p = resp;
+
+		   // NOTE: These are for the cross terms. 
+		   lambda   = psr[p].quad_ifunc_c_RA;
+		   beta     = psr[p].quad_ifunc_c_DEC;
+
+		   e11c = sin(2*lambda)*sin(beta);
+		   e21c = -cos(2*lambda)*sin(beta);
+		   e31c = -sin(lambda)*cos(beta);
+		   
+		   e12c = -cos(2*lambda)*sin(beta);
+		   e22c = -sin(2*lambda)*sin(beta);
+		   e32c = cos(lambda)*cos(beta);
+		   
+		   e13c = -sin(lambda)*cos(beta);
+		   e23c = cos(lambda)*cos(beta);
+		   e33c  = 0;
+		   
+		   resc = (n1*(n1*e11c+n2*e12c+n3*e13c)+
+			   n2*(n1*e21c+n2*e22c+n3*e23c)+
+			   n3*(n1*e31c+n2*e32c+n3*e33c));
+		   
+		   if ((1-cosTheta)==0.0)
+		     resc = 0.0;  // Check if this is sensible
+		   else
+		     resc = 1.0L/(2.0L*(1.0L-cosTheta))*(resc); 
+		   psr[p].quad_ifunc_geom_c = resc;
+
+		   dt = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*86400.0L;
+		   //		   scale = -0.5*cos2Phi*(1-cosTheta);
+		   phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[0]*psr[p].quad_ifunc_geom_p); 				
+		   phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[1]*psr[p].quad_ifunc_geom_c); 				
+
+
+		 }
+	     }	 
 	   /* Add in extra phase due to clock offset */
 	   if (psr[p].param[param_clk_offs].paramSet[0] == 1)
 	     {

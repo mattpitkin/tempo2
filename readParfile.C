@@ -168,6 +168,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     fscanf(fin,"%d",&(psr->fitMode));
   else if (strcasecmp(str,"NOTRACK")==0)  /* TEMPO2 uses automatic tracking */
     psr->param[param_track].paramSet[0]=0;
+  else if (strcasecmp(str,"WHITE_NOISE_MODEL")==0) // Use a white noise model file
+    fscanf(fin,"%s",psr->whiteNoiseModelFile);
   else if (strcasecmp(str,"TRACK")==0)  /* TEMPO2 uses automatic tracking */
     readValue(psr,(char *)"TRACK",fin,&(psr->param[param_track]),0);
   else if (strcasecmp(str,"NO_SS_SHAPIRO")==0)
@@ -843,6 +845,10 @@ else if (strcasecmp(str,"_DM")==0)
   //* Gravitational wave memory
   else if (strcasecmp(str,"GWM_AMP")==0)
 	 readValue(psr,str,fin,&(psr->param[param_gwm_amp]),0);
+  else if (strcasecmp(str,"GWM_A1")==0)
+    readValue(psr,str,fin,&(psr->param[param_gwm_amp]),0);
+  else if (strcasecmp(str,"GWM_A2")==0)
+    readValue(psr,str,fin,&(psr->param[param_gwm_amp]),1);
   else if (strcasecmp(str,"GWM_POSITION")==0)
 	 fscanf(fin,"%lf %lf",&psr->gwm_raj,&psr->gwm_decj);
   else if (strcasecmp(str,"GWM_EPOCH")==0)

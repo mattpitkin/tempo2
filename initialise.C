@@ -116,6 +116,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->filterStr,"");
   strcpy(psr->passStr,"");
   strcpy(psr->fitFunc,"default");
+  strcpy(psr->whiteNoiseModelFile,"NULL");
   psr->simflag=0;
   psr->nits=1;
   psr->clockFromOverride[0] = '\0';
@@ -239,6 +240,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH");
   strcpy(psr->param[param_gwm_amp].label[0],"GWM_AMP");
   strcpy(psr->param[param_gwm_amp].shortlabel[0],"GWM_AMP");
+  strcpy(psr->param[param_gwm_amp].label[1],"GWM_AMP_2");
+  strcpy(psr->param[param_gwm_amp].shortlabel[1],"GWM_AMP_2");
   strcpy(psr->param[param_tel_dx].label[0],"TEL_DX");
   strcpy(psr->param[param_tel_dy].label[0],"TEL_DY");
   strcpy(psr->param[param_tel_dz].label[0],"TEL_DZ");
@@ -521,6 +524,7 @@ void allocateMemory(pulsar *psr, int realloc)
       else if (i==param_tel_dy) psr->param[i].aSize = MAX_TEL_DY;
       else if (i==param_tel_dz) psr->param[i].aSize = MAX_TEL_DZ;
       else if (i==param_raj || i==param_decj) psr->param[i].aSize = 2; // Use second for gravitational wave work
+      else if (i==param_gwm_amp) psr->param[i].aSize = 2; 
       else psr->param[i].aSize = 1;
       
       psr->param[i].val       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));
