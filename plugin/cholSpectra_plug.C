@@ -50,7 +50,7 @@
 
 using namespace std;
 
-#define MAX_SPEC_BINS 10000
+#define MAX_SPEC_BINS 10001
 double OMEGA0=0; 
 
 long double toffset = 52601.0L;
@@ -68,7 +68,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    double px[MAX_SPEC_BINS];
    double py_r[MAX_SPEC_BINS];
    double py_i[MAX_SPEC_BINS];
-   double tspan,minx,maxx;
+   double tspan = -1;
+	  double minx,maxx;
    int nSpec=0;
    int newpar=0;
    char newparname[MAX_FILELEN];
@@ -99,6 +100,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  }
 	  if (strcmp(argv[i],"-nspec")==0) {
 		 nSpec=atoi(argv[++i]);
+	  }
+	  if (strcmp(argv[i],"-tspan")==0) {
+		 tspan=atof(argv[++i]);
 	  }
 
 	  if (strcmp(argv[i],"-window")==0) {
@@ -137,7 +141,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		 if (maxx < (double)psr[0].obsn[i].sat) maxx = (double)psr[0].obsn[i].sat;
 	  }
    }
-   tspan = maxx-minx;
+   if (tspan < 0)
+	  tspan = maxx-minx;
+   else
+	  printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
    OMEGA0 = (double)(2*M_PI/tspan);
    logmsg("Doing the calculation\n");
    verbose_calc_spectra=true;
