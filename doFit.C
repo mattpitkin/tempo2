@@ -1313,11 +1313,16 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
    }
    else if (i==param_wave_om) /* Whitening procedure using sinusoids */
    {
+	  double  Xoff = 0; // this Xoff is because x is referenced to pepoch not waveepoch!
+	  if (psr->param[param_waveepoch].paramSet[0]){
+		 Xoff = psr->param[param_waveepoch].val[0] - psr->param[param_pepoch].val[0];
+	  }
+
 	  double      om    = psr->param[param_wave_om].val[0];
 	  if (psr->waveScale==0)
 	  {
-		 if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x); 
-		 else        afunc = sin(om*(floor(k/2.0)+1)*x); 
+		 if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*(x-Xoff)); 
+		 else        afunc = sin(om*(floor(k/2.0)+1)*(x-Xoff)); 
 		 //	  printf("Value = %d %f %f %f %g\n",k,floor(k/2.0)+1,x,om,afunc);
 
 	  }
