@@ -693,6 +693,8 @@ long double DDmodel(pulsar *psr,int p,int obs,int param);
 void updateDD(pulsar *psr,double val,double err,int pos);
 double T2model(pulsar *psr,int p,int obs,int param,int arr);
 void updateT2(pulsar *psr,double val,double err,int pos,int arr);
+double T2_PTAmodel(pulsar *psr,int p,int obs,int param,int arr);
+void updateT2_PTA(pulsar *psr,double val,double err,int pos,int arr);
 double JVmodel(pulsar *psr,int p,int obs,int param,int arr);
 void updateJV(pulsar *psr,double val,double err,int pos,int arr);
 double DDKmodel(pulsar *psr,int p,int obs,int param);

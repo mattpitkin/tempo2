@@ -82,6 +82,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       else if (strcmp(psr[p].binaryModel,"MSS")==0)   torb = MSSmodel(psr,p,i,-1);
 	       else if (strcmp(psr[p].binaryModel,"DDGR")==0)  torb = DDGRmodel(psr,p,i,-1);
 	       else if (strcmp(psr[p].binaryModel,"T2")==0)    torb = T2model(psr,p,i,-1,0);
+	       else if (strcmp(psr[p].binaryModel,"T2-PTA")==0) torb = T2_PTAmodel(psr,p,i,-1,0);
 	       else if( strcmp( psr[p].binaryModel, "DDH" ) == 0) torb = DDHmodel( psr, p, i, -1 );
 	       else if( strcmp( psr[p].binaryModel, "ELL1H" ) == 0) torb = ELL1Hmodel( psr, p, i, -1 );
 	       else {printf("Warning: Unknown binary model '%s'\n",psr[p].binaryModel); exit(1);}

@@ -2069,6 +2069,8 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  afunc = MSSmodel(psr,0,ipos,i);
    else if (strcmp(psr->binaryModel,"T2")==0) 
 	  afunc = T2model(psr,0,ipos,i,k);	
+   else if (strcmp(psr->binaryModel,"T2-PTA")==0) 
+	  afunc = T2_PTAmodel(psr,0,ipos,i,k);	
    else if (strcmp(psr->binaryModel,"DDH")==0)
 	  afunc = DDHmodel(psr,0,ipos,i);
    else if (strcmp(psr->binaryModel,"ELL1H")==0)
@@ -2605,6 +2607,8 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			   updateMSS(&psr[p],val[j],error[j],i);
 			else if (strcmp(psr[p].binaryModel,"T2")==0)
 			   updateT2(&psr[p],val[j],error[j],i,k);
+			else if (strcmp(psr[p].binaryModel,"T2-PTA")==0)
+			   updateT2_PTA(&psr[p],val[j],error[j],i,k);
 			else if (strcmp(psr[p].binaryModel,"DDH")==0)
 			   updateDDH(&psr[p],val[j],error[j],i);
 			else if (strcmp(psr[p].binaryModel,"ELL1H")==0)
