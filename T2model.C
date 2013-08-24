@@ -46,6 +46,8 @@
 #include <math.h>
 #include "tempo2.h"
 
+
+static double calcDH( double ae, double h3, double h4, int nharm, int sel);
 double getParameter(pulsar *psr,int p,int k);
 
 void calcGR(double mtot,double m2,double x,double ecc,double an,double afac,
@@ -109,6 +111,13 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
   long double DOP=0.0L; // Orbital parallax time delay
   double daop;// DAOP is the time delay due to annual orbital
               // parallax. daop is the aop distance.
+
+  long double h3,h4,stig;
+  long double lgf,TrueAnom;
+  long double lsc, fs;
+  int nharm=4;
+  int mode = -1; // See ELL1Hmodel.C
+
   torb = 0.0;
   const char *CVS_verNum = "$Revision$";
 
@@ -245,6 +254,9 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
                   ( cos( 2.0 * omega ) + pow( ecc, 2.0 ) * 
                     ( pow( sin( ki ), -2.0 ) + pow( cu, 2.0 ) ) ) *
                   cos( 2.0 * u ) );
+
+	      printf("T2model: %g DAOP = %g DSR = %g DOP = %g\n",(double)psr[p].obsn[ipos].bbat,(double)DAOP,(double)DSR,(double)DOP);
+
 	      //                logdbg("DAOP is %g and DSR is %g\n", (double)DAOP, (double)DSR);
 	      //                logdbg("DAOP is %g, DK011 and DK021 are %f and %f\n",
 	      //                       (double)DAOP,(double)DK011,(double)DK021);
@@ -270,6 +282,10 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
           drep=-alpha*su + bg*cu;                       /* Equation 49  */
           drepp=-alpha*cu - bg*su;                      /* Equation 50  */
           anhat=an/onemecu;                             /* Equation 51  */
+
+	  dlogbr=log(brace);
+	  ds=-2*m2*dlogbr;        /* Equation 26 */
+	  
         }
       else if (psr[p].param[param_eps1].paramSet[com]==1)  /* ELL1 model */
         {
@@ -292,19 +308,128 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
               DAOP = (DK011+DK012)*C-(DK021+DK022)*S;
               DSR = (DK031+DK032)*C+(DK041+DK042)*S;
             }
+	  
           brace=1-si*sin(phase);
           da=a0*sin(phase)+b0*cos(phase);  
 	  
           anhat = an; ecc = 0.0;
+	  
+	  
+	  /* Shapiro delay */
+	  if ( psr[p].param[param_h3].paramSet[0] * psr[p].param[param_stig].paramSet[0] == 1 
+	       || psr[p].param[param_h3].paramSet[0] * psr[p].param[param_h4].paramSet[0] == 1){
+	    
+	    printf("Using the Friere & Wex formalism for the Shapiro delay\n");
+	    // Based on ELL1Hmodel.C
+	    
+	    h3 = psr[p].param[param_h3].val[0];
+	    //h3 = getParameterValue( &psr[p], param_h3, 0 );
+	    
+	    // Determine fw10 mode
+	    if( psr[p].param[param_h4].paramSet[0] == 1 ){
+	      h4 = psr[p].param[param_h4].val[0];
+	      //    h4 = getParameterValue( &psr[p], param_h4, 0 );
+	      // mode 2 or 3 take preference over mode 1 as they are more stable
+	      if( psr[p].param[param_nharm].paramSet[0] == 1 ){
+		nharm = (int)psr[p].param[param_nharm].val[0];
+		//nharm = (int)getParameterValue( &psr[p], param_nharm, 0 );
+		if( nharm > 4 )
+		  mode = 3;
+		else
+		  mode = 2;
+	      }
+	      if( psr[p].param[param_stig].paramSet[0] == 1 ){
+		// Conflict. Unsure whether to select mode 1 or modes 2/3, so will default
+		// to the most stable one.
+		printf( "WARNING! You specified both H4 and STIG.\n" );
+		printf( "We will ignore STIG and perform the approx. H4 fit instead.\n" );
+		printf( "If you want to perform the exact fit for H3 and STIG, then " );
+		printf( "please remove H4 from your parameter file.\n");
+	      }
+	      // Have H3, H4, but no NHARM
+	      mode = 2;
+	    }else{ 
+	      // Have H3, but no H4
+	      if( psr[p].param[param_stig].paramSet[0] == 1 ){
+		stig = psr[p].param[param_stig].val[0];
+		//stig = getParameterValue( &psr[p], param_stig, 0 );
+		mode = 1;
+	      }else{
+		mode = 0;
+		h4 = 0;
+		nharm = 3;
+	      }
+	    }// fw10 mode determined.
+	    
+	    // Define sin(i) and m2 for calculation of the orbital phases etc.
+	    if( mode == 1 ){
+	      // fw10, Eq. 22:
+	      si = 2.0 * stig / ( 1.0 + pow( stig, 2.0 ) );
+	      // fw10, Eq. 20:
+	      m2 = h3 / pow( stig, 3.0 ); // Shapiro r, not just M2.
+	      
+	      if( si > 1.0 ){
+		displayMsg(1,"BIN1",
+			   "SIN I > 1.0, setting to 1: should probably use DDS model",
+			   "",psr[p].noWarnings);
+		si = 1.0;
+		psr[p].param[param_sini].val[0] = 1.0L;
+	      }
+	    }else if( mode == 2 || mode == 3 ){
+	      // fw10, Eq. 25:
+	      si = 2.0 * h3 * h4 / ( h3 * h3 + h4 * h4 );
+	      // fw10, Eq. 26:
+	      m2 = pow( h3, 4.0 ) / pow( h4, 3.0 );
+	      if( si > 1.0 ){
+		displayMsg(1,"BIN1",
+			   "SIN I > 1.0, setting to 1: should probably use DDS model",
+			   "",psr[p].noWarnings);
+		si = 1.0;
+		psr[p].param[param_sini].val[0] = 1.0L;
+	      }
+	    }else if( mode == 0 ){
+	      // Cannot determine m2 and/or sini. Will have to determine the
+	      // Shapiro delay based on h3 alone.
+	    }else{
+	      printf( "This should not be possible. Go Away.\n" );
+	      printf( "And tell someone about it: joris.verbiest@gmail.com, e.g.\n" );
+	    }
+	    brace=1-si*sin(phase);
+	    dlogbr=log(brace);
+	    
+	    ecc = sqrt( eps1 * eps1 + eps2 * eps2 );
+	    TrueAnom = phase;
+	    //TrueAnom = 2.0 * atan2( sqrt( 1.0 + ecc ) * sin( phase / 2.0 ), 
+	    //                       sqrt( 1.0 - ecc ) * cos( phase / 2.0 ) );
+	    omega = atan2( eps1, eps2 );
+	    //lgf = log( 1.0 + stig * stig - 2.0 * stig * sin( TrueAnom + omega ) );
+
+	    fs = 1.0 + stig * stig - 2.0 * stig * sin( TrueAnom );
+	    lgf = log( fs );
+	    lsc = lgf + 2.0 * stig * sin( TrueAnom ) - stig * stig * cos( 2.0 * TrueAnom );
+	    
+	    if( mode == 0 ){
+	      // mode 0: only h3 is known. 
+	      ds = -4.0 / 3.0 * h3 * sin( 3.0 * TrueAnom );
+	    }else if( mode == 1 ){
+	      ds = -2.0 *m2* lsc;
+	      //ds = -2.0 * m2 * dlogbr;
+	    }else{ // modes 2 and 3
+	      ds = calcDH( TrueAnom, h3, h4, nharm, 0 );
+	    }
+	    
+	  }
+	  else{
+	    dlogbr=log(brace);
+	    ds=-2*m2*dlogbr;        /* Equation 26 */
+	  }
+	  
         }
       else
         {
           printf("Require eccentricity set or EPS1/EPS2 parameters for companion %d\n",com+1);
           exit(1);
         }
-      /* Shapiro delay */
-      dlogbr=log(brace);
-      ds=-2*m2*dlogbr;        /* Equation 26 */
       // printf("T2: %g %g %g %g %g %g %g\n",brace,phase,a0,b0,dlogbr,ds,m2);
 
       /* Now compute d2bar, the orbital time correction in DD equation 42. */
@@ -386,6 +511,28 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
           else if (param==param_eps2)    return ceps2;
           else if (param==param_tasc)    return -csigma*an*SECDAY;
           else if (param==param_shapmax) return cshapmax;
+	  else if (param==param_stig){
+	    return( -2.0 * m2 / stig * ( 1.0 - 3.0 * lgf - ( 1.0 - stig * stig ) / fs ) 
+		    + 2.0 * m2 * ( 4.0 * sin( TrueAnom ) - stig * cos( 2.0 * TrueAnom ) ) );	    
+	  }
+	  else if (param=param_h3) {
+	    if( mode == 0 || mode == 2)
+	      return( -4.0 / 3.0 * sin( 3.0 * TrueAnom ) );
+	    else if( mode == 1 ){
+	      return( -2.0 * lsc / pow( stig, 3.0 ) );
+	      //return( 2.0 / pow( stig, 3.0 ) * 
+	      //        ( lgf + 2.0 * stig * sin( TrueAnom ) - stig * stig * cos( TrueAnom ) ) );
+	    }else if( mode == 3 )
+	      return( calcDH( TrueAnom, h3, h4, nharm, 3 ) );
+	    else{
+	      printf( "ERROR in ELL1H. This really shouldn't happen.\n" );
+	    }
+	  }else if( param == param_h4 ){
+	    if( mode == 2 )
+	      return( cos( 4.0 * TrueAnom ) );
+	    else
+	      return( calcDH( TrueAnom, h3, h4, nharm, 4 ) );
+	  }	  
           else if (param==param_kom){
             ckom = C* (DK033+DK034+DK013+DK014) + S*(DK043+DK044+DK023+DK024);
             return ckom;
@@ -427,7 +574,7 @@ void updateT2(pulsar *psr,double val,double err,int pos,int arr){
       pos==param_sini || pos==param_m2 || pos == param_gamma || 
       pos==param_eps1 || pos==param_eps2 || pos==param_tasc ||
       pos == param_bpjph || pos==param_bpja1 || pos==param_bpjec || 
-      pos==param_bpjom || pos == param_bpjpb || pos==param_shapmax){
+      pos==param_bpjom || pos == param_bpjpb || pos==param_shapmax || pos==param_h3 || pos==param_h4 || pos==param_stig){
     psr->param[pos].val[arr] += val;
     psr->param[pos].err[arr]  = err;
   }
@@ -837,3 +984,62 @@ void computeU(double phase,double ecc,double *u)
    eth=ecc*(1+dth);
    }
 */
+
+static double calcDH( double ae, double h3, double h4, int nharm, int sel ){
+  // The final input argument "sel", selects the output for this function.
+  // sel = 3 outputs the derivative for H3;
+  // sel = 4 outputs the derivative for H4;
+  // sel = 0 outputs the shapiro delay.
+  double s = h4 / h3;
+  double FirstH3 = -4.0 / 3.0 * sin( 3.0 * ae );
+  double SecondH3 = 0.0;
+  double FirstH4 = cos( 4.0 * ae );
+  double SecondH4 = 0.0;
+  double sd3 = -4.0 / 3.0 * h3 * sin( 3.0 * ae );
+  double sd4 = h4 * cos( 4.0 * ae );
+  double sd5 = 0.0;
+
+  double fs = s * sin( 5.0 * ae ) / 5.0;
+  double dfsds = sin( 5.0 * ae ) / 5.0;
+  double count;
+
+  if( nharm > 5)
+    for( int EvenCt = 6; EvenCt <= nharm; EvenCt += 2 ){
+      count = (double)EvenCt;
+      // Add even harmonics
+      fs += pow( -1.0, count / 2.0 )/
+        count * pow( s, count - 4.0 ) * 
+        cos( count * ae );
+      dfsds += pow( -1.0, count / 2.0 ) / 
+        count * pow( s, count - 5.0 ) *
+        cos( count * ae ) * ( count - 4.0 );
+    }
+  
+  if( nharm > 6 )
+    for( int OddCt = 7; OddCt <= nharm; OddCt += 2 ){
+      count = (double)OddCt;
+      // Add odd harmonics
+      fs += pow( -1.0, ( count - 1.0 ) / 2.0 ) / 
+        count * pow( s, count - 4.0 ) * 
+        sin( count * ae );                                    
+      dfsds += pow( -1.0, ( count - 1.0 ) / 2.0 ) / 
+        count * pow( s, count - 5.0 ) * 
+        sin( count * ae ) * ( count - 4.0 );
+    }
+
+  if( nharm > 4 ){
+    SecondH3 = -4.0 * dfsds * s * s;
+    SecondH4 = 4.0 * ( fs + dfsds * s );
+    sd5 = 4.0 * h4 * fs;
+  }
+
+  if( sel == 3 )
+    return( FirstH3 + SecondH3 );
+  else if( sel == 4 )
+    return( FirstH4 + SecondH4 );
+  else if( sel == 0 )
+    return( sd3 + sd4 + sd5 );
+  else{
+    printf( "ERROR in ELL1Hmodel! This shouldn't be happening.\n" );
+  }
+}
