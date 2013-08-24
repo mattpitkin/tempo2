@@ -1067,6 +1067,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    fprintf(fout2, "%-15.15s%s\n", "PLANET_SHAPIRO", "N");
 	  if (psr[p].t2cMethod != T2C_IAU2000B)
 	    fprintf(fout2, "%-15.15s%s\n", "T2CMETHOD", "TEMPO");
+          fprintf(fout2, "%-15.15s%.3f\n", "NE_SW", psr[p].ne_sw);
 	  if (!psr[p].correctTroposphere)
 	    fprintf(fout2, "%-21.21s%s\n", "CORRECT_TROPOSPHERE", "N");
 
