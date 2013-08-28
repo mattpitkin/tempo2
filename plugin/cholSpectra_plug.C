@@ -219,6 +219,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 
 		 }
+	  }
 
 		 free(p1_x);
 		 free(p2_x);
@@ -226,7 +227,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		 free(p1_yi);
 		 free(p2_yr);
 		 free(p2_yi);
-	  }
    }else{
 	  logmsg("Producing spectra");
 	  double* px;
