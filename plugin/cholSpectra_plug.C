@@ -109,7 +109,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  if (strcmp(argv[i],"-yr")==0) {
 		 xfactor=365.25;
 	  }
-	
+
 	  if (strcmp(argv[i],"-tspan")==0) {
 		 tspan=atof(argv[++i]);
 	  }
@@ -144,7 +144,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    }
 
    if(xfactor!=1.0){
-   logmsg("Multiplying X axis by %lf",xfactor);
+	  logmsg("Multiplying X axis by %lf",xfactor);
    }
 
    if(xspec){
@@ -217,7 +217,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			psr[p2].param[param_finish].val[0]=p2_finish_o;
 
 
+
 		 }
+
+		 free(p1_x);
+		 free(p2_x);
+		 free(p1_yr);
+		 free(p1_yi);
+		 free(p2_yr);
+		 free(p2_yi);
 	  }
    }else{
 	  logmsg("Producing spectra");
