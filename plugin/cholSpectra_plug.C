@@ -50,11 +50,10 @@
 
 using namespace std;
 
-#define MAX_SPEC_BINS 10001
 double OMEGA0=0; 
 
 long double toffset = 52601.0L;
-void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,bool compute_spectral_window, double T);
+void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i);
 
 void help() /* Display help */
 {
@@ -65,26 +64,27 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
    char parFile[MAX_PSR][MAX_FILELEN];
    char timFile[MAX_PSR][MAX_FILELEN];
-   double px[MAX_SPEC_BINS];
-   double py_r[MAX_SPEC_BINS];
-   double py_i[MAX_SPEC_BINS];
    double tspan = -1;
    double minx,maxx;
    int nSpec=0;
    int newpar=0;
    char newparname[MAX_FILELEN];
+   char xspec=0;
+   char autoNspec=1;
+   char fname[MAX_FILELEN];
+   FILE *fout;
+   double xfactor=1.0;
 
-   int i;
+   int i,p;
    double globalParameter;
    const char *CVS_verNum = "$Revision$";
-   bool compute_spectral_window=false;
 
-   if (displayCVSversion == 1) CVSdisplayVersion("grTemplate.C","plugin",CVS_verNum);
+   if (displayCVSversion == 1) CVSdisplayVersion("cholSpecra_plug.C","plugin",CVS_verNum);
 
-   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
+   *npsr = 0;  /* Now we do more than one pulsar */
 
    printf("Graphical Interface: cholSpectra\n");
-   printf("Author:              G. Hobbs\n");
+   printf("Author:              M. Keith, G. Hobbs\n");
    printf("CVS Version:         $Revision$\n");
    printf(" --- type 'h' for help information\n");
 
@@ -92,34 +92,48 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    for (i=2;i<argc;i++)
    {
 	  if (strcmp(argv[i],"-f")==0) {
-		 strcpy(parFile[0],argv[++i]); 
-		 strcpy(timFile[0],argv[++i]);
+		 strcpy(parFile[*npsr],argv[++i]); 
+		 strcpy(timFile[*npsr],argv[++i]);
+		 (*npsr)++;
 	  }
 	  if ((strcmp(argv[i],"-dcf")==0) || (strcmp(argv[i],"-chol")==0)){
 		 strcpy(covarFuncFile,argv[++i]);
 	  }
 	  if (strcmp(argv[i],"-nspec")==0) {
 		 nSpec=atoi(argv[++i]);
+		 autoNspec=0;
 	  }
+	  if (strcmp(argv[i],"-xspec")==0) {
+		 xspec=1;
+	  }
+	  if (strcmp(argv[i],"-yr")==0) {
+		 xfactor=365.25;
+	  }
+	
 	  if (strcmp(argv[i],"-tspan")==0) {
 		 tspan=atof(argv[++i]);
 	  }
 
-	  if (strcmp(argv[i],"-window")==0) {
-		 compute_spectral_window=true;
-	  }
 	  else if (strcmp(argv[i],"-outpar")==0){
-	    newpar=1;
-		strcpy(newparname,argv[++i]);
+		 newpar=1;
+		 strcpy(newparname,argv[++i]);
 	  }
 
+   }
+   if (*npsr < 1){
+	  logerr("Need at least 1 pulsar!");
+	  exit(1);
    }
 
    readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
    readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
    preProcess(psr,*npsr,argc,argv);
 
-   sortToAs(psr); // sort the ToAs
+   for (p=0; p < *npsr ; p++){
+
+	  sortToAs(psr+p); // sort the ToAs
+   }
+   logmsg("Do the fitting");
 
    for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
    {
@@ -128,55 +142,148 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  if (i==0) doFitAll(psr,*npsr,covarFuncFile);   /* Do the fitting     */
 	  else textOutput(psr,*npsr,globalParameter,0,0,newpar,newparname);  /* Display the output */
    }
-   logmsg("Producing spectra");
-   for (i=0;i<psr[0].nobs;i++)
-   {
-	  if (i==0)
-	  {
-		 minx = maxx = (double)psr[0].obsn[i].sat;
+
+   if(xfactor!=1.0){
+   logmsg("Multiplying X axis by %lf",xfactor);
+   }
+
+   if(xspec){
+	  if(autoNspec)nSpec=16;
+	  int p1,p2;
+	  double crossR,crossI,P1,P2;
+	  double *p1_x,*p2_x,*p1_yr,*p2_yr,*p1_yi,*p2_yi;
+	  p1_x = (double*)malloc(nSpec*sizeof(double));
+	  p2_x = (double*)malloc(nSpec*sizeof(double));
+	  p1_yr = (double*)malloc(nSpec*sizeof(double));
+	  p1_yi = (double*)malloc(nSpec*sizeof(double));
+	  p2_yr = (double*)malloc(nSpec*sizeof(double));
+	  p2_yi = (double*)malloc(nSpec*sizeof(double));
+
+	  logmsg("Producing Cross Spectra");
+	  for (p1 = 0; p1 < *npsr; p1++){
+		 for (p2 = p1+1; p2 < *npsr; p2++){
+			double p1_start_o = psr[p1].param[param_start].val[0];
+			double p2_start_o = psr[p2].param[param_start].val[0];
+			double p1_finish_o = psr[p1].param[param_finish].val[0];
+			double p2_finish_o = psr[p2].param[param_finish].val[0];
+
+			double maxx = max(p1_finish_o,p2_finish_o);
+			double minx = min(p1_start_o,p2_start_o);
+			logmsg("%s X %s -- Overlap: %lf -> %lf",psr[p1].name,psr[p2].name,minx,maxx);
+			if ((maxx - minx < 1)){
+			   logmsg("Less than 1 day overlap, cannot continue");
+			   continue;
+			}
+			// Here we set the start/finish so that it only computes spectra of overlap data.
+			psr[p1].param[param_start].val[0]=minx;
+			psr[p2].param[param_start].val[0]=minx;
+			psr[p1].param[param_finish].val[0]=maxx;
+			psr[p2].param[param_finish].val[0]=maxx;
+
+			double realTspan=0;
+			if (tspan < 0)
+			   realTspan = maxx-minx;
+			else{
+			   if (1.2*(maxx-minx) < realTspan){
+				  logerr("Refusing to make tspan larger than 1.2 times actual data span");
+				  realTspan=maxx-minx;
+			   }
+			   printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
+			   realTspan=tspan;
+			}
+			realTspan=-realTspan; // this tells it to use this to set omega, rather than scaling by nsamples/(nsamples-1)
+			logmsg("Tspan=%lf",realTspan);
+
+			verbose_calc_spectra=true;
+			calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi);
+			calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi);
+			sprintf(fname,"%s.%s.xspec",psr[p1].name,psr[p2].name);
+			fout=fopen(fname,"w");
+			for (i=0; i < nSpec; i++){
+			   //365.25*crossX[i],crossY_r[i],crossY_i[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i])
+			   // X = 1 x 2*
+			   crossR = p1_yr[i]*p2_yr[i] + p1_yi[i]*p2_yi[i];
+			   crossI = p1_yi[i]*p2_yr[i] - p1_yr[i]*p2_yi[i];
+			   P1     = p1_yr[i]*p1_yr[i] + p1_yi[i]*p1_yi[i];
+			   P2     = p2_yr[i]*p2_yr[i] + p2_yi[i]*p2_yi[i];
+			   fprintf(fout,"%.8g\t%.4g\t%.4g\t%.4g\t%.4g\n",xfactor*p1_x[i],crossR,crossI,P1,P2);
+			}
+			fclose(fout);
+
+			// Set the start/finish back to orig values for the next iteration.
+			psr[p1].param[param_start].val[0]=p1_start_o;
+			psr[p2].param[param_start].val[0]=p2_start_o;
+			psr[p1].param[param_finish].val[0]=p1_finish_o;
+			psr[p2].param[param_finish].val[0]=p2_finish_o;
+
+
+		 }
 	  }
-	  else
-	  {
-		 if (minx > (double)psr[0].obsn[i].sat) minx = (double)psr[0].obsn[i].sat;
-		 if (maxx < (double)psr[0].obsn[i].sat) maxx = (double)psr[0].obsn[i].sat;
+   }else{
+	  logmsg("Producing spectra");
+	  double* px;
+	  double* py_r;
+	  double* py_i;
+	  for (p=0; p < *npsr ; p++){
+		 pulsar* thepulsar = psr+p;
+
+		 maxx=thepulsar->param[param_finish].val[0];
+		 minx=thepulsar->param[param_start].val[0];
+		 if (tspan < 0)
+			tspan = maxx-minx;
+		 else{
+			if (1.2*(maxx-minx) < tspan){
+			   logerr("Refusing to make tspan larger than 1.2 times actual data span");
+			   exit(1);
+			}
+			printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
+			tspan=-tspan;
+		 }
+
+		 if (autoNspec){
+			nSpec = 128;
+			while (nSpec > psr->nFit && nSpec > 8){
+			   nSpec /=2;
+			}
+		 }
+		 px = (double*)malloc(sizeof(double)*nSpec);
+		 py_r = (double*)malloc(sizeof(double)*nSpec);
+		 py_i = (double*)malloc(sizeof(double)*nSpec);
+
+		 logmsg("Doing the calculation %s Nspec=%d\n",thepulsar->name,nSpec);
+		 verbose_calc_spectra=true;
+		 calculateSpectrum(thepulsar,tspan,nSpec,px,py_r,py_i);
+		 logmsg("Write files");
+		 sprintf(fname,"%s.spec",thepulsar->name);
+		 fout = fopen(fname,"w");
+		 for (i=0;i<nSpec;i++)
+			fprintf(fout,"%g %g %g %g\n",xfactor*px[i],py_r[i]*py_r[i]+py_i[i]*py_i[i],py_r[i],py_i[i]);
+		 fclose(fout);
+		 free(px);
+		 free(py_r);
+		 free(py_i);
+
+		 logmsg("Finished\n");
 	  }
    }
-   if (tspan < 0)
-	  tspan = maxx-minx;
-   else{
-	  printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
-	  tspan=-tspan;
-   }
-   logmsg("Doing the calculation\n");
-   verbose_calc_spectra=true;
-   calculateSpectrum(psr,px,py_r,py_i,&nSpec,compute_spectral_window,tspan);
-   logmsg("Finished\n");
    return 0;
 }
 
 char * plugVersionCheck = TEMPO2_h_VER;
 
-void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,bool compute_spectral_window,double T) {
+void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i) {
    int i;
-   double pe[MAX_SPEC_BINS];
    double **uinv;
    FILE *fin;
-   char fname[128];
    int ndays=0;
    double resx[psr->nobs],resy[psr->nobs],rese[psr->nobs];
    int ip[psr->nobs];
-   FILE *fout;
+
 
    //  printf("Calculating the spectrum\n");
    uinv = malloc_uinv(psr->nobs);
 
 
-   sprintf(fname,"%s.res",psr->name);
-   if (!(fout = fopen(fname,"w")))
-   {
-	  logerr("Unable to open output file");
-	  exit(1);
-   }
    for (i=0;i<psr->nobs;i++)
    {
 	  if (psr->obsn[i].deleted != 0)
@@ -188,9 +295,7 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
 	  resy[i] = (double)(psr->obsn[i].residual);
 	  rese[i] = (double)(psr->obsn[i].toaErr*1.0e-6);
 	  ip[i]=i;
-	  fprintf(fout,"%g %g %g\n",resx[i],resy[i],rese[i]);
    }
-   fclose(fout);
 
 
    //  printf("Allocated memory\n");
@@ -205,20 +310,6 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
    getCholeskyMatrix(uinv,covarFuncFile,psr,resx,resy,rese,psr->nobs,0,ip);
    logdbg("Got uinv, now compute spectrum.");
 
-   if(*nSpec < 1){
-	 *nSpec=psr->nobs/2;
-	 if (*nSpec > 124){
-		 *nSpec = 124;
-	  }
-	  logdbg("nSpec hardcoded to %d",*nSpec);
-   }
-
-   if (*nSpec >= MAX_SPEC_BINS){
-	  logerr("nSpec too large! %d > %d",*nSpec,MAX_SPEC_BINS);
-	  logmsg("Change MAX_SPEC_BINS in cholSpectra");
-	  exit(1);
-   }
-
    // Must calculate uinv for the pulsar
    //
    //   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
@@ -227,15 +318,11 @@ void calculateSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSp
 	  mde='T';
 	  T=-T;
    }
-   calcSpectra_ri_T(uinv,resx,resy,psr->nobs,px,py_r,py_i,*nSpec,T,mde,psr);
+   calcSpectra_ri_T(uinv,resx,resy,psr->nobs,px,py_r,py_i,nSpec,T,mde,psr);
 
-   sprintf(fname,"%s.spec",psr->name);
-   fout = fopen(fname,"w");
-   for (i=0;i<*nSpec;i++)
-	  fprintf(fout,"%g %g %g %g\n",px[i],py_r[i]*py_r[i]+py_i[i]*py_i[i],py_r[i],py_i[i]);
-   fclose(fout);
    // Free uinv
    free_uinv(uinv);
+
 }
 
 
