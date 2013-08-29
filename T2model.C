@@ -319,16 +319,16 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
 	  if ( psr[p].param[param_h3].paramSet[0] * psr[p].param[param_stig].paramSet[0] == 1 
 	       || psr[p].param[param_h3].paramSet[0] * psr[p].param[param_h4].paramSet[0] == 1){
 	    
-	    printf("Using the Friere & Wex formalism for the Shapiro delay\n");
+	    //	    printf("Using the Friere & Wex formalism for the Shapiro delay\n");
 	    // Based on ELL1Hmodel.C
 	    
-	    h3 = psr[p].param[param_h3].val[0];
-	    //h3 = getParameterValue( &psr[p], param_h3, 0 );
+	    //h3 = psr[p].param[param_h3].val[0];
+	    h3 = getParameterValue( &psr[p], param_h3, 0 );
 	    
 	    // Determine fw10 mode
 	    if( psr[p].param[param_h4].paramSet[0] == 1 ){
-	      h4 = psr[p].param[param_h4].val[0];
-	      //    h4 = getParameterValue( &psr[p], param_h4, 0 );
+	      //	      h4 = psr[p].param[param_h4].val[0];
+	      h4 = getParameterValue( &psr[p], param_h4, 0 );
 	      // mode 2 or 3 take preference over mode 1 as they are more stable
 	      if( psr[p].param[param_nharm].paramSet[0] == 1 ){
 		nharm = (int)psr[p].param[param_nharm].val[0];
@@ -351,8 +351,8 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
 	    }else{ 
 	      // Have H3, but no H4
 	      if( psr[p].param[param_stig].paramSet[0] == 1 ){
-		stig = psr[p].param[param_stig].val[0];
-		//stig = getParameterValue( &psr[p], param_stig, 0 );
+		//		stig = psr[p].param[param_stig].val[0];
+		stig = getParameterValue( &psr[p], param_stig, 0 );
 		mode = 1;
 	      }else{
 		mode = 0;

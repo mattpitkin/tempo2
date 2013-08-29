@@ -407,6 +407,7 @@ longdouble getParameterValue(pulsar *psr,int param,int arr)
 {
   if (psr->param[param].nLinkTo > 0)
     {
+      //      printf("Here checking param %d %s\n",param,psr[0].param[param].shortlabel[0]);
       if (psr->param[param].nLinkTo > 1)
 	{
 	  printf("Sorry, can currently only link two parameters together\n");
@@ -419,6 +420,15 @@ longdouble getParameterValue(pulsar *psr,int param,int arr)
 		    (pow(psr->param[param_pmra].val[0]*MASYR2RADS,2)
 		     +pow(psr->param[param_pmdec].val[0]*MASYR2RADS,2))))/PCM;
       }
+      if (param==param_kin)
+	{
+	  if (psr->param[param].linkTo[0] == param_stig)
+	    {
+	      long double stig = psr->param[param_stig].val[0];
+	      //	      printf("kin = %g\n",(double)((2.0*stig)/(1+stig*stig)));
+	      return asin((2.0*stig)/(1+stig*stig))*180.0/M_PI;
+	    }
+	}
       if (param==param_sini)
 	{
 	  if (psr->param[param].linkTo[0] == param_kin)

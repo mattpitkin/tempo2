@@ -1616,6 +1616,16 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
 		 return 0;
 	  }
    }
+   else if (strcasecmp(pmtr,"KIN")==0)
+   {
+	  if(strcasecmp(str1,"STIG")==0)
+	  {
+		 parameter->linkTo[(parameter->nLinkTo)++] = param_stig;
+		 psr->param[param_stig].linkFrom[(psr->param[param_stig].nLinkFrom)++] = param_kin;
+		 psr->param[param_kin].paramSet[0]=1;
+		 return 0;
+	  }
+   }
    else if (strcasecmp(pmtr,"D_AOP")==0){
 	  if(strcasecmp(str1,"PBDOT")==0){
 		 parameter->linkTo[(parameter->nLinkTo)++] = param_pbdot;
