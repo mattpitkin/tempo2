@@ -32,6 +32,7 @@
 #include <string.h>
 #include <math.h>
 #include "tempo2.h"
+#include "GWsim.h"
 
 /* Form the timing residuals from the timing model and the barycentric arrival times */
 void residualTracking(pulsar *psr);
@@ -54,7 +55,26 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    int ntrk=0;
    int gotit=0;
    int pn0=-1;
+
+   // for gwecc Earth
+   double prev_p;
+   double prev_e;
+   double prev_epoch;
+   double prev_theta;
+   double prev_a;
+   int coalesceFlag = 0;
+
+   // for gwecc pulsar
+   double prev_p_p;
+   double prev_e_p;
+   double prev_epoch_p;
+   double prev_theta_p;
+   double prev_a_p;
+   int coalesceFlag_p = 0;
+
    const char *CVS_verNum = "$Revision$";
+
+
    
    if (displayCVSversion == 1) CVSdisplayVersion("formResiduals.C","formResiduals()",CVS_verNum);
    logtchk("Enter formresiduals()");
@@ -297,6 +317,63 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   
 		 }
 	     } 
+
+	   
+	   // Add in eccentric binary gravitational wave signal (Vikram Ravi)
+	   if (psr[p].param[param_gwecc].paramSet[0]==1)
+	     {
+
+	       if (i==0) {
+
+		 double ra_p = (double)psr[p].param[param_raj].val[0];
+		 double dec_p   = -(double)psr[p].param[param_decj].val[0]+M_PI/2.;
+		 double ra_g  = psr[p].gwecc_ra;
+		 double dec_g     = psr[p].gwecc_dec;
+
+		 printf("Have ra_p %g ra_g %g dec_p %g dec_g %g\n",ra_p,ra_g,dec_p,dec_g);
+
+		 // cos(separation) between source and pulsar vectors
+		 double cosMu = cosl(dec_g)*cosl(dec_p)*cosl(ra_g-ra_p)+sinl(dec_g)*sinl(dec_p);
+
+		 prev_p=(psr[p].gwecc_orbital_period)*365.25*86400.; // READ IN YEARS!
+		 prev_e=psr[p].gwecc_e;
+		 prev_epoch = psr[p].gwecc_epoch; // READ IN MJD!
+		 prev_theta = psr[p].gwecc_theta_0;
+		 prev_a = pow(6.67e-11*(psr[p].gwecc_m1+psr[p].gwecc_m2)*1.9891e30*pow(2.*M_PI/prev_p,-2.),1./3.);
+
+		 prev_p_p=(psr[p].gwecc_orbital_period)*365.25*86400.; // READ IN YEARS!
+		 prev_e_p=psr[p].gwecc_e;
+		 prev_epoch_p = psr[p].gwecc_epoch+(1./86400.)*(psr[p].gwecc_psrdist*3.08568e19/2.998e8)*(1.-cosMu); // READ IN MJD! // READ IN KPC
+		 prev_theta_p = psr[p].gwecc_theta_0;
+		 prev_a_p = pow(6.67e-11*(psr[p].gwecc_m1+psr[p].gwecc_m2)*1.9891e30*pow(2.*M_PI/prev_p,-2.),1./3.);
+
+	       }
+
+	       
+	       if (psr[p].gwecc_pulsarTermOn==0) {
+
+		 printf("ONLY EARTH\n");
+
+		 phaseW+=psr[p].param[param_gwecc].val[0]*(eccRes(&psr[p],i,&coalesceFlag,&prev_p,&prev_e,&prev_a,&prev_epoch,&prev_theta))*psr[p].param[param_f].val[0];
+	       }
+
+	       if (psr[p].gwecc_pulsarTermOn==1) {
+
+		 printf("PULSAR + EARTH\n");
+
+		 phaseW+=psr[p].param[param_gwecc].val[0]*(eccRes(&psr[p],i,&coalesceFlag,&prev_p,&prev_e,&prev_a,&prev_epoch,&prev_theta)-eccRes(&psr[p],i,&coalesceFlag_p,&prev_p_p,&prev_e_p,&prev_a_p,&prev_epoch_p,&prev_theta_p))*psr[p].param[param_f].val[0];
+
+	       }
+
+	       if (psr[p].gwecc_pulsarTermOn==2) {
+		 
+		 printf("ONLY PULSAR\n");
+
+		 phaseW+=psr[p].param[param_gwecc].val[0]*(-eccRes(&psr[p],i,&coalesceFlag_p,&prev_p_p,&prev_e_p,&prev_a_p,&prev_epoch_p,&prev_theta_p))*psr[p].param[param_f].val[0];
+	       }
+
+	     }
+
 
 
 	   /* Add in extra phase due to gravitational wave signal */

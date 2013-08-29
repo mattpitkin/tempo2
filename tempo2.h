@@ -190,7 +190,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_h3,param_h4,param_nharm,param_stig,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
-	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp};
+	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
@@ -412,6 +412,26 @@ typedef struct pulsar {
   double gwm_decj;
   double gwm_epoch;
   double gwm_phi; // Polarisation angle
+
+  // Vikram Ravi's addition for eccentric, binary black hole systems
+  double gwecc_ra;
+  double gwecc_dec;
+  double gwecc_m1; // solar masses
+  double gwecc_m2;
+  double gwecc_e; // eccentricity
+  double gwecc_inc; // Orbital params as in relevant memo
+  double gwecc_theta_nodes;
+  double gwecc_nodes_orientation;
+  double gwecc_theta_0;
+  double gwecc_orbital_period; // years at earth
+  double gwecc_distance; // Mpc
+  double gwecc_redshift;
+  double gwecc_epoch; //Earth MJD
+  double gwecc_psrdist; // kpc
+  int gwecc_pulsarTermOn; //0 - earth, 1 - e + p, 2 - p only
+
+
+
 
   // General pulsar information
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */

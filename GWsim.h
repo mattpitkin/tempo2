@@ -42,9 +42,22 @@
 
 #include "T2toolkit.h"
 
+// Functions relating to Vikram Ravi's eccentric binary black holes
+double Fe(double ec);
+double dadt(double ec, double a, double m1, double m2);
+double dedt(double ec, double a, double m1, double m2);
+double dtdt(double ec, double t, double p);
+double Rs(double m1); // in m
+
+long double eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta);
+
+long double eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta, float *eOut);
+
+
 /* Some useful functions */
 long double matrixMult(long double m1[3][3],long double m2[3][3],long double out[3][3]);
 long double dotProduct(long double *m1,long double *m2);
+
 
 
 /* Have a structure to define a gravitational wave source */
@@ -343,4 +356,396 @@ void GWbackground_write(gwSrc *gw, FILE *file,int ngw, int ireal){
 		fwrite(&(gw[igw]),gwsize,1,file);
 	}
 	fflush(file);
+}
+
+
+// Vikram Ravi's code to include an eccentric, binary black hole system into the 
+// tempo2 timing model
+long double eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta) 
+{
+
+
+  long double pert;
+
+  if (*coalesceFlag==1) {
+    pert=0.;
+    return pert;
+  }
+  else 
+    {
+
+      double ra_p, dec_p, ra_g, dec_g;
+      double m1, m2, e_0, inc, theta_n, theta_0, phi, z, D, t_0, p_0;
+      int ih;
+      
+      
+
+      const double G = 6.67e-11;     // in m^3/kg/s^2
+      const double c = 2.998e8;      // in m/s
+      const double msun = 1.9891e30; // in kg
+      const double Mpc_to_m = 3.08568e22; // in m
+      const double yr_to_sec = 365.25*86400.; // in s
+      
+      ra_p = (double)psr->param[param_raj].val[0];
+      dec_p   = (double)psr->param[param_decj].val[0];
+      ra_g  = psr->gwecc_ra;
+      dec_g     = psr->gwecc_dec;
+      m1 = psr->gwecc_m1*msun; // READ IN Msun UNITS!
+      m2 = psr->gwecc_m2*msun; // READ IN Msun UNITS!
+      e_0 = psr->gwecc_e;
+      inc = psr->gwecc_inc;
+      theta_n = psr->gwecc_theta_nodes;
+      theta_0 = psr->gwecc_theta_0;
+      phi = psr->gwecc_nodes_orientation;
+      z = psr->gwecc_redshift;
+      D = psr->gwecc_distance*Mpc_to_m; // READ IN Mpc UNITS!
+      t_0 = psr->gwecc_epoch; // READ IN MJD!
+      p_0 = (psr->gwecc_orbital_period)*yr_to_sec; // READ IN YEARS AT SOURCE!   
+
+      // schwarzschild radius
+      double rs_m1 = Rs(m1);
+      
+      // current time
+      // this is assuming gwecc_epoch defined in earth frame
+      double time    = ((double)(psr->obsn[i].sat-psr->obsn[i].residual/86400.L) - *prev_epoch)/(1.+z);
+      
+      // find integration interval (roughly less than 0.01 days)
+      double tint = 86400.*(time)/(fabs(100.*floor(time))); // this is in days here
+      int nt = (int)fabs((100.*floor(time)));
+
+      if (nt>1000000) {
+	tint=86400.*(time)/1000000.;
+	nt=1000000;
+	printf("running %d ints with tint %g\n",nt,tint/86400.);
+      }
+      
+
+      // find theta and ecc using 4th order runge-kutta
+      double theta = *prev_theta;
+      double ec = *prev_e;
+      double ax = *prev_a;
+      double M_c = (m1+m2)*pow(m1*m2/pow(m1+m2,2.),3./5.);
+      double k1, k2, k3, k4;
+      double l1, l2, l3, l4;
+      double o1, o2, o3, o4;
+		 		 
+      ih=0;
+      while (ih<nt && *coalesceFlag==0)
+	{
+	  
+	  k1=tint*dadt(ec,ax,m1,m2);
+	  l1=tint*dedt(ec,ax,m1,m2);
+	  o1=tint*dtdt(ec,theta,*prev_p);
+	  
+	  if (ax+k1/2.<1.5*rs_m1) {
+	    *coalesceFlag=1;
+	    printf("***********SOURCE HAS COALESCED***********\n");
+	  }
+
+	  k2=tint*dadt(ec+l1/2.,ax+k1/2.,m1,m2);
+	  l2=tint*dedt(ec+l1/2.,ax+k1/2.,m1,m2);
+	  o2=tint*dtdt(ec+l1/2.,theta+o1/2.,*prev_p);
+	  
+	  if (ax+k2/2.<1.5*rs_m1) {
+	    *coalesceFlag=1;
+	    printf("***********SOURCE HAS COALESCED***********\n");
+	  }
+
+	  k3=tint*dadt(ec+l2/2.,ax+k2/2.,m1,m2);
+	  l3=tint*dedt(ec+l2/2.,ax+k2/2.,m1,m2);
+	  o3=tint*dtdt(ec+l2/2.,theta+o2/2.,*prev_p);
+	  
+	  if (ax+k3<1.5*rs_m1) {
+	    *coalesceFlag=1;
+	    printf("***********SOURCE HAS COALESCED***********\n");
+	  }
+
+	  k4=tint*dadt(ec+l3,ax+k3,m1,m2);
+	  l4=tint*dedt(ec+l3,ax+k3,m1,m2);
+	  o4=tint*dtdt(ec+l3,theta+o3,*prev_p);
+	  
+	  
+	  ax+=(k1+2.*k2+2.*k3+k4)/6.;
+	  ec+=(l1+2.*l2+2.*l3+l4)/6.;
+	  theta+=(o1+2.*o2+2.*o3+o4)/6.;
+	  
+
+	  if (ax<1.5*rs_m1) {
+	    *coalesceFlag=1;
+	    printf("***********SOURCE HAS COALESCED***********\n");
+	  }
+		     
+	  *prev_p=(1./(sqrt(G*(m1+m2)*pow(ax,-3.))/(2.*M_PI)));
+	  
+		     
+	  ih++;
+	  
+	}
+
+      printf("Have time %g theta %g\n",((double)(psr->obsn[i].sat-psr->obsn[i].residual/86400.L-t_0)/365.25)/(*prev_p/(86400.*365.25)),theta/(2.*M_PI));
+
+      if (*coalesceFlag==1) {
+	pert=0.;
+      }
+      else {
+
+	*prev_e = ec;
+	*prev_epoch = (double)(psr->obsn[i].sat-psr->obsn[i].residual/86400.L);
+	*prev_theta = theta;
+	*prev_a = ax;
+	
+	
+	// Now put in the residuals
+	
+
+	double Ag = 4*pow(G,2.)*m1*m2/(pow(c,4.)*D*(1-ec*ec)*ax);
+	double frontTerm = -Ag*pow(1-ec*ec,3./2.)*(*prev_p)*sin(theta)/(32.*M_PI*(1+ec*cos(theta)));
+	double rplus = frontTerm*(ec*cos(2.*(inc-phi))+ec*cos(2.*(inc+phi))-16.*cos(inc)*sin(2.*phi)*sin(theta-2.*theta_n)+8.*ec*cos(inc)*sin(2.*phi)*sin(2.*theta_n)+2.*cos(2.*phi)*(-ec+(3.+cos(2.*inc))*(ec+2.*cos(theta))*cos(2.*theta_n)+2.*(3.+cos(2.*inc))*sin(theta)*sin(2.*theta_n)));
+	double rcross = frontTerm*(ec*sin(2.*(inc-phi))-ec*sin(2.*(inc+phi))+8.*cos(inc)*cos(2.*phi)*(-2.*sin(theta-2.*theta_n)+ec*sin(2.*theta_n))-2.*sin(2.*phi)*(-ec+(3.+cos(2.*inc))*(ec+2.*cos(theta))*cos(2.*theta_n)+2.*(3.+cos(2.*inc))*sin(theta)*sin(2.*theta_n)));
+
+	double dalpha = ra_g-ra_p;
+	double gplus = (-(1.+3.*cos(2.*dec_p))*pow(cos(dec_g),2.)+cos(2.*dalpha)*(-3.+cos(2.*dec_g))*pow(sin(dec_p),2.)+2.*cos(dalpha)*sin(2.*dec_g)*sin(2.*dec_p))/(8.*(-1.+cos(dec_p)*sin(dec_g)+cos(dalpha)*cos(dec_g)*sin(dec_p)));
+	double gcross = ((-cos(dec_g)*cos(dec_p)+cos(dalpha)*sin(dec_g)*sin(dec_p))*sin(dalpha)*sin(dec_p))/(-1.+cos(dec_p)*sin(dec_g)+cos(dalpha)*cos(dec_g)*sin(dec_p));
+
+	pert = 1e9*(rplus*gplus+rcross*gcross);
+	
+      }
+
+      printf("Have pert %Lg\n",pert);
+      return pert;
+      
+
+    }
+
+}
+
+long double eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta, float *eOut) 
+{
+
+
+  long double pert;
+
+  if (*coalesceFlag==1) {
+    pert=0.;
+    *eOut=0.;
+    return pert;
+  }
+  else 
+    {
+
+      double ra_p, dec_p, ra_g, dec_g;
+      double m1, m2, e_0, inc, theta_n, theta_0, phi, z, D, t_0, p_0;
+      int ih;
+      
+      
+
+      const double G = 6.67e-11;     // in m^3/kg/s^2
+      const double c = 2.998e8;      // in m/s
+      const double msun = 1.9891e30; // in kg
+      const double Mpc_to_m = 3.08568e22; // in m
+      const double yr_to_sec = 365.25*86400.; // in s
+      
+      ra_p = (double)psr->param[param_raj].val[0];
+      dec_p   = (double)psr->param[param_decj].val[0];
+      ra_g  = psr->gwecc_ra;
+      dec_g     = psr->gwecc_dec;
+      m1 = psr->gwecc_m1*msun; // READ IN Msun UNITS!
+      m2 = psr->gwecc_m2*msun; // READ IN Msun UNITS!
+      e_0 = psr->gwecc_e;
+      inc = psr->gwecc_inc;
+      theta_n = psr->gwecc_theta_nodes;
+      theta_0 = psr->gwecc_theta_0;
+      phi = psr->gwecc_nodes_orientation;
+      z = psr->gwecc_redshift;
+      D = psr->gwecc_distance*Mpc_to_m; // READ IN Mpc UNITS!
+      t_0 = psr->gwecc_epoch; // READ IN MJD!
+      p_0 = (psr->gwecc_orbital_period)*yr_to_sec; // READ IN YEARS AT SOURCE!   
+
+      // schwarzschild radius
+      double rs_m1 = Rs(m1);
+      
+      // current time
+      // this is assuming gwecc_epoch defined in earth frame
+      double time    = ((double)(psr->obsn[i].sat-psr->obsn[i].residual/86400.L) - *prev_epoch)/(1.+z);
+      
+      // find integration interval (roughly less than 0.01 days)
+      double tint = 86400.*(time)/(fabs(100.*floor(time))); // this is in days here
+      int nt = (int)fabs((100.*floor(time)));
+
+      if (nt>1000000) {
+	tint=86400.*(time)/1000000.;
+	nt=1000000;
+	printf("running %d ints with tint %g\n",nt,tint/86400.);
+      }
+      
+
+      // find theta and ecc using 4th order runge-kutta
+      double theta = *prev_theta;
+      double ec = *prev_e;
+      double ax = *prev_a;
+      double M_c = (m1+m2)*pow(m1*m2/pow(m1+m2,2.),3./5.);
+      double k1, k2, k3, k4;
+      double l1, l2, l3, l4;
+      double o1, o2, o3, o4;
+		 		 
+      ih=0;
+      while (ih<nt && *coalesceFlag==0)
+	{
+	  
+	  k1=tint*dadt(ec,ax,m1,m2);
+	  l1=tint*dedt(ec,ax,m1,m2);
+	  o1=tint*dtdt(ec,theta,*prev_p);
+	  
+	  if (ax+k1/2.<1.5*rs_m1) {
+	    *coalesceFlag=1;
+	    printf("***********SOURCE HAS COALESCED***********\n");
+	  }
+
+	  k2=tint*dadt(ec+l1/2.,ax+k1/2.,m1,m2);
+	  l2=tint*dedt(ec+l1/2.,ax+k1/2.,m1,m2);
+	  o2=tint*dtdt(ec+l1/2.,theta+o1/2.,*prev_p);
+	  
+	  if (ax+k2/2.<1.5*rs_m1) {
+	    *coalesceFlag=1;
+	    printf("***********SOURCE HAS COALESCED***********\n");
+	  }
+
+	  k3=tint*dadt(ec+l2/2.,ax+k2/2.,m1,m2);
+	  l3=tint*dedt(ec+l2/2.,ax+k2/2.,m1,m2);
+	  o3=tint*dtdt(ec+l2/2.,theta+o2/2.,*prev_p);
+	  
+	  if (ax+k3<1.5*rs_m1) {
+	    *coalesceFlag=1;
+	    printf("***********SOURCE HAS COALESCED***********\n");
+	  }
+
+	  k4=tint*dadt(ec+l3,ax+k3,m1,m2);
+	  l4=tint*dedt(ec+l3,ax+k3,m1,m2);
+	  o4=tint*dtdt(ec+l3,theta+o3,*prev_p);
+	  
+	  
+	  ax+=(k1+2.*k2+2.*k3+k4)/6.;
+	  ec+=(l1+2.*l2+2.*l3+l4)/6.;
+	  theta+=(o1+2.*o2+2.*o3+o4)/6.;
+	  
+
+	  if (ax<1.5*rs_m1) {
+	    *coalesceFlag=1;
+	    printf("***********SOURCE HAS COALESCED***********\n");
+	  }
+		     
+	  *prev_p=(1./(sqrt(G*(m1+m2)*pow(ax,-3.))/(2.*M_PI)));
+	  
+		     
+	  ih++;
+	  
+	}
+
+      printf("Have time %g theta %g\n",((double)(psr->obsn[i].sat-psr->obsn[i].residual/86400.L-t_0)/365.25)/(*prev_p/(86400.*365.25)),theta/(2.*M_PI));
+
+      if (*coalesceFlag==1) {
+	pert=0.;
+	*eOut=0.;
+      }
+      else {
+
+	*prev_e = ec;
+	*prev_epoch = (double)(psr->obsn[i].sat-psr->obsn[i].residual/86400.L);
+	*prev_theta = theta;
+	*prev_a = ax;
+	
+	
+	// Now put in the residuals
+	
+
+	double Ag = 4*pow(G,2.)*m1*m2/(pow(c,4.)*D*(1-ec*ec)*ax);
+	double frontTerm = -Ag*pow(1-ec*ec,3./2.)*(*prev_p)*sin(theta)/(32.*M_PI*(1+ec*cos(theta)));
+	double rplus = frontTerm*(ec*cos(2.*(inc-phi))+ec*cos(2.*(inc+phi))-16.*cos(inc)*sin(2.*phi)*sin(theta-2.*theta_n)+8.*ec*cos(inc)*sin(2.*phi)*sin(2.*theta_n)+2.*cos(2.*phi)*(-ec+(3.+cos(2.*inc))*(ec+2.*cos(theta))*cos(2.*theta_n)+2.*(3.+cos(2.*inc))*sin(theta)*sin(2.*theta_n)));
+	double rcross = frontTerm*(ec*sin(2.*(inc-phi))-ec*sin(2.*(inc+phi))+8.*cos(inc)*cos(2.*phi)*(-2.*sin(theta-2.*theta_n)+ec*sin(2.*theta_n))-2.*sin(2.*phi)*(-ec+(3.+cos(2.*inc))*(ec+2.*cos(theta))*cos(2.*theta_n)+2.*(3.+cos(2.*inc))*sin(theta)*sin(2.*theta_n)));
+
+	double dalpha = ra_g-ra_p;
+	double gplus = (-(1.+3.*cos(2.*dec_p))*pow(cos(dec_g),2.)+cos(2.*dalpha)*(-3.+cos(2.*dec_g))*pow(sin(dec_p),2.)+2.*cos(dalpha)*sin(2.*dec_g)*sin(2.*dec_p))/(8.*(-1.+cos(dec_p)*sin(dec_g)+cos(dalpha)*cos(dec_g)*sin(dec_p)));
+	double gcross = ((-cos(dec_g)*cos(dec_p)+cos(dalpha)*sin(dec_g)*sin(dec_p))*sin(dalpha)*sin(dec_p))/(-1.+cos(dec_p)*sin(dec_g)+cos(dalpha)*cos(dec_g)*sin(dec_p));
+
+	pert = 1e9*(rplus*gplus+rcross*gcross);
+	
+	
+	// do energy estimate
+
+	(*eOut) = (float)(pow(c,3.)/(16.*M_PI*G))*(((Ag*pow(M_PI,3.)*pow(1.+ec*cos(theta),2.))/(pow(*prev_p,2.)*pow(ec*ec-1.,3.)))*(-1536.-6184.*ec*ec-1847.*pow(ec,4.)-96.*pow(ec,6.)+256.*cos(4.*theta)+ec*(-4.*(1488.+1689.*ec*ec+116.*pow(ec,4.))*cos(theta)+2.*ec*(-1270.-243.*ec*ec+48.*pow(ec,4.))*cos(2.*theta)+4.*(32.+267.*ec*ec+76.*pow(ec,4.))*cos(3.*theta)+2.*ec*(200.+479.*ec*ec)*cos(4.*theta)+4.*(176.+87.*ec*ec+40.*pow(ec,4.))*cos(5.*theta)+14.*ec*(46.+5.*ec*ec)*cos(6.*theta)+220.*ec*ec*cos(7.*theta)+25.*pow(ec,3.)*cos(8.*theta))));
+
+
+      }
+
+      printf("Have pert %Lg energy %f\n",pert,*eOut);
+      return pert;
+      
+
+    }
+
+}
+
+
+double Rs(double m1) {
+
+  double G = 6.67e-11;
+  double c = 2.998e8;
+  double retval = 2*G*m1/(c*c);
+
+  return retval;
+
+}
+
+double dadt(double ec, double a, double m1, double m2) {
+
+  double G = 6.67e-11;
+  double c = 2.998e8;
+  double retval = (-64./5.)*pow(G/a,3.)*m1*m2*(m1+m2)*pow(c,-5.)*Fe(ec);
+  return retval;
+
+}
+
+double dedt(double ec, double a, double m1, double m2) {
+
+  double G = 6.67e-11;
+  double c = 2.998e8;
+  double retval = (-304./15.)*pow(G,3.)*m1*m2*(m1+m2)*pow(c,-5.)*pow(a,-4.)*pow(1.-ec*ec,-5./2.)*ec*(1.+121.*ec*ec/304.);
+  return retval;
+
+}
+
+double dtdt(double ec, double t, double p) {
+
+  double G = 6.67e-11;
+  //double retval = (2.*M_PI/p)*pow(1.+ec*cos(t),2.)/(pow(1.-pow(ec,2.),3./2.));
+  double retval = (2.*M_PI/p);
+  return retval;
+
+}
+
+
+double Fe(double ec) {
+
+  double retval = pow(1.-ec*ec,-7./2.)*(1.+73.*pow(ec,2.)/24.+37.*pow(ec,4.)/96.);
+  return retval;
+
+}
+
+
+// returns radians
+double psrangle(double centre_long,double centre_lat,double psr_long,double psr_lat)
+{
+  double dlon,dlat,a,c;
+  double deg2rad = M_PI/180.0;
+  
+  /* Apply the Haversine formula */
+  dlon = (psr_long - centre_long);
+  dlat = (psr_lat  - centre_lat);
+  a = pow(sin(dlat/2.0),2) + cos(centre_lat) * 
+    cos(psr_lat)*pow(sin(dlon/2.0),2);
+  if (a==1)
+    c = M_PI;
+  else
+    c = 2.0 * atan2(sqrt(a),sqrt(1.0-a));  
+  return c;
 }
