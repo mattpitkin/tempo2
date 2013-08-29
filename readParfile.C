@@ -842,6 +842,42 @@ else if (strcasecmp(str,"_DM")==0)
   else if (strcasecmp(str,"CGW_MC")==0)
     fscanf(fin,"%lf",&psr->cgw_mc);
 
+  // Eccentric binary source graviational waves -- Vikram Ravi
+  else if (strcasecmp(str,"GWECC_AMP")==0) 
+    readValue(psr,str,fin,&(psr->param[param_gwecc]),0);
+  else if (strcasecmp(str,"GWECC_POSITION")==0)
+    fscanf(fin,"%lf %lf",&psr->gwecc_ra,&psr->gwecc_dec);
+  else if (strcasecmp(str,"GWECC_E")==0)
+    fscanf(fin,"%lf",&psr->gwecc_e);
+  else if (strcasecmp(str,"GWECC_MASS")==0)
+    fscanf(fin,"%lf %lf",&psr->gwecc_m1,&psr->gwecc_m2);
+  else if (strcasecmp(str,"GWECC_INC")==0)
+    fscanf(fin,"%lf",&psr->gwecc_inc);
+  else if (strcasecmp(str,"GWECC_THETA_NODES")==0)
+    fscanf(fin,"%lf",&psr->gwecc_theta_nodes);
+  else if (strcasecmp(str,"GWECC_NODES_ORIENTATION")==0)
+    fscanf(fin,"%lf",&psr->gwecc_nodes_orientation);
+  else if (strcasecmp(str,"GWECC_THETA_0")==0)
+    fscanf(fin,"%lf",&psr->gwecc_theta_0);
+  else if (strcasecmp(str,"GWECC_ORBITAL_PERIOD")==0)
+    fscanf(fin,"%lf",&psr->gwecc_orbital_period);
+  else if (strcasecmp(str,"GWECC_Z")==0)
+    fscanf(fin,"%lf",&psr->gwecc_redshift);
+  else if (strcasecmp(str,"GWECC_DIST")==0)
+    fscanf(fin,"%lf",&psr->gwecc_distance);
+  else if (strcasecmp(str,"GWECC_EPOCH")==0)
+    fscanf(fin,"%lf",&psr->gwecc_epoch);
+  else if (strcasecmp(str,"GWECC_PSR_DIST")==0)
+    fscanf(fin,"%lf",&psr->gwecc_psrdist);
+  else if (strcasecmp(str,"GWECC_PSRTERM")==0)
+    fscanf(fin,"%d",&psr->gwecc_pulsarTermOn);
+  // 0 - no, 1 - yes, 2 - only
+  if (psr->param[param_gwecc].paramSet[0] == 1) 
+     {
+       strcpy(psr->param[param_gwecc].label[0],"GWECC_AMP");
+       strcpy(psr->param[param_gwecc].shortlabel[0],"GWECC_AMP");
+     }
+
   //* Gravitational wave memory
   else if (strcasecmp(str,"GWM_AMP")==0)
 	 readValue(psr,str,fin,&(psr->param[param_gwm_amp]),0);
