@@ -255,7 +255,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
                     ( pow( sin( ki ), -2.0 ) + pow( cu, 2.0 ) ) ) *
                   cos( 2.0 * u ) );
 
-	      printf("T2model: %g DAOP = %g DSR = %g DOP = %g\n",(double)psr[p].obsn[ipos].bbat,(double)DAOP,(double)DSR,(double)DOP);
+	      //	      printf("T2model: %g DAOP = %g DSR = %g DOP = %g\n",(double)psr[p].obsn[ipos].bbat,(double)DAOP,(double)DSR,(double)DOP);
 
 	      //                logdbg("DAOP is %g and DSR is %g\n", (double)DAOP, (double)DSR);
 	      //                logdbg("DAOP is %g, DK011 and DK021 are %f and %f\n",
@@ -515,7 +515,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
 	    return( -2.0 * m2 / stig * ( 1.0 - 3.0 * lgf - ( 1.0 - stig * stig ) / fs ) 
 		    + 2.0 * m2 * ( 4.0 * sin( TrueAnom ) - stig * cos( 2.0 * TrueAnom ) ) );	    
 	  }
-	  else if (param=param_h3) {
+	  else if (param==param_h3) {
 	    if( mode == 0 || mode == 2)
 	      return( -4.0 / 3.0 * sin( 3.0 * TrueAnom ) );
 	    else if( mode == 1 ){
@@ -525,7 +525,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
 	    }else if( mode == 3 )
 	      return( calcDH( TrueAnom, h3, h4, nharm, 3 ) );
 	    else{
-	      printf( "ERROR in ELL1H. This really shouldn't happen.\n" );
+	      printf( "ERROR in ELLH model in T2. This really shouldn't happen.\n" );
 	    }
 	  }else if( param == param_h4 ){
 	    if( mode == 2 )
