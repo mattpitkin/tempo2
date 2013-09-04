@@ -1148,6 +1148,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  printf("ERROR: Cannot currently fit for FDDI with a linear least-squares fit\n");
 	  exit(1);
    }
+   else if (i==param_fd)
+   {
+       afunc = pow(log(psr->obsn[ipos].freqSSB/1e9),k+1);
+   }
    /*	  else if (i==param_jump)
 		  {
 		  if (ipos>5)
@@ -2305,7 +2309,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 					 psr[p].param[param_f].val[0];
 			   }
 			}
-			else if (i==param_dm || i==param_px || i==param_fddc || i==param_fddi || i==param_dmassplanet || i==param_dmx)
+			else if (i==param_dm || i==param_px || i==param_fddc || i==param_fddi || i==param_dmassplanet || i==param_dmx || i==param_fd)
 			{
 			   psr[p].param[i].val[k] += val[j];
 			   psr[p].param[i].err[k]  = error[j];

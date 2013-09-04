@@ -468,6 +468,15 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_fddc]),0);
   else if (strcasecmp(str,"FDDI")==0) /* Frequency dependent delay */
     readValue(psr,str,fin,&(psr->param[param_fddi]),0);
+  else if (strncasecmp(str,"FD",2)==0 && (str[2]!=' '))
+    {
+      int fval;
+      if (sscanf(str+2,"%d",&fval)==1)
+        {
+          if (fval<psr->param[param_f].aSize) 
+            readValue(psr,str,fin,&(psr->param[param_fd]),fval-1);
+        }
+    }
   else if (strcasecmp(str,"DSHK")==0) /* Shklovskii term distance (kpc) */
     readValue(psr,str,fin,&(psr->param[param_dshk]),0);
   else if (strcasecmp(str,"START")==0)      /* START */

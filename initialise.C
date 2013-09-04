@@ -199,6 +199,11 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_fddi].shortlabel[0],"FDDI"); /* Frequency dependent delay */
   strcpy(psr->param[param_fddc].label[0],"FDDC"); /* Frequency dependent delay */
   strcpy(psr->param[param_fddc].shortlabel[0],"FDDC"); /* Frequency dependent delay */
+  for (j=0; j<psr->param[param_fd].aSize; j++) 
+    {
+      sprintf(psr->param[param_fd].shortlabel[j],"FD%d",j+1);
+      sprintf(psr->param[param_fd].label[j],"FD%d",j+1);
+    }
   /* Dispersion measure and its derivative */
   for (k=0;k<psr->param[param_dm].aSize;k++)
     {
@@ -519,6 +524,8 @@ void allocateMemory(pulsar *psr, int realloc)
 	psr->param[i].aSize = 9;
       else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
         psr->param[i].aSize = MAX_DMX;
+      else if (i==param_fd)
+        psr->param[i].aSize = 9;
       else if (i==param_telx) psr->param[i].aSize = 4;
       else if (i==param_tely) psr->param[i].aSize = 4;
       else if (i==param_telz) psr->param[i].aSize = 4;

@@ -235,6 +235,11 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       /* Add frequency dependent delay term */
       if (psr[p].param[param_fddc].paramSet[0]==1 && freqf>1)
 	psr[p].obsn[i].tdis1 += (double)(psr[p].param[param_fddc].val[0]/pow(freqf*1.0e-6,(double)psr[p].param[param_fddi].val[0]));
+      for (k=0; k<psr[p].param[param_fd].aSize; k++) {
+        if (psr[p].param[param_fd].paramSet[k]==1 && freqf>1)
+          psr[p].obsn[i].tdis1 += (double)(psr[p].param[param_fd].val[k] * 
+              pow(log(freqf/1e9),k+1));
+      }
       if (freqf<=1.0 || psr[p].ipm==0){
 	psr[p].obsn[i].tdis2 = 0.0;
       }
