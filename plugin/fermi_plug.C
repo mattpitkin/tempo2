@@ -60,8 +60,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             5 April 2013\n");
-	printf("Version:             5.8\n");
+	printf("Updated:             8 September 2013\n");
+	printf("Version:             5.9\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -1019,10 +1019,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 					else if (psr[0].param[param_pb].paramSet[0] && psr[0].param[param_tasc].paramSet[0])
 					{
 						tpb = (psr[0].obsn[i].bat-psr[0].param[param_tasc].val[0])/(psr[0].param[param_pb].val[0]);
+						if (psr[0].param[param_pbdot].paramSet[0]) tpb -= 0.5*psr[0].param[param_pbdot].val[0]*pow((psr[0].obsn[i].bat-psr[0].param[param_tasc].val[0])/(psr[0].param[param_pb].val[0]),2.);
 					}
 					else if (psr[0].param[param_pb].paramSet[0] && psr[0].param[param_t0].paramSet[0])
 					{
 						tpb = (psr[0].obsn[i].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
+						if (psr[0].param[param_pbdot].paramSet[0]) tpb -= 0.5*psr[0].param[param_pbdot].val[0]*pow((psr[0].obsn[i].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]),2.);
 					}
 					else
 					{
@@ -1104,10 +1106,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				else if (psr[0].param[param_pb].paramSet[0] && psr[0].param[param_tasc].paramSet[0])
 				{
 					tpb = (psr[0].obsn[1].bat-psr[0].param[param_tasc].val[0])/(psr[0].param[param_pb].val[0]);
+					if (psr[0].param[param_pbdot].paramSet[0]) tpb -= 0.5*psr[0].param[param_pbdot].val[0]*pow((psr[0].obsn[1].bat-psr[0].param[param_tasc].val[0])/(psr[0].param[param_pb].val[0]),2.);
 				}
 				else if (psr[0].param[param_pb].paramSet[0] && psr[0].param[param_t0].paramSet[0])
 				{
-					tpb = (psr[0].obsn[1].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
+					tpb = (psr[0].obsn[1].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]); 
+					if (psr[0].param[param_pbdot].paramSet[0]) tpb -= 0.5*psr[0].param[param_pbdot].val[0]*pow((psr[0].obsn[i].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]),2.);
 				}
 				else
 				{
