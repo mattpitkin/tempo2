@@ -14,4 +14,6 @@ clock_plug.C
 GWbkgrd_plug.C
 spectralModel_plug.C
 findCW_plug.C
+planet_plug.C
 glast_plug.C
+
