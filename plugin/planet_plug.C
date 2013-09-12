@@ -46,7 +46,7 @@ double G_OMEGA;
 void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 	   double *cholWspecY,int nCholWspec,double *highFreqSpecX,
 	   double *highFreqSpecY,int nHighFreqSpec,int makeps);
-void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file, int *npsr,  char *argv[], int argc, char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN] );
+void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file, int *npsr,  char *argv[], int argc, char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN], int nit );
 int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese,int *ip);
 void fitSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *smoothModel,double *highFreqRes,double *hfNormCovar,int *hfNormCovarNpts,double hfZerolagNormCovar);
@@ -198,13 +198,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int inpt=-1;
   int ipw=-1;
   int makeps=0;
+  int nit=20;
 
   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
 
-  printf("Graphical Interface: spectralModel\n");
-  printf("Author:              G. Hobbs, W. Coles\n");
+  printf("Graphical Interface: planet plugin\n");
+  printf("Author:              Ryan Shannon\n");
   printf("Version:             1.1\n");
-  printf("The techniques used here were developed by W. Coles\n");
+  printf("The techniques used here based on spectralModel by  Coles and Hobbs\n");
   printf(" --- type 'h' for help information\n");
 
   dcf_file[0]='\0';
@@ -219,7 +220,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       strcat(parFile[0],"par");
     }
 
-  strcpy(pgdevice,"/xs");
+  strcpy(pgdevice,"97/xs");
   /* Obtain all parameters from the command line */
   for (i=2;i<argc;i++)
     {
@@ -254,6 +255,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	makeps=1;
       else if (strcmp(argv[i],"-nofiles")==0)
 	writeFiles=false;
+      else if (strcmp(argv[i], "-nit")==0)
+	{
+	  sscanf(argv[++i],"%d",&nit);
+	}
+
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -272,12 +278,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   //
   printf("Plugin to obtain a spectral model of pulsar timing residuals\n");
-  doPlugin(psr,idt,ipw,ifc,iexp,inpt,makeps,amp,dcf_file, npsr, argv, argc, parFile, timFile);
+  doPlugin(psr,idt,ipw,ifc,iexp,inpt,makeps,amp,dcf_file, npsr, argv, argc, parFile, timFile, nit);
 
   return 0; 
 } 
 
-void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file, int *npsr, char *argv[], int argc, char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN])
+void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file, int *npsr, char *argv[], int argc, char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN], int nit)
 {
   int i,j;
 
@@ -335,6 +341,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   double errorScaleFactor = 1;
   int tempTime=1;
   char dummy[100];
+
+  
 
   verbose_calc_spectra=true;
 
@@ -632,8 +640,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   long double x;
  
 
-  int it, nit;
-  nit=50;
+  int it;
+ 
   long int idum;
   idum=-10;
 
@@ -659,7 +667,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   detfile=fopen("det_spec.dat", "w");
   fclose(detfile);
   
-  for(ispec=0;ispec<nCholSpec;ispec++)
+  for(ispec=1;ispec<nCholSpec;ispec++)
     {
       
       
@@ -669,7 +677,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
       x=1e-5;
 
-      Pb =  0.1/origSpecX[ispec]*24*3600;
+      Pb =  1./origSpecX[ispec]*24*3600;
       //fprintf(stderr, "%.3le %.3le\n",origSpecX[ispec], Pb);
       //exit(0);
       int firstit=0;
@@ -687,10 +695,6 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
 	  if (firstit!=0)
 	    {
-
-    
-
-	  
 
 	      if (fdet < 0.1)
 		{
@@ -793,7 +797,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
 
 	      
-	      if(cholSpecYp[ispec] > log((float) nCholSpec)*cholSpecY[ispec])
+	      if(cholSpecYp[ispec] > cholSpecY[ispec])
 		{
 		  fdet += 1./((float) nit);
 		}
@@ -833,7 +837,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	  
 
 
-	}while(fdet < 0.95 );
+	}while(fdet < 0.9 );
 	  
       detfile = fopen("detect.dat", "a");
       // should probably interpoltae to get mass and x
@@ -1381,7 +1385,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	  fy2[i] = log10(nmodelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
 	  //	  fy2[i] = log10(pow(10,nmodelScale)/365.25)-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
 	  fx4[i] = fx2[i];
-	  fy4[i] = log10(modelfcn(cholSpecX[i],  nmodelScale, modelFc,  modelAlpha, wn));
+	  fy4[i] = log10( sqrt((float) nCholSpec)*modelfcn(cholSpecX[i],  nmodelScale, modelFc,  modelAlpha, wn));
 
 
 			 //fy4[i] = log10(log((double) nCholSpec)*(pow(10., fy2[i]) + wn));
