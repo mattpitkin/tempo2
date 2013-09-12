@@ -820,8 +820,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	      
 	      //if (inpt==-1) {printf("Continue (press '1') "); scanf("%s",dummy);}
 	      
-	      /*plot5(cholSpecXp,cholSpecYp,nCholSpec,usePreWhitening,highFreqSpecX,highFreqSpecY,nHighFreqSpec,
-		modelAlpha,modelFc,modelNfit,modelScale,nmodelScale,cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,makeps,wn,Pb);*/
+	      plot5(cholSpecXp,cholSpecYp,nCholSpec,usePreWhitening,highFreqSpecX,highFreqSpecY,nHighFreqSpec,
+		modelAlpha,modelFc,modelNfit,modelScale,nmodelScale,cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,makeps,wn,Pb);
 	      
 	    }
 
