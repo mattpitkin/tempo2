@@ -167,6 +167,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nconstraints = 0;
   psr->auto_constraints = 0;
   psr->jboFormat=0;
+  // Moved from readTimfile.C (next line):
+  psr->dmOffset = 0;
   for (i=0;i<MAX_JUMPS;i++)
     {
       psr->jumpVal[i] = 0.0;

@@ -1002,6 +1002,17 @@ else if (strcasecmp(str,"_DM")==0)
 	 psr->nPhaseJump++;
   }  
 
+  /* /---------\
+     | T2 EFAC |
+     \---------/ */
+  else if( strcasecmp( str, "T2EFAC") == 0 ) // EFAC for given flag
+    { 
+      int nefacFlag = psr->nT2efac;
+      fscanf( fin, "%s %s %lf", psr->T2efacFlagID[nefacFlag], 
+              psr->T2efacFlagVal[nefacFlag], 
+              &psr->T2efacVal[nefacFlag] );
+      ( psr->nT2efac )++;
+    }
 
   /* ----------------- */
   /* Binary Parameters */

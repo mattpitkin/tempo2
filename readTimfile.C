@@ -65,12 +65,13 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
 
   for (p=0;p<npsr;p++)
     {
-
-      psr[p].nobs=0;
-      psr[p].dmOffset=0;
-      psr[p].nT2efac = 0;
-      psr[p].nT2equad = 0;
-      psr[p].T2globalEfac = 1;
+      
+      // Next five lines have been moved to initialise.C
+      //psr[p].nobs=0;
+      //psr[p].dmOffset=0;
+      //psr[p].nT2efac = 0;
+      //psr[p].nT2equad = 0;
+      //psr[p].T2globalEfac = 1;
       /*      jumpVal=psr[p].nJumps;
       for (i=0;i<jumpVal;i++)
       psr[p].jumpVal[i]=0.0; */
