@@ -544,11 +544,11 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
   return 0;
 }
 
-int ChebyModelSet_OutOfRange = 0;
 
-ChebyModel *ChebyModelSet_GetNearest(const ChebyModelSet *cms, long double mjd)
+int ChebyModelSet_GetNearestIndex(const ChebyModelSet *cms, long double mjd)
 {
   int inearest=-1;
+
   long double best_offset=1e6, offset;
   int iseg;
 
@@ -569,6 +569,17 @@ ChebyModel *ChebyModelSet_GetNearest(const ChebyModelSet *cms, long double mjd)
       best_offset = offset;
     }
   }
+
+  return inearest;
+}
+
+
+int ChebyModelSet_OutOfRange = 0;
+
+
+ChebyModel *ChebyModelSet_GetNearest(const ChebyModelSet *cms, long double mjd)
+{
+  int inearest = ChebyModelSet_GetNearestIndex(cms,mjd);
 
   if (inearest < 0) {
     ChebyModelSet_OutOfRange = 1;
@@ -633,11 +644,57 @@ int ChebyModelSet_Insert(ChebyModelSet *cms, const ChebyModelSet *from)
   cms->segments = (ChebyModel *) realloc (cms->segments, 
 					  cms->nsegments*sizeof(ChebyModel));
 
-  for (iseg=old_nseg; iseg < cms->nsegments ; iseg++) {
+  for (iseg=old_nseg; iseg < cms->nsegments ; iseg++)
+  {
     ChebyModel_Init(&cms->segments[iseg], 0, 0);
     ChebyModel_Copy(&cms->segments[iseg], &from->segments[iseg-old_nseg]);
   }
 }
+
+/*
+  This method destroys all ChebyModel elements that are no longer required
+  The MJD array defines what is required; only the nearest ChebyModel
+  to each MJD is kept.
+*/ 
+void
+ChebyModelSet_Keep(ChebyModelSet *cms, unsigned nmjd, const long double* mjd)
+{
+  unsigned nseg = cms->nsegments;  // number of segments in input
+  unsigned new_nseg = nseg;        // number of segments kept
+
+  unsigned iseg = 0;               // current segment index
+  unsigned rem_iseg = 0;           // remaining segment index
+  
+  unsigned i = 0;                  // counter
+  char* keep = malloc (nseg);      // array of "ChebyModel to be kept" flags
+
+  memset (keep, 0, nseg);          // set all keep flags to false
+
+  for (i=0; i<nmjd; i++)
+  {
+    int index = ChebyModelSet_GetNearestIndex (cms, mjd[i]);
+    if (index >= 0)
+      keep[index] = 1;         // set flag to true
+  }
+
+  for (i=0; i<nseg; i++)
+    if ( keep[i] )
+      iseg ++;
+    else
+      {
+	ChebyModel_Destroy(&cms->segments[iseg]);
+	// shift the remaining ChebyModel elements "to the left"
+	for (rem_iseg = iseg; rem_iseg < new_nseg-1; rem_iseg++)
+	  cms->segments[rem_iseg] = cms->segments[rem_iseg+1];
+
+	new_nseg --;
+      }
+
+  cms->nsegments = new_nseg;
+
+  free (keep);
+}
+
 
 void ChebyModelSet_Destroy(ChebyModelSet *cms)
 {
