@@ -138,6 +138,20 @@ T2Predictor_Insert(T2Predictor *into_t2p, const T2Predictor *from_t2p)
   }
 }
 
+void T2Predictor_Keep(T2Predictor* t2p, unsigned nmjd, const long double* mjd)
+{
+  switch (t2p->kind)
+  {
+  case Cheby:
+    ChebyModelSet_Keep(&t2p->modelset.cheby, nmjd, mjd);
+    break;
+  case T1:
+    fprintf (stderr, "T2Predictor_Keep: not implemented for T1 polyco!\n");
+    exit (-1);
+    break;
+  }
+}
+
 void
 T2Predictor_Destroy(T2Predictor *t2p)
 {
