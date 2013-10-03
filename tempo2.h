@@ -412,7 +412,8 @@ typedef struct pulsar {
   double gwm_decj;
   double gwm_epoch;
   double gwm_phi; // Polarisation angle
-
+  double gwm_dphase; // Phase offset (similar to GLPH)
+ 
   // Vikram Ravi's addition for eccentric, binary black hole systems
   double gwecc_ra;
   double gwecc_dec;

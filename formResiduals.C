@@ -672,7 +672,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 		   dt = (psr[p].obsn[i].sat - psr[p].gwm_epoch)*86400.0;
 		   scale = -0.5*cos2Phi*(1-cosTheta);
-		   phaseW += scale*(psr[p].param[param_gwm_amp].val[0]*psr[p].param[param_f].val[0])*dt;
+		   //		   scale=1.0;
+		   printf("%s scale = %g %g %g\n",psr[p].name,(double)scale,(double)cos2Phi,(double)cosTheta);
+		   // MUST CHECK CAREFULLY HOW TO USE GWM_DPHASE
+		   phaseW += scale*(psr[p].param[param_gwm_amp].val[0]*psr[p].param[param_f].val[0])*dt  + psr[p].gwm_dphase;
 
 		 }
 	       //	       printf("Res = %g\n",(double)res);
