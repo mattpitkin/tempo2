@@ -289,7 +289,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	      else
 		psr->fitJump[psr->nJumps]=0;
 	    }
-	    }
+	}
       
     }
   else if (strcasecmp(str,"EPHEM")==0) 
@@ -879,14 +879,15 @@ else if (strcasecmp(str,"_DM")==0)
   else if (strcasecmp(str,"GWECC_PSR_DIST")==0)
     fscanf(fin,"%lf",&psr->gwecc_psrdist);
   else if (strcasecmp(str,"GWECC_PSRTERM")==0)
-    fscanf(fin,"%d",&psr->gwecc_pulsarTermOn);
-  // 0 - no, 1 - yes, 2 - only
-  if (psr->param[param_gwecc].paramSet[0] == 1) 
-     {
-       strcpy(psr->param[param_gwecc].label[0],"GWECC_AMP");
-       strcpy(psr->param[param_gwecc].shortlabel[0],"GWECC_AMP");
-     }
-
+    {
+      fscanf(fin,"%d",&psr->gwecc_pulsarTermOn);
+      // 0 - no, 1 - yes, 2 - only
+      if (psr->param[param_gwecc].paramSet[0] == 1) 
+	{
+	  strcpy(psr->param[param_gwecc].label[0],"GWECC_AMP");
+	  strcpy(psr->param[param_gwecc].shortlabel[0],"GWECC_AMP");
+	}
+    }
   //* Gravitational wave memory
   else if (strcasecmp(str,"GWM_AMP")==0)
 	 readValue(psr,str,fin,&(psr->param[param_gwm_amp]),0);
@@ -900,6 +901,8 @@ else if (strcasecmp(str,"_DM")==0)
 	 fscanf(fin,"%lf",&psr->gwm_epoch);
   else if (strcasecmp(str,"GWM_PHI")==0)
 	 fscanf(fin,"%lf",&psr->gwm_phi);
+  else if (strcasecmp(str,"GWM_DPHASE")==0)
+	 fscanf(fin,"%lf",&psr->gwm_dphase);
   else if ((strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
 		&& strstr(str,"QIFUNC")==NULL)
   {
@@ -1092,231 +1095,229 @@ else if (strcasecmp(str,"_DM")==0)
 	
   else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') && 
 			(str[1]=='M' || str[1]=='m'))
-	  {
-		 int val;
-		 if (sscanf(str+3,"%d",&val)==1)
-		 {
-			if (val-1<psr->param[param_om].aSize)
-			   readValue(psr,str,fin,&(psr->param[param_om]),val-1);
-		 }
-	  
-	
-	  }
-	  else if  (strcasecmp(str,"ORBPX")==0)
-	    readValue(psr,str,fin,&(psr->param[param_orbpx]),0);
-
-	  else if (strcasecmp(str,"PB")==0)
-	  {
-		 readValue(psr,str,fin,&(psr->param[param_pb]),0);
-		 if (psr->nCompanion==0) psr->nCompanion=1;
-	  }
-	  else if ((strcasecmp(str,"PBDOT")!=0) && (str[0]=='P' || str[0]=='p') &&  /* Higher Pb derivatives */
-			(str[1]=='B' || str[1]=='b'))
-	  {
-		 int pbval;
-		 if (sscanf(str+3,"%d",&pbval)==1)
-		 {
-			if (pbval-1<psr->param[param_pb].aSize)
-			{
-			   readValue(psr,str,fin,&(psr->param[param_pb]),pbval-1);
-			   if (pbval > psr->nCompanion) psr->nCompanion=pbval;
-			}
-		 }
-	  }       
-	  else if (str[0]=='F' && str[1]=='B')
-	  {
-		 int fbval;
-		 if (strlen(str)==2)
-			fbval=0;
-		 else
-			sscanf(str+2,"%d",&fbval);
-
-		 readValue(psr,str,fin,&(psr->param[param_fb]),fbval);
-	  }
-	  else if (strcasecmp(str,"GAMMA")==0)
-		 readValue(psr,str,fin,&(psr->param[param_gamma]),0);
-	  else if (strcasecmp(str,"DR")==0)
-		 readValue(psr,str,fin,&(psr->param[param_dr]),0);
-	  else if (strcasecmp(str,"DTH")==0)
-		 readValue(psr,str,fin,&(psr->param[param_dth]),0);
-	  else if (strcasecmp(str,"A0")==0)
-		 readValue(psr,str,fin,&(psr->param[param_a0]),0);
-	  else if (strcasecmp(str,"B0")==0)
-		 readValue(psr,str,fin,&(psr->param[param_b0]),0);
-	  else if (strcasecmp(str,"BP")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bp]),0);
-	  else if (strcasecmp(str,"BPP")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpp]),0);
-	  else if (strcasecmp(str,"DTHETA")==0)
-		 readValue(psr,str,fin,&(psr->param[param_dtheta]),0);
-	  else if (strcasecmp(str,"PBDOT")==0)
-	  {
-		 readValue(psr,str,fin,&(psr->param[param_pbdot]),0);
-		 if (fabs(psr->param[param_pbdot].val[0]) > 1.0e-7) /* Check units: DO BETTER JOB */
-			psr->param[param_pbdot].val[0]*=1.0e-12;
-		 psr->param[param_pbdot].prefit[0] = psr->param[param_pbdot].val[0];
-	  }
-	  else if (strcasecmp(str,"XPBDOT")==0)
-	  {
-		 readValue(psr,str,fin,&(psr->param[param_xpbdot]),0);
-		 if (fabs(psr->param[param_xpbdot].val[0]) > 1.0e-7) /* Check units: DO BETTER JOB */
-			psr->param[param_xpbdot].val[0]*=1.0e-12;
-		 psr->param[param_xpbdot].prefit[0] = psr->param[param_xpbdot].val[0];
-	  }
-	  else if (strcasecmp(str,"OMDOT")==0)
-		 readValue(psr,str,fin,&(psr->param[param_omdot]),0);
-	  else if (strcasecmp(str,"XOMDOT")==0)
-		 readValue(psr,str,fin,&(psr->param[param_xomdot]),0);
-	  else if (strcasecmp(str,"AFAC")==0)
-		 readValue(psr,str,fin,&(psr->param[param_afac]),0);
-	  else if (strcasecmp(str,"A1DOT")==0 || strcasecmp(str,"XDOT")==0)
-	  {
-		 readValue(psr,str,fin,&(psr->param[param_a1dot]),0);
-		 if (fabs(psr->param[param_a1dot].val[0]) > 1e-7) /* Check units: DO BETTER JOB */
-			psr->param[param_a1dot].val[0]*=1.0e-12;
-		 psr->param[param_a1dot].prefit[0] = psr->param[param_a1dot].val[0];
-	  }
-	
+    {
+      int val;
+      if (sscanf(str+3,"%d",&val)==1)
+	{
+	  if (val-1<psr->param[param_om].aSize)
+	    readValue(psr,str,fin,&(psr->param[param_om]),val-1);
+	}
+      
+      
+    }
+  else if  (strcasecmp(str,"ORBPX")==0)
+    readValue(psr,str,fin,&(psr->param[param_orbpx]),0);
   
-	  else if ( strcasecmp(str,"X2DOT")==0) 
-		   {
-		     // Ryan: set this value which is used in THE MSS model plugin
-		     // These shouldn't be used in the same place, so hopefully this doesn't cause anything to crash!
-		     readValue(psr,str,fin,&(psr->param[param_a2dot]),0);
-		    
-		     psr->param[param_a2dot].prefit[0] = psr->param[param_a2dot].val[0];
-		   }
-
-	  else if ((strcasecmp(str,"A2DOT")==0) ||  (strcasecmp(str,"X2DOT")==0))
+  else if (strcasecmp(str,"PB")==0)
+    {
+      readValue(psr,str,fin,&(psr->param[param_pb]),0);
+      if (psr->nCompanion==0) psr->nCompanion=1;
+    }
+  else if ((strcasecmp(str,"PBDOT")!=0) && (str[0]=='P' || str[0]=='p') &&  /* Higher Pb derivatives */
+	   (str[1]=='B' || str[1]=='b'))
+    {
+      int pbval;
+      if (sscanf(str+3,"%d",&pbval)==1)
+	{
+	  if (pbval-1<psr->param[param_pb].aSize)
 	    {
-		 readValue(psr,str,fin,&(psr->param[param_a1dot]),1);
-		 psr->param[param_a1dot].prefit[1] = psr->param[param_a1dot].val[1];
-	    
-  
+	      readValue(psr,str,fin,&(psr->param[param_pb]),pbval-1);
+	      if (pbval > psr->nCompanion) psr->nCompanion=pbval;
 	    }
+	}
+    }       
+  else if (str[0]=='F' && str[1]=='B')
+    {
+      int fbval;
+      if (strlen(str)==2)
+	fbval=0;
+      else
+	sscanf(str+2,"%d",&fbval);
+      
+      readValue(psr,str,fin,&(psr->param[param_fb]),fbval);
+    }
+  else if (strcasecmp(str,"GAMMA")==0)
+    readValue(psr,str,fin,&(psr->param[param_gamma]),0);
+  else if (strcasecmp(str,"DR")==0)
+    readValue(psr,str,fin,&(psr->param[param_dr]),0);
+  else if (strcasecmp(str,"DTH")==0)
+    readValue(psr,str,fin,&(psr->param[param_dth]),0);
+  else if (strcasecmp(str,"A0")==0)
+    readValue(psr,str,fin,&(psr->param[param_a0]),0);
+  else if (strcasecmp(str,"B0")==0)
+    readValue(psr,str,fin,&(psr->param[param_b0]),0);
+  else if (strcasecmp(str,"BP")==0)
+    readValue(psr,str,fin,&(psr->param[param_bp]),0);
+  else if (strcasecmp(str,"BPP")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpp]),0);
+  else if (strcasecmp(str,"DTHETA")==0)
+    readValue(psr,str,fin,&(psr->param[param_dtheta]),0);
+  else if (strcasecmp(str,"PBDOT")==0)
+    {
+      readValue(psr,str,fin,&(psr->param[param_pbdot]),0);
+      if (fabs(psr->param[param_pbdot].val[0]) > 1.0e-7) /* Check units: DO BETTER JOB */
+	psr->param[param_pbdot].val[0]*=1.0e-12;
+      psr->param[param_pbdot].prefit[0] = psr->param[param_pbdot].val[0];
+    }
+  else if (strcasecmp(str,"XPBDOT")==0)
+    {
+      readValue(psr,str,fin,&(psr->param[param_xpbdot]),0);
+      if (fabs(psr->param[param_xpbdot].val[0]) > 1.0e-7) /* Check units: DO BETTER JOB */
+	psr->param[param_xpbdot].val[0]*=1.0e-12;
+      psr->param[param_xpbdot].prefit[0] = psr->param[param_xpbdot].val[0];
+    }
+  else if (strcasecmp(str,"OMDOT")==0)
+    readValue(psr,str,fin,&(psr->param[param_omdot]),0);
+  else if (strcasecmp(str,"XOMDOT")==0)
+    readValue(psr,str,fin,&(psr->param[param_xomdot]),0);
+  else if (strcasecmp(str,"AFAC")==0)
+    readValue(psr,str,fin,&(psr->param[param_afac]),0);
+  else if (strcasecmp(str,"A1DOT")==0 || strcasecmp(str,"XDOT")==0)
+    {
+      readValue(psr,str,fin,&(psr->param[param_a1dot]),0);
+      if (fabs(psr->param[param_a1dot].val[0]) > 1e-7) /* Check units: DO BETTER JOB */
+	psr->param[param_a1dot].val[0]*=1.0e-12;
+      psr->param[param_a1dot].prefit[0] = psr->param[param_a1dot].val[0];
+    }  
+  else if ( strcasecmp(str,"X2DOT")==0) 
+    {
+      // Ryan: set this value which is used in THE MSS model plugin
+      // These shouldn't be used in the same place, so hopefully this doesn't cause anything to crash!
+      readValue(psr,str,fin,&(psr->param[param_a2dot]),0);
+      
+      psr->param[param_a2dot].prefit[0] = psr->param[param_a2dot].val[0];
+    }
   
-	  else if (strcasecmp(str,"TASC")==0)
-		 readValue(psr,str,fin,&(psr->param[param_tasc]),0);
-	  else if (strcasecmp(str,"EPS1")==0)
-		 readValue(psr,str,fin,&(psr->param[param_eps1]),0);
-	  else if (strcasecmp(str,"EPS1DOT")==0)
-	  {
-	
-	    readValue(psr,str,fin,&(psr->param[param_eps1dot]),0);
-		 if (fabs(psr->param[param_eps1dot].val[0]) > 1e-7) 
-			psr->param[param_eps1dot].val[0] *= 1.0e-12;
-		 psr->param[param_eps1dot].prefit[0] = psr->param[param_eps1dot].val[0];
-	  }
-	  else if (strcasecmp(str,"EPS2")==0)
-		 readValue(psr,str,fin,&(psr->param[param_eps2]),0);
-	  else if (strcasecmp(str,"EPS2DOT")==0)
-	  {
-		 readValue(psr,str,fin,&(psr->param[param_eps2dot]),0);
-		 if (fabs(psr->param[param_eps2dot].val[0]) > 1e-7) 
-			psr->param[param_eps2dot].val[0] *= 1.0e-12;
-		 psr->param[param_eps2dot].prefit[0] = psr->param[param_eps2dot].val[0];
-	  }
-	  else if (strcasecmp(str,"M2")==0)
-		 readValue(psr,str,fin,&(psr->param[param_m2]),0);
-	  else if (strcasecmp(str,"KOM")==0)
-		 readValue(psr,str,fin,&(psr->param[param_kom]),0);
-	  else if (strcasecmp(str,"KIN")==0)
-		 readValue(psr,str,fin,&(psr->param[param_kin]),0);
-	  else if (strcasecmp(str,"SHAPMAX")==0)
-		 readValue(psr,str,fin,&(psr->param[param_shapmax]),0);
-	  else if( strcasecmp( str, "H3" ) == 0 ){
-		 // h3 harmonic Shapiro delay parameter for DDH model (FW10)
-		 readValue( psr, str, fin, &( psr->param[param_h3] ), 0 );
-	  }else if( strcasecmp( str, "H4" ) == 0 ){
-		 // h4 harmonic Shapiro delay parameter for DDH model (FW10)
-		 readValue( psr, str, fin, &( psr->param[param_h4] ), 0 );
-	  }else if( strcasecmp( str, "STIG" ) == 0 ){
-		 // Stigma Shapiro delay harmonic ratio for DDH model (FW10)
-		 readValue( psr, str, fin, &( psr->param[param_stig] ), 0 );
-	  }else if( strcasecmp( str, "NHARM" ) == 0 ){
-		 // Number of Shapiro delay harmonics to be used for DDH model (FW10)
-		 readValue( psr, str, fin, &( psr->param[param_nharm] ), 0 );
-	  }
-	  else if (strcasecmp(str,"MTOT")==0)
-		 readValue(psr,str,fin,&(psr->param[param_mtot]),0);
-	  else if (strcasecmp(str,"SINI")==0)
-		 readValue(psr,str,fin,&(psr->param[param_sini]),0);
-	  else if (strcasecmp(str,"BPJEP_1")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjep]),0);
-	  else if (strcasecmp(str,"BPJEP_2")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjep]),1);
-	  else if (strcasecmp(str,"BPJEP_3")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjep]),2);
-	  else if (strcasecmp(str,"BPJEP_4")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjep]),3);
-	  else if (strcasecmp(str,"BPJEP_5")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjep]),4);
-	  else if (strcasecmp(str,"BPJPH_1")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjph]),0);
-	  else if (strcasecmp(str,"BPJPH_2")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjph]),1);
-	  else if (strcasecmp(str,"BPJPH_3")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjph]),2);
-	  else if (strcasecmp(str,"BPJPH_4")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjph]),3);
-	  else if (strcasecmp(str,"BPJPH_5")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjph]),4);
-	  else if (strcasecmp(str,"BPJA1_1")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpja1]),0);
-	  else if (strcasecmp(str,"BPJA1_2")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpja1]),1);
-	  else if (strcasecmp(str,"BPJA1_3")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpja1]),2);
-	  else if (strcasecmp(str,"BPJA1_4")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpja1]),3);
-	  else if (strcasecmp(str,"BPJA1_5")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpja1]),4);
-	  else if (strcasecmp(str,"BPJEC_1")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjec]),0);
-	  else if (strcasecmp(str,"BPJEC_2")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjec]),1);
-	  else if (strcasecmp(str,"BPJEC_3")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjec]),2);
-	  else if (strcasecmp(str,"BPJEC_4")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjec]),3);
-	  else if (strcasecmp(str,"BPJEC_5")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjec]),4);
-	  else if (strcasecmp(str,"BPJOM_1")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjom]),0);
-	  else if (strcasecmp(str,"BPJOM_2")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjom]),1);
-	  else if (strcasecmp(str,"BPJOM_3")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjom]),2);
-	  else if (strcasecmp(str,"BPJOM_4")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjom]),3);
-	  else if (strcasecmp(str,"BPJOM_5")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjom]),4);
-	  else if (strcasecmp(str,"BPJPB_1")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjpb]),0);
-	  else if (strcasecmp(str,"BPJPB_2")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjpb]),1);
-	  else if (strcasecmp(str,"BPJPB_3")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjpb]),2);
-	  else if (strcasecmp(str,"BPJPB_4")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjpb]),3);
-	  else if (strcasecmp(str,"BPJPB_5")==0)
-		 readValue(psr,str,fin,&(psr->param[param_bpjpb]),4);
-	  else if (strcasecmp(str,"NTOA")==0)
-	  {
-		 char str[1000];
-		 fgets(str,1000,fin);
-		 //      parameter dummy[10];
-		 //      readValue(psr,str,fin,&dummy,0);
-	  }
-	  /* Other allowed parameters that are unused */
-	  else if (str[0]=='C') /* Comment line */
-		 fgets(str,1000,fin);
-	  else if (str[0]=='I') /* Comment line */
-		 fgets(str,1000,fin);
-	  else 
-	  {
-		 displayMsg(1,(char *)"MISC1",(char *)"Unknown parameter in par file: ",str,psr->noWarnings);
-	  }
+  else if ((strcasecmp(str,"A2DOT")==0) ||  (strcasecmp(str,"X2DOT")==0))
+    {
+      readValue(psr,str,fin,&(psr->param[param_a1dot]),1);
+      psr->param[param_a1dot].prefit[1] = psr->param[param_a1dot].val[1];
+      
+      
+    }
+  
+  else if (strcasecmp(str,"TASC")==0)
+    readValue(psr,str,fin,&(psr->param[param_tasc]),0);
+  else if (strcasecmp(str,"EPS1")==0)
+    readValue(psr,str,fin,&(psr->param[param_eps1]),0);
+  else if (strcasecmp(str,"EPS1DOT")==0)
+    {
+      
+      readValue(psr,str,fin,&(psr->param[param_eps1dot]),0);
+      if (fabs(psr->param[param_eps1dot].val[0]) > 1e-7) 
+	psr->param[param_eps1dot].val[0] *= 1.0e-12;
+      psr->param[param_eps1dot].prefit[0] = psr->param[param_eps1dot].val[0];
+    }
+  else if (strcasecmp(str,"EPS2")==0)
+    readValue(psr,str,fin,&(psr->param[param_eps2]),0);
+  else if (strcasecmp(str,"EPS2DOT")==0)
+    {
+      readValue(psr,str,fin,&(psr->param[param_eps2dot]),0);
+      if (fabs(psr->param[param_eps2dot].val[0]) > 1e-7) 
+	psr->param[param_eps2dot].val[0] *= 1.0e-12;
+      psr->param[param_eps2dot].prefit[0] = psr->param[param_eps2dot].val[0];
+    }
+  else if (strcasecmp(str,"M2")==0)
+    readValue(psr,str,fin,&(psr->param[param_m2]),0);
+  else if (strcasecmp(str,"KOM")==0)
+    readValue(psr,str,fin,&(psr->param[param_kom]),0);
+  else if (strcasecmp(str,"KIN")==0)
+    readValue(psr,str,fin,&(psr->param[param_kin]),0);
+  else if (strcasecmp(str,"SHAPMAX")==0)
+    readValue(psr,str,fin,&(psr->param[param_shapmax]),0);
+  else if( strcasecmp( str, "H3" ) == 0 ){
+    // h3 harmonic Shapiro delay parameter for DDH model (FW10)
+    readValue( psr, str, fin, &( psr->param[param_h3] ), 0 );
+  }else if( strcasecmp( str, "H4" ) == 0 ){
+    // h4 harmonic Shapiro delay parameter for DDH model (FW10)
+    readValue( psr, str, fin, &( psr->param[param_h4] ), 0 );
+  }else if( strcasecmp( str, "STIG" ) == 0 ){
+    // Stigma Shapiro delay harmonic ratio for DDH model (FW10)
+    readValue( psr, str, fin, &( psr->param[param_stig] ), 0 );
+  }else if( strcasecmp( str, "NHARM" ) == 0 ){
+    // Number of Shapiro delay harmonics to be used for DDH model (FW10)
+    readValue( psr, str, fin, &( psr->param[param_nharm] ), 0 );
+  }
+  else if (strcasecmp(str,"MTOT")==0)
+    readValue(psr,str,fin,&(psr->param[param_mtot]),0);
+  else if (strcasecmp(str,"SINI")==0)
+    readValue(psr,str,fin,&(psr->param[param_sini]),0);
+  else if (strcasecmp(str,"BPJEP_1")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjep]),0);
+  else if (strcasecmp(str,"BPJEP_2")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjep]),1);
+  else if (strcasecmp(str,"BPJEP_3")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjep]),2);
+  else if (strcasecmp(str,"BPJEP_4")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjep]),3);
+  else if (strcasecmp(str,"BPJEP_5")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjep]),4);
+  else if (strcasecmp(str,"BPJPH_1")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjph]),0);
+  else if (strcasecmp(str,"BPJPH_2")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjph]),1);
+  else if (strcasecmp(str,"BPJPH_3")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjph]),2);
+  else if (strcasecmp(str,"BPJPH_4")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjph]),3);
+  else if (strcasecmp(str,"BPJPH_5")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjph]),4);
+  else if (strcasecmp(str,"BPJA1_1")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpja1]),0);
+  else if (strcasecmp(str,"BPJA1_2")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpja1]),1);
+  else if (strcasecmp(str,"BPJA1_3")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpja1]),2);
+  else if (strcasecmp(str,"BPJA1_4")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpja1]),3);
+  else if (strcasecmp(str,"BPJA1_5")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpja1]),4);
+  else if (strcasecmp(str,"BPJEC_1")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjec]),0);
+  else if (strcasecmp(str,"BPJEC_2")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjec]),1);
+  else if (strcasecmp(str,"BPJEC_3")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjec]),2);
+  else if (strcasecmp(str,"BPJEC_4")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjec]),3);
+  else if (strcasecmp(str,"BPJEC_5")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjec]),4);
+  else if (strcasecmp(str,"BPJOM_1")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjom]),0);
+  else if (strcasecmp(str,"BPJOM_2")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjom]),1);
+  else if (strcasecmp(str,"BPJOM_3")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjom]),2);
+  else if (strcasecmp(str,"BPJOM_4")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjom]),3);
+  else if (strcasecmp(str,"BPJOM_5")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjom]),4);
+  else if (strcasecmp(str,"BPJPB_1")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjpb]),0);
+  else if (strcasecmp(str,"BPJPB_2")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjpb]),1);
+  else if (strcasecmp(str,"BPJPB_3")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjpb]),2);
+  else if (strcasecmp(str,"BPJPB_4")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjpb]),3);
+  else if (strcasecmp(str,"BPJPB_5")==0)
+    readValue(psr,str,fin,&(psr->param[param_bpjpb]),4);
+  else if (strcasecmp(str,"NTOA")==0)
+    {
+      char str[1000];
+      fgets(str,1000,fin);
+      //      parameter dummy[10];
+      //      readValue(psr,str,fin,&dummy,0);
+    }
+  /* Other allowed parameters that are unused */
+  else if (str[0]=='C') /* Comment line */
+    fgets(str,1000,fin);
+  else if (str[0]=='I') /* Comment line */
+    fgets(str,1000,fin);
+  else 
+    {
+      displayMsg(1,(char *)"MISC1",(char *)"Unknown parameter in par file: ",str,psr->noWarnings);
+    }
 }
 
 void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
