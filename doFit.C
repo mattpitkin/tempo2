@@ -519,22 +519,41 @@ int getNglobal(pulsar *psr,int npsr){
 
    if (psr[0].param[param_tel_dx].fitFlag[0]==2)
    {
-     for (i=0;i<psr->nTelDX;i++)
-       {psr->fitParamI[nGlobal+i]  = param_tel_dx; psr->fitParamK[nGlobal+i]  = i;}
-     nGlobal+=(psr[0].nTelDX);
+     if (psr->param[param_tel_dx].val[0] < 2){
+       for (i=0;i<psr->nTelDX;i++)
+	 {psr->fitParamI[nGlobal+i]  = param_tel_dx; psr->fitParamK[nGlobal+i]  = i;}
+       nGlobal+=(psr[0].nTelDX);
+     } else if (psr->param[param_tel_dx].val[0] == 2){
+       for (i=0;i<psr->nTelDX-1;i++)
+	 {psr->fitParamI[nGlobal+i]  = param_tel_dx; psr->fitParamK[nGlobal+i]  = i;}
+       nGlobal+=(psr[0].nTelDX-1);
+     }
    }
    if (psr[0].param[param_tel_dy].fitFlag[0]==2)
    {     
-     for (i=0;i<psr->nTelDY;i++)
-       {psr->fitParamI[nGlobal+i]  = param_tel_dy; psr->fitParamK[nGlobal+i]  = i;}
-     nGlobal+=(psr[0].nTelDY);
+     if (psr->param[param_tel_dy].val[0] < 2){
+       for (i=0;i<psr->nTelDY;i++)
+	 {psr->fitParamI[nGlobal+i]  = param_tel_dy; psr->fitParamK[nGlobal+i]  = i;}
+       nGlobal+=(psr[0].nTelDY);
+     } else if (psr->param[param_tel_dy].val[0] < 2) {
+       for (i=0;i<psr->nTelDY-1;i++)
+	 {psr->fitParamI[nGlobal+i]  = param_tel_dy; psr->fitParamK[nGlobal+i]  = i;}
+       nGlobal+=(psr[0].nTelDY-1);
+     }
    }
    if (psr[0].param[param_tel_dz].fitFlag[0]==2)
    {
-     for (i=0;i<psr->nTelDZ;i++)
-       {psr->fitParamI[nGlobal+i]  = param_tel_dz; psr->fitParamK[nGlobal+i]  = i;}
-     
-	  nGlobal+=(psr[0].nTelDZ);
+     if (psr->param[param_tel_dz].val[0] < 2){
+       for (i=0;i<psr->nTelDZ;i++)
+	 {psr->fitParamI[nGlobal+i]  = param_tel_dz; psr->fitParamK[nGlobal+i]  = i;}
+       
+       nGlobal+=(psr[0].nTelDZ);
+     } else if (psr->param[param_tel_dz].val[0] == 2){
+       for (i=0;i<psr->nTelDZ-1;i++)
+	 {psr->fitParamI[nGlobal+i]  = param_tel_dz; psr->fitParamK[nGlobal+i]  = i;}
+       
+       nGlobal+=(psr[0].nTelDZ-1);
+     }
    }
    if (psr->param[param_quad_ifunc_p].fitFlag[0]==2)
    {
@@ -772,25 +791,49 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int p){
 			   }
 			}
 			else if(i==param_tel_dx){
-			   for (j=0;j<psr[p].nTelDX;j++)
-			   {
-				  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
-				  c++;
-			   }
+			  if (psr[p].param[i].val[0]<2){
+			    for (j=0;j<psr[p].nTelDX;j++)
+			      {
+				afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+				c++;
+			      }
+			  } else {
+			    for (j=0;j<psr[p].nTelDX-1;j++)
+			      {
+				afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+				c++;
+			      }
+			  }
 			}
 			else if(i==param_tel_dy){
-			   for (j=0;j<psr[p].nTelDY;j++)
-			   {
-				  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
-				  c++;
-			   }
+			  if (psr[p].param[i].val[0]<2){
+			    for (j=0;j<psr[p].nTelDY;j++)
+			      {
+				afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+				c++;
+			      }
+			  } else {
+			    for (j=0;j<psr[p].nTelDY-1;j++)
+			      {
+				afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+				c++;
+			      }
+			  }
 			}
 			else if(i==param_tel_dz){
-			   for (j=0;j<psr[p].nTelDZ;j++)
-			   {
-				  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
-				  c++;
-			   }
+			  if (psr[p].param[i].val[0]<2){
+			    for (j=0;j<psr[p].nTelDZ;j++)
+			      {
+				afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+				c++;
+			      }
+			  }else{
+			    for (j=0;j<psr[p].nTelDZ-1;j++)
+			      {
+				afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+				c++;
+			      }
+			  }
 			}
 			else if (i==param_gwsingle)
 			{
@@ -1996,7 +2039,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	    
 	    dt = (psr->obsn[ipos].sat - psr->gwm_epoch)*86400.0;
 	    scale = -0.5*cos2Phi*(1-cosTheta);
-	    
+	    //	    scale=1;
 	    afunc = scale*dt;
 	  }
 	  else
@@ -2202,45 +2245,88 @@ void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error){
 			}
 			else if (i==param_tel_dx)
 			{
-			   for (j=0;j<psr[0].nTelDX;j++)
-			   {
-				  printf("Setting: %d %g\n",j,val[offset]);
-				  for (p=0;p<npsr;p++)
+			  if (psr[0].param[i].val[0]<2){
+			    for (j=0;j<psr[0].nTelDX;j++)
+			      {
+ 				printf("Setting a: %d %g\n",j,val[offset]);
+				for (p=0;p<npsr;p++)
 				  {
-					 psr[p].telDX_v[j]-=val[offset];
-					 psr[p].telDX_e[j]=error[offset];
+				    psr[p].telDX_v[j]-=val[offset];
+				    psr[p].telDX_e[j]=error[offset];
 				  }
-				  offset++;
-			   }
-			   offset--;
+				offset++;
+			      }
+			    offset--;
+			  }  else {
+			    for (j=0;j<psr[0].nTelDX-1;j++)
+			      {
+				printf("Setting b: %d %g\n",j,val[offset]);
+				for (p=0;p<npsr;p++)
+				  {
+				    psr[p].telDX_v[j]-=val[offset];
+				    psr[p].telDX_e[j]=error[offset];
+				  }
+				offset++;
+			      }
+			    offset--;
+
+			  }
 			}
 			else if (i==param_tel_dy)
 			{
-			   for (j=0;j<psr[0].nTelDY;j++)
-			   {
-				  printf("Setting: %d %g\n",j,val[offset]);
-				  for (p=0;p<npsr;p++)
+			  if (psr[0].param[i].val[0]<2){
+			    for (j=0;j<psr[0].nTelDY;j++)
+			      {
+				printf("Setting c: %d %g\n",j,val[offset]);
+				for (p=0;p<npsr;p++)
 				  {
-					 psr[p].telDY_v[j]-=val[offset];
-					 psr[p].telDY_e[j]=error[offset];
+				    psr[p].telDY_v[j]-=val[offset];
+				    psr[p].telDY_e[j]=error[offset];
 				  }
-				  offset++;
-			   }
-			   offset--;
+				offset++;
+			      }
+			    offset--;
+			  } else {
+			    for (j=0;j<psr[0].nTelDY-1;j++)
+			      {
+				printf("Setting d: %d %g\n",j,val[offset]);
+				for (p=0;p<npsr;p++)
+				  {
+				    psr[p].telDY_v[j]-=val[offset];
+				    psr[p].telDY_e[j]=error[offset];
+				  }
+				offset++;
+			      }
+			    offset--;
+			  }
 			}
 			else if (i==param_tel_dz)
 			{
-			   for (j=0;j<psr[0].nTelDZ;j++)
-			   {
-				  printf("Setting: %d %g\n",j,val[offset]);
-				  for (p=0;p<npsr;p++)
+			  if (psr[0].param[i].val[0]<2){
+			    for (j=0;j<psr[0].nTelDZ;j++)
+			      {
+				printf("Setting e: %d %g\n",j,val[offset]);
+				for (p=0;p<npsr;p++)
 				  {
-					 psr[p].telDZ_v[j]-=val[offset];
-					 psr[p].telDZ_e[j]=error[offset];
+				    psr[p].telDZ_v[j]-=val[offset];
+				    psr[p].telDZ_e[j]=error[offset];
 				  }
-				  offset++;
-			   }
-			   offset--;
+				offset++;
+			      }
+			    offset--;
+			  } else {
+			    for (j=0;j<psr[0].nTelDZ-1;j++)
+			      {
+				for (p=0;p<npsr;p++)
+				  {
+				    psr[p].telDZ_v[j]-=val[offset];
+				    psr[p].telDZ_e[j]=error[offset];
+				  }
+				offset++;
+			      }
+			    offset--;
+
+			  }
 			}
 			else if (i==param_gwsingle)
 			{
@@ -2464,7 +2550,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 					 j++;
 				  }
 			   }
-			}		  
+			}
 			else if (i==param_tel_dy) 
 			{
 			   int k;
