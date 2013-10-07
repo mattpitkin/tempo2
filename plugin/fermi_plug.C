@@ -60,8 +60,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             8 September 2013\n");
-	printf("Version:             5.9\n");
+	printf("Updated:             4 October 2013\n");
+	printf("Version:             5.10\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -136,7 +136,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	int FT1_time_col,FT1_phase_col,FT1_bary_col,FT2_time_col1,FT2_time_col2,FT2_pos_col;
 	int nrows2, nrows3, rows_status, rows_left;
 	int max_rows = MAX_OBSN_VAL / 2;
-
+	
 	/* ------------------------------------------------- //
 	// Time and satellite position definitions
 	// ------------------------------------------------- */
@@ -694,6 +694,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	// Load the arrival times
 	readParfile(psr,parFile,timFile,*npsr);
+	psr[0].nobs = 0;
 	readTimfile(psr,timFile,*npsr);
 	
 	if (ophase && (strcmp(psr[0].binaryModel,"NONE")==0))
@@ -722,7 +723,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		formBatsAll(psr,*npsr);
 		tzrmjd_bary = psr->obsn[0].bat;
 	}
-	
 	
 	
 
@@ -793,8 +793,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		// Load the arrival times
 		readParfile(psr,parFile,timFile,*npsr); 
+		psr[0].nobs = 0;
 		readTimfile(psr,timFile,*npsr);
-		
 		
 		/* ------------------------------------------------- //
 		// Satellite position as a function of time
@@ -948,16 +948,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		// keep track of the last TOA before shifting the others
 		lasttime = psr->obsn[psr[0].nobs-1].sat;
+		
 		for (k=0;k<3;k++) lastpos[k] = psr->obsn[psr[0].nobs-1].observatory_earth[k];
-
+		
 		for (i=psr[0].nobs-1;i>0;i--)
 		{
 			psr->obsn[i].sat = psr->obsn[i-1].sat;
-
+			
 			for (k=0;k<3;k++) psr[0].obsn[i].observatory_earth[k] = psr[0].obsn[i-1].observatory_earth[k];
 		}
-
-	
+		
 		/* ------------------------------------------------- //
 		// Stick in a fake obs to get the reference phase
 		// ------------------------------------------------- */
