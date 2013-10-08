@@ -733,45 +733,45 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 			   n2*(n1*e21p+n2*e22p+n3*e23p)+
 			   n3*(n1*e31p+n2*e32p+n3*e33p));
 
+		   //		   printf("Resp = %s %g %g\n",psr[p].name,(double)resp,(double)cosTheta);
 		   if ((1-cosTheta)==0.0)
 		     resp = 0.0;  // Check if this is sensible
 		   else
 		     resp = 1.0L/(2.0L*(1.0L-cosTheta))*(resp); 
 
 		   psr[p].quad_ifunc_geom_p = resp;
-
+		   //		   printf("Resp2 = %s %g %g\n",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
 		   // NOTE: These are for the cross terms. 
-		   lambda   = psr[p].quad_ifunc_c_RA;
-		   beta     = psr[p].quad_ifunc_c_DEC;
+		   lambda   = psr[p].gwm_raj;
+		   beta     = psr[p].gwm_decj;
 
-		   e11c = sin(2*lambda)*sin(beta);
-		   e21c = -cos(2*lambda)*sin(beta);
-		   e31c = -sin(lambda)*cos(beta);
+
+		   e11c = sinl(2*lambda)*sinl(beta);
+		   e21c = -cosl(2*lambda)*sinl(beta);
+		   e31c = -sinl(lambda)*cosl(beta);
 		   
-		   e12c = -cos(2*lambda)*sin(beta);
-		   e22c = -sin(2*lambda)*sin(beta);
-		   e32c = cos(lambda)*cos(beta);
+		   e12c = -cosl(2*lambda)*sinl(beta);
+		   e22c = -sinl(2*lambda)*sinl(beta);
+		   e32c = cosl(lambda)*cosl(beta);
 		   
-		   e13c = -sin(lambda)*cos(beta);
-		   e23c = cos(lambda)*cos(beta);
+		   e13c = -sinl(lambda)*cosl(beta);
+		   e23c = cosl(lambda)*cosl(beta);
 		   e33c  = 0;
 		   
 		   resc = (n1*(n1*e11c+n2*e12c+n3*e13c)+
 			   n2*(n1*e21c+n2*e22c+n3*e23c)+
 			   n3*(n1*e31c+n2*e32c+n3*e33c));
-		   
+		   //		   printf("Resc = %s %g %g\n",psr[p].name,(double)resc,(double)cosTheta);
 		   if ((1-cosTheta)==0.0)
 		     resc = 0.0;  // Check if this is sensible
 		   else
 		     resc = 1.0L/(2.0L*(1.0L-cosTheta))*(resc); 
 		   psr[p].quad_ifunc_geom_c = resc;
-
+		   //		   printf("Resc2 = %s %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c);
 		   dt = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*86400.0L;
 		   //		   scale = -0.5*cos2Phi*(1-cosTheta);
 		   phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[0]*psr[p].quad_ifunc_geom_p); 				
 		   phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[1]*psr[p].quad_ifunc_geom_c); 				
-
-
 		 }
 	     }	 
 	   /* Add in extra phase due to clock offset */
