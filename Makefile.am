@@ -34,6 +34,7 @@ libtempo2_la_include_HEADERS = tempo2.h
 libtempo2pred_la_SOURCES = $(headers) tempo2pred.c cheby2d.c t1polyco.c
 libtempo2pred_la_CFLAGS = -fPIC
 #libtempo2pred_la_LDFLAGS = -static
+libtempo2pred_la_LIBADD = -lm
 
 libtempo2pred_la_includedir=$(includedir)
 libtempo2pred_la_include_HEADERS = tempo2pred.h tempo2pred_int.h
