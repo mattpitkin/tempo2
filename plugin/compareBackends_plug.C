@@ -138,7 +138,8 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
   printf("z = zoom in a region using the mouse cursor\n");
   printf("u = unzoom\n");
   printf("s = provide statistics on the data points within the zoomed region\n");
-  printf("r = define a new set of backends to compare\n\n");
+  printf("r = define a new set of backends to compare\n");
+  printf("o = produce a text file with the difference values\n\n"); 
   do {
     if (recalc==1)
       {
@@ -171,7 +172,7 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
 			      {
 				dres = psr[0].obsn[i].residual - psr[0].obsn[j].residual;
 				if (xaxis==1)
-				  xval[it][n[it]] = (float)psr[0].obsn[i].sat;
+				  xval[it][n[it]] = (float)(psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0]);
 				yval[it][n[it]] = (float)dres;
 				ebar = sqrt(pow(psr[0].obsn[i].toaErr*1.0e-6,2)+pow(psr[0].obsn[j].toaErr*1.0e-6,2));
 				e1[it][n[it]] = yval[it][n[it]] - ebar;
@@ -222,7 +223,7 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
 	    maxy = zoomY2;
 	  }
 	cpgenv(minx,maxx,miny,maxy,0,1);
-	cpglab("MJD","Difference (sec)","");
+	cpglab("days since PEPOCH","Difference (sec)","");
 	//	drawAxis=0;
       }
 
@@ -251,6 +252,19 @@ void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,c
 	zoomX2 = TKretMax_f(mx,mouseX2);
 	zoomY1 = TKretMin_f(my,mouseY2);
 	zoomY2 = TKretMax_f(my,mouseY2);	
+      }
+    else if (key=='o') // Output
+      {
+	int k;
+	FILE *fout;
+	char fname[128];
+	fout = fopen("result.dat","w");
+	for (k=0;k<=it;k++)
+	  {
+	    for (j=0;j<=n[k];j++)
+	      fprintf(fout,"%d %d %.4f %g\n",k,j,xval[k][j],yval[k][j]);
+	  }
+	fclose(fout);
       }
     else if (key=='s') // Statistics
       {
