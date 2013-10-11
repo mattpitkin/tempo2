@@ -254,7 +254,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     psr[0].ipm = 1;
     psr[0].swm = 0;
     psr[0].nPhaseJump=0;
-    
+    psr[0].nobs = 0;
+
     for (i=0;i<MAX_PARAMS;i++)
       {
 	for (j=0;j<psr[0].param[i].aSize;j++)
@@ -410,6 +411,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      psr[ii].param[jj].nLinkTo = 0;
 	      psr[ii].param[jj].nLinkFrom = 0;
 	  }
+	  psr[ii].nconstraints = 0;
 	  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
 	  readTimfile(psr,timFile,*npsr); 
 	  preProcess(psr,1,argc,argv);
