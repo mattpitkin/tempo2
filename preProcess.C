@@ -543,7 +543,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	  char *(*entry)(int,char **,pulsar *,int *);
 	  void * module;
 	  char str[1000];
-	  
+	  logdbg("Dealing with the select plugin"); 
 
 
 	  for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
@@ -594,7 +594,11 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
       else
 	{
 	  if (strlen(selectFname) > 0)
-	    useSelectFile(selectFname,psr,npsr);
+	    {
+	      logdbg("Using select file");
+	      useSelectFile(selectFname,psr,npsr);
+	      logdbg("Complete using select file");
+	    }
 	}
       preProcessSimple3 (psr + p);
     }
@@ -705,7 +709,7 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 	    }
 	  else if (strcmp(first,"PASS")==0 && second[0]=='-')
 	    {
-	      char *pos;
+	      char pos[1000];
 	      char *res;
 	      int nf=0;
 	      int found;
@@ -713,7 +717,6 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 	      strcpy(pos,line);
 	      strcpy(line,strtok(pos," "));
 	      strcpy(second,strtok(NULL," "));
-	      
 	      do
 		{
 		  res = strtok(NULL," ");
