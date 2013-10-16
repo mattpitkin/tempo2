@@ -230,7 +230,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   for(ii=0;ii<Npsr;ii++){
     count = 0;
     strcpy(parFile[0],parFile[ii]);
-    printf("SET: %d\n",psr[0].param[param_pb].val[0]);
     psr[0].nJumps=0;
     psr[0].fitMode=0;
     psr[0].eclCoord=0;
@@ -412,6 +411,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      psr[ii].param[jj].nLinkFrom = 0;
 	  }
 	  psr[ii].nconstraints = 0;
+	  psr[ii].nobs = 0;
 	  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
 	  readTimfile(psr,timFile,*npsr); 
 	  preProcess(psr,1,argc,argv);
