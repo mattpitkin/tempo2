@@ -234,7 +234,7 @@ double TKleastSquares(double* b, double* white_b,
 		 svd_V[i] = white_b[i];
 	  }
 
-	  logdbg("Do backsubstituion");
+	  logdbg("Do backsubstitution");
 	  TKbacksubstitution_svd(v, w, svd_M, svd_V, p, n, nf);
 
 	  for (k=0;k<nf;k++)outP[k]=(double)(p[k]);
