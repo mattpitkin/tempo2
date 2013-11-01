@@ -1138,7 +1138,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			 for (i=0;i<psr[p].dmoffsCMnum;i++)
 				fprintf(fout2,"_CM\t %.15g %.15g %.15g\n",psr[p].dmoffsCM_mjd[i],psr[p].dmoffsCM[i],psr[p].dmoffsCM_error[i]);
 		  }
-		}
+	    }
 
 	  // add constraints
 	  if (psr[p].auto_constraints){
@@ -1150,6 +1150,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			}
 		 }
 	  }
+
+	  // white model file
+
+	  if (strcmp(psr[p].whiteNoiseModelFile, "NULL") != 0)
+	    {
+	      fprintf(fout2, "WHITE_NOISE_MODEL %s", psr[p].whiteNoiseModelFile);
+	    }
+
 	  fclose(fout2);	 
 		}
 	}
