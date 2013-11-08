@@ -77,7 +77,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,int nHighFreqSpec,
 	   double modelAlpha,double modelFc,int modelNfit,double modelScale,
 	   double nmodelScale,double *cholSpecX,double *cholSpecY,int nCholSpec,
-	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps);
+	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps,double *cholWspecX2,double *cholWspecY2);
 void outputMatrix(double **uinv,int nres);
 void fitExponential(double *resx,int nres,double *rawCovar,int *rawCovarNpts,double *ampFit,double *chisqFit,double *bestAmp,double *bestLag,double *bestChisq,int *nGridFit);
 void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,double **uinv,double *resx,
@@ -276,11 +276,14 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	   T2getHighFreqRes(resy,smoothModel,nres,highFreqRes);
 	   if(writeFiles)fileOutput3("highFreqRes.dat",resx,highFreqRes,rese,nres);
 	   // Step 1f: obtain covariance of high-freq. residuals
-	   getHighFreqCovar(resx,rese,highFreqRes,nres,hfNormCovar,hfNormCovarNpts,&hfZerolagNormCovar);
+	   getHighFreqCovar(resx,rese,highFreqRes,nres,hfNormCovar,
+			    hfNormCovarNpts,&hfZerolagNormCovar);
 	   // Step 1g: plot the results
 	   if (skipprocess==0)
 		 {
-	   plot1(resx,resy,rese,nres,cubicVal,smoothModel,highFreqRes,hfNormCovar,hfNormCovarNpts,hfZerolagNormCovar);
+		   plot1(resx,resy,rese,nres,cubicVal,smoothModel,
+			 highFreqRes,hfNormCovar,hfNormCovarNpts,
+			 hfZerolagNormCovar);
 		 }
 	   if (idt!=0) cont=0;
 	   else {
@@ -314,7 +317,6 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	   {
 		 nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY,-1);
 		 if(writeFiles)fileOutput2("origSpectra.dat",origSpecX,origSpecY,nOrigSpec);
-
 		 // Step 2b: interpolate the smooth curve
 		 T2interpolate(resx,resy,rese,nres,cubicVal,interpX,interpY,
 			 &nInterp,interpTime,expSmooth);
@@ -517,6 +519,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
     {
       FILE *fout;
       char fname[128];
+      double cholWhiteY2[MAX_OBSN];                         // Cholesky white residuals
+      double cholWspecX2[MAX_OBSN],cholWspecY2[MAX_OBSN];    // Cholesky whitened spectrum
 
       T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt,amp);
       sprintf(fname,"%s.model",psr[0].name);
@@ -526,9 +530,18 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       fprintf(fout,"FC %g\n",modelFc);
       fprintf(fout,"AMP %g\n",nmodelScale);
       fclose(fout);
+
+      // recalculating UINV and the whitened residuals and spectra with the new model
+      T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
+      T2getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY2);
+      if(writeFiles)fileOutput3("cholWhiteRes2.dat",resx,cholWhiteY2,rese,nres);
+      nCholWspec = T2calculateSpectra(resx,cholWhiteY2,rese,nres,0,0,2,
+				  cholWspecX2,cholWspecY2);
+
+
       
       plot5(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,highFreqSpecX,highFreqSpecY,nHighFreqSpec,
-	    modelAlpha,modelFc,modelNfit,modelScale,nmodelScale,cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,makeps);
+	    modelAlpha,modelFc,modelNfit,modelScale,nmodelScale,cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,makeps,cholWspecX2,cholWspecY2);
 
       // Step 5c: recalculate the Cholesky matrix
       T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
@@ -1010,13 +1023,14 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,int nHighFreqSpec,
 	   double modelAlpha,double modelFc,int modelNfit,double modelScale,
 	   double nmodelScale,double *cholSpecX,double *cholSpecY,int nCholSpec,
-	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps)
+	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps,double *cholWspecX2,double *cholWspecY2)
 {
   int i,j;
   float fx[MAX_OBSN],fy[MAX_OBSN];
   float fx1[MAX_OBSN],fy1[MAX_OBSN];
   float fx2[nCholSpec],fy2[nCholSpec];
   float fx3[nCholWspec],fy3[nCholWspec];
+  float fx4[nCholWspec],fy4[nCholWspec];
   float minx,maxx,miny,maxy;
   FILE *fout1,*fout2,*fout;
 
@@ -1058,6 +1072,8 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
     {
       fx3[i] = log10(cholWspecX[i]*365.25);
       fy3[i] = log10(cholWspecY[i]*pow(365.25*86400,2));
+      fx4[i] = log10(cholWspecX2[i]*365.25);
+      fy4[i] = log10(cholWspecY2[i]*pow(365.25*86400,2));
       fprintf(fout,"%g %g\n",cholWspecX[i],pow(10,fy3[i]));
     }
   fclose(fout);
@@ -1090,8 +1106,10 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	}
     }
 
-  cpgsci(7); cpgline(nCholWspec,fx3,fy3); 
+  cpgsci(1); cpgline(nCholWspec,fx3,fy3); 
   cpgpt(nCholWspec,fx3,fy3,20); cpgsci(1);
+  cpgsci(2); cpgline(nCholWspec,fx4,fy4); 
+  cpgpt(nCholWspec,fx4,fy4,20); cpgsci(1);
 
   fx[0] = minx; fx[1] = maxx;
   fy[0] = fy[1] = log10(1.0/pow(10,fx3[nCholWspec-1]));
