@@ -251,7 +251,7 @@ double TKleastSquares(double* b, double* white_b,
 	  }
 
 	  if(computeErrors && rescale_errors){
-	    printf("Error scaling = %g\n",sqrt(chisq/(n-nf)));
+	    // printf("Error scaling = %g\n",sqrt(chisq/(n-nf)));
 		 for (j=0;j<nf;j++)
 			e[j] *= sqrt(chisq/(n-nf));
 	  }
@@ -448,14 +448,14 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
 
 // legacy method.
 void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *outP,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar * , int,int),int weight,pulsar *psr,double tol, int *ip,double **uinv) {
-   logmsg("Warning: Depricated method TKleastSquares_svd_psr_dcm() -> TKleastSquares_single_pulsar()");
+   logmsg("Warning: Deprecated method TKleastSquares_svd_psr_dcm() -> TKleastSquares_single_pulsar()");
    TKleastSquares_single_pulsar(x,y,n,outP,e,nf,cvm,chisq,fitFuncs,psr,tol,ip,(weight==0 || (weight==1 && psr->rescaleErrChisq==1)),uinv);
 }
 
 // same as above but without a uinv matrix.
 void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int,int),int weight,pulsar *psr,double tol, int *ip)
 {
-   logmsg("Warning: Depricated method TKleastSquares_svd_psr() -> TKleastSquares_single_pulsar()");
+   logmsg("Warning: Deprecated method TKleastSquares_svd_psr() -> TKleastSquares_single_pulsar()");
    int i;
    double ** uinv=malloc_blas(1,n);
    if (weight==1){

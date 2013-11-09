@@ -48,14 +48,14 @@ double getConstraintDeriv(pulsar *psr,int ipos,int i,int k);
 // Backwards compatibility
 void doFit(pulsar *psr,int npsr,int writeModel) 
 {
-   logmsg("Depricated call to doFit() -> better to use doFitAll()");
+   logmsg("Deprecated call to doFit() -> better to use doFitAll()");
    doFitAll(psr,npsr,NULL);
 }
 
 
 // Backwards compatibility
 void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeModel) {
-   logmsg("Depricated call to doFitDCM() -> better to use doFitAll()");
+   logmsg("Deprecated call to doFitDCM() -> better to use doFitAll()");
    if (strcmp(dcmFile,"NULL")){
 	  doFitAll(psr,npsr,dcmFile);
    } else {
@@ -266,13 +266,13 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		 uinvs[p]=malloc_blas(1,count); // store diagonal matrix as a 1xN
 		 logtchk("complete allocating memory for uinv");
 		 if(psr[p].fitMode == 0){
-			logmsg("Doing an UNWEIGHTED fit");
+			logdbg("Doing an UNWEIGHTED fit");
 			// unweighted fit - set sigma to 1 (except for constraints)
 			for (i=0; i <= last; i++){
 			   sig[i]=1.0;
 			}
 		 } else {
-			logmsg("Doing a WEIGHTED fit");
+			logdbg("Doing a WEIGHTED fit");
 		 }
 	  }
 	  logtchk("Compute uinv");
@@ -858,7 +858,6 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int p){
 
    FITfuncs(x,afunc+nglobal,ma-nglobal,psr,ipos,p); // the non-global parameters.
 }
-
 
 
 void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr)

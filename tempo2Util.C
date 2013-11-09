@@ -381,7 +381,7 @@ void displayMsg(int type,char *key,char *searchStr,char *variableStr,int noWarni
 	    }
 	  else if (!warnedAboutMultiple)
 	  {
-	    printf("WARNING: duplicated warnings have been supressed.\n");
+	    printf("WARNING: duplicated warnings have been suppressed.\n");
 	    warnedAboutMultiple=1;
 	  }
 	}

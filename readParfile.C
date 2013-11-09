@@ -209,7 +209,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       char val[100];
       fscanf(fin,"%s",val);
       psr->correctTroposphere=(val[0]=='1'||val[0]=='y'||val[0]=='Y');
-      printf("Setting correctTroposphere %d\n",psr->correctTroposphere);
+      // printf("Setting correctTroposphere %d\n",psr->correctTroposphere);
     }
   else if (strcasecmp(str,"UNITS")==0)
     {

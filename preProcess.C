@@ -74,7 +74,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 
   if (displayCVSversion == 1) CVSdisplayVersion("preProcess.C","preProcess()",CVS_verNum);
   
-  logmsg("PreProcess");
+  // logmsg("PreProcess");
   logdbg("In preProcess");
 
   //MAX_PSR   = MAX_PSR_VAL;    /* Maximum number of pulsars to fit simultaneously  */
