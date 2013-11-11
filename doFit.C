@@ -1299,10 +1299,16 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		 //	  printf("dofit: %g %.10g 0.0\n",(double)(psr->obsn[ipos].sat-psr->param[param_pepoch].val[0]),(double)afunc);
 
 	  }
-	  else if (i==param_pmra)
-		 afunc = re*cos(deltae)*cos(psrdec)*sin(psrra - alphae) * x;
-	  else if (i==param_pmdec) /* pmdec */
-		 afunc = re*(cos(deltae)*sin(psrdec)*cos(psrra - alphae) - sin(deltae)*cos(psrdec))*x;
+	  else if (i==param_pmra) {
+			longdouble t0 = ((x + psr->param[param_pepoch].val[0])
+				  - psr->param[param_posepoch].val[0]);
+		 afunc = re*cos(deltae)*cos(psrdec)*sin(psrra - alphae) * t0;
+	  }
+	  else if (i==param_pmdec) { /* pmdec */
+			longdouble t0 = ((x + psr->param[param_pepoch].val[0])
+				  - psr->param[param_posepoch].val[0]);
+		 afunc = re*(cos(deltae)*sin(psrdec)*cos(psrra - alphae) - sin(deltae)*cos(psrdec))*t0;
+	  }
 	  else if (i==param_px)
 	  {
 		 int l;
