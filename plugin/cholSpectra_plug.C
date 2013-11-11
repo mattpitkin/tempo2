@@ -74,6 +74,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    char fname[MAX_FILELEN];
    FILE *fout;
    double xfactor=1.0;
+   char use_ccache=0;
+   int cache_hits=0;
+   char roundem = 0;
 
    int i,p;
    double globalParameter;
@@ -106,6 +109,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  if (strcmp(argv[i],"-xspec")==0) {
 		 xspec=1;
 	  }
+
+	  if (strcmp(argv[i],"-cache")==0) {
+		 use_ccache=1;
+	  }
+	  if (strcmp(argv[i],"-round")==0) {
+		 roundem=1;
+	  }
+
 	  if (strcmp(argv[i],"-yr")==0) {
 		 xfactor=365.25;
 	  }
@@ -159,6 +170,23 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  p2_yr = (double*)malloc(nSpec*sizeof(double));
 	  p2_yi = (double*)malloc(nSpec*sizeof(double));
 
+	  double **cc_x, **cc_yr, **cc_yi;
+	  if (use_ccache){
+		 cc_x = (double**)malloc(sizeof(double*)*(*npsr));
+		 cc_yr= (double**)malloc(sizeof(double*)*(*npsr));
+		 cc_yi= (double**)malloc(sizeof(double*)*(*npsr));
+		 for (p1 = 0; p1 < *npsr; p1++){
+			cc_x[p1]=NULL;
+		 }
+	  }
+	  if(roundem){
+		 for (p1 = 0; p1 < *npsr; p1++){
+			psr[p1].param[param_start].val[0] = double(int(psr[p1].param[param_start].val[0]/50.0)*50.0);
+			psr[p1].param[param_finish].val[0] = double(int(psr[p1].param[param_finish].val[0]/50.0+1)*50.0);
+
+		 }
+	  }
+
 	  logmsg("Producing Cross Spectra");
 	  for (p1 = 0; p1 < *npsr; p1++){
 		 for (p2 = p1+1; p2 < *npsr; p2++){
@@ -195,13 +223,59 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			logmsg("Tspan=%lf",realTspan);
 
 			verbose_calc_spectra=true;
-			calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi);
-			calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi);
+			char dop1=1;
+			char dop2=1;
+			if (use_ccache){
+			   if (cc_x[p1] != NULL && p1_start_o == minx && p1_finish_o == maxx){
+				  // can use cached p1
+				  memcpy(p1_x,cc_x[p1],sizeof(double)*nSpec);
+				  memcpy(p1_yr,cc_yr[p1],sizeof(double)*nSpec);
+				  memcpy(p1_yi,cc_yi[p1],sizeof(double)*nSpec);
+				  logmsg("CACHED %s",psr[p1].name);
+				  cache_hits++;
+				  dop1=0;
+			   }
+			   if (cc_x[p2] != NULL && p2_start_o == minx && p2_finish_o == maxx){
+				  // can use cached p2
+				  memcpy(p2_x,cc_x[p2],sizeof(double)*nSpec);
+				  memcpy(p2_yr,cc_yr[p2],sizeof(double)*nSpec);
+				  memcpy(p2_yi,cc_yi[p2],sizeof(double)*nSpec);
+				  logmsg("CACHED %s",psr[p2].name);
+				  cache_hits++;
+				  dop2=0;
+			   }
+			}
+			if (dop1)calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi);
+			if (dop2)calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi);
+			if (use_ccache){
+			   if (cc_x[p1] == NULL && p1_start_o == minx && p1_finish_o == maxx){
+				  // can cache p1
+				  cc_x[p1] = (double*)malloc(sizeof(double)*nSpec);
+				  cc_yr[p1] = (double*)malloc(sizeof(double)*nSpec);
+				  cc_yi[p1] = (double*)malloc(sizeof(double)*nSpec);
+				  memcpy(cc_x[p1],p1_x,sizeof(double)*nSpec);
+				  memcpy(cc_yr[p1],p1_yr,sizeof(double)*nSpec);
+				  memcpy(cc_yi[p1],p1_yi,sizeof(double)*nSpec);
+			   }
+			   if (cc_x[p2] == NULL && p2_start_o == minx && p2_finish_o == maxx){
+				  // can cache p2
+				  cc_x[p2] = (double*)malloc(sizeof(double)*nSpec);
+				  cc_yr[p2] = (double*)malloc(sizeof(double)*nSpec);
+				  cc_yi[p2] = (double*)malloc(sizeof(double)*nSpec);
+				  memcpy(cc_x[p2],p2_x,sizeof(double)*nSpec);
+				  memcpy(cc_yr[p2],p2_yr,sizeof(double)*nSpec);
+				  memcpy(cc_yi[p2],p2_yi,sizeof(double)*nSpec);
+			   }
+			}
 			sprintf(fname,"%s.%s.xspec",psr[p1].name,psr[p2].name);
 			fout=fopen(fname,"w");
 			for (i=0; i < nSpec; i++){
 			   //365.25*crossX[i],crossY_r[i],crossY_i[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i])
 			   // X = 1 x 2*
+			   if (p1_x[i]!=p2_x[i]){
+				  logerr("X scale for %s not same as for %s!!! %lf %lf",psr[p1].name,psr[p2].name,p1_x[i],p2_x[i]);
+				  exit(2);
+			   }
 			   crossR = p1_yr[i]*p2_yr[i] + p1_yi[i]*p2_yi[i];
 			   crossI = p1_yi[i]*p2_yr[i] - p1_yr[i]*p2_yi[i];
 			   P1     = p1_yr[i]*p1_yr[i] + p1_yi[i]*p1_yi[i];
@@ -221,19 +295,37 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		 }
 	  }
 
-		 free(p1_x);
-		 free(p2_x);
-		 free(p1_yr);
-		 free(p1_yi);
-		 free(p2_yr);
-		 free(p2_yi);
+	  free(p1_x);
+	  free(p2_x);
+	  free(p1_yr);
+	  free(p1_yi);
+	  free(p2_yr);
+	  free(p2_yi);
+	  if(use_ccache){
+		 logmsg("CACHE HITS = %d",cache_hits);
+		 for (p1 = 0; p1 < *npsr; p1++){
+			if(cc_x[p1]!=NULL){
+			   logmsg("Free cc: %s",psr[p1].name);
+			   free(cc_x[p1]);
+			   free(cc_yi[p1]);
+			   free(cc_yr[p1]);
+			}
+		 }
+		 free(cc_x);
+		 free(cc_yr);
+		 free(cc_yi);
+
+
+	  }
    }else{
 	  logmsg("Producing spectra");
 	  double* px;
 	  double* py_r;
 	  double* py_i;
+	  double origTspan=tspan;
 	  for (p=0; p < *npsr ; p++){
 		 pulsar* thepulsar = psr+p;
+		 tspan=origTspan;
 
 		 maxx=thepulsar->param[param_finish].val[0];
 		 minx=thepulsar->param[param_start].val[0];
@@ -241,6 +333,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			tspan = maxx-minx;
 		 else{
 			if (1.2*(maxx-minx) < tspan){
+			   printf("tspan=%lg, maxx-minx=%lg",maxx-minx,tspan);
 			   logerr("Refusing to make tspan larger than 1.2 times actual data span");
 			   exit(1);
 			}
