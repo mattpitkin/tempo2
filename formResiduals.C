@@ -54,7 +54,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    int time=0;
    int ntrk=0;
    int gotit=0;
-   int pn0=-1;
+   long long pn0=-1;
 
    // for gwecc Earth
    double prev_p;
@@ -1395,6 +1395,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 	       nf0  = (int)psr[p].param[param_f].val[0];
 	       //ntpd = ((int)psr[p].obsn[i].bbat-(int)psr[p].param[param_pepoch].val[0]);
+		   // M. Keith 2013. Changed to be referenced to bat0 rather than pepoch
 	       ntpd = ((int)psr[p].obsn[i].bbat-(int)psr[p].obsn[0].bbat);
 	       phaseint = nf0*ntpd*86400.0;
 	       pnNew = (long long)(phaseint + fortran_nint(phase5[i]));
