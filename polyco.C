@@ -83,12 +83,12 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
 	      longdouble afmjd,longdouble *tmin,longdouble *tmidMJD,int *retTspan,int *nsets,longdouble *val);
 void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,double *utc,
 	   longdouble tmidMJD,int ncoeff, longdouble *coeff,char *binPhase,int nsets,longdouble afmjd,
-	   char* sitename,int dspan,double obsFreq,char *date,longdouble *val,int trueDM);
+	   char* sitename,int dspan,double obsFreq,char *date,longdouble *val,int trueDM,char* polyco_file);
 void pcshft(longdouble a,longdouble b,longdouble *d,int n);
 void chebpc(longdouble *c,longdouble *d, int n);
 
 void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,int nspan,int ncoeff,
-	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM)
+	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM,char* polyco_file)
 {
   longdouble tsid = 1.0L/1.002737909L;
   longdouble tmidMJD;
@@ -103,6 +103,26 @@ void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,i
   double globalParameter,utc;
   int nsets;
   const char *CVS_verNum = "$Revision$";
+
+  /* buffers for three polyco outputs -- any input from the user is
+   * prepended to the default file names */
+  char fname1[256];
+  char fname2[256];
+  char fname3[256];
+  strcpy(fname1,polyco_file);
+  strcpy(fname2,polyco_file);
+  strcpy(fname3,polyco_file);
+  strcat(fname1,"polyco_new.dat");
+  strcat(fname2,"newpolyco.dat");
+  strcat(fname3,"polyco.tim");
+
+  /* erase any existing files */
+  fclose(fopen(fname1,"w"));
+  fclose(fopen(fname2,"w"));
+
+  /* special flag for barycenter polycos */
+  bool bary = strcmp(sitename,"@")==0 || strcasecmp(sitename,"bat")==0;
+
 
   if (displayCVSversion == 1) CVSdisplayVersion("polyco.C","polyco()",CVS_verNum);
 
@@ -122,15 +142,24 @@ void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,i
       atimfake(psr,npsr,nspan,ncoeff,maxha,sitename,freq,afmjd,tmin,&tmidMJD,&dspan,&nsets,val);
       for (i=0;i<psr[0].nobs;i++)
 	{
-	  psr->obsn[i].clockCorr=1;
-	  psr->obsn[i].delayCorr=1;
+	  psr->obsn[i].clockCorr=(!bary);
+	  psr->obsn[i].delayCorr=(!bary);
 	  psr->obsn[i].phaseOffset = 0.0;
 	}
-      writeTim("polyco.tim",psr,"tempo2"); 
+    /* Use reference phase TZR information unless at bary.*/
+    if (strcmp(psr->tzrsite,"@")!=0) {
+      psr->obsn[0].clockCorr=1;
+      psr->obsn[0].delayCorr=1;
+    }
+    else {
+      psr->obsn[0].clockCorr=0;
+      psr->obsn[0].delayCorr=0;
+    }
+      writeTim(fname3,psr,"tempo2"); 
       formBatsAll(psr,npsr);
       formResiduals(psr,npsr,0);
       tzFit(psr,npsr,tmin,&doppler,&rms,&utc,tmidMJD,ncoeff,coeff,binPhase,nsets,afmjd,sitename,nspan,
-	    freq,date,val,trueDM);
+	    freq,date,val,trueDM,polyco_file);
     }      
   if (psr->tempo1==0)
     printf("WARNING: Should probably use -tempo1 option\n");
@@ -154,12 +183,15 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
 
   *retTspan = tspan;
 
-  /* Get observatory coordinates */
-  observatory *obs = getObservatory(sitename);
-
-
-  /* See tzinit.f for if icoord = 0 : NOT IMPLEMENTED */
-  alng = atan2(-obs->y, obs->x);
+  /* Get observatory coordinates - if barycenter do nothing */
+  if (strcmp(sitename,"@")==0 || strcasecmp(sitename,"bat")==0) {
+    alng = 0;
+  }
+  else {
+    observatory *obs = getObservatory(sitename);
+    /* See tzinit.f for if icoord = 0 : NOT IMPLEMENTED */
+    alng = atan2(-obs->y, obs->x);
+  }
 
   /* Conversion of UT into local sidereal time (WHERE DOES 0.154374 come from????) */
   /* Note: 0.154374 is the GST at MJD 0 = 3.716667309 h = 0.15486*24               */
@@ -271,7 +303,7 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
 
 void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,double *utc,
 	   longdouble tmidMJD,int ncoeff, longdouble *coeff,char *binPhase,int nsets,longdouble afmjd,
-	   char* sitename,int tspan,double obsFreq,char *date,longdouble *val,int trueDM)
+	   char* sitename,int tspan,double obsFreq,char *date,longdouble *val,int trueDM,char* polyco_file)
 {
   FILE *fout,*fout2;
   int ntoas=32; 
@@ -282,12 +314,15 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
   longdouble b,a,rtime,sq,phtst,ct,ct2,phifac,phi0;
   struct tm *timePtr;
   time_t tm;
+  char fname1[128];
+  char fname2[128];
 
-  //  fout = fopen("polyco_new.dat","w");
-  //  fout2 = fopen("newpolyco.dat","w");
-
-  fout = fopen("polyco_new.dat","a");
-  fout2 = fopen("newpolyco.dat","a");
+  strcpy(fname1,polyco_file);
+  strcpy(fname2,polyco_file);
+  strcat(fname1,"polyco_new.dat");
+  strcat(fname2,"newpolyco.dat");
+  fout = fopen(fname1,"a");
+  fout2 = fopen(fname2,"a");
 
   /* Note: throughout we are ignoring the first 'TOA' */
   for (i=1;i<psr->nobs;i++)

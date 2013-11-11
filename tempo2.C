@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
   int  displayParams,p;
   int nGlobal,i,flagPolyco=0,it,k;
   char polyco_args[128];
+  char polyco_file[128]; /* buffer for optional polyco filenames */
   int newpar=0;
   int onlypre=0;
   //  char tempo2MachineType[MAX_FILELEN]="";
@@ -82,6 +83,8 @@ int main(int argc, char *argv[])
   char **commandLine;
   clock_t startClock,endClock;
   const char *CVS_verNum = "$Revision$";
+
+  polyco_file[0] = '\0';
 
   timer_clk=clock();  
   if (argc > 1 && ((strcmp(argv[1],"-version") == 0 ) || (strcmp(argv[1],"-v") == 0))){
@@ -276,7 +279,7 @@ int main(int argc, char *argv[])
   /* Obtain command line arguments */
   logdbg("Running getInputs %d",psr[0].nits);
   getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
-	    outputSO,&flagPolyco,polyco_args,&newpar,&onlypre,dcmFile,covarFuncFile,newparname);
+	    outputSO,&flagPolyco,polyco_args,polyco_file,&newpar,&onlypre,dcmFile,covarFuncFile,newparname);
   logdbg("Completed getInputs");
 
   for (i=1;i<argc;i++)
@@ -393,7 +396,7 @@ int main(int argc, char *argv[])
 	}
 
 
-      polyco(psr,npsr,mjd1, mjd2,nspan,ncoeff,maxha,sitename,freq,coeff,1);
+      polyco(psr,npsr,mjd1, mjd2,nspan,ncoeff,maxha,sitename,freq,coeff,1,polyco_file);
     }
     else if (flagPolyco==2)
     {

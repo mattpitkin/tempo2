@@ -47,7 +47,7 @@
 #define MAX_PARAMS           500   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
-#define MAX_IFUNC            500   /* Maximum number of parameters for interpolation function  */
+#define MAX_IFUNC            800   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_CLK_OFFS     500   /* Maximum number of parameters for telescope clock offset */
 #define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
@@ -603,9 +603,9 @@ int zoom_graphics(float xcurs2,float ycurs2,int flag);
 void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *displayParams,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,int *polyco,
-	       char *polyco_args, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,char* newparname);
+	       char *polyco_args, char *polyco_file, int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,char* newparname);
 void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,int nspan,int ncoeff,
-	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM);
+	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM,char* polyco_file);
 void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILELEN],int npsr);
 void readParfileGlobal(pulsar *psr,int npsr,char tpar[MAX_STRLEN][MAX_FILELEN],
 		       char ttim[MAX_STRLEN][MAX_FILELEN]);

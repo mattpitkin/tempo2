@@ -51,7 +51,7 @@ void printplugs(bool full);
 void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	       char parFile[][MAX_FILELEN],int *list,int *npsr,
 	       int *nGlobal,int *outRes,int *writeModel,char *outputSO,
-	       int *polyco, char *polyco_args,
+	       int *polyco, char *polyco_args, char *polyco_file,
 	       int *newpar,int *onlypre,char *dcmFile,char *covarFuncFile,char* newparname)
 {
   int i,p;
@@ -88,6 +88,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  printf("      args = \"sitename mjd1 mjd2 freq1 freq2 ntimecoeff nfreqcoeff seg_length (s)\"\n"); 
 	  printf("-polyco \"args\"  Creates a TEMPO1-style polyco file.\n");
 	  printf("                   args = \"mjd1 mjd2 nspan ncoeff maxha sitename freq\"\n");
+      printf("-polyco_file      Specify a leading string for file outputs.\n");
 	  printf("-residuals        Outputs the residuals\n");
 	  printf("-allInfo          Prints out clock, Earth orientation and similar information\n");
 	  printf("-reminder         Saves the command line to T2command.input for future reference.\n");
@@ -175,6 +176,10 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	    {
 	      *polyco=1;
 	      strcpy(polyco_args, argv[++i]);
+	    }
+	  else if (strcmp(argv[i],"-polyco_file")==0)
+	    {
+	      strcpy(polyco_file, argv[++i]);
 	    }
 	  else if (i==argc-1 && gotTim==0) /* Must be .tim file name */
 	    {
