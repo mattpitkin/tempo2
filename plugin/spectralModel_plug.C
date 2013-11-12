@@ -257,6 +257,10 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   // Step 1b: remove mean from residuals (x and y)
   removeMean(resx,resy,nres);
   if(writeFiles)fileOutput3("tresiduals.dat",resx,resy,rese,nres);
+  if(resx[nres-1]-resx[0] > MAX_OBSN){
+	 fprintf(stderr,"ERROR: Tspan > MAX_OBSN. Increase -nobs to continue\n");
+	 exit(2);
+  }
 
 	 // Step 1
 	 do {
