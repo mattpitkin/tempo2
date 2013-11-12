@@ -55,6 +55,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    int ntrk=0;
    int gotit=0;
    long long pn0=-1;
+   long long pnAdd=-1;
 
    // for gwecc Earth
    double prev_p;
@@ -1410,9 +1411,17 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       // Compare with flag
 	       for (int kk=0;kk<psr[p].obsn[i].nFlags;kk++)
 		 {
+		   if (strcmp(psr[p].obsn[i].flagID[kk],"-pnadd")==0){
+		       sscanf(psr[p].obsn[i].flagVal[kk],"%lld",&pnAct);
+			   pnAdd+=pnAct;
+		   }
+		 }
+	       for (int kk=0;kk<psr[p].obsn[i].nFlags;kk++)
+		 {
 		   if (strcmp(psr[p].obsn[i].flagID[kk],"-pn")==0)
 		     {
 		       sscanf(psr[p].obsn[i].flagVal[kk],"%lld",&pnAct);
+			   pnAct+=pnAdd;
 		       addPhase = pnNew-pnAct;
 		       residual += addPhase;
 		       ntrk += addPhase;
@@ -1455,7 +1464,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /* dt in resid.f */
 	   /*	   psr[p].obsn[i].phase = phaseint+nphase+phase5-nphase+dphase+ddnprd; */	   
 	   psr[p].obsn[i].phase = phaseint+phase5[i];  
-	   psr[p].obsn[i].pulseN = (long double)(phaseint + fortran_nint(phase5[i]));
+	   psr[p].obsn[i].pulseN = (long long)(phaseint + fortran_nint(phase5[i]));
 	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
 	   if (psr[p].obsn[i].deleted!=1)
 	     {

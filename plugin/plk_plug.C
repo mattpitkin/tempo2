@@ -1513,10 +1513,30 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			{
 			   for (i=0;i<psr[0].nobs;i++)
 			   {
-				  printf("%g %g\n",(double)psr[0].obsn[i].sat,(double)(psr[0].obsn[i].pulseN - psr[0].obsn[0].pulseN));
-				  strcpy(psr[0].obsn[i].flagID[psr[0].obsn[i].nFlags],"-pn");
-				  sprintf(psr[0].obsn[i].flagVal[psr[0].obsn[i].nFlags],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
-				  psr[0].obsn[i].nFlags++;
+				  int flagid=psr[0].obsn[i].nFlags;
+				  for(int k=0; k < flagid ; k++){
+					 if(strcmp(psr[0].obsn[i].flagID[k],"-pnadd")==0){
+						printf("Removing -pnadd flag\n");
+						for (int kk=k; kk < flagid-1; kk++){
+						   strcpy(psr[0].obsn[i].flagID[kk],psr[0].obsn[i].flagID[kk+1]);
+						   strcpy(psr[0].obsn[i].flagVal[kk],psr[0].obsn[i].flagVal[kk+1]);
+						}
+						flagid-=1;
+						k-=1;
+					 }
+				  }
+				  psr[0].obsn[i].nFlags = flagid;
+				  for(int k=0; k < flagid ; k++){
+					 if(strcmp(psr[0].obsn[i].flagID[k],"-pn")==0){
+						flagid=k;
+						break;
+					 }
+				  }
+				  //printf("%g %lld\n",(double)psr[0].obsn[i].sat,(psr[0].obsn[i].pulseN - psr[0].obsn[0].pulseN));
+				  strcpy(psr[0].obsn[i].flagID[flagid],"-pn");
+				  sprintf(psr[0].obsn[i].flagVal[flagid],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
+				  if (flagid==psr[0].obsn[i].nFlags)
+					 psr[0].obsn[i].nFlags++;
 			   }
 			   writeTim("withpn.tim",psr,"tempo2");
 			}

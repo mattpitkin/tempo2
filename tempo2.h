@@ -355,7 +355,7 @@ typedef struct observation {
   longdouble torb;                /* Combined binary delays */
   longdouble nphase;              /* allows the pulse number to be determined                   */
   longdouble phase;               
-  unsigned long long pulseN;                    /* Pulse number */
+  long long pulseN;                    /* Pulse number */
 
   char flagID[MAX_FLAGS][MAX_FLAG_LEN];     /* Flags in .tim file                                         */
   char flagVal[MAX_FLAGS][MAX_FLAG_LEN];
