@@ -146,12 +146,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    }
    logmsg("Do the fitting");
 
+
    for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
    {
 	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
 	  formResiduals(psr,*npsr,1);    /* Form the residuals                 */
 	  if (i==0) doFitAll(psr,*npsr,covarFuncFile);   /* Do the fitting     */
 	  else textOutput(psr,*npsr,globalParameter,0,0,newpar,newparname);  /* Display the output */
+   }
+
+   for (int p = 0; p < *npsr; p++){
+	  for (int param=0; param < MAX_PARAMS; param++){
+		 psr[p].param[param].fitFlag[0]=0;
+	  }
    }
 
    if(xfactor!=1.0){
@@ -195,14 +202,30 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			double p1_finish_o = psr[p1].param[param_finish].val[0];
 			double p2_finish_o = psr[p2].param[param_finish].val[0];
 
-			double maxx = max(p1_finish_o,p2_finish_o);
-			double minx = min(p1_start_o,p2_start_o);
+			double maxx = min(p1_finish_o,p2_finish_o);
+			double minx = max(p1_start_o,p2_start_o);
 			logmsg("%s X %s -- Overlap: %lf -> %lf",psr[p1].name,psr[p2].name,minx,maxx);
 			if ((maxx - minx < 1)){
 			   logmsg("Less than 1 day overlap, cannot continue");
 			   continue;
 			}
 			// Here we set the start/finish so that it only computes spectra of overlap data.
+			psr[p1].param[param_start].paramSet[0]=1;
+			psr[p1].param[param_start].fitFlag[0]=1;
+			psr[p1].param[param_finish].paramSet[0]=1;
+			psr[p1].param[param_finish].fitFlag[0]=1;
+
+			psr[p1].param[param_f].fitFlag[0]=1;
+			psr[p1].param[param_f].fitFlag[1]=1;
+
+			psr[p2].param[param_start].paramSet[0]=1;
+			psr[p2].param[param_start].fitFlag[0]=1;
+			psr[p2].param[param_finish].paramSet[0]=1;
+			psr[p2].param[param_finish].fitFlag[0]=1;
+
+			psr[p2].param[param_f].fitFlag[0]=1;
+			psr[p2].param[param_f].fitFlag[1]=1;
+
 			psr[p1].param[param_start].val[0]=minx;
 			psr[p2].param[param_start].val[0]=minx;
 			psr[p1].param[param_finish].val[0]=maxx;
@@ -245,8 +268,22 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				  dop2=0;
 			   }
 			}
-			if (dop1)calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi);
-			if (dop2)calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi);
+			if (dop1){
+			   formBatsAll(psr+p1,1);        
+			   formResiduals(psr+p1,1,1);   
+			   doFitAll(psr+p1,1,covarFuncFile);   
+			   formBatsAll(psr+p1,1);        
+			   formResiduals(psr+p1,1,1);   
+			   textOutput(psr+p1,1,globalParameter,0,0,newpar,newparname);
+			   calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi);
+			}
+			if (dop2){
+			   doFitAll(psr+p2,1,covarFuncFile);   
+			   formBatsAll(psr+p2,1);        
+			   formResiduals(psr+p2,1,1);   
+			   textOutput(psr+p2,1,globalParameter,0,0,newpar,newparname);
+			   calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi);
+			}
 			if (use_ccache){
 			   if (cc_x[p1] == NULL && p1_start_o == minx && p1_finish_o == maxx){
 				  // can cache p1
@@ -381,21 +418,41 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
    int ip[psr->nobs];
 
 
+   logmsg("calculateSpectrum '%s' %f %d",psr->name,T,nSpec);
+// only do between start and finish
+
+   int nobs=0;
+   for (i=0;i<psr->nobs;i++){
+	  if(psr->obsn[i].deleted !=0)continue;
+	  if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+			(psr->param[param_start].val[0] > psr->obsn[i].sat))
+		 continue;
+	  if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+			psr->param[param_finish].val[0] < psr->obsn[i].sat)
+		 continue;
+	  nobs++;
+   }
+
+   logmsg("Total obs = %d, Good obs = %d",psr->nobs,nobs);
    //  printf("Calculating the spectrum\n");
-   uinv = malloc_uinv(psr->nobs);
+   uinv = malloc_uinv(nobs);
 
-
+   int ir=0;
    for (i=0;i<psr->nobs;i++)
    {
-	  if (psr->obsn[i].deleted != 0)
-	  {
-		 logerr("cholSpectrum cannot work with deleted points.\nPlease remove from .tim file and try again.");
-		 exit(1);
-	  }
-	  resx[i] = (double)(psr->obsn[i].sat-toffset);
-	  resy[i] = (double)(psr->obsn[i].residual);
-	  rese[i] = (double)(psr->obsn[i].toaErr*1.0e-6);
-	  ip[i]=i;
+	  if(psr->obsn[i].deleted !=0)continue;
+	  if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+			(psr->param[param_start].val[0] > psr->obsn[i].sat))
+		 continue;
+	  if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+			psr->param[param_finish].val[0] < psr->obsn[i].sat)
+		 continue;
+
+	  resx[ir] = (double)(psr->obsn[i].sat-toffset);
+	  resy[ir] = (double)(psr->obsn[i].residual);
+	  rese[ir] = (double)(psr->obsn[i].toaErr*1.0e-6);
+	  ip[ir]=i;
+	  ir++;
    }
 
 
@@ -408,7 +465,7 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
    }
 
    logmsg("Get Cholesky 'uinv' matrix from '%s'",covarFuncFile);
-   getCholeskyMatrix(uinv,covarFuncFile,psr,resx,resy,rese,psr->nobs,0,ip);
+   getCholeskyMatrix(uinv,covarFuncFile,psr,resx,resy,rese,nobs,0,ip);
    logdbg("Got uinv, now compute spectrum.");
 
    // Must calculate uinv for the pulsar
@@ -419,7 +476,7 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
 	  mde='T';
 	  T=-T;
    }
-   calcSpectra_ri_T(uinv,resx,resy,psr->nobs,px,py_r,py_i,nSpec,T,mde,psr);
+   calcSpectra_ri_T(uinv,resx,resy,nobs,px,py_r,py_i,nSpec,T,mde,psr);
 
    // Free uinv
    free_uinv(uinv);
