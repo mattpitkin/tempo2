@@ -472,7 +472,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	    }
 	  fclose(fdmin);
 	}
-      // Check efacs and equads
+       //Check efacs and equads
       if (psr[p].nT2efac > 0 || psr[p].nT2equad > 0 || psr[p].T2globalEfac!=1.0)
 	{
 	  double err;
@@ -482,7 +482,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	      err = psr[p].obsn[i].toaErr;
 	      for (j=0;j<psr[p].obsn[i].nFlags;j++)
 		{
-		  // Check equad
+	//	   Check equad
 		  for (k=0;k<psr[p].nT2equad;k++)
 		    {
 		      if (strcmp(psr[p].obsn[i].flagID[j],psr[p].T2equadFlagID[k])==0)
@@ -491,7 +491,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 			    err = (sqrt(pow(err,2)+pow(psr[p].T2equadVal[k],2)));
 			}
 		    }
-		  // Check efac
+	//	   Check efac
 		  for (k=0;k<psr[p].nT2efac;k++)
 		    {
 		      if (strcmp(psr[p].obsn[i].flagID[j],psr[p].T2efacFlagID[k])==0)
@@ -505,6 +505,44 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	      psr[p].obsn[i].toaErr = err;
 	    }
 	}
+
+      // Check TNEF and TNEQ
+      if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0)
+        {
+          double err;
+          printf("Updating TOA errors using TNEF and TNEQ\n");
+          for (i=0;i<psr[p].nobs;i++)
+            {
+              err = psr[p].obsn[i].toaErr;
+              for (j=0;j<psr[p].obsn[i].nFlags;j++)
+                {
+                   //Check efac
+                  for (k=0;k<psr[p].nTNEF;k++)
+                    {
+                      if (strcmp(psr[p].obsn[i].flagID[j],psr[p].TNEFFlagID[k])==0)
+                        {
+                          if (strcmp(psr[p].obsn[i].flagVal[j],psr[p].TNEFFlagVal[k])==0)
+                            err *= psr[p].TNEFVal[k];
+                        }
+                    }
+
+                   //Check equad
+                  for (k=0;k<psr[p].nTNEQ;k++)
+                    {
+                      if (strcmp(psr[p].obsn[i].flagID[j],psr[p].TNEQFlagID[k])==0)
+                        {
+                          if (strcmp(psr[p].obsn[i].flagVal[j],psr[p].TNEQFlagVal[k])==0){
+			    double TNEquad = pow(10.0,psr[p].TNEQVal[k]+6);
+                            err += TNEquad;
+			  }
+                        }
+                    }
+
+                }
+              psr[p].obsn[i].toaErr = err;
+            }
+  	}
+
 
       // Modify TOA flags if required
       if (modify==1)

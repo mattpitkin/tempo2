@@ -55,6 +55,8 @@
 #define MAX_FIT              10000  /* Maximum number of parameters to fit for */
 #define MAX_T2EFAC           50    /* Maximum number of T2EFACs allowed                */
 #define MAX_T2EQUAD          50    /* Maximum number of T2EQUADs allowed               */
+#define MAX_TNEF           50    /* Maximum number of T2EFACs allowed                */
+#define MAX_TNEQ          50    /* Maximum number of T2EQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
@@ -571,6 +573,14 @@ typedef struct pulsar {
   char   T2equadFlagID[MAX_T2EQUAD][MAX_FLAG_LEN],T2equadFlagVal[MAX_T2EQUAD][MAX_FLAG_LEN];
   double T2equadVal[MAX_T2EQUAD];
   double T2globalEfac;
+
+  //TNEF/TNEQ
+  int    nTNEF,nTNEQ;
+  char   TNEFFlagID[MAX_TNEF][MAX_FLAG_LEN],TNEFFlagVal[MAX_TNEF][MAX_FLAG_LEN];
+  double TNEFVal[MAX_TNEF];
+  char   TNEQFlagID[MAX_TNEQ][MAX_FLAG_LEN],TNEQFlagVal[MAX_TNEQ][MAX_FLAG_LEN];
+  double TNEQVal[MAX_TNEQ];
+
   
   // White noise models
   char whiteNoiseModelFile[MAX_STRLEN];

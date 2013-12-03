@@ -1017,6 +1017,32 @@ else if (strcasecmp(str,"_DM")==0)
       ( psr->nT2efac )++;
     }
 
+
+  /* /---------\
+     | TN EF |
+     \---------/ */
+  else if( strcasecmp( str, "TNEF") == 0 ) // EFAC for given flag
+    {
+      int nefacFlag = psr->nTNEF;
+      fscanf( fin, "%s %s %lf", psr->TNEFFlagID[nefacFlag],
+              psr->TNEFFlagVal[nefacFlag],
+              &psr->TNEFVal[nefacFlag] );
+      ( psr->nTNEF )++;
+    }
+
+
+  /* /---------\
+     | TN EQ |
+     \---------/ */
+  else if( strcasecmp( str, "TNEQ") == 0 ) // EFAC for given flag
+    {
+      int nequadFlag = psr->nTNEQ;
+      fscanf( fin, "%s %s %lf", psr->TNEQFlagID[nequadFlag],
+              psr->TNEQFlagVal[nequadFlag],
+              &psr->TNEQVal[nequadFlag] );
+      ( psr->nTNEQ )++;
+    }
+
   /* ----------------- */
   /* Binary Parameters */
   /* ----------------- */
