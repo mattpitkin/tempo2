@@ -762,13 +762,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   resc = (n1*(n1*e11c+n2*e12c+n3*e13c)+
 			   n2*(n1*e21c+n2*e22c+n3*e23c)+
 			   n3*(n1*e31c+n2*e32c+n3*e33c));
-		   //		   printf("Resc = %s %g %g\n",psr[p].name,(double)resc,(double)cosTheta);
+		   printf("Resc = %s %g %g\n",psr[p].name,(double)resc,(double)cosTheta);
 		   if ((1-cosTheta)==0.0)
 		     resc = 0.0;  // Check if this is sensible
 		   else
 		     resc = 1.0L/(2.0L*(1.0L-cosTheta))*(resc); 
 		   psr[p].quad_ifunc_geom_c = resc;
-		   //		   printf("Resc2 = %s %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c);
+		   printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(1.0L/(2.0L*(1.0L-cosTheta))));
 		   dt = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*86400.0L;
 		   //		   scale = -0.5*cos2Phi*(1-cosTheta);
 		   phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[0]*psr[p].quad_ifunc_geom_p); 				

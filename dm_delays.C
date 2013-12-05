@@ -43,9 +43,8 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
   double dmDot;
   int j,k;
   const char *CVS_verNum = "$Revision$";
-
   if (displayCVSversion == 1) CVSdisplayVersion("dm_delays.C","dm_delays()",CVS_verNum);
-  //  logdbg("with pulsar %d; number of obs = %d",p,psr[p].nobs);
+  logdbg("dm_delays with pulsar %d; number of obs = %d",p,psr[p].nobs);
 
   if (psr[p].obsn[i].delayCorr==0) /* No correction */
     {

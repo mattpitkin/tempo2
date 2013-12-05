@@ -337,7 +337,22 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		     (double)psr[p].quad_across_r_e[j],(double)psr[p].quad_across_i_e[j]);
 	    }
 	}
-	  
+      if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&	
+	  psr[p].param[param_gwm_amp].paramSet[1]==1 &&
+	  (psr[p].param[param_gwm_amp].fitFlag[0]>0 ||
+	   psr[p].param[param_gwm_amp].fitFlag[1]>0))
+	{
+	  int i,i0,i1;
+	  for (i=0;i<psr[0].nParam;i++)
+	    {
+	      if (psr[0].fitParamI[i] == param_gwm_amp && psr[0].fitParamK[i] == 0)
+		i0 = i;
+	      if (psr[0].fitParamI[i] == param_gwm_amp && psr[0].fitParamK[i] == 1)
+		i1 = i;
+	    }
+	  printf("\n");
+	  printf("GWM covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
+	}
       if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	{
 	  printf("\n");
@@ -811,7 +826,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      printf("DE200 Jupiter mass not set\n");
 	    }
 	}
-      if (psr[p].quad_ifuncN_p > 0)
+      if (psr[p].quad_ifuncN_p > 0 || psr[p].param[param_gwm_amp].paramSet[1] == 1)
 	{
 	  printf("Geometrical factor for pulsar %d (%s) = %g %g\n",p,psr[p].name,psr[p].quad_ifunc_geom_p,psr[p].quad_ifunc_geom_c);
 	}
@@ -927,7 +942,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  char fname2[1000];
 	  char str1[100],str2[100],str3[100],str4[100],str5[100];
 	  int nread;
-
+	  printf("In here writing a new parameter file: %s\n",fname);
 	  if (strlen(fname)==0)
 	    {
 	      printf("Enter filename for new parameter file ");

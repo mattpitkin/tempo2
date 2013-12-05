@@ -251,6 +251,7 @@ double TKleastSquares(double* b, double* white_b,
 	  }
 
 	  if(computeErrors && rescale_errors){
+	    //	    printf("Error scaling = %g [chisq = %g] [n = %d] [nf = %d]\n",sqrt(chisq/(n-nf)),(double)chisq,n,nf);
         // This is not the place for this message: this is the only thing one
         // sees when a fit is done. Perhaps move to the results
         // summary?    -- Rutger van Haasteren & Michele Vallisneri

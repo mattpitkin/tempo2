@@ -55,13 +55,15 @@ void calculate_bclt(pulsar *psr,int npsr)
     {
       if (psr[p].correctTroposphere==1) {
 	//	printf("Correcting troposphere\n");
+	logdbg("Correcting troposphere");
 	compute_tropospheric_delays(&psr[p], 1);
+	logdbg("Complete correcting troposphere");
       }
 
       for (i=0;i<psr[p].nobs;i++)	
 	{
 	  if (psr[p].correctTroposphere==0) psr[0].obsn[i].troposphericDelay=0;
-	  //	  logdbg("In tdis2 calculate_bclt with observation %d %d",i,psr[p].obsn[i].delayCorr);
+	  logdbg("In tdis2 calculate_bclt with observation %d %d",i,psr[p].obsn[i].delayCorr);
 	  if (psr[p].obsn[i].delayCorr==0) /* No correction */
 	    {
 	      psr[p].obsn[i].freqSSB = psr[p].obsn[i].freq;
@@ -93,7 +95,6 @@ void calculate_bclt(pulsar *psr,int npsr)
 	      
 	      dt_SSB = 0.0;
 	      loop=0;
-
 	      do {
 		dt_SSB_old = dt_SSB;
 		
@@ -112,11 +113,13 @@ void calculate_bclt(pulsar *psr,int npsr)
 		/* dt_pmtr = transverse velocity */
 		dt_pmtr = -pow((delt),2)*pmrvrad*pmtrans_rcos2;
 
-		//		logdbg("Calculating roemer using %g %g %g %g %g (delt = %g; dt_SSB = %g)",(double)rcos1,(double)dt_pm, (double)dt_pmtt,(double)dt_px,(double)dt_pmtr,(double)delt,(double)dt_SSB);		
+		logdbg("Calculating roemer using %g %g %g %g %g (delt = %g; dt_SSB = %g)",(double)rcos1,(double)dt_pm, (double)dt_pmtt,(double)dt_px,(double)dt_pmtr,(double)delt,(double)dt_SSB);		
 		psr[p].obsn[i].roemer = rcos1 + dt_pm + dt_pmtt + dt_px + dt_pmtr;		
 		shapiro_delay(psr,npsr,p,i,delt,dt_SSB); /* Now calculate the Shapiro delay */
-		//		logdbg("In tdis2 calculate_bclt with observation %d %d calling dmdelays",i,psr[p].obsn[i].delayCorr);
+		logdbg("In tdis2 calculate_bclt with observation %d %d calling dmdelays",i,psr[p].obsn[i].delayCorr);
 		dm_delays(psr,npsr,p,i,delt,dt_SSB);     /* Now calculate the dispersion measure delays */
+
+		logdbg("Complete dm_delays");
 		dt_SSB = psr[p].obsn[i].roemer-(psr[p].obsn[i].tdis1+psr[p].obsn[i].tdis2)-
 		  (psr[p].obsn[i].shapiroDelaySun+psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter); 
 		//		printf("dt_SSB: %g %g %g %g %g  \n",(double)psr[p].obsn[i].roemer,(double)psr[p].obsn[i].tdis1,(double)psr[p].obsn[i].tdis2,(double)psr[p].obsn[i].shapiroDelaySun,(double)psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter);
@@ -132,4 +135,5 @@ void calculate_bclt(pulsar *psr,int npsr)
 	    }
 	}
     }
+  logdbg("Leaving calculate_bclt");
 }
