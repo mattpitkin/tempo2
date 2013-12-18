@@ -373,7 +373,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       if (timesFile==1)
     fclose(fin);
 
-
+  
       psr[0].nobs=count;
       
       if (have_outfile){
@@ -389,6 +389,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       /* Now run the tempo2 code */
       preProcess(psr,*npsr,argc,argv);
       callFit(psr,*npsr);             /* Do all the fitting routines */
+
       for (j=0;j<nit;j++)
 	{
 	  /* Now update the site arrival times depending upon the residuals */
@@ -398,24 +399,28 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      psr[0].obsn[i].sat -= psr[0].obsn[i].prefitResidual/SECDAY; 
 	      psr->obsn[i].nFlags = 0;
 	    } 
+
 	  writeTim(str,psr,"tempo2");
 	  //	  initialise(&psr[ii],0);
 	  // Reset the jumps
-	  psr[ii].nJumps = 0;
+	  psr[0].nJumps = 0;
 	  for(kk=0;kk<MAX_JUMPS;kk++){
-	      psr[ii].jumpVal[kk] = 0.0;
-	      psr[ii].jumpValErr[kk] = 0.0;
+	      psr[0].jumpVal[kk] = 0.0;
+	      psr[0].jumpValErr[kk] = 0.0;
 	  }
 	  for(jj=0;jj<MAX_PARAMS;jj++){
-	      psr[ii].param[jj].nLinkTo = 0;
-	      psr[ii].param[jj].nLinkFrom = 0;
+	      psr[0].param[jj].nLinkTo = 0;
+	      psr[0].param[jj].nLinkFrom = 0;
 	  }
-	  psr[ii].nconstraints = 0;
-	  psr[ii].nobs = 0;
+	  psr[0].nconstraints = 0;
+	  psr[0].nobs = 0;
+
+	  // SOMETHING TO FIX HERE!!
+
 	  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
 	  readTimfile(psr,timFile,*npsr); 
 	  preProcess(psr,1,argc,argv);
-	  /* Now run the superTEMPO code again */
+	  /* Now run the tempo2 code again */
 	  callFit(psr,*npsr);             /* Do all the fitting routines */
 	}
 
@@ -444,7 +449,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       
       printf("Output TOA file written to %s\n",str);
       writeTim(str,psr,formstr);      
-    }
+  }
 }
 
 /* This function calls all of the fitting routines.             */
