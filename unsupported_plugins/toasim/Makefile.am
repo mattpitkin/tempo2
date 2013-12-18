@@ -2,7 +2,7 @@ plugindir=@TEMPO2_PLUG_INSTALL@
 
 plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian_@T2ARCH@_plug.la formIdeal_@T2ARCH@_plug.la createRealisation_@T2ARCH@_plug.la addRedNoise_@T2ARCH@_plug.la
 
-bin_PROGRAMS=read_toasim
+#bin_PROGRAMS=read_toasim
 lib_LTLIBRARIES=libtoasim.la
 
 
@@ -21,8 +21,8 @@ pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install formIdeal-ins
 TOASIM_src=toasim.h toasim.c toasim_compute.c toasim_io.c makeRedNoise.C makeRedNoise.h
 libtoasim_la_SOURCES=$(TOASIM_src)
 
-read_toasim_SOURCES=read_toasim.c
-read_toasim_LDADD=libtoasim.la
+#read_toasim_SOURCES=read_toasim.c
+#read_toasim_LDADD=libtoasim.la
 
 plugin_LDFLAGS= -shared -module -avoid-version -shrext .t2 -lfftw3f
 addDmVar_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addDmVar_plug.C $(TOASIM_src)
