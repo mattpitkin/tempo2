@@ -560,6 +560,18 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }
+		    else if (strcasecmp(var,"telEpos")==0) // Telescope wrt Earth geocenter
+		      {
+			sprintf(disp,"%.8f %.8f %.8f",psr[0].obsn[varN].observatory_earth[0], psr[0].obsn[varN].observatory_earth[1], psr[0].obsn[varN].observatory_earth[2]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
+		    else if (strcasecmp(var,"telEVel")==0) // Telescope wrt Earth geocenter
+		      {
+			sprintf(disp,"%.8g %.8g %.8g",psr[0].obsn[varN].siteVel[0], psr[0].obsn[varN].siteVel[1], psr[0].obsn[varN].siteVel[2]); 
+			fprintf(fout,"%s",disp);
+			pos+=strlen(disp);			
+		      }
 		    else if (strcasecmp(var,"telSSB")==0) // Telescope wrt SSB
 		      {
 			sprintf(disp,"%.8f %.8f %.8f",psr[0].obsn[varN].observatory_earth[0]+psr[0].obsn[varN].earth_ssb[0],psr[0].obsn[varN].observatory_earth[1]+psr[0].obsn[varN].earth_ssb[1],psr[0].obsn[varN].observatory_earth[2]+psr[0].obsn[varN].earth_ssb[2]); 
