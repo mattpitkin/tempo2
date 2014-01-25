@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2013.9.1],[george.hobbs@csiro.au])
+AC_INIT([Tempo2],[2014.1.23],[george.hobbs@csiro.au])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -20,7 +20,7 @@ AC_SYS_LARGEFILE
 # Determine the machine endian
 AC_C_BIGENDIAN
 
-# Checks for programs.
+# Checks for compilers
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_PROG_CC
@@ -48,6 +48,11 @@ AC_PROG_LIBTOOL
 if test $can_build_shared == no ; then
 	AC_WARN("Libtool cannot build shared libraries - ")
 fi
+
+# Check whether the 'cos' function can be found in library 'm'
+# (standard C math library).
+# Math library is required for the tempo2 predictor library
+AC_CHECK_LIB(m, cos)
 
 # look for third-party packages in various places (or not)
 SWIN_LOCAL
@@ -123,6 +128,11 @@ AC_MSG_CHECKING([for LAPACK])
 AC_MSG_RESULT($have_lapack)
 AM_CONDITIONAL(HAVE_LAPACK, [test x"$have_lapack" = xyes])
 
+# TempoNest addition:
+# Test for MultiNest and CUDA/CULA installation
+SWIN_LIB_MULTINEST
+SWIN_LIB_CULA
+
 
 AC_MSG_CHECKING([for LOGIN_ARCH variable])
 if test -n "$LOGIN_ARCH" ; then
@@ -155,7 +165,8 @@ AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile
 		 unsupported_plugins/Makefile
 		 unsupported_plugins/toasim/Makefile
 		 unsupported_plugins/ppta/Makefile
-		 unsupported_plugins/glast/Makefile])
+		 unsupported_plugins/glast/Makefile
+		 temponest/Makefile])
 
 AC_OUTPUT
 
@@ -193,7 +204,16 @@ if test X$have_blas = Xyes; then
 	AC_MSG_NOTICE(Using BLAS library for matrix multiplication)
 fi
 
+# TempoNest addition:
+if test X$have_multinest != Xyes; then
+	AC_MSG_NOTICE(MultiNest was not found - TempoNest can not be built)
 
+    else if test X$have_cula = Xyes; then
+        AC_MSG_NOTICE(TempoNest will be built with CUDA/CULA GPU support)
+    else
+        AC_MSG_NOTICE(TempoNest will be built without GPU support)
+    fi
+fi
 
 
 if test $can_build_shared == no ; then
@@ -202,7 +222,19 @@ if test $can_build_shared == no ; then
 	echo ""
 else
 	echo ""
-	echo "NOTICE: plugins now built with 'make plugins && make plugins-install'"
+	echo "NOTICE: plugins can now be built with 'make plugins && make plugins-install'"
+    if test X$have_multinest = Xyes; then
+        echo "        temponest can be built with 'make temponest && make temponest-install'"
+    fi
+    echo ""
+
+    echo ""
+    echo "Debugging TempoNest configure, library summary:"
+    echo " * MULTINEST:    $MULTINEST_LIBS   $MULTINEST_CFLAGS"
+    echo " * CULA:         $CULA_LIBS        $CULA_CFLAGS"
+    echo " * GSL:          $GSL_LIBS         $GSL_CFLAGS"
+    echo " * BLAS:         $BLAS_LIBS        $BLAS_CFLAGS"
+    echo " * LAPACK:       $LIBS_LAPACK"
 fi
 
 
