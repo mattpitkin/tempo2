@@ -145,21 +145,30 @@ double ut1red(double mjd, int warnings)
       fgets(line,1000,fin); /* Read two header lines (I hope that these don't change!!!!) */
       fgets(line,1000,fin); /* ... no checks are done ... */
       nread=1;
-      while (nread==1)
+      while ( (nread==1) && (fgets(line,1000,fin)!=NULL) )
 	{
-	  nread = fscanf(fin,"%d",&mjdVal[count]);
-	  if (nread==1)
+          // Chop off everything past char 57 to avoid the extra 'item
+          // count' value being read in as either a UT1 value or an MJD.
+          line[57]='\0';
+	  nread = sscanf(line,"%d %d %d %d %d %d %d",&mjdVal[count],
+                  &entry[count2+0], &entry[count2+1], &entry[count2+2],
+                  &entry[count2+3], &entry[count2+4], &entry[count2+5]);
+	  if (nread>1) 
 	    {
 	      count++;
-	      for (i=0;i<6;i++)
+	      for (i=0;i<nread-1;i++)
 		{
-		  fscanf(fin,"%d",&entry[count2]);
 		  if (entry[count2]!=0)
 		    count2++;
 		  else
 		    nread=-1;
 		}	  
+              if (nread>0) { nread=1; }
 	    }
+          else
+            {
+              nread=-1;
+            }
 	  if (count>999) /* Too many lines? */
 	    {
 	      printf("ERROR: Too many lines in ut1 file -- increase array size in tai2tdb\n");
