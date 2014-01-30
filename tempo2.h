@@ -806,5 +806,8 @@ void compute_tropospheric_delays(pulsar *psr,int npsr);
 #endif /* Defined __Tempo2_h */
 
 
-
+/* Also include the GW generation stuff. It is now included in the library */
+#ifndef __Tempo2_GWsim_general_h     /* Beware of circular inclusions */
+#include "GWsim_general.h"
+#endif  /* __Tempo2_GWsim_general_h */
 

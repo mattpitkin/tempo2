@@ -31,8 +31,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "tempo2.h"
-#include "GWsim_anisotropic.h"
-#include "T2toolkit.h"
+#include "GWsim_general.h"
 #include "TKfit.h"
 #include <cpgplot.h>
 

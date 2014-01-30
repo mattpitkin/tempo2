@@ -39,7 +39,6 @@
 #include <math.h>
 #include "tempo2.h"
 #include "GWsim.h"
-#include "T2toolkit.h"
 #include "TKfit.h"
 #include <cpgplot.h>
 
