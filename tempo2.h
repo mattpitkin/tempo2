@@ -803,4 +803,10 @@ void compute_tropospheric_delays(pulsar *psr,int npsr);
 }
 #endif
 
+/* We nowadays also distribute the GWsim functions in libtempo2, with the
+ * GWsim.h header distributed separately. This define tells us we have the
+ * header
+ * */
+#define HAVE_GWSIM_H
+
 #endif /* __Tempo2_h */
