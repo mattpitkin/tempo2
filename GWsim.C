@@ -44,6 +44,7 @@
 #include "GWsim.h"
 #include "T2toolkit.h"
 #include <math.h>
+#include <stdlib.h>
 
 
 /* Set up GW:                                                              
