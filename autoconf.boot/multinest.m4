@@ -91,7 +91,7 @@ AC_DEFUN([SWIN_LIB_MULTINEST],
 
     int main(int argc, const char **argv) {
         int IS = 1, mmodal=1, ceff = 0, nlive = 10, ndims=2, nPar=2, nClsPar=2, maxModes=2, updInt=50,
-            seed=-1, i, fb=1, outfile=0, initMPI=0, resume=0, maxiter=20, pWrap[2];
+            seed=-1, i, fb=1, outfile=0, initMPI=1, resume=0, maxiter=20, pWrap[2];
         double tol=0.5, efr=0.8, Ztol=-1E90, logZero = -1.0e99;
         void *context=NULL;
         char root[]="./test";
