@@ -60,7 +60,7 @@
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
-#define MAX_DMX              64    /* Max number of DM steps allowed */
+#define MAX_DMX             128    /* Max number of DM steps allowed */
 #define MAX_FLAGS            20    /* Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /* Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /* Maximum number of steps in the correction to TT  */ 
