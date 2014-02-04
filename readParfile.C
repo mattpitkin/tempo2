@@ -1072,7 +1072,11 @@ else if (strcasecmp(str,"_DM")==0)
 	 }
   }       
   else if (strcasecmp(str,"EDOT")==0 || strcasecmp(str,"ECCDOT")==0)
+  {
 	 readValue(psr,str,fin,&(psr->param[param_edot]),0);
+         if (fabs(psr->param[param_edot].val[0]) > 1e-7) 
+	   psr->param[param_edot].val[0] *= 1.0e-12;
+  }
   else if (strcasecmp(str,"E")==0 || strcmp(str,"ECC")==0)
 	 readValue(psr,str,fin,&(psr->param[param_ecc]),0);
   else if (((str[0]=='E' || str[0]=='e') &&  /* Higher ECC derivatives */
