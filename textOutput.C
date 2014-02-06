@@ -1104,6 +1104,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
 		fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
 	    }	  
+	  /* Add T2EFAC / T2EQUAD */
+	  for (i=0;i<psr[p].nT2efac;i++)
+	    {
+	      fprintf(fout2,"T2EFAC %s %s %g\n", psr[p].T2efacFlagID[i], psr[p].T2efacFlagVal[i], psr[p].T2efacVal[i]);
+	    }
 
 	  /* Add whitening flags */
 	  if (psr[p].param[param_wave_om].paramSet[0]==1)
