@@ -253,7 +253,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else textOutput(psr,*npsr,globalParameter,0,0,1,(char *)"try.par");  /* Display the output */
       //      else textOutput(psr,*npsr,globalParameter,0,0,0,(char *)"");  /* Display the output */
     }
-
+  printf("Step 1\n");
   // Determine how many different flags to process
   if (group==0)
     {
@@ -301,6 +301,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       fclose(fin);
     }
+  printf("Step 2\n");
   fout = fopen("efacEquad_output.dat","w");
   for (i=0;i<nFlag;i++)
     {
@@ -352,8 +353,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    }
 	  //	  calcEfacEquad(px,py,pe,npts,&efac,&equad,1);
 	  //  printf("npts = %d ",npts);
-
+  printf("Step 3\n");
 	  calcEfacEquad2(px,py,pe,npts,&efac,&equad,plot,correctEfac,correctEquad,minEquad,maxEquad,stepEquad,minEfac,maxEfac,stepEfac,grDev);
+  printf("Step 4\n");
 	  //	  if (l==1){
 	    printf("npts = %d ",npts);
 	    printf("\n");
@@ -622,8 +624,9 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
   double d;
   double gauss[8192*4];
   double chisq;
+  int nval;
 
-  //  printf("Starting search\n");
+  printf("Starting search\n");
 
   chisq = 0.0;
   for (i=0;i<npts;i++)
@@ -635,7 +638,7 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
       *equadRet = 0.0;
       return;
     }
-  //  printf("Starting %g %g\n",correctEfac,correctEquad);
+  printf("Starting %g %g\n",correctEfac,correctEquad);
     fout = fopen("gauss.dat","w");
     for (i=0;i<8192*4;i++)
       {
@@ -650,13 +653,27 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
   for (i=0;i<npts;i++)
     meanErr+=pe[i];
   meanErr/=(double)npts;
-  //  printf("Starting3 %g %g\n",correctEfac,correctEquad);
+    printf("Starting3 %g %g\n",correctEfac,correctEquad);
   fout = fopen("equadEfac.dat","w");
   fout2 = fopen("norm.dat","w");
   fout3 = fopen("normCorrect.dat","w");
   fout4 = fopen("orig.dat","w");
 
-  //  printf("Starting4 %g %g\n",correctEfac,correctEquad);
+
+  nval = (int)((maxEfac-minEfac)/stepEfac*(maxEquad-minEquad)/stepEquad+1);
+  printf("nval = %d\n",nval);
+  do {
+    stepEquad *= 2.0;
+    nval = (int)((maxEfac-minEfac)/stepEfac*(maxEquad-minEquad)/stepEquad+1);
+    printf("nval = %d\n",nval);
+  } while (nval > 8192*3);
+
+  printf("Starting4 %g %g\n",correctEfac,correctEquad);
+  printf("Number of grid points = %g\n",(maxEfac-minEfac)/stepEfac*(maxEquad-minEquad)/stepEquad);
+
+
+  
+  
   for (efac = minEfac;efac < maxEfac;efac+=stepEfac)
   //   efac = 2;
     {
@@ -665,45 +682,40 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
 	{
 	  //	  efac = 1.0; equad=0;
 	  // Calculate normalised residuals
-	  sx = sx2 = 0.0;
+	  sx = sx2 = se = 0.0;
 	  meanVal = 0.0;
 	  //	  printf("%g %g %d\n",efac,equad,npts);
+	  //	  printf("place 1 %d\n",npts);
 	  for (i=0;i<npts;i++)
 	    {
+	      //	      printf("Trying %g %g %g\n",pe[i],equad,efac);
 	      err = sqrt(pe[i]*pe[i]+equad*1e-6*equad*1e-6)*efac;
+	      //	      printf("Err = %g\n",err);
 	      //err = sqrt(pow(pe[i]*efac,2)+equad*1e-6*equad*1e-6);
 	      //	      err = sqrt(pe[i]*pe[i]+equad*1e-6*equad*1e-6)+pe[i]*efac;
+	      //	      printf("py = %g %d %g %d\n",py[i],i,err,npts);
 	      nr[i] = py[i]/err;
-	      //	        printf("%g %g %g\n",py[i],err,nr[i]);
+	      //	      printf("%g %g %g\n",py[i],err,nr[i]);
 	      meanVal += nr[i];
 	      w[i] = pow(pe[i]-meanErr,2);
 	      fprintf(fout2,"efac = %g equad = %g %g\n",efac,equad,nr[i]);
 	      //	      printf("Have: %g %g %g %g\n",efac,correctEfac,equad,correctEquad);
 	      if (efac==1 && equad==0)
 		  fprintf(fout4,"%g %g %g %g\n",px[i],py[i],err,nr[i]);
+	      //	      printf("This pos\n");
 	      if (fabs(efac-correctEfac) < 1e-5 && fabs(equad-correctEquad)<1e-5)
 		  fprintf(fout3,"%g %g %g %g\n",px[i],py[i],err,nr[i]);
+	      //	      printf("This pos2\n");
 	      //  w[i] = 1.0;
 	      sx+=nr[i];
 	      sx2+=(nr[i]*nr[i]);
 	      se+=1;
+	      //	      printf("This pos3\n");
 	    }  
-	  
+	  //	  printf("Here with %g %g\n",efac,equad);
 	  meanVal /= (double)npts;
-	  /*	  var = 0.0;
-	  sw=0.0;
-	  for (i=0;i<npts;i++)
-	    {
-	      var += pow(nr[i]-meanVal,2)*w[i];
-	      sw += w[i];
-	    }
-	  var /= sw;
-	  var = (sx2/(double)npts - pow(sx/(double)npts,2));
-
-	  var = sx2/(double)npts;*/ // This is actually the chisq
 	  for (i=0;i<npts;i++)
 	    nr[i]-=meanVal;
-
 	  //	  kstwo(nr-1,npts,gauss-1,8192*4,&d,&var);
 	  ksone(nr-1,npts,gaussFunc,&d,&var);
 	  if (fabs(efac-correctEfac) < 1e-5 && fabs(equad-correctEquad)<1e-5)
@@ -743,7 +755,6 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
 	  
 	  if (fv[n] < minV) minV = fv[n];
 	  n++;
-
 	  t++;
 	  //	  printf("%g %g %g %g %g %g %g %g %d\n",efac,equad,var,diff,bestDiff,bestEquad,sx,sx2,npts);
 	  fprintf(fout,"efac = %g equad = %g %g %g\n",efac,equad,var,1.0/pow(var-1.0,2));
@@ -773,7 +784,7 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
 	  col = (fv[i]-minV)/(maxV-minV);
 	  //	  	  printf("%d %g col = %g\n",i,fv[i],col);
 	  //col = fv[i];
-	  cpgscr(2,col,col,col);
+	  cpgscr(2,1-col,1-col,1-col);
 	  cpgsci(2);
 	  cpgsch(3*col);
 	  cpgpt(1,fx+i,fy+i,-15);
@@ -791,6 +802,7 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
   //    exit(1);
   *efacRet =  bestEfac;
   *equadRet = bestEquad;
+
   printf("Complete search\n");
 }
 
