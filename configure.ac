@@ -214,27 +214,31 @@ if test X$have_multinest != Xyes; then
         AC_MSG_NOTICE(TempoNest will be built without GPU support)
     fi
 fi
-
-
 if test $can_build_shared == no ; then
 	echo ""
 	AC_WARN("Libtool cannot build shared libraries - no plugins can be built!")
 	echo ""
 else
 	echo ""
-	echo "NOTICE: plugins can now be built with 'make plugins && make plugins-install'"
+	echo "NOTICE: plugins can be built with 'make plugins && make plugins-install'"
     if test X$have_multinest = Xyes; then
         echo "        temponest can be built with 'make temponest && make temponest-install'"
+
+	   echo ""
+	   echo "Debugging TempoNest configure, library summary:"
+	   echo " * MULTINEST:    $MULTINEST_LIBS   $MULTINEST_CFLAGS"
+	   echo " * CULA:         $CULA_LIBS        $CULA_CFLAGS"
+	   echo " * GSL:          $GSL_LIBS         $GSL_CFLAGS"
+	   echo " * BLAS:         $BLAS_LIBS        $BLAS_CFLAGS"
+	   echo " * LAPACK:       $LIBS_LAPACK"
     fi
     echo ""
-
-    echo ""
-    echo "Debugging TempoNest configure, library summary:"
-    echo " * MULTINEST:    $MULTINEST_LIBS   $MULTINEST_CFLAGS"
-    echo " * CULA:         $CULA_LIBS        $CULA_CFLAGS"
-    echo " * GSL:          $GSL_LIBS         $GSL_CFLAGS"
-    echo " * BLAS:         $BLAS_LIBS        $BLAS_CFLAGS"
-    echo " * LAPACK:       $LIBS_LAPACK"
 fi
+
+echo ""
+echo "****"
+echo "Ok! Good to start compiling... try make && make install'"
+echo "****"
+
 
 

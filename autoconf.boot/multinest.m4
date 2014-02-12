@@ -124,7 +124,7 @@ AC_DEFUN([SWIN_LIB_MULTINEST],
     AC_DEFINE([HAVE_MULTINEST], [1], [Define to 1 if you have the MULTINEST library])
     [$1]
   else
-    AC_MSG_WARN([MultiNest code will not be compiled])
+    AC_MSG_WARN([MultiNest code will not be compiled. This only affects MultiNest plugins.])
 
     if test x"$compile_multinest" = xyes; then
       AC_MSG_WARN([***************************************************************])
@@ -134,10 +134,12 @@ AC_DEFUN([SWIN_LIB_MULTINEST],
       AC_MSG_WARN([***************************************************************])
     else
       if test x"$MULTINEST_DIR" = x; then
-        AC_MSG_WARN([***************************************************************])
-        AC_MSG_WARN([Please set the MULTINEST_DIR environment variable, or set the LIBRARY_PATH variable])
-        AC_MSG_WARN([       Note: LIBRARY_PATH is used at linking stage, (DY)LD_LIBRARY_PATH is used at runtime])
-        AC_MSG_WARN([***************************************************************])
+        AC_MSG_NOTICE([MultiNest plugins will not be compiled. If you need this, set MULTINEST_DIR.])
+# Reduced warning message size
+#        AC_MSG_WARN([***************************************************************])
+#        AC_MSG_WARN([Please set the MULTINEST_DIR environment variable, or set the LIBRARY_PATH variable])
+#        AC_MSG_WARN([       Note: LIBRARY_PATH is used at linking stage, (DY)LD_LIBRARY_PATH is used at runtime])
+#        AC_MSG_WARN([***************************************************************])
       fi
     fi
 

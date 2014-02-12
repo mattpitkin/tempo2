@@ -38,13 +38,6 @@ addRedNoise_@T2ARCH@_plug_la_LDFLAGS=$(plugin_LDFLAGS)
 addRedNoise-install: addRedNoise_@T2ARCH@_plug.la
 	$(INSTALL) .libs/addRedNoise_@T2ARCH@_plug.t2 $(plugindir)
 
-addGWB2_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addGWB2_plug.C $(TOASIM_src)
-addGWB2_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
-addGWB2_@T2ARCH@_plug_la_LDFLAGS=$(plugin_LDFLAGS)
-addGWB2-install: addGWB2_@T2ARCH@_plug.la
-	$(INSTALL) .libs/addGWB2_@T2ARCH@_plug.t2 $(plugindir)
-
-
 
 addGWB_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addGWB_plug.C $(TOASIM_src)
 addGWB_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la

@@ -993,6 +993,7 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
    double freq;
    double P;
    double varScaleFactor=0.6;
+   varScaleFactor=1.0; // test mjk 2013
 
    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
    npts=128;

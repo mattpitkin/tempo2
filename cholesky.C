@@ -63,14 +63,12 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
    }
 
    logmsg("Reading Cholesky model '%s' for pulsar %s",fname,psr->name);
-
    m=(double**)malloc(sizeof(double*)*(np+1));
    if(!m)logerr("Could not allocate enough memory");
    for(i=0;i<np+1;i++){
 	  m[i]=(double*)malloc(sizeof(double)*(np+1));
 	  if(!m[i])logerr("Could not allocate enough memory");
    }
-
 
    if (strcmp(fname,"PSRJ")==0){
 	  // this is the old method where the covariance function is read based on pulsar name.

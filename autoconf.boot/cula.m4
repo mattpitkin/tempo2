@@ -83,9 +83,9 @@ AC_DEFUN([SWIN_LIB_CULA],
     AC_DEFINE([HAVE_CULA], [1], [Define to 1 if you have the CULA library])
     [$1]
   else
-    AC_MSG_WARN([Will compile without CULA GPU code])
+    AC_MSG_NOTICE([Will compile without CULA GPU code])
     if test x"$CULA_LIB_PATH_64" = x; then
-      AC_MSG_WARN([Please set the CULA_LIB_PATH_64/32 environment variable for CULA support])
+      AC_MSG_NOTICE([Please set the CULA_LIB_PATH_64/32 environment variable for CULA support])
     fi
     CULA_CFLAGS=""
     CULA_LIBS=""
