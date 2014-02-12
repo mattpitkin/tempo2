@@ -47,13 +47,14 @@
 #include "TKfit.h"
 #include "T2toolkit.h"
 #include "constraints.h"
+#include "choleskyRoutines.C"
 
 using namespace std;
 
 double OMEGA0=0; 
 
 long double toffset = 52601.0L;
-void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i);
+void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i,int outWhite);
 
 void help() /* Display help */
 {
@@ -77,6 +78,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    char use_ccache=0;
    int cache_hits=0;
    char roundem = 0;
+   int outWhite=0;
 
    int i,p;
    double globalParameter;
@@ -115,6 +117,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  }
 	  if (strcmp(argv[i],"-round")==0) {
 		 roundem=1;
+	  }
+	  if (strcmp(argv[i],"-outWhite")==0) {
+		 outWhite=1;
 	  }
 
 	  if (strcmp(argv[i],"-yr")==0) {
@@ -275,14 +280,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			   formBatsAll(psr+p1,1);        
 			   formResiduals(psr+p1,1,1);   
 			   textOutput(psr+p1,1,globalParameter,0,0,newpar,newparname);
-			   calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi);
+			   calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi,outWhite);
 			}
 			if (dop2){
 			   doFitAll(psr+p2,1,covarFuncFile);   
 			   formBatsAll(psr+p2,1);        
 			   formResiduals(psr+p2,1,1);   
 			   textOutput(psr+p2,1,globalParameter,0,0,newpar,newparname);
-			   calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi);
+			   calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi,outWhite);
 			}
 			if (use_ccache){
 			   if (cc_x[p1] == NULL && p1_start_o == minx && p1_finish_o == maxx){
@@ -390,7 +395,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 		 logmsg("Doing the calculation %s Nspec=%d\n",thepulsar->name,nSpec);
 		 verbose_calc_spectra=true;
-		 calculateSpectrum(thepulsar,tspan,nSpec,px,py_r,py_i);
+		 calculateSpectrum(thepulsar,tspan,nSpec,px,py_r,py_i,outWhite);
 		 logmsg("Write files");
 		 sprintf(fname,"%s.spec",thepulsar->name);
 		 fout = fopen(fname,"w");
@@ -409,7 +414,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 char * plugVersionCheck = TEMPO2_h_VER;
 
-void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i) {
+void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i,int outWhite) {
    int i;
    double **uinv;
    FILE *fin;
@@ -477,6 +482,25 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
 	  T=-T;
    }
    calcSpectra_ri_T(uinv,resx,resy,nobs,px,py_r,py_i,nSpec,T,mde,psr);
+
+   if (outWhite==1)
+     {
+       double outRes[nobs];
+       FILE *fout;
+
+       printf("Outputting whitened residuals\n");
+       T2getWhiteRes(resx,resy,rese,nobs,uinv,outRes);
+       if (!(fout = fopen("whiteRes.dat","w"))){
+	 printf("Unable to open file whiteRes.dat\n");
+	 exit(1);
+       }
+       for (i=0;i<nobs;i++)
+	 {
+	   printf("%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
+	   fprintf(fout,"%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
+	 }
+       fclose(fout);
+     }
 
    // Free uinv
    free_uinv(uinv);
