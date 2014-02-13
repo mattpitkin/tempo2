@@ -46,6 +46,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int i,j,k,argn=0;
   double globalParameter;
   long double centreMJD;
+  long double avMJD;
+  int nav;
   long double newTOA;
   const char *CVS_verNum = "$Revision$";
   char timeList[MAX_STRLEN];
@@ -60,8 +62,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   FILE *fout2;
   FILE *fout3;
   char str[1024];
-  int closeID,t;
+  int closeID,t,fitF0=0;
   double distance=0;
+  long double oldF0;
+  int autoblock=0;
 
   if (displayCVSversion == 1) CVSdisplayVersion("averageData.C","plugin",CVS_verNum);
 
@@ -90,28 +94,67 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-t")==0)
 	strcpy(timeList,argv[++i]);
+      else if (strcmp(argv[i],"-fitf0")==0)
+	fitF0=1;
+      else if (strcmp(argv[i],"-autoblock")==0)
+	autoblock=1;
     }
   // Read the list of strides
-  fin = fopen(timeList,"r");
-  while (!feof(fin))
+  if (autoblock==0)
     {
-      nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
-      if (nread==3 || nread==4)
+      fin = fopen(timeList,"r");
+      while (!feof(fin))
 	{
-	  if (nread==4)
-	    strcpy(timFileName[nStride],tname);
-	  else
-	    strcpy(timFileName[nStride],timFile[0]);
-	  nStride++;
+	  nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
+	  if (nread==3 || nread==4)
+	    {
+	      if (nread==4)
+		strcpy(timFileName[nStride],tname);
+	      else
+		strcpy(timFileName[nStride],timFile[0]);
+	      nStride++;
+	    }
+	}
+      fclose(fin);
+      printf("Have read %d strides\n",nStride);
+      if (nStride == 0)
+	{
+	  printf("ERROR: require at least one stride - use -t option\n");
+	  exit(1);
 	}
     }
-  fclose(fin);
-  printf("Have read %d strides\n",nStride);
-  if (nStride == 0)
+  if (autoblock==1)
     {
-      printf("ERROR: require at least one stride - use -t option\n");
-      exit(1);
+      readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+      sortToAs(&psr[0]);
+      //      for (i=0;i<psr[0].nobs;i++)
+      //	printf("toas: %g\n",(double)psr[0].obsn[i].sat);
+      //      exit(1);
+      printf("Number of points = %d\n",psr[0].nobs);
+      // Assume that we have time sorted data
+      nStride=0;
+      mjd1[nStride] = psr[0].obsn[0].sat-0.01;
+      strcpy(parFileName[nStride],parFile[0]);
+      strcpy(timFileName[nStride],timFile[0]);
+      for (i=1;i<psr[0].nobs;i++)
+	{
+	  printf("i = %d %d\n",i,nStride);
+	  if (psr[0].obsn[i].sat - psr[0].obsn[i-1].sat > 1)
+	    {
+	      mjd2[nStride] = psr[0].obsn[i-1].sat+0.1;
+	      nStride++;
+	      mjd1[nStride] = psr[0].obsn[i].sat-0.1;
+	      strcpy(parFileName[nStride],parFile[0]);
+	      strcpy(timFileName[nStride],timFile[0]);
+	    }
+	}
+      printf("Have loaded %d strides\n",nStride);
+      for (i=0;i<nStride;i++)
+	{
+	  printf("Stride at %d with %.15Lf %.15Lf\n",i,mjd1[i],mjd2[i]);
+	}
     }
+
   for (i=0;i<nStride;i++)
     {
       printf("***** Stride %d *****\n",i);
@@ -121,8 +164,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       strcpy(parFile[0],parFileName[i]);
       strcpy(timFile[0],timFileName[i]);
 
+      psr[0].nobs = 0;
       psr[0].nJumps=0;
       psr[0].nconstraints = 0;
+      for (j=0;j<psr[0].nobs;j++)
+	psr[0].obsn[j].nFlags=0;
+
       for(j=0;j<MAX_PARAMS;j++){
 	psr[0].param[j].nLinkTo = 0;
 	psr[0].param[j].nLinkFrom = 0;
@@ -134,32 +181,83 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    psr[0].param[j].val[k] = 0.0;
 	  }
       }
+      psr[0].nTNEF = 0;
+      psr[0].nTNEQ = 0;
+      psr[0].nT2efac = 0;
+      psr[0].nT2equad = 0;
 
       readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+      printf("Reading tim\n");
       readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+      //      for (k=0;k<psr[0].nobs;k++)
+      //      	{
+      //	  printf("Nflags = %d\n",psr[0].obsn[k].nFlags);
+      //	}
+      //      exit(1);
 
+      printf("Complete reading tim\n");
       // Make a new timFile that only contains the TOAs in the region
       fout3 = fopen("short.tim","w");
       fprintf(fout3,"FORMAT 1\n");
+      nav=0;
+      avMJD = 0.0L;
       for (k=0;k<psr[0].nobs;k++)
 	{
 	  if (psr[0].obsn[k].sat >= mjd1[i] && psr[0].obsn[k].sat < mjd2[i])
 	    {
-	      fprintf(fout3,"%s %.8f %.17Lf %.5f %s\n",psr[0].obsn[k].fname,
+	      fprintf(fout3,"%s %.8f %.17Lf %.5f %s ",psr[0].obsn[k].fname,
 		      psr[0].obsn[k].freq,psr[0].obsn[k].sat,
 		      psr[0].obsn[k].toaErr,psr[0].obsn[k].telID);
+	      printf("%s %.8f %.17Lf %.5f %s ",psr[0].obsn[k].fname,
+		      psr[0].obsn[k].freq,psr[0].obsn[k].sat,
+		      psr[0].obsn[k].toaErr,psr[0].obsn[k].telID);
+	      printf("** %d ** ",psr[0].obsn[k].nFlags);
+	      for (j=0;j<psr[0].obsn[k].nFlags;j++)
+		{
+		  fprintf(fout3," %s %s ",psr[0].obsn[k].flagID[j],psr[0].obsn[k].flagVal[j]);
+		  printf(" %s %s ",psr[0].obsn[k].flagID[j],psr[0].obsn[k].flagVal[j]);
+		}
+	      fprintf(fout3,"\n");
+	      printf("\n");
+	      avMJD+=psr[0].obsn[k].sat;
+	      nav++;
 	    }
-	}	  
+	}
+
+      // Turn off jump fitting
+      printf("JUMP1: %d\n",psr[0].fitJump[2]);
+      for (j=1;j<=psr[0].nJumps;j++)
+	psr[0].fitJump[j] = 0;
+      printf("JUMP2: %d\n",psr[0].fitJump[2]);
+      if (nav == 0)
+	{
+	  printf("Cannot identify any points within the current region: mjd = %.15Lf to %.15Lf\n",mjd1[i],mjd2[i]);
+	  exit(1);
+	}
+
+      avMJD/=(long double)nav;
+      centreMJD = avMJD;
       fclose(fout3);
+
       strcpy(timFile[0],"short.tim");
+      psr[0].nobs = 0;
+      for (j=0;j<psr[0].nobs;j++)
+	psr[0].obsn[j].nFlags=0;
+
       readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
       
-      
+      printf("JUMP3: %d\n",psr[0].fitJump[2]);      
       // Update the epoch in the par file for centreMJD
       strcpy(argv[argn],"-epoch");
       sprintf(argv[argn+1],"%.5f",(double)centreMJD);
       printf("Before preProcess\n");
+      
+
+      printf("TNEF = %d\n",psr[0].nTNEF);
+      printf("TNEQ = %d\n",psr[0].nTNEQ);
+      printf("JUMP3.1: %d\n",psr[0].fitJump[2]);      
       preProcess(psr,1,argc,argv);      
+      printf("JUMP3.2: %d\n",psr[0].fitJump[2]);      
       printf("After preProcess\n");
       // Turn off all fitting
       for (j=0;j<MAX_PARAMS;j++)
@@ -167,7 +265,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  for (k=0;k<psr[0].param[j].aSize;k++)
 	    psr[0].param[j].fitFlag[k] = 0;
 	}
-      
+      if (fitF0==1)
+	{
+	  psr[0].param[param_f].fitFlag[0] = 1;
+	  oldF0 = psr[0].param[param_f].val[0];
+	}
+      printf("JUMP4: %d\n",psr[0].fitJump[2]);
       // Update the start and finish flags
       psr[0].param[param_start].val[0] = mjd1[i];
       psr[0].param[param_start].fitFlag[0] = 1;
@@ -210,11 +313,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       
       // Turn on required fitting
       //      psr[0].param[param_f].fitFlag[0] = 1;
-      
+      printf("JUMP5: %d\n",psr[0].fitJump[2]);      
       for (k=0;k<2;k++)                   /* Do two iterations for pre- and post-fit residuals*/
 	{
+	  printf("Forming bats\n");
 	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+	  printf("Forming residuals\n");
 	  formResiduals(psr,*npsr,0);    /* Form the residuals                 */
+	  printf("k = %d\n",k);
 	  if (k==0) 
 	    {
 	      char str2[1024];
@@ -227,13 +333,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    }
 	  else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
 	}
+      printf("JUMP6: %d\n",psr[0].fitJump[2]);
+
       // Now fit once more to the post-fit residuals
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,0);    /* Form the residuals                 */
       doFit(psr,*npsr,0);   /* Do the fitting     */
 
       printf("Offset = %g, offset_e = %g\n",psr[0].offset,psr[0].offset_e);
-
+      
       //      for (i=0;i<psr[0].nobs;i++)
       //	printf("res1: %g %g %g\n",(double)(psr[0].obsn[i].sat-centreMJD),(double)psr[0].obsn[i].residual-psr[0].offset,(double)psr[0].obsn[i].toaErr*1.0e-6);
       
@@ -283,6 +391,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       fprintf(fout2,"res3: %g %g %g\n",(double)(psr[0].obsn[k].sat-centreMJD),(double)psr[0].obsn[k].residual,(double)psr[0].obsn[k].toaErr*1.0e-6);
       fflush(fout);
       fclose(fout2);
+
+      if (fitF0==1)
+	{
+	  psr[0].param[param_f].val[0] = oldF0;
+	}
     }
   fclose(fout);
   return 0;
