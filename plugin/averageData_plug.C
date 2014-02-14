@@ -245,152 +245,149 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	psr[0].obsn[j].nFlags=0;
 
       readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
-      
-      printf("JUMP3: %d\n",psr[0].fitJump[2]);      
-      // Update the epoch in the par file for centreMJD
-      strcpy(argv[argn],"-epoch");
-      sprintf(argv[argn+1],"%.5f",(double)centreMJD);
-      printf("Before preProcess\n");
-      
-
-      printf("TNEF = %d\n",psr[0].nTNEF);
-      printf("TNEQ = %d\n",psr[0].nTNEQ);
-      printf("JUMP3.1: %d\n",psr[0].fitJump[2]);      
-      preProcess(psr,1,argc,argv);      
-      printf("JUMP3.2: %d\n",psr[0].fitJump[2]);      
-      printf("After preProcess\n");
-      // Turn off all fitting
-      for (j=0;j<MAX_PARAMS;j++)
-	{
-	  for (k=0;k<psr[0].param[j].aSize;k++)
-	    psr[0].param[j].fitFlag[k] = 0;
-	}
-      if (fitF0==1)
-	{
-	  psr[0].param[param_f].fitFlag[0] = 1;
-	  oldF0 = psr[0].param[param_f].val[0];
-	}
-      printf("JUMP4: %d\n",psr[0].fitJump[2]);
-      // Update the start and finish flags
-      psr[0].param[param_start].val[0] = mjd1[i];
-      psr[0].param[param_start].fitFlag[0] = 1;
-      psr[0].param[param_start].paramSet[0] = 1;
-      
-      psr[0].param[param_finish].val[0] = mjd2[i];
-      psr[0].param[param_finish].fitFlag[0] = 1;
-      psr[0].param[param_finish].paramSet[0] = 1;
-    
-      // Find closest point
-      t=1;
-      distance=-1;
-      for (k=0;k<psr[0].nobs;k++)
-	{
-	  if (psr[0].obsn[k].sat > psr[0].param[param_start].val[0]
-	      && psr[0].obsn[k].sat < psr[0].param[param_finish].val[0])
-	    {
-	      if (t==1)
-		{
-		  closeID = k;
-		  distance = (double)fabs(psr[0].obsn[k].sat - centreMJD);
-		  t=2;
-		}
-	      else
-		{
-		  if ((double)fabs(psr[0].obsn[k].sat - centreMJD) < distance)
-		    {
-		      closeID=k;
-		      distance = (double)fabs(psr[0].obsn[i].sat - centreMJD);
-		    }
-		}
-	    }
-	  
-	}
-      if (distance == -1)
-	{
-	  printf("Cannot identify any points within the current region: mjd = %g\n",(double)centreMJD);
-	  exit(1);
-	}
-      
-      // Turn on required fitting
-      //      psr[0].param[param_f].fitFlag[0] = 1;
-      printf("JUMP5: %d\n",psr[0].fitJump[2]);      
-      for (k=0;k<2;k++)                   /* Do two iterations for pre- and post-fit residuals*/
-	{
-	  printf("Forming bats\n");
-	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-	  printf("Forming residuals\n");
-	  formResiduals(psr,*npsr,0);    /* Form the residuals                 */
-	  printf("k = %d\n",k);
-	  if (k==0) 
-	    {
-	      char str2[1024];
-	      sprintf(str2,"%s.res",str);
-	      fout2 = fopen(str2,"w");
-	      for (j=0;j<psr[0].nobs;j++)
-		fprintf(fout2,"%g %g %g\n",(double)(psr[0].obsn[j].sat-centreMJD),(double)psr[0].obsn[j].residual,psr[0].obsn[j].toaErr*1.0e-6);
-	      fclose(fout2);
-	      doFit(psr,*npsr,0);   /* Do the fitting     */
-	    }
-	  else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
-	}
-      printf("JUMP6: %d\n",psr[0].fitJump[2]);
-
-      // Now fit once more to the post-fit residuals
-      formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-      formResiduals(psr,*npsr,0);    /* Form the residuals                 */
-      doFit(psr,*npsr,0);   /* Do the fitting     */
-
-      printf("Offset = %g, offset_e = %g\n",psr[0].offset,psr[0].offset_e);
-      
-      //      for (i=0;i<psr[0].nobs;i++)
-      //	printf("res1: %g %g %g\n",(double)(psr[0].obsn[i].sat-centreMJD),(double)psr[0].obsn[i].residual-psr[0].offset,(double)psr[0].obsn[i].toaErr*1.0e-6);
-      
-      // Now add in a pseudo point at centreMJD
-      psr[0].obsn[psr[0].nobs].sat  = centreMJD;
-      psr[0].obsn[psr[0].nobs].freq = psr[0].obsn[closeID].freq;
-      strcpy(psr[0].obsn[psr[0].nobs].fname,"avpt");
-      strcpy(psr[0].obsn[psr[0].nobs].telID,psr[0].obsn[closeID].telID);
-      psr[0].obsn[psr[0].nobs].phaseOffset=0.0;
-      psr[0].obsn[psr[0].nobs].deleted=0.0;
-      psr[0].obsn[psr[0].nobs].toaErr=psr[0].offset_e/1.0e-6;
-      psr[0].obsn[psr[0].nobs].clockCorr=1;
-      psr[0].obsn[psr[0].nobs].delayCorr=1;
-      psr[0].obsn[psr[0].nobs].efac=1;
+	// Update the epoch in the par file for centreMJD
+	strcpy(argv[argn],"-epoch");
+	sprintf(argv[argn+1],"%.5f",(double)centreMJD);
+	preProcess(psr,1,argc,argv);      
+	
+	// Turn off all fitting
+	for (j=0;j<MAX_PARAMS;j++)
+	  {
+	    for (k=0;k<psr[0].param[j].aSize;k++)
+	      psr[0].param[j].fitFlag[k] = 0;
+	  }
+	if (fitF0==1)
+	  {
+	    psr[0].param[param_f].fitFlag[0] = 1;
+	    oldF0 = psr[0].param[param_f].val[0];
+	  }
+	printf("JUMP4: %d\n",psr[0].fitJump[2]);
+	// Update the start and finish flags
+	psr[0].param[param_start].val[0] = mjd1[i];
+	psr[0].param[param_start].fitFlag[0] = 1;
+	psr[0].param[param_start].paramSet[0] = 1;
+	
+	psr[0].param[param_finish].val[0] = mjd2[i];
+	psr[0].param[param_finish].fitFlag[0] = 1;
+	psr[0].param[param_finish].paramSet[0] = 1;
+	
+	// Find closest point
+	t=1;
+	distance=-1;
+	for (k=0;k<psr[0].nobs;k++)
+	  {
+	    if (psr[0].obsn[k].sat > psr[0].param[param_start].val[0]
+		&& psr[0].obsn[k].sat < psr[0].param[param_finish].val[0])
+	      {
+		if (t==1)
+		  {
+		    closeID = k;
+		    distance = (double)fabs(psr[0].obsn[k].sat - centreMJD);
+		    t=2;
+		  }
+		else
+		  {
+		    if ((double)fabs(psr[0].obsn[k].sat - centreMJD) < distance)
+		      {
+			closeID=k;
+			distance = (double)fabs(psr[0].obsn[i].sat - centreMJD);
+		      }
+		  }
+	      }
+	    
+	  }
+	if (distance == -1)
+	  {
+	    printf("Cannot identify any points within the current region: mjd = %g\n",(double)centreMJD);
+	    exit(1);
+	  }
+	
+	// Turn on required fitting
+	//      psr[0].param[param_f].fitFlag[0] = 1;
+	printf("JUMP5: %d\n",psr[0].fitJump[2]);      
+	for (k=0;k<2;k++)                   /* Do two iterations for pre- and post-fit residuals*/
+	  {
+	    printf("Forming bats\n");
+	    formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+	    printf("Forming residuals\n");
+	    formResiduals(psr,*npsr,0);    /* Form the residuals                 */
+	    printf("k = %d\n",k);
+	    if (k==0) 
+	      {
+		char str2[1024];
+		sprintf(str2,"%s.res",str);
+		fout2 = fopen(str2,"w");
+		for (j=0;j<psr[0].nobs;j++)
+		  fprintf(fout2,"%g %g %g\n",(double)(psr[0].obsn[j].sat-centreMJD),(double)psr[0].obsn[j].residual,psr[0].obsn[j].toaErr*1.0e-6);
+		fclose(fout2);
+		doFit(psr,*npsr,0);   /* Do the fitting     */
+	      }
+	    else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
+	  }
+	printf("JUMP6: %d\n",psr[0].fitJump[2]);
+	
+	// Now fit once more to the post-fit residuals
+	formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+	formResiduals(psr,*npsr,0);    /* Form the residuals                 */
+	doFit(psr,*npsr,0);   /* Do the fitting     */
+	
+	printf("Offset = %g, offset_e = %g\n",psr[0].offset,psr[0].offset_e);
+	
+	//      for (i=0;i<psr[0].nobs;i++)
+	//	printf("res1: %g %g %g\n",(double)(psr[0].obsn[i].sat-centreMJD),(double)psr[0].obsn[i].residual-psr[0].offset,(double)psr[0].obsn[i].toaErr*1.0e-6);
+	
+	// Now add in a pseudo point at centreMJD
+	psr[0].obsn[psr[0].nobs].sat  = centreMJD;
+	psr[0].obsn[psr[0].nobs].freq = psr[0].obsn[closeID].freq;
+	strcpy(psr[0].obsn[psr[0].nobs].fname,"avpt");
+	strcpy(psr[0].obsn[psr[0].nobs].telID,psr[0].obsn[closeID].telID);
+	psr[0].obsn[psr[0].nobs].phaseOffset=0.0;
+	psr[0].obsn[psr[0].nobs].deleted=0.0;
+	psr[0].obsn[psr[0].nobs].toaErr=psr[0].offset_e/1.0e-6;
+	psr[0].obsn[psr[0].nobs].clockCorr=1;
+	psr[0].obsn[psr[0].nobs].delayCorr=1;
+	psr[0].obsn[psr[0].nobs].efac=1;
       
 
-      psr[0].nobs++;
-      formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-      formResiduals(psr,*npsr,0);    /* Form the residuals                 */
-      //      for (i=0;i<psr[0].nobs;i++)
-      //      	printf("res2: %g %g %g\n",(double)(psr[0].obsn[i].sat-centreMJD),(double)psr[0].obsn[i].residual-psr[0].offset,(double)psr[0].obsn[i].toaErr*1.0e-6);
-      
-      for (j=0;j<3;j++) // Iterate to converge
-	{
-	  psr[0].obsn[psr[0].nobs-1].sat  -= (long double)(psr[0].obsn[psr[0].nobs-1].residual-psr[0].offset)/SECDAY;
-	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-	  formResiduals(psr,*npsr,0);    /* Form the residuals                 */
-	}
-      //      psr[0].obsn[psr[0].nobs-1].sat += (long double)psr[0].offset/SECDAY;
-      formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-      formResiduals(psr,*npsr,0);    /* Form the residuals                 */
-      if (psr[0].nobs==2) // Only dealing with one point
-	{ 
-	  fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1\n",psr[0].obsn[psr[0].nobs-2].fname,
-		  psr[0].obsn[psr[0].nobs-2].freq,psr[0].obsn[psr[0].nobs-2].sat,
-		  psr[0].obsn[psr[0].nobs-2].toaErr,psr[0].obsn[psr[0].nobs-2].telID);
-	}
-      else
-	{
-	  fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit %d\n",psr[0].obsn[psr[0].nobs-1].fname,
-		  psr[0].obsn[psr[0].nobs-1].freq,psr[0].obsn[psr[0].nobs-1].sat,
-		  psr[0].obsn[psr[0].nobs-1].toaErr,psr[0].obsn[psr[0].nobs-1].telID,psr[0].nobs);
-	}
-      fout2 = fopen(str,"w");
-      for (k=0;k<psr[0].nobs;k++)
-	//	fprintf(fout2,"res3: %g %g %g\n",(double)(psr[0].obsn[k].sat-centreMJD),(double)psr[0].obsn[k].residual-psr[0].offset,(double)psr[0].obsn[k].toaErr*1.0e-6);
-      fprintf(fout2,"res3: %g %g %g\n",(double)(psr[0].obsn[k].sat-centreMJD),(double)psr[0].obsn[k].residual,(double)psr[0].obsn[k].toaErr*1.0e-6);
-      fflush(fout);
-      fclose(fout2);
+	psr[0].nobs++;
+	formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+	formResiduals(psr,*npsr,0);    /* Form the residuals                 */
+	//      for (i=0;i<psr[0].nobs;i++)
+	//      	printf("res2: %g %g %g\n",(double)(psr[0].obsn[i].sat-centreMJD),(double)psr[0].obsn[i].residual-psr[0].offset,(double)psr[0].obsn[i].toaErr*1.0e-6);
+	
+	for (j=0;j<3;j++) // Iterate to converge
+	  {
+	    psr[0].obsn[psr[0].nobs-1].sat  -= (long double)(psr[0].obsn[psr[0].nobs-1].residual-psr[0].offset)/SECDAY;
+	    formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+	    formResiduals(psr,*npsr,0);    /* Form the residuals                 */
+	  }
+	//      psr[0].obsn[psr[0].nobs-1].sat += (long double)psr[0].offset/SECDAY;
+	formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+	formResiduals(psr,*npsr,0);    /* Form the residuals                 */
+	if (psr[0].nobs==2) // Only dealing with one point
+		  { 
+		    // NOT SURE WHY I DID THIS ... (commented out now)
+		    //		    fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1\n",psr[0].obsn[psr[0].nobs-2].fname,
+		    //			    psr[0].obsn[psr[0].nobs-2].freq,psr[0].obsn[psr[0].nobs-2].sat,
+		    //			    psr[0].obsn[psr[0].nobs-2].toaErr,psr[0].obsn[psr[0].nobs-2].telID);
+
+		    // Note that error is NAN and so use the original eror
+fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit 1\n",psr[0].obsn[psr[0].nobs-1].fname,
+		    			    psr[0].obsn[psr[0].nobs-1].freq,psr[0].obsn[psr[0].nobs-1].sat,
+		    			    psr[0].obsn[psr[0].nobs-2].toaErr,psr[0].obsn[psr[0].nobs-1].telID);
+	  }
+	else
+	  {
+	    fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit %d\n",psr[0].obsn[psr[0].nobs-1].fname,
+		    psr[0].obsn[psr[0].nobs-1].freq,psr[0].obsn[psr[0].nobs-1].sat,
+		    psr[0].obsn[psr[0].nobs-1].toaErr,psr[0].obsn[psr[0].nobs-1].telID,psr[0].nobs);
+	  }
+	fout2 = fopen(str,"w");
+	for (k=0;k<psr[0].nobs;k++)
+	  //	fprintf(fout2,"res3: %g %g %g\n",(double)(psr[0].obsn[k].sat-centreMJD),(double)psr[0].obsn[k].residual-psr[0].offset,(double)psr[0].obsn[k].toaErr*1.0e-6);
+	  fprintf(fout2,"res3: %g %g %g\n",(double)(psr[0].obsn[k].sat-centreMJD),(double)psr[0].obsn[k].residual,(double)psr[0].obsn[k].toaErr*1.0e-6);
+	fflush(fout);
+	fclose(fout2);
 
       if (fitF0==1)
 	{
