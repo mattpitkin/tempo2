@@ -43,7 +43,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
-  int i,j,k,argn=0;
+  int i,j,k,l,m,argn=0;
   double globalParameter;
   long double centreMJD;
   long double avMJD;
@@ -66,6 +66,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double distance=0;
   long double oldF0;
   int autoblock=0;
+
+  int addFlags=0;
+  char addFlagID[MAX_FLAGS][1024];
+  int addText=0;
+  char addTextStr[1024];
+
 
   if (displayCVSversion == 1) CVSdisplayVersion("averageData.C","plugin",CVS_verNum);
 
@@ -98,6 +104,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	fitF0=1;
       else if (strcmp(argv[i],"-autoblock")==0)
 	autoblock=1;
+      else if (strcmp(argv[i],"-addFlag")==0)
+	{
+	  strcpy(addFlagID[addFlags],argv[++i]);
+	  addFlags++;
+	}
+      else if (strcmp(argv[i],"-addText")==0)
+	{
+	  addText=1;
+	  strcpy(addTextStr,argv[++i]);
+	}
     }
   // Read the list of strides
   if (autoblock==0)
@@ -304,14 +320,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	
 	// Turn on required fitting
 	//      psr[0].param[param_f].fitFlag[0] = 1;
-	printf("JUMP5: %d\n",psr[0].fitJump[2]);      
 	for (k=0;k<2;k++)                   /* Do two iterations for pre- and post-fit residuals*/
 	  {
-	    printf("Forming bats\n");
 	    formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-	    printf("Forming residuals\n");
 	    formResiduals(psr,*npsr,0);    /* Form the residuals                 */
-	    printf("k = %d\n",k);
 	    if (k==0) 
 	      {
 		char str2[1024];
@@ -324,7 +336,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      }
 	    else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
 	  }
-	printf("JUMP6: %d\n",psr[0].fitJump[2]);
 	
 	// Now fit once more to the post-fit residuals
 	formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
@@ -347,7 +358,30 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	psr[0].obsn[psr[0].nobs].clockCorr=1;
 	psr[0].obsn[psr[0].nobs].delayCorr=1;
 	psr[0].obsn[psr[0].nobs].efac=1;
-      
+	psr[0].obsn[psr[0].nobs].nFlags=0;
+
+	// Add flags to this pseudo-point
+	// Must identify which flags are in common to add points in the region
+	{
+	  char flagValue[128];
+
+	  printf("Finding flags\n");
+	  psr[0].obsn[psr[0].nobs].nFlags = addFlags;
+	  for (j=0;j<addFlags;j++)
+	    {
+	      strcpy(psr[0].obsn[psr[0].nobs].flagID[j],addFlagID[j]);
+	      strcpy(flagValue,"unknown");
+	      // Really we should check if this flag exists for all observations - currently just choose the first observation
+	      for (k=0;k<psr[0].obsn[0].nFlags;k++)
+		{
+		  if (strcmp(psr[0].obsn[0].flagID[k],addFlagID[j])==0)
+		    strcpy(flagValue,psr[0].obsn[0].flagVal[k]);
+		}
+	      strcpy(psr[0].obsn[psr[0].nobs].flagVal[j],flagValue);
+	    }
+	  
+	  printf("Complete finding flags %d %d\n",psr[0].obsn[psr[0].nobs].nFlags,addFlags);
+	}
 
 	psr[0].nobs++;
 	formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
@@ -372,16 +406,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		    //			    psr[0].obsn[psr[0].nobs-2].toaErr,psr[0].obsn[psr[0].nobs-2].telID);
 
 		    // Note that error is NAN and so use the original eror
-fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit 1\n",psr[0].obsn[psr[0].nobs-1].fname,
+		    fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit 1",psr[0].obsn[psr[0].nobs-1].fname,
 		    			    psr[0].obsn[psr[0].nobs-1].freq,psr[0].obsn[psr[0].nobs-1].sat,
 		    			    psr[0].obsn[psr[0].nobs-2].toaErr,psr[0].obsn[psr[0].nobs-1].telID);
 	  }
 	else
 	  {
-	    fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit %d\n",psr[0].obsn[psr[0].nobs-1].fname,
+	    fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit %d",psr[0].obsn[psr[0].nobs-1].fname,
 		    psr[0].obsn[psr[0].nobs-1].freq,psr[0].obsn[psr[0].nobs-1].sat,
 		    psr[0].obsn[psr[0].nobs-1].toaErr,psr[0].obsn[psr[0].nobs-1].telID,psr[0].nobs);
 	  }
+	// Add flags
+	for (j=0;j<psr[0].obsn[psr[0].nobs-1].nFlags;j++)
+	  fprintf(fout," %s %s ",psr[0].obsn[psr[0].nobs-1].flagID[j],psr[0].obsn[psr[0].nobs-1].flagVal[j]);
+
+	// Add extra text
+	if (addText==1)
+	  fprintf(fout, " %s ",addTextStr);
+
+
+	fprintf(fout,"\n");
 	fout2 = fopen(str,"w");
 	for (k=0;k<psr[0].nobs;k++)
 	  //	fprintf(fout2,"res3: %g %g %g\n",(double)(psr[0].obsn[k].sat-centreMJD),(double)psr[0].obsn[k].residual-psr[0].offset,(double)psr[0].obsn[k].toaErr*1.0e-6);
