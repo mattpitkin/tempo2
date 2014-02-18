@@ -760,12 +760,14 @@ void T2getWhiteRes(double *resx,double *resy,double *rese,int nres,double **uinv
   int i,j;
   double sum;
   printf("choleskyRoutines: Getting white residuals\n");
+  printf("Updated version after transposing uinv\n");
   for (i=0;i<nres;i++)
     {
       sum=0.0;
       for (j=0;j<nres;j++)
 	{
-	  sum+=uinv[j][i]*resy[j];
+	  //	  sum+=uinv[j][i]*resy[j];
+	  sum+=uinv[i][j]*resy[j];
 	  //	  if (i==0) printf("uinv = %g\n",uinv[j+1][i+1]);
 	}
       cholWhiteY[i]=sum;
