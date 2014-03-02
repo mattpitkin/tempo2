@@ -304,6 +304,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       else
 	sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/%s.1950.2050",getenv("TEMPO2"),psr->ephemeris);
     }
+  else if (strcasecmp(str,"EPHEM_FILE")==0)
+    {
+      fscanf(fin,"%s",psr->ephemeris);
+      strcpy(psr->JPL_EPHEMERIS,psr->ephemeris);
+    }
   else if (strcasecmp(str,"TOFFSET")==0) /* Time offset */
     {
       char str[1000];
