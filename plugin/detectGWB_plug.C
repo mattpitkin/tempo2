@@ -204,6 +204,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       if (i==0) doFit(psr,*npsr,0);       /* Do the fitting     */
       else if (write_debug_files)textOutput(psr,*npsr,globalParameter,0,0,0,tstr);  /* Display the output */
     }
+  printf("Completed initial fit\n");
   for (p=0;p<*npsr;p++)
     {
 	if(write_debug_files){
@@ -218,7 +219,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
       fclose(fout);
     }
-
+  printf("Output afterfit.par and ifuncDGW files\n");
   // Now get a spectrum of each pulsar (should do this pairwise using the same
   // frequency channels -- for now assume identical sampling)
   /*  for (p=0;p<*npsr;p++)
@@ -239,6 +240,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       for (p2 = p1+1;p2 < *npsr;p2++)
 	{
+	  printf("Processing: %s %s\n",psr[p1].name,psr[p2].name);
 	  // Find overlap region
 	  if (psr[p1].ifuncT[0] > psr[p2].ifuncT[0])
 	    startOverlap = psr[p1].ifuncT[0];
@@ -257,9 +259,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      OMEGA0 = (double)(2.0*M_PI/toverlap);
 	      
 	      printf("Processing pair: %s--%s\n",psr[p1].name,psr[p2].name);
-	      getSpectrum(&psr[p1],px1,py_r1,py_i1,&nSpec1,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
-	      getSpectrum(&psr[p2],px2,py_r2,py_i2,&nSpec2,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
+	      printf("Overlap time = %g\n",toverlap);
 
+	      getSpectrum(&psr[p1],px1,py_r1,py_i1,&nSpec1,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
+	      printf("Got initial spectrum\n");
+	      getSpectrum(&psr[p2],px2,py_r2,py_i2,&nSpec2,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
+	      printf("Got second spectrum\n");
 
 	      if (nSpec1 < nSpec2) nSpec = nSpec1;
 	      else nSpec = nSpec2;
@@ -415,6 +420,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  printf("Trying next pulsar pair\n");
 		}
 	    }
+	  printf("Completed processing: %s %s\n",psr[p1].name,psr[p2].name);
+
 	}
     }
   fclose(fout);
@@ -485,11 +492,14 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
    int i;
    longdouble peopoch=toffset;
    pulsar* fakepsr = (pulsar*)malloc(sizeof(pulsar));
+
+   printf("In get spectrum\n");
    fakepsr->obsn = (observation*) malloc(sizeof(observation)*psr->ifuncN);
+   fakepsr->ToAextraCovar = NULL;
    strcpy(fakepsr->name,psr->name);
 
    *nSpec = (int)((((endOverlap-startOverlap)/(double)(stepMJD))-1)/2.0);
-
+   printf("nSpec = %d\n",*nSpec);
    fakepsr->param[param_pepoch].val=&peopoch;
    for(i=0; i < psr->ifuncN;i++){
       if (psr->ifuncT[i] >= startOverlap && psr->ifuncT[i] <= endOverlap){
@@ -502,8 +512,8 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
 	  }
    }
    fakepsr->nobs=nobs;
-
-   
+   printf("Set up spectrum %d\n",fakepsr->nobs);
+   printf("nSpec = %d\n",*nSpec);
 /* From here on in we copy the cholSpectra plugin
  */
    double **uinv;
@@ -525,14 +535,16 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
 	  resy[i] = (double)(fakepsr->obsn[i].residual);
 	  rese[i] = (double)(fakepsr->obsn[i].toaErr*1.0e-6);
 	  ip[i]=i;
+	  printf("Handing Cholesky: %g %g %g %d\n",resx[i],resy[i],rese[i],ip[i]);
    }
    logmsg("Get Cholesky 'uinv' matrix from '%s'",covarFuncFile);
    getCholeskyMatrix(uinv,covarFuncFile,fakepsr,resx,resy,rese,fakepsr->nobs,0,ip);
    logdbg("Got uinv, now compute spectrum.");
 
    // Must calculate uinv for the pulsar
+   printf("calculating spectra\n");
    calcSpectra_ri(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec);
-
+   printf("complete calculating spectra\n");
    // Free uinv
    free_uinv(uinv);
 
