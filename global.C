@@ -65,7 +65,7 @@ double FCALPHA, WNLEVEL, EXPSMOOTH, UPW, NFIT, FCFINAL;
 void extra_delays(pulsar *psr,int npsr)
 {  
   const char *CVS_verNum = "$Revision$";
-  if (displayCVSversion == 1) CVSdisplayVersion("global.C","extra_delays()",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"extra_delays()",CVS_verNum);
 
   calculate_bclt(psr,npsr);/* 3. Calculate bclt  */
   /*  shapiro_delay(psr,npsr); */ /* 1. Calculate the Shapiro delay */
@@ -75,7 +75,7 @@ void extra_delays(pulsar *psr,int npsr)
 void clock_corrections(pulsar *psr,int npsr)
 {  
   const char *CVS_verNum = "$Revision$";
-  if (displayCVSversion == 1) CVSdisplayVersion("global.C","clock_corrections()",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"clock_corrections()",CVS_verNum);
 
   logdbg("Calling toa2utc");
   toa2utc(psr,npsr);        /* 1. UTC(Observatory) -> UTC(NIST) */
@@ -91,24 +91,30 @@ void clock_corrections(pulsar *psr,int npsr)
 void ephemeris_routines(pulsar *psr,int npsr)
 { 
   const char *CVS_verNum = "$Revision$";
-  if (displayCVSversion == 1) CVSdisplayVersion("global.C","ephemeris_routines()",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"ephemeris_routines()",CVS_verNum);
 
   logtchk("call vectorPulsar()");
   vectorPulsar(psr,npsr);   /* 1. Form a vector pointing at the pulsar */
   logtchk("call readEphemeris()");
-  readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+  if (psr[0].useCalceph == 0)
+    readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+  else
+    readEphemeris_calceph(psr,npsr);
   logtchk("call get_obsCoord()");
   get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
   logtchk("call tt2tb()");
   tt2tb(psr,npsr);          /* Observatory/time-dependent part of TT-TB */
   logtchk("call readEphemeris()");
-  readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
+  if (psr[0].useCalceph == 0)
+    readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
+  else
+    readEphemeris_calceph(psr,npsr);
 }
 
 void formBatsAll(pulsar *psr,int npsr)
 {
   const char *CVS_verNum = "$Revision$";
-  if (displayCVSversion == 1) CVSdisplayVersion("global.C","formBatsAll()",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"formBatsAll()",CVS_verNum);
 
   logtchk("enter formBatsAll()");
   logdbg("Calling clock corrections");
@@ -132,7 +138,7 @@ void formBatsAll(pulsar *psr,int npsr)
 void updateBatsAll(pulsar *psr, int npsr)
 {
   const char *CVS_verNum = "$Revision$";
-  if (displayCVSversion == 1) CVSdisplayVersion("global.C","updateBatsAll()",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"updateBatsAll()",CVS_verNum);
 
   vectorPulsar(psr, npsr);
   calculate_bclt(psr, npsr);

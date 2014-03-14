@@ -138,6 +138,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->cgw_mc = 0;
  
   psr->timeEphemeris = IF99_TIMEEPH;
+  psr->useCalceph = 0;
   psr->dilateFreq = 1;
   psr->planetShapiro = 1;
   psr->correctTroposphere = 1;

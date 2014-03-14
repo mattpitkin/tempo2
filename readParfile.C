@@ -309,6 +309,13 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       fscanf(fin,"%s",psr->ephemeris);
       strcpy(psr->JPL_EPHEMERIS,psr->ephemeris);
     }
+  else if (strcasecmp(str,"EPH_FILE")==0)
+    {
+      char temp[1024];
+      fscanf(fin,"%s",temp);
+      sprintf(psr->ephemeris,"%s/ephemeris/%s",getenv("TEMPO2"),temp);
+      psr->useCalceph = 1;
+    }
   else if (strcasecmp(str,"TOFFSET")==0) /* Time offset */
     {
       char str[1000];

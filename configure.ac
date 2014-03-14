@@ -122,6 +122,12 @@ AC_MSG_CHECKING([for BLAS])
 AC_MSG_RESULT($have_blas)
 AM_CONDITIONAL(HAVE_BLAS, [test x$have_blas = xyes])
 
+# Test for calceph 
+ACX_CALCEPH(have_calceph=yes, have_calceph=no)
+AC_MSG_CHECKING([for CALCEPH])
+AC_MSG_RESULT($have_calceph)
+AM_CONDITIONAL(HAVE_CALCEPH, [test x"$have_calceph" = xyes])
+
 # test for LAPACK acceleration
 ACX_LAPACK(have_lapack=yes, have_lapack=no)
 AC_MSG_CHECKING([for LAPACK])
@@ -204,6 +210,12 @@ if test X$have_blas = Xyes; then
 	AC_MSG_NOTICE(Using BLAS library for matrix multiplication)
 fi
 
+if test X$have_calceph = Xyes; then
+	AC_MSG_NOTICE(Able to use calceph library for ephemeris reading)
+else
+	AC_MSG_NOTICE(Calceph library was not found)
+fi
+
 # TempoNest addition:
 if test X$have_multinest != Xyes; then
 	AC_MSG_NOTICE(MultiNest was not found - TempoNest can not be built)
@@ -230,6 +242,7 @@ else
 	   echo " * CULA:         $CULA_LIBS        $CULA_CFLAGS"
 	   echo " * GSL:          $GSL_LIBS         $GSL_CFLAGS"
 	   echo " * BLAS:         $BLAS_LIBS        $BLAS_CFLAGS"
+	   echo " * CALCEPH:      $CALCEPH_LIBS     $CALCEPH_CFLAGS"
 	   echo " * LAPACK:       $LIBS_LAPACK"
     fi
     echo ""

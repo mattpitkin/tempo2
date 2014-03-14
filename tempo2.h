@@ -501,6 +501,7 @@ typedef struct pulsar {
   char clockFromOverride[64];    /* Clock code to assume TOAs are measured against (e.g. UTC to turn off clock corrections, or TDB/TCG to turn off those + Einstein delay */
   char JPL_EPHEMERIS[MAX_FILELEN];
   char ephemeris[MAX_FILELEN];
+  int  useCalceph;
   storePrecision storePrec[MAX_STOREPRECISION];
   int  nStorePrecision;
   int  bootStrap;           /* > 0 if calculating errors using bootstrap Monte-Carlo method */

@@ -34,6 +34,9 @@
 #include <math.h>
 #include <string.h>
 #include "tempo2.h"
+#include "ifteph.h"
+
+void convertUnits(double *val,int units);
 
 #ifdef HAVE_CALCEPH
 #include <calceph.h>
@@ -63,7 +66,10 @@
 void readEphemeris_calceph(pulsar *psr,int npsr)
 {
   t_calcephbin *eph;
-  int p;
+  int i,p;
+  long double jd;
+  double jd0,jd1;
+ 
 
   for (p=0;p<npsr;p++)
     {
@@ -74,8 +80,17 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 	printf("Error: unable to open ephemeris >%s< for pulsar >%s<\n",psr[p].ephemeris,psr[p].name);
 	exit(1);
       }
-
-      cacleph_close(eph);
+      // Now read the ephemeris for each observation
+      for (i=0;i<psr[p].nobs;i++)
+	{
+	  jd = psr[p].obsn[i].sat + getCorrectionTT(psr[p].obsn+i)/SECDAY + 
+	    psr[p].obsn[i].correctionTT_Teph/SECDAY+2400000.5; 
+	  jd0 = (double)((int)jd);
+	  jd1 = (double)(jd-(int)jd);
+	  calceph_compute_unit(eph,jd0,jd1,3,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earth_ssb);
+	  convertUnits(psr[p].obsn[i].earth_ssb,psr[p].units);
+	}	
+      calceph_close(eph);
   }
 }
 #else
@@ -85,3 +100,16 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
   exit(1);
 }
 #endif
+
+void convertUnits(double *val,int units)
+{
+  double scale=1;
+  if (units == SI_UNITS)
+    scale = IFTE_K;
+  val[0] = val[0]*1000.0*scale/SPEED_LIGHT;
+  val[1] = val[1]*1000.0*scale/SPEED_LIGHT;
+  val[2] = val[2]*1000.0*scale/SPEED_LIGHT;
+  val[3] = val[3]*1000.0*scale/SPEED_LIGHT;
+  val[4] = val[4]*1000.0*scale/SPEED_LIGHT;
+  val[5] = val[5]*1000.0*scale/SPEED_LIGHT;
+}

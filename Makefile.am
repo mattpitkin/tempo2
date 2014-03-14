@@ -28,6 +28,10 @@ if HAVE_BLAS
 libtempo2_la_LIBADD+=@BLAS_LIBS@
 endif
 
+if HAVE_CALCEPH
+libtempo2_la_LIBADD+=@CALCEPH_LIBS@
+endif
+
 libtempo2_la_includedir=$(includedir)
 libtempo2_la_include_HEADERS = tempo2.h GWsim.h
 
