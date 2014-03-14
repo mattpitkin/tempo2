@@ -680,6 +680,7 @@ void tai2tt(pulsar *psr,int npsr);
 void tai2ut1(pulsar *psr,int npsr);
 void vectorPulsar(pulsar *psr,int npsr);
 void readEphemeris(pulsar *psr,int npsr,int addEphemNoise);
+void readEphemeris_calceph(pulsar *psr,int npsr);
 void get_obsCoord(pulsar *psr,int npsr);
 double calcRMS(pulsar *psr,int p);
 
