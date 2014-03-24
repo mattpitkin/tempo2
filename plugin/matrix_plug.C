@@ -63,21 +63,21 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
       // Print top headers
       if (resultType==1)
 	{
-	  printf("Param\t");
+	  printf("% 11s\t","Param");
 	  for (j=0;j<psr[p].nParam;j++)
 	    {
 	      getLabel(&psr[p],lab2,j);
-	      printf("%s\t",lab2);
+	      printf("% 11s\t",lab2);
 	    }
 	  printf("\n");
 	  
 	  for (i=0;i<psr[p].nParam;i++)
 	    {
 	      getLabel(&psr[p],lab1,i);
-	      printf("%s\t",lab1);
+	      printf("% 11s\t",lab1);
 	      for (j=0;j<=i;j++)
 		{
-		  printf("%+.8f\t",psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]));
+		  printf("%+10.8f\t",psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]));
 		}
 	      printf("\n");
 	    }
@@ -128,7 +128,8 @@ void getLabel(pulsar *psr,char *lab,int i)
   if (psr->fitParamI[i]==-1) strcpy(lab,"JUMP");
   else if (psr->fitParamI[i]==-2) sprintf(lab,"_DM_%.1f",(float)(psr->dmoffsDM_mjd[psr->fitParamK[i]]));
   else if (psr->fitParamI[i]==-3) sprintf(lab,"_CM_%.1f",(float)(psr->dmoffsCM_mjd[psr->fitParamK[i]]));
-  else strcpy(lab,psr->param[psr->fitParamI[i]].shortlabel[psr->fitParamK[i]]);
+  else if (i==0)sprintf(lab,"%s","YOFF");
+  else sprintf(lab,"%s",psr->param[psr->fitParamI[i]].shortlabel[psr->fitParamK[i]]);
   
 }
 
