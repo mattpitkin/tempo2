@@ -447,7 +447,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
                      (pow(drep,2) + 0.5*dre*drepp))
             + allTerms*(ds+da+DAOP+DSR+DOP);
         }    
-      printf("T2a: %g %g %g %g %g drepp=%g ecc=%g su =%g ome =%g ds = %g da = %g %g %g\n",(double)d2bar,(double)dre,(double)anhat,(double)drep,(double)allTerms,(double)drepp,(double)ecc,(double)su,(double)onemecu,(double)ds,(double)da,(double)DAOP,(double)DSR);
+      //      printf("T2a: %g %g %g %g %g drepp=%g ecc=%g su =%g ome =%g ds = %g da = %g %g %g\n",(double)d2bar,(double)dre,(double)anhat,(double)drep,(double)allTerms,(double)drepp,(double)ecc,(double)su,(double)onemecu,(double)ds,(double)da,(double)DAOP,(double)DSR);
       torb-=d2bar;                                  /* Equation 42  */
 
       if (param==-1 && com == psr[p].nCompanion-1) return torb;
