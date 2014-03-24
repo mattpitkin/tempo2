@@ -92,8 +92,8 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
   double pbdot,xpbdot,phase,u,gamma;
   double orbits;
   int    norbits;
-  double cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,
-    anhat,su;
+  double cu,onemecu=0,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,
+    anhat,su=0;
   double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
   double csigma,ce,cx,comega,cgamma,cdth,cm2,csi, ckom, ckin;
   double eps1,eps2,eps1dot,eps2dot,t0asc;
@@ -447,9 +447,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
                      (pow(drep,2) + 0.5*dre*drepp))
             + allTerms*(ds+da+DAOP+DSR+DOP);
         }    
-      //      printf("T2a: %g %g %g %g %d %g %g %g %g %g %g %g
-      //      %g\n",d2bar,dre,anhat,drep,allTerms,drepp,ecc,su,
-      //      onemecu,ds,da,(double)DAOP,(double)DSR);
+      printf("T2a: %g %g %g %g %g drepp=%g ecc=%g su =%g ome =%g ds = %g da = %g %g %g\n",(double)d2bar,(double)dre,(double)anhat,(double)drep,(double)allTerms,(double)drepp,(double)ecc,(double)su,(double)onemecu,(double)ds,(double)da,(double)DAOP,(double)DSR);
       torb-=d2bar;                                  /* Equation 42  */
 
       if (param==-1 && com == psr[p].nCompanion-1) return torb;
