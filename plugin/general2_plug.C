@@ -713,11 +713,26 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		if (strcasecmp(var,"binphase")==0) /* binary phase */
 		  {
 		    double pbdot=0.0;
-		    double tpb = (psr[0].obsn[varN].bat-psr[0].param[param_t0].val[0])*86400.0/(psr[0].param[param_pb].val[0]*SECDAY);
-		    double phase;
-		    phase = fortranMod(tpb+1000000.0,1.0);
-		    if (phase < 0.0) phase+=1.0; 
+            double tpb;
 
+            // copied from plk_plug.C so that phases printed here match!
+            if( psr[0].param[param_t0].paramSet[0] ){
+               tpb = ( psr[0].obsn[varN].bat - psr[0].param[param_t0].val[0])
+                  / ( psr[0].param[param_pb].val[0] );
+            }else if( psr[0].param[param_tasc].paramSet[0] ){
+               tpb = ( psr[0].obsn[varN].bat - psr[0].param[param_tasc].val[0] )
+                  / ( psr[0].param[param_pb].val[0] );
+            }else{
+               printf( "ERROR: Neither Tasc not T0 set...\n");
+               tpb = ( psr[0].obsn[varN].bat - psr[0].param[param_t0].val[0] )
+                  / ( psr[0].param[param_pb].val[0] );
+            }
+		    double phase;
+            if (psr[0].param[param_pbdot].paramSet[0] == 1)
+			    pbdot = psr[0].param[param_pbdot].val[0];
+
+		    phase = fortranMod(tpb-0.5*pbdot*tpb*tpb+1000000.0,1.0);
+		    if (phase < 0.0) phase+=1.0; 
 
 		    sprintf(disp,format,(longdouble)phase); 
 		    fprintf(fout,"%s",disp);
