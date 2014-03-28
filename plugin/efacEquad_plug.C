@@ -784,7 +784,8 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
 	  col = (fv[i]-minV)/(maxV-minV);
 	  //	  	  printf("%d %g col = %g\n",i,fv[i],col);
 	  //col = fv[i];
-	  cpgscr(2,1-col,1-col,1-col);
+	  //	  cpgscr(2,1-col,1-col,1-col);
+	  cpgscr(2,col,col,col);
 	  cpgsci(2);
 	  cpgsch(3*col);
 	  cpgpt(1,fx+i,fy+i,-15);
