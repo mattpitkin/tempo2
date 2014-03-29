@@ -1,6 +1,6 @@
 plugindir=@TEMPO2_PLUG_INSTALL@
 
-plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian_@T2ARCH@_plug.la formIdeal_@T2ARCH@_plug.la createRealisation_@T2ARCH@_plug.la addRedNoise_@T2ARCH@_plug.la
+plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian_@T2ARCH@_plug.la formIdeal_@T2ARCH@_plug.la createRealisation_@T2ARCH@_plug.la addRedNoise_@T2ARCH@_plug.la addCGW_@T2ARCH@_plug.la
 
 #bin_PROGRAMS=read_toasim
 lib_LTLIBRARIES=libtoasim.la
@@ -15,7 +15,7 @@ AM_CPPFLAGS=-I@top_srcdir@/
 
 CFLAGS+=@FFTW_CFLAGS@
 
-pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install formIdeal-install createRealisation-install addRedNoise-install
+pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install formIdeal-install createRealisation-install addRedNoise-install addCGW-install
 
 
 TOASIM_src=toasim.h toasim.c toasim_compute.c toasim_io.c makeRedNoise.C makeRedNoise.h
@@ -50,6 +50,12 @@ addGaussian_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
 addGaussian_@T2ARCH@_plug_la_LDFLAGS=$(plugin_LDFLAGS)
 addGaussian-install: addGaussian_@T2ARCH@_plug.la
 	$(INSTALL) .libs/addGaussian_@T2ARCH@_plug.t2 $(plugindir)
+
+addCGW_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addCGW_plug.C $(TOASIM_src)
+addCGW_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
+addCGW_@T2ARCH@_plug_la_LDFLAGS=$(plugin_LDFLAGS)
+addCGW-install: addGaussian_@T2ARCH@_plug.la
+	$(INSTALL) .libs/addCGW_@T2ARCH@_plug.t2 $(plugindir)
 
 
 formIdeal_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h formIdeal_plug.C $(TOASIM_src)
