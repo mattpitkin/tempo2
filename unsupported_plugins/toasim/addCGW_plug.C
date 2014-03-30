@@ -111,12 +111,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    { sscanf(argv[++i],"%lf",&cgw_cosinc); set_cosinc=1;}
 	  else if (strcmp(argv[i],"-angpol")==0)
 	    { sscanf(argv[++i],"%lf",&cgw_angpol); set_angpol=1;}
-	  else if (strcmp(argv[i],"-mc")==0)
+	  else if (strcmp(argv[i],"-mc")==0) // Solar masses
 	    { sscanf(argv[++i],"%lf",&cgw_mc); set_mc=1;}
 	}
-	if (set_freq==0 || set_ra==0 || set_dec==0 || set_h0==0 || set_epoch==0 || set_cosinc==0 || set_angpol==0 || set_mc==0){
+	if (set_freq==0 || set_ra==0 || set_dec==0 || set_h0==0 || set_epoch==0 || set_cosinc==0 || set_angpol==0){
 	  printf("Have not set all required parameters:\n");
-	  printf("-freq, -ra, -dec, -h0, -ep, -cosinc, -angpol, -mc\n");
+	  printf("-freq, -ra, -dec, -h0, -ep, -cosinc, -angpol\n");
 	  exit(1);
 	}
 
