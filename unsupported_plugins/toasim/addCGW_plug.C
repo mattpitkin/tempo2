@@ -277,7 +277,7 @@ double calculateOffset(pulsar *psr,int p,int obs,double cgw_freq,double cgw_ra,d
       res_i = -1.0L/(2.0L*(1.0L-cosTheta))*(res_i); 
     }
 
-  return res_r+res_i;
+  return -(res_r+res_i); // Xingjiang Zhu argued on 31st March 2014 that this should be negative
 }
 
 
