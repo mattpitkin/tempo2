@@ -646,7 +646,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     fscanf(fin,"%lf %lf",&psr->quadRA,&psr->quadDEC);
   else if (strcasecmp(str,"QUAD_EPOCH")==0) // Epoch for quad function
     fscanf(fin,"%lf",&psr->quadEpoch);
-  else if (strstr(str,"QUAD")!=NULL || strstr(str,"quad")!=NULL)
+  else if ((strstr(str,"QUAD")!=NULL || strstr(str,"quad")!=NULL)
+      && (strcasecmp(str,"T2EQUAD")!=0)) // Avoid misinterpreting T2EQUAD
     {
       int number;
       /* Obtain parameter number */
@@ -1027,6 +1028,18 @@ else if (strcasecmp(str,"_DM")==0)
               psr->T2efacFlagVal[nefacFlag], 
               &psr->T2efacVal[nefacFlag] );
       ( psr->nT2efac )++;
+    }
+
+  /* /----------\
+     | T2 EQUAD |
+     \----------/ */
+  else if( strcasecmp( str, "T2EQUAD") == 0 ) // EQUAD for given flag
+    { 
+      int nequadFlag = psr->nT2equad;
+      fscanf( fin, "%s %s %lf", psr->T2equadFlagID[nequadFlag], 
+              psr->T2equadFlagVal[nequadFlag], 
+              &psr->T2equadVal[nequadFlag] );
+      ( psr->nT2equad )++;
     }
 
 

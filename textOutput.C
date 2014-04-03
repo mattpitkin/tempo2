@@ -1110,6 +1110,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      fprintf(fout2,"T2EFAC %s %s %g\n", psr[p].T2efacFlagID[i], psr[p].T2efacFlagVal[i], psr[p].T2efacVal[i]);
 	    }
 
+	  for (i=0;i<psr[p].nT2equad;i++)
+	    {
+	      fprintf(fout2,"T2EQUAD %s %s %g\n", psr[p].T2equadFlagID[i], psr[p].T2equadFlagVal[i], psr[p].T2equadVal[i]);
+	    }
+
 	  /* Add whitening flags */
 	  if (psr[p].param[param_wave_om].paramSet[0]==1)
 	    {
