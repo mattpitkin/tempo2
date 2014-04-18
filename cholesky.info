@@ -3,6 +3,7 @@ MODEL	DM [D] [d] [f]				DM model with structure function [D] at a lag of [d] day
 MODEL	T2							Indicates that we are reading a "new style" model file.
 MODEL	T2PowerLaw [a] [P] [fc]		Power law model with corner frequency. index=[a], P(fc) = [P], fc=[fc].
 DCF		[file]						Reads [file] as an "old old" style covariance function.
+ECM             [file]                                          Reads [file] as an "extra" covariance matrix
 MJD		[start] [end]				following lines are applied only to ToAs within this time period
 PSR		[pulsar name]				following lines match only this pulsar
 CLEAR	--							reset the PSR and MJD keywords

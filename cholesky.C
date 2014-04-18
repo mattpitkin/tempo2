@@ -205,6 +205,11 @@ void cholesky_readT2CholModel_R(double **m, double **mm, char* fname,double *res
 			cholesky_readFromCovarianceFunction(mm,val,resx,resy,rese,np,nc);
 			addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
 		 }
+		 else if (strcmp(key,"ECM")==0){ // Extra covariance matrix
+		   sscanf(tmp,"%s %s",dmy,val);
+		   cholesky_ecm(mm,val,resx,resy,rese,np,nc);
+		   addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+		 }
 
 		 if (strcmp(key,"MODEL")==0){
 			sscanf(tmp,"%s %s",dmy,val);
@@ -448,6 +453,41 @@ void cholesky_readT2Model1(double **m, FILE* file,double *resx,double *resy,doub
    fscanf(file,"%s %lg\n",dmy,&amp);
    cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
 }
+
+void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *rese,int np, int nc){
+   char dmy[LINE_LENGTH];
+   int i,j;
+   FILE *fin;
+   double dummy;
+
+   if (!(fin = fopen(fileName,"r")))
+     {
+       printf("ERROR: Unable to open ECM file: %s\n",fileName);
+       exit(1);
+     }
+
+   //   cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
+   printf("Using extra covariance matrix from: %s\n",fileName);
+   for (i=0;i<np+nc;i++)
+     {
+       for (j=0;j<np+nc;j++)
+	 {
+	   if (fscanf(fin,"%lf",&m[i][j])!=1)
+	     {
+	       printf("Error reading element (%d,%d) from %s\n",i,j,fileName);
+	       exit(1);
+	     }
+	 }
+     }
+   if (fscanf(fin,"%lf",&dummy)==1)
+     {
+       printf("WARNING: %s seems to have too many elements\n",fileName);
+     }
+   fclose(fin);
+}
+
+
+
 void cholesky_readT2CholModel(double **m, char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
    char psrJ[LINE_LENGTH];
    int i,j;
