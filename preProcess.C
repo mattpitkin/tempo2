@@ -532,8 +532,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                       if (strcmp(psr[p].obsn[i].flagID[j],psr[p].TNEQFlagID[k])==0)
                         {
                           if (strcmp(psr[p].obsn[i].flagVal[j],psr[p].TNEQFlagVal[k])==0){
-			    double TNEquad = pow(10.0,psr[p].TNEQVal[k]+6);
-                            err += TNEquad;
+				double TNEquad = pow(10.0,psr[p].TNEQVal[k]+6)*pow(10.0,psr[p].TNEQVal[k]+6);
+                            	err = sqrt(err*err + TNEquad);
 			  }
                         }
                     }
