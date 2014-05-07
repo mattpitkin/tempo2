@@ -674,6 +674,7 @@ void preProcessSimple3 (pulsar *psr);
 void useSelectFile(char *fname,pulsar *psr,int npsr);
 void processSimultaneous(char *line,pulsar *psr, int npsr);
 void processFlag(char *line,pulsar *psr,int npsr);
+void logicFlag(char *line,pulsar *psr,int npsr);
 void toa2utc(pulsar *psr,int npsr);
 void utc2tai(pulsar *psr,int npsr);
 void tt2tb(pulsar *psr,int npsr);

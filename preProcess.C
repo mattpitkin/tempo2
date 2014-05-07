@@ -813,9 +813,79 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 	    processSimultaneous(line,psr,npsr);
 	  else if (strcmp(first,"PROCESS")==0 && second[0]=='-')
 	    processFlag(line,psr,npsr);
+	  else if (strcasecmp(first,"LOGIC")==0 && second[0]=='-')
+	    logicFlag(line,psr,npsr);
 	}      
     }
   fclose(fin);
+}
+
+// Function to process specified flags
+void logicFlag(char *line,pulsar *psr,int npsr)
+{
+  char t1[100],flagID[100],flagV[100],s1[100],s2[100],s3[100],s4[100],s5[100],s6[100];
+  double v1,v2;
+  int p,i,j,k,found;
+  int fVal=0;
+
+  sscanf(line,"%s %s %s %s %s",t1,flagID,s1,s2,s3);
+  for (p=0;p<npsr;p++)
+    {
+      for (i=0;i<psr[p].nobs;i++)
+	{
+	  found=0;
+	  for (k=0;k<psr[p].obsn[i].nFlags;k++)
+	    {
+	      if (strcmp(psr[p].obsn[i].flagID[k],flagID)==0 &&
+		  psr[p].obsn[i].deleted==0)
+		{found=1; fVal=k; break;}
+	    }
+	  if (found==0) // Haven't found an observation
+	    {
+	      if (strcasecmp(s1,"EXIST")==0)
+		{
+		  if (strcasecmp(s2,"PASS")==0)
+		    psr[p].obsn[i].deleted=1;
+		}	      
+	    }
+	  else if (found==1) // Got a point to process
+	    {
+	      double val;
+	      if (strcasecmp(s1,"EXIST")==0)
+		{
+		  if (strcasecmp(s2,"REJECT")==0)
+		    psr[p].obsn[i].deleted=1;
+		}	      
+	      else if (sscanf(psr[p].obsn[i].flagVal[fVal],"%lf",&val)==1)
+		{
+		  if (strcasecmp(s3,"REJECT")==0)
+		    {
+		      if (strcmp(s1,">")==0)
+			{
+			  double val2;
+			  sscanf(s2,"%lf",&val2);
+			  if (val > val2)
+			    psr[p].obsn[i].deleted=1;
+			}
+		      else if (strcmp(s1,"<")==0)
+			{
+			  double val2;
+			  sscanf(s2,"%lf",&val2);
+			  if (val < val2)
+			    psr[p].obsn[i].deleted=1;
+			}
+		      else if (strcmp(s1,"=")==0)
+			{
+			  double val2;
+			  sscanf(s2,"%lf",&val2);
+			  if (val == val2)
+			    psr[p].obsn[i].deleted=1;
+			}
+		    }
+		}
+	    }
+	}
+    }
 }
 
 // Function to process specified flags
