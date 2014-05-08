@@ -309,6 +309,7 @@ void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac)
       if (err==1)
         {
           rnd8((double)psr[0].param[i].val[k],psr[0].param[i].err[k]*efac,1,cval,&lv,cerr,&le,msg);
+	  //	  printf("Trying %g %g %g %s %s\n",(double)psr[0].param[i].val[k],(double)psr[0].param[i].err[k],(double)efac,cval,cerr);
           sprintf(valStr,"%s(%s)",cval,cerr);
         }
       else
@@ -379,7 +380,7 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
 {
   double vv, ee, xv, xe;
   int ixv, ixe, iee, j, ivv, ise, irnd, ilim,ret,ret_lv,ret_le;
-  char cexp[9], fmt[12];
+  char cexp[9], fmt[12],temp[20];
 
   ilim = 7;
 
@@ -444,7 +445,11 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
 	  do
 	    {
 	      j=strlen(cexp)-1;
-	      if (j==0)strcpy(cexp,cexp+1);
+	      if (j==0)
+		{
+		  strcpy(temp,cexp+1);
+		  strcpy(cexp,temp);
+		}
 	    }
 	  while (j==0);
 	  if (vv<0) /* allow space for - sign */
@@ -452,7 +457,11 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
 	  else
 	    sprintf(fmt,"%%%d.%df",ise+3,ise);
 	  sprintf(cval,fmt,vv);
-	  if (cval[0]==' ') strcpy(cval,cval+1);
+	  if (cval[0]==' ') 
+	    {
+	      strcpy(temp,cval+1);
+	      strcpy(cval,temp);
+	    }
 	  ret_lv = strlen(cval)-1;
 	  strcat(cval,"E");
 	  strcat(cval,cexp);
@@ -478,7 +487,10 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
 	  sprintf(cval,fmt,rval);
 	}
     }
-  if (cval[0]==' ') strcpy(cval,cval+1);  /* For positive numbers */
+  if (cval[0]==' ') {
+    strcpy(temp,cval+1);
+    strcpy(cval,temp);  /* For positive numbers */
+  }
   ret_lv=strlen(cval)-1; 
 
   irnd = (int)log10(ee/2.0);
