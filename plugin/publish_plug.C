@@ -21,29 +21,44 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   double pval;
   double efac=1.0;
   char efacStr[500];
-  
+  int nohead=0;
+
   for (i=0;i<argc;i++)
     {
       if (strcmp(argv[i],"-efac")==0)
         sscanf(argv[i+1],"%lf",&efac);
+      else if (strcmp(argv[i],"-nohead")==0)
+	nohead=1;
     }
   char format[20]="";
   textOutput(psr,npsr,0,0,0,0,format);
   
   fout = fopen("table.tex","w");
-  fprintf(fout,"\\documentclass{article}\n");
-  fprintf(fout,"\\begin{document}\n");
-
+  if (nohead==0){
+    fprintf(fout,"\\documentclass{article}\n");
+    fprintf(fout,"\\begin{document}\n");
+  }
   fprintf(fout,"\\begin{table}\n");
+  fprintf(fout,"\\caption{Parameters for PSR %s}\n",psr[0].name);
+  if (nohead==1){
+    fprintf(fout,"\\resizebox{35pc}{!}{\\begin{minipage}{\\textwidth}\n");
+  }
   fprintf(fout,"\\begin{tabular}{ll}\n");
   fprintf(fout,"\\hline\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Fit and data-set} \\\\\n");
   fprintf(fout,"\\hline\n");
   strcpy(name,psr[0].name); parseMinus(name);
-  fprintf(fout,"Pulsar name\\dotfill & J%s \\\\ \n",name);
+  // Check if a J already exists in the name
+  if (psr[0].name[0]=='J')
+    fprintf(fout,"Pulsar name\\dotfill & %s \\\\ \n",name);
+  else
+    fprintf(fout,"Pulsar name\\dotfill & J%s \\\\ \n",name);
+
   fprintf(fout,"MJD range\\dotfill & %7.1Lf---%7.1Lf \\\\ \n",
           psr[0].param[param_start].val[0],
 	 psr[0].param[param_finish].val[0]);
+  fprintf(fout,"Data span (yr)\\dotfill & %.2Lf \\\\ \n",
+          (psr[0].param[param_finish].val[0]-psr[0].param[param_start].val[0])/365.25);
   fprintf(fout,"Number of TOAs\\dotfill & %d \\\\\n",psr[0].nFit);
   fprintf(fout,"Rms timing residual ($\\mu s$)\\dotfill & %.1Lf \\\\\n",
           psr[0].param[param_tres].val[0]);
@@ -98,7 +113,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
               i!=param_tzrmjd && i!=param_tzrfrq
               && i!=param_start && i!=param_finish 
               && i!=param_waveepoch && i!=param_wave_om
-              && i!=param_ephver)
+              && i!=param_ephver && i!=param_dmmodel)
             {
               if (psr[0].param[i].paramSet[k]==1 && 
                   psr[0].param[i].fitFlag[k]==0)
@@ -156,6 +171,19 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
                        pow(psr[0].param[param_f].val[0],3))*3.2e19);
   fprintf(fout,"$\\log_{10}$(Surface magnetic field strength, G) \\dotfill & %.2f \\\\\n",log10(pval));
 
+  /* Distance from parallax */
+  if (psr[0].param[param_px].paramSet[0]==1){
+    double pxdist,pxdistErr;
+    int lv,le;
+    char cval[500],cerr[500],msg[500];
+
+    pxdist = (1.0/psr[0].param[param_px].val[0]*1000.0);
+    pxdistErr = 1.0/powl(psr[0].param[param_px].val[0],2.0)*psr[0].param[param_px].err[0]*1000.0;
+    rnd8((double)pxdist,pxdistErr*efac,1,cval,&lv,cerr,&le,msg);
+    fprintf(fout,"Distance from parallax (pc) \\dotfill & %s(%s) \\\\\n",cval,cerr);
+  }
+
+
   fprintf(fout,"\\hline\n");
   fprintf(fout,"\\multicolumn{2}{c}{Assumptions} \\\\\n");
   fprintf(fout,"\\hline\n"); 
@@ -191,6 +219,10 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
 
   fprintf(fout,"\\hline\n");
   fprintf(fout,"\\end{tabular}\n");
+  if (nohead==1){
+    fprintf(fout,"\\end{minipage}\n");
+  }
+
   if (efac==1)
     strcpy(efacStr,"");
   else if (efac==2)
@@ -200,10 +232,15 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   else
     sprintf(efacStr,"%f times",efac);
 
-  fprintf(fout,"Note: Figures in parentheses are %s the nominal 1$\\sigma$ \\textsc{tempo2} uncertainties in the least-significant digits quoted.\n",efacStr);
-  fprintf(fout,"\\end{table}\n");
+  printf("Suggest adding the following into your paper:\n\n");
+  printf("Note: Figures in parentheses are %s the nominal 1$\\sigma$ \\textsc{tempo2} uncertainties in the least-significant digits quoted.\n",efacStr);
 
-  fprintf(fout,"\\end{document}\n");
+  if (nohead==0)
+    {
+      fprintf(fout,"\\end{table}\n");
+      
+      fprintf(fout,"\\end{document}\n");
+    }
   fclose(fout);
 }
 
@@ -281,9 +318,9 @@ void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac)
   parseExp(valStr);
   
   if (i==param_raj)
-    strcpy(label,"Right ascension, $\\alpha$");
+    strcpy(label,"Right ascension, $\\alpha$ (hh:mm:ss)");
   else if (i==param_decj)
-    strcpy(label,"Declination, $\\delta$");
+    strcpy(label,"Declination, $\\delta$ (dd:mm:ss)");
   else if (i==param_f && k==0)
     strcpy(label,"Pulse frequency, $\\nu$ (s$^{-1}$)");
   else if (i==param_f && k==1)
@@ -291,11 +328,11 @@ void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac)
   else if (i==param_f && k==2)
     strcpy(label,"Second derivative of pulse frequency, $\\ddot{\\nu}$ (s$^{-3}$)");
   else if (i==param_dm && k==0)
-    strcpy(label,"Dispersion measure, $DM$ (cm$^{-3}$pc)");
+    strcpy(label,"Dispersion measure, DM (cm$^{-3}$pc)");
   else if (i==param_dm && k==1)
     strcpy(label,"First derivative of dispersion measure, $\\dot{DM}$ (cm$^{-3}$pc\\,yr$^{-1}$)");
   else if (i==param_pmra)
-    strcpy(label,"Proper motion in right ascension, $\\mu_{\\alpha}$ (mas\\,yr$^{-1}$)");
+    strcpy(label,"Proper motion in right ascension, $\\mu_{\\alpha} \\cos \\delta$ (mas\\,yr$^{-1}$)");
   else if (i==param_pmdec)
     strcpy(label,"Proper motion in declination, $\\mu_{\\delta}$ (mas\\,yr$^{-1}$)");
   else if (i==param_px)
