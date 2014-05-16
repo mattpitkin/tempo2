@@ -210,12 +210,17 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	      if (strcmp(psr[p].obsn[i].flagID[k],"-dm")==0) /* Have DM correction */
 		{
 		  sscanf(psr[p].obsn[i].flagVal[k],"%lf",&dmval);
-		  dmval+=psr[p].dmOffset;
+      // The dmOffset value is never set and therefore the following line only adds confusion.
+      //                                                   JPWV, 08.05.2014
+		  //dmval+=psr[p].dmOffset;
 		}
 	      if (strcmp(psr[p].obsn[i].flagID[k],"-dmo")==0) /* Have DM correction */
 		{
 		  sscanf(psr[p].obsn[i].flagVal[k],"%lf",&dmval2);
-		  dmval+=(dmval2+psr[p].dmOffset);
+      // The dmOffset value is never set and therefore the following line only adds confusion.
+      //                                                   JPWV, 08.05.2014
+		  //dmval+=(dmval2+psr[p].dmOffset);
+      dmval += dmval2; // JPWV, 08.05.2014
 		}
 	    }
 	  //	  logdbg("Looked for flags");      

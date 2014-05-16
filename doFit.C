@@ -2404,10 +2404,13 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 			{
 			   psr[p].param[i].val[k] += val[j];
 			   psr[p].param[i].err[k]  = error[j];
+         // The following lines break the -dmo tim-file option and have therefore been disabled. 
+         // As far as I know, they don't really have an effect anyway.
+         //                                               JPWV, 08.05.2014
 			   // This is slow - should be a better approach
-			   if (i==param_dm){
-				  psr[p].dmOffset+=val[j];
-			   }
+			   // if (i==param_dm){
+         //   psr[p].dmOffset+=val[j];
+			   // }
 			}
 			else if (i==param_dshk)
 			{
