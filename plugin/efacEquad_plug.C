@@ -129,6 +129,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-reqPoints")==0)
 	sscanf(argv[++i],"%d",&reqPoints);
+      else if (strcmp(argv[i],"-dstep")==0)
+	sscanf(argv[++i],"%lf",&dstep);
       else if (strcmp(argv[i],"-flag")==0)
 	strcpy(flagID,argv[++i]);
       else if (strcmp(argv[i],"-plot")==0)
