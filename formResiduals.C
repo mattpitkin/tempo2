@@ -1400,7 +1400,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       ntpd = ((int)psr[p].obsn[i].bbat-(int)psr[p].obsn[0].bbat);
 	       phaseint = nf0*ntpd*86400.0;
 	       pnNew = (long long)(phaseint + fortran_nint(phase5[i]));
-	       printf("Have %g %lld %lld %lld\n",(double)psr[p].obsn[i].sat,pnNew-pn0,pn0,pnNew);
+	       logdbg("Have %g %lld %lld %lld",(double)psr[p].obsn[i].sat,pnNew-pn0,pn0,pnNew);
 	       if (pn0 == -1)
 		 {
 		   pn0 = pnNew;
@@ -1425,7 +1425,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		       addPhase = pnNew-pnAct;
 		       residual += addPhase;
 		       ntrk += addPhase;
-		       printf("*** Adding phase %lld ***\n",addPhase);
+		       logdbg("*** Adding phase %lld ***",addPhase);
 		     }
 		 }
 	     }
