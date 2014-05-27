@@ -1171,7 +1171,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		 afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
 	  else
 	  {
-		 yrs = (psr->obsn[ipos].sat - psr->param[param_pepoch].val[0])/365.25;
+		 yrs = (psr->obsn[ipos].sat - psr->param[param_dmepoch].val[0])/365.25;
 		 afunc = 1.0/(DM_CONST*pow(psr->obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k);
 	  }
    }
