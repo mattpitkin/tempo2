@@ -1162,6 +1162,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
    }
    else if (i==param_dm)    /* Dispersion measure */
    {
+	  if(psr->obsn[ipos].freq==0){
+		 // no DM fit for infinite frequency TOAS
+		 afunc=0;
+	  } else {
 	  double yrs;
 	  /* What about Doppler effect for the frequency -- change to barycentre?? */
 	  /* look at Blanford(?) paper */
@@ -1173,6 +1177,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	  {
 		 yrs = (psr->obsn[ipos].sat - psr->param[param_dmepoch].val[0])/365.25;
 		 afunc = 1.0/(DM_CONST*pow(psr->obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k);
+	  }
 	  }
    }
    else if (i==param_dmx)
