@@ -104,6 +104,7 @@ void tt2tb(pulsar *psr,int npsr)
 		varray);   */
 	for (k=0;k<3;k++)
 	  earthVel[k] = psr[p].obsn[i].earth_ssb[k+3];
+	//logdbg("i %d Vearth = %g %g %g",i,earthVel[0],earthVel[1],earthVel[2]);
 	obsTerm = dotproduct(earthVel, psr[p].obsn[i].observatory_earth)
 	  /  (1.0-IFTE_LC) ;
 	/* both vectors were meant to be defined in Ephemeris units ...
@@ -169,6 +170,10 @@ void tt2tb(pulsar *psr,int npsr)
 
 							   
 	    }
+
+	logdbg("corrn TT_Teph %llg",psr[p].obsn[i].correctionTT_Teph);
+	logdbg("corrn TT_TB %llg",psr[p].obsn[i].correctionTT_TB);
+	logdbg("corrn einstin %llg",psr[p].obsn[i].einsteinRate-1);
 // 	  if (!first) printf("%g %g %g %g %g Einstein\n", (double)mjd_tt,
 // 		 deltaT, deltaTDot, obsTerm, obsTermDot);
 //	  if (!first)

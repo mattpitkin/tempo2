@@ -122,7 +122,7 @@ void calculate_bclt(pulsar *psr,int npsr)
 		logdbg("Complete dm_delays");
 		dt_SSB = psr[p].obsn[i].roemer-(psr[p].obsn[i].tdis1+psr[p].obsn[i].tdis2)-
 		  (psr[p].obsn[i].shapiroDelaySun+psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter); 
-		//		printf("dt_SSB: %g %g %g %g %g  \n",(double)psr[p].obsn[i].roemer,(double)psr[p].obsn[i].tdis1,(double)psr[p].obsn[i].tdis2,(double)psr[p].obsn[i].shapiroDelaySun,(double)psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter);
+				logdbg("dt_SSB: %g %g %g %g %g",(double)psr[p].obsn[i].roemer,(double)psr[p].obsn[i].tdis1,(double)psr[p].obsn[i].tdis2,(double)psr[p].obsn[i].shapiroDelaySun,(double)psr[p].planetShapiro*psr[p].obsn[i].shapiroDelayJupiter);
 		if (veryFast==1) break;
 		loop++;
 	      } while (fabs(dt_SSB-dt_SSB_old)>1.0e-10 && psr[p].obsn[i].deleted!=1 && loop < 100);

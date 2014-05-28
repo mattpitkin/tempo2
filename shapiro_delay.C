@@ -43,7 +43,8 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 
   if (displayCVSversion == 1) CVSdisplayVersion("shapiro_delay.C","shapiro_delay()",CVS_verNum);
   
-  if (psr[p].obsn[i].delayCorr==0) /* No correction */
+  if ((strcmp(psr[p].obsn[i].telID,"STL_BAT")==0) || psr[p].obsn[i].delayCorr==0) /* No correction */
+  //if ( psr[p].obsn[i].delayCorr==0) /* No correction */
     {
       psr[p].obsn[i].shapiroDelaySun = 0.0;
       psr[p].obsn[i].shapiroDelayJupiter = 0.0;
