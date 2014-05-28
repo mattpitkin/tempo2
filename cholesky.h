@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 void cholesky_readFromCovarianceFunction(double **m, char* fname,double *resx,double *resy,double *rese,int np, int nc);
 void cholesky_readT2CholModel(double **m, char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
 void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *resx,double *resy,double *rese,int np, int nc);
@@ -9,5 +14,9 @@ void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,
 void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *rese,int np, int nc);
 
 void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr,double mjd_start,double mjd_end);
+
+#ifdef __cplusplus
+}
+#endif
 
 
