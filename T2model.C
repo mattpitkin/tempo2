@@ -48,15 +48,15 @@
 
 
 static double calcDH( double ae, double h3, double h4, int nharm, int sel);
-double getParameter(pulsar *psr,int p,int k);
+long double getParameter(pulsar *psr,int p,int k);
 
 void calcGR(double mtot,double m2,double x,double ecc,double an,double afac,
             double f0, double *dr,double *dth,double *er,double *eth,
             double *xk,double *si,double *gamma, double *pbdot,double *a0,
             double *b0);
-void getKeplerian(pulsar *psr,int com,double *pb,double *t0,double *ecc,
+void getKeplerian(pulsar *psr,int com,double *pb,long double *t0,double *ecc,
                   double *omz,double *x,double *eps1,double *eps2,
-                  double *t0asc,double *shapmax,double *kom,double *kin);
+                  long double *t0asc,double *shapmax,double *kom,double *kin);
 void addKeplerianJumps(pulsar *psr,int ipos,double *torb,double *x,double *ecc,
                        double *omz,double *pb);
 void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
@@ -66,14 +66,14 @@ void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
                       double *a0,double *b0,double *xomdot,double *afac,
                       double *eps1dot,double *eps2dot,double *daop);
 void updateParameters(double edot,double xdot,double eps1dot,double eps2dot,
-                      double tt0,double *ecc,double *x,double *eps1,
+                      long double tt0,double *ecc,double *x,double *eps1,
                       double *eps2);
 void deriveKeplerian(double pb,double kom,double *an,double *sin_omega,
                      double *cos_omega);
 void derivePostKeplerian(double mtot,double m2,double dr,double dth,
                          double ecc,double *m1,double *er,double *eth);
 void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,
-                   double pmdec, double cos_omega,double tt0,double dpara, 
+                   double pmdec, double cos_omega,long double tt0,double dpara, 
                    double daop, double si,double *x, long double *DK011, 
                    long double *DK012, long double *DK021,long double *DK022,
                    long double *DK031, long double *DK032, long double *DK041, 
@@ -88,7 +88,8 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
   double pb,omdot;
   double rad2deg = 180.0/M_PI;
   double SUNMASS = 4.925490947e-6;
-  double m2,tt0,t0,x,ecc,er,xdot,edot,dr,dth,eth,ct;
+  long double tt0,t0,ct,t0asc;
+  double m2,x,ecc,er,xdot,edot,dr,dth,eth;
   double pbdot,xpbdot,phase,u,gamma;
   double orbits;
   int    norbits;
@@ -96,7 +97,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
     anhat,su=0;
   double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
   double csigma,ce,cx,comega,cgamma,cdth,cm2,csi, ckom, ckin;
-  double eps1,eps2,eps1dot,eps2dot,t0asc;
+  double eps1,eps2,eps1dot,eps2dot;
   double ceps1,ceps2;
   double shapmax,cshapmax,sdds;
   int    com,com1,com2;
@@ -120,6 +121,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
 
   torb = 0.0;
   const char *CVS_verNum = "$Revision$";
+
 
   if (displayCVSversion == 1) 
     CVSdisplayVersion("T2model.C","T2model()",CVS_verNum);
@@ -206,7 +208,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
       
       /* Obtain phase of orbit */
       phase=2.0*M_PI*(orbits-norbits);
-      
+      //      printf("Orbit phase = %.15Lf %.15g\n",psr[p].obsn[ipos].bbat,phase);
       if (psr[p].param[param_ecc].paramSet[com]==1)
         {
 	  //          logdbg("going to compute U");
@@ -598,7 +600,7 @@ void updateT2(pulsar *psr,double val,double err,int pos,int arr){
     }
 }
 
-double getParameter(pulsar *psr,int p,int k)
+long double getParameter(pulsar *psr,int p,int k)
 {  
   if (k > psr->param[p].aSize) return 0.0;
   //  if (psr->param[p].paramSet[k]==1) return(double)psr->param[p].val[k];
@@ -606,10 +608,10 @@ double getParameter(pulsar *psr,int p,int k)
  
   if (psr->param[p].paramSet[k]==1){
     if(psr->param[p].nLinkTo>0)
-      return (double)getParameterValue(psr,p,k);
+      return getParameterValue(psr,p,k);
 
     else 
-      return(double)psr->param[p].val[k];
+      return psr->param[p].val[k];
   }
  
   return 0.0;
@@ -679,9 +681,9 @@ void calcGR(double mtot,double m2,double x,double ecc,double an,double afac,
  * tasc= Time of ascending node
  */
 
-void getKeplerian(pulsar *psr,int com,double *pb,double *t0,double *ecc,
+void getKeplerian(pulsar *psr,int com,double *pb,long double *t0,double *ecc,
                   double *omz,double *x,double *eps1,double *eps2,
-                  double *t0asc,double *shapmax,double *kom,double *kin)
+                  long double *t0asc,double *shapmax,double *kom,double *kin)
 {
   *pb  = getParameter(psr,param_pb,com)*SECDAY;
   *t0  = getParameter(psr,param_t0,com);
@@ -791,7 +793,7 @@ void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
 
 
 void updateParameters(double edot,double xdot,double eps1dot,double eps2dot,
-                      double tt0,double *ecc,double *x,double *eps1,
+                      long double tt0,double *ecc,double *x,double *eps1,
                       double *eps2){
   (*ecc)  += edot*tt0;
   (*x)    += xdot*tt0;
@@ -815,7 +817,7 @@ void derivePostKeplerian(double mtot,double m2,double dr,double dth,
 }
 
 void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,
-                   double pmdec, double cos_omega,double tt0,double dpara, 
+                   double pmdec, double cos_omega,long double tt0,double dpara, 
                    double daop, double si,double *x, long double *DK011, 
                    long double *DK012, long double *DK021,long double *DK022, 
                    long double *DK031,long double *DK032, long double *DK041, 
