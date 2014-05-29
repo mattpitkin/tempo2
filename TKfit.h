@@ -53,6 +53,7 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
 longdouble TKfindMax_Ld(longdouble *x,int n);
 void TKremovePoly_f(float *px,float *py,int n,int m);
 void TKremovePoly_d(double *px,double *py,int n,int m);
+void TKfindPoly_d(double *px,double *py,int n,int m,double* p);
 void TKfitPoly(double x,double *v,int m);
 
 

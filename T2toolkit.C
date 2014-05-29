@@ -1,6 +1,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <float.h>
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
@@ -76,7 +77,7 @@ void TKconvertFloat2(double *x,double *y,float *ox,float *oy,int n)
 
 float TKfindMin_f(float *x,int n)
 {
-  float ret;
+  float ret=DBL_MIN;
   int i;
 
   ret = x[0];
@@ -89,7 +90,7 @@ float TKfindMin_f(float *x,int n)
 
 double TKfindMin_d(double *x,int n)
 {
-  double ret;
+  double ret=DBL_MAX;
   int i;
 
   ret = x[0];

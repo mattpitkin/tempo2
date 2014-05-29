@@ -78,6 +78,15 @@ void TKremovePoly_d(double *x,double *y,int n,int m)
    }
 }
 
+void TKfindPoly_d(double *x,double *y,int n,int m,double* p){
+   int i,j;
+   double chisq;
+   double v[m];
+
+   TKleastSquares_svd_noErr(x,y,n, p, m, TKfitPoly);  
+
+}
+
 void TKfitPoly(double x,double *v,int m)
 {
    int i;
@@ -88,6 +97,7 @@ void TKfitPoly(double x,double *v,int m)
 	  t*=x;
    }
 }
+
 
 /* Least squares fitting routines */
 
