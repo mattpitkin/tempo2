@@ -227,6 +227,13 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }
   strcpy(psr->param[param_px].label[0],"PX (mas)");
   strcpy(psr->param[param_px].shortlabel[0],"PX");
+
+  strcpy(psr->param[param_dm_sin1yr].label[0],"DM_S1YR (cm^-3 pc)");
+  strcpy(psr->param[param_dm_sin1yr].shortlabel[0],"DM_S1YR");
+
+  strcpy(psr->param[param_dm_cos1yr].label[0],"DM_C1YR (cm^-3 pc)");
+  strcpy(psr->param[param_dm_cos1yr].shortlabel[0],"DM_C1YR");
+
   strcpy(psr->param[param_daop].label[0],"AOP dist. (kpc)");
   strcpy(psr->param[param_daop].shortlabel[0],"D_AOP");
   strcpy(psr->param[param_daop].label[0],"IPERHARM");

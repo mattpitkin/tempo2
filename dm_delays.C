@@ -41,6 +41,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
   double ctheta,freqf,pospos,r,voverc,dmval,dmval2;
   double rsa[3],pos[3],vobs[3],yrs;
   double dmDot;
+  long double dt;
   int j,k;
   const char *CVS_verNum = "$Revision$";
   if (displayCVSversion == 1) CVSdisplayVersion("dm_delays.C","dm_delays()",CVS_verNum);
@@ -112,7 +113,8 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       
       psr[p].obsn[i].freqSSB = freqf; /* Record observing frequency in barycentric frame */
       //      logdbg("set freqSSB");      
-      yrs = (psr[p].obsn[i].sat - psr[p].param[param_dmepoch].val[0])/365.25;
+      dt = psr[p].obsn[i].sat - psr[p].param[param_dmepoch].val[0];
+      yrs = dt/365.25;
       dmDot=0.0;
       
       longdouble arg = 1.0;
@@ -126,6 +128,16 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	}
       //      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
       dmval = psr[p].param[param_dm].val[0]+dmDot;
+
+      // Add in annual terms
+      //
+
+      if (psr[p].param[param_dm_sin1yr].paramSet[0]==1){
+	dmval += psr[p].param[param_dm_sin1yr].val[0]*sin(2*M_PI/(365.25)*dt);
+      }
+      if (psr[p].param[param_dm_cos1yr].paramSet[0]==1){
+	dmval += psr[p].param[param_dm_cos1yr].val[0]*cos(2*M_PI/(365.25)*dt);
+      }
       //      logdbg("calculating dmval");      
       // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
 

@@ -53,8 +53,8 @@
 #define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DZ           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_FIT              10000  /* Maximum number of parameters to fit for */
-#define MAX_T2EFAC           50    /* Maximum number of T2EFACs allowed                */
-#define MAX_T2EQUAD          50    /* Maximum number of T2EQUADs allowed               */
+#define MAX_T2EFAC           100    /* Maximum number of T2EFACs allowed                */
+#define MAX_T2EQUAD          100    /* Maximum number of T2EQUADs allowed               */
 #define MAX_TNEF           50    /* Maximum number of TNEFACs allowed                */
 #define MAX_TNEQ          50    /* Maximum number of TNEQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
@@ -192,7 +192,8 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_h3,param_h4,param_nharm,param_stig,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
-	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc};
+	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,
+	    param_dm_sin1yr,param_dm_cos1yr};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.

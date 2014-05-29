@@ -1166,20 +1166,24 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		 // no DM fit for infinite frequency TOAS
 		 afunc=0;
 	  } else {
-	  double yrs;
-	  /* What about Doppler effect for the frequency -- change to barycentre?? */
-	  /* look at Blanford(?) paper */
-	  /* Should have a check to see if only one frequency exists in data
-		 in which case fitting for DM does not make sense */
-	  if (k==0) 
-		 afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
-	  else
-	  {
-		 yrs = (psr->obsn[ipos].sat - psr->param[param_dmepoch].val[0])/365.25;
-		 afunc = 1.0/(DM_CONST*pow(psr->obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k);
-	  }
+	    double yrs;
+	    /* What about Doppler effect for the frequency -- change to barycentre?? */
+	    /* look at Blanford(?) paper */
+	    /* Should have a check to see if only one frequency exists in data
+	       in which case fitting for DM does not make sense */
+	    if (k==0) 
+	      afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2));
+	    else
+	      {
+		yrs = (psr->obsn[ipos].sat - psr->param[param_dmepoch].val[0])/365.25;
+		afunc = 1.0/(DM_CONST*pow(psr->obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k);
+	      }
 	  }
    }
+   else if (i==param_dm_sin1yr)
+     afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2))*sin(2*M_PI/(365.25)*(psr->obsn[ipos].sat - psr->param[param_dmepoch].val[0]));
+   else if (i==param_dm_cos1yr)
+     afunc = 1.0/(DM_CONST*powl(psr->obsn[ipos].freqSSB/1.0e6,2))*cos(2*M_PI/(365.25)*(psr->obsn[ipos].sat - psr->param[param_dmepoch].val[0]));
    else if (i==param_dmx)
    {
 	  if ((psr->obsn[ipos].sat > psr->param[param_dmxr1].val[k])
@@ -2405,7 +2409,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 					 psr[p].param[param_f].val[0];
 			   }
 			}
-			else if (i==param_dm || i==param_px || i==param_fddc || i==param_fddi || i==param_dmassplanet || i==param_dmx || i==param_fd)
+			else if (i==param_dm || i==param_px || i==param_fddc || i==param_fddi || i==param_dmassplanet || i==param_dmx || i==param_fd || param_dm_sin1yr || param_dm_cos1yr)
 			{
 			   psr[p].param[i].val[k] += val[j];
 			   psr[p].param[i].err[k]  = error[j];
