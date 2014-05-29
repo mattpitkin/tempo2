@@ -87,8 +87,14 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 	    psr[p].obsn[i].correctionTT_Teph/SECDAY+2400000.5; 
 	  jd0 = (double)((int)jd);
 	  jd1 = (double)(jd-(int)jd);
+
+	  // Calculate the Earth to SSB vector
 	  calceph_compute_unit(eph,jd0,jd1,3,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earth_ssb);
 	  convertUnits(psr[p].obsn[i].earth_ssb,psr[p].units);
+
+	  // Calculate the Sun to SSB vector
+	  calceph_compute_unit(eph,jd0,jd1,11,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].sun_ssb);
+	  convertUnits(psr[p].obsn[i].sun_ssb,psr[p].units);
 	}	
       calceph_close(eph);
   }
