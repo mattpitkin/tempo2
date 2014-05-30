@@ -2409,7 +2409,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 					 psr[p].param[param_f].val[0];
 			   }
 			}
-			else if (i==param_dm || i==param_px || i==param_fddc || i==param_fddi || i==param_dmassplanet || i==param_dmx || i==param_fd || param_dm_sin1yr || param_dm_cos1yr)
+			else if (i==param_dm || i==param_px || i==param_fddc || i==param_fddi || i==param_dmassplanet || i==param_dmx || i==param_fd || i==param_dm_sin1yr || i==param_dm_cos1yr)
 			{
 			   psr[p].param[i].val[k] += val[j];
 			   psr[p].param[i].err[k]  = error[j];
