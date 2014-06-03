@@ -4,7 +4,7 @@
 #include "TKmatrix.h"
 
 
-void TKmultMatrix(double **idcm,double **u,int ndata,int ndata2,int npol,double **uout)
+void TKmultMatrix( double **idcm, double **u,int ndata,int ndata2,int npol,double **uout)
 {
 #ifdef ACCEL_MULTMATRIX
    if(useT2accel){
@@ -35,11 +35,11 @@ void TKmultMatrix(double **idcm,double **u,int ndata,int ndata2,int npol,double 
 }
 
 
-void TKmultMatrix_sq(double **idcm,double **u,int ndata,int npol,double **uout)
+void TKmultMatrix_sq( double **idcm, double **u,int ndata,int npol,double **uout)
 {
    TKmultMatrix(idcm,u,ndata,ndata,npol,uout);
 }
-void TKmultMatrixVec(double **idcm,double *b,int ndata,int ndata2,double *bout)
+void TKmultMatrixVec( double **idcm, double *b,int ndata,int ndata2,double *bout)
 {
 #ifdef ACCEL_MULTMATRIX
    if (useT2accel){
@@ -65,7 +65,7 @@ void TKmultMatrixVec(double **idcm,double *b,int ndata,int ndata2,double *bout)
 }
 
 
-void TKmultMatrixVec_sq(double **idcm,double *b,int ndata,double *bout)
+void TKmultMatrixVec_sq( double **idcm, double *b,int ndata,double *bout)
 {
    TKmultMatrixVec(idcm,b,ndata,ndata,bout);
 }
