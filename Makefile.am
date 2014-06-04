@@ -7,6 +7,8 @@ DIST_SUBDIRS=sofa plugin unsupported_plugins temponest
 bin_PROGRAMS=tempo2
 lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
 
+BUILT_SOURCES=TKcholesky.h
+
 
 # Source files used by plugins that are not part of libtempo2
 xtra_dist_sources=choleskyRoutines.C choleskyRoutines.h
@@ -42,7 +44,10 @@ libtempo2_la_includedir=$(includedir)
 libtempo2_la_include_HEADERS = tempo2.h GWsim.h 
 
 libt2toolkit_la_includedir=$(includedir)
-libt2toolkit_la_include_HEADERS = TKfit.h TKmatrix.h T2toolkit.h TKsvd.h cholesky.h TKlog.h
+libt2toolkit_la_include_HEADERS = TKfit.h TKmatrix.h T2toolkit.h TKsvd.h TKcholesky.h TKlog.h
+
+TKcholesky.h: cholesky.h
+	cp $(srcdir)/cholesky.h TKcholesky.h
 
 libtempo2pred_la_SOURCES = $(headers) tempo2pred.c cheby2d.c t1polyco.c
 libtempo2pred_la_CFLAGS = -fPIC
