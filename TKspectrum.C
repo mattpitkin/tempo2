@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "tempo2.h"
 #include "T2toolkit.h"
 #include "TKfit.h"
 #include "TKspectrum.h"

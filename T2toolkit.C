@@ -46,7 +46,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
-#include "tempo2.h"
+//#include "tempo2.h"
 #include "T2toolkit.h"
 
 
