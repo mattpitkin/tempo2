@@ -111,23 +111,7 @@
 #define T2C_IAU2000B 1
 #define T2C_TEMPO   2
 
-
-/* define some functions for log message 
- * M.Keith 2012 - let me know if this fails to compile anywhere.
- * mkeith@pulsarastronomy.net
- **/
-#define LOG_OUTFILE stdout
-#define WHERESTR  "[%s:%d] "
-#define WHEREARG  __FILE__, __LINE__
-#define ENDL "\n"
-#define WHEREERR "******\nERROR [%s:%d] "
-#define WHERETCHK "[%s:%d] T=%.2f s: "
-#define _LOG(...) fprintf(LOG_OUTFILE,__VA_ARGS__)
-#define logmsg(_fmt, ...) _LOG(WHERESTR _fmt ENDL, WHEREARG,##__VA_ARGS__)
-#define logdbg(_fmt, ...)  if(debugFlag)logmsg(_fmt,##__VA_ARGS__)
-#define logerr(_fmt, ...) _LOG(WHEREERR _fmt ENDL, WHEREARG,##__VA_ARGS__)
-#define logtchk(_fmt, ...) if(tcheck)_LOG(WHERETCHK _fmt ENDL, WHEREARG,(clock()-timer_clk)/(float)CLOCKS_PER_SEC,##__VA_ARGS__)
-
+#include "TKlog.h"
 
 
 /* Type for doing extra precision computations: longdouble */
@@ -254,11 +238,7 @@ extern int MAX_PSR;
 extern int MAX_OBSN;
 extern double ECLIPTIC_OBLIQUITY;
 
-extern int debugFlag;   /* Global = 1 if debug mode is running */
 extern int forceGlobalFit;   /* Global = 1 if we are forcing a global fit */
-extern int writeResiduals;   /* Global = 1 if we are writing out post-fit residuals */
-extern int tcheck;   /* Global = 1 if time check message should be printed is running */
-extern clock_t timer_clk;
 extern int veryFast;    /* Global to run the code fast */
 extern char tempo2MachineType[MAX_FILELEN];
 extern int displayCVSversion; /* Display CVS version */
