@@ -963,6 +963,11 @@ else if (strcasecmp(str,"_DM")==0)
 	 int number;
 	 /* Obtain parameter number */
 	 sscanf(str+6,"%d",&number);
+	 if (number < 1) {
+	   printf("ERROR loading TEL_DX. The value (%d) must be > 0\n",number);
+	   exit(1);
+	 }
+
 	 fscanf(fin,"%lf %lf %lf",&psr->telDY_t[number-1],&psr->telDY_v[number-1],&psr->telDY_e[number-1]);
 	 if (psr->nTelDY < number) psr->nTelDY = number;
   }
@@ -972,6 +977,11 @@ else if (strcasecmp(str,"_DM")==0)
 	 psr->setTelVelY=1;
 	 /* Obtain parameter number */
 	 sscanf(str+6,"%d",&number);
+	 if (number < 1) {
+	   printf("ERROR loading TEL_DY. The value (%d) must be > 0\n",number);
+	   exit(1);
+	 }
+
 	 fscanf(fin,"%lf %lf",&psr->telDY_vel[number-1],&psr->telDY_vel_e[number-1]);
   }
   else if ((strstr(str,"TEL_DZ")!=NULL || strstr(str,"tel_dz")!=NULL) && strcmp(str,"STEL_DZ")!=0)
@@ -979,6 +989,10 @@ else if (strcasecmp(str,"_DM")==0)
 	 int number;
 	 /* Obtain parameter number */
 	 sscanf(str+6,"%d",&number);
+	 if (number < 1) {
+	   printf("ERROR loading TEL_DZ. The value (%d) must be > 0\n",number);
+	   exit(1);
+	 }
 	 fscanf(fin,"%lf %lf %lf",&psr->telDZ_t[number-1],&psr->telDZ_v[number-1],&psr->telDZ_e[number-1]);
 	 if (psr->nTelDZ < number) psr->nTelDZ = number;
   }
