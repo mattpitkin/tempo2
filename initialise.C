@@ -123,6 +123,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nCompanion = 0;
   psr->bootStrap = 0;
   psr->units = SI_UNITS;
+  psr->setUnits = 0;
   psr->ne_sw  = NE_SW_DEFAULT; 
   psr->nWhite = 0;  /* No whitening by default */
   psr->nQuad  = 0;  /* No quadrupolar function */

@@ -468,6 +468,7 @@ typedef struct pulsar {
   int nobs;                       /* Number of observations in .tim file                        */
   int units;  /* TDB or SI units (tempo emulation mode uses TDB) 
                                      see #define definition above for possible units            */
+  int setUnits;
   int tempo1; /* = 1 if tempo1 is emulated */
   int dilateFreq;  /* whether or not to apply SS time dilation to RFs */
   int timeEphemeris;              /* Which code to use for Einstein delay */
