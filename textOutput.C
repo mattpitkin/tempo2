@@ -433,7 +433,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    }
 	  if (psr[p].param[param_tel_dz].paramSet[0]==1)
 	    {
-	      printf("Telescope z function\n");
+	      printf("Telescope z function (%d)\n",psr[p].nTelDZ);
 	      for (i=0;i<psr[p].nTelDZ;i++)
 		printf("%.2f %.10g %.10g\n",psr[p].telDZ_t[i],psr[p].telDZ_v[i],psr[p].telDZ_e[i]);
 	    }
@@ -855,7 +855,30 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      }
 	  }
 	printf("Total time span = %.3f days = %.3f years\n",end-start,(end-start)/365.25);
+      
       }
+      // Fit parameters
+      printf("\nTempo2 usage\n");
+      if (psr[p].units == TDB_UNITS) 
+	printf("Units:                 TDB (tempo1)\n");
+      else 
+	printf("Units:                 TCB (tempo2)\n");
+      if (psr[p].timeEphemeris==FB90_TIMEEPH) 
+	printf("Time ephemeris:        FB90 (tempo1)\n");
+      else 
+	printf("Time ephemeris:        IF99 (tempo2)\n");
+      if (psr[p].correctTroposphere==0) 
+	printf("Troposphere corr.?     No (tempo1)\n");
+      else
+	printf("Troposphere corr.?     Yes (tempo2)\n");
+      if (psr[p].dilateFreq==0) 
+	printf("Dilate freq?           No (tempo1)\n");
+      else
+	printf("Dilate freq?           Yes (tempo2)\n");
+      printf("Electron density (1AU) %g\n",psr[p].ne_sw);
+      printf("Solar system ephem     %s\n",psr[p].ephemeris);
+      printf("Time scale             %s\n",psr[p].clock);
+      printf("Binary model           %s\n",psr[p].binaryModel);
       // Write out covariance matrix for global parameters
       if (p==0 && psr[0].globalNfit > 0)
 	{
@@ -1072,19 +1095,33 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    fprintf(fout2,"%-15.15s%s\n","CLK",psr[p].clock);
 
 	  if (psr[p].fitMode==1) fprintf(fout2,"MODE 1\n");
-	  if (psr[p].units != SI_UNITS)
-	    fprintf(fout2, "%-15.15s%s\n", "UNITS", "TDB");
+	  if (psr[p].units != SI_UNITS)fprintf(fout2, "%-15.15s%s\n", "UNITS", "TDB");
+	  else fprintf(fout2, "%-15.15s%s\n", "UNITS", "TCB");
 	  if (psr[p].timeEphemeris != IF99_TIMEEPH)
 	    fprintf(fout2, "%-15.15s%s\n", "TIMEEPH", "FB90");
+	  else
+	    fprintf(fout2, "%-15.15s%s\n", "TIMEEPH", "IF99");
+
 	  if (!psr[p].dilateFreq)
 	    fprintf(fout2, "%-15.15s%s\n", "DILATEFREQ", "N");
+	  else
+	    fprintf(fout2, "%-15.15s%s\n", "DILATEFREQ", "Y");
+
 	  if (!psr[p].planetShapiro)
 	    fprintf(fout2, "%-15.15s%s\n", "PLANET_SHAPIRO", "N");
+	  else
+	    fprintf(fout2, "%-15.15s%s\n", "PLANET_SHAPIRO", "Y");
+
 	  if (psr[p].t2cMethod != T2C_IAU2000B)
 	    fprintf(fout2, "%-15.15s%s\n", "T2CMETHOD", "TEMPO");
+	  else
+	    fprintf(fout2, "%-15.15s%s\n", "T2CMETHOD", "IAU2000B");
+
           fprintf(fout2, "%-15.15s%.3f\n", "NE_SW", psr[p].ne_sw);
 	  if (!psr[p].correctTroposphere)
 	    fprintf(fout2, "%-21.21s%s\n", "CORRECT_TROPOSPHERE", "N");
+	  else
+	    fprintf(fout2, "%-21.21s%s\n", "CORRECT_TROPOSPHERE", "Y");
 
 	  fprintf(fout2,"%-15.15s%s\n","EPHEM",psr[p].ephemeris);
 	  fprintf(fout2,"%-15.15s%s\n","NITS","1");
