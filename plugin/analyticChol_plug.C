@@ -86,6 +86,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%lf",&modelFc);
       else if (strcmp(argv[i],"-gwamp")==0)
 	sscanf(argv[++i],"%lf",&gwamp);
+      else if (strcmp(argv[i],"-amp")==0)
+	sscanf(argv[++i],"%lf",&modelA);
       else if (strcmp(argv[i],"-rms")==0)
 	sscanf(argv[++i],"%lf",&rms);
       else if (strcmp(argv[i],"-alpha_res")==0)
