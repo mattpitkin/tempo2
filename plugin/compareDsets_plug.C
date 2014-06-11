@@ -228,8 +228,8 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	for (i=0;i<nOverlap;i++)
 	  {
 	    id1[n1] = overlap1[i];
-	    x1[n1] = psr[0].obsn[overlap1[i]].toaErr*1e-6;
-	    y1[n1] = psr[1].obsn[overlap2[i]].toaErr*1e-6;
+	    x1[n1] = psr[0].obsn[overlap1[i]].toaErr;
+	    y1[n1] = psr[1].obsn[overlap2[i]].toaErr;
 
 	    if (zoom==0)
 	      {
