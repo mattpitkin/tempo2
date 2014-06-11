@@ -222,14 +222,22 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	printf("n1 = %d\n",n1);
       }
 
-    if (plot==3)
+    if (plot==3 || plot==4)
       {
 	n1=0;
 	for (i=0;i<nOverlap;i++)
 	  {
 	    id1[n1] = overlap1[i];
-	    x1[n1] = psr[0].obsn[overlap1[i]].toaErr;
-	    y1[n1] = psr[1].obsn[overlap2[i]].toaErr;
+	    if (plot==3)
+	      {
+		x1[n1] = psr[0].obsn[overlap1[i]].toaErr;
+		y1[n1] = psr[1].obsn[overlap2[i]].toaErr;
+	      }
+	    else if (plot==4)
+	      {
+		x1[n1] = psr[0].obsn[overlap1[i]].freq;
+		y1[n1] = psr[1].obsn[overlap2[i]].freq;
+	      }
 
 	    if (zoom==0)
 	      {
@@ -269,6 +277,13 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	sprintf(str2,"%s, %s, error bar (us)",parFile[1],timFile[1]);
 	cpglab(str1,str2,"");
       }
+    if (plot==4)
+      {
+	char str1[128],str2[128];
+	sprintf(str1,"%s, %s, frequency (MHz)",parFile[0],timFile[0]);
+	sprintf(str2,"%s, %s, frequenc (MHz)",parFile[1],timFile[1]);
+	cpglab(str1,str2,"");
+      }
     cpgsci(2); cpgpt(n1,x1,y1,16);
     if (plot==1 || plot==2)
       cpgerry(n1,x1,y1e_u,y1e_l,1);
@@ -279,7 +294,7 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
       printf("Red = %s %s\n",parFile[0],timFile[0]);
       printf("Green = %s %s\n",parFile[1],timFile[1]);
     }
-    if (plot==3)
+    if (plot==3 || plot==4) 
       {
 	float fx[2],fy[2];
 	fx[0] = minx; fx[1] = maxx;
@@ -302,7 +317,7 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	    fout = fopen("overlap.dat","w");
 	    for (i=0;i<nOverlap;i++)
 	      {
-		fprintf(fout,"%.5Lf %g %g\n",psr[0].obsn[overlap1[i]].sat,
+		fprintf(fout,"%s %s %.5Lf %g %g\n",psr[0].obsn[overlap1[i]].fname,psr[1].obsn[overlap2[i]].fname,psr[0].obsn[overlap1[i]].sat,
 			(double)(psr[0].obsn[overlap1[i]].residual - psr[1].obsn[overlap2[i]].residual), sqrt(pow(psr[0].obsn[overlap1[i]].toaErr*1e-6,2)+pow(psr[1].obsn[overlap2[i]].toaErr*1e-6,2)));
 	      }
 	    fclose(fout);
@@ -312,7 +327,7 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	  {
 	    if (plot==1)
 	      idPoint(psr,0,x1,y1,id1,n1,x2,y2,id2,n2,mx,my,parFile,timFile,0);
-	    else if (plot==2 || plot==3)
+	    else if (plot==2 || plot==3 || plot==4)
 	      idPoint2(psr,0,x1,y1,id1,n1,mx,my,overlap1,overlap2,0);
 	  }
 	else if (key=='z')
@@ -338,6 +353,8 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	  plot=2;
 	else if (key=='3') // Plot difference between error bar sizes
 	  plot=3;
+	else if (key=='4') // Plot difference between frequencies
+	  plot=4;
 	else if (key=='g') 
 	  {
 	    changePlot=1;
@@ -348,8 +365,15 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	  {
 	    if (plot==1)
 	      idPoint(psr,0,x1,y1,id1,n1,x2,y2,id2,n2,mx,my,parFile,timFile,1);
-	    else if (plot==2 || plot==3)
+	    else if (plot==2 || plot==3 || plot==4)
 	      idPoint2(psr,0,x1,y1,id1,n1,mx,my,overlap1,overlap2,1);
+	  }
+	else if (key=='c') // Command point
+	  {
+	    if (plot==1)
+	      idPoint(psr,0,x1,y1,id1,n1,x2,y2,id2,n2,mx,my,parFile,timFile,2);
+	    else if (plot==2 || plot==3 || plot==4)
+	      idPoint2(psr,0,x1,y1,id1,n1,mx,my,overlap1,overlap2,2);
 	  }
 	else  if (key!='q')
 	  {
@@ -473,6 +497,18 @@ int idPoint(pulsar *psr,int np,float *x_1,float *y_1,int *id_1,int count_1,float
        sprintf(str,"pav -CDFTp %s -g10/xs\n",psr[d].obsn[iclosest].fname);
        system(str);
      }
+   else if (view==2)
+     {
+       char str[1024];
+       char cmd[1024];
+       printf("Enter command (e.g. vap -c nchan) ");
+       //       scanf("%s",cmd);
+       fgets(cmd,1024,stdin);
+       cmd[strlen(cmd)-1]='\0';
+       sprintf(str,"%s %s",cmd,psr[d].obsn[iclosest].fname);
+       printf("Running >%s<\n",str);
+       system(str);
+     }
    return iclosest;
 }
 
@@ -531,6 +567,18 @@ int idPoint2(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouse
      {
        char str[1024];
        sprintf(str,"pav -CDFTp -N1,2 %s %s -g10/xs\n",psr[0].obsn[overlap1[iclosest]].fname,psr[1].obsn[overlap2[iclosest]].fname);
+       system(str);
+     }
+   else if (view==2)
+     {
+       char str[1024];
+       char cmd[1024];
+       printf("Enter command (e.g. vap -c nchan) ");
+       //       scanf("%s",cmd);
+       fgets(cmd,1024,stdin);
+       cmd[strlen(cmd)-1]='\0';
+       sprintf(str,"%s %s %s",cmd,psr[0].obsn[overlap1[iclosest]].fname,psr[1].obsn[overlap2[iclosest]].fname);
+       printf("Running >%s<\n",str);
        system(str);
      }
 
