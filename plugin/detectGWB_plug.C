@@ -42,6 +42,7 @@ void formCholeskyMatrixPlugin(double *c,double *resx,double *resy,double *rese,i
 int calcSpectra_plugin(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit);
 double psrangle(double centre_long,double centre_lat,double psr_long,double psr_lat);
 void hdfunc(double x,double *p,int ma);
+void hdfunc_offs(double x,double *p,int ma);
 
 void help() /* Display help */
 {
@@ -97,6 +98,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int nSpecNdof;
   int specStart;
 
+  int giveHD=0;
+  char hdFile[128];
+
   strcpy(dcmFile,"NULL");
   strcpy(covarFuncFile,"PSRJ");
 
@@ -132,304 +136,330 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	useRed=1;
       else if (strcasecmp(argv[i],"-fast")==0)
 	write_debug_files=false;
-    }
-
-  toffset = 0.5*(startMJD+endMJD);
-
-  if (guessGWamp == -1)
-    {
-      printf("Must use the -gwamp command-line option to specify\n");
-      printf("a gravitational wave amplitude for use in the weighting\n");
-      exit(1);
-    }
-
-  //
-  // Standard tempo2 processing to obtain post-fit timing residuals
-  //
-  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
-  readTimfile(psr,timFile,*npsr);         /* Load the arrival times    */
-  printf("Here: %d\n",psr[0].nobs);
-  preProcess(psr,*npsr,argc,argv);
-  printf("Here 2: %d\n",psr[0].nobs);
-  // Create some IFUNCs that will represent the low frequency signal
-  // ensure that these IFUNCs are constrained not to include 
-  // the quadratic etc.
-  for (p=0;p<*npsr;p++)
-    {
-      // Check if IFUNCs already exist
-      if (psr[p].ifuncN > 0)
+      else if (strcasecmp(argv[i],"-hd")==0)
 	{
-	  printf("Pulsar: %s already has IFUNC parameters\n",psr[p].name);
+	  giveHD=1;
+	  strcpy(hdFile,argv[++i]);
+	}
+
+    }
+
+  if (giveHD==0)
+    {
+      toffset = 0.5*(startMJD+endMJD);
+
+      if (guessGWamp == -1)
+	{
+	  printf("Must use the -gwamp command-line option to specify\n");
+	  printf("a gravitational wave amplitude for use in the weighting\n");
 	  exit(1);
 	}
-      n=0;
-      for (t = startMJD; t<=endMJD;t+=stepMJD)
+      
+      //
+      // Standard tempo2 processing to obtain post-fit timing residuals
+      //
+      readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+      readTimfile(psr,timFile,*npsr);         /* Load the arrival times    */
+      preProcess(psr,*npsr,argc,argv);
+      // Create some IFUNCs that will represent the low frequency signal
+      // ensure that these IFUNCs are constrained not to include 
+      // the quadratic etc.
+      for (p=0;p<*npsr;p++)
 	{
-	  if (t+stepMJD >= psr[p].obsn[0].sat && t-stepMJD <= psr[p].obsn[psr[p].nobs-1].sat)
-	  //	  if (t >= psr[p].obsn[0].sat && t <= psr[p].obsn[psr[p].nobs-1].sat)
+	  // Check if IFUNCs already exist
+	  if (psr[p].ifuncN > 0)
 	    {
-	      psr[p].ifuncT[n] = t;
-	      psr[p].ifuncV[n] = 0.0;
-	      psr[p].ifuncE[n] = 0.0;
-	      n++;
+	      printf("Pulsar: %s already has IFUNC parameters\n",psr[p].name);
+	      exit(1);
 	    }
-	}
-      psr[p].ifuncN = n;
-      psr[p].param[param_ifunc].fitFlag[0] = 1;
-      psr[p].param[param_ifunc].paramSet[0] = 1;
-      psr[p].param[param_ifunc].val[0] = 2;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_0;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_1;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_2;
-
-      /*      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xsin;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xcos;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin2;
-      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos2; */
-      sprintf(newname,"%s.new.par",psr[p].name);
-      if(write_debug_files)textOutput(psr+p,1,0,0,0,1,newname);
-    }
-
-  //
-  // Do the standard pulsar fits and get record the IFUNCs
-  //    
-  printf("Currently npts = %d\n",psr[0].nobs);
-  for (i=0;i<2;i++)                       /* Do two iterations for pre- and post-fit residuals*/
-     {
-      formBatsAll(psr,*npsr);             /* Form the barycentric arrival times */
-      formResiduals(psr,*npsr,1);         /* Form the residuals                 */
-//      if (i==0) doFitDCM(psr,dcmFile,covarFuncFile,*npsr,0);       /* Do the fitting     */
-      if (i==0) doFit(psr,*npsr,0);       /* Do the fitting     */
-      else if (write_debug_files)textOutput(psr,*npsr,globalParameter,0,0,0,tstr);  /* Display the output */
-    }
-  printf("Completed initial fit\n");
-  for (p=0;p<*npsr;p++)
-    {
-	if(write_debug_files){
-      sprintf(newname,"%s.afterfit.par",psr[p].name);
-      textOutput(psr+p,1,0,0,0,1,newname);
-	}
-
-      sprintf(tstr,"%s.ifuncDGW",psr[p].name);
-      fout = fopen(tstr,"w");
-      for (i=0;i<psr[p].ifuncN;i++)
-			fprintf(fout,"%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
-
-      fclose(fout);
-    }
-  printf("Output afterfit.par and ifuncDGW files\n");
-  // Now get a spectrum of each pulsar (should do this pairwise using the same
-  // frequency channels -- for now assume identical sampling)
-  /*  for (p=0;p<*npsr;p++)
-    {
-    OMEGA0 = (double)(2.0*M_PI/(psr[p].ifuncT[n-1]-psr[p].ifuncT[0]));
-      sprintf(tstr,"%s.specDGW",psr[p].name);
-      fout = fopen(tstr,"w");
-      getSpectrum(&psr[p],px1,py_r1,py_i1,&nSpec,toffset);
-      for (i=0;i<nSpec;i++)
-	if(write_debug_files)fprintf(fout,"%g %g %g\n",px1[i],py_r1[i],py_i1[i]);
-      fclose(fout);
-      }*/
-
-  // Now do each pair of pulsars
-  fout = fopen("hdcurve.dat","w");
-
-  for (p1 = 0;p1 < *npsr ;p1++)
-    {
-      for (p2 = p1+1;p2 < *npsr;p2++)
-	{
-	  printf("Processing: %s %s\n",psr[p1].name,psr[p2].name);
-	  // Find overlap region
-	  if (psr[p1].ifuncT[0] > psr[p2].ifuncT[0])
-	    startOverlap = psr[p1].ifuncT[0];
-	  else
-	    startOverlap = psr[p2].ifuncT[0];
-
-	  if (psr[p1].ifuncT[psr[p1].ifuncN-1] > psr[p2].ifuncT[psr[p2].ifuncN-1])
-	    endOverlap = psr[p2].ifuncT[psr[p2].ifuncN-1];
-	  else
-	    endOverlap = psr[p1].ifuncT[psr[p1].ifuncN-1];
-
-
-	  toverlap = endOverlap-startOverlap;
-	  if (toverlap > maxOverlap)
+	  n=0;
+	  printf("Creating ifuncs from %g to %g in steps of %g\n",(double)startMJD,(double)endMJD,(double)stepMJD);
+	  for (t = startMJD; t<=endMJD;t+=stepMJD)
 	    {
-	      OMEGA0 = (double)(2.0*M_PI/toverlap);
+	      if (t+stepMJD >= psr[p].obsn[0].sat && t-stepMJD <= psr[p].obsn[psr[p].nobs-1].sat)
+		//	  if (t >= psr[p].obsn[0].sat && t <= psr[p].obsn[psr[p].nobs-1].sat)
+		{
+		  psr[p].ifuncT[n] = t;
+		  psr[p].ifuncV[n] = 0.0;
+		  psr[p].ifuncE[n] = 0.0;
+		  n++;
+		}
+	    }
+	  if (n < 2){
+	    printf("\n\n\nERROR: For some reason we cannot determine the interpolated function. Please check the -t1, -t2, -dt options and also the start and finish arrival times in your .tim files.\n\n\n");
+	    exit(1);
+	  }
+	  psr[p].ifuncN = n;
+	  psr[p].param[param_ifunc].fitFlag[0] = 1;
+	  psr[p].param[param_ifunc].paramSet[0] = 1;
+	  psr[p].param[param_ifunc].val[0] = 2;
+	  psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_0;
+	  psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_1;
+	  psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_2;
+	  
+	  /*      psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin;
+		  psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos;
+		  psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xsin;
+		  psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_xcos;
+		  psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_sin2;
+		  psr[p].constraints[psr[p].nconstraints++] = constraint_ifunc_year_cos2; */
+	  sprintf(newname,"%s.new.par",psr[p].name);
+	  if(write_debug_files)textOutput(psr+p,1,0,0,0,1,newname);
+	}
+      
+      //
+      // Do the standard pulsar fits and get record the IFUNCs
+      //    
+      printf("Currently npts = %d\n",psr[0].nobs);
+      for (i=0;i<2;i++)                       /* Do two iterations for pre- and post-fit residuals*/
+	{
+	  formBatsAll(psr,*npsr);             /* Form the barycentric arrival times */
+	  formResiduals(psr,*npsr,1);         /* Form the residuals                 */
+	  //      if (i==0) doFitDCM(psr,dcmFile,covarFuncFile,*npsr,0);       /* Do the fitting     */
+	  if (i==0) doFit(psr,*npsr,0);       /* Do the fitting     */
+	  else if (write_debug_files)textOutput(psr,*npsr,globalParameter,0,0,0,tstr);  /* Display the output */
+	}
+      printf("Completed initial fit\n");
+      for (p=0;p<*npsr;p++)
+	{
+	  if(write_debug_files){
+	    sprintf(newname,"%s.afterfit.par",psr[p].name);
+	    textOutput(psr+p,1,0,0,0,1,newname);
+	  }
+	  
+	  sprintf(tstr,"%s.ifuncDGW",psr[p].name);
+	  fout = fopen(tstr,"w");
+	  for (i=0;i<psr[p].ifuncN;i++)
+	    fprintf(fout,"%.2f %.10g %.10g\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i]);
+	  
+	  fclose(fout);
+	}
+      printf("Output afterfit.par and ifuncDGW files\n");
+      // Now get a spectrum of each pulsar (should do this pairwise using the same
+      // frequency channels -- for now assume identical sampling)
+      /*  for (p=0;p<*npsr;p++)
+	  {
+	  OMEGA0 = (double)(2.0*M_PI/(psr[p].ifuncT[n-1]-psr[p].ifuncT[0]));
+	  sprintf(tstr,"%s.specDGW",psr[p].name);
+	  fout = fopen(tstr,"w");
+	  getSpectrum(&psr[p],px1,py_r1,py_i1,&nSpec,toffset);
+	  for (i=0;i<nSpec;i++)
+	  if(write_debug_files)fprintf(fout,"%g %g %g\n",px1[i],py_r1[i],py_i1[i]);
+	  fclose(fout);
+	  }*/
+      
+      // Now do each pair of pulsars
+      fout = fopen("hdcurve.dat","w");
+      
+      for (p1 = 0;p1 < *npsr ;p1++)
+	{
+	  for (p2 = p1+1;p2 < *npsr;p2++)
+	    {
+	      printf("Processing: %s %s\n",psr[p1].name,psr[p2].name);
+	      // Find overlap region
+	      if (psr[p1].ifuncT[0] > psr[p2].ifuncT[0])
+		startOverlap = psr[p1].ifuncT[0];
+	      else
+		startOverlap = psr[p2].ifuncT[0];
 	      
-	      printf("Processing pair: %s--%s\n",psr[p1].name,psr[p2].name);
-	      printf("Overlap time = %g\n",toverlap);
-
-	      getSpectrum(&psr[p1],px1,py_r1,py_i1,&nSpec1,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
-	      printf("Got initial spectrum\n");
-	      getSpectrum(&psr[p2],px2,py_r2,py_i2,&nSpec2,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
-	      printf("Got second spectrum\n");
-
-	      if (nSpec1 < nSpec2) nSpec = nSpec1;
-	      else nSpec = nSpec2;
-
-
-	      sprintf(tstr,"%s-%s.crossSpecDGW",psr[p1].name,psr[p2].name);
-	      if (write_debug_files) {
-			 logmsg("Writing '%s'",tstr);
-			 fout2 = fopen(tstr,"w");
+	      if (psr[p1].ifuncT[psr[p1].ifuncN-1] > psr[p2].ifuncT[psr[p2].ifuncN-1])
+		endOverlap = psr[p2].ifuncT[psr[p2].ifuncN-1];
+	      else
+		endOverlap = psr[p1].ifuncT[psr[p1].ifuncN-1];
+	      
+	      
+	      toverlap = endOverlap-startOverlap;
+	      if (toverlap > maxOverlap)
+		{
+		  OMEGA0 = (double)(2.0*M_PI/toverlap);
+		  
+		  printf("Processing pair: %s--%s\n",psr[p1].name,psr[p2].name);
+		  printf("Overlap time = %g\n",toverlap);
+		  
+		  getSpectrum(&psr[p1],px1,py_r1,py_i1,&nSpec1,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
+		  printf("Got initial spectrum\n");
+		  getSpectrum(&psr[p2],px2,py_r2,py_i2,&nSpec2,toffset,startOverlap,endOverlap,stepMJD,covarFuncFile);
+		  printf("Got second spectrum\n");
+		  
+		  if (nSpec1 < nSpec2) nSpec = nSpec1;
+		  else nSpec = nSpec2;
+		  
+		  
+		  sprintf(tstr,"%s-%s.crossSpecDGW",psr[p1].name,psr[p2].name);
+		  if (write_debug_files) {
+		    logmsg("Writing '%s'",tstr);
+		    fout2 = fopen(tstr,"w");
 		  }
-	      
-	      // Form the cross power spectrum
-	      for (i=0;i<nSpec;i++)
-		{
-		  crossX[i] = px1[i]; 
-		  crossY_r[i] = (py_r1[i]*py_r2[i]+py_i1[i]*py_i2[i]); // /(toverlap/365.25);
-		  crossY_i[i] = (py_i1[i]*py_r2[i]-py_i2[i]*py_r1[i]); // /(toverlap/365.25);
-		  if (write_debug_files) fprintf(fout2,"%g %g %g %g %g %g %g %g %g %g %g\n",crossX[i],crossY_r[i],crossY_i[i],px1[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],px2[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i], py_r1[i],py_i1[i],py_r2[i],py_i2[i]);
-		}
-	      if (write_debug_files) fclose(fout2);
-	      angle[npair]  = (double)psrangle(psr[p1].param[param_raj].val[0],
-					       psr[p1].param[param_decj].val[0],
-					       psr[p2].param[param_raj].val[0],
-					       psr[p2].param[param_decj].val[0]);
-	      cx = (1.0-cos(angle[npair]*M_PI/180.0))/2.0;
-	      zeta = 3.0/2.0*(cx*log(cx)-cx/6.0+1.0/3.0);
-	      
-	      sprintf(fname,"%s.model",psr[p1].name);
-	      if (!(fin = fopen(fname,"r")))
-		{
-		  printf("Unable to open file >%s<\n",fname);
-		  exit(1);
-		}
-	      fscanf(fin,"%s %s",dummy,dummy);
-	      fscanf(fin,"%s %lf",dummy,&alpha1);
-	      fscanf(fin,"%s %lf",dummy,&fc1);
-	      fscanf(fin,"%s %lf",dummy,&amp1);
-	      if (fscanf(fin,"%s %lf",dummy,&pw1)!=2)
-		{
-		  printf("Unable to read whitenoise level >%s<\n",fname);
-		  exit(1);
-		}
-	      fclose(fin); 
-	      
-	      sprintf(fname,"%s.model",psr[p2].name);
-	      fin = fopen(fname,"r");
-	      fscanf(fin,"%s %s",dummy,dummy);
-	      fscanf(fin,"%s %lf",dummy,&alpha2);
-	      fscanf(fin,"%s %lf",dummy,&fc2);
-	      fscanf(fin,"%s %lf",dummy,&amp2);
-	      fscanf(fin,"%s %lf",dummy,&pw2);
-	      fclose(fin);
-
-	      if (useRed==1)
-		{
-		  sprintf(fname,"%s.rednoise",psr[p1].name);
+		  
+		  // Form the cross power spectrum
+		  for (i=0;i<nSpec;i++)
+		    {
+		      crossX[i] = px1[i]; 
+		      crossY_r[i] = (py_r1[i]*py_r2[i]+py_i1[i]*py_i2[i]); // /(toverlap/365.25);
+		      crossY_i[i] = (py_i1[i]*py_r2[i]-py_i2[i]*py_r1[i]); // /(toverlap/365.25);
+		      if (write_debug_files) fprintf(fout2,"%g %g %g %g %g %g %g %g %g %g %g\n",crossX[i],crossY_r[i],crossY_i[i],px1[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],px2[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i], py_r1[i],py_i1[i],py_r2[i],py_i2[i]);
+		    }
+		  if (write_debug_files) fclose(fout2);
+		  angle[npair]  = (double)psrangle(psr[p1].param[param_raj].val[0],
+						   psr[p1].param[param_decj].val[0],
+						   psr[p2].param[param_raj].val[0],
+						   psr[p2].param[param_decj].val[0]);
+		  cx = (1.0-cos(angle[npair]*M_PI/180.0))/2.0;
+		  zeta = 3.0/2.0*(cx*log(cx)-cx/6.0+1.0/3.0);
+		  
+		  sprintf(fname,"%s.model",psr[p1].name);
+		  if (!(fin = fopen(fname,"r")))
+		    {
+		      printf("Unable to open file >%s<\n",fname);
+		      exit(1);
+		    }
+		  fscanf(fin,"%s %s",dummy,dummy);
+		  fscanf(fin,"%s %lf",dummy,&alpha1);
+		  fscanf(fin,"%s %lf",dummy,&fc1);
+		  fscanf(fin,"%s %lf",dummy,&amp1);
+		  if (fscanf(fin,"%s %lf",dummy,&pw1)!=2)
+		    {
+		      printf("Unable to read whitenoise level >%s<\n",fname);
+		      exit(1);
+		    }
+		  fclose(fin); 
+		  
+		  sprintf(fname,"%s.model",psr[p2].name);
 		  fin = fopen(fname,"r");
-		  fscanf(fin,"%s %lf",dummy,&red_pwr1);
-		  fscanf(fin,"%s %lf",dummy,&red_alpha1);
+		  fscanf(fin,"%s %s",dummy,dummy);
+		  fscanf(fin,"%s %lf",dummy,&alpha2);
+		  fscanf(fin,"%s %lf",dummy,&fc2);
+		  fscanf(fin,"%s %lf",dummy,&amp2);
+		  fscanf(fin,"%s %lf",dummy,&pw2);
 		  fclose(fin);
-
-		  sprintf(fname,"%s.rednoise",psr[p2].name);
-		  fin = fopen(fname,"r");
-		  fscanf(fin,"%s %lf",dummy,&red_pwr2);
-		  fscanf(fin,"%s %lf",dummy,&red_alpha2);
-		  fclose(fin);
-		}
-
+		  
+		  if (useRed==1)
+		    {
+		      sprintf(fname,"%s.rednoise",psr[p1].name);
+		      fin = fopen(fname,"r");
+		      fscanf(fin,"%s %lf",dummy,&red_pwr1);
+		      fscanf(fin,"%s %lf",dummy,&red_alpha1);
+		      fclose(fin);
+		      
+		      sprintf(fname,"%s.rednoise",psr[p2].name);
+		      fin = fopen(fname,"r");
+		      fscanf(fin,"%s %lf",dummy,&red_pwr2);
+		      fscanf(fin,"%s %lf",dummy,&red_alpha2);
+		      fclose(fin);
+		    }
+		  
 		  double pwe=0;
 		  for (i=nSpec-10;i<nSpec;i++){
-			pwe+=py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i];
+		    pwe+=py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i];
 		  }
 		  pwe/=10.0;
 		  logmsg("pw1=%lg pwE=%lg",pw1,pwe);
-//		  pw1*=3.0;
+		  //		  pw1*=3.0;
 		  pwe=0;
 		  for (i=nSpec-10;i<nSpec;i++){
-			pwe+=py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i];
+		    pwe+=py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i];
 		  }
 		  pwe/=10.0;
 		  logmsg("pw2=%lg pwe=%lg",pw2,pwe);
-//		  pw2*=3.0;
-//
-	      nSpecNdof=nSpec;
-	      specStart=0;
-	      if(useRed==1)nSpecNdof=0;
-	      for (i=0;i<nSpec;i++)
-		{
-		  pg = guessGWamp*guessGWamp*pow((double)(crossX[i]*365.25),alpha_res)/12.0/M_PI/M_PI;
-		  modelPwr1 = pg + pw1;
-		  modelPwr2 = pg + pw2;
-		  if (useRed==1)
+		  //		  pw2*=3.0;
+		  //
+		  nSpecNdof=nSpec;
+		  specStart=0;
+		  if(useRed==1)nSpecNdof=0;
+		  for (i=0;i<nSpec;i++)
 		    {
-		      double pr1,pr2;
-		      pr1 = red_pwr1*pow((double)(crossX[i]*365.25),red_alpha1);
-		      pr2 = red_pwr2*pow((double)(crossX[i]*365.25),red_alpha2);
-		      modelPwr1 += pr1;
-		      modelPwr2 += pr2;
-                      if (nSpecNdof==0){
-			      if(pg > pr1+pw1 && pg > pr2+pw2){
-				      nSpecNdof++;
-			      } else {
-				      specStart++;
+		      pg = guessGWamp*guessGWamp*pow((double)(crossX[i]*365.25),alpha_res)/12.0/M_PI/M_PI;
+		      modelPwr1 = pg + pw1;
+		      modelPwr2 = pg + pw2;
+		      if (useRed==1)
+			{
+			  double pr1,pr2;
+			  pr1 = red_pwr1*pow((double)(crossX[i]*365.25),red_alpha1);
+			  pr2 = red_pwr2*pow((double)(crossX[i]*365.25),red_alpha2);
+			  modelPwr1 += pr1;
+			  modelPwr2 += pr2;
+			  if (nSpecNdof==0){
+			    if(pg > pr1+pw1 && pg > pr2+pw2){
+			      nSpecNdof++;
+			    } else {
+			      specStart++;
 			      }
-		      } else {
-			      if(pg > pr1 && pg > pr2){
-				      nSpecNdof++;
-			      } else{
-				      break;
-			      }
-		      }
-		    }
+			  } else {
+			    if(pg > pr1 && pg > pr2){
+			      nSpecNdof++;
+			    } else{
+			      break;
+			    }
+			  }
+			}
 		  //
 		  // Should check this 0.5+zeta^2
 		  //
 		  //crossPowerErr[i] = sqrt((0.5+zeta*zeta)*modelPwr1*modelPwr2);
-		  crossPowerErr[i] = sqrt((0.5*(1+zeta*zeta))*modelPwr1*modelPwr2);
-		  //crossPowerErr[i] = sqrt(modelPwr1*modelPwr2);
-//		  printf("In here with %s-%s %g %g %g %g %g %g\n",psr[p1].name,psr[p2].name,pg,pw1,pw2,guessGWamp,crossX[i],crossPowerErr[i]);
-		}
-	      
-	      nSpec = nSpecNdof+specStart;
-
-	      if (nSpecNdof > 0)
-		{
-		  sum1=sum2=sum3=sum4=0.0L;
-		  weight1 = -alpha_res;
-		  sprintf(tstr,"%s-%s.weightDGW",psr[p1].name,psr[p2].name);
-		  if(write_debug_files)fout2 = fopen(tstr,"w");
-		  
-		  for (i=specStart;i<nSpec;i++)
-		    {
-		      sum1 += (crossY_r[i]*pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2));
-		      sum2 += (pow((double)(i+1),-2.0*weight1)/pow(crossPowerErr[i],2));
-		      sum3 += (crossY_i[i]*pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2));
-		      sum4 += (1.0/pow(crossPowerErr[i],2)/pow((double)(i+1),2.0*weight1));
-		      if(write_debug_files)fprintf(fout2,"%g %g %g %g %g\n",crossX[i],crossPowerErr[i],(pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2)),(pow((double)(i+1),-2.0*weight1)/pow(crossPowerErr[i],2)),(1.0/pow(crossPowerErr[i],2)/pow((double)(i+1),2.0*weight1)));
+		      crossPowerErr[i] = sqrt((0.5*(1+zeta*zeta))*modelPwr1*modelPwr2);
+		      //crossPowerErr[i] = sqrt(modelPwr1*modelPwr2);
+		      //		  printf("In here with %s-%s %g %g %g %g %g %g\n",psr[p1].name,psr[p2].name,pg,pw1,pw2,guessGWamp,crossX[i],crossPowerErr[i]);
 		    }
-		  if (write_debug_files) fclose(fout2);
-		  printf("Complete weighting\n");
-		  a2zeta[npair]    = 12.0*M_PI*M_PI/pow(toverlap/365.25,weight1)*(sum1/sum2); // Equation 9 in Yardley et al.
-		  printf("Step2\n");
-		  a2zeta_im[npair] = 12.0*M_PI*M_PI/pow(toverlap/365.25,weight1)*(sum3/sum2);
-		  printf("Step3\n");
-		  a2zeta_e[npair]  = 12.0*M_PI*M_PI/pow(toverlap/365.25,weight1)/sqrt(sum4);
-		  printf("Step4\n");
-		  printf("v1 = %g\n",angle[npair]);
-		  printf("v2 = %g\n",a2zeta[npair]);
-
-		  fprintf(fout,"%g %g %g %s %s %g %g %g %g %d %d %d %s %s\n",angle[npair],a2zeta[npair],a2zeta_e[npair],psr[p1].name,psr[p2].name,(double)sum1,(double)sum2,(double)weight1,(double)toverlap,nSpec,nSpec1,nSpec2,timFile[p1],timFile[p2]);
-		  printf("Step5\n");
-		  npair++;
-		  printf("Trying next pulsar pair\n");
+		  
+		  nSpec = nSpecNdof+specStart;
+		  
+		  if (nSpecNdof > 0)
+		    {
+		      sum1=sum2=sum3=sum4=0.0L;
+		      weight1 = -alpha_res;
+		      sprintf(tstr,"%s-%s.weightDGW",psr[p1].name,psr[p2].name);
+		      if(write_debug_files)fout2 = fopen(tstr,"w");
+		      
+		      for (i=specStart;i<nSpec;i++)
+			{
+			  sum1 += (crossY_r[i]*pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2));
+			  sum2 += (pow((double)(i+1),-2.0*weight1)/pow(crossPowerErr[i],2));
+			  sum3 += (crossY_i[i]*pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2));
+			  sum4 += (1.0/pow(crossPowerErr[i],2)/pow((double)(i+1),2.0*weight1));
+			  if(write_debug_files)fprintf(fout2,"%g %g %g %g %g\n",crossX[i],crossPowerErr[i],(pow((double)(i+1),-1.0*weight1)/pow(crossPowerErr[i],2)),(pow((double)(i+1),-2.0*weight1)/pow(crossPowerErr[i],2)),(1.0/pow(crossPowerErr[i],2)/pow((double)(i+1),2.0*weight1)));
+			}
+		      if (write_debug_files) fclose(fout2);
+		      printf("Complete weighting\n");
+		      a2zeta[npair]    = 12.0*M_PI*M_PI/pow(toverlap/365.25,weight1)*(sum1/sum2); // Equation 9 in Yardley et al.
+		      printf("Step2\n");
+		      a2zeta_im[npair] = 12.0*M_PI*M_PI/pow(toverlap/365.25,weight1)*(sum3/sum2); // Equation 14??
+		      printf("Step3\n");
+		      a2zeta_e[npair]  = 12.0*M_PI*M_PI/pow(toverlap/365.25,weight1)/sqrt(sum4); // Equation 12??
+		      printf("Step4\n");
+		      printf("v1 = %g\n",angle[npair]);
+		      printf("v2 = %g\n",a2zeta[npair]);
+		      
+		      fprintf(fout,"%g %g %g %s %s %g %g %g %g %d %d %d %s %s\n",angle[npair],a2zeta[npair],a2zeta_e[npair],psr[p1].name,psr[p2].name,(double)sum1,(double)sum2,(double)weight1,(double)toverlap,nSpec,nSpec1,nSpec2,timFile[p1],timFile[p2]);
+		      printf("Step5\n");
+		      npair++;
+		      printf("Trying next pulsar pair\n");
+		    }
 		}
-	    }
-	  printf("Completed processing: %s %s\n",psr[p1].name,psr[p2].name);
+	      printf("Completed processing: %s %s\n",psr[p1].name,psr[p2].name);
 
+	    }
 	}
+      fclose(fout);
     }
-  fclose(fout);
+  else {
+    FILE *fin;
+    char temp[1024];
+
+    npair = 0;
+    fin = fopen(hdFile,"r");
+    while (!feof(fin))
+      {
+	if (fscanf(fin,"%lf %lf %lf %s %s %s %s %s %s %s",&angle[npair],&a2zeta[npair],&a2zeta_e[npair],temp,temp,temp,temp,temp,temp,temp)==10)
+	  npair++;
+      }
+    fclose(fin);
+
+  }
   // Fit for the amplitude of the HD curve and get its error
   // Currently not including errors in this fit
   {
     double p[2],e[2];
-    double **cvm;
+    double **cvm,**cvm1;
     double chisq;
     int nf=1;
     float fx[180],fy[180];
@@ -437,12 +467,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     double p1,e1,p2,e2,p3,e3,c1;
     FILE *fout;
 
+    printf("Calculating the significance\n");
+    cvm = (double**)malloc(sizeof(double *)*2);
+    for (i=0;i<2;i++)
+      cvm[i] = (double *)malloc(sizeof(double)*2);
 
-    cvm = (double**)malloc(sizeof(double *)*nf);
-    for (i=0;i<nf;i++)
-      cvm[i] = (double *)malloc(sizeof(double)*nf);
+    cvm1 = (double**)malloc(sizeof(double *)*1);
+    for (i=0;i<1;i++)
+      cvm1[i] = (double *)malloc(sizeof(double)*1);
+    printf("Allocated memory %d %d\n",npair,nf);
+    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,nf,cvm1,&chisq,hdfunc,1);
+    printf("Done the fit\n");
 
-    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,nf,cvm,&chisq,hdfunc,1);
     amp = p[0];
     printf("A2 = %g +/- %g\n",p[0],e[0]);
     if (p[0] > 0)
@@ -459,7 +495,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("2] A = %g\n",sqrt(p2));
     printf("2] Significance = %g\n",p2/e2);
 
-    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,nf,cvm,&chisq,hdfunc,0);
+    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,nf,cvm1,&chisq,hdfunc,0);
     amp = p[0];
     printf("3] A2 = %g +/- %g\n",p[0],e[0]);
     if (p[0] > 0)
@@ -469,11 +505,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     p3 = p[0];
     e3 = e[0];
 
+    // Now fit for an offset as well as the hd curve
+    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,2,cvm,&chisq,hdfunc_offs,1);
+    printf("4] A2 = %g +/- %g\n",p[0],e[0]);
+    printf("4] Significance = %g\n",p[0]/e[0]);
+    printf("4] offset = %g +/- %g\n",p[1],e[1]);
+    printf("4] chisq = %g\n",chisq);
+    printf("4] chisq reduced = %g\n",chisq/(double)(npair-2));
     fout = fopen("result.dat","w");
     fprintf(fout,"%g %g %g %g %g %g %g %g %g %g\n",p1,e1,p1/e1,c1,p2,e2,p2/e2,p3,e3,p3/e3,chisq);
     fclose(fout);
 
-    for (i=0;i<nf;i++)
+    free(cvm1[0]);
+    free(cvm1);
+    for (i=0;i<2;i++)
       free(cvm[i]);
     free(cvm);
   }
@@ -578,6 +623,16 @@ void hdfunc(double x,double *p,int ma)
   cx = (1.0-ctheta)/2.0;
   p[0] = (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0;
 
+}
+
+void hdfunc_offs(double x,double *p,int ma)
+{
+  double ctheta,cx;
+
+  ctheta = cos(x*M_PI/180.0);
+  cx = (1.0-ctheta)/2.0;
+  p[0] = (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0;
+  p[1] = 1.0;
 }
 
 
