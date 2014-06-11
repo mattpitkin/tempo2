@@ -35,10 +35,10 @@
 using namespace std;
 
 void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN],
-		     char timFile[MAX_PSR_VAL][MAX_FILELEN]);
-int findOverlap(pulsar *psr,int *npsr,int *overlap1,int *overlap2);
-int idPoint(pulsar *psr,int np,float *x,float *y,int *id,int count,float mouseX,float mouseY);
-int idPoint2(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouseX,float mouseY,int *overlap1,int *overlap2);
+		     char timFile[MAX_PSR_VAL][MAX_FILELEN],double maxDiff);
+int findOverlap(pulsar *psr,int *npsr,int *overlap1,int *overlap2,double maxDiff);
+int idPoint(pulsar *psr,int np,float *x_1,float *y_1,int *id_1,int count_1,float *x_2,float *y_2,int *id_2,int count_2,float mouseX,float mouseY,char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN],int view);
+int idPoint2(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouseX,float mouseY,int *overlap1,int *overlap2,int view);
 
 void help() /* Display help */
 {
@@ -50,7 +50,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
+  int autoRun=0;
   double globalParameter;
+  double maxDiff = 120; // Number of seconds corresponding to overlap
   const char *CVS_verNum = "$Revision$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("compareDsets.C","plugin",CVS_verNum);
@@ -73,6 +75,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  strcpy(timFile[*npsr],argv[++i]);
 	  (*npsr)++;
 	}
+      else if (strcmp(argv[i],"-auto")==0)
+	autoRun=1;
+      else if (strcmp(argv[i],"-delta")==0)
+	sscanf(argv[++i],"%lf",&maxDiff);
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -87,17 +93,30 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
 
-  compareDatasets(psr,npsr,parFile,timFile);
+  if (autoRun==1)
+    {
+      int nOverlap;
+      int overlap1[MAX_OBSN];
+      int overlap2[MAX_OBSN];
+      
+      nOverlap = findOverlap(psr,npsr,overlap1,overlap2,maxDiff);
+      printf("Have automatically found %d overlapping points\n",nOverlap);
+      writeTim((char *)"compare_dset1.tim",&psr[0],(char *)"tempo2");
+      writeTim((char *)"compare_dset2.tim",&psr[1],(char *)"tempo2");
+      printf("Written out compare_dset1.tim and compare_dset2.tim\n");
+    }
+  else
+    compareDatasets(psr,npsr,parFile,timFile,maxDiff);
 
   return 0;
 }
 
 void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN],
-		     char timFile[MAX_PSR_VAL][MAX_FILELEN])
+		     char timFile[MAX_PSR_VAL][MAX_FILELEN],double maxDiff)
 {
   float x1[MAX_OBSN],y1[MAX_OBSN],e1[MAX_OBSN],y1e_u[MAX_OBSN],y1e_l[MAX_OBSN];
   float x2[MAX_OBSN],y2[MAX_OBSN],e2[MAX_OBSN],y2e_u[MAX_OBSN],y2e_l[MAX_OBSN];
-  int id1[MAX_OBSN];
+  int id1[MAX_OBSN],id2[MAX_OBSN];
   int overlap1[MAX_OBSN];
   int overlap2[MAX_OBSN];
   int nOverlap=0;
@@ -108,6 +127,11 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
   int i;
   int plot=1;
   int zoom=0;
+  char grDev[128];
+  char xstr[128];
+  int changePlot=0;
+
+  strcpy(grDev,"/xs");
 
   do {
 
@@ -119,7 +143,7 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	    if (psr[0].obsn[i].deleted==0)
 	      {
 		id1[n1] = i;
-		x1[n1] = psr[0].obsn[i].sat;
+		x1[n1] = psr[0].obsn[i].sat-psr[0].param[param_pepoch].val[0];
 		y1[n1] = psr[0].obsn[i].residual;
 		e1[n1] = psr[0].obsn[i].toaErr*1e-6;
 		y1e_u[n1] = y1[n1]+e1[n1];
@@ -147,7 +171,8 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	  {
 	    if (psr[1].obsn[i].deleted==0)
 	      {
-		x2[n2] = psr[1].obsn[i].sat;
+		id2[n2] = i;
+		x2[n2] = psr[1].obsn[i].sat-psr[0].param[param_pepoch].val[0];
 		y2[n2] = psr[1].obsn[i].residual;
 		e2[n2] = psr[1].obsn[i].toaErr*1e-6;
 		y2e_u[n2] = y2[n2]+e2[n2];
@@ -164,14 +189,13 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	      }
 	  }
       }
-    printf("n1 = %d, n2 = %d, nOverlap = %d\n",n1,n2,nOverlap);
     if (plot==2)
       {
 	n1=0;
 	for (i=0;i<nOverlap;i++)
 	  {
 	    id1[n1] = overlap1[i];
-	    x1[n1] = psr[0].obsn[overlap1[i]].sat;
+	    x1[n1] = psr[0].obsn[overlap1[i]].sat-psr[0].param[param_pepoch].val[0];
 	    y1[n1] = psr[0].obsn[overlap1[i]].residual - psr[1].obsn[overlap2[i]].residual;
 	    e1[n1] = sqrt(pow(psr[0].obsn[overlap1[i]].toaErr*1e-6,2)+pow(psr[1].obsn[overlap2[i]].toaErr*1e-6,2));
 	    y1e_u[n1] = y1[n1]+e1[n1];
@@ -228,15 +252,16 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	printf("n1 = %d\n",n1);
       }
 
-    cpgbeg(0,"/xs",1,1);
+    cpgbeg(0,grDev,1,1);
     cpgsch(1.4);
     cpgscf(1);
     cpgslw(2);
     cpgenv(minx,maxx,miny,maxy,0,1);
+    sprintf(xstr,"MJD - %.1f",(double)psr[0].param[param_pepoch].val[0]);
     if (plot==2)
-      cpglab("MJD","Difference","");
+      cpglab(xstr,"Difference","");
     if (plot==1)
-      cpglab("MJD","Residual (s)","");
+      cpglab(xstr,"Residual (s)","");
     if (plot==3)
       {
 	char str1[128],str2[128];
@@ -263,63 +288,86 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
       }
 
     cpgsci(1);
-    cpgcurs(&mx,&my,&key);
-    if (key=='o') // find overlap points
-      {	
-	nOverlap = findOverlap(psr,npsr,overlap1,overlap2);
-	printf("Number of overlapping points = %d\n",nOverlap);
-      }
-    else if (key=='t') // Output overlap points to file
+    if (changePlot==0)
       {
-	FILE *fout;
-	fout = fopen("overlap.dat","w");
-	for (i=0;i<nOverlap;i++)
-	  {
-	    fprintf(fout,"%.5Lf %g %g\n",psr[0].obsn[overlap1[i]].sat,
-		    (double)(psr[0].obsn[overlap1[i]].residual - psr[1].obsn[overlap2[i]].residual), sqrt(pow(psr[0].obsn[overlap1[i]].toaErr*1e-6,2)+pow(psr[1].obsn[overlap2[i]].toaErr*1e-6,2)));
+	cpgcurs(&mx,&my,&key);
+	if (key=='o') // find overlap points
+	  {	
+	    nOverlap = findOverlap(psr,npsr,overlap1,overlap2,maxDiff);
+	    printf("Number of overlapping points = %d\n",nOverlap);
 	  }
-	fclose(fout);
-
-      }
-    else if (key=='A')
-      {
-	if (plot==1)
-	  idPoint(psr,0,x1,y1,id1,n1,mx,my);
-	else if (plot==2 || plot==3)
-	  idPoint2(psr,0,x1,y1,id1,n1,mx,my,overlap1,overlap2);
-      }
-    else if (key=='z')
-      {
-	float mx2,my2;
-	cpgband(2,0,mx,my,&mx2,&my2,&key);
-	zoom=1;
-	minx = TKretMin_f(mx,mx2);
-	maxx = TKretMax_f(mx,mx2);
-	miny = TKretMin_f(my,my2);
-	maxy = TKretMax_f(my,my2);
-      }
-    else if (key=='w')
-      {
-	writeTim((char *)"compare_dset1.tim",&psr[0],(char *)"tempo2");
-	writeTim((char *)"compare_dset2.tim",&psr[1],(char *)"tempo2");
-      }
-    else if (key=='u')
-      zoom=0;
-    else if (key=='1') 
-      plot=1;
-    else if (key=='2') // Plot difference between residuals
-      plot=2;
-    else if (key=='3') // Plot difference between error bar sizes
-      plot=3;
+	else if (key=='t') // Output overlap points to file
+	  {
+	    FILE *fout;
+	    fout = fopen("overlap.dat","w");
+	    for (i=0;i<nOverlap;i++)
+	      {
+		fprintf(fout,"%.5Lf %g %g\n",psr[0].obsn[overlap1[i]].sat,
+			(double)(psr[0].obsn[overlap1[i]].residual - psr[1].obsn[overlap2[i]].residual), sqrt(pow(psr[0].obsn[overlap1[i]].toaErr*1e-6,2)+pow(psr[1].obsn[overlap2[i]].toaErr*1e-6,2)));
+	      }
+	    fclose(fout);
+	    
+	  }
+	else if (key=='A')
+	  {
+	    if (plot==1)
+	      idPoint(psr,0,x1,y1,id1,n1,x2,y2,id2,n2,mx,my,parFile,timFile,0);
+	    else if (plot==2 || plot==3)
+	      idPoint2(psr,0,x1,y1,id1,n1,mx,my,overlap1,overlap2,0);
+	  }
+	else if (key=='z')
+	  {
+	    float mx2,my2;
+	    cpgband(2,0,mx,my,&mx2,&my2,&key);
+	    zoom=1;
+	    minx = TKretMin_f(mx,mx2);
+	    maxx = TKretMax_f(mx,mx2);
+	    miny = TKretMin_f(my,my2);
+	    maxy = TKretMax_f(my,my2);
+	  }
+	else if (key=='w')
+	  {
+	    writeTim((char *)"compare_dset1.tim",&psr[0],(char *)"tempo2");
+	    writeTim((char *)"compare_dset2.tim",&psr[1],(char *)"tempo2");
+	  }
+	else if (key=='u')
+	  zoom=0;
+	else if (key=='1') 
+	  plot=1;
+	else if (key=='2') // Plot difference between residuals
+	  plot=2;
+	else if (key=='3') // Plot difference between error bar sizes
+	  plot=3;
+	else if (key=='g') 
+	  {
+	    changePlot=1;
+	    printf("Enter graphical device: ");
+	    scanf("%s",grDev);
+	  }
+	else if (key=='D') // View point
+	  {
+	    if (plot==1)
+	      idPoint(psr,0,x1,y1,id1,n1,x2,y2,id2,n2,mx,my,parFile,timFile,1);
+	    else if (plot==2 || plot==3)
+	      idPoint2(psr,0,x1,y1,id1,n1,mx,my,overlap1,overlap2,1);
+	  }
+	else  if (key!='q')
+	  {
+	    printf("Unknown key stroke %c\n",key);
+	  }
+      } 
+    else {
+      strcpy(grDev,"/xs");
+      changePlot=0;
+    }
   } while (key!='q');
   cpgend();
 }
 
-int findOverlap(pulsar *psr,int *npsr,int *overlap1,int *overlap2)
+int findOverlap(pulsar *psr,int *npsr,int *overlap1,int *overlap2,double maxDiff)
 {
   int i,j,found;
   long double tdiff;
-  double maxDiff = 120; // Number of seconds corresponding to overlap
   int nOverlap=0;
 
   for (i=0;i<psr[0].nobs;i++)
@@ -365,10 +413,10 @@ int findOverlap(pulsar *psr,int *npsr,int *overlap1,int *overlap2)
   return nOverlap;
 }
 
-int idPoint(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouseX,float mouseY)
+int idPoint(pulsar *psr,int np,float *x_1,float *y_1,int *id_1,int count_1,float *x_2,float *y_2,int *id_2,int count_2,float mouseX,float mouseY,char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX_PSR_VAL][MAX_FILELEN],int view)
 {
-   int i,iclosest,l;
-   float closest,x1,x2,x3,x4,y1,y2,y3,y4,xscale,yscale,xpos,ypos;
+  int i,iclosest,l,d;
+  float closest,x1,x2,x3,x4,y1,y2,y3,y4,xscale,yscale,xpos,ypos;
 
    cpgqvp(3,&x1,&x2,&y1,&y2);
    cpgqwin(&x3,&x4,&y3,&y4);
@@ -377,30 +425,59 @@ int idPoint(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouseX
    mouseX = (mouseX-x3)*xscale;
    mouseY = (mouseY-y3)*yscale;
    iclosest=-1;
-   for (i=0;i<count;i++)
+   for (i=0;i<count_1;i++)
    {
-	  xpos = (x[i]-x3)*xscale;
-	  ypos = (y[i]-y3)*yscale;
+	  xpos = (x_1[i]-x3)*xscale;
+	  ypos = (y_1[i]-y3)*yscale;
 	  if (iclosest==-1)
 	  {
-		 iclosest=id1[i];
+		 iclosest=id_1[i];
 		 closest = pow(xpos-mouseX,2)+pow(ypos-mouseY,2);
+		 d=1;
 	  }
 	  else if (pow(xpos-mouseX,2)+pow(ypos-mouseY,2)<closest)
 	  {
-		 iclosest=id1[i];
+		 iclosest=id_1[i];
 		 closest = pow(xpos-mouseX,2)+pow(ypos-mouseY,2);
+		 d=0;
+	  }
+   }
+
+   for (i=0;i<count_2;i++)
+   {
+	  xpos = (x_2[i]-x3)*xscale;
+	  ypos = (y_2[i]-y3)*yscale;
+	  if (pow(xpos-mouseX,2)+pow(ypos-mouseY,2)<closest)
+	  {
+		 iclosest=id_2[i];
+		 closest = pow(xpos-mouseX,2)+pow(ypos-mouseY,2);
+		 d=1;
 	  }
    }
 
    printf("---------------------------------------------------\n");
-   printf("Closest point has TOA number %d (starting from 1)\n",iclosest+1);
-   printf("ToA value = %f\n",(double)psr[0].obsn[iclosest].sat);
+   printf("Closest point is from %s %s\n",parFile[d],timFile[d]);
+   printf("Filename = %s\n",psr[d].obsn[iclosest].fname);
+   printf("ToA value = %f\n",(double)psr[d].obsn[iclosest].sat);
+   printf("Error = %f (us)\n",(double)psr[d].obsn[iclosest].toaErr);
+   printf("Frequency = %f (MHz)\n",(double)psr[d].obsn[iclosest].freq);
+   printf("Flags = ");
+   for (i=0;i<psr[d].obsn[iclosest].nFlags;i++)
+	  printf(" \"%s\" %s ",psr[d].obsn[iclosest].flagID[i],psr[d].obsn[iclosest].flagVal[i]);
+   printf("\n");
+
+   printf("---------------------------------------------------\n");
+   if (view==1)
+     {
+       char str[1024];
+       sprintf(str,"pav -CDFTp %s -g10/xs\n",psr[d].obsn[iclosest].fname);
+       system(str);
+     }
    return iclosest;
 }
 
 
-int idPoint2(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouseX,float mouseY,int *overlap1,int *overlap2)
+int idPoint2(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouseX,float mouseY,int *overlap1,int *overlap2,int view)
 {
    int i,iclosest,l;
    float closest,x1,x2,x3,x4,y1,y2,y3,y4,xscale,yscale,xpos,ypos;
@@ -431,7 +508,32 @@ int idPoint2(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouse
    printf("---------------------------------------------------\n");
    printf("Closest point represents: %s %s\n",psr[0].obsn[overlap1[iclosest]].fname,
 	  psr[1].obsn[overlap2[iclosest]].fname);
-   printf("ToA value = %f\n",(double)psr[0].obsn[iclosest].sat);
+   printf("ToA value 1 = %f\n",(double)psr[0].obsn[overlap1[iclosest]].sat);
+   printf("ToA value 2 = %f\n",(double)psr[1].obsn[overlap2[iclosest]].sat);
+
+   printf("Error 1 = %f (us)\n",(double)psr[0].obsn[overlap1[iclosest]].toaErr);
+   printf("Error 2 = %f (us)\n",(double)psr[1].obsn[overlap2[iclosest]].toaErr);
+
+   printf("Frequency 1 = %f (MHz)\n",(double)psr[0].obsn[overlap1[iclosest]].freq);
+   printf("Frequency 2 = %f (MHz)\n",(double)psr[1].obsn[overlap2[iclosest]].freq);
+
+   printf("Flags1 = ");
+   for (i=0;i<psr[0].obsn[overlap1[iclosest]].nFlags;i++)
+	  printf(" \"%s\" %s ",psr[0].obsn[overlap1[iclosest]].flagID[i],psr[0].obsn[overlap1[iclosest]].flagVal[i]);
+   printf("\n");
+
+   printf("Flags2 = ");
+   for (i=0;i<psr[1].obsn[overlap2[iclosest]].nFlags;i++)
+	  printf(" \"%s\" %s ",psr[1].obsn[overlap2[iclosest]].flagID[i],psr[1].obsn[overlap2[iclosest]].flagVal[i]);
+   printf("\n");
+   printf("---------------------------------------------------\n");
+   if (view==1)
+     {
+       char str[1024];
+       sprintf(str,"pav -CDFTp -N1,2 %s %s -g10/xs\n",psr[0].obsn[overlap1[iclosest]].fname,psr[1].obsn[overlap2[iclosest]].fname);
+       system(str);
+     }
+
    return iclosest;
 }
 
