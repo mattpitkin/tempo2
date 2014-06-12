@@ -20,7 +20,9 @@ extern "C" {
  * M.Keith 2012 - let me know if this fails to compile anywhere.
  * mkeith@pulsarastronomy.net
  **/
+#ifndef LOG_OUTFILE
 #define LOG_OUTFILE stdout
+#endif
 #define WHERESTR  "[%s:%d] "
 #define WHEREARG  __FILE__, __LINE__
 #define ENDL "\n"
