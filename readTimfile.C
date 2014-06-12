@@ -551,8 +551,27 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	      else if (strcasecmp(param1,"INCLUDE")==0) /* Include another .tim file */
 		{
 		  char newtim[MAX_FILELEN];
+		  char relPath[MAX_FILELEN];
 		  if (sscanf(line,"%s %s",param1,newtim)==2)
-		    readTim(newtim,psr,jumpVal);
+		    {
+		      int ii;
+		      // Relative file path
+		      printf("Current filename = %s\n",timname);
+		      realpath(timname,relPath);
+		      // Remove filename
+		      for (ii=strlen(relPath);ii>0;ii--)
+			{
+			  if (relPath[ii]=='/')
+			    {
+			      relPath[ii+1]='\0';
+			      break;
+			    }
+			}
+		      strcat(relPath,newtim);
+		      printf("Rel path = %s\n",relPath);
+		      //		      readTim(newtim,psr,jumpVal);
+		      readTim(relPath,psr,jumpVal);
+		    }
 		  else
 		    printf("Unable to parse INCLUDE line >%s<\n",line);
 		  strcpy(param1,"");
