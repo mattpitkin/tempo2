@@ -87,7 +87,39 @@ void accel_uinv(double* _m, int n){
 extern "C" {
    extern void F77_dgemm(char* ta, char* tb, int* m, int* n, int* k, double* alpha, 
 		 double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
+
+#define F77_dgemv F77_FUNC(dgemv,DGEMV)
+   extern void F77_dgemv(char* trans, int* m, int* n, double* alpha, 
+		 double* a, int* lda, double* x, int* incx, double* beta, double* y, int* incy);
 }
+
+
+void accel_multMatrixVec(double* m1,double* v, int ndata,int npol, double* out){
+
+   int m,n,k;
+   double alpha=1.0,beta=0;
+   int inc=1;
+
+   m=npol;
+   n=ndata;
+   /*
+	* An important note about this. FORTRAN effectively transposes all matricies becaue
+	* the memory is ordered differently. Therefore we specify "T" to do a transpose
+	*
+	*
+	* M.Keith 2013.
+	*/
+   F77_dgemv("T",&m,&n,&alpha ,m1,&m,v,&inc,&beta,out,&inc);
+
+   /*
+	  m=ndata;
+	  n=npol;
+	  k=ndata;
+
+	  F77_dgemm("N","T",&m,&n,&k,&alpha,m1,&m,m2,&n,&beta,out,&m);
+	  */
+}
+
 
 
 void accel_multMatrix(double* m1,double* m2, int ndata,int ndata2,int npol, double* out){

@@ -44,7 +44,8 @@ void TKmultMatrixVec( double **idcm, double *b,int ndata,int ndata2,double *bout
 #ifdef ACCEL_MULTMATRIX
    if (useT2accel){
       logdbg("using accelerated multmatrix (m.keith 2012)");
-      accel_multMatrix(idcm[0],b,ndata,ndata2,1,bout);
+      accel_multMatrixVec(idcm[0],b,ndata,ndata2,bout);
+      //accel_multMatrix(idcm[0],b,ndata,ndata2,1,bout);
    }else{
 #endif
       int i,j;

@@ -1511,6 +1511,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			   newTim(psr);
 			else if (key=='n') /* Save new .tim file with pulse numbers */
 			{
+			   logmsg("Writing pulse numbers to withpn.tim");
 			   for (i=0;i<psr[0].nobs;i++)
 			   {
 				  int flagid=psr[0].obsn[i].nFlags;

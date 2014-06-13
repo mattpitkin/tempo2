@@ -370,7 +370,7 @@ void cholesky_formUinv(double **uinv,double** m,int np){
    logtchk("forming Cholesky matrix ... do Cholesky decomposition");
 #ifdef ACCEL_UINV
    if(useT2accel){
-	  logmsg("Doing ACCELERATED Chol Decomp (M.Keith/LAPACK method)");
+	  logdbg("Doing ACCELERATED Chol Decomp (M.Keith/LAPACK method)");
 	  for(i =0;i<np;i++){
 		 memcpy(uinv[i],m[i],np*sizeof(double));
 	  }
