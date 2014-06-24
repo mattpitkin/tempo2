@@ -569,7 +569,8 @@ typedef struct pulsar {
   double TNDMAmp;
   double TNDMGam;
   int TNDMC;
-  int TNsubtract;
+  int TNsubtractDM;
+  int TNsubtractRed;
   
   // White noise models
   char whiteNoiseModelFile[MAX_STRLEN];

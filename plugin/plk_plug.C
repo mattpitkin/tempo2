@@ -1225,9 +1225,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  setZoomY1 = 0; setZoomY2 = 0;
 	   }
 		else if(key=='F'){
-			printf("will ubstract red noise on next Fit \n");
-			psr[0].TNsubtract=1;
+			printf("will substract PL DM Variations on next Fit \n");
+			psr[0].TNsubtractDM=1;
 		}
+		else if(key=='K'){
+                        printf("will substract Red Noise on next Fit \n");
+                        psr[0].TNsubtractRed=1;
+                }
+
 	   else if (key==3) /* Change central point */
 		  centre*=-1;
 	   else if (key=='E') /* Toggle plotting error bars */

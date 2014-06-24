@@ -3273,16 +3273,29 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 
 	double chisq=0;
-	printf("subtract is %i \n", pulse->TNsubtract);
+	printf("subtractRed is %i \n", pulse->TNsubtractRed);
+	printf("subtractDM is %i \n", pulse->TNsubtractDM);
         for(int i=0;i<pulse->nobs;i++){
                 double dsum=0;
+		double redsum=0;
+		double dmsum=0;
                 for(int j=0;j<totalsize; j++){
                         dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
+			if(j>=numtofit && j < numtofit+FitRedCoeff){
+				redsum+=TotalMatrix[i][j]*maxcoeff[j];
+			}
+			if(j>=FitRedCoeff+numtofit && j < totalsize){
+                                dmsum+=TotalMatrix[i][j]*maxcoeff[j];
+                        }
+
                 }
 		chisq+=(Resvec[i]-dsum)*(Resvec[i]-dsum)/(Noise[i]);
-		if(pulse->TNsubtract==1){
-			pulse->obsn[i].sat -= dsum/SECDAY;
+		if(pulse->TNsubtractRed==1){
+			pulse->obsn[i].sat -= redsum/SECDAY;
 		}
+                if(pulse->TNsubtractDM==1){
+                        pulse->obsn[i].sat -= dmsum/SECDAY;
+                }
 	}
 
 	pulse->fitChisq = chisq; 

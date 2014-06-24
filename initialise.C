@@ -188,7 +188,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->TNDMAmp = 0;
   psr->TNDMGam = 0;
   psr->TNDMC = 0;
-  psr->TNsubtract=0;
+  psr->TNsubtractDM=0;
+  psr->TNsubtractRed=0;
   psr->sorted=0;
   allocateMemory(psr,0);
   /*  psr->param[param_track].paramSet[0]=1;
