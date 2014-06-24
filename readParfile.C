@@ -1086,6 +1086,20 @@ else if (strcasecmp(str,"_DM")==0)
               &psr->TNEQVal[nequadFlag] );
       ( psr->nTNEQ )++;
     }
+    
+      else if (strcasecmp(str,"TNRedAmp")==0) /* TempoNest Red noise power law amplitude */
+            fscanf(fin,"%lf",&(psr->TNRedAmp));
+  else if (strcasecmp(str,"TNRedGam")==0) /* TempoNest Red noise spectral index */
+	fscanf(fin,"%lf",&(psr->TNRedGam));
+  else if (strcasecmp(str,"TNRedC")==0) /* TempoNest Red noise spectral index */
+        fscanf(fin,"%d",&(psr->TNRedC));
+  else if (strcasecmp(str,"TNDMAmp")==0) /* TempoNest Red noise power law amplitude */
+	fscanf(fin,"%lf",&(psr->TNDMAmp));
+  else if (strcasecmp(str,"TNDMGam")==0) /* TempoNest Red noise spectral index */
+	fscanf(fin,"%lf",&(psr->TNDMGam));
+  else if (strcasecmp(str,"TNDMC")==0) /* TempoNest Red noise spectral index */
+        fscanf(fin,"%d",&(psr->TNDMC));
+
 
   /* ----------------- */
   /* Binary Parameters */

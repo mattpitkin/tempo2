@@ -563,7 +563,13 @@ typedef struct pulsar {
   double TNEFVal[MAX_TNEF];
   char   TNEQFlagID[MAX_TNEQ][MAX_FLAG_LEN],TNEQFlagVal[MAX_TNEQ][MAX_FLAG_LEN];
   double TNEQVal[MAX_TNEQ];
-
+  double TNRedAmp;
+  double TNRedGam;
+  int TNRedC;
+  double TNDMAmp;
+  double TNDMGam;
+  int TNDMC;
+  int TNsubtract;
   
   // White noise models
   char whiteNoiseModelFile[MAX_STRLEN];

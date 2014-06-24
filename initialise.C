@@ -182,7 +182,13 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
 
   psr->nTNEF  = 0; // Number of TNEFACs
   psr->nTNEQ = 0; // Number of TNEQUADs
-
+  psr->TNRedAmp = 0;
+  psr->TNRedGam = 0;
+  psr->TNRedC = 0;
+  psr->TNDMAmp = 0;
+  psr->TNDMGam = 0;
+  psr->TNDMC = 0;
+  psr->TNsubtract=0;
   psr->sorted=0;
   allocateMemory(psr,0);
   /*  psr->param[param_track].paramSet[0]=1;

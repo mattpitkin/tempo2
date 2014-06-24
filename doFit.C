@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <algorithm>
 #include <string.h>
 #include <dlfcn.h>
 #include "tempo2.h"
@@ -44,6 +45,46 @@ void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error);
 int getNparams(pulsar *psr,int offset);
 int getNglobal(pulsar *psr,int npsr);
 double getConstraintDeriv(pulsar *psr,int ipos,int i,int k);
+
+
+///////////////////Functions for TempoNest maximum likelihood Fitting////////////////
+
+#ifdef HAVE_LAPACK
+#ifdef HAVE_BLAS
+void getTempoNestMaxLike(pulsar *pulse, int npsr);
+
+void dgesvd_ftoc(double *in, double **out, int rows, int cols);
+double* dgesvd_ctof(double **in, int rows, int cols);
+void dgesvd(double **A, int m, int n, double *S, double **U, double **VT);
+void dgemv(double **A, double *vecin,double *vecout,int rowa, int cola, char AT);
+double *dgemv_ctof(double **in, int rows, int cols);
+void dgemv_ftoc(double *in, double **out, int rows, int cols);
+void dgemm(double **A, double **B,double **C,int rowa, int cola, int rowb, int colb, char AT, char BT);
+double *dgemm_ctof(double **in, int rows, int cols);
+void dgemm_ftoc(double *in, double **out, int rows, int cols);
+void dpotri(double **A, int msize);
+double *dpotri_ctof(double **in, int rows, int cols);
+void dpotri_ftoc(double *in, double **out, int rows, int cols);
+void dpotrf(double **A, int msize, double &det);
+double *dpotrf_ctof(double **in, int rows, int cols);
+void dpotrf_ftoc(double *in, double **out, int rows, int cols);
+
+extern "C" void dpotrf_(char *UPLO, int *msize, double *a, int *lda, int *info);
+extern "C" void dpotri_(char *UPLO, int *msize, double *a, int *lda, int *info);
+extern "C" void dgesvd_(char *jobu, char *jobvt, int *m, int *n,
+			double *a, int *lda, double *s, double *u,
+			int *ldu, double *vt, int *ldvt, double *work,
+			int *lwork, int *info);
+extern "C" void dgemv_(char *jobu, int *m, int *n,
+			double *alpha, double *a, int *lda,
+			double *x, int *incx, double *beta, double *y, int *incy);
+extern "C" void dgemm_(char *jobu, char *jobvt, int *m, int *n,
+			int *k, double *alpha, double *a, int *lda,
+			double *b, int *ldb, double *beta, double *c,
+			int *ldc);
+#endif
+#endif
+/////////////////End Functions for TempoNest maximum likelihood Fitting/////////////////////
 
 // Backwards compatibility
 void doFit(pulsar *psr,int npsr,int writeModel) 
@@ -92,6 +133,25 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
    //  printf("WARNING: Switching weighting off for the fit\n");
    //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
+  
+
+///////////////If TNRed or TNDM parameters defined, call TempoNest maxlike function and return/////////////////////// 
+   	if((psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) || (psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0 )){
+
+
+#ifdef HAVE_LAPACK
+#ifdef HAVE_BLAS
+		printf("\n\nIncluding red noise parameters, calling new dofit\n\n");
+		getTempoNestMaxLike(psr, npsr);
+		return;
+#else
+		printf("LAPACK required for use of temponest noise parameters\n");
+#endif
+#endif
+	}
+
+
+
 
    if (strcmp(psr[0].fitFunc,"default")!=0)
    {
@@ -2869,4 +2929,694 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
    }
 }
 
+#ifdef HAVE_LAPACK
+#ifdef HAVE_BLAS
+void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
+	formBatsAll(pulse,npsr);       /* Form Barycentric arrival times */
+	formResiduals(pulse,npsr,1);       /* Form residuals */
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Form the Design Matrix////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////  
+
+	int numtofit = 1;
+	int numTime=0;
+	int numJumps=0;
+	for(int i=0; i<MAX_PARAMS; i++) {
+		for(int k=0; k<pulse->param[i].aSize; k++) {
+			if(pulse->param[i].fitFlag[k]==1) {
+				if(i!=param_start && i!=param_finish) {
+					numtofit++;
+					numTime++;
+				}
+			} // if fitFlag
+		} // for k
+	} // for i
+	
+	/* Add extra parameters for jumps */
+	for(int i=1; i<=pulse->nJumps; i++) {
+		if(pulse->fitJump[i]==1){
+			numtofit++;
+			numJumps++;
+		}
+	}
+	
+
+	double **TNDM=new double*[pulse->nobs];
+	for(int i=0;i<pulse->nobs;i++){
+		TNDM[i]=new double[numtofit];
+	}
+
+
+	double pdParamDeriv[MAX_PARAMS];
+	for(int i=0; i < pulse->nobs; i++) {
+		FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, pulse, i,0);
+		for(int j=0; j<numtofit; j++) {
+			TNDM[i][j]=pdParamDeriv[j];
+		} 
+	} 
+	
+	
+
+
+
+	double* S = new double[numtofit];
+	double** U = new double*[pulse->nobs];
+	for(int k=0; k < pulse->nobs; k++){
+		U[k] = new double[pulse->nobs];
+	}
+	double** VT = new double*[numtofit]; 
+	for (int k=0; k<numtofit; k++) VT[k] = new double[numtofit];
+
+	dgesvd(TNDM,pulse->nobs, numtofit, S, U, VT);
+	
+
+	double **V=new double*[numtofit];
+
+	for(int i=0;i<numtofit;i++){
+		V[i]=new double[numtofit];
+	}
+
+
+	for(int j=0;j < numtofit;j++){
+		for(int k=0;k < numtofit;k++){
+			V[j][k]=VT[k][j];
+		}
+	}
+
+	for(int j=0;j<pulse->nobs;j++){
+		for(int k=0;k < numtofit;k++){
+				TNDM[j][k]=U[j][k];
+
+		}
+	}
+
+
+
+
+
+
+	///////////////Form the F Matrix////////////////////////////////////////
+
+	double RedAmp=0;
+	double RedIndex=0;
+	double DMAmp=0;
+	double DMIndex=0;
+	int FitRedCoeff=0;
+	int FitDMCoeff=0;
+	int totCoeff=0;
+
+	if(pulse->TNRedAmp != 0 && pulse->TNRedGam != 0){
+		RedAmp=pulse->TNRedAmp;
+		RedIndex=pulse->TNRedGam;
+		FitRedCoeff=pulse->TNRedC;
+
+		printf("\n Including Red noise with %i Coefficients, %g Log_10 Amplitude, %g Spectral Index\n", FitRedCoeff,RedAmp,RedIndex);
+	}
+	if(pulse->TNDMAmp != 0 && pulse->TNDMGam != 0){
+		DMAmp=pulse->TNDMAmp;
+		DMIndex=pulse->TNDMGam;
+		FitDMCoeff=pulse->TNDMC;
+
+		printf("\n Including DM Variations with %i Coefficients, %g Log_10 Amplitude, %g Spectral Index\n", FitDMCoeff,DMAmp,DMIndex);
+	}
+
+
+	totCoeff+=FitRedCoeff;
+	totCoeff+=FitDMCoeff;
+
+	double **FMatrix=new double*[pulse->nobs];
+	for(int i=0;i<pulse->nobs;i++){
+		FMatrix[i]=new double[totCoeff];
+	}
+
+
+	double start,end;
+	int go=0;
+	for (int i=0;i<pulse->nobs;i++)
+	  {
+	    if (pulse->obsn[i].deleted==0)
+	      {
+		if (go==0)
+		  {
+		    go = 1;
+		    start = (double)pulse->obsn[i].bat;
+		    end  = start;
+		  }
+		else
+		  {
+		    if (start > (double)pulse->obsn[i].bat)
+		      start = (double)pulse->obsn[i].bat;
+		    if (end < (double)pulse->obsn[i].bat)
+		      end = (double)pulse->obsn[i].bat;
+		  }
+	      }
+	  }
+
+	double maxtspan=1*(end-start);
+
+
+	double *freqs = new double[totCoeff];
+
+	double *DMVec=new double[pulse->nobs];
+	double DMKappa = 2.410*pow(10.0,-16);
+	int startpos=0;
+	double freqdet=0;
+
+	double *powercoeff=new double[totCoeff];
+	for(int o=0;o<totCoeff; o++){
+		powercoeff[o]=0;
+	}
+
+	double Tspan = maxtspan;
+	double f1yr = 1.0/3.16e7;
+
+	RedAmp=pow(10.0, RedAmp);
+
+	for (int i=0; i<FitRedCoeff/2; i++){
+
+		freqs[startpos+i]=((double)(i+1.0))/maxtspan;
+		freqs[startpos+i+FitRedCoeff/2]=freqs[startpos+i];
+		
+		double rho = (RedAmp*RedAmp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[i]*365.25,(-RedIndex))/(maxtspan*24*60*60);
+		powercoeff[i]+= rho;
+		powercoeff[i+FitRedCoeff/2]+= rho;
+	}
+
+
+	for(int i=0;i<FitRedCoeff/2;i++){
+		for(int k=0;k<pulse->nobs;k++){
+			double time=(double)pulse->obsn[k].bat;
+			FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
+
+		}
+	}
+
+	for(int i=0;i<FitRedCoeff/2;i++){
+		for(int k=0;k<pulse->nobs;k++){
+			double time=(double)pulse->obsn[k].bat;
+			FMatrix[k][i+FitRedCoeff/2]=sin(2*M_PI*freqs[i]*time);
+		}
+	}
+
+
+	startpos=FitRedCoeff;
+
+
+
+	DMAmp=pow(10.0, DMAmp);
+
+	for (int i=0; i<FitDMCoeff/2; i++){
+
+		freqs[startpos+i]=((double)(i+1.0))/maxtspan;
+		freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
+		
+		double rho = (DMAmp*DMAmp)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-DMIndex))/(maxtspan*24*60*60);	
+		powercoeff[startpos+i]+=rho;
+		powercoeff[startpos+i+FitDMCoeff/2]+=rho;
+	}
+	
+
+
+	for(int o=0;o<pulse->nobs; o++){
+		DMVec[o]=1.0/(DMKappa*pow((double)pulse->obsn[o].freqSSB,2));
+	}
+
+	for(int i=0;i<FitDMCoeff/2;i++){
+		for(int k=0;k<pulse->nobs;k++){
+			double time=(double)pulse->obsn[k].bat;
+			FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+		}
+	}
+
+	for(int i=0;i<FitDMCoeff/2;i++){
+		for(int k=0;k<pulse->nobs;k++){
+			double time=(double)pulse->obsn[k].bat;
+			FMatrix[k][startpos+i+FitDMCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+		}
+	}
+
+	double **PPFM=new double*[totCoeff];
+	for(int i=0;i<totCoeff;i++){
+		PPFM[i]=new double[totCoeff];
+		for(int j=0;j<totCoeff;j++){
+			PPFM[i][j]=0;
+		}
+	}
+
+
+	for(int c1=0; c1<totCoeff; c1++){
+
+		PPFM[c1][c1]=1.0/powercoeff[c1];
+	}
+
+
+	///////////////////////Form Total Matrices////////////////////////////////////////////////
+
+	int totalsize=numtofit+totCoeff;
+	double **TotalMatrix=new double*[pulse->nobs];
+	for(int i =0;i<pulse->nobs;i++){
+		TotalMatrix[i]=new double[totalsize];
+		for(int j =0;j<totalsize; j++){
+			TotalMatrix[i][j]=0;
+		}
+	}
+	
+
+	for(int i =0;i<pulse->nobs;i++){
+		for(int j =0;j<numtofit; j++){
+			TotalMatrix[i][j]=TNDM[i][j];
+		}
+		
+		for(int j =0;j<totCoeff; j++){
+			TotalMatrix[i][j+numtofit]=FMatrix[i][j];
+		}
+	}
+
+// 	printf("made TMatrix\n");
+
+	double *Noise=new double[pulse->nobs];
+	for(int o=0;o<pulse->nobs; o++){
+		Noise[o]=pow(((pulse->obsn[o].toaErr)*pow(10.0,-6)),2);
+	}
+
+// 	printf("made NMatrix\n");
+	
+	double **NG = new double*[pulse->nobs]; for (int k=0; k<pulse->nobs; k++) NG[k] = new double[totalsize];
+	double **GNG = new double*[totalsize]; for (int k=0; k<totalsize; k++) GNG[k] = new double[totalsize];
+
+
+
+	for(int i=0;i<pulse->nobs;i++){
+		for(int j=0;j<totalsize; j++){
+
+			NG[i][j]=TotalMatrix[i][j]/Noise[i];
+
+		}
+	}
+
+
+	dgemm(TotalMatrix, NG,GNG,pulse->nobs, totalsize,pulse->nobs, totalsize, 'T','N');
+
+
+	for(int j =0;j<totCoeff; j++){
+		GNG[numtofit+j][numtofit+j]+=PPFM[j][j];
+	}
+
+
+	double tdet=0;
+	dpotrf(GNG, totalsize, tdet);
+	dpotri(GNG,totalsize);
+
+
+	double *Resvec=new double[pulse->nobs];
+	for(int o=0;o<pulse->nobs; o++){
+		Resvec[o]=(double)pulse->obsn[o].residual;
+		pulse->obsn[o].prefitResidual = pulse->obsn[o].residual;
+	}
+
+
+	double *dG=new double[totalsize];
+	dgemv(NG,Resvec,dG,pulse->nobs,totalsize,'T');
+
+	double *maxcoeff=new double[totalsize];
+	dgemv(GNG,dG,maxcoeff,totalsize,totalsize,'N');
+
+	double *Errorvec=new double[totalsize];
+
+	for(int i =0; i < totalsize; i++){
+		Errorvec[i]=pow(GNG[i][i], 0.5);
+	}
+
+	double *Scoeff=new double[numtofit];
+	double *Serr=new double[numtofit];
+	for(int i =0; i < numtofit; i++){
+		Scoeff[i]=maxcoeff[i]/S[i];
+		Serr[i]=Errorvec[i]/S[i];
+	}
+
+	double *TempoCoeff = new double[numtofit];
+	double *TempoErr =  new double[numtofit];
+	dgemv(V,Scoeff,TempoCoeff,numtofit,numtofit, 'N');
+	dgemv(V,Serr,TempoErr,numtofit,numtofit, 'N');
+	
+	for(int i=0;i<numtofit; i++){
+		double errsum=0;
+          for(int j=0;j<numtofit; j++){
+				errsum += pow(V[i][j]*Serr[j],2);
+                }
+          TempoErr[i]=pow(errsum,0.5);
+	}
+	updateParameters(pulse,0,TempoCoeff,TempoErr);
+
+
+	double chisq=0;
+	printf("subtract is %i \n", pulse->TNsubtract);
+        for(int i=0;i<pulse->nobs;i++){
+                double dsum=0;
+                for(int j=0;j<totalsize; j++){
+                        dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
+                }
+		chisq+=(Resvec[i]-dsum)*(Resvec[i]-dsum)/(Noise[i]);
+		if(pulse->TNsubtract==1){
+			pulse->obsn[i].sat -= dsum/SECDAY;
+		}
+	}
+
+	pulse->fitChisq = chisq; 
+	pulse->fitNfree = pulse->nobs-numtofit;
+	pulse->nFit=pulse->nobs;
+	pulse->nParam = numtofit;
+	
+
+
+	for (int j = 0; j < pulse->nobs; j++){
+		delete[]U[j];
+	}
+	delete[]U;
+
+	delete[]S;
+	delete[]Scoeff;	
+	delete[]Serr;	
+
+	for (int j = 0; j < numtofit; j++){
+		delete[]VT[j];
+		delete[]V[j];
+	}
+	
+	delete[]V; 
+
+	delete[] TempoErr;
+	delete[] TempoCoeff;
+
+	for(int i=0;i<pulse->nobs;i++){
+		delete[] TNDM[i];
+	}
+	delete[] TNDM;
+
+	delete[] dG;
+	delete[] maxcoeff;
+	delete[] Errorvec;
+	delete[] Resvec;
+	delete[] Noise;
+
+	for (int k=0; k<pulse->nobs; k++){
+		delete[] NG[k];
+	}
+	delete[] NG;
+	for (int k=0; k<totalsize; k++){
+		delete[] GNG[k];
+	}
+	delete[] GNG;
+
+	for(int i =0;i<pulse->nobs;i++){
+		delete[] TotalMatrix[i];
+	}
+	delete[] TotalMatrix;
+
+	for(int i=0;i<totCoeff;i++){
+		delete[] PPFM[i];
+	}
+	delete[] PPFM;
+
+	delete[] powercoeff;
+	delete[] freqs;
+	for(int i=0;i<pulse->nobs;i++){
+		delete[] FMatrix[i];
+	}
+	delete[] FMatrix;
+
+}
+
+void dgesvd(double **A, int m, int n, double *S, double **U, double **VT)
+{
+  char jobu, jobvt;
+  int lda, ldu, ldvt, lwork, info;
+  double *a, *u, *vt, *work;
+
+  int minmn, maxmn;
+
+  jobu = 'A'; /* Specifies options for computing U.
+		 A: all M columns of U are returned in array U;
+		 S: the first min(m,n) columns of U (the left
+		    singular vectors) are returned in the array U;
+		 O: the first min(m,n) columns of U (the left
+		    singular vectors) are overwritten on the array A;
+		 N: no columns of U (no left singular vectors) are
+		    computed. */
+
+  jobvt = 'A'; /* Specifies options for computing VT.
+		  A: all N rows of V**T are returned in the array
+		     VT;
+		  S: the first min(m,n) rows of V**T (the right
+		     singular vectors) are returned in the array VT;
+		  O: the first min(m,n) rows of V**T (the right
+		     singular vectors) are overwritten on the array A;
+		  N: no rows of V**T (no right singular vectors) are
+		     computed. */
+
+  lda = m; // The leading dimension of the matrix a.
+  a = dgesvd_ctof(A, lda, n); /* Convert the matrix A from double pointer
+			  C form to single pointer Fortran form. */
+
+  ldu = m;
+
+
+	maxmn = m;
+	minmn = n;
+
+	ldu = m; // Left singular vector matrix
+	u = new double[ldu*ldu];
+	
+	ldvt = n; // Right singular vector matrix
+	vt = new double[ldvt*n];
+
+	int LMAX=100000;
+	
+	work = new double[LMAX];
+	lwork = -1; // Set up the work array, larger than needed.
+
+// 	printf("parm 11 %i %i\n",ldu,ldvt);
+	dgesvd_(&jobu, &jobvt, &m, &n, a, &lda, S, u,&ldu, vt, &ldvt, work, &lwork, &info);
+	
+	lwork = std::min(LMAX,int(work[0]));
+	
+	dgesvd_(&jobu, &jobvt, &m, &n, a, &lda, S, u,&ldu, vt, &ldvt, work, &lwork, &info);
+// 	printf("parm 11 out %i %i\n",ldu,ldvt);
+	dgesvd_ftoc(u, U, ldu, ldu);
+	dgesvd_ftoc(vt, VT, ldvt, n);
+  
+  delete a;
+  delete u;
+  delete vt;
+  delete work;
+}
+
+
+double* dgesvd_ctof(double **in, int rows, int cols)
+{
+  double *out;
+  int i, j;
+
+  out = new double[rows*cols];
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i+j*rows] = in[i][j];
+  return(out);
+}
+
+
+void dgesvd_ftoc(double *in, double **out, int rows, int cols)
+{
+  int i, j;
+
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i][j] = in[i+j*rows];
+}
+
+
+void dgemv(double **A, double *vecin,double *vecout,int rowa, int cola, char AT)
+{
+
+	int M,N,K;
+	double *a;
+
+	double alpha=1;
+	double beta=0;
+	int incX=1;
+	int incY=1;
+
+	a = dgemv_ctof(A, rowa, cola); 
+	
+	dgemv_(&AT, &rowa, &cola, &alpha, a, &rowa, vecin, &incX, &beta, vecout, &incY);
+  
+  delete a;
+}
+
+
+double* dgemv_ctof(double **in, int rows, int cols)
+{
+  double *out;
+  int i, j;
+
+  out = new double[rows*cols];
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i+j*rows] = in[i][j];
+  return(out);
+}
+
+
+void dgemv_ftoc(double *in, double **out, int rows, int cols)
+{
+  int i, j;
+
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i][j] = in[i+j*rows];
+}
+
+void dgemm(double **A, double **B,double **C,int rowa, int cola, int rowb, int colb, char AT, char BT)
+{
+
+  int M,N,K;
+  double *a, *b, *c;
+
+	double alpha=1;
+	double beta=0;
+
+
+	if(AT == 'N'){
+		M=rowa;
+		K=cola;
+	}
+	else if(AT == 'T'){
+		M=cola;
+		K=rowa;
+	}
+
+	if(BT == 'N'){
+		N=colb;
+	}
+	else if(BT == 'T'){
+		N=rowa;
+	}	
+/*
+(TRANSA,TRANSB,M,N,K,ALPHA,A,LDA,B,LDB,BETA,C,LDC)*/
+
+
+	a = dgemm_ctof(A, rowa, cola); 
+	b = dgemm_ctof(B, rowb, colb);
+	c = new double[M*N];
+	
+	dgemm_(&AT, &BT, &M, &N, &K, &alpha, a, &rowa,b, &rowb, &beta, c, &M);
+	dgemm_ftoc(c, C, M, N);
+
+  
+  delete a;
+  delete b;
+  delete c;
+
+}
+
+
+double* dgemm_ctof(double **in, int rows, int cols)
+{
+  double *out;
+  int i, j;
+
+  out = new double[rows*cols];
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i+j*rows] = in[i][j];
+  return(out);
+}
+
+
+void dgemm_ftoc(double *in, double **out, int rows, int cols)
+{
+  int i, j;
+
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i][j] = in[i+j*rows];
+}
+
+void dpotri(double **A, int msize)
+{
+
+	int info;
+	double *a;
+	char UPLO='L';
+
+	a = dpotri_ctof(A, msize, msize); 
+	
+	dpotri_(&UPLO, &msize, a, &msize, &info);
+	dpotri_ftoc(a, A, msize, msize);
+
+	for(int i=0;i<msize;i++){
+		for(int j=0;j<i;j++){
+			A[j][i]=A[i][j];
+		}
+	}
+
+  
+  delete a;
+
+}
+
+
+double* dpotri_ctof(double **in, int rows, int cols)
+{
+  double *out;
+  int i, j;
+
+  out = new double[rows*cols];
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i+j*rows] = in[i][j];
+  return(out);
+}
+
+
+void dpotri_ftoc(double *in, double **out, int rows, int cols)
+{
+  int i, j;
+
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i][j] = in[i+j*rows];
+}
+
+void dpotrf(double **A, int msize, double &det)
+{
+
+	int info;
+	double *a;
+	char UPLO='L';
+
+	a = dpotrf_ctof(A, msize, msize); 
+	
+	dpotrf_(&UPLO, &msize, a, &msize, &info);
+	dpotrf_ftoc(a, A, msize, msize);
+
+	det=0;
+	for(int i=0;i<msize;i++){
+		det+=log(A[i][i]);
+	}
+
+	det=det*2;
+
+  	//printf("info: %i \n", info);
+  delete a;
+
+}
+
+
+double* dpotrf_ctof(double **in, int rows, int cols)
+{
+  double *out;
+  int i, j;
+
+  out = new double[rows*cols];
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i+j*rows] = in[i][j];
+  return(out);
+}
+
+
+void dpotrf_ftoc(double *in, double **out, int rows, int cols)
+{
+  int i, j;
+
+  for (i=0; i<rows; i++) for (j=0; j<cols; j++) out[i][j] = in[i+j*rows];
+}
+
+#endif
+#endif
