@@ -2933,9 +2933,19 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 #ifdef HAVE_BLAS
 void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
+	int subDM=pulse->TNsubtractDM;
+	int subRed=pulse->TNsubtractRed;
+
+	pulse->TNsubtractDM=0;
+	pulse->TNsubtractRed=0;
+	
+
 	formBatsAll(pulse,npsr);       /* Form Barycentric arrival times */
 	formResiduals(pulse,npsr,1);       /* Form residuals */
 
+
+        pulse->TNsubtractDM=subDM;
+        pulse->TNsubtractRed=subRed;
 
 /////////////////////////////////////////////////////////////////////////////////////////////  
 /////////////////////////Form the Design Matrix////////////////////////////////////////////
@@ -3290,12 +3300,14 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
                 }
 		chisq+=(Resvec[i]-dsum)*(Resvec[i]-dsum)/(Noise[i]);
-		if(pulse->TNsubtractRed==1){
-			pulse->obsn[i].sat -= redsum/SECDAY;
-		}
-                if(pulse->TNsubtractDM==1){
-                        pulse->obsn[i].sat -= dmsum/SECDAY;
-                }
+		pulse->obsn[i].TNRedSignal=redsum;
+		pulse->obsn[i].TNDMSignal=dmsum;
+	//	if(pulse->TNsubtractRed==1){
+	//		pulse->obsn[i].sat -= redsum/SECDAY;
+	//	}
+          //      if(pulse->TNsubtractDM==1){
+            //            pulse->obsn[i].sat -= dmsum/SECDAY;
+              //  }
 	}
 
 	pulse->fitChisq = chisq; 

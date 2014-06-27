@@ -1479,6 +1479,18 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     psr[p].obsn[i].residual-=mean;
 	 }
 
+	if(psr[p].TNsubtractRed==1){
+		 for (i=0;i<psr[p].nobs;i++){
+		psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
+		}
+	}
+	if(psr[p].TNsubtractDM==1){
+		for (i=0;i<psr[p].nobs;i++){
+                psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
+		}
+        }
+
+
      }
 
    logtchk("Leave formresiduals()");

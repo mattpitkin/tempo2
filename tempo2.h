@@ -290,6 +290,8 @@ typedef struct observation {
                                   /* = -1 if not included in fit                                */
   longdouble prefitResidual;      /* Pre-fit residual                                           */
   longdouble residual;            /* residual                                                   */
+  double      TNRedSignal;
+  double      TNDMSignal;
   double      freq;               /* Frequency of observation (in MHz)                          */
   double      freqSSB;            /* Frequency of observation in barycentric frame (in Hz)      */
   double      toaErr;             /* Error on TOA (in us)                                       */
