@@ -976,8 +976,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      char fname3[1000];
 	      if (npsr > 1)
 		sprintf(fname2,"%s_%d",fname,p+1);
-	      else
-		strcpy(fname2,fname);
+	      else{
+		  std::string pulsarname=psr[0].name;
+		  std::string longname=pulsarname+"-new.par";
+		  for(int r=0;r<=longname.size();r++){fname[r]=longname[r];}
+
+		  strcpy(fname2,fname);
+		}
 	    }
 	  if (!(fout2 = fopen(fname2,"w")))
 	    {
@@ -1151,6 +1156,27 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	    {
 	      fprintf(fout2,"T2EQUAD %s %s %g\n", psr[p].T2equadFlagID[i], psr[p].T2equadFlagVal[i], psr[p].T2equadVal[i]);
 	    }
+          /* Add TNEF / TNEQ */
+          for (i=0;i<psr[p].nTNEF;i++)
+            {
+              fprintf(fout2,"TNEF %s %s %g\n", psr[p].TNEFFlagID[i], psr[p].TNEFFlagVal[i], psr[p].TNEFVal[i]);
+            }
+
+          for (i=0;i<psr[p].nTNEQ;i++)
+            {
+              fprintf(fout2,"TNEQ %s %s %g\n", psr[p].TNEQFlagID[i], psr[p].TNEQFlagVal[i], psr[p].TNEQVal[i]);
+            }
+          if(psr[p].TNDMAmp != 0 && psr[p].TNDMGam != 0){
+		fprintf(fout2,"TNDMAmp %g\n", psr[p].TNDMAmp);	
+		fprintf(fout2,"TNDMGam %g\n", psr[p].TNDMGam);
+		fprintf(fout2,"TNDMC %i\n", psr[p].TNDMC);
+	}
+         if(psr[p].TNRedAmp != 0 && psr[p].TNRedGam != 0){
+                fprintf(fout2,"TNRedAmp %g\n", psr[p].TNRedAmp);
+                fprintf(fout2,"TNRedGam %g\n", psr[p].TNRedGam);
+                fprintf(fout2,"TNRedC %i\n", psr[p].TNRedC);
+        }
+
 
 	  /* Add whitening flags */
 	  if (psr[p].param[param_wave_om].paramSet[0]==1)
