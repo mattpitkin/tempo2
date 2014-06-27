@@ -2938,6 +2938,9 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
 	  else if (mouseY==11) *xplot=13;
 	  else if (mouseY==12) *xplot=14;
 	  else if (mouseY==13) *xplot=15;
+	  else if (mouseY==14) *xplot=16;
+	  else if (mouseY==15) *xplot=17;
+
    }
    else if (mouseX==1)
    {
@@ -2955,6 +2958,9 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
 	  else if (mouseY==11) *yplot=13;
 	  else if (mouseY==12) *yplot=14;
 	  else if (mouseY==13) *yplot=15;
+	  else if (mouseY==14 &&  psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) *yplot=16;
+	  else if (mouseY==15 && psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0) *yplot=17;
+
    }
 
    // Now check the bottom menu
@@ -3256,6 +3262,12 @@ void drawMenu3(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,
    drawAxisSel(0,0.34,"sidereal time",xplot==13,yplot==13);
    drawAxisSel(0,0.28,"hour angle",xplot==14,yplot==14);
    drawAxisSel(0,0.22,"para. angle",xplot==15,yplot==15);
+   if(psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0){
+	drawAxisSel(0,0.16,"Red Noise",xplot==16,yplot==16);
+   }
+   if(psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0){
+        drawAxisSel(0,0.10,"DM Var",xplot==17,yplot==17);
+   }
 
 }
 
@@ -3922,6 +3934,13 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
 	  }
 	  //      printf("Local sidereal time = %s %g %g %g %g %g\n",psr[0].obsn[iobs].fname,ph,tsid,pc,siteCoord[2],x[count]);
    }
+   else if(plot==16){
+		x[count]=(float)psr[0].obsn[iobs].TNRedSignal;
+	}
+     else if(plot==17){
+                x[count]=(float)psr[0].obsn[iobs].TNDMSignal;
+        }
+
    if (log==1 && x[count]>0)
 	  x[count] = log10(x[count]);
    else if (log==1 && x[count]<0)
@@ -3965,7 +3984,8 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
    else if (plot==13)  sprintf(str,"Local sidereal time (hour)");
    else if (plot==14)  sprintf(str,"Hour angle (hour)");
    else if (plot==15)  sprintf(str,"Parallactic angle (deg)");
-
+   else if (plot==16) sprintf(str,"Red Noise (sec)");
+   else if (plot==17) sprintf(str,"DM Variations (sec)");
 }
 
 void averagePts(float *x,float *y,int n,int width,float *meanX,float *meanY,int *nMean)
