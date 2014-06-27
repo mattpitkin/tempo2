@@ -3332,10 +3332,10 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	}
 	
 	delete[]V; 
-
+	delete[]VT;
 	delete[] TempoErr;
 	delete[] TempoCoeff;
-
+	delete[] DMVec;
 	for(int i=0;i<pulse->nobs;i++){
 		delete[] TNDM[i];
 	}
