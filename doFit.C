@@ -3288,26 +3288,42 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
         for(int i=0;i<pulse->nobs;i++){
                 double dsum=0;
 		double redsum=0;
+		double rederr=0;
 		double dmsum=0;
+		double dmerr=0;
                 for(int j=0;j<totalsize; j++){
                         dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
 			if(j>=numtofit && j < numtofit+FitRedCoeff){
 				redsum+=TotalMatrix[i][j]*maxcoeff[j];
+				rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
 			}
 			if(j>=FitRedCoeff+numtofit && j < totalsize){
                                 dmsum+=TotalMatrix[i][j]*maxcoeff[j];
+				dmerr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
                         }
 
                 }
+
+                double freq=(double)pulse->obsn[i].freqSSB;
+                long double yrs = (pulse->obsn[i].sat - pulse->param[param_dmepoch].val[0])/365.25;
+                long double arg = 1.0;
+                double dmDot=0;
+                double dmDotErr=0;
+                for (int d=1;d<9;d++){
+                        arg *= yrs;
+                        if (pulse->param[param_dm].paramSet[d]==1){
+                                dmDot+=(double)(pulse->param[param_dm].val[d]*arg);
+                                dmDotErr+=pow((double)(pulse->param[param_dm].err[d]*arg),2);
+                        }
+                }
+
+	
 		chisq+=(Resvec[i]-dsum)*(Resvec[i]-dsum)/(Noise[i]);
 		pulse->obsn[i].TNRedSignal=redsum;
+		pulse->obsn[i].TNRedErr=pow(rederr,0.5);
+		
 		pulse->obsn[i].TNDMSignal=dmsum;
-	//	if(pulse->TNsubtractRed==1){
-	//		pulse->obsn[i].sat -= redsum/SECDAY;
-	//	}
-          //      if(pulse->TNsubtractDM==1){
-            //            pulse->obsn[i].sat -= dmsum/SECDAY;
-              //  }
+		pulse->obsn[i].TNDMErr=pow(dmerr/pow(DMVec[i],2) + dmDotErr,0.5);
 	}
 
 	pulse->fitChisq = chisq; 

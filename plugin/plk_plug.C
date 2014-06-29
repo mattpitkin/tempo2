@@ -180,6 +180,8 @@ void help() /* Display help */
   printf("9         plot user value\n");
   printf("0         plot year\n");
   printf("-         plot elevation\n");
+  printf("K         subtract/add TN red noise\n");
+  printf("F         subtract/add TN DM Variations\n");
 
   printf("\nDisplay Options\n"); /* Determines HOW to display the things */
   printf("===============\n");
@@ -767,6 +769,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		    errBar[count] = psr[0].obsn[i].origErr;
 	    else 
 		    errBar[count] = psr[0].obsn[i].toaDMErr;
+	    if(yplot==16){errBar[count] = (float) psr[0].obsn[i].TNRedErr/1e-6;}
+	    if(yplot==17){errBar[count] = (float) psr[0].obsn[i].TNDMErr/1e-6;}
 	    if (bad==0) count++;	    
 	  }
       }
@@ -810,6 +814,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
     miny = findMinY(y,x,count,plotx1,plotx2);
     maxy = findMaxY(y,x,count,plotx1,plotx2);
+	
+   if(yplot==16 || yplot == 17){
+	miny = findMinY(yerr1,x,count,plotx1,plotx2);
+    	maxy = findMaxY(yerr2,x,count,plotx1,plotx2);
+	}
     
     if (setZoomY1==0) ploty1 = miny-fabs(maxy-miny)*0.1;
     else ploty1 = zoomY1;
@@ -1014,7 +1023,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  //if (plotPoints==1)
 		  //  {
 		  cpgpt(ncount,x2,y2,freqStyle[j]);
-		  if (plotErr==1 && (yplot==1 || yplot==2)) cpgerry(ncount,x2,yerr1_2,yerr2_2,1);
+		  if (plotErr==1 && (yplot==1 || yplot==2 || yplot==16 || yplot==17)) cpgerry(ncount,x2,yerr1_2,yerr2_2,1);
 		  if (plotErr==2 && (yplot==1 || yplot==2)) cpgerry(ncount,x2,yerr1_2,yerr2_2,0);
 		  //  }
 		  if (join==1)
@@ -1225,12 +1234,26 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  setZoomY1 = 0; setZoomY2 = 0;
 	   }
 		else if(key=='F'){
-			printf("will substract PL DM Variations on next Fit \n");
-			psr[0].TNsubtractDM=1;
+			if(psr[0].TNsubtractDM==0){
+				printf("will substract PL DM Variations on next Fit \n");
+				psr[0].TNsubtractDM=1;
+			}
+			else if(psr[0].TNsubtractDM==1){
+                                printf("will Re-add PL DM Variations on next Fit \n");
+                                psr[0].TNsubtractDM=0;
+                        }
+
 		}
 		else if(key=='K'){
-                        printf("will substract Red Noise on next Fit \n");
-                        psr[0].TNsubtractRed=1;
+			if(psr[0].TNsubtractRed==0){
+	                        printf("will substract Red Noise on next Fit \n");
+        	                psr[0].TNsubtractRed=1;
+			}
+			else if(psr[0].TNsubtractRed==1){
+                                printf("will Re-add Red Noise on next Fit \n");
+                                psr[0].TNsubtractRed=0;
+                        }
+
                 }
 
 	   else if (key==3) /* Change central point */
@@ -3938,7 +3961,20 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
 		x[count]=(float)psr[0].obsn[iobs].TNRedSignal;
 	}
      else if(plot==17){
-                x[count]=(float)psr[0].obsn[iobs].TNDMSignal;
+		double DMKappa=2.410*pow(10.0,-16);
+		double freq=(double)psr[0].obsn[iobs].freqSSB;
+                long double yrs = (psr[0].obsn[iobs].sat - psr[0].param[param_dmepoch].val[0])/365.25;
+                long double arg = 1.0;
+                double dmDot=0;
+                double dmDotErr=0;
+                for (int d=1;d<9;d++){
+                        arg *= yrs;
+                        if (psr[0].param[param_dm].paramSet[d]==1){
+                                dmDot+=(double)(psr[0].param[param_dm].val[d]*arg);
+                        }
+                }
+	
+                x[count]=(float)(psr[0].obsn[iobs].TNDMSignal*(DMKappa*pow(freq,2)) + dmDot);
         }
 
    if (log==1 && x[count]>0)
@@ -3985,7 +4021,7 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
    else if (plot==14)  sprintf(str,"Hour angle (hour)");
    else if (plot==15)  sprintf(str,"Parallactic angle (deg)");
    else if (plot==16) sprintf(str,"Red Noise (sec)");
-   else if (plot==17) sprintf(str,"DM Variations (sec)");
+   else if (plot==17) sprintf(str,"DM Variations (cm^-3 pc)");
 }
 
 void averagePts(float *x,float *y,int n,int width,float *meanX,float *meanY,int *nMean)
