@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <vector>
 #include <string.h>
-#include <gsl/gsl_sf_gamma.h>
+#include "/usr/include/gsl/gsl_sf_gamma.h"
 #include <gsl/gsl_multimin.h>
 #include "dgemm.h"
 #include "dgemv.h"
@@ -293,7 +293,7 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 			NoiseVec[o1]-= sum/psr->nobs;
 			bats[o1]=(double)psr[0].obsn[o1].bat;		
 		}
-		TKremovePoly_d(bats,NoiseVec,psr[0].nobs,2); // remove a quadratic to reduce the chances of phase wraps
+		//TKremovePoly_d(bats,NoiseVec,psr[0].nobs,2); // remove a quadratic to reduce the chances of phase wraps
 
 		for(int o1=0;o1 < psr->nobs; o1++){
 			printf("DM Signal: %i %g %g \n:", o1, NoiseVec[o1], DMVec[o1]);
@@ -364,7 +364,7 @@ void TNSimRedfromTim(int argc, char **commandLine, pulsar *psr, char timFile[][M
 			NoiseVec[o1]-= sum/psr->nobs;
 			bats[o1]=(double)psr[0].obsn[o1].bat;		
 		}
-		TKremovePoly_d(bats,NoiseVec,psr[0].nobs,2); // remove a quadratic to reduce the chances of phase wraps
+		//TKremovePoly_d(bats,NoiseVec,psr[0].nobs,2); // remove a quadratic to reduce the chances of phase wraps
 		for(int o1=0;o1 < psr->nobs; o1++){
 			printf("Signal: %i %g\n", o1, NoiseVec[o1]);
 			psr[0].obsn[o1].sat +=	NoiseVec[o1]/(24*60*60);

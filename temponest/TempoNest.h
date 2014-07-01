@@ -44,6 +44,7 @@ typedef struct {
 	int numFitJumps;
 	int numFitTiming;
 	int numFitEFAC;
+	int EPolTerms;
 	int numFitEQUAD;
 	int numFitRedCoeff;
 	int numFitDMCoeff;
@@ -55,6 +56,8 @@ typedef struct {
 	int incDM;
 	int incFloatDM;
 	int incFloatRed;
+	int yearlyDM;
+	int incsinusoid;
 	int FloatDMstart;
         int FloatRedstart;
 	int Gsize;
@@ -69,7 +72,9 @@ typedef struct {
 	int incStep;
 	char *whiteflag;
 	int whitemodel;
-	
+	int varyRedCoeff;
+	int varyDMCoeff;
+	int incGWB;
 } MNStruct;
 
 
@@ -80,7 +85,8 @@ void fastephemeris_routines(pulsar *psr,int npsr);
 void fastformBatsAll(pulsar *psr,int npsr);
 
 
-void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context, int incRED, int ndims, std::vector<double> paramlist, double Evidence, int MarginTime, int MarginJumps, int doLinear, std::string longname);
+void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context, int incRED, int ndims, std::vector<double> paramlist, double Evidence, int MarginTime, int MarginJumps, int doLinear, std::string longname, double **paramarray);
+void getmaxlikeDM(pulsar *pulse,std::string longname, int ndim, void *context, double **paramsarray);
 
 
 void NelderMeadOptimum(int nParameters, long double *pdParameters, void *context);
@@ -102,30 +108,16 @@ void TNIupdateParameters(pulsar *psr,int p,double *val,double *error, double *ou
 //non linear timing model likelihood functions
 void WhiteLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void WhiteMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void LRedLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void NewLRedMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
-void LRedDMMarginLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-
-//GPU linear timing model likelihood functions
-void WhiteMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedMarginGPULinearLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
 //GPU non linear timing model likelihood functions
 void WhiteMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void LRedGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void LRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void NewLRedMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 
-void LRedDMMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedDMMarginGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
-void vHRedDMGPULogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+
 
 
 //Functions to calculate the design matrices or 'G' marginalisation matrices
@@ -135,6 +127,7 @@ void getMarginDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMarg
 void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **TempoFitNums, int *TempoJumpNums, double **Dpriors, int incDM, int TimetoFit, int JumptoFit);
 void makeStaticGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** staticGMatrix, double &tdet);
 void makeStaticDiagGMatrix(pulsar *pulse, int Gsize, double **GMatrix, double** UMatrix, double *SVec);
+void getCustomDMatrixLike(void *context, double **TNDM);
 
 
 void readsummary(pulsar *psr, std::string longname, int ndim, void *context, long double *Tempo2Fit, int incRED, int ndims, int MarginTime, int MarginJumps, int doLinear);
@@ -145,6 +138,7 @@ void setupparams(char *root,
 		int &doLinearFit, 
 		int &doMax,
 		int &incEFAC,
+		int &EPolyTerms,
 		int &incEQUAD,
 		int &incRED,
 		int &incDM,
@@ -153,6 +147,7 @@ void setupparams(char *root,
 		double &FitSig,
 		int &customPriors,
 		double *EFACPrior,
+		double *EPolyPriors,
 		double *EQUADPrior,
 		double *AlphaPrior,
 		double *AmpPrior,
@@ -166,13 +161,19 @@ void setupparams(char *root,
 		double *DMCoeffPrior,
 		int &FloatingDM,
 		double *DMFreqPrior,
+		int &yearlyDM,
+		int &incsinusoid,
 		int &FloatingRed,
 		double *RedFreqPrior,
 		double &FourierSig,
 		int &incStep,
 		double *StepAmpPrior,
 		char *whiteflag,
-		int &whitemodel);
+		int &whitemodel,
+		int &varyRedCoeff,
+		int &varyDMCoeff,
+		int &incGWB,
+		double *GWBAmpPrior);
 
 void setTNPriors(double **Dpriors, long double **TempoPriors, int TPsize, int DPsize);
 void setFrequencies(double *samplefreqs, int numRedfreqs, int numDMfreqs);

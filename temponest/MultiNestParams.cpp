@@ -39,7 +39,7 @@ void setupMNparams(int &IS, int &modal, int &ceff, int &nlive, double &efr){
 	IS=0;
 	
 	//modal: flag to allow multinest to search for multiple modes in the data. 1 = multimodal, 0 = single mode
-	modal=1;
+	modal=0;
 
 	//ceff: flag to set multinest to constant efficiency mode.  Adjusts sampling to maintain the efficiency set by the efr parameter. This is usefull for large dimensional problems (> 20dim), however the accuracy of the evidence suffers if importance sampling isn't used.
 	ceff=0;

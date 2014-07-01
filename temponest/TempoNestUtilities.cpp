@@ -32,6 +32,7 @@
 #include "dgesvd.h"
 #include "dpotrf.h"
 #include "dpotri.h"
+#include "dgemv.h"
 #include <vector>
 #include <cmath>
 #include <iostream>
@@ -45,7 +46,7 @@
 #include <limits>
 #include <sstream>
 #include <iomanip>
-#include <gsl/gsl_sf_gamma.h>
+#include "/usr/include/gsl/gsl_sf_gamma.h"
 
 void writeCov(std::vector<double> Cube, int &ndim,void *context, std::string longname, int outputoption);
 
@@ -91,6 +92,16 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 			std::istringstream myStream( line );
 			std::istream_iterator< double > begin(myStream),eof;
 			std::vector<double> paramlist(begin,eof);
+
+			double **paramarray = new double*[ndims];
+			for(int p =0;p < ndims; p++){
+				paramarray[p]=new double[4];
+				for(int pp=0; pp<4; pp++){
+					paramarray[p][pp] = paramlist[pp*ndims+p];
+				}
+			}
+
+			//getmaxlikeDM(psr,longname, ndims, context, paramarray);
 
 			int numlongparams=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;
 			long double *LDP = new long double[numlongparams];
@@ -247,7 +258,7 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 				
 				((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[j]] = value;
 				((MNStruct *)context)->pulse->jumpValErr[((MNStruct *)context)->TempoJumpNums[j]] = error;
-				//printf("%i %Lg %Lg %Lg %Lg \n",pcount,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
+			//	printf("%i %Lg %Lg %Lg %Lg \n",pcount,(((MNStruct *)context)->LDpriors[pcount][0]),(((MNStruct *)context)->LDpriors[pcount][1]),value,error);
 				pcount++;
 			}	
 			
@@ -273,59 +284,56 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 			formResiduals(((MNStruct *)context)->pulse,1,1);       //Form residuals 
 			//printf("done bats and stuff \n");	
 			std::ofstream designfile;
-			std::string dname = longname+"designMatrix.txt";
-			std::ofstream resfile;
-			std::string rname = longname+"res.dat";
+			std::string dname = longname+"T2scaling.txt";
 			printf("Writing Timing Model Design Matrix and Residuals\n");
-
+			/*
 			designfile.open(dname.c_str());
-			resfile.open(rname.c_str());
 			double pdParamDeriv[MAX_PARAMS];
 			int numtofit=((MNStruct *)context)->numFitTiming+((MNStruct *)context)->numFitJumps;
-			designfile << psr->nobs;
+			for(int i =1;i<((MNStruct *)context)->numFitTiming; i++){
+			designfile << psr->param[((MNStruct *)context)->TempoFitNums[i][0]].label[((MNStruct *)context)->TempoFitNums[pcount][1]];
 			designfile << " ";
-			designfile << numtofit;
-			designfile << "\n";
-			designfile << psr->param[param_raj].val[0];
+			std::stringstream ss;
+                        ss.precision(std::numeric_limits<long double>::digits);//override the default
+                        ss << ((MNStruct *)context)->LDpriors[i][0];
+                        designfile << ss.str();
 			designfile << " ";
-			designfile << psr->param[param_decj].val[0];
+			ss << ((MNStruct *)context)->LDpriors[i][1];
+			designfile << ss.str();
 			designfile << "\n";		
-			for(int i=0; i < psr->nobs; i++) {
-
-				std::stringstream rs;
-				rs.precision(std::numeric_limits<double>::digits10);//override the default
-
-				rs << psr->obsn[i].bat;
-				rs << " ";
-				rs << psr->obsn[i].residual;
-				rs << " ";
-				rs << psr->obsn[i].toaErr*pow(10.0,-6);
-				resfile << rs.str();
-				resfile << "\n";		
-// 				printf("DMCorr Res: %i %g \n", i,(double)psr->obsn[i].residual);
-				FITfuncs(psr[0].obsn[i].bat - psr[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, psr, i,0);
-				for(int j=0; j<numtofit; j++) {
-					std::stringstream ss;
-					ss.precision(std::numeric_limits<double>::digits10);//override the default
-					ss << pdParamDeriv[j];
-	
-					designfile << ss.str();
-					designfile << " ";
-	 				//printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
-	
-				} 
-				designfile << "\n";
-	
 			} 
-
+			*/
 			designfile.close();
-			resfile.close();
-		
+
+
+			std::ofstream planetfile;
+			std::string planetname = longname+"planetdesignMatrix.dat";
+			planetfile.open(planetname.c_str());
+		//	printf("wWriting planets \n");
+		/*	for(int i =0; i <((MNStruct *)context)->pulse->nobs; i++){
+			
+                	for(int j=0; j<9; j++) {
+				if(j!=2){
+                        		std::stringstream ss;
+                        		ss.precision(std::numeric_limits<double>::digits10);//override the default
+					printf("%i %i %g \n",i,j,dotproduct(((MNStruct *)context)->pulse->posPulsar,((MNStruct *)context)->pulse->obsn[i].planet_ssb[j]));
+                        		ss << dotproduct(((MNStruct *)context)->pulse->posPulsar,((MNStruct *)context)->pulse->obsn[i].planet_ssb[j]);
+                        		planetfile << ss.str();
+                        		planetfile << " ";
+                	}
+			}
+
+			planetfile << "\n";
+			}
+			planetfile.close();
+		*/
 			//writeCov(paramlist, ndim,context, longname,outputoption);
 			
 			double Evidence=paramlist[4*ndim];
 			//printf("Ev: %i %g \n", ndim, Evidence);
-			TNtextOutput(((MNStruct *)context)->pulse, 1, 0, Tempo2Fit,  context,incRED,ndims,paramlist, Evidence, doTimeMargin, doJumpMargin, doLinear, longname);
+			TNtextOutput(((MNStruct *)context)->pulse, 1, 0, Tempo2Fit,  context,incRED,ndims,paramlist, Evidence, doTimeMargin, doJumpMargin, doLinear, longname, paramarray);
+
+			
 			
 			
 			printf("finished output \n");
@@ -336,6 +344,486 @@ void readsummary(pulsar *psr, std::string longname, int ndim, void *context, lon
 	else{
 		printf("More than one mode has been detected, you'll have to handle that on your own for now.");
 	}
+
+}
+
+
+void getmaxlikeDM(pulsar *pulse,std::string longname, int ndim, void *context, double **paramsarray){
+
+	formBatsAll(pulse,((MNStruct *)context)->numberpulsars);       /* Form Barycentric arrival times */
+	formResiduals(pulse,((MNStruct *)context)->numberpulsars,1);       /* Form residuals */
+//	printf("Jump1: %g \n",pulse[0].jumpVal[((MNStruct *)context)->TempoJumpNums[0]]);
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////  
+/////////////////////////Form the Design Matrix////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////  
+
+	
+	int TimetoFit=((MNStruct *)context)->numFitTiming;
+	int JumpstoFit=((MNStruct *)context)->numFitJumps;
+	int TimetoMargin=TimetoFit+JumpstoFit;
+	int numtofit= TimetoFit+JumpstoFit;
+	
+	printf("num params, %i %i \n", TimetoFit, JumpstoFit);
+
+	double **TNDM=new double*[((MNStruct *)context)->pulse->nobs];
+	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+		TNDM[i]=new double[TimetoMargin];
+	}
+	
+
+
+	//getDMatrix(((MNStruct *)context)->pulse, TimetoFit, JumpstoFit, numtofit, ((MNStruct *)context)->TempoFitNums,((MNStruct *)context)->TempoJumpNums, ((MNStruct *)context)->Dpriors,1, 2, TNDM);
+	getCustomDMatrixLike(context, TNDM);
+	
+	
+	std::ofstream designfile;
+	std::string dname = longname+"DesignMatrix.txt";
+
+	designfile.open(dname.c_str());
+
+	designfile << ((MNStruct *)context)->pulse->nobs;
+	designfile << " ";
+	designfile << numtofit;
+	designfile << "\n";
+	designfile << ((MNStruct *)context)->pulse->param[param_raj].val[0];
+	designfile << " ";
+	designfile << ((MNStruct *)context)->pulse->param[param_decj].val[0];
+	designfile << "\n";		
+	for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+
+		for(int j=0; j<numtofit; j++) {
+			std::stringstream ss;
+			ss.precision(std::numeric_limits<double>::digits10);//override the default
+			ss << TNDM[i][j];
+			designfile << ss.str();
+			designfile << " ";
+		//	if(j==6)printf("%i %g \n", i, TNDM[i][j]);
+		} 
+		designfile << "\n";
+
+	} 
+
+	designfile.close();
+
+
+	double* S = new double[TimetoMargin];
+	double** U = new double*[((MNStruct *)context)->pulse->nobs];
+	for(int k=0; k < ((MNStruct *)context)->pulse->nobs; k++){
+		U[k] = new double[((MNStruct *)context)->pulse->nobs];
+	}
+	double** VT = new double*[TimetoMargin]; 
+	for (int k=0; k<TimetoMargin; k++) VT[k] = new double[TimetoMargin];
+
+	dgesvd(TNDM,((MNStruct *)context)->pulse->nobs, TimetoMargin, S, U, VT);
+
+	double **V=new double*[numtofit];
+
+	for(int i=0;i<numtofit;i++){
+		V[i]=new double[numtofit];
+	}
+
+
+	for(int j=0;j < numtofit;j++){
+		for(int k=0;k < numtofit;k++){
+			V[j][k]=VT[k][j];
+		}
+	}
+		
+	
+
+	for(int j=0;j<((MNStruct *)context)->pulse->nobs;j++){
+		for(int k=0;k < TimetoMargin;k++){
+				TNDM[j][k]=U[j][k];
+		}
+	}
+
+
+
+	///////////////Form the F Matrix////////////////////////////////////////
+
+
+
+	int RedAmpParam=((MNStruct *)context)->numFitEFAC + ((MNStruct *)context)->numFitEQUAD;
+	int RedSpecParam=RedAmpParam+1;
+	int DMAmpParam=RedSpecParam+1;
+	int DMSpecParam=DMAmpParam+1;
+
+
+	double RedAmp=paramsarray[RedAmpParam][2];
+	double RedIndex=paramsarray[RedSpecParam][2];
+	double DMAmp=paramsarray[DMAmpParam][2];
+	double DMIndex=paramsarray[DMSpecParam][2];
+
+	printf("params %i %i %i %i\n", RedAmpParam, RedSpecParam, DMAmpParam, DMSpecParam);
+	printf("params %g %g %g %g\n", RedAmp, RedIndex, DMAmp, DMIndex);
+
+	int FitRedCoeff=2*(((MNStruct *)context)->numFitRedCoeff);
+	int FitDMCoeff=2*(((MNStruct *)context)->numFitDMCoeff);
+
+    int totCoeff=0;
+    if(((MNStruct *)context)->incRED != 0)totCoeff+=FitRedCoeff;
+    if(((MNStruct *)context)->incDM != 0)totCoeff+=FitDMCoeff;
+
+	double **FMatrix=new double*[((MNStruct *)context)->pulse->nobs];
+	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+		FMatrix[i]=new double[totCoeff];
+	}
+
+
+	double start,end;
+	int go=0;
+	for (int i=0;i<((MNStruct *)context)->pulse->nobs;i++)
+	  {
+	    if (((MNStruct *)context)->pulse->obsn[i].deleted==0)
+	      {
+		if (go==0)
+		  {
+		    go = 1;
+		    start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		    end  = start;
+		  }
+		else
+		  {
+		    if (start > (double)((MNStruct *)context)->pulse->obsn[i].bat)
+		      start = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		    if (end < (double)((MNStruct *)context)->pulse->obsn[i].bat)
+		      end = (double)((MNStruct *)context)->pulse->obsn[i].bat;
+		  }
+	      }
+	  }
+
+	double maxtspan=1*(end-start);
+
+
+	double *freqs = new double[totCoeff];
+
+	double *DMVec=new double[((MNStruct *)context)->pulse->nobs];
+	double DMKappa = 2.410*pow(10.0,-16);
+	int startpos=0;
+	double freqdet=0;
+
+	double *powercoeff=new double[totCoeff];
+	for(int o=0;o<totCoeff; o++){
+		powercoeff[o]=0;
+	}
+
+	double Tspan = maxtspan;
+	double f1yr = 1.0/3.16e7;
+
+	RedAmp=pow(10.0, RedAmp);
+
+	for (int i=0; i<FitRedCoeff/2; i++){
+
+		freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[i]/maxtspan;
+		freqs[startpos+i+FitRedCoeff/2]=freqs[startpos+i];
+		
+		double rho = (RedAmp*RedAmp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[i]*365.25,(-RedIndex))/(maxtspan*24*60*60);
+		powercoeff[i]+= rho;
+		powercoeff[i+FitRedCoeff/2]+= rho;
+	}
+
+
+	for(int i=0;i<FitRedCoeff/2;i++){
+		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+			double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+			FMatrix[k][i]=cos(2*M_PI*freqs[i]*time);
+
+		}
+	}
+
+	for(int i=0;i<FitRedCoeff/2;i++){
+		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+			double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+			FMatrix[k][i+FitRedCoeff/2]=sin(2*M_PI*freqs[i]*time);
+		}
+	}
+
+
+	startpos=FitRedCoeff;
+
+
+
+	DMAmp=pow(10.0, DMAmp);
+
+	for (int i=0; i<FitDMCoeff/2; i++){
+
+		freqs[startpos+i]=(double)((MNStruct *)context)->sampleFreq[startpos/2 - ((MNStruct *)context)->incFloatRed +i]/maxtspan;
+		freqs[startpos+i+FitDMCoeff/2]=freqs[startpos+i];
+		
+		double rho = (DMAmp*DMAmp)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-DMIndex))/(maxtspan*24*60*60);	
+		powercoeff[startpos+i]+=rho;
+		powercoeff[startpos+i+FitDMCoeff/2]+=rho;
+	}
+	
+
+
+	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+		DMVec[o]=1.0/(DMKappa*pow((double)((MNStruct *)context)->pulse->obsn[o].freqSSB,2));
+	}
+
+	for(int i=0;i<FitDMCoeff/2;i++){
+		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+			double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+			FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+		}
+	}
+
+	for(int i=0;i<FitDMCoeff/2;i++){
+		for(int k=0;k<((MNStruct *)context)->pulse->nobs;k++){
+			double time=(double)((MNStruct *)context)->pulse->obsn[k].bat;
+			FMatrix[k][startpos+i+FitDMCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+		}
+	}
+
+	double **PPFM=new double*[totCoeff];
+	for(int i=0;i<totCoeff;i++){
+		PPFM[i]=new double[totCoeff];
+		for(int j=0;j<totCoeff;j++){
+			PPFM[i][j]=0;
+		}
+	}
+
+
+	for(int c1=0; c1<totCoeff; c1++){
+
+		PPFM[c1][c1]=1.0/powercoeff[c1];
+	}
+
+
+	///////////////////////Form Total Matrices////////////////////////////////////////////////
+
+	int totalsize=numtofit+totCoeff;
+	double **TotalMatrix=new double*[((MNStruct *)context)->pulse->nobs];
+	for(int i =0;i<((MNStruct *)context)->pulse->nobs;i++){
+		TotalMatrix[i]=new double[totalsize];
+		for(int j =0;j<totalsize; j++){
+			TotalMatrix[i][j]=0;
+		}
+	}
+	
+
+	for(int i =0;i<((MNStruct *)context)->pulse->nobs;i++){
+		for(int j =0;j<numtofit; j++){
+			TotalMatrix[i][j]=TNDM[i][j];
+		}
+		
+		for(int j =0;j<totCoeff; j++){
+			TotalMatrix[i][j+numtofit]=FMatrix[i][j];
+		}
+	}
+
+// 	printf("made TMatrix\n");
+
+	double *Noise=new double[((MNStruct *)context)->pulse->nobs];
+	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+		Noise[o]=pow(((((MNStruct *)context)->pulse->obsn[o].toaErr)*pow(10.0,-6)),2);
+	}
+
+// 	printf("made NMatrix\n");
+	
+	double **NG = new double*[((MNStruct *)context)->pulse->nobs]; for (int k=0; k<((MNStruct *)context)->pulse->nobs; k++) NG[k] = new double[totalsize];
+	double **GNG = new double*[totalsize]; for (int k=0; k<totalsize; k++) GNG[k] = new double[totalsize];
+
+
+
+	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+		for(int j=0;j<totalsize; j++){
+
+			NG[i][j]=TotalMatrix[i][j]/Noise[i];
+
+		}
+	}
+
+
+	dgemm(TotalMatrix, NG,GNG,((MNStruct *)context)->pulse->nobs, totalsize,((MNStruct *)context)->pulse->nobs, totalsize, 'T','N');
+
+
+	for(int j =0;j<totCoeff; j++){
+		GNG[numtofit+j][numtofit+j]+=PPFM[j][j];
+	}
+
+
+	double tdet=0;
+	dpotrf(GNG, totalsize, tdet);
+	dpotri(GNG,totalsize);
+
+
+	double *Resvec=new double[((MNStruct *)context)->pulse->nobs];
+	for(int o=0;o<((MNStruct *)context)->pulse->nobs; o++){
+		Resvec[o]=(double)pulse->obsn[o].residual;
+	}
+
+
+	double *dG=new double[totalsize];
+	dgemv(NG,Resvec,dG,((MNStruct *)context)->pulse->nobs,totalsize,'T');
+
+	double *maxcoeff=new double[totalsize];
+	dgemv(GNG,dG,maxcoeff,totalsize,totalsize,'N');
+
+	double *Errorvec=new double[totalsize];
+
+	for(int i =0; i < totalsize; i++){
+		Errorvec[i]=pow(GNG[i][i], 0.5);
+	}
+
+        double *Scoeff=new double[numtofit];
+        double *Serr=new double[numtofit];
+        for(int i =0; i < numtofit; i++){
+                Scoeff[i]=maxcoeff[i]/S[i];
+                Serr[i]=Errorvec[i]/S[i];
+        }
+
+        double *TempoCoeff = new double[numtofit];
+        double *TempoErr =  new double[numtofit];
+        dgemv(V,Scoeff,TempoCoeff,numtofit,numtofit, 'N');
+        dgemv(V,Serr,TempoErr,numtofit,numtofit, 'N');
+
+        for(int i=0;i<numtofit; i++){
+                double errsum=0;
+          for(int j=0;j<numtofit; j++){
+                                errsum += pow(V[i][j]*Serr[j],2);
+                }
+          TempoErr[i]=pow(errsum,0.5);
+        }
+        //updateParameters(((MNStruct *)context)->pulse,0,TempoCoeff,TempoErr);
+	 for(int p=0;p<((MNStruct *)context)->numFitTiming;p++){
+                        //printf("%i %.25Lg \n", p, ((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].val[((MNStruct *)context)->TempoFitNums[p][1]]);
+                }
+                for(int p=0;p<((MNStruct *)context)->numFitJumps;p++){
+                        //printf("%i %g \n", p,((MNStruct *)context)->pulse->jumpVal[((MNStruct *)context)->TempoJumpNums[p]]);
+                }
+
+
+
+
+ 	char name[1000];
+
+        std::ofstream Finalfile;
+        std::string Finalfilename = longname+"Final.dat";
+        Finalfile.open(Finalfilename.c_str());
+
+
+        for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+                double dsum=0;
+                for(int j=0;j<totalsize; j++){
+                        dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
+                }
+		Finalfile << std::fixed  << std::setprecision(8)  << (double)((MNStruct *)context)->pulse->obsn[i].bat << " ";
+        Finalfile << std::scientific << Resvec[i] << " " << dsum <<  " " << pow(Noise[i],0.5) << " ";
+	Finalfile << std::fixed  << std::setprecision(1)  <<(double)((MNStruct *)context)->pulse->obsn[i].freqSSB << " ";
+		Finalfile << ((MNStruct *)context)->sysFlags[i]  << "\n";
+
+
+        }
+	Finalfile.close();
+
+        std::ofstream Resfile;
+        std::string Resfilename = longname+"Res.dat";
+        Resfile.open(Resfilename.c_str());
+        Resfile << ((MNStruct *)context)->pulse->name << "\n";
+        Resfile << "obsid    Freq (MHz)   SAT    Res (s)    Error (s)\n";
+
+        for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+                double dsum=0;
+                for(int j=0;j<numtofit; j++){
+                        dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
+                }
+                sscanf(((MNStruct *)context)->pulse->obsn[i].fname,"%s",name);
+                Resfile <<  name << " ";
+                Resfile << std::fixed  << std::setprecision(8)  << (double)((MNStruct *)context)->pulse->obsn[i].freq << " " << (double)((MNStruct *)context)->pulse->obsn[i].sat << " ";
+                Resfile << std::scientific << Resvec[i]-dsum <<  " " << pow(Noise[i],0.5) << "\n";
+        }
+
+        Resfile.close();
+
+
+
+
+        std::ofstream DMfile;
+        std::string DMfilename = longname+"DM.dat";
+        DMfile.open(DMfilename.c_str());
+	DMfile << ((MNStruct *)context)->pulse->name << "\n";
+	DMfile << "obsid    Freq (MHz)   SAT    DMRes (s)    Error (s)  DMVal    Error\n";
+
+
+	for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+		double dsum=0;
+		double scaledsum=0;
+		double errsum=0;
+		double scaleerrsum=0;
+		for(int j=0;j<FitDMCoeff; j++){
+			dsum=dsum+TotalMatrix[i][j+numtofit+FitRedCoeff]*maxcoeff[j+numtofit+FitRedCoeff];
+			scaledsum=scaledsum+TotalMatrix[i][j+numtofit+FitRedCoeff]*maxcoeff[j+numtofit+FitRedCoeff]/DMVec[i];
+			errsum=errsum+pow(Errorvec[j+numtofit+FitRedCoeff]*TotalMatrix[i][j+numtofit+FitRedCoeff],2);
+			scaleerrsum=scaleerrsum+pow(Errorvec[j+numtofit+FitRedCoeff]*TotalMatrix[i][j+numtofit+FitRedCoeff]/DMVec[i],2);
+		}
+		
+		double freq=(double)((MNStruct *)context)->pulse->obsn[i].freqSSB;
+	        long double yrs = (((MNStruct *)context)->pulse->obsn[i].sat - ((MNStruct *)context)->pulse->param[param_dmepoch].val[0])/365.25;
+ 	        long double arg = 1.0;
+		double dmDot=0;
+		double dmDotErr=0;
+                for (int d=1;d<9;d++){	
+          		arg *= yrs;
+          		if (((MNStruct *)context)->pulse->param[param_dm].paramSet[d]==1){
+            			dmDot+=(double)(((MNStruct *)context)->pulse->param[param_dm].val[d]*arg);
+				dmDotErr+=pow((double)(((MNStruct *)context)->pulse->param[param_dm].err[d]*arg),2);
+			}
+        	}
+		dsum=dsum+dmDot*DMVec[i];
+		scaledsum=scaledsum+dmDot;
+		errsum=errsum+dmDotErr*pow(DMVec[i],2);
+		scaleerrsum=scaleerrsum+dmDotErr;
+		double restsum=0;
+		for(int j=0;j<numtofit+FitRedCoeff; j++){
+			restsum=restsum+TotalMatrix[i][j]*maxcoeff[j];
+		}
+		sscanf(((MNStruct *)context)->pulse->obsn[i].fname,"%s",name);
+		DMfile <<  name << " ";
+		DMfile << std::fixed  << std::setprecision(8)  << (double)((MNStruct *)context)->pulse->obsn[i].freq << " " << (double)((MNStruct *)context)->pulse->obsn[i].sat << " "; 
+		DMfile << std::scientific << dsum <<  " " << pow(errsum,0.5) << " " << scaledsum << " " << pow(scaleerrsum,0.5) << "\n";
+	}
+
+	DMfile.close();
+
+
+
+        std::ofstream Redfile;
+        std::string Redfilename = longname+"Red.dat";
+        Redfile.open(Redfilename.c_str());
+        Redfile << ((MNStruct *)context)->pulse->name << "\n";
+        Redfile << "obsid    Freq (MHz)   SAT    RedRes (s)    Error (s) \n";
+
+        for(int i=0;i<((MNStruct *)context)->pulse->nobs;i++){
+                double dsum=0;
+                double errsum=0;
+                for(int j=0;j<FitRedCoeff; j++){
+                        dsum=dsum+TotalMatrix[i][j+numtofit]*maxcoeff[j+numtofit];
+                        errsum=errsum+pow(Errorvec[j+numtofit]*TotalMatrix[i][j+numtofit],2);
+                }
+                sscanf(((MNStruct *)context)->pulse->obsn[i].fname,"%s",name);
+                Redfile <<  name << " ";
+                Redfile << std::fixed  << std::setprecision(8)  << (double)((MNStruct *)context)->pulse->obsn[i].freq << " " << (double)((MNStruct *)context)->pulse->obsn[i].sat << " ";
+                Redfile << std::scientific << dsum <<  " " << pow(errsum,0.5) << "\n";
+        }
+
+        Redfile.close();
+
+
+	delete[]S;	
+
+	for (int j = 0; j < TimetoMargin; j++){
+		delete[]VT[j];
+	}
+	
+	delete[]VT;
+
+	for (int j = 0; j < ((MNStruct *)context)->pulse->nobs; j++){
+		delete[]U[j];
+	}
+	delete[]U;
 
 }
 
@@ -387,15 +875,7 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **Tempo
 					//printf("Dmatrix: %i %i %22.20e \n", i,j,pdParamDeriv[j]);
 			} 
 		} 
-//		int doDMMargin=0;
-//		if(incDM == 2 || incDM ==3 && doDMMargin == 1){	
- //               double DMKappa=2.410*pow(10.0,-16);
- //               	for(int i=0; i < pulse->nobs; i++) {
- //                               TNDM[i][numToMargin]=((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0]))/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
- //                              TNDM[i][numToMargin+1]=pow(((double)(pulse[0].obsn[i].bat-pulse[0].param[param_pepoch].val[0])),2)/(DMKappa*pow((double)pulse[0].obsn[i].freqSSB,2));
-               			//printf("DMbit %i %g %g \n", i,TNDM[i][numToMargin],TNDM[i][numToMargin+1]); 
-////			}               
-//		}
+
 		//Now set fit flags back to how they were
 	
 		for (int p=1;p<TimetoFit;p++) {
@@ -406,6 +886,64 @@ void getCustomDMatrix(pulsar *pulse, int *MarginList, double **TNDM, int **Tempo
 			pulse[0].fitJump[TempoJumpNums[i]]=1;
 		}
 }
+
+
+void getCustomDMatrixLike(void *context, double **TNDM){
+	
+	double pdParamDeriv[MAX_PARAMS], dMultiplication;
+
+
+	//Unset all fit flags for parameters we arn't marginalising over so they arn't in the design Matrix
+
+
+		int pcount=1;
+		int numToMargin=1;
+		
+		for (int p=1;p<((MNStruct *)context)->numFitTiming;p++) {
+			if(((MNStruct *)context)->LDpriors[pcount][2]!=1){
+				((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].fitFlag[((MNStruct *)context)->TempoFitNums[p][1]] = 0;
+			}
+			else if(((MNStruct *)context)->LDpriors[pcount][2]==1){
+				((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].fitFlag[((MNStruct *)context)->TempoFitNums[p][1]] = 1;
+				numToMargin++;
+			}
+			pcount++;
+		}
+	
+		for(int i=0; i < ((MNStruct *)context)->numFitJumps; i++){
+			if(((MNStruct *)context)->LDpriors[pcount][2]!=1){
+				((MNStruct *)context)->pulse->fitJump[((MNStruct *)context)->TempoJumpNums[i]]=0;
+			}
+			else if(((MNStruct *)context)->LDpriors[pcount][2]==1){
+				((MNStruct *)context)->pulse->fitJump[((MNStruct *)context)->TempoJumpNums[i]]=1;
+				numToMargin++;
+			}
+			pcount++;
+		}
+	
+	
+		for(int i=0; i < ((MNStruct *)context)->pulse->nobs; i++) {
+			FITfuncs(((MNStruct *)context)->pulse->obsn[i].bat - ((MNStruct *)context)->pulse->param[param_pepoch].val[0], pdParamDeriv, numToMargin, ((MNStruct *)context)->pulse, i,0);
+			for(int j=0; j<numToMargin; j++) {
+//				printf("CDML: %i %i %i %g\n", i,j,numToMargin,pdParamDeriv[j]);
+				TNDM[i][j]=pdParamDeriv[j];
+			} 
+		} 
+
+		//Now set fit flags back to how they were
+	
+
+		for (int p=1;p<((MNStruct *)context)->numFitTiming;p++) {
+				((MNStruct *)context)->pulse->param[((MNStruct *)context)->TempoFitNums[p][0]].fitFlag[((MNStruct *)context)->TempoFitNums[p][1]] = 1;
+
+		}
+	
+		for(int i=0; i < ((MNStruct *)context)->numFitJumps; i++){
+			((MNStruct *)context)->pulse->fitJump[((MNStruct *)context)->TempoJumpNums[i]]=1;
+		}
+	
+}
+
 
 
 
@@ -472,10 +1010,10 @@ void getDMatrix(pulsar *pulse, int TimetoFit, int JumptoFit, int numToMargin, in
 
 
 	for(int i=0; i < pulse->nobs; i++) {
-		FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin, pulse, i,0);
+		FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numToMargin-1, pulse, i,0);
 		for(int j=0; j<numToMargin; j++) {
 			TNDM[i][j]=pdParamDeriv[j];
- 			//printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
+ 			printf("%i %i %22.20e \n", i,j,pdParamDeriv[j]);
 
 		} 
 

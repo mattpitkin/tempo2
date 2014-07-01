@@ -35,6 +35,7 @@ void setupparams(char *root,
 		int &doLinearFit, 
 		int &doMax,
 		int &incEFAC,
+		int &EPolyTerms,
 		int &incEQUAD,
 		int &incRED,
 		int &incDM,
@@ -43,6 +44,7 @@ void setupparams(char *root,
 		double &FitSig,
 		int &customPriors,
 		double *EFACPrior,
+		double *EPolyPriors,
 		double *EQUADPrior,
 		double *AlphaPrior,
 		double *AmpPrior,
@@ -56,13 +58,19 @@ void setupparams(char *root,
 		double *DMCoeffPrior,
 		int &FloatingDM,
 		double *DMFreqPrior,
+		int &yearlyDM,
+		int &incsinusoid,
 		int &FloatingRed,
 		double *RedFreqPrior,
 		double &FourierSig,
 		int &incStep,
 		double *StepAmpPrior,
 		char *whiteflag,
-		int &whitemodel){
+		int &whitemodel,
+		int &varyRedCoeff,
+		int &varyDMCoeff,
+		int &incGWB,
+		double *GWBAmpPrior){
 
     //General parameters:
     //Root of the results files,relative to the directory in which TempoNest is run. This will be followed by the pulsar name, and then the individual output file extensions.
@@ -87,6 +95,7 @@ void setupparams(char *root,
 
 
     incEFAC=0; //include EFAC: 0 = none, 1 = one for all residuals, 2 = one for each observing system
+    EPolyTerms = 1; //Number of terms to include in EFAC polynomial (A*TOAerr + B*TOAERR^2 etc)
     incEQUAD=0; //include EQUAD: 0 = no, 1 = yes
     strcpy( whiteflag, "-sys");
     whitemodel=0;
@@ -113,6 +122,9 @@ void setupparams(char *root,
 	//Remaining priors for the stochastic parameters.  
 	EFACPrior[0]=0.1;
 	EFACPrior[1]=10;
+
+	EPolyPriors[0]=-20;
+	EPolyPriors[1]=20;   //Prior on terms in EPoly > linear
 	
 	
 	EQUADPrior[0]=-10;
@@ -124,8 +136,8 @@ void setupparams(char *root,
 	numRedCoeff=10;
 	numDMCoeff=10;
 
-// 	varyRedCoeff=0;
-// 	varyDMCoeff=0;
+	varyRedCoeff=0;
+	varyDMCoeff=0;
 	
 	AlphaPrior[0]=1.1;
 	AlphaPrior[1]=6.1;
@@ -157,10 +169,17 @@ void setupparams(char *root,
 	FloatingRed = 0;
 	RedFreqPrior[0]=1;
 	RedFreqPrior[1]=100;
+
+	yearlyDM=0;
+	incsinusoid=0;
 	
 	incStep = 0;
 	StepAmpPrior[0] = -1;
 	StepAmpPrior[1] = 1;
+
+	incGWB=0;
+	GWBAmpPrior[0] = -20;
+	GWBAmpPrior[1] = -10;
 
 
     // Use a configfile, if we can, to overwrite the defaults set in this file.
@@ -186,6 +205,7 @@ void setupparams(char *root,
         parameters.readInto(doLinearFit, "doLinearFit", doLinearFit);
         parameters.readInto(doMax, "doMax", doMax);
         parameters.readInto(incEFAC, "incEFAC", incEFAC);
+        parameters.readInto(EPolyTerms, "EPolyTerms", EPolyTerms);
         parameters.readInto(incEQUAD, "incEQUAD", incEQUAD);
         parameters.readInto(incRED, "incRED", incRED);
 		parameters.readInto(incDM, "incDM", incDM);
@@ -195,6 +215,8 @@ void setupparams(char *root,
         parameters.readInto(FitSig, "FitSig", FitSig);
         parameters.readInto(EFACPrior[0], "EFACPrior[0]", EFACPrior[0]);
         parameters.readInto(EFACPrior[1], "EFACPrior[1]", EFACPrior[1]);
+	parameters.readInto(EPolyPriors[0], "EPolyPriors[0]", EPolyPriors[0]);
+	parameters.readInto(EPolyPriors[1], "EPolyPriors[1]", EPolyPriors[1]);
         parameters.readInto(EQUADPrior[0], "EQUADPrior[0]", EQUADPrior[0]);
         parameters.readInto(EQUADPrior[1], "EQUADPrior[1]", EQUADPrior[1]);
         parameters.readInto(AlphaPrior[0], "AlphaPrior[0]", AlphaPrior[0]);
@@ -215,6 +237,8 @@ void setupparams(char *root,
         parameters.readInto(DMAmpPrior[1], "DMAmpPrior[1]", DMAmpPrior[1]);
         
         parameters.readInto(FloatingDM, "FloatingDM", FloatingDM);
+	parameters.readInto(yearlyDM, "yearlyDM", yearlyDM);
+	parameters.readInto(incsinusoid, "incsinusoid", incsinusoid);
         parameters.readInto(DMFreqPrior[0], "DMFreqPrior[0]", DMFreqPrior[0]);
         parameters.readInto(DMFreqPrior[1], "DMFreqPrior[1]", DMFreqPrior[1]);
         parameters.readInto(FloatingRed, "FloatingRed", FloatingRed);
@@ -231,9 +255,11 @@ void setupparams(char *root,
 
         parameters.readInto(FourierSig, "FourierSig", FourierSig);
 
-//         parameters.readInto(varyRedCoeff, "varyRedCoeff", varyRedCoeff);
-//         parameters.readInto(varyDMCoeff, "varyDMCoeff", varyDMCoeff);
-
+        parameters.readInto(varyRedCoeff, "varyRedCoeff", varyRedCoeff);
+        parameters.readInto(varyDMCoeff, "varyDMCoeff", varyDMCoeff);
+	parameters.readInto(incGWB, "incGWB", incGWB);
+	parameters.readInto(GWBAmpPrior[0], "GWBAmpPrior[0]", GWBAmpPrior[0]);
+	parameters.readInto(GWBAmpPrior[1], "GWBAmpPrior[1]", GWBAmpPrior[1]);
 
     } catch(ConfigFile::file_not_found oError) {
         printf("WARNING: parameters file '%s' not found. Using defaults.\n", oError.filename.c_str());

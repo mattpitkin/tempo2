@@ -33,6 +33,11 @@
 #include <math.h>
 #include <string.h>
 #include <vector>
+#include <sstream>
+#include <iterator>
+#include <cstring>
+#include <iostream>
+#include <fstream>
 #include "tempo2.h"
 #include "constraints.h"
 #include "TKfit.h"
@@ -122,11 +127,11 @@ int longturn_dms(long double turn, char *dms){
 
 
 
-void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context,int incRED, int ndim, std::vector<double> paramlist, double Evidence,int doTimeMargin, int doJumpMargin, int doLinear, std::string longname)
+void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, void *context,int incRED, int ndim, std::vector<double> paramlist, double Evidence,int doTimeMargin, int doJumpMargin, int doLinear, std::string longname, double **paramarray)
 {
   double rms_pre=0.0,rms_post=0.0;
   double mean_pre=0.0,mean_post=0.0,chisqr;
-  int i,p,count,k;
+  int i,p,count,k, whitefitcount;
   FILE *fout;
 	char *fname;
 
@@ -384,11 +389,13 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
                 printf("------------------------------------------------------------------------------\n");
                 printf("Stochastic Parameters:\n");
                 if(((MNStruct *)context)->numFitEFAC == 1){
+			whitefitcount=fitcount;
                         printf("Global EFAC: %g +/- %g\n", paramlist[fitcount],paramlist[fitcount+ndim]);
                         fitcount++;
                 }
                 else if(((MNStruct *)context)->numFitEFAC > 1){
                         int system=1;
+			whitefitcount=fitcount;
                         for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
                                 printf("EFAC for %s %s: %g +/- %g\n",((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] ,paramlist[fitcount],paramlist[fitcount+ndim]);
                                 fitcount++;
@@ -1011,19 +1018,46 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 	  }
 	printf("Total time span = %.3f days = %.3f years\n",end-start,(end-start)/365.25);
       }
+
+
+
+        std::ofstream tablefile;
+        std::string tablefilename = longname+"_table.tex";
+        tablefile.open(tablefilename.c_str());
+
+	tablefile <<  "\n";
+        tablefile <<  "\\documentclass{article}\n";
+        tablefile <<  "\\begin{document}\n";
+	tablefile <<  "\\begin{table*}\n";
+	tablefile <<  "\\caption{Stochastic parameter estimates for PSR " << psr[p].name << "}\n";
+	tablefile <<  "\\begin{tabular}{ll}\n";
+	tablefile <<  "\\hline\\hline\n";
+	tablefile <<  "\\multicolumn{2}{c}{Fit and data-set} \\\\ \n";
+	tablefile <<  "\\hline\n";
+	tablefile <<  "Pulsar name\\dotfill & "<<psr[p].name <<" \\\\ \n";
+	tablefile <<  "MJD range\\dotfill & "<<psr[p].param[param_start].val[0] << "---"<< psr[p].param[param_finish].val[0] <<" \\\\ \n";
+	tablefile <<  "Number of TOAs\\dotfill & "<< psr[p].nFit <<" \\\\\n";
+	tablefile <<  "\\hline\n";
+	tablefile <<  "\\multicolumn{2}{c}{Stochastic Parameters} \\\\ \n";
+	tablefile <<  "\\hline\n";
     
       if (1==1)  /* Write a new .par file */
 	{
 		
 		std::string parname=longname+".par";
-		printf("name size: %i \n",parname.size());
+		
+		//printf("name size: %i \n",parname.size());
 		fname=(char*)parname.c_str();
 		//fname="newpar.par";
 		printf("writing par file %s. \n",fname);
-	  FILE *fout2;
-	  char fname2[1000];
-	  char str1[100],str2[100],str3[100],str4[100],str5[100];
-	  int nread;
+	        FILE *fout2;
+	  	
+	        char fname2[1000];
+
+
+
+	        char str1[100],str2[100],str3[100],str4[100],str5[100];
+	        int nread;
 
 		char hmsstr[100];
 		longturn_hms(psr[p].param[param_raj].val[0]/(2*M_PI), hmsstr);
@@ -1193,7 +1227,59 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 		fprintf(fout2,"JUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
 	      else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
 		fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
-	    }	  
+	    }	 
+
+
+            //Add EFACS/EQUADS
+            if(((MNStruct *)context)->numFitEFAC == 1){
+                        fprintf(fout2,"TNGLOBALEF %g\n", paramarray[whitefitcount][2]);
+                        whitefitcount++;
+            }
+            else if(((MNStruct *)context)->numFitEFAC > 1){
+                    int system=1;
+                    for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
+                            fprintf(fout2,"TNEF %s %s %g\n",((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] ,paramarray[whitefitcount][2]);
+			    tablefile <<  "EFAC "<< ((MNStruct *)context)->whiteflag <<" "<< ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] <<" \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                            whitefitcount++;
+                            system++;
+                    }
+            }
+
+            if(((MNStruct *)context)->numFitEQUAD ==1){
+                    fprintf(fout2,"TNGLOBALEQ %g\n", paramarray[whitefitcount][2]);
+                    whitefitcount++;
+            }
+            else if(((MNStruct *)context)->numFitEQUAD > 1){
+                    int system=1;
+                    for(int i =0;i<((MNStruct *)context)->numFitEFAC; i++){
+                            fprintf(fout2, "TNEQ %s %s %g\n", ((MNStruct *)context)->whiteflag, ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]],paramarray[whitefitcount][2]);
+			    tablefile <<  "Log$_{10}$[EQUAD] "<< ((MNStruct *)context)->whiteflag <<" "<< ((MNStruct *)context)->pulse[0].obsn[systempos[i]].flagVal[sysflag[i]] <<" \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                            whitefitcount++;
+                            system++;
+                    }
+            }
+
+	if(incRED ==1 || incRED ==3){
+		fprintf(fout2, "TNRedAmp %g\n", paramarray[whitefitcount][2]);
+		tablefile <<  "Log$_{10}$[Red Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+		whitefitcount++;
+		fprintf(fout2, "TNRedGam %g\n", paramarray[whitefitcount][2]);
+		fprintf(fout2, "TNRedC %i\n", ((MNStruct *)context)->numFitRedCoeff);
+		tablefile <<  "Red Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";	
+		whitefitcount++;
+	}
+	if(((MNStruct *)context)->incDM ==1 ||((MNStruct *)context)->incDM ==3 ){
+		fprintf(fout2, "TNDMAmp %g\n", paramarray[whitefitcount][2]);
+                tablefile <<  "Log$_{10}$[DM Amp] \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+		 fprintf(fout2, "TNDMGam %g\n", paramarray[whitefitcount][2]);
+                fprintf(fout2, "TNDMC %i\n", ((MNStruct *)context)->numFitDMCoeff);
+
+                tablefile <<  "DM Index \\dotfill & "<< paramarray[whitefitcount][0] <<" $\\pm$ "<< paramarray[whitefitcount][1] <<"  \\\\ \n";
+                whitefitcount++;
+
+	}
+
 
 	  /* Add whitening flags */
 	  if (psr[p].param[param_wave_om].paramSet[0]==1)
@@ -1251,7 +1337,16 @@ void TNtextOutput(pulsar *psr, int npsr, int newpar, long double *Tempo2Fit, voi
 			fprintf(fout2,"CONSTRAIN DMMODEL\n");
 		  }
 	  }
-	  fclose(fout2);	 
+	  fclose(fout2);	
+
+
+	  tablefile <<  "\\hline\n";
+	  tablefile <<  "\\end{tabular}\n";
+	  tablefile <<  "\\label{Table:"<<psr[p].name<<"}\n";
+	  tablefile <<  "\\end{table*} \n";
+          tablefile <<  "\\end{document}\n";
+	  tablefile <<  "\n";
+	  tablefile.close();	
 	    }
 	}
       /* printf("Precision: routine, precision, comment\n");

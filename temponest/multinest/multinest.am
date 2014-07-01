@@ -1,0 +1,39 @@
+FC = gfortran
+CC = gcc
+CXX = g++
+FFLAGS += -O3 -fPIC -ffree-line-length-none 
+CFLAGS += -O3 
+
+LAPACKLIB = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread
+
+NESTLIBDIR = ./
+
+export FC CC CXX FFLAGS CFLAGS LAPACKLIB
+
+ 
+AR = ar r  
+LINKLIB = ld -shared
+ 
+NSOBJECTS = utils.o utils1.o priors.o kmeans_clstr.o xmeans_clstr.o posterior.o nested.o
+
+%.o: %.f90
+	$(FC) $(FFLAGS) -c -o $@ $^ 
+
+%.o: %.F90
+	$(FC) $(FFLAGS) -c -o $@ $^ 
+
+default: libnest3.a
+
+all: libnest3.a
+ 
+libnest3.so: $(NSOBJECTS) 
+	$(LINKLIB) -o $(LIBS) $@ $^ 
+ 
+libnest3.a: $(NSOBJECTS) 
+	$(AR) $@ $^ 
+ 
+clean: 
+	-rm $(NESTLIBDIR)/libnest3.*  *.o *.mod
+	
+cleanall: clean_exec clean 
+
