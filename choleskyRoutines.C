@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "TKfit.h"
 #include "TKspectrum.h"
+#include "T2toolkit.h"
 #include "cholesky.h"
 
 // Automatic determination of the covariance function
@@ -909,7 +910,7 @@ int T2calculateSpectra(double *x,double *y,double *e,int n,int useErr,int preWhi
   return nSpec;
 }
 
-int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp)
+int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp,double cutoff)
 {
   static int time=1;
   double v1,v2,m;
@@ -933,11 +934,73 @@ int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,d
   if (aval==0)
     {
       if (ifc == -1) {printf("Enter corner freq (yr-1) "); scanf("%lf",modelFc);}
+      else if (ifc == -2) { // Automatically determine the corner frequency
+	*modelFc = preWhiteSpecX[0]*365.25;
+	printf("Automatically determining corner frequency to be %g\n",*modelFc);
+      }
       else *modelFc = ifc;
       if (iexp == 0) {printf("Enter power law exponential (should be positive) "); scanf("%lf",modelAlpha);}
-      else *modelAlpha = iexp;	
+      else if (iexp!=-2) *modelAlpha = iexp;	
+
       if (inpt == -1) {printf("Enter nfit "); scanf("%d",modelNfit);}
+      else if (inpt == -2) // Automatically determine this
+	{
+	  int i;
+	  *modelNfit = -1;
+
+	  for (i=0;i<nPreWhiteSpec;i++)
+	    {
+	      //	      printf("testing %g %g\n",preWhiteSpecY[i],mean+rms);
+	      if (preWhiteSpecY[i] < cutoff)
+		{
+		  //		  printf("STOPPING %d\n",i);
+		  *modelNfit = i+1;
+		  break;
+		}
+	    }
+	  if (*modelNfit == -1)
+	    {
+	      printf("Cannot fit Nfit\n");
+	      exit(1);
+	    }
+	  printf("Automatically found nfit = %d\n",*modelNfit);
+	}
       else *modelNfit = inpt;
+
+      if (iexp == -2)
+	{
+	  int i;
+	  int n = *modelNfit;	 
+	  double fx[n],fy[n],vals[2];
+
+	  if (n==1) // Be careful
+	    {
+	      double ratio = preWhiteSpecY[0]/cutoff;
+	      if (ratio < 2) // Probably all white
+		{
+		  *modelAlpha = 0;
+		  *modelNfit = 6; // This should be set from the position of the filter and not hardcoded
+		}
+	      else // Probably the first point is really red noise and so alpha can be calculated. Probably should use the model
+		*modelAlpha = (log10(preWhiteSpecY[0])-log10(preWhiteSpecY[1]))/(log10(preWhiteSpecX[0])-log10(preWhiteSpecX[1]));
+	      printf("ratio = %g\n",ratio);
+	    }
+	  else
+	    {
+	      for (i=0;i<n;i++)
+		{
+		  fx[i] = log10(preWhiteSpecX[i]);
+		  fy[i] = log10(preWhiteSpecY[i]);
+		}
+	      // Fit a straight line to these points
+	      TKfindPoly_d(fx,fy,n,2,vals);
+	      printf("Fit result = %g %g\n",vals[0],vals[1]);
+	      *modelAlpha = -vals[1];
+	    }
+	  printf("Automatically found alpha = %g\n",*modelAlpha);
+	}
+
+
     }
   // Do the fit
   // This fit is useful for fitting spectra where the error is proportional to the mean
@@ -1014,21 +1077,23 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
 
    double delta=1.0/365.25;
    double N=(double)npts;
-
+   int noTF=0;
    FILE* tf = fopen("testf","w");
+   if (!tf) {printf("Warning: unable to open output file: testf\n"); noTF=1;}
+
    p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
 
-   fprintf(tf,"%g %g\n",0,p_r[0]);
+   if (noTF==0) fprintf(tf,"%g %g\n",0,p_r[0]);
    for (i=1;i<=npts/2;i++){
 	  freq=double(i)/(N*delta);
 	  P=modelA/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
-	  fprintf(tf,"%g %g\n",freq,P);
+	  if (noTF==0) fprintf(tf,"%g %g\n",freq,P);
 	  p_r[i]=P;
 	  p_r[npts-i]=P;
 	  p_i[i]=0;
 	  p_i[npts-i]=0;
    }
-   fclose(tf);
+   if (noTF == 0) fclose(tf);
 
    TK_fft(1,npts,p_r,p_i);
 
