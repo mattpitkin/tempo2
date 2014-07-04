@@ -418,7 +418,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 			   highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
 		   }
 		 // Step 3c: Fit to spectra
-		 cont = T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp);
+		 cont = T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp,-1);
 		 printf("modelScale = %g\n",modelScale);
 	   } while (cont==1);
 		 }
@@ -476,7 +476,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 			  plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,
 			   highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
 		 // Step 3c: Fit to spectra
-		 cont = T2fitSpectra(origSpecX,origSpecY,nOrigSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp);
+			  cont = T2fitSpectra(origSpecX,origSpecY,nOrigSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp,-1);
 		 printf("modelScale = %g\n",modelScale);
 	   } while (cont==1);
 
@@ -526,7 +526,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       double cholWhiteY2[MAX_OBSN];                         // Cholesky white residuals
       double cholWspecX2[MAX_OBSN],cholWspecY2[MAX_OBSN];    // Cholesky whitened spectrum
 
-      T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt,amp);
+      T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt,amp,-1);
       sprintf(fname,"%s.model",psr[0].name);
       fout = fopen(fname,"w");
       fprintf(fout,"MODEL 1\n");
