@@ -1466,6 +1466,19 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   psr[p].obsn[i].phase = phaseint+phase5[i];  
 	   psr[p].obsn[i].pulseN = (long long)(phaseint + fortran_nint(phase5[i]));
 	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
+
+
+        if(psr[p].TNsubtractRed==1){
+                 for (i=0;i<psr[p].nobs;i++){
+                psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
+                }
+        }
+        if(psr[p].TNsubtractDM==1){
+                for (i=0;i<psr[p].nobs;i++){
+                psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
+                }
+        }
+
 	   if (psr[p].obsn[i].deleted!=1)
 	     {
 	       mean+=psr[p].obsn[i].residual;
@@ -1479,16 +1492,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     psr[p].obsn[i].residual-=mean;
 	 }
 
-	if(psr[p].TNsubtractRed==1){
-		 for (i=0;i<psr[p].nobs;i++){
-		psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
-		}
-	}
-	if(psr[p].TNsubtractDM==1){
-		for (i=0;i<psr[p].nobs;i++){
-                psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
-		}
-        }
 
 
      }
