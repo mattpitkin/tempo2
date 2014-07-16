@@ -107,6 +107,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double stepEfac = 0.1;
   char grDev[128]="/xs";
 
+  printf("Starting the plugin now\n");
   strcpy(flagID,"NULL");
 
   if (displayCVSversion == 1) CVSdisplayVersion((char *)"efacEquad.C",(char *)"plugin",CVS_verNum);
@@ -220,6 +221,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   psr[0].ifuncN++;
   lastUsed=0;
   // Assume time sorted points
+  printf("Using dstep = %f\n",dstep);
   for (i=0;i<psr[0].nobs;i++)
     {
       if (i-lastUsed > reqPoints && (psr[0].obsn[i].sat - xpos) > dstep)
