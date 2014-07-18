@@ -879,6 +879,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       printf("Solar system ephem     %s\n",psr[p].ephemeris);
       printf("Time scale             %s\n",psr[p].clock);
       printf("Binary model           %s\n",psr[p].binaryModel);
+
+      if (psr[p].setUnits==0)
+	{
+	  if (psr[p].units != SI_UNITS)
+	    printf("**** UNITS was not set in the parameter file: using TDB (tempo1) **** \n");
+	  else
+	    printf("**** UNITS was not set in the parameter file: using TCB (tempo2) **** \n");
+	}
+
       // Write out covariance matrix for global parameters
       if (p==0 && psr[0].globalNfit > 0)
 	{
@@ -977,11 +986,21 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      if (npsr > 1)
 		sprintf(fname2,"%s_%d",fname,p+1);
 	      else{
+		// GH: 18 July 2014
+		// This seems to be causing efacEquad plugin to segfault
+		// Also we pass in the filename that we want
+		// I've put this back for now
+
+		strcpy(fname2,fname);
+
+		/*		printf("In here\n");
 		  std::string pulsarname=psr[0].name;
 		  std::string longname=pulsarname+"-new.par";
+		  printf("in here 2\n");
 		  for(int r=0;r<=longname.size();r++){fname[r]=longname[r];}
-
+		  printf("in here 3\n");
 		  strcpy(fname2,fname);
+		  printf("in here 4\n");*/
 		}
 	    }
 	  if (!(fout2 = fopen(fname2,"w")))
