@@ -131,6 +131,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
    int nglobal;
    int **ip=(int**)malloc(sizeof(int*)*npsr);
 
+
    //  printf("WARNING: Switching weighting off for the fit\n");
    //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
   
@@ -220,29 +221,29 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
    for (p=0;p<npsr;p++)  /* Loop over all the pulsars */
    {
-	  // if we are doing a Cholesky fit, we need to sort the data or it will fail!
-	  if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL"))sortToAs(psr+p);
-	  if (psr[p].auto_constraints)autoConstraints(psr,p,npsr);
-	  nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
-	  nobs_noconstrain += psr[p].nobs;
-	  ip[p]=(int*)malloc(sizeof(int)*nobs_and_constraints);
-	  if (ip[p]==NULL) {printf("Unable to allocate memory in doFit.C (ip[p])\n"); exit(1);}
-	  logtchk("Processing pulsar %d",p);
-
-	  /*
-	   * Check for "broken" combinations of fit parameters
-	   */
-	  if (psr[p].param[param_dmmodel].paramSet[0] &&
-			psr[p].param[param_dm].fitFlag[0]!= 0 &&
-			psr[p].param[param_dmmodel].linkTo[0] != param_dm){
-		 // if we are using DMMODEL, and we want to fit for DM then
-		 // DMMODEL must be linked to DM... otherwise badness will occur!
-		 printf("WARNING: DM cannot be fit with DMMODEL\n         unless you set 'DMMODEL DM 1' in par file.\n");
-		 psr[p].param[param_dm].fitFlag[0]=0;
-	  }
-	  strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
-	  strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
-	  /* How many parameters are we fitting for */
+     // if we are doing a Cholesky fit, we need to sort the data or it will fail!
+     if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL"))sortToAs(psr+p);
+     if (psr[p].auto_constraints)autoConstraints(psr,p,npsr);
+     nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
+     nobs_noconstrain += psr[p].nobs;
+     ip[p]=(int*)malloc(sizeof(int)*nobs_and_constraints);
+     if (ip[p]==NULL) {printf("Unable to allocate memory in doFit.C (ip[p])\n"); exit(1);}
+     logtchk("Processing pulsar %d",p);
+     
+     /*
+      * Check for "broken" combinations of fit parameters
+      */
+     if (psr[p].param[param_dmmodel].paramSet[0] &&
+	 psr[p].param[param_dm].fitFlag[0]!= 0 &&
+	 psr[p].param[param_dmmodel].linkTo[0] != param_dm){
+       // if we are using DMMODEL, and we want to fit for DM then
+       // DMMODEL must be linked to DM... otherwise badness will occur!
+       printf("WARNING: DM cannot be fit with DMMODEL\n         unless you set 'DMMODEL DM 1' in par file.\n");
+       psr[p].param[param_dm].fitFlag[0]=0;
+     }
+     strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
+     strcpy(psr[p].decjStrPre,psr[p].decjStrPost);
+     /* How many parameters are we fitting for */
 	  logtchk("Determining which parameters we are fitting for");
 	  npol = getNparams(psr+p,offsetNp);
 	  offsetNp += npol;
@@ -265,38 +266,44 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	  count=0;
 	  for (i=0;i<psr[p].nobs;i++)
 	  {	  
-		 psr[p].obsn[i].prefitResidual = psr[p].obsn[i].residual;
-		 if (psr[p].obsn[i].deleted==0)
-		 {
-			okay=1;
-			/* Check for START and FINISH flags */
-			if (psr[p].param[param_start].paramSet[0]==1 && psr[p].param[param_start].fitFlag[0]==1 &&
-				  (psr[p].param[param_start].val[0] > psr[p].obsn[i].sat))
-			   okay=0;
-			if (psr[p].param[param_finish].paramSet[0]==1 && psr[p].param[param_finish].fitFlag[0]==1 &&
-				  psr[p].param[param_finish].val[0] < psr[p].obsn[i].sat)
-			   okay=0;
-			if (okay==1)
-			{
-			   x[count]   = (double)(psr[p].obsn[i].bbat-psr[p].param[param_pepoch].val[0]);
-			   if (count==0)
-			   {
-				  newStart = (double)psr[p].obsn[i].sat;
-				  newFinish = (double)psr[p].obsn[i].sat;
-			   }
-			   else
-			   {
-				  if (newStart > psr[p].obsn[i].sat)  newStart = (double)psr[p].obsn[i].sat;
-				  if (newFinish < psr[p].obsn[i].sat) newFinish = (double)psr[p].obsn[i].sat;
-			   } 
-			   y[count]   = (double)psr[p].obsn[i].prefitResidual;
-			   ip[p][count]  = i;
-			   // note that for an unweighted fit we later set this to 1.
-			   sig[count] = psr[p].obsn[i].toaErr*1e-6; /* Error in seconds */
-
-			   count++;
-			}
-		 }
+	    psr[p].obsn[i].prefitResidual = psr[p].obsn[i].residual;
+	    if (psr[p].obsn[i].deleted==0)
+	      {
+		okay=1;
+		/* Check for START and FINISH flags */
+		if (psr[p].param[param_start].paramSet[0]==1 && psr[p].param[param_start].fitFlag[0]==1 &&
+		    (psr[p].param[param_start].val[0] > psr[p].obsn[i].sat))
+		  okay=0;
+		if (psr[p].param[param_finish].paramSet[0]==1 && psr[p].param[param_finish].fitFlag[0]==1 &&
+		    psr[p].param[param_finish].val[0] < psr[p].obsn[i].sat)
+		  okay=0;
+		if (okay==1)
+		  {
+		    x[count]   = (double)(psr[p].obsn[i].bbat-psr[p].param[param_pepoch].val[0]);
+		    if (count==0)
+		      {
+			newStart = (double)psr[p].obsn[i].sat;
+			newFinish = (double)psr[p].obsn[i].sat;
+		      }
+		    else
+		      {
+			if (newStart > psr[p].obsn[i].sat)  newStart = (double)psr[p].obsn[i].sat;
+			if (newFinish < psr[p].obsn[i].sat) newFinish = (double)psr[p].obsn[i].sat;
+		      } 
+		    y[count]   = (double)psr[p].obsn[i].prefitResidual;
+		    ip[p][count]  = i;
+		    // note that for an unweighted fit we later set this to 1.
+		    sig[count] = psr[p].obsn[i].toaErr*1e-6; /* Error in seconds */
+		    
+		    count++;
+		  }
+	      }
+	  }
+	  if (count == 0){
+	    printf("-----------------------------------------------\n");
+	    printf("ERROR: no observations to process for pulsar %s\n",psr[p].name);
+	    printf("Perhaps you have filtered out all the observations?\n");
+	    exit(1);
 	  }
 	  int last=count-1;
 	  // add constraints as extra pseudo observations
