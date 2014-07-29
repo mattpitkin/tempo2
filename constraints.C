@@ -591,14 +591,16 @@ void autoConstraints(pulsar* psr_array, int ipsr,int npsr){
 		 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin2;
 		 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos2;
 	  }
-	  if (qifunc_p){
+	  //
+	  // Dustin Madison argues that constraints are not needed on PX
+	  /*	  if (qifunc_p){
 		 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin2;
 		 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos2;
 	  }
 	  if (qifunc_c){
 		 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin2;
 		 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos2;
-	  }
+		 } */
    }
 
 
