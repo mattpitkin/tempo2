@@ -507,10 +507,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	}
 
       // Check TNEF and TNEQ
-      if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0)
+      if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0 || psr[p].nTNSQ > 0)
         {
           double err;
-          printf("Updating TOA errors using TNEF and TNEQ\n");
+          printf("Updating TOA errors using TN parameters.\n");
           for (i=0;i<psr[p].nobs;i++)
             {
               err = psr[p].obsn[i].toaErr;
@@ -537,6 +537,31 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 			  }
                         }
                     }
+		//Check Squad
+                  for (k=0;k<psr[p].nTNSQ;k++)
+                    {
+                      if (strcmp(psr[p].obsn[i].flagID[j],psr[p].TNSQFlagID[k])==0)
+                        {
+                          if (strcmp(psr[p].obsn[i].flagVal[j],psr[p].TNSQFlagVal[k])==0){
+
+				double tobsval=0;
+				for (int tf=0;tf<psr[p].obsn[i].nFlags;tf++){
+					if(strcasecmp(psr[p].obsn[i].flagID[tf],"-tobs")==0){
+						if(strcasecmp(psr[p].obsn[i].flagVal[tf],"UNKNOWN")==0){
+							tobsval=1;
+						}
+						else{
+							double tobs=atof(psr[p].obsn[i].flagVal[tf]);
+							tobsval=tobs;
+						}
+					}		
+				}
+                                double TNSquad = pow(10.0,psr[p].TNSQVal[k]+6)*pow(10.0,psr[p].TNSQVal[k]+6)*tobsval;
+                                err = sqrt(err*err + TNSquad);
+                          }
+                        }
+                    }
+
 
                 }
               psr[p].obsn[i].toaErr = err;

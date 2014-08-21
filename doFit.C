@@ -3048,16 +3048,16 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	if(pulse->TNRedAmp != 0 && pulse->TNRedGam != 0){
 		RedAmp=pulse->TNRedAmp;
 		RedIndex=pulse->TNRedGam;
-		FitRedCoeff=pulse->TNRedC;
+		FitRedCoeff=2*pulse->TNRedC;
 
-		printf("\n Including Red noise with %i Coefficients, %g Log_10 Amplitude, %g Spectral Index\n", FitRedCoeff,RedAmp,RedIndex);
+		printf("\n Including Red noise with %i Frequencies, %g Log_10 Amplitude, %g Spectral Index\n", FitRedCoeff/2,RedAmp,RedIndex);
 	}
 	if(pulse->TNDMAmp != 0 && pulse->TNDMGam != 0){
 		DMAmp=pulse->TNDMAmp;
 		DMIndex=pulse->TNDMGam;
-		FitDMCoeff=pulse->TNDMC;
+		FitDMCoeff=2*pulse->TNDMC;
 
-		printf("\n Including DM Variations with %i Coefficients, %g Log_10 Amplitude, %g Spectral Index\n", FitDMCoeff,DMAmp,DMIndex);
+		printf("\n Including DM Variations with %i Frequencies, %g Log_10 Amplitude, %g Spectral Index\n", FitDMCoeff/2,DMAmp,DMIndex);
 	}
 
 
@@ -3120,6 +3120,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		double rho = (RedAmp*RedAmp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[i]*365.25,(-RedIndex))/(maxtspan*24*60*60);
 		powercoeff[i]+= rho;
 		powercoeff[i+FitRedCoeff/2]+= rho;
+		//printf("T2 RedC: %i %g %g %g %g %g \n", i, rho, RedAmp, RedIndex, freqs[i], maxtspan);
 	}
 
 
@@ -3312,7 +3313,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
                 }
 
                 double freq=(double)pulse->obsn[i].freqSSB;
-                long double yrs = (pulse->obsn[i].sat - pulse->param[param_dmepoch].val[0])/365.25;
+                long double yrs = (pulse->obsn[i].bat - pulse->param[param_dmepoch].val[0])/365.25;
                 long double arg = 1.0;
                 double dmDot=0;
                 double dmDotErr=0;
@@ -3323,11 +3324,25 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
                                 dmDotErr+=pow((double)(pulse->param[param_dm].err[d]*arg),2);
                         }
                 }
+		
+		double pDotErr=0;
+		if(pulse->param[param_f].paramSet[0]==1){
+			arg=((pulse->obsn[i].bat - pulse->param[param_pepoch].val[0])/pulse[0].param[param_f].val[0])*86400.0;
+			pDotErr+=pow((double)(pulse->param[param_f].err[0]*arg),2);
 
+		}
+
+                if(pulse->param[param_f].paramSet[1]==1){
+                        arg=0.5*pow((double)(pulse->obsn[i].bat - pulse->param[param_pepoch].val[0]), 2);
+			long double argerr = (pulse->param[param_f].err[1]/pulse[0].param[param_f].val[0])*86400.0*86400;
+                        pDotErr+=pow((double)(argerr*arg),2);
+                }
+
+		//printf("err: %i %g %g \n", i, rederr, pDotErr);
 	
 		chisq+=(Resvec[i]-dsum)*(Resvec[i]-dsum)/(Noise[i]);
 		pulse->obsn[i].TNRedSignal=redsum;
-		pulse->obsn[i].TNRedErr=pow(rederr,0.5);
+		pulse->obsn[i].TNRedErr=pow(rederr+pDotErr,0.5);
 		
 		pulse->obsn[i].TNDMSignal=dmsum;
 		pulse->obsn[i].TNDMErr=pow(dmerr/pow(DMVec[i],2) + dmDotErr,0.5);

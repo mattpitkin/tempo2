@@ -57,6 +57,7 @@
 #define MAX_T2EQUAD          100    /* Maximum number of T2EQUADs allowed               */
 #define MAX_TNEF           50    /* Maximum number of TNEFACs allowed                */
 #define MAX_TNEQ          50    /* Maximum number of TNEQUADs allowed               */
+#define MAX_TNSQ          50    /* Maximum number of TNEQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
@@ -562,11 +563,14 @@ typedef struct pulsar {
   double T2globalEfac;
 
   //TNEF/TNEQ
-  int    nTNEF,nTNEQ;
+  int    nTNEF,nTNEQ, nTNSQ;
   char   TNEFFlagID[MAX_TNEF][MAX_FLAG_LEN],TNEFFlagVal[MAX_TNEF][MAX_FLAG_LEN];
   double TNEFVal[MAX_TNEF];
   char   TNEQFlagID[MAX_TNEQ][MAX_FLAG_LEN],TNEQFlagVal[MAX_TNEQ][MAX_FLAG_LEN];
   double TNEQVal[MAX_TNEQ];
+  char   TNSQFlagID[MAX_TNSQ][MAX_FLAG_LEN],TNSQFlagVal[MAX_TNSQ][MAX_FLAG_LEN];
+  double TNSQVal[MAX_TNSQ];
+
   double TNRedAmp;
   double TNRedGam;
   int TNRedC;
