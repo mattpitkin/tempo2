@@ -31,7 +31,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 #include "tempo2.h"
 
 /* ******************************************** */
@@ -552,23 +551,16 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 	      else if (strcasecmp(param1,"INCLUDE")==0) /* Include another .tim file */
 		{
 		  char newtim[MAX_FILELEN];
-#ifdef PATH_MAX
-		  char relPath[PATH_MAX];
-#else
-		  char *relPath;
-#endif
+		  char relPath[MAX_FILELEN];
 		  if (sscanf(line,"%s %s",param1,newtim)==2)
 		    {
 		      int ii;
 		      // Relative file path
-		      printf("Current filename = %s\n",timname);
-#ifdef PATH_MAX
+		      //printf("Current filename = %s\n",timname);
+		      // Stas modification
 		      realpath(timname,relPath);
-#else
-		      relPath = realpath(timname,NULL);
-#endif
 		      // Remove filename
-		      for (ii=strlen(relPath);ii>0;ii--)
+		      for (ii=strlen(relPath);ii> 0;ii--)
 			{
 			  if (relPath[ii]=='/')
 			    {
@@ -576,13 +568,11 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 			      break;
 			    }
 			}
-		      strcat(relPath,newtim);
+		      //strcat(relPath,newtim);
+		      strcpy(relPath,newtim);
 		      printf("Rel path = %s\n",relPath);
 		      //		      readTim(newtim,psr,jumpVal);
 		      readTim(relPath,psr,jumpVal);
-#ifndef PATH_MAX
-		      free(relPath);
-#endif
 		    }
 		  else
 		    printf("Unable to parse INCLUDE line >%s<\n",line);
