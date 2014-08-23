@@ -590,6 +590,9 @@ typedef struct pulsar {
   double TNDMEvLength[MAX_TNDMEv];
   double TNDMEvAmp[MAX_TNDMEv];
   double TNDMEvGam[MAX_TNDMEv];
+  int TNDMEvOff[MAX_TNDMEv];
+  int TNDMEvLin[MAX_TNDMEv];
+  int TNDMEvQuad[MAX_TNDMEv];
   
   
   

@@ -3035,7 +3035,9 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 
 
-	///////////////Form the F Matrix////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////  
+///////////////////////Noise Hyperparameters//////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 	
 	
 	double start,end;
@@ -3074,6 +3076,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	int FitDMCoeff=0;
 	int DMEventCoeff=0;
 	int totCoeff=0;
+	int DMEventQuadTerms=0;
 
 	if(pulse->TNRedAmp != 0 && pulse->TNRedGam != 0){
 		RedAmp=pulse->TNRedAmp;
@@ -3103,6 +3106,10 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 			DMEventInfo[i][2]=pow(10.0, pulse->TNDMEvAmp[i]); //Amplitude
 			DMEventInfo[i][3]=pulse->TNDMEvGam[i]; //SpectralIndex
 			DMEventCoeff+=2*int(DMEventInfo[i][1]/averageTSamp);
+
+			if(pulse->TNDMEvOff[i]==1){printf(" Including DMEvent offset \n"); DMEventQuadTerms++;}
+			if(pulse->TNDMEvLin[i]==1){printf(" Including DMEvent Linear Term \n");DMEventQuadTerms++;}
+			if(pulse->TNDMEvQuad[i]==1){printf(" Including DMEvent Quadratic Term \n");DMEventQuadTerms++;}
 
 			}
 	}
@@ -3216,6 +3223,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 //////////////////////////////////////////////////////////////////////////////////////////	
 	
 	startpos+=FitDMCoeff;
+	
 	if(pulse->nDMEvents > 0){
 	
 		for(int i =0; i < pulse->nDMEvents; i++){
@@ -3273,9 +3281,11 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	}
 
 
-	///////////////////////Form Total Matrices////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////  
+//////////////////////Form Total Matrix///////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 
-	int totalsize=numtofit+totCoeff;
+	int totalsize=numtofit+totCoeff+DMEventQuadTerms;
 	double **TotalMatrix=new double*[pulse->nobs];
 	for(int i =0;i<pulse->nobs;i++){
 		TotalMatrix[i]=new double[totalsize];
@@ -3293,16 +3303,40 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		for(int j =0;j<totCoeff; j++){
 			TotalMatrix[i][j+numtofit]=FMatrix[i][j];
 		}
+
+		int DMEvterms=0;
+		for(int e =0; e < pulse->nDMEvents; e++){
+			double time=((double)pulse->obsn[i].bat);
+			if(time < DMEventInfo[e][0]+DMEventInfo[e][1] && time > DMEventInfo[e][0]){
+				if(pulse->TNDMEvOff[e]==1){	
+					TotalMatrix[i][numtofit+totCoeff+DMEvterms]=DMVec[i];
+					DMEvterms++;
+				}
+				if(pulse->TNDMEvLin[e]==1){	
+					TotalMatrix[i][numtofit+totCoeff+DMEvterms]=(time-DMEventInfo[e][0])*DMVec[i];
+					DMEvterms++;
+				}
+				if(pulse->TNDMEvQuad[e]==1){	
+					TotalMatrix[i][numtofit+totCoeff+DMEvterms]=pow((time-DMEventInfo[e][0]),2)*DMVec[i];
+					DMEvterms++;
+				}
+			}
+		}
 	}
 
-// 	printf("made TMatrix\n");
+//////////////////////////////////////////////////////////////////////////////////////////  
+//////////////////////Get White Noise Vector//////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 
 	double *Noise=new double[pulse->nobs];
 	for(int o=0;o<pulse->nobs; o++){
 		Noise[o]=pow(((pulse->obsn[o].toaErr)*pow(10.0,-6)),2);
 	}
 
-// 	printf("made NMatrix\n");
+
+//////////////////////////////////////////////////////////////////////////////////////////  
+//////////////////////Do Algebra//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 	
 	double **NG = new double*[pulse->nobs]; for (int k=0; k<pulse->nobs; k++) NG[k] = new double[totalsize];
 	double **GNG = new double*[totalsize]; for (int k=0; k<totalsize; k++) GNG[k] = new double[totalsize];

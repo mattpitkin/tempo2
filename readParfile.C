@@ -1127,13 +1127,17 @@ else if (strcasecmp(str,"_DM")==0)
      \---------/ */
      
   else if (strcasecmp(str,"TNDMEvent")==0){ /* TempoNest DM Event Start position */   
-  	 int nTNDMEv = psr->nDMEvents;
-  	 fscanf( fin, "%lf %lf %lf %lf", 
-  	          &psr->TNDMEvStart[nTNDMEv],
-              &psr->TNDMEvLength[nTNDMEv],
-              &psr->TNDMEvAmp[nTNDMEv],
-              &psr->TNDMEvGam[nTNDMEv] );
-  	 ( psr->nDMEvents )++;
+	int nTNDMEv = psr->nDMEvents;
+	fscanf( fin, "%lf %lf %lf %lf %d %d %d", 
+		&psr->TNDMEvStart[nTNDMEv],
+		&psr->TNDMEvLength[nTNDMEv],
+		&psr->TNDMEvAmp[nTNDMEv],
+		&psr->TNDMEvGam[nTNDMEv],
+		&psr->TNDMEvOff[nTNDMEv],
+		&psr->TNDMEvLin[nTNDMEv],
+		&psr->TNDMEvQuad[nTNDMEv]);
+
+	( psr->nDMEvents )++;
 	}    
      
 
