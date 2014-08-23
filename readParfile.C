@@ -1086,9 +1086,27 @@ else if (strcasecmp(str,"_DM")==0)
               &psr->TNEQVal[nequadFlag] );
       ( psr->nTNEQ )++;
     }
-    
-      else if (strcasecmp(str,"TNRedAmp")==0) /* TempoNest Red noise power law amplitude */
-            fscanf(fin,"%lf",&(psr->TNRedAmp));
+
+  /* /---------\
+     | TN SQ |
+     \---------/ */
+
+   
+  else if( strcasecmp( str, "TNSQ") == 0 ) // EFAC for given flag
+    {
+      int nequadFlag = psr->nTNSQ;
+      fscanf( fin, "%s %s %lf", psr->TNSQFlagID[nequadFlag],
+              psr->TNSQFlagVal[nequadFlag],
+              &psr->TNSQVal[nequadFlag] );
+      ( psr->nTNSQ )++;
+    }
+
+   /* /---------\
+     | TN Noise |
+     \---------/ */
+     
+  else if (strcasecmp(str,"TNRedAmp")==0) /* TempoNest Red noise power law amplitude */
+    fscanf(fin,"%lf",&(psr->TNRedAmp));
   else if (strcasecmp(str,"TNRedGam")==0) /* TempoNest Red noise spectral index */
 	fscanf(fin,"%lf",&(psr->TNRedGam));
   else if (strcasecmp(str,"TNRedC")==0) /* TempoNest Red noise spectral index */
@@ -1101,10 +1119,23 @@ else if (strcasecmp(str,"_DM")==0)
 	fscanf(fin,"%lf",&(psr->TNDMGam));
   else if (strcasecmp(str,"TNDMC")==0) /* TempoNest Red noise spectral index */
         fscanf(fin,"%d",&(psr->TNDMC));
-    else if(strcasecmp(str,"TNsubtractDM")==0)
+  else if(strcasecmp(str,"TNsubtractDM")==0)
         fscanf(fin,"%d",&(psr->TNsubtractDM));
 
-
+   /* /---------\
+     | TNDMEvents |
+     \---------/ */
+     
+  else if (strcasecmp(str,"TNDMEvent")==0){ /* TempoNest DM Event Start position */   
+  	 int nTNDMEv = psr->nDMEvents;
+  	 fscanf( fin, "%lf %lf %lf %lf", 
+  	          &psr->TNDMEvStart[nTNDMEv],
+              &psr->TNDMEvLength[nTNDMEv],
+              &psr->TNDMEvAmp[nTNDMEv],
+              &psr->TNDMEvGam[nTNDMEv] );
+  	 ( psr->nDMEvents )++;
+	}    
+     
 
   /* ----------------- */
   /* Binary Parameters */
