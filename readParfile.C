@@ -1139,7 +1139,25 @@ else if (strcasecmp(str,"_DM")==0)
 
 	( psr->nDMEvents )++;
 	}    
+
+
+
+
+   /* /----------------\
+     | TNDMShapeEvents |
+     \-----------------/ */
+
      
+  else if (strcasecmp(str,"TNDMShapeEvent")==0){ /* TempoNest DM Shapelet Event Start position */   
+	int nTNDMEv = psr->nDMShapeEvents;
+	fscanf( fin, "%d %lf %lf", 
+		&psr->TNDMShapeEvN[nTNDMEv],
+		&psr->TNDMShapeEvPos[nTNDMEv],
+		&psr->TNDMShapeEvWidth[nTNDMEv]);
+
+	( psr->nDMShapeEvents )++;
+	}        
+
 
   /* ----------------- */
   /* Binary Parameters */

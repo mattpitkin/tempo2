@@ -2938,6 +2938,39 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 
 #ifdef HAVE_LAPACK
 #ifdef HAVE_BLAS
+
+
+
+void othpl(int n,double x,double *pl){
+
+
+        double a=2.0;
+        double b=0.0;
+        double c=1.0;
+        double y0=1.0;
+        double y1=2.0*x;
+        pl[0]=1.0;
+        pl[1]=2.0*x;
+
+
+
+        for(int k=2;k<n;k++){
+
+                double c=2.0*(k-1.0);
+                double yn=(a*x+b)*y1-c*y0;
+                pl[k]=yn;
+                y0=y1;
+                y1=yn;
+
+        }
+
+
+
+}
+
+
+
+
 void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 	int subDM=pulse->TNsubtractDM;
@@ -3281,11 +3314,21 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	}
 
 
+	int DMShapeEventTerms=0;
+	if(pulse->nDMShapeEvents > 0){
+		for(int i =0; i < pulse->nDMShapeEvents; i++){
+			DMShapeEventTerms += pulse->TNDMShapeEvN[i];
+		}	
+
+	}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////  
 //////////////////////Form Total Matrix///////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
-	int totalsize=numtofit+totCoeff+DMEventQuadTerms;
+	int totalsize=numtofit+totCoeff+DMEventQuadTerms+DMShapeEventTerms;
+
 	double **TotalMatrix=new double*[pulse->nobs];
 	for(int i =0;i<pulse->nobs;i++){
 		TotalMatrix[i]=new double[totalsize];
@@ -3294,8 +3337,11 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		}
 	}
 	
-
+	
 	for(int i =0;i<pulse->nobs;i++){
+
+		double time=((double)pulse->obsn[i].bat);
+
 		for(int j =0;j<numtofit; j++){
 			TotalMatrix[i][j]=TNDM[i][j];
 		}
@@ -3306,7 +3352,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 		int DMEvterms=0;
 		for(int e =0; e < pulse->nDMEvents; e++){
-			double time=((double)pulse->obsn[i].bat);
 			if(time < DMEventInfo[e][0]+DMEventInfo[e][1] && time > DMEventInfo[e][0]){
 				if(pulse->TNDMEvOff[e]==1){	
 					TotalMatrix[i][numtofit+totCoeff+DMEvterms]=DMVec[i];
@@ -3322,7 +3367,35 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 				}
 			}
 		}
+
+		int DMShapeEvterms=0;
+		for(int e =0; e < pulse->nDMShapeEvents; e++){
+			double *DMshapeVec =  new double[pulse->TNDMShapeEvN[e]];
+			double HVal=(time-pulse->TNDMShapeEvPos[e])/(sqrt(2.0)*pulse->TNDMShapeEvWidth[e]);
+			othpl(pulse->TNDMShapeEvN[e],HVal,DMshapeVec);
+			for(int s=0; s < pulse->TNDMShapeEvN[e]; s++){
+				double NormTerm=1.0/sqrt(sqrt(2.0*M_PI)*pow(2.0,s));
+				TotalMatrix[i][numtofit+totCoeff+DMEventQuadTerms+DMShapeEvterms] = NormTerm*DMshapeVec[s]*exp(-0.5*pow((time-pulse->TNDMShapeEvPos[e])/pulse->TNDMShapeEvWidth[e], 2))*DMVec[i];
+				
+				DMShapeEvterms++;
+
+			}
+			delete[] DMshapeVec;
+		}
 	}
+
+//////////////////////////////////////////////////////////////////////////////////////////  
+//////////////////////Get Residuals Vector////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+
+	double *Resvec=new double[pulse->nobs];
+	for(int o=0;o<pulse->nobs; o++){
+		Resvec[o]=(double)pulse->obsn[o].residual;
+		pulse->obsn[o].prefitResidual = pulse->obsn[o].residual;
+	}
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////  
 //////////////////////Get White Noise Vector//////////////////////////////////////////////
@@ -3365,11 +3438,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	dpotri(GNG,totalsize);
 
 
-	double *Resvec=new double[pulse->nobs];
-	for(int o=0;o<pulse->nobs; o++){
-		Resvec[o]=(double)pulse->obsn[o].residual;
-		pulse->obsn[o].prefitResidual = pulse->obsn[o].residual;
-	}
 
 
 	double *dG=new double[totalsize];
@@ -3416,6 +3484,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		double dmsum=0;
 		double dmerr=0;
                 for(int j=0;j<totalsize; j++){
+			
                         dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
 			if(j>=numtofit && j < numtofit+FitRedCoeff){
 				redsum+=TotalMatrix[i][j]*maxcoeff[j];
@@ -3528,6 +3597,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	delete[] FMatrix;
 
 }
+
 
 void dgesvd(double **A, int m, int n, double *S, double **U, double **VT)
 {
