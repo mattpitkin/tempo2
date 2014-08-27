@@ -1928,12 +1928,22 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
 	  }
 	  else
 		 parameter->prefitErr[arr] = parse_longdouble(str2);
+	  
    }
    else if (nread==3)
    {
 	  sscanf(str2,"%d",&(parameter->fitFlag[arr]));
+	  parameter->err[arr] = 0.0;
 	  parameter->prefitErr[arr] = parse_longdouble(str3);
    }
+   if (strcasecmp(pmtr,"RAJ")==0){
+	  // convert to radians
+	  parameter->prefitErr[arr]/=(12.0*60.0*60.0/M_PI);
+   } else if (strcasecmp(pmtr,"DECJ")==0){
+	  // convert to radians
+	  parameter->prefitErr[arr]/=(180*60.0*60.0/M_PI);
+   }
+
    if (strcasecmp(pmtr,"P0")==0 || strcasecmp(pmtr,"P")==0) /* Must invert frequency */
    {
 	  parameter->val[arr] = 1.0/parameter->val[arr];
