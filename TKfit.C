@@ -112,6 +112,15 @@ double TKleastSquares(double* b, double* white_b,
    int i,j,k;
 
    logdbg("TKleastSquares n=%d nf=%d",n,nf);
+   if(nf > n){
+	  logerr("Number of fit parameters exceeds number of data points\nFit will crash");
+	  for (k=0;k<nf;k++)outP[k]=0;
+	  for (k=0;k<nf;k++)e[k]=0;
+	  for (i=0;i<nf;i++){
+		 for (k=0;k<nf;k++)cvm[i][k]=0;
+	  }
+	  return 0;
+   }
    // quad precision arrays for fitting.
    longdouble svd_V[n];
    longdouble **svd_M=malloc_2dLL(n,nf);

@@ -158,7 +158,7 @@ float TKfindRMS_f(float *x,int n)
   return sdev;
 }
 
-float TKfindRMS_d(double *x,int n)
+double TKfindRMS_d(double *x,int n)
 {
   int i;
   double mean,sdev=0.0;
