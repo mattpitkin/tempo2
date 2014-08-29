@@ -3551,7 +3551,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		
 		double pDotErr=0;
 		pDotErr+=pow(TempoErr[0],2);
-		printf("Adding phase error: %g %g \n",TempoCoeff[0], TempoErr[0]);
 		if(pulse->param[param_f].paramSet[0]==1){
 			arg=((pulse->obsn[i].bat - pulse->param[param_pepoch].val[0])/pulse[0].param[param_f].val[0])*86400.0;
 			pDotErr+=pow((double)(pulse->param[param_f].err[0]*arg),2);
