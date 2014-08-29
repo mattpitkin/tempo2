@@ -3321,13 +3321,19 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		}	
 
 	}
+	int RedShapeEventTerms=0;
+	if(pulse->nRedShapeEvents > 0){
+		for(int i =0; i < pulse->nRedShapeEvents; i++){
+			RedShapeEventTerms += pulse->TNRedShapeEvN[i];
+		}	
 
+	}
 
 //////////////////////////////////////////////////////////////////////////////////////////  
 //////////////////////Form Total Matrix///////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
 
-	int totalsize=numtofit+totCoeff+DMEventQuadTerms+DMShapeEventTerms;
+	int totalsize=numtofit+totCoeff+DMEventQuadTerms+DMShapeEventTerms+RedShapeEventTerms;
 
 	double **TotalMatrix=new double*[pulse->nobs];
 	for(int i =0;i<pulse->nobs;i++){
@@ -3339,48 +3345,73 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	
 	
 	for(int i =0;i<pulse->nobs;i++){
-
+		int startpoint=0;
 		double time=((double)pulse->obsn[i].bat);
 
 		for(int j =0;j<numtofit; j++){
 			TotalMatrix[i][j]=TNDM[i][j];
 		}
 		
+		startpoint+=numtofit;		
 		for(int j =0;j<totCoeff; j++){
-			TotalMatrix[i][j+numtofit]=FMatrix[i][j];
+			TotalMatrix[i][j+startpoint]=FMatrix[i][j];
 		}
-
+		
+	    startpoint += totCoeff;
 		int DMEvterms=0;
 		for(int e =0; e < pulse->nDMEvents; e++){
 			if(time < DMEventInfo[e][0]+DMEventInfo[e][1] && time > DMEventInfo[e][0]){
 				if(pulse->TNDMEvOff[e]==1){	
-					TotalMatrix[i][numtofit+totCoeff+DMEvterms]=DMVec[i];
+					TotalMatrix[i][startpoint+DMEvterms]=DMVec[i];
 					DMEvterms++;
 				}
 				if(pulse->TNDMEvLin[e]==1){	
-					TotalMatrix[i][numtofit+totCoeff+DMEvterms]=(time-DMEventInfo[e][0])*DMVec[i];
+					TotalMatrix[i][startpoint+DMEvterms]=(time-DMEventInfo[e][0])*DMVec[i];
 					DMEvterms++;
 				}
 				if(pulse->TNDMEvQuad[e]==1){	
-					TotalMatrix[i][numtofit+totCoeff+DMEvterms]=pow((time-DMEventInfo[e][0]),2)*DMVec[i];
+					TotalMatrix[i][startpoint+DMEvterms]=pow((time-DMEventInfo[e][0]),2)*DMVec[i];
 					DMEvterms++;
 				}
 			}
 		}
 
+		startpoint += DMEventQuadTerms;
 		int DMShapeEvterms=0;
 		for(int e =0; e < pulse->nDMShapeEvents; e++){
+		
 			double *DMshapeVec =  new double[pulse->TNDMShapeEvN[e]];
 			double HVal=(time-pulse->TNDMShapeEvPos[e])/(sqrt(2.0)*pulse->TNDMShapeEvWidth[e]);
 			othpl(pulse->TNDMShapeEvN[e],HVal,DMshapeVec);
+			
 			for(int s=0; s < pulse->TNDMShapeEvN[e]; s++){
+			
 				double NormTerm=1.0/sqrt(sqrt(2.0*M_PI)*pow(2.0,s));
-				TotalMatrix[i][numtofit+totCoeff+DMEventQuadTerms+DMShapeEvterms] = NormTerm*DMshapeVec[s]*exp(-0.5*pow((time-pulse->TNDMShapeEvPos[e])/pulse->TNDMShapeEvWidth[e], 2))*DMVec[i];
+				TotalMatrix[i][startpoint+DMShapeEvterms] = NormTerm*DMshapeVec[s]*exp(-0.5*pow((time-pulse->TNDMShapeEvPos[e])/pulse->TNDMShapeEvWidth[e], 2))*DMVec[i];
 				
 				DMShapeEvterms++;
 
 			}
 			delete[] DMshapeVec;
+		}
+		
+		startpoint += DMShapeEvterms;
+		int RedShapeEvterms=0;
+		for(int e =0; e < pulse->nRedShapeEvents; e++){
+		
+			double *RedShapeVec =  new double[pulse->TNRedShapeEvN[e]];
+			double HVal=(time-pulse->TNRedShapeEvPos[e])/(sqrt(2.0)*pulse->TNRedShapeEvWidth[e]);
+			othpl(pulse->TNRedShapeEvN[e],HVal,RedShapeVec);
+			
+			for(int s=0; s < pulse->TNRedShapeEvN[e]; s++){
+			
+				double NormTerm=1.0/sqrt(sqrt(2.0*M_PI)*pow(2.0,s));
+				TotalMatrix[i][startpoint+RedShapeEvterms] = NormTerm*RedShapeVec[s]*exp(-0.5*pow((time-pulse->TNRedShapeEvPos[e])/pulse->TNRedShapeEvWidth[e], 2));
+				
+				RedShapeEvterms++;
+
+			}
+			delete[] RedShapeVec;
 		}
 	}
 
@@ -3477,40 +3508,50 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	double chisq=0;
 	printf("subtractRed is %i \n", pulse->TNsubtractRed);
 	printf("subtractDM is %i \n", pulse->TNsubtractDM);
+	
         for(int i=0;i<pulse->nobs;i++){
-                double dsum=0;
-		double redsum=0;
-		double rederr=0;
-		double dmsum=0;
-		double dmerr=0;
-                for(int j=0;j<totalsize; j++){
+            double dsum=0;
+			double redsum=0;
+			double rederr=0;
+			double dmsum=0;
+			double dmerr=0;
+            for(int j=0;j<totalsize; j++){
 			
-                        dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
-			if(j>=numtofit && j < numtofit+FitRedCoeff){
-				redsum+=TotalMatrix[i][j]*maxcoeff[j];
-				rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
-			}
-			if(j>=FitRedCoeff+numtofit && j < totalsize){
-                                dmsum+=TotalMatrix[i][j]*maxcoeff[j];
-				dmerr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
-                        }
-
-                }
-
+                  dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
+                        
+				if(j>=numtofit && j < numtofit+FitRedCoeff){
+					redsum+=TotalMatrix[i][j]*maxcoeff[j];
+					rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
+				}
+				if(j>=FitRedCoeff+numtofit && j < numtofit+totCoeff+DMEventQuadTerms+DMShapeEventTerms){
+               	    dmsum+=TotalMatrix[i][j]*maxcoeff[j];
+					dmerr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
+            	}
+				if(j>=numtofit+totCoeff+DMEventQuadTerms+DMShapeEventTerms && j < totalsize){
+					redsum+=TotalMatrix[i][j]*maxcoeff[j];
+					rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
+				}
+       		}
                 double freq=(double)pulse->obsn[i].freqSSB;
                 long double yrs = (pulse->obsn[i].bat - pulse->param[param_dmepoch].val[0])/365.25;
                 long double arg = 1.0;
                 double dmDot=0;
                 double dmDotErr=0;
-                for (int d=1;d<9;d++){
-                        arg *= yrs;
+                for (int d=0;d<9;d++){
+			if(d>0){
+                        	arg *= yrs;
+			}
                         if (pulse->param[param_dm].paramSet[d]==1){
-                                dmDot+=(double)(pulse->param[param_dm].val[d]*arg);
+				if(d>0){
+                                	dmDot+=(double)(pulse->param[param_dm].val[d]*arg);
+				}
                                 dmDotErr+=pow((double)(pulse->param[param_dm].err[d]*arg),2);
                         }
                 }
 		
 		double pDotErr=0;
+		pDotErr+=pow(TempoErr[0],2);
+		printf("Adding phase error: %g %g \n",TempoCoeff[0], TempoErr[0]);
 		if(pulse->param[param_f].paramSet[0]==1){
 			arg=((pulse->obsn[i].bat - pulse->param[param_pepoch].val[0])/pulse[0].param[param_f].val[0])*86400.0;
 			pDotErr+=pow((double)(pulse->param[param_f].err[0]*arg),2);

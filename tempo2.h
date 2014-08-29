@@ -600,6 +600,13 @@ typedef struct pulsar {
   double TNDMShapeEvPos[MAX_TNDMEv];  //central position
   double TNDMShapeEvWidth[MAX_TNDMEv];  //Overall Width 
   
+  
+   //RedShapeEvent Parameters
+  int nRedShapeEvents;
+  int TNRedShapeEvN[MAX_TNDMEv];  //Numbers of terms in the event
+  double TNRedShapeEvPos[MAX_TNDMEv];  //central position
+  double TNRedShapeEvWidth[MAX_TNDMEv];  //Overall Width 
+  
   // White noise models
   char whiteNoiseModelFile[MAX_STRLEN];
 

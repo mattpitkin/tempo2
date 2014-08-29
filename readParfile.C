@@ -1158,7 +1158,22 @@ else if (strcasecmp(str,"_DM")==0)
 	( psr->nDMShapeEvents )++;
 	}        
 
+   /* /----------------\
+     | TNRedShapeEvents|
+     \-----------------/ */
 
+     
+  else if (strcasecmp(str,"TNRedShapeEvent")==0){ /* TempoNest Red Shapelet Event Start position */   
+	int nTNRedEv = psr->nRedShapeEvents;
+	fscanf( fin, "%d %lf %lf", 
+		&psr->TNRedShapeEvN[nTNRedEv],
+		&psr->TNRedShapeEvPos[nTNRedEv],
+		&psr->TNRedShapeEvWidth[nTNRedEv]);
+
+	( psr->nRedShapeEvents )++;
+	}
+	
+	
   /* ----------------- */
   /* Binary Parameters */
   /* ----------------- */
