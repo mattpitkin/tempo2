@@ -34,7 +34,7 @@
 #include "T2toolkit.h"
 #include "tempo2.h"
 #include "toasim.h"
-
+#include "TKfit.h"
 
 #define MAX_STEP 100
 
@@ -42,6 +42,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
+  double epochs[MAX_OBSN];
   int i,nit,j,p;
   char fname[MAX_FILELEN];
   double globalParameter;
@@ -55,6 +56,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   toasim_header_t* read_header;
   FILE* file;
   double offsets[MAX_OBSN]; // Will change to doubles - should use malloc
+  double mean=0.0;
   // Create a set of corrections.
   toasim_corrections_t* corr = (toasim_corrections_t*)malloc(sizeof(toasim_corrections_t));
   
@@ -160,6 +162,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       
       for (i=0;i<nit;i++)
 	{
+	  mean=0;
 	  if(i%10 == 0){
 	    printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 	    printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
@@ -167,16 +170,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    fflush(stdout);
 	  }
 	  
-	  
+	  t0 = (double)psr[p].obsn[0].sat;
 
 	  for (j=0;j<psr[p].nobs;j++)
 	    {
-	      t= (psr[p].obsn[j].sat-psr[p].param[param_pepoch].val[0])*86400.0;
+	      t= (psr[p].obsn[j].sat-t0)*86400.0;
 	      // Calculate nudot at time t
 	      sw=1;
 	      for (ii=0;ii<nStep;ii++)
 		{
-		  if (t > stepTime[ii])
+		  if (psr[p].obsn[j].sat > stepTime[ii])
 		    sw*=-1;
 		}
 	      if (sw == 1)
@@ -190,7 +193,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      nSwitch=0;
 	      for (ii=0;ii<nStep;ii++)
 		{
-		  if (stepTime[ii] < t) {nSwitch++;}
+		  if (stepTime[ii] < psr[p].obsn[j].sat) {nSwitch++;}
 		}
 	      nu0 = f0;
 	      initialT = t0;
@@ -199,7 +202,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      nuSwitch[0] = nu0;
 	      for (ii=0;ii<nSwitch;ii++)
 		{
-		  nu0 = nu0 + nudot_now*(stepTime[ii]-initialT);
+		  nu0 = nu0 + nudot_now*(stepTime[ii]-initialT)*86400.0;
 		  nuSwitch[ii+1] = nu0;
 		  sw*=-1;
 		  if (sw==1)
@@ -209,7 +212,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  initialT = stepTime[ii];
 		}
 	      // Now do the last bit
-	      nu = nu0 + nudot_now*(t - initialT);
+	      nu = nu0 + nudot_now*(psr[p].obsn[j].sat - initialT)*86400.0;
 	      
 	      // Now calculate phase at time t
 	      // Dealing with all the switches
@@ -233,21 +236,27 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  else
 		    nudot_now = f1_2;
 		  
-		  phase += (deltaT*fb)+0.5*deltaT*fabs(fa-fb);
+		  phase += (deltaT*86400.0*fb)+0.5*deltaT*86400.0*fabs(fa-fb);
 		  initialT = stepTime[ii];
 		}
 	      // Now do last bit
-	      deltaT = t-initialT;
+	      deltaT = (psr[p].obsn[j].sat-initialT)*86400.0;
 	      fa = fb;
 	      fb = fa+deltaT*nudot_now;
 	      phase += fb*deltaT+0.5*deltaT*fabs(fa-fb);
-	      phase = phase - floor(phase);
+	      //	      phase = phase - floor(phase);
 	      
-	      printf("%g %g %d %g %g\n",t,nudot,nSwitch,nu,phase);
+	      printf("initial %g %g %d %.15f %.15f %g\n",(double)psr[p].obsn[j].sat,nudot,nSwitch,nu,phase,f0);
+	      epochs[j] = (double)(psr[p].obsn[j].sat-psr[p].param[param_pepoch].val[0]);
 	      offsets[j] = (double)(phase);
+	      mean+=offsets[j];
 	    }
-	    
-	    
+	  for (j=0;j<psr[p].nobs;j++)
+	    offsets[j]-=mean/(double)psr[p].nobs;
+	  TKremovePoly_d(epochs,offsets,psr[p].nobs,3);
+
+	  for (j=0;j<psr[p].nobs;j++)
+	    printf("value = %g %.15f\n",epochs[j],offsets[j]);
 
 
 
