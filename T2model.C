@@ -486,6 +486,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
           if (param==param_pb)	         return -csigma*an*SECDAY*tt0/pb; 
           else if (param==param_a1)      return cx;
           else if (param==param_ecc)     return ce;
+          else if (param==param_edot)     return ce*tt0;
           else if (param==param_om)      return comega;
           else if (param==param_omdot)   
             return ae*comega/(an*360.0/(2.0*M_PI)*365.25*SECDAY);
@@ -574,7 +575,7 @@ void updateT2(pulsar *psr,double val,double err,int pos,int arr){
       pos==param_sini || pos==param_m2 || pos == param_gamma || 
       pos==param_eps1 || pos==param_eps2 || pos==param_tasc ||
       pos == param_bpjph || pos==param_bpja1 || pos==param_bpjec || 
-      pos==param_bpjom || pos == param_bpjpb || pos==param_shapmax || pos==param_h3 || pos==param_h4 || pos==param_stig){
+      pos==param_bpjom || pos == param_bpjpb || pos==param_shapmax || pos==param_h3 || pos==param_h4 || pos==param_stig || pos==param_edot){
     psr->param[pos].val[arr] += val;
     psr->param[pos].err[arr]  = err;
   }

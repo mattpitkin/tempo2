@@ -175,6 +175,8 @@ long double DDmodel(pulsar *psr,int p,int ipos,int param)
     return cx;
   else if (param==param_ecc)
     return ce;
+  else if (param==param_edot)
+    return ce*tt0;
   else if (param==param_om)
     return comega;
   else if (param==param_omdot)
@@ -204,7 +206,7 @@ void updateDD(pulsar *psr,double val,double err,int pos)
       psr->param[param_pb].err[0]  = err/SECDAY;
     }
   else if (pos==param_a1 || pos==param_ecc || pos==param_t0 || pos==param_sini || pos==param_m2
-	   || pos == param_gamma)
+	   || pos == param_gamma || pos==param_edot)
     {
       psr->param[pos].val[0] += val;
       psr->param[pos].err[0]  = err;
