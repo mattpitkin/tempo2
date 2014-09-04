@@ -184,6 +184,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    {
 	      if (minx > (double)psr[0].obsn[i].sat) minx = (double)psr[0].obsn[i].sat;
 	      if (maxx < (double)psr[0].obsn[i].sat) maxx = (double)psr[0].obsn[i].sat;
+	      if (psr[0].obsn[i].toaErr > maxEquad){
+		printf("WARNING: maxEquad = %g is less than error bar size for observation %d of %g. Probably should increase EQUAD\n",maxEquad,i,psr[0].obsn[i].toaErr);
+	      }
 	    }
 	}
     }
@@ -254,10 +257,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
       if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
-      else textOutput(psr,*npsr,globalParameter,0,0,1,(char *)"try.par");  /* Display the output */
+      else textOutput(psr,*npsr,globalParameter,0,0,1,(char *)"efacEquad_try.par");  /* Display the output */
       //      else textOutput(psr,*npsr,globalParameter,0,0,0,(char *)"");  /* Display the output */
     }
   printf("Step 1\n");
+  
+
   // Determine how many different flags to process
   if (group==0)
     {
