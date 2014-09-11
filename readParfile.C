@@ -1144,35 +1144,20 @@ else if (strcasecmp(str,"_DM")==0)
 
 
    /* /----------------\
-     | TNDMShapeEvents |
+     | TNShapeletEvents |
      \-----------------/ */
 
      
-  else if (strcasecmp(str,"TNDMShapeEvent")==0){ /* TempoNest DM Shapelet Event Start position */   
-	int nTNDMEv = psr->nDMShapeEvents;
-	fscanf( fin, "%d %lf %lf", 
-		&psr->TNDMShapeEvN[nTNDMEv],
-		&psr->TNDMShapeEvPos[nTNDMEv],
-		&psr->TNDMShapeEvWidth[nTNDMEv]);
+  else if (strcasecmp(str,"TNShapeletEvent")==0){ /* TempoNest DM Shapelet Event Start position */   
+	int nTNEv = psr->nTNShapeletEvents;
+	fscanf( fin, "%d %lf %lf %lf", 
+		&psr->TNShapeletEvN[nTNEv],
+		&psr->TNShapeletEvPos[nTNEv],
+		&psr->TNShapeletEvWidth[nTNEv],
+		&psr->TNShapeletEvFScale[nTNEv]);
 
-	( psr->nDMShapeEvents )++;
+	( psr->nTNShapeletEvents )++;
 	}        
-
-   /* /----------------\
-     | TNRedShapeEvents|
-     \-----------------/ */
-
-     
-  else if (strcasecmp(str,"TNRedShapeEvent")==0){ /* TempoNest Red Shapelet Event Start position */   
-	int nTNRedEv = psr->nRedShapeEvents;
-	fscanf( fin, "%d %lf %lf", 
-		&psr->TNRedShapeEvN[nTNRedEv],
-		&psr->TNRedShapeEvPos[nTNRedEv],
-		&psr->TNRedShapeEvWidth[nTNRedEv]);
-
-	( psr->nRedShapeEvents )++;
-	}
-	
 	
   /* ----------------- */
   /* Binary Parameters */

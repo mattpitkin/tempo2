@@ -57,7 +57,7 @@
 #define MAX_T2EQUAD          100    /* Maximum number of T2EQUADs allowed               */
 #define MAX_TNEF           50    /* Maximum number of TNEFACs allowed                */
 #define MAX_TNEQ          50    /* Maximum number of TNEQUADs allowed               */
-#define MAX_TNDMEv		   1    /*Maximum number of TNDMEvents allowed */
+#define MAX_TNDMEv		   10    /*Maximum number of TNDMEvents allowed */
 #define MAX_TNSQ          50    /* Maximum number of TNEQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
@@ -594,18 +594,15 @@ typedef struct pulsar {
   int TNDMEvLin[MAX_TNDMEv];
   int TNDMEvQuad[MAX_TNDMEv];
   
-   //DMShapeEvent Parameters
-  int nDMShapeEvents;
-  int TNDMShapeEvN[MAX_TNDMEv];  //Numbers of terms in the event
-  double TNDMShapeEvPos[MAX_TNDMEv];  //central position
-  double TNDMShapeEvWidth[MAX_TNDMEv];  //Overall Width 
+   //ShapeletEvent Parameters
+  int nTNShapeletEvents;
+  int TNShapeletEvN[MAX_TNDMEv];  //Numbers of terms in the event
+  double TNShapeletEvPos[MAX_TNDMEv];  //central position
+  double TNShapeletEvWidth[MAX_TNDMEv];  //Overall Width 
+  double TNShapeletEvFScale[MAX_TNDMEv];  //Scaling dependence with observational frequency
+
   
   
-   //RedShapeEvent Parameters
-  int nRedShapeEvents;
-  int TNRedShapeEvN[MAX_TNDMEv];  //Numbers of terms in the event
-  double TNRedShapeEvPos[MAX_TNDMEv];  //central position
-  double TNRedShapeEvWidth[MAX_TNDMEv];  //Overall Width 
   
   // White noise models
   char whiteNoiseModelFile[MAX_STRLEN];
