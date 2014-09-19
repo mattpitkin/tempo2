@@ -1,6 +1,6 @@
 To build this software you need these packages:
 
-Debian: autoconf automake libtool liblapack libblas libX11 gcc gfortran g++ libz gawk
+Debian: autoconf automake libtool liblapack libblas libX11 gcc gfortran g++ libz gawk libltdl-dev
 Optional libfftw3 cfitsio pgplot5 libgsl libdgemm (or libcxml) libatlas
 
 
