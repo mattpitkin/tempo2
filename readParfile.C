@@ -1100,6 +1100,19 @@ else if (strcasecmp(str,"_DM")==0)
               &psr->TNSQVal[nequadFlag] );
       ( psr->nTNSQ )++;
     }
+  
+  /* /---------\
+     | TN ECORR |
+     \---------/ */
+  else if( strcasecmp( str, "ECORR") == 0 || strcasecmp( str, "TNECORR") == 0)  
+	  // ECORR for given flag
+    {
+      int necorrFlag = psr->nTNECORR;
+      fscanf( fin, "%s %s %lf", psr->TNECORRFlagID[necorrFlag],
+              psr->TNECORRFlagVal[necorrFlag],
+              &psr->TNECORRVal[necorrFlag] );
+      ( psr->nTNECORR )++;
+    }
 
    /* /---------\
      | TN Noise |
@@ -1121,6 +1134,24 @@ else if (strcasecmp(str,"_DM")==0)
         fscanf(fin,"%d",&(psr->TNDMC));
   else if(strcasecmp(str,"TNsubtractDM")==0)
         fscanf(fin,"%d",&(psr->TNsubtractDM));
+  else if(strcasecmp(str,"RNAMP")==0){ /* compatibility with tempo RN notation */
+	printf("\nWARNING: Using tempo RNAMP parameter: setting TNRedC to 100!\n");
+	
+	char tmpstr[1000];
+	fscanf(fin,"%s", tmpstr);
+	for (int i=0;i<(int)strlen(tmpstr);i++)
+	{
+	 if (tmpstr[i]=='D' || tmpstr[i]=='d')
+		tmpstr[i]='e';
+	}
+	sscanf(tmpstr,"%lf",&(psr->TNRedAmp));
+	psr->TNRedAmp = log10(2.0*M_PI*pow(3.0,0.5)/(86400.0*365.25*1e6)*psr->TNRedAmp);
+	psr->TNRedC = 100; /* Since tempo doesn't have this just hard-code to 100 */
+  }
+  else if (strcasecmp(str,"RNIDX")==0){ /* Tempo Red noise spectral index */
+	fscanf(fin,"%lf",&(psr->TNRedGam));
+	psr->TNRedGam *= -1.0; /* Flip sign convention */
+  }
 
    /* /---------\
      | TNDMEvents |
