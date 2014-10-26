@@ -555,7 +555,7 @@ int getNglobal(pulsar *psr,int npsr){
 				{
 					if (i!=param_wave_om && i!= param_ifunc && i!=param_quad_om &&
 							i!=param_tel_dx && i!= param_tel_dy && i!=param_tel_dz &&
-							i!=param_quad_ifunc_p && i!=param_quad_ifunc_c && i!=param_gwsingle)
+					    i!=param_quad_ifunc_p && i!=param_quad_ifunc_c && i!=param_gwsingle && i!=param_wave_dm)
 					{
 						psr->fitParamI[nGlobal]  = i;
 						psr->fitParamK[nGlobal]  = k;
@@ -573,6 +573,16 @@ int getNglobal(pulsar *psr,int npsr){
 		{psr->fitParamI[nGlobal+i]  = param_wave_om; psr->fitParamK[nGlobal+i]  = i;}
 		nGlobal+=psr[0].nWhite*2;
 	}
+	if (psr[0].param[param_wave_dm].fitFlag[0]==2)
+	  {
+	    for (i=0;i<psr->nWhite_dm*2;i++)
+	      {psr->fitParamI[nGlobal+i]  = param_wave_dm; psr->fitParamK[nGlobal+i]  = i;}
+	    nGlobal+=psr[0].nWhite_dm*2;
+	  }
+
+	
+
+
 
 	if (psr[0].param[param_ifunc].fitFlag[0]==2){
 		for (i=0;i<psr->ifuncN;i++)
@@ -702,6 +712,16 @@ int getNparams(pulsar *psr,int offset)
 			npol+=psr->nWhite*2-1;      
 		}
 	}
+	 if (psr->param[param_wave_dm].fitFlag[0]==1)
+	   {
+	
+	for (i=0;i<psr->nWhite_dm*2-1;i++)
+	  {psr->fitParamI[npol+i+offset]  = param_wave_dm; psr->fitParamK[npol+i+offset]  = i;}
+	npol+=psr->nWhite_dm*2-1;
+	
+      }
+
+
 	if (psr->param[param_quad_om].fitFlag[0]==1)
 	{
 		for (i=0;i<psr->nQuad*4-1;i++)
@@ -825,6 +845,16 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int p){
 						c++;
 					}
 				}
+
+				else if (i==param_wave_dm)
+				  {
+				    for (kk=0;kk<2*psr[0].nWhite_dm;kk++)
+				      {
+					afunc[c]= getParamDeriv(&psr[p],ipos,x+(double)psr[p].param[param_pepoch].val[0] - (double)psr[0].param[param_waveepoch_dm].val[0],i,kk);
+					c++;
+				      }
+				  }
+
 				else if(i==param_ifunc){
 					for (j=0;j<psr[p].ifuncN;j++)
 					{
@@ -954,9 +984,9 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr)
 		{
 			if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]==1) /* If we are fitting for this parameter */
 			{
-				if (i!=param_start && i!=param_finish)
-				{
-
+			  if (i!=param_start && i!=param_finish)
+			    {
+				  
 					logdbg("Fitting for %d (%s)",i,psr->param[i].label[k]);
 					if (i==param_wave_om)
 					{
@@ -972,6 +1002,16 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr)
 								afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
 						}
 					}
+					else if (i==param_wave_dm)
+					  {
+					    
+
+					    fprintf(stderr, "here\n");
+					      exit(0);
+					    for (j=0;j<psr->nWhite_dm*2;j++)
+					      afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+					    
+					  }
 					else if (i==param_quad_om)
 					{
 						for (j=0;j<psr->nQuad*4;j++)
@@ -1442,23 +1482,28 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
 	else if (i==param_wave_om) /* Whitening procedure using sinusoids */
 	{
-		double  Xoff = 0; // this Xoff is because x is referenced to pepoch not waveepoch!
-		if (psr->param[param_waveepoch].paramSet[0]){
-			Xoff = psr->param[param_waveepoch].val[0] - psr->param[param_pepoch].val[0];
-		}
-
-		double      om    = psr->param[param_wave_om].val[0];
-		if (psr->waveScale==0)
-		{
-			if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*(x-Xoff)); 
-			else        afunc = sin(om*(floor(k/2.0)+1)*(x-Xoff)); 
-			//	  printf("Value = %d %f %f %f %g\n",k,floor(k/2.0)+1,x,om,afunc);
-
-		}
-		else if (psr->waveScale==1)
-		{
-			double freq = psr->obsn[ipos].freqSSB/1.0e6;
-			if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
+	 
+	  double  Xoff = 0; // this Xoff is because x is referenced to pepoch not waveepoch!
+	  
+	  if (psr->param[param_waveepoch].paramSet[0]){
+	    Xoff = psr->param[param_waveepoch].val[0] - psr->param[param_pepoch].val[0];
+	  }
+	  
+	  //fprintf(stderr, "Xoff in paramderiv %.3e\n", Xoff);
+	  
+	  
+	  double      om    = psr->param[param_wave_om].val[0];
+	  if (psr->waveScale==0)
+	    {
+	      if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*(x-Xoff)); 
+	      else        afunc = sin(om*(floor(k/2.0)+1)*(x-Xoff)); 
+	      	  printf("Value = %d %f %f %f %g\n",k,floor(k/2.0)+1,x,om,afunc);
+	      
+	    }
+	  else if (psr->waveScale==1)
+	    {
+	      double freq = psr->obsn[ipos].freqSSB/1.0e6;
+	      if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
 			else afunc = sin(om*(floor(k/2.0)+1)*x)/(DM_CONST*freq*freq); 
 		}
 		else if (psr->waveScale==2)
@@ -1477,6 +1522,28 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 			}
 		}
 	}
+
+	   else if (i==param_wave_dm) /* Whitening procedure using sinusoids */
+	     {
+	  double  Xoff = 0; // this Xoff is because x is referenced to pepoch not waveepoch!
+	  if (psr->param[param_waveepoch_dm].paramSet[0]){
+	    Xoff = psr->param[param_waveepoch_dm].val[0] - psr->param[param_pepoch].val[0];
+	  }
+	  
+	  double      om    = psr->param[param_wave_dm].val[0];
+	  double freq = psr->obsn[ipos].freqSSB/1.0e6;
+	  if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*(x-Xoff))/(DM_CONST*freq*freq); 
+	  else        afunc = sin(om*(floor(k/2.0)+1)*(x-Xoff))/(DM_CONST*freq*freq); 
+	
+	  
+	  
+	  //  printf("Value = %d %f %f %f %g\n",k,floor(k/2.0)+1,x,om,afunc);
+
+	  
+	 
+	     }
+
+
 	else if (i==param_tel_dx)
 	{
 		double yoffs[MAX_TEL_DX];
@@ -1967,6 +2034,34 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 			//	  else if (k==3) afunc = resc*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
 		}
 	}
+
+	 else if (i== param_gwb_amp)
+     {
+       long double dt;
+       long double prefac;
+       if (psr->param[param_gwb_amp].paramSet[1]==1)
+	 {
+	   dt = (psr->obsn[ipos].bbat - psr->gwb_epoch)/psr->gwb_width;
+	   prefac = dt*exp( (double) -dt*dt/2.);
+	   
+	   if (k==0)
+	     {
+		 afunc = psr->gwb_geom_p*prefac;
+	       }
+	     else if (k==1)
+	       {
+		 afunc = psr->gwb_geom_c*prefac;
+	       }
+	     else
+	       { 
+		 afunc = 0;
+	       }
+	 }
+     }
+	
+
+	
+
 	else if (i==param_gwm_amp)
 	{
 		long double dt;
@@ -2242,6 +2337,28 @@ void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error){
 					}
 					offset--;
 				}
+				else if (i==param_wave_dm) /* Whitening procedure using sinusoids */
+				  {
+				    int k;
+				    //exit(0);
+				    
+				    
+				    for (k=0;k<psr[p].nWhite_dm;k++)
+				      {
+					//fprintf(stderr, "%.3e\n", val[j]);
+					psr[p].wave_cos_dm[k]  -= val[j]; 
+					psr[p].wave_cos_dm_err[k] = error[j]; j++;
+					psr[p].wave_sine_dm[k] -= val[j]; 
+					psr[p].wave_sine_dm_err[k] = error[j]; j++;	      
+				      }
+				    j--;  
+				    
+				    //exit(0);
+				  }
+
+
+			
+
 				else if (i==param_gwm_amp)
 				{
 					//			  printf("In here with offset = %d\n",offset);
@@ -2262,6 +2379,28 @@ void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error){
 					//			  offset++;
 
 				}
+				
+				else if (i==param_gwb_amp)
+					  {
+					    //			  printf("In here with offset = %d\n",offset);
+					    for (p=0;p<npsr;p++)
+					      {			      
+						if (psr[p].param[param_gwb_amp].paramSet[1]==1)
+						  {
+						    psr[p].param[i].val[k] -= val[offset];
+						    psr[p].param[i].err[k] = error[offset];
+						  }
+						else
+						  {
+						    psr[p].param[i].val[0] -= val[offset];
+						    psr[p].param[i].err[0] = error[offset];
+						  }
+					      }
+			  //			  printf("Setting %d %g %g\n",offset,val[offset],error[offset]);
+			  //			  offset++;
+
+			}
+
 
 				else if(i==param_ifunc) {
 					printf("Updating %d point\n",psr[0].ifuncN);
@@ -2569,7 +2708,9 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 				}	       
 				else if (i==param_wave_om) /* Whitening procedure using sinusoids */
 				{
-					int k;
+				
+				  /*
+				  int k;
 					for (k=0;k<psr[p].nWhite;k++)
 					{
 						psr[p].wave_cos[k]  -= val[j]; 
@@ -2587,7 +2728,72 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 						//		      j+=psr->nWhite*2; 
 					}
 					j--;
-				}		  
+
+				  */
+
+
+				  
+				  if (psr->waveScale != 2)
+				    {
+				      
+				      for (k=0;k<psr[p].nWhite;k++)
+					{
+					  fprintf(stderr, "%d %.3e \n", j, val[j]);
+					  psr[p].wave_cos[k]  -= val[j]; 
+					  psr[p].wave_cos_err[k] = error[j]; j++;
+					  psr[p].wave_sine[k] -= val[j]; 
+					  psr[p].wave_sine_err[k] = error[j]; j++;	      
+					}
+				    }
+				  else if(psr->waveScale==2) // Ignore the non-frequency derivative terms
+				    {
+				      
+				      
+				      for (k=0;k<psr[p].nWhite;k++)
+					{
+					  //printf("Ignoring cos %g %g\n",val[j],error[j]); j++;
+					  //printf("Ignoring sin %g %g\n",val[j],error[j]); j++;
+					  psr[p].wave_cos_dm[k]-= val[j];
+					  psr[p].wave_cos_dm_err[k]= error[j]; j++;
+					  psr[p].wave_sine_dm[k] -= val[j];
+					  psr[p].wave_sine_dm_err[k]= error[j]; j++;
+					}
+				      // now do timing noise terms
+				      for (k=0;k<psr[p].nWhite;k++)
+					{
+					  psr[p].wave_cos[k]  -= val[j]; 
+					  psr[p].wave_cos_err[k] = error[j]; j++;
+					  psr[p].wave_sine[k] -= val[j]; 
+					  psr[p].wave_sine_err[k] = error[j]; j++;	      
+					}
+				      
+				      //		      j+=psr->nWhite*2; 
+				    }
+				  j--;
+				  
+				}	
+
+
+				else if (i==param_wave_dm) /* Whitening procedure using sinusoids */
+				  {
+				    int k;
+				    //exit(0);
+				    
+				    
+				    for (k=0;k<psr[p].nWhite_dm;k++)
+				      {
+					//fprintf(stderr, "%.3e\n", val[j]);
+					psr[p].wave_cos_dm[k]  -= val[j]; 
+					psr[p].wave_cos_dm_err[k] = error[j]; j++;
+					psr[p].wave_sine_dm[k] -= val[j]; 
+					psr[p].wave_sine_dm_err[k] = error[j]; j++;	      
+				      }
+				    j--;  
+				    
+				    //exit(0);
+				  }
+
+	  
 				else if (i==param_ifunc) 
 				{
 					int k;
@@ -2740,6 +2946,25 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 						j++;
 					}
 				}
+
+				else if (i==param_gwb_amp)
+				  {
+				    printf("Should I be in here???\n");
+				    if (psr[p].param[param_gwb_amp].paramSet[1]==1)
+				      {
+					psr[p].param[i].val[k] -= val[j];
+					psr[p].param[i].err[k] = error[j];
+					j++;
+				      }
+				    else
+				      {
+					psr[p].param[i].val[0] -= val[j];
+					psr[p].param[i].err[0] = error[j];
+					j++;
+				      }
+				  }
+				
+
 				else if (i==param_dmmodel)
 				{
 					for (int k=0;k<psr[p].dmoffsDMnum;k++)
