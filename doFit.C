@@ -1497,7 +1497,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	    {
 	      if (k%2==0) afunc = cos(om*(floor(k/2.0)+1)*(x-Xoff)); 
 	      else        afunc = sin(om*(floor(k/2.0)+1)*(x-Xoff)); 
-	      	  printf("Value = %d %f %f %f %g\n",k,floor(k/2.0)+1,x,om,afunc);
+	      	  // printf("Value = %d %f %f %f %g\n",k,floor(k/2.0)+1,x,om,afunc);
 	      
 	    }
 	  else if (psr->waveScale==1)
