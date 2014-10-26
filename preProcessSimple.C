@@ -62,7 +62,27 @@ void preProcessSimple1 (pulsar *psr, int tempo1, double thelast)
 	}
       psr->param[param_wave_om].val[0] = 2.0*M_PI/(last-first)/
 	(1.0+4.0/(double)(psr->nWhite));
+      fprintf(stderr, "%.3e\n",   psr->param[param_wave_om].val[0]);
+     
     }
+
+
+   /* Check whitening */
+  if (psr->param[param_wave_dm].paramSet[0] == 1 && psr->param[param_wave_dm].val[0] == 0.0) /* Set fundamental frequency */
+    {  
+      longdouble first=-1,last=-1;
+      for (i=0;i<psr->nobs;i++)
+	{
+	  if (psr->obsn[i].deleted==0 && first==-1) first=psr->obsn[i].sat;
+	  if (psr->obsn[i].deleted==0 && last==-1)  last=psr->obsn[i].sat;
+	  if (psr->obsn[i].deleted==0 && psr->obsn[i].sat < first) first = psr->obsn[i].sat;
+	  if (psr->obsn[i].deleted==0 && psr->obsn[i].sat > last)   last = psr->obsn[i].sat;
+	}
+      psr->param[param_wave_dm].val[0] = 2.0*M_PI/(last-first)/
+	(1.0+4.0/(double)(psr->nWhite));
+    }
+
+
 
   /* Set tempo emulation mode */
   if (psr->param[param_ephver].paramSet[0]==1)

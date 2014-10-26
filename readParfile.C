@@ -642,6 +642,23 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       fscanf(fin,"%lf %lf",&psr->wave_sine[number-1],&psr->wave_cos[number-1]);
       if (psr->nWhite < number) psr->nWhite = number;
     }
+   else if (strcasecmp(str,"WAVDM_OM")==0) /* Fundamental frequency */
+    {
+      readValue(psr,str,fin,&(psr->param[param_wave_dm]),0);
+      //psr->waveScale = 0;
+    }
+  
+  else if (strstr(str,"WAVDM")!=NULL || strstr(str,"wavedm")!=NULL)
+    {
+      int number;
+      /* Obtain parameter number */
+      sscanf(str+5,"%d",&number);
+      fscanf(fin,"%lf %lf",&psr->wave_sine_dm[number-1],&psr->wave_cos_dm[number-1]);
+      if (psr->nWhite_dm < number) psr->nWhite_dm = number;
+    }
+  
+
+
   /* ------------------- */
   /* Quad polar function */
   /* ------------------- */ 
@@ -921,6 +938,22 @@ else if (strcasecmp(str,"_DM")==0)
 	 fscanf(fin,"%lf",&psr->gwm_phi);
   else if (strcasecmp(str,"GWM_DPHASE")==0)
 	 fscanf(fin,"%lf",&psr->gwm_dphase);
+   // Ryan's gw bursts
+    else if (strcasecmp(str,"GWB_AMP")==0)
+	 readValue(psr,str,fin,&(psr->param[param_gwb_amp]),0);
+  else if (strcasecmp(str,"GWB_A1")==0)
+    readValue(psr,str,fin,&(psr->param[param_gwb_amp]),0);
+  else if (strcasecmp(str,"GWB_A2")==0)
+    readValue(psr,str,fin,&(psr->param[param_gwb_amp]),1);
+  else if (strcasecmp(str,"GWB_POSITION")==0)
+	 fscanf(fin,"%lf %lf",&psr->gwb_raj,&psr->gwb_decj);
+  else if (strcasecmp(str,"GWB_EPOCH")==0)
+	 fscanf(fin,"%lf",&psr->gwb_epoch);
+  else if (strcasecmp(str,"GWB_WIDTH")==0)
+	 fscanf(fin,"%lf",&psr->gwb_width);
+  
+
+
   else if ((strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
 		&& strstr(str,"QIFUNC")==NULL)
   {
@@ -1524,6 +1557,27 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
 		 // Do nothing.
 	  }
    }
+       if (psr->param[param_waveepoch_dm].paramSet[0] == 0)
+   {
+	  // Do we need a value for waveepoch (and does waveepoch.paramSet
+	  // need to be unity), even when we're not using waves for
+	  // prewhitening?
+	  //
+	  // No we don't.
+	  if(psr->param[param_wave_dm].paramSet[0] == 1){
+		 copyParam(psr->param[param_pepoch],&(psr->param[param_waveepoch_dm]));
+		 strcpy(psr->param[param_waveepoch_dm].label[0],"WAVEEPOCHDM (MJD)");
+		 strcpy(psr->param[param_waveepoch_dm].shortlabel[0],"WAVEEPOCHDM"); 
+		 printf("Setting waveepoch to %g\n",(double)psr->param[param_waveepoch_dm].val[0]);
+	  }else{
+		 // waveepoch isn't set, but neither is wave_om. Ergo: we're
+		 // not using waves and don't need to set this epoch.
+		 //
+		 // Do nothing.
+	  }
+   }
+
+
    if (psr->param[param_posepoch].paramSet[0] == 0)
    {
 	  displayMsg(1,(char *)"PAR1",(char *)"Have not set a position epoch. The period epoch will be used instead.",filename,psr->noWarnings);

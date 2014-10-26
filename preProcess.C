@@ -352,6 +352,12 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 	    {
 	      printf("ERROR: Not updating the FITWAVES to new EPOCH\n");
 	    }
+	  if (psr[p].param[param_waveepoch_dm].paramSet[0]==1)
+	    {
+	      printf("ERROR: Not updating the FITWAVES(DM) to new EPOCH\n");
+	    }
+	  
+
 
 	  /* Update binary parameters if necessary */
 	  if (psr[p].param[param_pb].paramSet[0]==1 && 0 == 1)  /* Binary pulsar */

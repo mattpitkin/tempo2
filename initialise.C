@@ -267,10 +267,16 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_posepoch].shortlabel[0],"POSEPOCH");
   strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
   strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH");
+   strcpy(psr->param[param_waveepoch_dm].label[0],"WAVEEPOCHD (MJD)");
+  strcpy(psr->param[param_waveepoch_dm].shortlabel[0],"WAVEEPOCHD");
   strcpy(psr->param[param_gwm_amp].label[0],"GWM_AMP");
   strcpy(psr->param[param_gwm_amp].shortlabel[0],"GWM_AMP");
   strcpy(psr->param[param_gwm_amp].label[1],"GWM_AMP_2");
   strcpy(psr->param[param_gwm_amp].shortlabel[1],"GWM_AMP_2");
+  strcpy(psr->param[param_gwb_amp].label[0],"GWB_AMP");
+  strcpy(psr->param[param_gwb_amp].shortlabel[0],"GWB_AMP");
+  strcpy(psr->param[param_gwb_amp].label[1],"GWB_AMP_2");
+  strcpy(psr->param[param_gwb_amp].shortlabel[1],"GWB_AMP_2");
   strcpy(psr->param[param_gwecc].label[0],"GWECC_AMP");
   strcpy(psr->param[param_gwecc].shortlabel[0],"GWECC_AMP");
   strcpy(psr->param[param_tel_dx].label[0],"TEL_DX");
@@ -501,6 +507,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }       
 
   strcpy(psr->param[param_wave_om].label[0],"WAVE_OM"); strcpy(psr->param[param_wave_om].shortlabel[0],"WAVE_OM");
+  strcpy(psr->param[param_wave_dm].label[0],"WAVE_DM"); strcpy(psr->param[param_wave_dm].shortlabel[0],"WAVE_DM");
   strcpy(psr->param[param_quad_om].label[0],"QUAD_OM"); strcpy(psr->param[param_quad_om].shortlabel[0],"QUAD_OM");
   strcpy(psr->param[param_dmmodel].label[0],"DMMODEL"); strcpy(psr->param[param_dmmodel].shortlabel[0],"DMMODEL");
   strcpy(psr->param[param_gwsingle].label[0],"GW_OMEGA"); strcpy(psr->param[param_gwsingle].shortlabel[0],"GW_OMEGA");
@@ -558,6 +565,7 @@ void allocateMemory(pulsar *psr, int realloc)
       else if (i==param_tel_dz) psr->param[i].aSize = MAX_TEL_DZ;
       else if (i==param_raj || i==param_decj) psr->param[i].aSize = 2; // Use second for gravitational wave work
       else if (i==param_gwm_amp) psr->param[i].aSize = 2; 
+      else if (i==param_gwb_amp) psr->param[i].aSize =2;
       else psr->param[i].aSize = 1;
       
       psr->param[i].val       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));

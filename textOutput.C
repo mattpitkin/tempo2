@@ -20,7 +20,7 @@
 
 /*
 *    If you use TEMPO2 then please acknowledge it by citing 
-*    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2, 
+*    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issuse 2, 
 *    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
 *    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
 *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
@@ -292,30 +292,110 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
       /* Whitening */
       if (psr[p].param[param_wave_om].paramSet[0]==1)
 	{
-	  double perr,pwr;
-	  double xval,yval;
-	  int j;
-	  FILE *fout;
-	  printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","Freq","Period","Cosine amp","Sine amp","Power");
-	  printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","(yr^-1)","(yr)","(s)","(s)","(s^2)");
-	  printf("------------------------------------------------------------------------------\n");
-	  for (i=0;i<psr[p].nWhite;i++)
+
+	  if ( psr[p].waveScale == 2)
 	    {
-	      pwr = pow(psr[p].wave_cos[i],2)+pow(psr[p].wave_sine[i],2);
-	      perr = sqrt(pow(2*psr[p].wave_cos[i]*psr[p].wave_cos_err[i],2)+pow(2*psr[p].wave_sine[i]*psr[p].wave_sine_err[i],2));
-	      printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
-               i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
-		     (i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
-               1.0/((i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25), // Wave period (yrs)
-               psr[p].wave_cos[i],       // Wave cosine amplitude
-               psr[p].wave_cos_err[i],   // Wave cosine amplitude uncertainty
-               psr[p].wave_sine[i],      // Wave sine amplitude
-               psr[p].wave_sine_err[i],  // Wave sine amplitude uncertainty
-               pwr,  // Wave power
-               perr); // Wave power uncertainty
+
+	      double perr,pwr;
+	      double xval,yval;
+	      int j;
+	      FILE *fout;
+	      printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","Freq","Period","Cosine amp","Sine amp","Power");
+	      printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","(yr^-1)","(yr)","(s)","(s)","(s^2)");
+	      printf("------------------------------------------------------------------------------\n");
+	      for (i=0;i<psr[p].nWhite;i++)
+		{
+		  pwr = pow(psr[p].wave_cos[i],2)+pow(psr[p].wave_sine[i],2);
+		  perr = sqrt(pow(2*psr[p].wave_cos[i]*psr[p].wave_cos_err[i],2)+pow(2*psr[p].wave_sine[i]*psr[p].wave_sine_err[i],2));
+		  printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g  %-+10.5g %-+10.5g  \n",
+			 i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
+			 (i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
+			 1.0/((i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25), // Wave period (yrs)
+			 psr[p].wave_cos[i],       // Wave cosine amplitude
+			 psr[p].wave_cos_err[i],   // Wave cosine amplitude uncertainty
+			 psr[p].wave_sine[i],      // Wave sine amplitude
+			 psr[p].wave_sine_err[i],  // Wave sine amplitude uncertainty
+			 psr[p].wave_cos_dm[i],       // Wave cosine amplitude
+			 psr[p].wave_cos_dm_err[i],   // Wave cosine amplitude uncertainty
+			 psr[p].wave_sine_dm[i],      // Wave sine amplitude
+			 psr[p].wave_sine_dm_err[i]);  // Wave sine amplitude uncertainty
+		}
+	      printf("------------------------------------------------------------------------------\n");
 	    }
-	  printf("------------------------------------------------------------------------------\n");
+	  else
+	    {
+	      double om;
+	      double perr,pwr;
+	      double xval,yval;
+	      int j;
+	      FILE *fout;
+	      printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","Freq","Period","Cosine amp","Sine amp","Power");
+	      printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","(yr^-1)","(yr)","(s)","(s)","(s^2)");
+	      printf("------------------------------------------------------------------------------\n");
+	      for (i=0;i<psr[p].nWhite;i++)
+		{
+		  pwr = pow(psr[p].wave_cos[i],2)+pow(psr[p].wave_sine[i],2);
+		  perr = sqrt(pow(2*psr[p].wave_cos[i]*psr[p].wave_cos_err[i],2)+pow(2*psr[p].wave_sine_err[i]*psr[p].wave_sine_err[i],2));
+		  
+		  if (i==0)
+		    {
+
+		      om =    (i+1.0)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25;
+		      
+		    }
+		  else
+		    {
+		      om =  (i+1.0)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25;
+		    }
+
+		  
+		
+
+		  printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
+			 i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
+			 (long double)  om,       // Wave frequency (yr^-1) 
+			 (long double) 1./om, // Wave period (yrs)
+			 psr[p].wave_cos[i],       // Wave cosine amplitude
+			 psr[p].wave_cos_err[i],   // Wave cosine amplitude uncertainty
+			 psr[p].wave_sine[i],      // Wave sine amplitude
+			 psr[p].wave_sine_err[i],  // Wave sine amplitude uncertainty
+			 pwr,  // Wave power
+			 perr); // Wave power uncertainty
+		}
+	      printf("------------------------------------------------------------------------------\n");
+	    }
+	  
 	}
+      
+ if (psr[p].param[param_wave_dm].paramSet[0]==1)
+	{
+	  
+	    double perr,pwr;
+	      double xval,yval;
+	      int j;
+	      FILE *fout;
+	      printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","Freq","Period","Cosine amp","Sine amp","Power");
+	      printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","(yr^-1)","(yr)","(s)","(s)","(s^2)");
+	      printf("------------------------------------------------------------------------------\n");
+	      for (i=0;i<psr[p].nWhite_dm;i++)
+		{
+		  pwr = pow(psr[p].wave_cos_dm[i],2)+pow(psr[p].wave_sine_dm[i],2);
+		  perr = sqrt(pow(2*psr[p].wave_cos_dm[i]*psr[p].wave_cos_dm_err[i],2)+pow(2*psr[p].wave_sine_dm[i]*psr[p].wave_sine_dm_err[i],2));
+		  printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
+			 i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
+			 (i+1)*psr[p].param[param_wave_dm].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
+			 1.0/((i+1)*psr[p].param[param_wave_dm].val[0]/2.0/M_PI*365.25), // Wave period (yrs)
+			 psr[p].wave_cos_dm[i],       // Wave cosine amplitude
+			 psr[p].wave_cos_dm_err[i],   // Wave cosine amplitude uncertainty
+			 psr[p].wave_sine_dm[i],      // Wave sine amplitude
+			 psr[p].wave_sine_dm_err[i],  // Wave sine amplitude uncertainty
+			 pwr,  // Wave power
+			 perr); // Wave power uncertainty
+		}
+	      printf("------------------------------------------------------------------------------\n");
+	 
+	}
+
       if (psr[p].param[param_gwsingle].paramSet[0]==1)
 	{
 	  printf("GW single source:\n");
@@ -353,6 +433,24 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("\n");
 	  printf("GWM covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
 	}
+      if (psr[p].param[param_gwb_amp].paramSet[0]==1 &&	
+	  psr[p].param[param_gwb_amp].paramSet[1]==1 &&
+	  (psr[p].param[param_gwb_amp].fitFlag[0]>0 ||
+	   psr[p].param[param_gwb_amp].fitFlag[1]>0))
+	{
+	  int i,i0,i1;
+	  for (i=0;i<psr[0].nParam;i++)
+	    {
+	      if (psr[0].fitParamI[i] == param_gwb_amp && psr[0].fitParamK[i] == 0)
+		i0 = i;
+	      if (psr[0].fitParamI[i] == param_gwb_amp && psr[0].fitParamK[i] == 1)
+		i1 = i;
+	    }
+	  printf("\n");
+	  printf("GW BURST A1: %g A2: %g A1_A1 = %g A2_A2 = %g A1_A2 = %g \n" , (double) psr[0].param[param_gwb_amp].val[0], (double) psr[0].param[param_gwb_amp].val[1], (double) psr[0].covar[i0][i0], (double) psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
+	}
+
+
       if (psr[p].param[param_dmmodel].paramSet[0]==1)
 	{
 	  printf("\n");
@@ -1014,7 +1112,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		{
 		  for (k=0;k<psr[p].param[i].aSize;k++)
 		    {
-		  if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om 
+		  if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om &&  i!= param_wave_dm 
 		      && i!=param_waveepoch && i!=param_ifunc && i!=param_dmmodel &&
 		      (psr[p].tempo1==0 || (i!=param_dmepoch)))
 		    {
@@ -1206,7 +1304,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      for (i=0;i<psr[p].nWhite;i++)
 		fprintf(fout2,"WAVE%d %.14g %.14g\n",i+1,psr[p].wave_sine[i],psr[p].wave_cos[i]);
 	    }
+	   if (psr[p].param[param_wave_dm].paramSet[0]==1)
+	    {
+	      fprintf(fout2,"WAVEEPOCH_DM %.14Lg\n",psr[p].param[param_waveepoch_dm].val[0]);
+	      fprintf(fout2,"WAVDM_DM %.14Lg 0\n",psr[p].param[param_wave_dm].val[0]);
+	      //if (psr[p].waveScale!=0) fprintf(fout2,"WAVE_SCALE %g\n",psr[p].waveScale);
+	      for (i=0;i<psr[p].nWhite_dm;i++)
+		fprintf(fout2,"WAVDM%d %.14g %.14g\n",i+1,psr[p].wave_sine_dm[i],psr[p].wave_cos_dm[i]);
+	    }
  
+
+
 	  if (psr[p].param[param_ifunc].paramSet[0]==1)
 	    {
 	      fprintf(fout2,"SIFUNC %d %d\n",(int)psr[p].param[param_ifunc].val[0],
@@ -1374,27 +1482,40 @@ void printGlitch(pulsar psr)
    double dfof,edfof;
    double df1of1,edf1of1;
 
-   iph = fortran_nint((double)psr.param[param_glph].val[0]);
-   fph = (double)psr.param[param_glph].val[0]-iph;
+   int iglitch;
+   for(iglitch=0;iglitch<psr.param[param_glep].aSize; iglitch++)
+     {
+        if (psr.param[param_glep].paramSet[iglitch]==1)
+		 {
 
-   glep1z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph);
+
+       iph = fortran_nint((double)psr.param[param_glph].val[iglitch]);
+   fph = (double)psr.param[param_glph].val[iglitch]-iph;
+
+   glep1z=(double)psr.param[param_glep].val[iglitch]+dglep(psr,iglitch,fph);
    if (fph >= 0)
-	  glep2z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph-1);
+	  glep2z=(double)psr.param[param_glep].val[iglitch]+dglep(psr,iglitch,fph-1);
    else
-	  glep2z=(double)psr.param[param_glep].val[0]+dglep(psr,0,fph+1);
+	  glep2z=(double)psr.param[param_glep].val[iglitch]+dglep(psr,iglitch,fph+1);
 
    //  glepe=ferr(NPAR1+(i-1)*NGLP+1)/
-   glepe = (double)psr.param[param_glph].err[0]/(double)(fabs(psr.param[param_glf0].val[0]+psr.param[param_glf0d].val[0])*86400.0);
+   
+   
+   
 
-   printf("MJD for zero glitch phase = %.6f or %.6f, error = %g\n",glep1z,glep2z,glepe);
+   glepe = (double)psr.param[param_glph].err[iglitch]/(double)(fabs(psr.param[param_glf0].val[iglitch]+psr.param[param_glf0d].val[iglitch])*86400.0);
 
-   dfof = (double)(psr.param[param_glf0].val[0]/psr.param[param_f].val[0]);
-   edfof = (double)(psr.param[param_glf0].err[0]/psr.param[param_f].val[0]);
+   printf("MJD for zero glitch  %d phase = %.6f or %.6f, error = %g\n",iglitch,glep1z,glep2z,glepe);
+
+   dfof = (double)(psr.param[param_glf0].val[iglitch]/psr.param[param_f].val[iglitch]);
+   edfof = (double)(psr.param[param_glf0].err[iglitch]/psr.param[param_f].val[iglitch]);
    printf("Delta f/f = %g +/- %g\n",dfof,edfof);
 
-   df1of1 = (double)(psr.param[param_glf1].val[0]/psr.param[param_f].val[1]);
-   edf1of1 = (double)(psr.param[param_glf1].err[0]/fabs(psr.param[param_f].val[1]));
+   df1of1 = (double)(psr.param[param_glf1].val[iglitch]/psr.param[param_f].val[1]);
+   edf1of1 = (double)(psr.param[param_glf1].err[iglitch]/fabs(psr.param[param_f].val[1]));
    printf("Delta f1/f1 = %g +/- %g\n",df1of1,edf1of1);
+		 }
+     }
 }
 
 double dglep(pulsar psr,int gn,double fph)
