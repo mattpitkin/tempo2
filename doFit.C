@@ -1144,6 +1144,24 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	 * Otherwise, we check what parameter it is and return the appropriate derivative.
 	 */
 	//  printf("In here with %s %d %d %d\n",psr->name,psr->nobs,ipos,i);
+
+	long double arg3,arg4;
+	
+	long double f1,f0,bindex;
+	long double t2;
+	
+	t2 = x*86400.L;
+	    
+	arg3=t2*t2*t2;
+	arg4=t2*t2*t2*t2;
+	
+	f0 = psr->param[param_f].val[0];
+	f1 = psr->param[param_f].val[1];
+	
+	//fprintf(stderr, "%.3e %.3Le %.3Le\n", x, f0,f1);
+
+	
+
 	if(ipos >= psr->nobs)
 	{
 		//      printf("In here with ipos = %d, psr->nobs=%d, i=%d, str = %s, k= %d\n",ipos,psr->nobs,i,psr->param[i].shortlabel[0],k);
@@ -1154,13 +1172,37 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	else if (i==param_f)         /* Rotational frequency */
 	{
 		if (k==0)
-			afunc = x*24.0L*3600.0L/psr->param[param_f].val[0];
+		  {
+		    afunc = x*24.0L*3600.0L/psr->param[param_f].val[0];
+		    if (psr->param[param_brake].paramSet[0] ==1)
+		      {
+			afunc +=   (-bindex*f1*f1/f0/f0*arg3/6.L -2*bindex*(2*bindex-1)*f1*f1*f1/f0/f0/f0*arg4/24.)
+			  *84000.L/f0;
+		      }
+		    
+		    
+		  }
 		else if (k==1)    /* Rotational frequency derivative */
-			afunc = 0.5L*x*x;
+		  {
+		    afunc = 0.5L*x*x;
+		    if (psr->param[param_brake].paramSet[0] ==1)
+		      {
+			afunc += (2*bindex*f1/f0*arg3/6.L + 3*bindex*(2*bindex-1)*f1*f1/f0/f0*arg4/24.L)
+			  *86400.L/f0;
+		      }
+
+		    
+		  }
 		else if (k==2)    /* Rotational frequency second derivative */
-			afunc = 1.0L/6.0L*x*x*x/1.0e9L;
+		  {
+		    afunc = 1.0L/6.0L*x*x*x/1.0e9L;
+		 
+		  }
+
 		else if (k==3)
-			afunc = 1.0L/24.0L*x/1.0e18L*x*x*x;
+		  {
+		    afunc = 1.0L/24.0L*x/1.0e18L*x*x*x;
+		  }
 		else if (k==4)
 			afunc = 1.0L/120.0L*x*x*x*x*x/1.0e18L;
 		else if (k==5)
@@ -1182,6 +1224,19 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		else if (k==13)
 			afunc = 1.0L/3628800.0L/11.0L/12.0L/13.0L/14.0L*powl(x,14.0L)/1.0e23L;
 	}
+	else if (i==param_brake)
+	  {
+	    
+	    
+
+	    
+	    afunc = f1*f1/f0*arg3/6.0L + (4*bindex-1)*f1*f1*f1/f0/f0;
+
+
+
+	  }
+	
+
 	else if (i==param_dshk)
 	{
 		longdouble kpc2m = 3.08568025e19L;           /* 1 kpc in m        */
@@ -2611,7 +2666,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 						else if (k>9) scale=1.0e23L;
 
 						psr[p].param[param_f].val[k] = psr[p].param[param_f].val[k] - 
-							(psr[p].param[param_f].val[0]*(val[j]/pow(24.0*3600.0,k+1))/scale);
+						  (psr[p].param[param_f].val[0]*(val[j]/pow(24.0*3600.0,k+1))/scale);
 						psr[p].param[param_f].err[k] = error[j]/(pow(24.0*3600.0,k+1))/scale*
 							psr[p].param[param_f].val[0];
 					}
@@ -2963,7 +3018,13 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 					j++;
 				      }
 				  }
-				
+				else if (i==param_brake)
+				  {
+				    psr[p].param[i].val[0] -= val[j];
+				    psr[p].param[i].err[0] = error[j];
+				    
+				  }
+
 
 				else if (i==param_dmmodel)
 				{
@@ -3012,9 +3073,11 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 				else if (strcmp(psr[p].binaryModel,"DDH")==0)
 					updateDDH(&psr[p],val[j],error[j],i);
 				else if (strcmp(psr[p].binaryModel,"ELL1H")==0)
-					updateELL1H(&psr[p],val[j],error[j],i);
+				  updateELL1H(&psr[p],val[j],error[j],i);
+			
 				j++; /* Increment position in fit list */
-			}
+	
+		}
 		}
 	}
 	if (strcmp(psr[p].binaryModel,"DDGR")==0) 

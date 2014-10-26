@@ -241,6 +241,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		      printf("%-13.5g ", (double)psr[p].param[i].err[k]);
 		      printf("%-13.5g ", (double)getParameterValue(&psr[p],i,k)-(double)psr[p].param[i].prefit[k]);
 		    }
+		
 		  if (psr[p].param[i].fitFlag[k]==1) printf("Y");
 		  else if (psr[p].param[i].fitFlag[k]==2) printf("G");
 		  else printf("N");
@@ -595,6 +596,35 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  printf("tau_c (Myr) = %.5g\n",(double)age);
 	  printf("bs (G)      = %.5g\n\n",(double)bs);
 	}
+      if ((psr[0].param[param_brake].paramSet[0]==1) && (psr[0].param[param_f].paramSet[1]==1))
+	{
+	  longdouble F2brake,F1,F0;
+	  longdouble F3brake;
+	  longdouble bindex;
+	  F1 = psr[0].param[param_f].val[1];
+	  F0 = psr[0].param[param_f].val[0];
+	  bindex= psr[0].param[param_brake].val[0];
+	  F2brake= bindex*F1*F1/F0;
+	  F3brake= bindex*(2*bindex-1)*F1*F1*F1/F0/F0;
+	  printf("F2 derived from braking index %.5Le\n", F2brake);
+	  printf("F3 derived from braking index %.5Le\n", F3brake);
+  
+
+
+	}
+      
+      if ((psr[0].param[param_f].paramSet[2]==1) && (psr[0].param[param_brake].paramSet[0]==0))
+	{
+	  longdouble brake,F1,F0,F2;
+	  F1 = psr[0].param[param_f].val[1];
+	  F0 = psr[0].param[param_f].val[0];
+	  F2 = psr[0].param[param_f].val[2];
+	  brake= F0*F2/(F1*F1);
+	  printf("Braking index derived from F0,F1,F2 %.3Lf\n", brake);
+
+	}
+      
+
       /* Binary parameters */
       if (psr[p].param[param_pb].paramSet[0]==1 || psr[p].param[param_fb].paramSet[0]==1)
 	{

@@ -181,7 +181,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
 	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
-	    param_dm_sin1yr,param_dm_cos1yr};
+	    param_dm_sin1yr,param_dm_cos1yr,param_brake};
 
 /*
  * These represent the possible constraints to the fit that have been implemented.

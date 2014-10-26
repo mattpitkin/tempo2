@@ -236,6 +236,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
 	  strcpy(psr->param[param_dm].shortlabel[0],"DM");
 	}
     }
+
+
+
   strcpy(psr->param[param_px].label[0],"PX (mas)");
   strcpy(psr->param[param_px].shortlabel[0],"PX");
 
@@ -476,6 +479,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_tzrfrq].shortlabel[0],"TZRFRQ");
   strcpy(psr->param[param_tspan].label[0],"TSPAN (min)"); 
   strcpy(psr->param[param_tspan].shortlabel[0],"TSPAN");
+  strcpy(psr->param[param_brake].label[0],"BRAKING INDEX"); 
+  strcpy(psr->param[param_brake].shortlabel[0],"BRAKE");
+  
 
   for (k=0;k<psr->param[param_bpjep].aSize;k++)
     {
@@ -576,6 +582,7 @@ void allocateMemory(pulsar *psr, int realloc)
       psr->param[i].paramSet  = (int *)malloc(psr->param[i].aSize*sizeof(int));
       psr->param[i].label     = (char **)malloc(psr->param[i].aSize*sizeof(char *));
       psr->param[i].shortlabel= (char **)malloc(psr->param[i].aSize*sizeof(char *));
+      
 
       for (j=0;j<psr->param[i].aSize;j++)
 	{

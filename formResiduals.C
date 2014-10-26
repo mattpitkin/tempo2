@@ -140,6 +140,35 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   arg *= deltaT; if (psr[p].param[param_f].paramSet[11]==1) phase3 += (psr[p].param[param_f].val[11]/479001600.0L)*arg; 
 	   arg *= deltaT; if (psr[p].param[param_f].paramSet[12]==1) phase3 += (psr[p].param[param_f].val[12]/6227020800.0L)*arg; 
 
+	   // add in term from pulsar braking
+	 
+
+	   if ((psr[p].param[param_brake].paramSet[0] == 1) && (psr[p].param[param_f].paramSet[1] ==1)) 
+	     {
+	       longdouble F2brake;
+	       longdouble F3brake;
+	       longdouble F1,F0;
+	       longdouble bindex;
+	       longdouble arg3;
+	       longdouble arg4;
+	       arg3= deltaT*deltaT*deltaT;
+	       arg4 = arg3*deltaT;
+
+	       F1 = psr[p].param[param_f].val[1];
+	       F0 =  psr[p].param[param_f].val[0];
+	       bindex= psr[p].param[param_brake].val[0];
+	       // f1squared= psr[p].param[param_f].val[1];
+	       
+	       F2brake= bindex*F1*F1/F0;
+	       F3brake= bindex*(2*bindex-1)*F1*F1*F1/F0/F0;
+	       	       	       
+	       //arg = deltaT*deltaT*deltaT;
+	       
+	       phase3 += F2brake*arg3/6.L + F3brake*arg4/24.L;
+	       
+	     }
+
+
 	   /* Must check glitch parameters */
 	   phase4 = 0.0; 
 	   for (k=0;k<psr[p].param[param_glep].aSize;k++)

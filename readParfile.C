@@ -1060,6 +1060,10 @@ else if (strcasecmp(str,"_DM")==0)
 	 fscanf(fin,"%lf %lf %lf",&psr->quad_ifuncT_c[number-1],&psr->quad_ifuncV_c[number-1],&psr->quad_ifuncE_c[number-1]);
 	 if (psr->quad_ifuncN_c < number) psr->quad_ifuncN_c = number;
   }
+  // Braking index
+  else if (strcasecmp(str,"BRAKE")==0)
+    readValue(psr,str,fin,&(psr->param[param_brake]),0);
+
   /* ---------------- */
   /* Phase jumps      */
   /* ---------------- */
@@ -1346,6 +1350,7 @@ else if (strcasecmp(str,"_DM")==0)
       
       readValue(psr,str,fin,&(psr->param[param_fb]),fbval);
     }
+  
   else if (strcasecmp(str,"GAMMA")==0)
     readValue(psr,str,fin,&(psr->param[param_gamma]),0);
   else if (strcasecmp(str,"DR")==0)
