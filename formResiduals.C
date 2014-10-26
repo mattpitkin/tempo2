@@ -192,24 +192,69 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     {
 	       double om;  /* Fundamental frequency */
 	       double dt;  /* Change in time from pepoch */
+	       double om_eff;
 
 	       dt = psr[p].obsn[i].bbat - psr[p].param[param_waveepoch].val[0] ;
 	       om = psr[p].param[param_wave_om].val[0];
 	       for (k=0;k<psr[p].nWhite;k++)
 		 {
 		   if (psr[p].waveScale==0)
-		     {		       
-		       phaseW += psr[p].wave_sine[k]*sin(om*(k+1)*dt)*psr[p].param[param_f].val[0] +
-			 psr[p].wave_cos[k]*cos(om*(k+1)*dt)*psr[p].param[param_f].val[0];
+		     {	
+		       if( k==0)
+			 {
+			   om_eff = om*(k+1.0);
+			 }
+		       else
+			 {
+			   om_eff = om*(k+1.0);
+			 }
+
+		       phaseW += psr[p].wave_sine[k]*sin(om_eff*dt)*psr[p].param[param_f].val[0] +
+			 psr[p].wave_cos[k]*cos(om_eff*dt)*psr[p].param[param_f].val[0];
 		     }
-		   else 
+		   else if(psr[p].waveScale ==1)
 		     {
 		       double freq= psr[p].obsn[i].freq;
 		       phaseW += (psr[p].wave_sine[k]*sin(om*(k+1)*dt)*psr[p].param[param_f].val[0] +
 			 psr[p].wave_cos[k]*cos(om*(k+1)*dt)*psr[p].param[param_f].val[0])/(DM_CONST*freq*freq);
 		     }
+		   else if (psr[p].waveScale ==2)
+		     {
+		       double freq= psr[p].obsn[i].freq;
+		       phaseW+= psr[p].wave_sine[k]*sin(om*(k+1)*dt)*psr[p].param[param_f].val[0] +
+			 psr[p].wave_cos[k]*cos(om*(k+1)*dt)*psr[p].param[param_f].val[0];
+		       phaseW += (psr[p].wave_sine_dm[k]*sin(om*(k+1)*dt)*psr[p].param[param_f].val[0] +
+				  psr[p].wave_cos_dm[k]*cos(om*(k+1)*dt)*psr[p].param[param_f].val[0])/(DM_CONST*freq*freq); 
+		       
+		     }
+
+
 		 }
 	     }
+
+	    if (psr[p].param[param_wave_dm].paramSet[0] == 1)
+	     {
+	       double om;  /* Fundamental frequency */
+	       double dt;  /* Change in time from pepoch */
+
+	       dt = psr[p].obsn[i].bbat - psr[p].param[param_waveepoch_dm].val[0] ;
+	       om = psr[p].param[param_wave_dm].val[0];
+	     
+	       double freq= psr[p].obsn[i].freq;
+	       for (k=0;k<psr[p].nWhite_dm;k++)
+		 {
+
+	       
+
+	       phaseW += (psr[p].wave_sine_dm[k]*sin(om*(k+1)*dt)*psr[p].param[param_f].val[0] +
+				  psr[p].wave_cos_dm[k]*cos(om*(k+1)*dt)*psr[p].param[param_f].val[0])/(DM_CONST*freq*freq); 
+		 }
+		     
+	       
+
+	     }
+	     
+
 	 
 	   // Add in extra phase due to quadrupolar signal 
 	   if (psr[p].param[param_quad_om].paramSet[0] == 1)
@@ -681,6 +726,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		 }
 	       //	       printf("Res = %g\n",(double)res);
 	     }
+
+
 	   // GWM model that includes two amplitudes
 	   if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&
 	       psr[p].param[param_gwm_amp].paramSet[1]==1)
@@ -775,6 +822,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[1]*psr[p].quad_ifunc_geom_c); 				
 		 }
 	     }	 
+
+
 	   /* Add in extra phase due to clock offset */
 	   if (psr[p].param[param_clk_offs].paramSet[0] == 1)
 	     {
@@ -990,7 +1039,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     }
 	 
 	   
-	   // Ryan's Geometricral fitting function for plus
+	   // Ryan's Geometrical fitting function for plus
 	   
 	   if ((psr[p].param[param_quad_ifunc_p].paramSet[0] ==1) &&  (psr[p].param[param_quad_ifunc_p].val[0] > 1.5))
 	     {
@@ -1055,7 +1104,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   
 		   
 		   // plus polarization in \hat theta direction? 
-		   // this ought to point to NCP
+		   // this ought to point to SCP
 		   
 		   polx = sin(bg)*cos(lg);
 		   poly = sin(bg)*sin(lg);
@@ -1071,15 +1120,19 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   
 
 		   
-		   double phi;
+		   double phi, cphi,c2phi;
 		   phi = acos((rhox*polx+ rhoy*poly+rhoz*polz)/(rho*pol));
+
+		   cphi = (rhox*polx+rhoy*poly+rhoz*polz)/(rho*pol);
+		   c2phi = 2*cphi*cphi-1;
+		     
 
 		   fprintf(stderr, "%.3e\n", phi);
 		  
 
 		   long double resp;
 
-		   resp =0.5*(1-ctheta)*cos(2*phi);
+		   resp =0.5*(1-ctheta)*c2phi;
 	       
 	      
 		   psr[p].quad_ifunc_geom_p = resp;
@@ -1168,7 +1221,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 		   thetax = sin(bg)*cos(lg);
 		   thetay = sin(bg)*sin(lg);
-		   thetaz - -cos(bg);
+		   thetaz = -cos(bg);
 		   
 		   phix = -sin(lg);
 		   phiy = cos(lg);
@@ -1181,21 +1234,27 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   polz = thetaz+phiz;
 
 
-				  
+		 
 		   pol = sqrt(polx*polx + poly*poly+ polz*polz);
 
 
 		   rho = sqrt(rhox*rhox + rhoy*rhoy + rhoz*rhoz);
 		   
+		   //fprintf(stderr, "%.3e %.3e\n", (polx*thetax+poly*thetay+polz*thetaz)/pol, pol);
+
+				  
+		   //exit(0);
+		   
 		  
 		   
-		   double phi;
+		   double phi, cphi, c2phi;
 		   phi = acos((rhox*polx + rhoy*poly + rhoz*polz)/rho/pol);
-
+		   cphi = (rhox*polx + rhoy*poly + rhoz*polz)/rho/pol;
+		   c2phi = 2*cphi*cphi-1;
 
 		   long double resc;
 
-		   resc =0.5*(1-ctheta)*cos(2*phi);
+		   resc =0.5*(1-ctheta)*c2phi;
 	       
 	      
 		   psr[p].quad_ifunc_geom_c = resc;
@@ -1222,10 +1281,119 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     }
 
 
+  
+	   
+	   // Ryan's burst fitting 
+	   if (psr[p].param[param_gwb_amp].paramSet[0]==1 &&
+	       psr[p].param[param_gwb_amp].paramSet[1]==1)
+	     {
+	       
+	       //long double wi,t1,t2;
+	       long double dt, prefac;
+	       int k;
+	       double m,c,ival;
+	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+	       //	       double res_e,res_i;
+	       long double resp,resc,res_r,res_i;
+	       double theta_p,theta_g,phi_p,phi_g;
+	       double lambda_p,beta_p,lambda,beta;
+	       double n1,n2,n3;
+	       double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+	       double cosTheta;
+	       
+	       lambda_p = (double)psr[p].param[param_raj].val[0];
+	       beta_p   = (double)psr[p].param[param_decj].val[0];
+	       lambda   = psr[p].gwb_raj;
+	       beta     = psr[p].gwb_decj;
+	       
+	       // Pulsar vector
+	       n1 = cosl(lambda_p)*cosl(beta_p);
+	       n2 = sinl(lambda_p)*cosl(beta_p);
+	       n3 = sinl(beta_p);
+	       
+	       cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+		 sinl(beta)*sinl(beta_p);
+	       
+	       // From KJ's paper
+	       // Gravitational wave matrix
+	       
+	       // NOTE: This is for the plus terms.  For cross should use different terms
+	       e11p = pow(sinl(lambda),2)-pow(cosl(lambda),2)*pow(sinl(beta),2);
+	       e21p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+	       e31p = cosl(lambda)*sinl(beta)*cosl(beta);
+	       
+	       e12p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+	       e22p = pow(cosl(lambda),2)-pow(sinl(lambda),2)*pow(sinl(beta),2);
+	       e32p = sinl(lambda)*sinl(beta)*cosl(beta);
+	       
+	       e13p = cosl(lambda)*sinl(beta)*cosl(beta);
+	       e23p = sinl(lambda)*sinl(beta)*cosl(beta);
+	       e33p = -powl(cosl(beta),2);
+	       
+	       resp = (n1*(n1*e11p+n2*e12p+n3*e13p)+
+		       n2*(n1*e21p+n2*e22p+n3*e23p)+
+		       n3*(n1*e31p+n2*e32p+n3*e33p));
+	       
+	       //		   printf("Resp = %s %g %g\n",psr[p].name,(double)resp,(double)cosTheta);
+	       if ((1-cosTheta)==0.0)
+		 resp = 0.0;  // Check if this is sensible
+	       else
+		 resp = 1.0L/(2.0L*(1.0L-cosTheta))*(resp); 
+	       
+	       psr[p].gwb_geom_p = resp;
+	       //		   printf("Resp2 = %s %g %g\n",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
+	       // NOTE: These are for the cross terms. 
+	       lambda   = psr[p].gwb_raj;
+	       beta     = psr[p].gwb_decj;
+	       
+	       
+	       e11c = sinl(2*lambda)*sinl(beta);
+	       e21c = -cosl(2*lambda)*sinl(beta);
+	       e31c = -sinl(lambda)*cosl(beta);
+	       
+	       e12c = -cosl(2*lambda)*sinl(beta);
+	       e22c = -sinl(2*lambda)*sinl(beta);
+	       e32c = cosl(lambda)*cosl(beta);
+	       
+	       e13c = -sinl(lambda)*cosl(beta);
+	       e23c = cosl(lambda)*cosl(beta);
+	       e33c  = 0;
+	       
+	       resc = (n1*(n1*e11c+n2*e12c+n3*e13c)+
+		       n2*(n1*e21c+n2*e22c+n3*e23c)+
+		       n3*(n1*e31c+n2*e32c+n3*e33c));
+	       //		   printf("Resc = %s %g %g\n",psr[p].name,(double)resc,(double)cosTheta);
+	       if ((1-cosTheta)==0.0)
+		 resc = 0.0;  // Check if this is sensible
+	       else
+		 resc = 1.0L/(2.0L*(1.0L-cosTheta))*(resc); 
+	       psr[p].gwb_geom_c = resc;
+	       //		   printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(1.0L/(2.0L*(1.0L-cosTheta))));
+	       
+	       // exp(-(t-T0)**2/2./w**2)
+ 
+       
+	       
+	       dt = (psr[p].obsn[i].bbat - psr[p].gwb_epoch)/psr[p].gwb_width;
+	       
+	       prefac = dt*exp( (double) -dt*dt/2.);
+	       
+
+	       fprintf(stderr, "%.3e %.3e %.3e\n",(double) psr[p].gwb_width, (double) psr[p].gwb_epoch, (double) prefac);
+	       //exit(0);
 
 
+	       //		   scale = -0.5*cos2Phi*(1-cosTheta);
+	       phaseW += psr[p].param[param_f].val[0]*prefac*psr[p].param[param_gwb_amp].val[0]*psr[p].gwb_geom_p; 
+				
+
+	       phaseW +=  psr[p].param[param_f].val[0]*prefac*psr[p].param[param_gwb_amp].val[1]*psr[p].gwb_geom_c; 				
+	       
+	     }	
 
 
+	   // END of Ryan's code
 
 	   
 
@@ -1467,20 +1635,27 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   psr[p].obsn[i].pulseN = (long long)(phaseint + fortran_nint(phase5[i]));
 	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
 
-
-
+	   
 	   if (psr[p].obsn[i].deleted!=1)
 	     {
 	       mean+=psr[p].obsn[i].residual;
 	       nmean++;
 	     }
 	 }
+       
+
+       
        if (removeMean==1)
 	 {
 	   mean/=(long double)nmean;
 	   for (i=0;i<psr[p].nobs;i++)
 	     psr[p].obsn[i].residual-=mean;
+	     // psr[p].obsn[i].residual-=0;
 	 }
+
+
+
+
 
 
         if(psr[p].TNsubtractRed==1){
@@ -1494,7 +1669,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 }
         }
 
-     }
+
+	 }
 
    logtchk("Leave formresiduals()");
 }
