@@ -174,12 +174,13 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
             param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
 	    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
+	    param_wave_dm, param_waveepoch_dm,
             param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,param_clk_offs,
             param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_cgw,param_quad_om,
 	    param_h3,param_h4,param_nharm,param_stig,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
-	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,
+	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
 	    param_dm_sin1yr,param_dm_cos1yr};
 
 /*
@@ -404,6 +405,15 @@ typedef struct pulsar {
   double gwm_phi; // Polarisation angle
   double gwm_dphase; // Phase offset (similar to GLPH)
  
+   // Ryan's gw burst parameters
+  double gwb_epoch;
+  double gwb_width;
+   double gwb_raj;
+  double gwb_decj;
+  double gwb_geom_c;
+  double gwb_geom_p;
+
+
   // Vikram Ravi's addition for eccentric, binary black hole systems
   double gwecc_ra;
   double gwecc_dec;
@@ -504,7 +514,12 @@ typedef struct pulsar {
   /* For whitening */
   double wave_sine[MAX_WHITE], wave_sine_err[MAX_WHITE];
   double wave_cos[MAX_WHITE],  wave_cos_err[MAX_WHITE];
-  int    nWhite;
+   double wave_sine_dm[MAX_WHITE], wave_sine_dm_err[MAX_WHITE];
+  double wave_cos_dm[MAX_WHITE], wave_cos_dm_err[MAX_WHITE];
+
+
+
+  int    nWhite, nWhite_dm;
   double waveScale;
 
   // Quadrapolar function
