@@ -182,3 +182,34 @@ void free_uinv(double** uinv){
 
 
 
+float** malloc_2df(int rows,int cols){
+   int i;
+   float* memory;
+   float** m;
+   logdbg("Allocate %d x %d float array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(float)/1024.0));
+
+   m=(float**) calloc(rows,sizeof(float*));
+   memory=(float*)malloc(sizeof(float)*rows*cols);
+
+   if(memory==NULL || m==NULL){
+	  logdbg("Could not allocate %d x %d float array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(float)/1024.0));
+	  logerr("Cannot allocate enough memory for array");
+	  exit(1);
+   }
+   logdbg("Allocated mem=0x%016x m=0x%016x",memory,m);
+   for(i=0;i<rows;i++){
+	  m[i]=memory+cols*i;
+   }
+
+   logdbg("Accessible memory 0x%016x -> 0x%016x",memory,memory+rows*cols);
+
+   return m;
+
+}
+
+void free_2df(float** m){
+   free(m[0]);
+   free(m);
+}
+
+

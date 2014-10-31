@@ -41,6 +41,8 @@ void free_blas(double** matrix);
 void free_uinv(double** uinv);
 int get_blas_rows(double** uinv);
 int get_blas_cols(double** uinv);
+float** malloc_2df(int rows,int cols);
+void free_2df(double** uinv);
 #ifdef __cplusplus
 }
 #endif
