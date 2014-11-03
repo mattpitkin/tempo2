@@ -129,15 +129,6 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       //      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
       dmval = psr[p].param[param_dm].val[0]+dmDot;
 
-      // Add in annual terms
-      //
-
-      if (psr[p].param[param_dm_sin1yr].paramSet[0]==1){
-	dmval += psr[p].param[param_dm_sin1yr].val[0]*sin(2*M_PI/(365.25)*dt);
-      }
-      if (psr[p].param[param_dm_cos1yr].paramSet[0]==1){
-	dmval += psr[p].param[param_dm_cos1yr].val[0]*cos(2*M_PI/(365.25)*dt);
-      }
       //      logdbg("calculating dmval");      
       // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
 
@@ -232,11 +223,23 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
       // The dmOffset value is never set and therefore the following line only adds confusion.
       //                                                   JPWV, 08.05.2014
 		  //dmval+=(dmval2+psr[p].dmOffset);
-      dmval += dmval2; // JPWV, 08.05.2014
+		  dmval += dmval2; // JPWV, 08.05.2014
 		}
 	    }
 	  //	  logdbg("Looked for flags");      
 	}
+
+      // Add in annual terms
+      //
+
+      if (psr[p].param[param_dm_sin1yr].paramSet[0]==1){
+	dmval += psr[p].param[param_dm_sin1yr].val[0]*sin(2*M_PI/(365.25)*dt);
+      }
+      if (psr[p].param[param_dm_cos1yr].paramSet[0]==1){
+	dmval += psr[p].param[param_dm_cos1yr].val[0]*cos(2*M_PI/(365.25)*dt);
+      }
+
+
       if (freqf<=1) /* Have infinitive frequency */
 	psr[p].obsn[i].tdis1 = 0.0;
       else{
