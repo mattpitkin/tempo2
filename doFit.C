@@ -38,7 +38,7 @@
 #include "TKfit.h"
 #include "constraints.h"
 #include "TKsvd.h"
-
+#include "T2accel.h"
 void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
 
 void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error);
@@ -345,8 +345,16 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		}
 		logtchk("Compute uinv");
 		// note that this works even for a non-cholesky fit.
-		getCholeskyMatrix(uinvs[p],covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip[p]);
-		logtchk("Completed computing uinv");
+		if(!uselongdouble)
+		  {
+		    getCholeskyMatrix(uinvs[p],covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip[p]);
+		    logtchk("Completed computing uinv usign doubles");
+		  }
+		else
+		  {
+		    getCholeskyMatrixL(uinvs[p],covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip[p]);
+		    logtchk("Completed computing uinv usign long doubles");
+		  }
 		psr[p].nFit = count;
 		psr[p].param[param_start].val[0] = newStart-0.001; 
 		psr[p].param[param_finish].val[0] = newFinish+0.001;
@@ -1188,7 +1196,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		    if (psr->param[param_brake].paramSet[0] ==1)
 		      {
 			afunc += (2*bindex*f1/f0*arg3/6.L + 3*bindex*(2*bindex-1)*f1*f1/f0/f0*arg4/24.L)
-			  *86400.L/f0;
+			  *86400.L*86400.L/f0;
 		      }
 
 		    
@@ -1230,7 +1238,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	    
 
 	    
-	    afunc = f1*f1/f0*arg3/6.0L + (4*bindex-1)*f1*f1*f1/f0/f0;
+	    afunc = f1*f1/f0*arg3/6.0L + (4*bindex-1)*f1*f1*f1/f0/f0*arg4/24.L;
 
 
 
