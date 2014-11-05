@@ -46,7 +46,7 @@ double G_OMEGA;
 void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 	   double *cholWspecY,int nCholWspec,double *highFreqSpecX,
 	   double *highFreqSpecY,int nHighFreqSpec,int makeps);
-void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file);
+void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file,int fc_auto,int nfit_auto,int exp_auto,int useBeta);
 int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese,int *ip);
 void fitSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *smoothModel,double *highFreqRes,double *hfNormCovar,int *hfNormCovarNpts,double hfZerolagNormCovar);
@@ -67,7 +67,7 @@ void plot2(double *origSpecX,double *origSpecY,int nOrigSpec,double *smoothSpecX
 	   double *highFreqSpecY,int nHighFreqSpec,int makeps);
 void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,
-	   int nHighFreqSpec,double modelAlpha,double modelFc,int modelNfit,double modelScale,int closeit,float *minx,float *maxx);
+	   int nHighFreqSpec,double modelAlpha,double modelFc,int modelNfit,double modelScale,int closeit,float *minx,float *maxx,int useBeta,double betaVal);
 void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpts,
 	    double zerolagRawCovar,double *ampFit,double *chisqFit,int nGridFit,
 	    double bestAmp,double bestLag,double bestChisq,int makeps);
@@ -77,7 +77,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,int nHighFreqSpec,
 	   double modelAlpha,double modelFc,int modelNfit,double modelScale,
 	   double nmodelScale,double *cholSpecX,double *cholSpecY,int nCholSpec,
-	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps,double *cholWspecX2,double *cholWspecY2);
+	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps,double *cholWspecX2,double *cholWspecY2,int useBeta,double betaVal);
 void outputMatrix(double **uinv,int nres);
 void fitExponential(double *resx,int nres,double *rawCovar,int *rawCovarNpts,double *ampFit,double *chisqFit,double *bestAmp,double *bestLag,double *bestChisq,int *nGridFit);
 void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,double **uinv,double *resx,
@@ -111,6 +111,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int inpt=-1;
   int ipw=-1;
   int makeps=0;
+  int fc_auto=0;
+  int nfit_auto=0;
+  int exp_auto=0;
+  int useBeta=0;
 
   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
 
@@ -141,6 +145,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  strcpy(parFile[0],argv[i+1]); 
 	  strcpy(timFile[0],argv[i+2]);
 	}
+      else if (strcasecmp(argv[i],"-useBeta")==0)
+	useBeta=1;
       else if (strcmp(argv[i],"-t")==0)
 	sscanf(argv[++i],"%lf",&idt);
       else if (strcmp(argv[i],"-g")==0)
@@ -150,15 +156,45 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	strcpy(covarFuncFile,dcf_file);
 	  }
       else if (strcmp(argv[i],"-fc")==0)
-	sscanf(argv[++i],"%lf",&ifc);
+	{
+	  char tt[128];
+	  sscanf(argv[++i],"%s",tt);
+	  if (strcmp(tt,"auto")==0)
+	    {ifc=-2; fc_auto=1;}
+	  else
+	    {
+	      sscanf(tt,"%lf",&ifc);
+	      fc_auto=0;
+	    }
+	}
       else if (strcmp(argv[i],"-exp")==0)
-	sscanf(argv[++i],"%lf",&iexp);
+	{
+	  char tt[128];
+	  sscanf(argv[++i],"%s",tt);
+	  if (strcmp(tt,"auto")==0)
+	    {iexp=-2; exp_auto=1;}
+	  else
+	    {
+	      sscanf(tt,"%lf",&iexp);
+	      exp_auto=0;
+	    }
+	}
       else if (strcmp(argv[i],"-pw")==0)
 	sscanf(argv[++i],"%d",&ipw);
       else if (strcmp(argv[i],"-setamp")==0)
 	sscanf(argv[++i],"%lf",&amp);
       else if (strcmp(argv[i],"-nfit")==0)
-	sscanf(argv[++i],"%d",&inpt);
+	{
+	  char tt[128];
+	  sscanf(argv[++i],"%s",tt);
+	  if (strcmp(tt,"auto")==0)
+	    {inpt=-2; nfit_auto=1;}
+	  else
+	    {
+	      sscanf(tt,"%d",&inpt);
+	      nfit_auto=0;
+	    }
+	}
       else if (strcmp(argv[i],"-skipstep2")==0)
 	skipstep2=1;
       else if (strcmp(argv[i],"-skipprocess")==0)
@@ -185,12 +221,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   //
   printf("Plugin to obtain a spectral model of pulsar timing residuals\n");
-  doPlugin(psr,idt,ipw,ifc,iexp,inpt,makeps,amp,dcf_file);
+  doPlugin(psr,idt,ipw,ifc,iexp,inpt,makeps,amp,dcf_file,fc_auto,nfit_auto,exp_auto,useBeta);
 
   return 0; 
 } 
 
-void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file)
+void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file,int fc_auto,int nfit_auto,int exp_auto,int useBeta)
 {
   int i,j;
 
@@ -219,6 +255,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   int nHighFreqSpec;
   int usePreWhitening=0;                               // Prewhitening to use
   double preWhiteSpecX[MAX_OBSN],preWhiteSpecY[MAX_OBSN]; // Spectrum with final prewhitening
+  double betaVal=0;
   double *covFunc;                                     // Covariance function
   int nPreWhiteSpec;
   double modelAlpha,modelFc,modelScale,nmodelScale;    // Model parameters
@@ -246,6 +283,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   double errorScaleFactor = 1;
   int tempTime=1;
   char dummy[100];
+  double cutoff=0.0;
 
   verbose_calc_spectra=true;
 
@@ -415,20 +453,31 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 		 if (skipprocess==0)
 		   {
 			 plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,
-			   highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
+			       highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my,useBeta,betaVal);
 		   }
 		 // Step 3c: Fit to spectra
-		 cont = T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp,-1);
+		 printf("Calling fitSpectra with %g\n",ifc);
+		 if (inpt == -2) // Automatically find a cutoff value
+		   {
+		     int i;
+		     int nWhiteSpec = 10; // How many of the last channels are expected to be white
+		     double rms = TKfindRMS_d(highFreqSpecY+nHighFreqSpec-1-nWhiteSpec,nWhiteSpec);
+		     double mean = TKmean_d(highFreqSpecY+nHighFreqSpec-1-nWhiteSpec,nWhiteSpec);
+		     printf("rms = %g, mean = %g\n",rms,mean);
+		     cutoff = mean+rms;  // SHOULD WE CALCUALTE THIS ON A LOG SCALE?
+		   }
+
+		 cont = T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp,useBeta,&betaVal,cutoff);
 		 printf("modelScale = %g\n",modelScale);
 	   } while (cont==1);
 		 }
-	   //      else
-	   //	{
+		 //      else
+		 //	{
 	   //	  modelScale = amp;
 	   //	}
 
 		 // Step 4a: calculate the Cholesky whitening matrix (uinv)
-		 T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
+		 T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,useBeta,betaVal);
 		 for (i=0;i<100;i++)
 	   printf("cov: %lg %g %g %g %d %g %g\n",covFunc[i],resx[i],resy[i],rese[i],nres,highFreqRes[i],errorScaleFactor);
 	   }
@@ -474,14 +523,14 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	   nPreWhiteSpec=nOrigSpec;
 	   do {
 			  plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,
-			   highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my);
+				highFreqSpecX,highFreqSpecY,nHighFreqSpec,modelAlpha,modelFc,modelNfit,modelScale,1,&mx,&my,useBeta,betaVal);
 		 // Step 3c: Fit to spectra
-			  cont = T2fitSpectra(origSpecX,origSpecY,nOrigSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp,-1);
+			  cont = T2fitSpectra(origSpecX,origSpecY,nOrigSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,0,ipw,ifc, iexp, inpt,amp,useBeta,&betaVal,-1);
 		 printf("modelScale = %g\n",modelScale);
 	   } while (cont==1);
 
 		 // Step 4a: calculate the Cholesky whitening matrix (uinv)
-		 T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
+	   T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,useBeta,betaVal);
 
    }
 
@@ -526,17 +575,22 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       double cholWhiteY2[MAX_OBSN];                         // Cholesky white residuals
       double cholWspecX2[MAX_OBSN],cholWspecY2[MAX_OBSN];    // Cholesky whitened spectrum
 
-      T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt,amp,-1);
+      T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,ipw,ifc, iexp, inpt,amp,useBeta,&betaVal,-1);
       sprintf(fname,"%s.model",psr[0].name);
       fout = fopen(fname,"w");
-      fprintf(fout,"MODEL 1\n");
+      if (useBeta==1)
+	fprintf(fout,"MODEL 2\n");
+      else
+	fprintf(fout,"MODEL 1\n");
       fprintf(fout,"ALPHA %g\n",modelAlpha);
+      if (useBeta==1)
+	fprintf(fout,"BETA %g\n",betaVal);
       fprintf(fout,"FC %g\n",modelFc);
       fprintf(fout,"AMP %g\n",nmodelScale);
       fclose(fout);
 
       // recalculating UINV and the whitened residuals and spectra with the new model
-      T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
+      T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,useBeta,betaVal);
       T2getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY2);
       if(writeFiles)fileOutput3("cholWhiteRes2.dat",resx,cholWhiteY2,rese,nres);
       nCholWspec = T2calculateSpectra(resx,cholWhiteY2,rese,nres,0,0,2,
@@ -545,10 +599,10 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
       
       plot5(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,highFreqSpecX,highFreqSpecY,nHighFreqSpec,
-	    modelAlpha,modelFc,modelNfit,modelScale,nmodelScale,cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,makeps,cholWspecX2,cholWspecY2);
+	    modelAlpha,modelFc,modelNfit,modelScale,nmodelScale,cholSpecX,cholSpecY,nCholSpec,cholWspecX,cholWspecY,nCholWspec,makeps,cholWspecX2,cholWspecY2,useBeta,betaVal);
 
       // Step 5c: recalculate the Cholesky matrix
-      T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
+      T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,useBeta,betaVal);
     }
   else
   // Step 6: output the covariance function
@@ -933,7 +987,7 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
   cpgswin(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny));
   cpgbox("BCLTS",0,0,"BCNTS",0,0);
   cpglab("","Power Spectral Density (yr\\u3\\d)","");
-  cpgsci(7); cpgline(nCholSpec,fx,fy); cpgpt(nCholSpec,fx,fy,20); cpgsci(1);
+   cpgsci(7); cpgline(nCholSpec,fx,fy); cpgpt(nCholSpec,fx,fy,20); cpgsci(1);
   cpgsci(1); cpgline(nHighFreqSpec,fx3,fy3); cpgpt(nHighFreqSpec,fx3,fy3,20); cpgsci(1);
   for (i=(int)(miny-0.1*(maxy-miny))-1;i<(int)maxy+1;i++)
     {
@@ -964,7 +1018,7 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
   cpgswin(minx-0.1*(maxx-minx),maxx+0.1*(maxx-minx),miny-0.1*(maxy-miny),maxy+0.1*(maxy-miny));
   cpgbox("BCNLTS",0,0,"BCNTS",0,0);
   cpglab("Frequency (yr\\u-1\\d)","Power Spectral Density (yr)","");
-  cpgsci(2); cpgline(nCholWspec,fx2,fy2); cpgpt(nCholWspec,fx2,fy2,20); cpgsci(1);
+  //  cpgsci(2); cpgline(nCholWspec,fx2,fy2); cpgpt(nCholWspec,fx2,fy2,20); cpgsci(1);
   for (i=(int)(miny-0.1*(maxy-miny))-1;i<(int)maxy+1;i++)
     {
       fx[0] = minx-0.1*(maxx-minx); fx[1] = maxx+0.1*(maxx-minx);
@@ -983,6 +1037,8 @@ void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 	  cpgsls(4); cpgsci(14); cpgline(2,fx,fy); cpgsci(1); cpgsls(1);
 	}
     }
+
+  // gh: this bit!
   fx[0] = minx-0.1*(maxx-minx); fx[1] = maxx+0.1*(maxx-minx);
   fy[0] = fy[1] = log10(1.0/pow(10,fx2[nCholWspec-1]));
   cpgsci(3); cpgline(2,fx,fy);
@@ -1027,7 +1083,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,int nHighFreqSpec,
 	   double modelAlpha,double modelFc,int modelNfit,double modelScale,
 	   double nmodelScale,double *cholSpecX,double *cholSpecY,int nCholSpec,
-	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps,double *cholWspecX2,double *cholWspecY2)
+	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps,double *cholWspecX2,double *cholWspecY2,int useBeta,double betaVal)
 {
   int i,j;
   float fx[MAX_OBSN],fy[MAX_OBSN];
@@ -1046,7 +1102,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
   cpgslw(2);
 
   plot3(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,usePreWhitening,highFreqSpecX,highFreqSpecY,
-	nHighFreqSpec, modelAlpha, modelFc, modelNfit, modelScale,0,&minx,&maxx);
+	nHighFreqSpec, modelAlpha, modelFc, modelNfit, modelScale,0,&minx,&maxx,useBeta,betaVal);
   // Overlay spectrum obtained using Cholesky
   
   // Overlay new model
@@ -1055,6 +1111,7 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
       fx1[i] = log10(cholSpecX[i]*365.25);
       fy1[i] = log10(cholSpecY[i]);
     }
+  // THIS IS THE FINAL PLOT
   cpgsci(7); cpgline(nCholSpec,fx1,fy1); 
   cpgpt(nCholSpec,fx1,fy1,20); cpgsci(1);
 
@@ -1064,7 +1121,10 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	{
 	  fx2[i] = log10(cholSpecX[i]*365.25);
 	  //	  fy2[i] = nmodelScale-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
-	  fy2[i] = log10(nmodelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	  if (useBeta==0)
+	    fy2[i] = log10(nmodelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	  else
+	    fy2[i] = log10(nmodelScale*pow(cholSpecX[i]*365.25/modelFc,betaVal)*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
 	  //	  fy2[i] = log10(pow(10,nmodelScale)/365.25)-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
 	}
       cpgsls(2); cpgsci(2); cpgline(nCholSpec,fx2,fy2); cpgsci(1); cpgsls(1);
@@ -1144,6 +1204,8 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
       cpgsci(7); cpgline(nCholWspec,fx3,fy3); 
       cpgpt(nCholWspec,fx3,fy3,20); cpgsci(1);
       
+
+      // Lines for the expected level
       fx[0] = minx-0.1*(maxx-minx); fx[1] = maxx+0.1*(maxx-minx);
       fy[0] = fy[1] = log10(1.0/pow(10,fx3[nCholWspec-1]));
       cpgsls(4); cpgline(2,fx,fy);
@@ -1185,11 +1247,22 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	  fx2[i] = log10(cholSpecX[i]*365.25);
 	  //	  fy2[i] = nmodelScale-log10(pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
 
-	  fy2[i] = log10(nmodelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
-	  fprintf(fout2,"%g %g\n",cholSpecX[i],pow(10,fy2[i]));
-
-	  fy2[i] = log10(modelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
-	  fprintf(fout1,"%g %g\n",cholSpecX[i],pow(10,fy2[i]));
+	  if (useBeta==0)
+	    {
+	      fy2[i] = log10(nmodelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	      fprintf(fout2,"%g %g\n",cholSpecX[i],pow(10,fy2[i]));
+	      
+	      fy2[i] = log10(modelScale*(1.0/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	      fprintf(fout1,"%g %g\n",cholSpecX[i],pow(10,fy2[i]));
+	    }
+	  else
+	    {
+	      fy2[i] = log10(nmodelScale*(pow(cholSpecX[i]*356.25/modelFc,betaVal)/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	      fprintf(fout2,"%g %g\n",cholSpecX[i],pow(10,fy2[i]));
+	      
+	      fy2[i] = log10(modelScale*(pow(cholSpecX[i]*356.25/modelFc,betaVal)/pow((1.0+pow(cholSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	      fprintf(fout1,"%g %g\n",cholSpecX[i],pow(10,fy2[i]));
+	    }
 	}
       cpgsls(2); cpgsci(2); cpgline(nCholSpec,fx2,fy2); cpgsci(1); cpgsls(1);
       fx[0] = fx[1] = 0;
@@ -1310,7 +1383,7 @@ void plot4(double *resx,double *resy,double *rese,int nres,double *cholWhiteY,
 void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   int usePreWhitening,double *highFreqSpecX,double *highFreqSpecY,
 	   int nHighFreqSpec,double modelAlpha,double modelFc,int modelNfit,double modelScale,
-	   int closeit,float *minx,float *maxx)
+	   int closeit,float *minx,float *maxx,int useBeta,double betaVal)
 {
   int i,j;
   float fx1[nPreWhiteSpec],fy1[nPreWhiteSpec];
@@ -1399,7 +1472,11 @@ void plot3(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	{
 	  fx3[i] = log10(preWhiteSpecX[i]*365.25);
 	  //	  fy3[i] = modelScale-log10(pow((1.0+pow(preWhiteSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
-	  fy3[i] = log10(modelScale*(1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	  if (useBeta==1)
+	    fy3[i] = log10(modelScale*(pow(preWhiteSpecX[i]*365.25/modelFc,betaVal)/pow((1.0+pow(preWhiteSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+	  else
+	    fy3[i] = log10(modelScale*(1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0)));
+
 	  //	  fy3[i] = log10(pow(10,modelScale)/365.25)-log10(pow((1.0+pow(preWhiteSpecX[i]*365.25/modelFc,2)),modelAlpha/2.0));
 	}
       cpgsls(3); cpgsci(1); cpgline(nPreWhiteSpec,fx3,fy3); cpgsci(1); cpgsls(1);
