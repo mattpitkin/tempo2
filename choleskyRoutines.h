@@ -16,10 +16,10 @@ int T2calculateSpectra(double *x,double *y,double *e,int n,int useErr,int preWhi
 
 //int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt);
 
-int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp, double cutoff);
+int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp, int useBeta,double *betaVal,double cutoff=0.0);
 
-void T2calculateCholesky(double modelAlpha,double modelFc,double modelScale,double fitVar,double **uinv,double *covFunc, double *resx,double *resy,double *rese,int np,double *highFreqRes,double *errorScaleFactor, int dcmflag);
-int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *covFunc,double *resx,double *resy,double *rese,int np);
+void T2calculateCholesky(double modelAlpha,double modelFc,double modelScale,double fitVar,double **uinv,double *covFunc, double *resx,double *resy,double *rese,int np,double *highFreqRes,double *errorScaleFactor, int dcmflag,int useBeta,double betaVal);
+int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useBeta,double betaVal,double *covFunc,double *resx,double *resy,double *rese,int np);
 
 void T2getWhiteRes(double *resx,double *resy,double *rese,int nres,double **uinv,double *cholWhiteY);
 void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,int *in,double *zl,int usewt);

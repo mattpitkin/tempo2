@@ -309,7 +309,7 @@ fprintf(stderr,"fc_white %.3e expsmooth %.3e\n", fc_white, expSmooth);
    int cont;
 
    
-   cont = T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit, -1,-1);
+   cont = T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit, -1,0,NULL,-1);
 
    NFIT = modelNfit;
 
@@ -326,7 +326,7 @@ fprintf(stderr,"fc_white %.3e expsmooth %.3e\n", fc_white, expSmooth);
    double errorScaleFactor=1;
 
    fprintf(stderr, "calculating Cholesky\n");
-   T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor, 0);
+   T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor, 0,0,0);
 
    
    
@@ -443,16 +443,16 @@ fprintf(stderr,"fc_white %.3e expsmooth %.3e\n", fc_white, expSmooth);
    if (modelAmp != 1000)
      {
       
-       T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha, &modelFc,&modelNfit_chol,&nmodelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit,-1,-1);
+       T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha, &modelFc,&modelNfit_chol,&nmodelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit, -1,0,NULL,-1);
      }
    else
      {
        //fprintf(stderr, "made it here\n");
        // exit(0);
-       T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha, &modelFc,&modelNfit_chol,&nmodelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit,-1,-1);
+       T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha, &modelFc,&modelNfit_chol,&nmodelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit, -1,0,NULL,-1);
      }
 
-   T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha, &modelFc,&modelNfit_chol,&nmodelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit,-1,-1);
+   T2fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha, &modelFc,&modelNfit_chol,&nmodelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit, -1,0,NULL,-1);
 
    free(cholSpecX);
    free(cholSpecY);
@@ -469,7 +469,7 @@ fprintf(stderr,"fc_white %.3e expsmooth %.3e\n", fc_white, expSmooth);
     // does this need to be one beforehand?
     errorScaleFactor=1;
 
-    T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0);
+    T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
    nSpec =  calcSpectra(uinv,resx,resy, nres,specX,specY, -1);
    //  nSpec = calcSpectra_with_err(uinv,resx,resy, nres,specX,specY,specY_err,-1);  
    
@@ -489,7 +489,7 @@ fprintf(stderr,"fc_white %.3e expsmooth %.3e\n", fc_white, expSmooth);
 
    //fitSpectra(cholSpecX,cholSpecY,nCholSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,usePreWhitening,ifc, iexp, inpt);
 
-   T2fitSpectra(specX,specY,nSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,usePreWhitening,ifc, iexp, inpt,-1,-1);
+   T2fitSpectra(specX,specY,nSpec,&modelAlpha,&modelFc,&modelNfit,&nmodelScale,&fitVar,1,usePreWhitening,ifc, iexp, inpt, -1,0,NULL,-1);
    *modelVal = modelAmp; 
    *modelAlpha_out = modelAlpha;
 
@@ -910,7 +910,7 @@ int T2calculateSpectra(double *x,double *y,double *e,int n,int useErr,int preWhi
   return nSpec;
 }
 
-int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp,double cutoff)
+int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp,int useBeta,double *betaVal,double cutoff)
 {
   static int time=1;
   double v1,v2,m;
@@ -939,6 +939,11 @@ int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,d
 	printf("Automatically determining corner frequency to be %g\n",*modelFc);
       }
       else *modelFc = ifc;
+      if (useBeta==1)
+	{
+	  printf("Enter beta "); scanf("%lf",betaVal);
+	}
+
       if (iexp == 0) {printf("Enter power law exponential (should be positive) "); scanf("%lf",modelAlpha);}
       else if (iexp!=-2) *modelAlpha = iexp;	
 
@@ -1016,8 +1021,10 @@ int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,d
 	  //	  m = 1.0/pow((1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),2)),(*modelAlpha)/2.0);
 //	  m = 1.0/pow(1.0+pow(preWhiteSpecX[i]*365.25/(*modelFc),*modelAlpha/2.0),2); // MJK OLD CODE
 
-	  m=1.0/pow(1.0+pow(fabs(preWhiteSpecX[i]*365.25)/(*modelFc),2),*modelAlpha/2.0);
-
+	  if (useBeta==0)
+	    m=1.0/pow(1.0+pow(fabs(preWhiteSpecX[i]*365.25)/(*modelFc),2),*modelAlpha/2.0);
+	  else
+	    m=pow(preWhiteSpecX[i]*365.25/(*modelFc),*betaVal)/pow(1.0+pow(fabs(preWhiteSpecX[i]*365.25)/(*modelFc),2),*modelAlpha/2.0);
 	  v1 += preWhiteSpecY[i]/m;
 	  printf("Here with %g %g %g %d\n",v1,preWhiteSpecY[i],m,*modelNfit);
 
@@ -1051,7 +1058,7 @@ int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,d
  *
  *
  */
-int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *covFunc,double *resx,double *resy,double *rese,int np){
+int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useBeta,double betaVal,double *covFunc,double *resx,double *resy,double *rese,int np){
    int ndays;
    int npts,i;
    double *p_r,*p_i;
@@ -1081,12 +1088,18 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
    FILE* tf = fopen("testf","w");
    if (!tf) {printf("Warning: unable to open output file: testf\n"); noTF=1;}
 
-   p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
+   if (useBeta==0)
+     p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
+   else
+     p_r[0]=modelA*pow(fabs(0)/modelFc,betaVal)/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
 
    if (noTF==0) fprintf(tf,"%g %g\n",0,p_r[0]);
    for (i=1;i<=npts/2;i++){
 	  freq=double(i)/(N*delta);
-	  P=modelA/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
+	  if (useBeta==0)
+	    P=modelA/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
+	  else
+	    P=modelA*pow(fabs(freq)/modelFc,betaVal)/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
 	  if (noTF==0) fprintf(tf,"%g %g\n",freq,P);
 	  p_r[i]=P;
 	  p_r[npts-i]=P;
@@ -1183,14 +1196,14 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,double *
 void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
 double fitVar,double **uinv,double *covarFunc,double *resx,double *resy,
 double *rese,int np,double *highFreqRes,double *errorScaleFactor, 
-int dcmflag)
+			 int dcmflag,int useBeta,double betaVal)
 {
    int i,j,ndays;
    double** m=malloc_uinv(np);
    
    printf("choleskyRoutines: calculateCholesky\n");
    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
-   int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,covarFunc,resx,resy,rese,np);
+   int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,useBeta,betaVal,covarFunc,resx,resy,rese,np);
 
    if(ndays!=ndays_out){
 	  logerr("Ndays in != Ndays out!");

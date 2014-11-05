@@ -87,6 +87,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
       
       one_au = jpl_get_double(ephem, JPL_EPHEM_AU_IN_KM) * 1000.0;
       emrat  = jpl_get_double(ephem, JPL_EPHEM_EARTH_MOON_RATIO);
+      if (debugFlag) printf("one_au = %g, emrat = %g\n",one_au,emrat);
       /* Get "Ephemeris AU" in SI m instead of Ephemeris m */
       if (psr[p].units == SI_UNITS)
 	      one_au = (double)one_au*IFTE_K; 

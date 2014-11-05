@@ -302,6 +302,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   strcpy(psr->param[param_tel_z0].shortlabel[0],"TEL_Z0");
   strcpy(psr->param[param_ifunc].label[0],"IFUNC");
   strcpy(psr->param[param_ifunc].shortlabel[0],"IFUNC");
+  strcpy(psr->param[param_df1].label[0],"DF1");
+  strcpy(psr->param[param_df1].shortlabel[0],"DF1");
   strcpy(psr->param[param_clk_offs].label[0],"CLK_OFFS");
   strcpy(psr->param[param_clk_offs].shortlabel[0],"CLK_OFFS");
   strcpy(psr->param[param_quad_ifunc_p].label[0],"QIFUNC_p");
@@ -374,6 +376,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
       sprintf(temp,"GLTD_%d",k+1);
       strcpy(psr->param[param_gltd].label[k],temp);
       strcpy(psr->param[param_gltd].shortlabel[k],temp);
+      sprintf(temp,"SWITCH_%d",k+1);
+      strcpy(psr->param[param_stateSwitchT].label[k],temp);
+      strcpy(psr->param[param_stateSwitchT].shortlabel[k],temp);
+
     }
   /* Binary parameters */
   strcpy(psr->param[param_t0].label[0],"T0 (MJD)");
@@ -555,7 +561,7 @@ void allocateMemory(pulsar *psr, int realloc)
 	psr->param[i].aSize = 20;
       else if (i==param_bpjep || i==param_bpjph || i==param_bpja1 || i==param_bpjec || i==param_bpjom
 	       || i==param_bpjpb)  psr->param[i].aSize = MAX_BPJ_JUMPS;
-      else if (i==param_glep || i==param_glph || i==param_glf0 || i==param_glf1 || i==param_glf2 || 
+      else if (i==param_glep || i==param_glph || i==param_glf0 || i==param_glf1 || i==param_stateSwitchT || i==param_glf2 || 
 	       i==param_glf0d || i==param_gltd) psr->param[i].aSize = 20;
       else if (i==param_dmassplanet)
 	psr->param[i].aSize = 9;

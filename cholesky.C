@@ -229,6 +229,10 @@ void cholesky_readT2CholModel_R(double **m, double **mm, char* fname,double *res
 			   cholesky_readT2Model1(mm,infile,resx,resy,rese,np,nc,ip,psr);
 			   addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
 			   continue;
+			} else if (strcmp(val,"2")==0){
+			   cholesky_readT2Model2(mm,infile,resx,resy,rese,np,nc,ip,psr);
+			   addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+			   continue;
 			} else if (strcmp(val,"T2")==0){
 			   continue;
 			}
@@ -454,6 +458,19 @@ void cholesky_readT2Model1(double **m, FILE* file,double *resx,double *resy,doub
    cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
 }
 
+void cholesky_readT2Model2(double **m, FILE* file,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
+   char dmy[LINE_LENGTH];
+   double alpha;
+   double beta;
+   double fc;
+   double amp;
+   fscanf(file,"%s %lg\n",dmy,&alpha);
+   fscanf(file,"%s %lg\n",dmy,&beta);
+   fscanf(file,"%s %lg\n",dmy,&fc);
+   fscanf(file,"%s %lg\n",dmy,&amp);
+   cholesky_powerlawModel_withBeta(m,alpha,beta,fc,amp, resx, resy,rese,np, nc);
+}
+
 void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *rese,int np, int nc){
    char dmy[LINE_LENGTH];
    int i,j;
@@ -619,7 +636,30 @@ void cholesky_powerlawModel(double **m, double modelAlpha, double modelFc, doubl
    logmsg("Generate covar matrix from powerlaw model (a=%lf fc=%lf A=%lg)",modelAlpha,modelFc,modelA);
    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
-   int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,covarFunc,resx,resy,rese,np);
+   int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,0,0,covarFunc,resx,resy,rese,np);
+   if(ndays!=ndays_out){
+	  logerr("Ndays in != Ndays out!");
+   }
+   if(debugFlag){
+	  FILE* outFile = fopen("newDCF","w");
+	  for(i=0;i<ndays;i++){
+		 fprintf(outFile,"%lg\n",covarFunc[i]);
+	  }
+	  fclose(outFile);
+   }
+
+   cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+   free(covarFunc);
+}
+
+void cholesky_powerlawModel_withBeta(double **m, double modelAlpha, double modelBeta,double modelFc, double modelA,double *resx,double *resy,double *rese,int np, int nc){
+
+   int ndays,i;
+   double *covarFunc;
+   logmsg("Generate covar matrix from powerlaw model (a=%lf b=%lf fc=%lf A=%lg)",modelAlpha,modelBeta,modelFc,modelA);
+   ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+   covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+   int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,1,modelBeta,covarFunc,resx,resy,rese,np);
    if(ndays!=ndays_out){
 	  logerr("Ndays in != Ndays out!");
    }

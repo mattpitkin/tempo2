@@ -506,6 +506,18 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      printf("Interpolated function\n");
 	      for (i=0;i<psr[p].ifuncN;i++)
 		printf("%.2f %.10g %.10g %.3f\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i],psr[p].ifunc_weights[i]);
+	      fout = fopen("ifunc.dat","w");
+	      if (!fout){
+		printf("Unable to open file ifunc.dat for writing\n");
+	      }
+	      else
+		{
+		  for (i=0;i<psr[p].ifuncN;i++)
+		    fprintf(fout,"%.2f %.10g %.10g %.3f\n",psr[p].ifuncT[i],psr[p].ifuncV[i],psr[p].ifuncE[i],psr[p].ifunc_weights[i]);
+		  
+		  fclose(fout);
+		}
+
 	    }
 	  if (psr[p].param[param_tel_dx].paramSet[0]==1)
 	    {
