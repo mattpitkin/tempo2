@@ -352,7 +352,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		  }
 		else
 		  {
-		    getCholeskyMatrixL(uinvs[p],covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip[p]);
+		    getCholeskyMatrix(uinvs[p],covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip[p]);
 		    logtchk("Completed computing uinv usign long doubles");
 		  }
 		psr[p].nFit = count;
