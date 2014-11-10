@@ -3,10 +3,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
-#include <tempo2.h>
-#include <TKfit.h>
-#include <TKspectrum.h>
-#include <choleskyRoutines.h>
+#include "tempo2.h"
+#include "TKfit.h"
+#include "TKspectrum.h"
+#include "choleskyRoutines.h"
 #include "T2accel.h"
 #include "cholesky.h"
 
