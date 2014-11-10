@@ -18,7 +18,7 @@ headers=GWsim.h T2toolkit.h TKfit.h TKspectrum.h dynarr.h ifteph.h jpl_int.h jpl
 
 libtempo2_la_SOURCES = $(headers) preProcess.C calculate_bclt.C T2toolkit.C TKfit.C doFit.C readTimfile.C formBats.C initialise.C shapiro_delay.C textOutput.C displayParameters.C formResiduals.C jpleph.c toa2utc.C tai2tt.C dm_delays.C getInputs.C readEphemeris.C tt2tdb.C utc2tai.C tai2ut1.C  get_obsCoord.C readParfile.C units.C vectorPulsar.C tempo2Util.C polyco.C dynarr.C clkcorr.C observatory.C storePrecision.C readJBO_bat.C MSSmodel.C BTmodel.C BTJmodel.C BTXmodel.C ELL1model.C DDGRmodel.C DDmodel.C DDKmodel.C DDSmodel.C DDHmodel.C ELL1Hmodel.C T2model.C ifteph.C eop.C tropo.C bootstrap.C cheby2d_int.C cheby2d.c tabulatedfunction.C t1polyco.c tempo2pred.c secularMotion.C sw_delay.C global.C preProcessSimple.C constraints.C cholesky.C choleskyRoutines.C TKspectrum.C T2accel.C TKsvd.C TKmatrix.C sortToAs.C T2-PTAmodel.C GWsim.C readEphemeris_calceph.C TKlog.C choleskyAutomatic.C
 
-libt2toolkit_la_SOURCES=T2toolkit.C T2toolkit.h TKfit.C TKfit.h TKmatrix.C TKmatrix.h TKsvd.C TKsvd.h  TKlog.C TKlog.h T2accel.C T2accel.h cholesky.C cholesky.h choleskyRoutines.C TKspectrum.C TKspectrum.h
+libt2toolkit_la_SOURCES=T2toolkit.C T2toolkit.h TKfit.C TKfit.h TKmatrix.C TKmatrix.h TKsvd.C TKsvd.h  TKlog.C TKlog.h T2accel.C T2accel.h cholesky.C cholesky.h choleskyRoutines.C TKspectrum.C TKspectrum.h t2toolkit_global.C
 libt2toolkit_la_CFLAGS=-fPIC
 libt2toolkit_la_LIBADD=
 
