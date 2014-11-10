@@ -344,6 +344,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			}
 		}
 		logtchk("Compute uinv");
+		bool uselongdouble=false;
 		// note that this works even for a non-cholesky fit.
 		if(!uselongdouble)
 		  {
