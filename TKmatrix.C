@@ -189,7 +189,12 @@ float** malloc_2df(int rows,int cols){
    logdbg("Allocate %d x %d float array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(float)/1024.0));
 
    m=(float**) calloc(rows,sizeof(float*));
-   memory=(float*)calloc(rows*cols,sizeof(float));
+   //memory=(float*)malloc(sizeof(float)*rows*cols);
+   posix_memalign((void**)&memory,16,sizeof(float)*rows*cols);
+
+   for(i=0;i<rows*cols;i++){
+	  memory[i]=0;
+   }
 
    if(memory==NULL || m==NULL){
 	  logdbg("Could not allocate %d x %d float array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(float)/1024.0));
