@@ -225,6 +225,12 @@ void cholesky_readT2CholModel_R(double **m, double **mm, char* fname,double *res
 			   cholesky_dmModel(mm,D,d,ref_freq,resx, resy,rese,np, nc);
 			   addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
 			   continue;
+			} else if(strcmp(val,"DMCovarParam")==0){ // Added by Daniel Reardon and George Hobbs
+			  double alpha,a,b;
+			   sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&a,&b);
+			   cholesky_dmModelCovarParam(mm,alpha,a,b,resx, resy,rese,np, nc);
+			   addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+			   continue;
 			} else if (strcmp(val,"1")==0){
 			   cholesky_readT2Model1(mm,infile,resx,resy,rese,np,nc,ip,psr);
 			   addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
@@ -600,6 +606,32 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
    }
 }
 
+
+// a in seconds^2
+// b in days
+//
+void cholesky_dmModelCovarParam(double **m, double alpha, double a, double b,double *resx,double *resy,double *rese,int np, int nc){
+   double secperyear=365.25*86400.0;
+   double tobs=ceil((resx[np-1])-(resx[0]))/365.25;
+   double *covarFunc;
+   double x;
+   int i;
+   int ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+   covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+
+   printf("In DMCovarParam function\n");
+   for (i=0; i <= ndays; i++){
+     x = (i+1e-10);
+     covarFunc[i]=a*exp(-pow(x/b,alpha));
+     printf("DMCovarParam: %g\n",covarFunc[i]);
+   }
+   cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+
+
+   free(covarFunc);
+}
+
+
 void cholesky_dmModel(double **m, double D_d, double d, double ref_freq,double *resx,double *resy,double *rese,int np, int nc){
    double secperyear=365.25*86400.0;
    double tobs=ceil((resx[np-1])-(resx[0]))/365.25;
@@ -614,6 +646,7 @@ void cholesky_dmModel(double **m, double D_d, double d, double ref_freq,double *
 
    //power at 1 year
    //Equation 12 from Keith et al. (2012)
+   // 0.0112 scales a structure function into a power spectrum
    double pism = 0.0112 * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
    logdbg("pism(1yr^-1)  = %g (yr^3)",pism);
 

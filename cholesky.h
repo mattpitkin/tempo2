@@ -9,8 +9,8 @@ void cholesky_powerlawModel(double **m, double modelAlpha, double modelFc, doubl
   void cholesky_powerlawModel_withBeta(double **m, double modelAlpha, double beta, double modelFc, double modelA,double *resx,double *resy,double *rese,int np, int nc);
 void cholesky_formUinv(double **uinv,double** m,int np);
 void cholesky_dmModel(double **m, double D, double d, double ref_freq,double *resx,double *resy,double *rese,int np, int nc);
-void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *rese,int np, int nc);
-
+  void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *rese,int np, int nc);
+  void cholesky_dmModelCovarParam(double **m, double alpha, double a, double b,double *resx,double *resy,double *rese,int np, int nc);
 
 #ifdef __Tempo2_h
 void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip);

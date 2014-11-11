@@ -14,6 +14,8 @@ std::string get_constraint_name(enum constraint c){
 	switch(c){
 		case constraint_dmmodel_mean:
 			return "DMMODEL mean(DM) = 0";
+		case constraint_dmmodel_dm1:
+			return "DMMODEL mean(DM1) = 0";
 		case constraint_dmmodel_cw_0:
 			return "DMMODEL mean(C) = 0";
 		case constraint_dmmodel_cw_1:
@@ -286,6 +288,21 @@ double consFunc_dmmodel_mean(pulsar *psr,int i,int k){
 	  return psr->dmoffsDM_weight[k];
    } else return 0;
 }
+
+double consFunc_dmmodel_dm1(pulsar *psr,int i,int k){
+   /*
+	* Only operate on param=dmmodel and when fit parameter is 
+	* one of the frequency dependant parts (i.e. first dmoffsNum)
+	*/
+  long double epoch = psr->param[param_dmepoch].val[0];
+   int nDM=psr->dmoffsDMnum;
+   printf("WE ARE IN HERE\n");
+   if(i==param_dmmodel && k < nDM){
+     //     k-=nDM;
+     return psr->dmoffsDM_weight[k]*(psr->dmoffsDM_mjd[k]-epoch);
+   } else return 0;
+}
+
 double consFunc_dmmodel_cw(pulsar *psr,int i,int k,int order){
    /*
 	* Only operate on param=dmmodel and when fit parameter is 

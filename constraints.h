@@ -12,6 +12,7 @@ void computeConstraintWeights(pulsar *psr);
  */
 
 double consFunc_dmmodel_mean(pulsar *psr,int i,int k);
+double consFunc_dmmodel_dm1(pulsar *psr,int i,int k);
 double consFunc_dmmodel_cw(pulsar *psr,int i,int k, int order);
 double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k,int order);
 

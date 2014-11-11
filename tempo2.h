@@ -188,6 +188,7 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
  */
 enum constraint {
 	constraint_dmmodel_mean,
+	constraint_dmmodel_dm1,
 	constraint_dmmodel_cw_0,
 	constraint_dmmodel_cw_1,
 	constraint_dmmodel_cw_2,

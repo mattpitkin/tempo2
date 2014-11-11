@@ -770,6 +770,9 @@ else if (strcasecmp(str,"_DM")==0)
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
       }
+      if((strcasecmp(cname,"DMMODEL_DM1")==0)){
+	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_dm1;
+      }
       if((strcasecmp(cname,"DMMODEL_CUBIC")==0)){
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_3;
       }
@@ -777,13 +780,15 @@ else if (strcasecmp(str,"_DM")==0)
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_px;
       }
 
-      if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_OLD")==0)){
+      if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_OLD")==0)
+	 || strcasecmp(cname,"DMMODEL_DM1")==0){
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_1;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_2;
       }
-      if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_YEAR")==0)){
+      if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_YEAR")==0)
+	 || strcasecmp(cname,"DMMODEL_DM1")==0){
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos;
 	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xsin;

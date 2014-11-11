@@ -127,7 +127,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	    dmDot+=(double)(psr[p].param[param_dm].val[k]*arg); 
 	}
       //      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
-      dmval = psr[p].param[param_dm].val[0]+dmDot;
+      dmval = psr[p].param[param_dm].val[0]; //+dmDot;
 
       //      logdbg("calculating dmval");      
       // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
@@ -228,6 +228,9 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 	    }
 	  //	  logdbg("Looked for flags");      
 	}
+
+      // Add in derivative term
+      dmval += dmDot;
 
       // Add in annual terms
       //

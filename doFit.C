@@ -3126,6 +3126,8 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 
 			// Notice that these case statements fall through, so order is defined
 			// based on which constraint name is used.
+                case constraint_dmmodel_dm1:
+                       return consFunc_dmmodel_dm1(psr,i,k);
 		case constraint_dmmodel_cw_3:
 			order++;
 		case constraint_dmmodel_cw_2:
