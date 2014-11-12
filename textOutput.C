@@ -1210,13 +1210,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			  fprintf(fout2," 1 ");
 			  if (i==param_raj)
 			    {
-			      if (psr[p].param[i].err[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]*12.0*60.0*60.0/M_PI);
-			      else if (psr[p].param[i].err[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]*12.0*60.0*60.0/M_PI);
+                              double fac = 12.0*60.0*60.0/M_PI;
+                              if (psr[p].eclCoord==1) fac=180.0/M_PI;
+			      if (psr[p].param[i].err[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]*fac);
+			      else if (psr[p].param[i].err[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]*fac);
 			    }
 			  else if (i==param_decj)
 			    {
-			      if (psr[p].param[i].err[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]*180.0*60.0*60.0/M_PI);
-			      else if (psr[p].param[i].err[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]*180.0*60.0*60.0/M_PI);
+                              double fac = 180.0*60.0*60.0/M_PI;
+                              if (psr[p].eclCoord==1) fac=180.0/M_PI;
+			      if (psr[p].param[i].err[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]*fac);
+			      else if (psr[p].param[i].err[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]*fac);
 			    }
 			  else
 			    {
@@ -1229,13 +1233,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			  fprintf(fout2,"   ");
 			  if (i==param_raj)
 			    {
-			      if (psr[p].param[i].prefitErr[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]*12.0*60.0*60.0/M_PI);
-			      else if (psr[p].param[i].prefitErr[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]*12.0*60.0*60.0/M_PI);
+                              double fac = 12.0*60.0*60.0/M_PI;
+                              if (psr[p].eclCoord==1) fac=180.0/M_PI;
+			      if (psr[p].param[i].prefitErr[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]*fac);
+			      else if (psr[p].param[i].prefitErr[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]*fac);
 			    }
 			  else if (i==param_decj)
 			    {
-			      if (psr[p].param[i].prefitErr[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]*180.0*60.0*60.0/M_PI);
-			      else if (psr[p].param[i].prefitErr[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]*180.0*60.0*60.0/M_PI);
+                              double fac = 180.0*60.0*60.0/M_PI;
+                              if (psr[p].eclCoord==1) fac=180.0/M_PI;
+			      if (psr[p].param[i].prefitErr[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]*fac);
+			      else if (psr[p].param[i].prefitErr[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]*fac);
 			    }
 			  else
 			    {
