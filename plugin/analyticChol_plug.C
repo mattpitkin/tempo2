@@ -138,7 +138,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
 
   ndays = ceil((resx[np-1])-(resx[0])); 
-  T2calculateCovarFunc(modelAlpha,modelFc,modelA,covFunc,resx,resy,rese,np);
+  T2calculateCovarFunc(modelAlpha,modelFc,modelA,0,0,covFunc,resx,resy,rese,np);
 
   // Write it out
   sprintf(fname,"covarFunc.dat_%s",psr[0].name);
