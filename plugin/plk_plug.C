@@ -1301,7 +1301,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
 	   else if (key=='P') /* New parameter file */
 	   {
-		  textOutput(psr,npsr,0,0,0,1,"");
+		  textOutput(psr,npsr,0,0,0,1,(char *)"");
 	   }
 	   else if (key==23) /* over-write par file */
 	   {
@@ -1756,11 +1756,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 						(setZoomY1==0 || y[i]>zoomY1) &&
 						(setZoomY2==0 || y[i]<zoomY2))
 				  {
-					 printf("%s %s\t%7.5g\t%.5g\t%.5g ",psr[0].obsn[id[i]].fname,
-						   print_longdouble(psr[0].obsn[id[i]].sat).c_str(),x[i],y[i],
-						   (double)psr[0].obsn[id[i]].freq);
+					 printf("%s %s\t%7.5g\t%.5g\t%.5g %.5g ",psr[0].obsn[id[i]].fname,
+						print_longdouble(psr[0].obsn[id[i]].sat).c_str(),x[i],y[i],
+						(double)psr[0].obsn[id[i]].toaErr*1e-6,
+						(double)psr[0].obsn[id[i]].freq);
 					 for (j=0;j<psr[0].obsn[id[i]].nFlags;j++)
-						printf("%s %s ",psr[0].obsn[id[i]].flagID[j],psr[0].obsn[id[i]].flagVal[j]);
+					   printf("%s %s ",psr[0].obsn[id[i]].flagID[j],psr[0].obsn[id[i]].flagVal[j]);
 					 printf("\n");
 				  }
 			   }
@@ -2066,17 +2067,20 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			   {
 				  while (!feof(fin))
 				  {
-					 if (fscanf(fin,"%f %f %s %s",&fx[0],&fx2[0],temp,temp)==4)
-					 {
-						fx[0] = fx[0] - (double)centreEpoch;
-						fx2[0] = fx2[0] - (double)centreEpoch;
-						fx[1] = fx[0];
-						fx2[1] = fx2[0];
-						fy[0] = ploty1; fy[1] = ploty2;
-						cpgsci(2); cpgline(2,fx,fy);
-						cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);
-					 }
+				    long double lx1,lx2;
+				    if (fscanf(fin,"%Lf %Lf %s %s",&lx1,&lx2,temp,temp)==4)
+				      {
 
+					fx[0] = (float)(lx1 - centreEpoch);
+					fx2[0] = (float)(lx2 - centreEpoch);
+					fx[1] = fx[0];
+					fx2[1] = fx2[0];
+					printf("Loaded %.15Lf %.15Lf,%g %g %.15Lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
+					fy[0] = ploty1; fy[1] = ploty2;
+					cpgsci(2); cpgline(2,fx,fy);
+					cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);
+				      }
+				    
 				  }
 				  fclose(fin);
 			   }
@@ -2887,7 +2891,7 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 
 		 /*     callFit(psr,1); */ /* MUST FIX FOR ZOOM MODES */
 	  }
-	  if (mouseX==1 && mouseY==3) textOutput(psr,1,0,0,0,1,"");
+	  if (mouseX==1 && mouseY==3) textOutput(psr,1,0,0,0,1,""); 
 	  if (mouseX==2 && mouseY==3) newTim(psr);
 	  if (mouseX==3 && mouseY==3)  /* Reload */
 	  {
