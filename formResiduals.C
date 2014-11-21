@@ -961,7 +961,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 	       double cosTheta;
 
-	       if ((psr[p].quad_ifunc_geom_p == 0) && (psr[p].param[param_quad_ifunc_p].val[0] == 0 || psr[p].param[param_quad_ifunc_p].val[0] == 3)) 
+	       if ((psr[p].quad_ifunc_geom_p == 0) && (psr[p].param[param_quad_ifunc_p].val[0] == 0 || psr[p].param[param_quad_ifunc_p].val[0] == 1 || psr[p].param[param_quad_ifunc_p].val[0] == 3)) 
 		 {
 		   if (psr[p].param[param_quad_ifunc_p].val[0] == 3)
 		     psr[p].quad_ifunc_geom_p = 1;
