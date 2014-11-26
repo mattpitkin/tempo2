@@ -565,7 +565,7 @@ void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac,int us
 
 double fixRA(char *tstr,double err,char *valStr)
 {
-  int dp,ierr,sym,k;
+  int dp,ierr,sym=0,k;
   double hr,min,sec;
   char disp[500];
   double ra;
@@ -593,29 +593,43 @@ double fixRA(char *tstr,double err,char *valStr)
 
 double fixDec(char *tstr,double err,char *valStr)
 {
-  int dp,ierr,sym,k;
+  int dp,ierr,sym=0,k;
   char disp[500];
   double deg,min,sec;
   double dec;
 
+  //  strcpy(tstr,"10:11:12.3456789");
+  //  err = 0.032/3600.0*M_PI/180.0;
+
+  //  printf("fixDec = %s %g\n",tstr,err);
   sscanf(tstr,"%lf:%lf:%lf",&deg,&min,&sec);
   dec = (fabs(deg)+min/60.0+sec/3600.0)/180.0*M_PI;
   if (deg < 0) dec=-dec;
 
   strcpy(disp,tstr);
-  dp = nint_derived(log10(err*3600.0/M_PI*180.0));
-  if (err*3600.0/M_PI*180.0/pow(10.0,(double)dp)<1.90)
-    {
-      if (dp < 0) dp --;
-      else dp ++;
-    }
+  dp = nint_derived(log10(err*3600.0/M_PI*180.0)-0.5);
+  //  dp = (int)(log10(err*3600.0/M_PI*180.0));
+  //  dp=-2;
+  //  printf("dp = %d\n",dp);
+  //  if (err*3600.0/M_PI*180.0/pow(10.0,(double)dp)<1.90)
+  //    {
+  //      if (dp < 0) dp --;
+  //      else dp ++;
+  //    }
+  //  printf("dp here = %d\n",dp);
   ierr = (int)(err*3600.0/M_PI*180.0/pow(10.0,(double)dp)+0.9999);
+  if (dp > 0)
+    ierr = (int)(err*3600.0/M_PI*180.0+0.9999);
+  //      printf("ierr = %d\n",ierr);
+  //  printf("disp = %s %d\n",disp,dp);
   for (k=0;k<strlen(disp);k++)
     {
       if (disp[k] == ':') sym++;
       if (disp[k] == '.' && dp < 0) {disp[k-dp+1]='\0'; break;}
+      if (disp[k] == '.' && dp >= 0) {disp[k]='\0'; break;}
     }
   sprintf(valStr,"%s(%d)",disp,ierr);
+  //  printf("returning = %s %g\n",valStr,dec);
   return dec;
 }
 
