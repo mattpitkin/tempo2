@@ -581,10 +581,13 @@ double fixRA(char *tstr,double err,char *valStr)
       else dp ++;
     }
   ierr = (int)(err*3600.0/M_PI*12.0/pow(10.0,(double)dp)+0.9999);
+  if (dp > 0)
+    ierr = (int)(err*3600.0/M_PI*12.0+0.9999);
   for (k=0;k<strlen(disp);k++)
     {
       if (disp[k] == ':') sym++;
       if (disp[k] == '.' && dp < 0) {disp[k-dp+1]='\0'; break;}
+      if (disp[k] == '.' && dp >= 0) {disp[k]='\0'; break;}
     }
   sprintf(valStr,"%s(%d)",disp,ierr);
 
@@ -598,8 +601,8 @@ double fixDec(char *tstr,double err,char *valStr)
   double deg,min,sec;
   double dec;
 
-  //  strcpy(tstr,"10:11:12.3456789");
-  //  err = 0.032/3600.0*M_PI/180.0;
+  //    strcpy(tstr,"10:11:12.3456789");
+  //    err = 32/3600.0*M_PI/180.0;
 
   //  printf("fixDec = %s %g\n",tstr,err);
   sscanf(tstr,"%lf:%lf:%lf",&deg,&min,&sec);
@@ -611,11 +614,11 @@ double fixDec(char *tstr,double err,char *valStr)
   //  dp = (int)(log10(err*3600.0/M_PI*180.0));
   //  dp=-2;
   //  printf("dp = %d\n",dp);
-  //  if (err*3600.0/M_PI*180.0/pow(10.0,(double)dp)<1.90)
-  //    {
-  //      if (dp < 0) dp --;
-  //      else dp ++;
-  //    }
+    if (err*3600.0/M_PI*180.0/pow(10.0,(double)dp)<1.90)
+      {
+        if (dp < 0) dp --;
+        else dp ++;
+      }
   //  printf("dp here = %d\n",dp);
   ierr = (int)(err*3600.0/M_PI*180.0/pow(10.0,(double)dp)+0.9999);
   if (dp > 0)
@@ -629,7 +632,7 @@ double fixDec(char *tstr,double err,char *valStr)
       if (disp[k] == '.' && dp >= 0) {disp[k]='\0'; break;}
     }
   sprintf(valStr,"%s(%d)",disp,ierr);
-  //  printf("returning = %s %g\n",valStr,dec);
+  //    printf("returning = %s %g\n",valStr,dec);
   return dec;
 }
 
