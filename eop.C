@@ -50,7 +50,7 @@ typedef struct
 
 
 void
-load_EOP(DynamicArray *EOPsamples)
+load_EOP(DynamicArray *EOPsamples,char *eopcFile)
 {
   char fname[1024], line[1024], mjd_s[1024], xp_s[1024], yp_s[1024], dut1_s[1024];
   int year;
@@ -66,7 +66,8 @@ load_EOP(DynamicArray *EOPsamples)
   DynamicArray_init(EOPsamples, sizeof(EOPSample));
 
   // open file
-  sprintf(fname, "%s/%s", getenv("TEMPO2"), EOPC04_FILE);
+  //  sprintf(fname, "%s/%s", getenv("TEMPO2"), EOPC04_FILE);
+  sprintf(fname, "%s/%s", getenv("TEMPO2"), eopcFile);
   f = fopen(fname, "r");
   if (!f)
   {
@@ -130,7 +131,7 @@ load_EOP(DynamicArray *EOPsamples)
 void
 get_EOP(double mjd, double *xp, double *yp, double *dut1, 
 	      double *dut1dot,
-	      int dispWarnings)
+	int dispWarnings,char *eopcFile)
 {
   static int first = 1;
   static DynamicArray EOPsamples;
@@ -141,7 +142,7 @@ get_EOP(double mjd, double *xp, double *yp, double *dut1,
   // load EOP series first
   if (first)
   {
-    load_EOP(&EOPsamples);
+    load_EOP(&EOPsamples,eopcFile);
     first = 0;
   }
   samp =  (EOPSample *)EOPsamples.data;

@@ -44,10 +44,10 @@
 #define MAX_STOREPRECISION   50    /* How many routines in TEMPO2 store precision information */
 #define MAX_OBSN_VAL         10000 /* Maximum number of TOAs                           */ 
 #define MAX_SITE             100   /* Maximum number of observatory sites              */
-#define MAX_PARAMS           500   /* Maximum number of parameters                     */
+#define MAX_PARAMS           1000   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
-#define MAX_IFUNC            800   /* Maximum number of parameters for interpolation function  */
+#define MAX_IFUNC            1000   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_CLK_OFFS     500   /* Maximum number of parameters for telescope clock offset */
 #define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
 #define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
@@ -95,7 +95,8 @@
 #define UT1_FILE "/clock/ut1.dat" 
 
 /* Path for file containing IERS EOP C04 series */
-#define EOPC04_FILE "earth/eopc04_IAU2000.62-now"
+//#define EOPC04_FILE "earth/eopc04_IAU2000.62-now"
+// This is now defined in tempo2.C
 
 /* Path for file containing TDB-TDT ephemeris */
 #define TDBTDT_FILE "/ephemeris/TDB.1950.2050"
@@ -249,7 +250,7 @@ extern char tempo2MachineType[MAX_FILELEN];
 extern int displayCVSversion; /* Display CVS version */
 
 extern char dcmFile[MAX_FILELEN];
-extern char covarFuncFile[MAX_FILELEN];;
+extern char covarFuncFile[MAX_FILELEN];
 extern char tempo2_plug_path[32][MAX_STRLEN];
 extern int tempo2_plug_path_len;
 
@@ -363,6 +364,7 @@ typedef struct pulsar {
   /*                                                                 */
   /* Note: when adding a new parameter, initialise it in intialise.c */
   /*                                                                 */
+  char eopc04_file[MAX_FILELEN];
   int  fixedFormat;              /* = 0 for separate .par and .tim files, > 0 indicates number of lines to skip */
   parameter param[MAX_PARAMS];
   char rajStrPre[100],decjStrPre[100];   /* String containing RAJ and DECJ  (prefit)              */
@@ -837,7 +839,7 @@ get_obsCoord_IAU2000B(double observatory_trs[3],
 
 /* redwards stuff to get earth orientation parameters */
 void get_EOP(double mjd, double *xp, double *yp, double *dut1, 
-	     double *dut1dot, int dispWarnings);
+	     double *dut1dot, int dispWarnings,char *eopcFile);
 /* ... and tropospheric delays ... */
 void compute_tropospheric_delays(pulsar *psr,int npsr);
 

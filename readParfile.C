@@ -162,6 +162,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       fscanf(fin,"%s",psr->name);
   else if (strcasecmp(str,"CLK")==0)
     fscanf(fin,"%s",psr->clock);
+  else if (strcasecmp(str,"EOP_FILE")==0)
+    {
+      fscanf(fin,"%s",psr->eopc04_file);
+      printf("WARNING: All pulsars will use the EOPC04 file: %s\n",psr->eopc04_file);
+    }
   else if (strcasecmp(str,"TRES")==0)
     readValue(psr,str,fin,&(psr->param[param_tres]),0);
   else if (strcasecmp(str,"MODE")==0 || strcasecmp(str,"WEIGHT")==0) /* Fitting mode */
