@@ -1655,7 +1655,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 			   pnAct+=pnAdd;
 		       addPhase = pnNew-pnAct;
 		       residual += addPhase;
-		       ntrk += addPhase;
+		       ntrk = addPhase;
 		       logdbg("*** Adding phase %lld ***",addPhase);
 		     }
 		 }
@@ -1695,7 +1695,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /* dt in resid.f */
 	   /*	   psr[p].obsn[i].phase = phaseint+nphase+phase5-nphase+dphase+ddnprd; */	   
 	   psr[p].obsn[i].phase = phaseint+phase5[i];  
-	   psr[p].obsn[i].pulseN = (long long)(phaseint + fortran_nint(phase5[i]));
+	   psr[p].obsn[i].pulseN = (long long)(phaseint + fortran_nint(phase5[i])) - (long long)ntrk;
 	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
 
 	   
