@@ -1120,6 +1120,10 @@ else if (strcasecmp(str,"_DM")==0)
               &psr->TNEFVal[nefacFlag] );
       ( psr->nTNEF )++;
     }
+  else if( strcasecmp( str, "TNGlobalEF") == 0 ) // EFAC for given flag
+    {
+      fscanf( fin, "%lf", &(psr->TNGlobalEF));
+    }
 
 
   /* /---------\
@@ -1133,6 +1137,17 @@ else if (strcasecmp(str,"_DM")==0)
               &psr->TNEQVal[nequadFlag] );
       ( psr->nTNEQ )++;
     }
+
+  else if( strcasecmp( str, "TNGlobalEQ") == 0 ) // EFAC for given flag
+    {
+      fscanf( fin, "%lf", &(psr->TNGlobalEQ));
+    }
+
+  else if( strcasecmp( str, "addTNGlobalEQ") == 0 ) // EFAC for given flag
+    {
+      fscanf( fin, "%lf", &(psr->addTNGlobalEQ));
+    }
+
 
   /* /---------\
      | TN SQ |
@@ -1171,6 +1186,10 @@ else if (strcasecmp(str,"_DM")==0)
 	fscanf(fin,"%lf",&(psr->TNRedGam));
   else if (strcasecmp(str,"TNRedC")==0) /* TempoNest Red noise spectral index */
         fscanf(fin,"%d",&(psr->TNRedC));
+  else if (strcasecmp(str,"TNRedFLow")==0) /* TempoNest Red noise power law amplitude */
+    fscanf(fin,"%lf",&(psr->TNRedFLow));
+  else if (strcasecmp(str,"TNRedCorner")==0) /* TempoNest Red noise spectral index */
+        fscanf(fin,"%lf",&(psr->TNRedCorner));
   else if(strcasecmp(str,"TNsubtractRed")==0)
 	fscanf(fin,"%d",&(psr->TNsubtractRed));
   else if (strcasecmp(str,"TNDMAmp")==0) /* TempoNest Red noise power law amplitude */
@@ -1199,6 +1218,36 @@ else if (strcasecmp(str,"_DM")==0)
 	fscanf(fin,"%lf",&(psr->TNRedGam));
 	psr->TNRedGam *= -1.0; /* Flip sign convention */
   }
+
+
+   /* /---------\
+     | TNBandDM |
+     \---------/ */
+     
+  else if (strcasecmp(str,"TNBandDM")==0){ /* TempoNest Band DM */   
+	fscanf( fin, "%lf %lf %d", 
+		&psr->TNBandDMAmp,
+		&psr->TNBandDMGam,
+		&psr->TNBandDMC);
+	}    
+
+
+
+   /* /-------------\
+     | TNGroupNoise |
+     \------------ -/ */
+     
+  else if (strcasecmp(str,"TNGroupNoise")==0){ /* TempoNest Group Noise */   
+		int nTNGroupNoiseFlag = psr->nTNGroupNoise;
+		fscanf( fin, "%s %s %lf %lf %d", psr->TNGroupNoiseFlagID[nTNGroupNoiseFlag],
+			psr->TNGroupNoiseFlagVal[nTNGroupNoiseFlag],
+			&psr->TNGroupNoiseAmp[nTNGroupNoiseFlag],
+			&psr->TNGroupNoiseGam[nTNGroupNoiseFlag],
+			&psr->TNGroupNoiseC[nTNGroupNoiseFlag]);
+		( psr->nTNGroupNoise )++;
+	}    
+
+
 
    /* /---------\
      | TNDMEvents |

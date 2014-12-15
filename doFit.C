@@ -1166,6 +1166,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	
 	f0 = psr->param[param_f].val[0];
 	f1 = psr->param[param_f].val[1];
+	bindex = 0;//psr->param[param_brake].val[0];
 	
 	//fprintf(stderr, "%.3e %.3Le %.3Le\n", x, f0,f1);
 
@@ -1187,6 +1188,8 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		      {
 			afunc +=   (-bindex*f1*f1/f0/f0*arg3/6.L -2*bindex*(2*bindex-1)*f1*f1*f1/f0/f0/f0*arg4/24.)
 			  *84000.L/f0;
+
+			//printf("Braking part %Lg %Lg %Lg \n", bindex, arg3, arg4);
 		      }
 		    
 		    
@@ -3330,6 +3333,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		FITfuncs(pulse[0].obsn[i].bat - pulse[0].param[param_pepoch].val[0], pdParamDeriv, numtofit, pulse, i,0);
 		for(int j=0; j<numtofit; j++) {
 			TNDM[i][j]=pdParamDeriv[j];
+//			printf("PD: %i %i %g \n", i, j, pdParamDeriv[j]);
 			TNDMScale[j]+=TNDM[i][j]*TNDM[i][j];
 		} 
 	} 
@@ -3427,6 +3431,8 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 	double RedAmp=0;
 	double RedIndex=0;
+        double RedFLow=0;
+        double RedCorner=0;
 	double DMAmp=0;
 	double DMIndex=0;
 	int FitRedCoeff=0;
@@ -3439,6 +3445,9 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		RedAmp=pulse->TNRedAmp;
 		RedIndex=pulse->TNRedGam;
 		FitRedCoeff=2*pulse->TNRedC;
+                RedFLow=pow(10.0, pulse->TNRedFLow);
+                RedCorner=pulse->TNRedCorner/maxtspan;
+	
 
 		printf("\nIncluding Red noise with %i Frequencies, %g Log_10 Amplitude, %g Spectral Index\n", FitRedCoeff/2,RedAmp,RedIndex);
 	}
@@ -3471,6 +3480,8 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		}
 	}
 
+
+	printf("about to do ecorr stuff \n");
 	// count ECORR values
 	if(pulse->nTNECORR > 0){
 		for(int i=0; i<pulse->nTNECORR; i++){
@@ -3480,17 +3491,19 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		}
 	}
 
+	 printf("here1\n");
 
 	// find number of epochs (default dt= 10 s)
 	int *Processed = new int[pulse->nobs];
 
 	// initialize processed flags
-	for (int i;i<pulse->nobs;i++){
+	for (int i=0;i<pulse->nobs;i++){
 		Processed[i] = 1;
 	}
+	 printf("here2\n");
 
 	// make sure we only process the epochs with the chosen flags
-	for (int i;i<pulse->nobs;i++){
+	for (int i=0;i<pulse->nobs;i++){
 		for (int j=0;j<pulse->obsn[i].nFlags;j++){
 			for (int k=0;k<pulse->nTNECORR;k++){
 				if (strcmp(pulse->obsn[i].flagID[j], pulse->TNECORRFlagID[k])==0){
@@ -3502,7 +3515,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		}
 	}
 
-
+	printf("here\n");
 	double dt = 10.0 / SECDAY;
 	double satmin;
 	double satmax;
@@ -3549,17 +3562,31 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	if (nepoch > 0){
 		printf("\n\nUsing %d epochs for PSR %s\n\n", nepoch, pulse->name);
 	}
-
+	printf("end of ecorr \n");
 	// Total coefficients in F-matrix (include Jitter matrix here if present)
 	totCoeff += FitRedCoeff;
 	totCoeff += FitDMCoeff;
 	totCoeff += DMEventCoeff;
 	totCoeff += nepoch;
-	//printf("\nTotal number of coefficients: %d\n",totCoeff);
+
+	if(pulse->TNBandDMAmp != 0 && pulse->TNBandDMGam != 0){
+		printf("Including Band DM Noise: Amp %g   Index %g \n", pulse->TNBandDMAmp, pulse->TNBandDMGam);
+		totCoeff += 6*pulse->TNBandDMC;
+	}
+
+	for(int i =0; i < pulse->nTNGroupNoise; i++){
+		printf("Including Group Noise : Amp %g   Index %g \n", pulse->TNGroupNoiseAmp[i], pulse->TNGroupNoiseGam[i]);
+		totCoeff += 2*pulse->TNGroupNoiseC[i];
+	}
+
+	printf("\nTotal number of coefficients: %d\n",totCoeff);
 
 	double **FMatrix=new double*[pulse->nobs];
 	for(int i=0;i<pulse->nobs;i++){
 		FMatrix[i]=new double[totCoeff];
+		for(int j=0;j<totCoeff;j++){
+			FMatrix[i][j] = 0;
+		}
 	}
 
 
@@ -3587,10 +3614,10 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 	for (int i=0; i<FitRedCoeff/2; i++){
 
-		freqs[startpos+i]=((double)(i+1.0))/maxtspan;
+		freqs[startpos+i]=RedFLow*((double)(i+1.0))/(maxtspan);
 		freqs[startpos+i+FitRedCoeff/2]=freqs[startpos+i];
 
-		double rho = (RedAmp*RedAmp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[i]*365.25,(-RedIndex))/(maxtspan*24*60*60);
+		double rho = pow((1+(pow((1.0/365.25)/RedCorner,RedIndex/2))),2)*(RedAmp*RedAmp/12.0/(M_PI*M_PI))/pow((1+(pow(freqs[i]/RedCorner,RedIndex/2))),2)/(maxtspan*24*60*60)*pow(f1yr,-3.0);
 		powercoeff[i]+= rho;
 		powercoeff[i+FitRedCoeff/2]+= rho;
 		//printf("T2 RedC: %i %g %g %g %g %g \n", i, rho, RedAmp, RedIndex, freqs[i], maxtspan);
@@ -3648,6 +3675,13 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		for(int k=0;k<pulse->nobs;k++){
 			double time=(double)pulse->obsn[k].bat;
 			FMatrix[k][startpos+i+FitDMCoeff/2]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+		}
+	}
+
+
+	for(int i =0;i<pulse->nobs;i++){
+		for(int j =0;j<totCoeff; j++){
+			if(i==3149 && j>500)printf("FMDM %i %i %g %g\n", i,j,FMatrix[i][j], pulse->obsn[i].freq);
 		}
 	}
 
@@ -3709,6 +3743,239 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	//printf("Total event coeffs: %i \n", ShapeEventTerms);
 
 
+	startpos += DMEventCoeff;
+
+	//////////////////////////////////////////////////////////////////////////////////////////  
+	///////////////////////DM Band Noise//////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	if(pulse->TNBandDMAmp != 0 && pulse->TNBandDMGam != 0){
+
+		double BandDMAmp=pow(10.0, pulse->TNBandDMAmp);
+
+		printf("start point is %i \n", startpos);
+
+
+		double startfreq=0;
+		double stopfreq=0;
+
+		/////////////////////////////////50CM/////////////////////////////////////////////////////////////////
+
+		startfreq = 0;
+		stopfreq=1000;
+
+		for (int i=0; i<pulse->TNBandDMC; i++){
+
+			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
+			freqs[startpos+i+pulse->TNBandDMC]=freqs[startpos+i];
+			
+			double rho = (BandDMAmp*BandDMAmp)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-pulse->TNBandDMGam))/(maxtspan*24*60*60);	
+			powercoeff[startpos+i]+=rho;
+			powercoeff[startpos+i+pulse->TNBandDMC]+=rho;
+		}
+		
+		
+
+
+		for(int i=0;i<pulse->TNBandDMC;i++){
+		        for(int k=0;k<pulse->nobs;k++){
+				if(pulse->obsn[k].freq > startfreq && pulse->obsn[k].freq < stopfreq){
+		               		double time=(double)pulse->obsn[k].bat;
+		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+				}
+				else{	
+					FMatrix[k][startpos+i]=0;
+				}
+		        }
+		}
+
+		for(int i=0;i<pulse->TNBandDMC;i++){
+		        for(int k=0;k<pulse->nobs;k++){
+				if(pulse->obsn[k].freq > startfreq && pulse->obsn[k].freq < stopfreq){		
+				        double time=(double)pulse->obsn[k].bat;
+				        FMatrix[k][startpos+i+pulse->TNBandDMC]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+				}
+				else{
+					FMatrix[k][startpos+i+pulse->TNBandDMC]=0;
+				}
+		        }
+		}
+
+
+		startpos=startpos+2*pulse->TNBandDMC;
+
+		/////////////////////////////////20CM/////////////////////////////////////////////////////////////////
+
+		startfreq = 1000;
+		stopfreq=1800;
+
+		for (int i=0; i<pulse->TNBandDMC; i++){
+
+			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
+			freqs[startpos+i+pulse->TNBandDMC]=freqs[startpos+i];
+			
+			double rho = (BandDMAmp*BandDMAmp)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-pulse->TNBandDMGam))/(maxtspan*24*60*60);	
+			powercoeff[startpos+i]+=rho;
+			powercoeff[startpos+i+pulse->TNBandDMC]+=rho;
+		}
+		
+		
+
+
+		for(int i=0;i<pulse->TNBandDMC;i++){
+		        for(int k=0;k<pulse->nobs;k++){
+				if(pulse->obsn[k].freq > startfreq && pulse->obsn[k].freq < stopfreq){
+		               		double time=(double)pulse->obsn[k].bat;
+		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+				}
+				else{	
+					FMatrix[k][startpos+i]=0;
+				}
+		        }
+		}
+
+		for(int i=0;i<pulse->TNBandDMC;i++){
+		        for(int k=0;k<pulse->nobs;k++){
+				if(pulse->obsn[k].freq > startfreq && pulse->obsn[k].freq < stopfreq){		
+				        double time=(double)pulse->obsn[k].bat;
+				        FMatrix[k][startpos+i+pulse->TNBandDMC]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+				}
+				else{
+					FMatrix[k][startpos+i+pulse->TNBandDMC]=0;
+				}
+		        }
+		}
+
+
+		startpos=startpos+2*pulse->TNBandDMC;
+
+		/////////////////////////////////10CM/////////////////////////////////////////////////////////////////
+
+
+		startfreq = 1800;
+		stopfreq=10000;
+
+		for (int i=0; i<pulse->TNBandDMC; i++){
+
+			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
+			freqs[startpos+i+pulse->TNBandDMC]=freqs[startpos+i];
+			
+			double rho = (BandDMAmp*BandDMAmp)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-pulse->TNBandDMGam))/(maxtspan*24*60*60);	
+			powercoeff[startpos+i]+=rho;
+			powercoeff[startpos+i+pulse->TNBandDMC]+=rho;
+		}
+		
+		
+
+
+		for(int i=0;i<pulse->TNBandDMC;i++){
+		        for(int k=0;k<pulse->nobs;k++){
+				if(pulse->obsn[k].freq > startfreq && pulse->obsn[k].freq < stopfreq){
+		               		double time=(double)pulse->obsn[k].bat;
+		                	FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+				}
+				else{	
+					FMatrix[k][startpos+i]=0;
+				}
+		        }
+		}
+
+		for(int i=0;i<pulse->TNBandDMC;i++){
+		        for(int k=0;k<pulse->nobs;k++){
+				if(pulse->obsn[k].freq > startfreq && pulse->obsn[k].freq < stopfreq){		
+				        double time=(double)pulse->obsn[k].bat;
+				        FMatrix[k][startpos+i+pulse->TNBandDMC]=sin(2*M_PI*freqs[startpos+i]*time)*DMVec[k];
+				}
+				else{
+					FMatrix[k][startpos+i+pulse->TNBandDMC]=0;
+				}
+		        }
+		}
+
+
+		startpos=startpos+2*pulse->TNBandDMC;
+	}
+
+	for(int i =0;i<pulse->nobs;i++){
+		for(int j =0;j<totCoeff; j++){
+			if(i==3149 && j>500)printf("FMBDM %i %i %g %g\n", i,j,FMatrix[i][j], pulse->obsn[i].freq);
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////  
+	///////////////////////Group Noise//////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////
+
+	int totalGroupCoeff=0;
+	for(int g =0; g < pulse->nTNGroupNoise; g++){
+
+		double GroupAmp=pow(10.0, pulse->TNGroupNoiseAmp[g]);
+		double GroupSpec=pulse->TNGroupNoiseGam[g];
+		int GroupC=pulse->TNGroupNoiseC[g];
+
+		totalGroupCoeff+=2*GroupC;
+
+		printf("Group Noise %i %i %g %g %i \n", startpos, g, GroupAmp, GroupSpec, GroupC);
+
+
+		for (int i=0; i<GroupC; i++){
+
+			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
+			freqs[startpos+i+GroupC]=freqs[startpos+i];
+			
+			double rho = (GroupAmp*GroupAmp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-GroupSpec))/(maxtspan*24*60*60);	
+			powercoeff[startpos+i]+=rho;
+			powercoeff[startpos+i+GroupC]+=rho;
+		}
+		
+		
+
+
+		for(int i=0;i<GroupC;i++){
+		        for(int k=0; k<pulse->nobs; k++){
+				 int set=0;
+				 for (int j=0; j < pulse->obsn[k].nFlags; j++){
+                
+					   //Check Group Noise Flag
+	
+			         	 if (strcmp(pulse->obsn[k].flagID[j],pulse->TNGroupNoiseFlagID[g])==0){
+			    	          	if (strcmp(pulse->obsn[k].flagVal[j],pulse->TNGroupNoiseFlagVal[g])==0){
+							//printf("%i %s %g \n", k, pulse->obsn[k].flagVal[j], pulse->obsn[k].freq);
+					       		double time=(double)pulse->obsn[k].bat;
+							FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time);
+							FMatrix[k][startpos+i+GroupC]=sin(2*M_PI*freqs[startpos+i]*time);
+							set = 1;
+
+						}
+						else{
+							if(set == 0){	
+								FMatrix[k][startpos+i]=0;
+								FMatrix[k][startpos+i+GroupC]=0;
+							}
+						}
+					}
+					else{	
+						FMatrix[k][startpos+i]=0;
+						FMatrix[k][startpos+i+GroupC]=0;
+					}	
+					
+				}
+			}
+		}
+
+
+
+
+		startpos=startpos+2*GroupC;
+	}
+
+
+	for(int i =0;i<pulse->nobs;i++){
+		for(int j =0;j<totCoeff; j++){
+			if(i==3149 && j>500)printf("FM %i %i %g %g\n", i,j,FMatrix[i][j], pulse->obsn[i].freq);
+		}
+	}
+
 	//////////////////////////////////////////////////////////////////////////////////////////  
 	///////////////////////U Jitter Matrix////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -3716,16 +3983,16 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 	//// construct jitter matrix //
 
-	startpos += DMEventCoeff;
+	
 	//printf("\nStarting Coefficients at %d for Jitter:\n",startpos);
 
 	// initialize processed flags
-	for (int i;i<pulse->nobs;i++){
+	for (int i=0;i<pulse->nobs;i++){
 		Processed[i] = 1;
 	}
 
 	// make sure we only process the epochs with the chosen flags
-	for (int i;i<pulse->nobs;i++){
+	for (int i=0;i<pulse->nobs;i++){
 		for (int j=0;j<pulse->obsn[i].nFlags;j++){
 			for (int k=0;k<pulse->nTNECORR;k++){
 				if (strcmp(pulse->obsn[i].flagID[j], pulse->TNECORRFlagID[k])==0){
@@ -3799,7 +4066,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 
 	for(int c1=0; c1<totCoeff; c1++){
-
+//		printf("PPFM %i %g \n", c1, powercoeff[c1]);
 		PPFM[c1][c1]=1.0/powercoeff[c1];
 	}
 
@@ -3808,7 +4075,8 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	int totalsize=numtofit+totCoeff+DMEventQuadTerms+ShapeEventTerms;
-
+	int totalDMsize = DMEventQuadTerms+ShapeEventTerms+FitDMCoeff;
+	
 	double **TotalMatrix=new double*[pulse->nobs];
 	for(int i =0;i<pulse->nobs;i++){
 		TotalMatrix[i]=new double[totalsize];
@@ -3829,6 +4097,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		startpoint+=numtofit;		
 		for(int j =0;j<totCoeff; j++){
 			TotalMatrix[i][j+startpoint]=FMatrix[i][j];
+			if(i==3149 && j>500)printf("TM %i %i %g %g\n", i,j,TotalMatrix[i][j+startpoint], pulse->obsn[i].freq);
 		}
 
 		startpoint += totCoeff;
@@ -3923,7 +4192,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	double tdet=0;
 	dpotrf(GNG, totalsize, tdet);
 	dpotri(GNG,totalsize);
-	//printf("logdet GNG = %g\n",tdet);
+//	printf("logdet GNG = %g\n",tdet);
 
 	double *dG=new double[totalsize];
 	dgemv(NG,Resvec,dG,pulse->nobs,totalsize,'T');
@@ -3934,6 +4203,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	long double *Errorvec=new long double[totalsize];
 
 	for(int i =0; i < totalsize; i++){
+//		printf("GNG %i %g \n", i, GNG[i][i]);
 		Errorvec[i]=pow(GNG[i][i], 0.5);
 	}
 
@@ -3966,7 +4236,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 		if(useOrthogonal==0){
 			TempoCoeff[i]=maxcoeff[i]/TNDMScale[i];
-			TempoErr[i]=Errorvec[i]/TNDMScale[i];
+			TempoErr[i]=((double)Errorvec[i])/TNDMScale[i];
 		}
 	}
 	updateParameters(pulse,0,TempoCoeff,TempoErr);
@@ -3990,10 +4260,24 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 				redsum+=TotalMatrix[i][j]*maxcoeff[j];
 				rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
 			}
-			if(j>=FitRedCoeff+numtofit && j < numtofit+totCoeff+DMEventQuadTerms+ShapeEventTerms){
+			if(j>=FitRedCoeff+numtofit && j < numtofit+FitRedCoeff+totalDMsize){
 				dmsum+=TotalMatrix[i][j]*maxcoeff[j];
 				dmerr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
 			}
+
+			if(pulse->TNBandDMAmp != 0 && pulse->TNBandDMGam != 0){
+				if(j>=numtofit+FitRedCoeff+totalDMsize && j < numtofit+FitRedCoeff+totalDMsize+6*pulse->TNBandDMC){
+					redsum+=TotalMatrix[i][j]*maxcoeff[j];
+					rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
+				}
+			}
+			if(j>=numtofit+FitRedCoeff+totalDMsize+6*pulse->TNBandDMC && j < numtofit+FitRedCoeff+totalDMsize+6*pulse->TNBandDMC+totalGroupCoeff){
+					//if(i>2000 && i<3500)printf("%i %i %g %g\n", i,j,TotalMatrix[i][j], pulse->obsn[i].freq);
+					redsum+=TotalMatrix[i][j]*maxcoeff[j];
+					rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
+			}				
+			
+
 		}
 		double freq=(double)pulse->obsn[i].freqSSB;
 		long double yrs = (pulse->obsn[i].bat - pulse->param[param_dmepoch].val[0])/365.25;
@@ -4028,7 +4312,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 			pDotErr+=pow((double)(argerr*arg),2);
 		}
 
-		//printf("err: %i %g %g \n", i, rederr, pDotErr);
 
 		chisq+=(Resvec[i]-dsum)*(Resvec[i]-dsum)/(Noise[i]);
 		pulse->obsn[i].TNRedSignal=redsum;
@@ -4078,7 +4361,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 	dgemm(TMat, NT, TNT, pulse->nobs, nother, pulse->nobs, nother, 'T', 'N');
 
-	for(int j =0;j<nother; j++){
+	for(int j =0;j<totCoeff; j++){
 		TNT[j][j] += PPFM[j][j];
 	}
 

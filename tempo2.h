@@ -57,6 +57,7 @@
 #define MAX_T2EQUAD          100    /* Maximum number of T2EQUADs allowed               */
 #define MAX_TNEF           50    /* Maximum number of TNEFACs allowed                */
 #define MAX_TNEQ          50    /* Maximum number of TNEQUADs allowed               */
+#define MAX_TNGN	50 /* maximum number of TNGroupNoise parameters allowed*/
 #define MAX_TNECORR       50    /* Maximum number of TNECORRss allowed               */
 #define MAX_TNDMEv		   10    /*Maximum number of TNDMEvents allowed */
 #define MAX_TNSQ          50    /* Maximum number of TNEQUADs allowed               */
@@ -296,6 +297,7 @@ typedef struct observation {
                                   /* = -1 if not included in fit                                */
   longdouble prefitResidual;      /* Pre-fit residual                                           */
   longdouble residual;            /* residual                                                   */
+  double      addedNoise;
   double      TNRedSignal;	  /* Model red noise signal from temponest fit */
   double      TNRedErr;		  /* Error on Model red noise signal from temponest fit */
   double      TNDMSignal;         /* Model DM signal from temponest fit */
@@ -586,24 +588,40 @@ typedef struct pulsar {
   int    nTNEF,nTNEQ, nTNSQ, nTNECORR;
   char   TNEFFlagID[MAX_TNEF][MAX_FLAG_LEN],TNEFFlagVal[MAX_TNEF][MAX_FLAG_LEN];
   double TNEFVal[MAX_TNEF];
+  double TNGlobalEF;
   char   TNEQFlagID[MAX_TNEQ][MAX_FLAG_LEN],TNEQFlagVal[MAX_TNEQ][MAX_FLAG_LEN];
   double TNEQVal[MAX_TNEQ];
+  double TNGlobalEQ;
+  double addTNGlobalEQ;
   char   TNSQFlagID[MAX_TNSQ][MAX_FLAG_LEN],TNSQFlagVal[MAX_TNSQ][MAX_FLAG_LEN];
   double TNSQVal[MAX_TNSQ];
   char   TNECORRFlagID[MAX_TNECORR][MAX_FLAG_LEN],TNECORRFlagVal[MAX_TNECORR][MAX_FLAG_LEN];
   double TNECORRVal[MAX_TNECORR];
   
   
-  //Stochastic Parameters
-  double TNRedAmp;
-  double TNRedGam;
-  int TNRedC;
-  double TNDMAmp;
-  double TNDMGam;
-  int TNDMC;
-  int TNsubtractDM;
-  int TNsubtractRed;
+	//Stochastic Parameters
+	double TNRedAmp;
+	double TNRedGam;
+	int TNRedC;
+	double TNRedFLow;
+	double TNRedCorner;
+	double TNDMAmp;
+	double TNDMGam;
+	int TNDMC;
+	int TNsubtractDM;
+	int TNsubtractRed;
   
+	double TNBandDMAmp;
+	double TNBandDMGam;
+	int TNBandDMC;
+
+	int    nTNGroupNoise;
+	char   TNGroupNoiseFlagID[MAX_TNGN][MAX_FLAG_LEN],TNGroupNoiseFlagVal[MAX_TNGN][MAX_FLAG_LEN];
+	double TNGroupNoiseAmp[MAX_TNGN];
+	double TNGroupNoiseGam[MAX_TNGN];
+	int TNGroupNoiseC[MAX_TNGN];
+	
+
   
   //DMEvent Parameters
   int nDMEvents;
