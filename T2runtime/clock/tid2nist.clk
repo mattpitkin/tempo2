@@ -6,6 +6,7 @@
 #   RTE 9 Sep 2004 generated from old data files:
 # cat tid_nist_9* | sort | awk '{print $1, -($2+$3)*1e-6}'
 #
+0.00     -2.61e-07
 48806.00 -2.61e-07
 48815.00 -3.61e-07
 48819.00 -3.76e-07

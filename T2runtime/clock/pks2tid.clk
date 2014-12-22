@@ -6,6 +6,7 @@
 # cat pks_tid_9* | sort | awk '{print $1, -$2*1e-6}'
 #
 # On MJD 50844, the clock was switched to tie to GPS (see pks2gps.clk)
+0.00     -1.71e-06
 48811.25 -1.71e-06
 48811.50 -1.72e-06
 48811.75 -1.75e-06
