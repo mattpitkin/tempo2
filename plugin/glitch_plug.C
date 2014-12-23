@@ -418,12 +418,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       for (i=0;i<nStride;i++)
 	{
 	  centreMJD = (mjd1[i]+mjd2[i])/2.0;
-	  printf("Analysing %g\n",(double)centreMJD);
+	  printf("Analysing %g %g %g\n",(double)mjd1[i],(double)mjd2[i],(double)centreMJD);
 	  
 	  strcpy(parFile[0],parFileName[i]);
 	  strcpy(timFile[0],timFileName[i]);
 	  
 	  psr[0].nJumps=0;
+	  psr[0].nobs=0;
 	  for(j=0;j<MAX_PARAMS;j++){
 	    psr[0].param[j].nLinkTo = 0;
 	    psr[0].param[j].nLinkFrom = 0;
@@ -437,7 +438,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  }
 	  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
 	  readTimfile(psr,timFile,1); /* Load the arrival times    */
-	  
+	  printf("ntoas = %d\n",psr[0].nobs);
 	  // Update the epoch in the par file for centreMJD
 	  strcpy(argv[argn],"-epoch");
 	  sprintf(argv[argn+1],"%.5f",(double)centreMJD);
