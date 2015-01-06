@@ -3481,7 +3481,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	}
 
 
-	printf("about to do ecorr stuff \n");
 	// count ECORR values
 	if(pulse->nTNECORR > 0){
 		for(int i=0; i<pulse->nTNECORR; i++){
@@ -3491,7 +3490,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		}
 	}
 
-	 printf("here1\n");
 
 	// find number of epochs (default dt= 10 s)
 	int *Processed = new int[pulse->nobs];
@@ -3500,7 +3498,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	for (int i=0;i<pulse->nobs;i++){
 		Processed[i] = 1;
 	}
-	 printf("here2\n");
 
 	// make sure we only process the epochs with the chosen flags
 	for (int i=0;i<pulse->nobs;i++){
@@ -3515,7 +3512,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		}
 	}
 
-	printf("here\n");
 	double dt = 10.0 / SECDAY;
 	double satmin;
 	double satmax;
@@ -3562,7 +3558,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	if (nepoch > 0){
 		printf("\n\nUsing %d epochs for PSR %s\n\n", nepoch, pulse->name);
 	}
-	printf("end of ecorr \n");
 	// Total coefficients in F-matrix (include Jitter matrix here if present)
 	totCoeff += FitRedCoeff;
 	totCoeff += FitDMCoeff;
@@ -3679,11 +3674,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	}
 
 
-	for(int i =0;i<pulse->nobs;i++){
-		for(int j =0;j<totCoeff; j++){
-			if(i==3149 && j>500)printf("FMDM %i %i %g %g\n", i,j,FMatrix[i][j], pulse->obsn[i].freq);
-		}
-	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////  
 	///////////////////////DM Events//////////////////////////////////////////////////////////
@@ -3753,7 +3743,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 		double BandDMAmp=pow(10.0, pulse->TNBandDMAmp);
 
-		printf("start point is %i \n", startpos);
 
 
 		double startfreq=0;
@@ -3896,11 +3885,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		startpos=startpos+2*pulse->TNBandDMC;
 	}
 
-	for(int i =0;i<pulse->nobs;i++){
-		for(int j =0;j<totCoeff; j++){
-			if(i==3149 && j>500)printf("FMBDM %i %i %g %g\n", i,j,FMatrix[i][j], pulse->obsn[i].freq);
-		}
-	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////  
 	///////////////////////Group Noise//////////////////////////////////////////////////////
@@ -3915,7 +3899,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 		totalGroupCoeff+=2*GroupC;
 
-		printf("Group Noise %i %i %g %g %i \n", startpos, g, GroupAmp, GroupSpec, GroupC);
 
 
 		for (int i=0; i<GroupC; i++){
@@ -3940,7 +3923,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	
 			         	 if (strcmp(pulse->obsn[k].flagID[j],pulse->TNGroupNoiseFlagID[g])==0){
 			    	          	if (strcmp(pulse->obsn[k].flagVal[j],pulse->TNGroupNoiseFlagVal[g])==0){
-							//printf("%i %s %g \n", k, pulse->obsn[k].flagVal[j], pulse->obsn[k].freq);
 					       		double time=(double)pulse->obsn[k].bat;
 							FMatrix[k][startpos+i]=cos(2*M_PI*freqs[startpos+i]*time);
 							FMatrix[k][startpos+i+GroupC]=sin(2*M_PI*freqs[startpos+i]*time);
@@ -3954,9 +3936,11 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 							}
 						}
 					}
-					else{	
-						FMatrix[k][startpos+i]=0;
-						FMatrix[k][startpos+i+GroupC]=0;
+					else{
+						if(set == 0){
+							FMatrix[k][startpos+i]=0;
+							FMatrix[k][startpos+i+GroupC]=0;
+						}
 					}	
 					
 				}
@@ -3970,11 +3954,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	}
 
 
-	for(int i =0;i<pulse->nobs;i++){
-		for(int j =0;j<totCoeff; j++){
-			if(i==3149 && j>500)printf("FM %i %i %g %g\n", i,j,FMatrix[i][j], pulse->obsn[i].freq);
-		}
-	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////  
 	///////////////////////U Jitter Matrix////////////////////////////////////////////////////
@@ -4097,7 +4076,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		startpoint+=numtofit;		
 		for(int j =0;j<totCoeff; j++){
 			TotalMatrix[i][j+startpoint]=FMatrix[i][j];
-			if(i==3149 && j>500)printf("TM %i %i %g %g\n", i,j,TotalMatrix[i][j+startpoint], pulse->obsn[i].freq);
 		}
 
 		startpoint += totCoeff;
@@ -4376,11 +4354,16 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	dgemv(TNT, dT, Sigmad, nother, nother, 'N');
 
 	chisq = 0.0;
+	double timesq=0;
 	for (int i=0; i<pulse->nobs; i++){
+		timesq+=Resvec[i]*Resvec[i]/Noise[i];
 		chisq += Resvec[i]*Resvec[i]/Noise[i];
 	}
+		
 
+	double freqsq=0;
 	for (int k=0; k<nother; k++){
+		freqsq+=dT[k]*Sigmad[k];
 		chisq -= dT[k]*Sigmad[k];
 	}
 
@@ -4388,7 +4371,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	pulse->fitNfree = pulse->nobs-numtofit;
 	pulse->nFit=pulse->nobs;
 	pulse->nParam = numtofit;
-
 
 
 	/*	for (int j = 0; j < pulse->nobs; j++){
