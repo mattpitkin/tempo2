@@ -404,17 +404,17 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
       sprintf(temp,"PB_%d (d)",k+1); strcpy(psr->param[param_pb].label[k],temp);
       sprintf(temp,"PB_%d",k+1); strcpy(psr->param[param_pb].shortlabel[k],temp);
 	  
-      sprintf(temp,"ECC_%d",k); strcpy(psr->param[param_ecc].label[k],temp);
-      sprintf(temp,"ECC_%d",k); strcpy(psr->param[param_ecc].shortlabel[k],temp);
+      sprintf(temp,"ECC_%d",k+1); strcpy(psr->param[param_ecc].label[k],temp);
+      sprintf(temp,"ECC_%d",k+1); strcpy(psr->param[param_ecc].shortlabel[k],temp);
 
-      sprintf(temp,"OM_%d (deg)",k); strcpy(psr->param[param_om].label[k],temp);
-      sprintf(temp,"OM_%d",k); strcpy(psr->param[param_om].shortlabel[k],temp);
+      sprintf(temp,"OM_%d (deg)",k+1); strcpy(psr->param[param_om].label[k],temp);
+      sprintf(temp,"OM_%d",k+1); strcpy(psr->param[param_om].shortlabel[k],temp);
 
-      sprintf(temp,"A1_%d (lt-s)",k); strcpy(psr->param[param_a1].label[k],temp);
-      sprintf(temp,"A1_%d",k); strcpy(psr->param[param_a1].shortlabel[k],temp);
+      sprintf(temp,"A1_%d (lt-s)",k+1); strcpy(psr->param[param_a1].label[k],temp);
+      sprintf(temp,"A1_%d",k+1); strcpy(psr->param[param_a1].shortlabel[k],temp);
 
-      sprintf(temp,"T0_%d (mjd)",k); strcpy(psr->param[param_t0].label[k],temp);
-      sprintf(temp,"T0_%d",k); strcpy(psr->param[param_t0].shortlabel[k],temp);
+      sprintf(temp,"T0_%d (mjd)",k+1); strcpy(psr->param[param_t0].label[k],temp);
+      sprintf(temp,"T0_%d",k+1); strcpy(psr->param[param_t0].shortlabel[k],temp);
     }
   strcpy(psr->param[param_pb].label[0],"PB (d)");
   strcpy(psr->param[param_pb].shortlabel[0],"PB");
