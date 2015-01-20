@@ -583,7 +583,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     + (psr[p].cgw_h0/omega_g*((1+pow(psr[p].cgw_cosinc,2))*sin(2*psr[p].cgw_angpol)*sin(omega_g*time)-2*psr[p].cgw_cosinc*cos(2*psr[p].cgw_angpol)*cos(omega_g*time)))*resc; 
 		   //(psr[p].gwsrc_aplus_r*resp+psr[p].gwsrc_across_r*resc)*sinl(omega_g*time);
 		   res_i = 0.0;
-
+		   printf("res_r = %g %g %g %g omega = %g %g %g %g time = %g\n",(double)res_r,(double)res_i,(double)resp,(double)resc,(double)omega_g,
+			  (double)psr[p].cgw_h0,(double)psr[p].cgw_cosinc,(double)psr[p].cgw_angpol,(double)time);
 		   if (psr[p].gwsrc_psrdist>0) // Add in the pulsar term  (NOTE: using subtraction here)
 		     {
 		       double omega_prime_g;
