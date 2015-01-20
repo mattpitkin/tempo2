@@ -199,6 +199,7 @@ void matrixDMConstraintWeights(pulsar *psr){
 		    double sum=0.0;
 		    if(i < nDM){
 		      psr->dmoffsDM_weight[i]=1.0/e[i]/e[i];
+		      printf("constraints.C here: %d %g\n",i,e[i]);
 		      sum_wDM+=psr->dmoffsDM_weight[i];
 		    } else {
 		      psr->dmoffsCM_weight[i-nDM]=1.0/e[i]/e[i];
@@ -226,10 +227,10 @@ void matrixDMConstraintWeights(pulsar *psr){
  *
  */
 void computeConstraintWeights(pulsar *psr){
-  //  printf("GH: in computeConstraintWeights with %s\n",psr->name);
+  printf("GH: in computeConstraintWeights with %s\n",psr->name);
    for (int k=0; k < psr->ifuncN; k++){
 	  psr->ifunc_weights[k]=1.0/(double)psr->ifuncN;
-   }
+   }   
    for (int k=0; k < psr->dmoffsDMnum; k++)
 	  psr->dmoffsDM_weight[k]=1.0/(double)psr->dmoffsDMnum;
 

@@ -111,6 +111,12 @@ double TKleastSquares(double* b, double* white_b,
    double chisq = 0;
    int i,j,k;
 
+   if (nf > MAX_PARAMS)
+     {
+       printf("Number of fitted parameters, %d, is greater than MAX_PARAMS. Please update MAX_PARAMS and reinstall\n",nf);
+       exit(1);
+     }
+
    logdbg("TKleastSquares n=%d nf=%d",n,nf);
    if(nf > n){
 	  logerr("Number of fit parameters exceeds number of data points\nFit will crash");
@@ -204,11 +210,13 @@ double TKleastSquares(double* b, double* white_b,
    /* Now form the covariance matrix */
    if(computeCVM){
 	  logdbg("Compute CVM");
+
 	  for (i=0;i<nf;i++)
 	  {
 		 if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
 		 else wt[i] = 0.0;     
 	  }
+
 	  for (i=0;i<nf;i++)
 	  {
 		 for (j=0;j<=i;j++)
@@ -219,7 +227,6 @@ double TKleastSquares(double* b, double* white_b,
 			cvm[i][j] = cvm[j][i] = (double)sum;
 		 }
 	  } 
-
 	  if(debugFlag==1) {
 		 FILE *fout;
 		 fout = fopen("cvm.matrix","w");
@@ -242,7 +249,6 @@ double TKleastSquares(double* b, double* white_b,
 	  logdbg("Compute Errors");
 	  for (i=0;i<nf;i++){e[i]=sqrt(cvm[i][i]);}
 	  }
-
    }
 
 

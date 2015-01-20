@@ -65,7 +65,8 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
   if (displayCVSversion == 1) CVSdisplayVersion("getInputs.C","getInputs()",CVS_verNum);
   //  *nGlobal=0; /* How many global parameters are we fitting? */
 
-  if (argc==2) /* Just have .tim file name */
+
+  if (argc==2 && strcasecmp(argv[1],"-allParTim")!=0) /* Just have .tim file name */
     {
       if (strcmp(argv[1],"-h")==0) /* Some help */
 	{
@@ -102,7 +103,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  printf("-----------------\n");
 	  exit(1);
 	}	    
-            strcpy(timFile[timfile_num],argv[1]);
+      strcpy(timFile[timfile_num],argv[1]);
       strcpy(parFile[parfile_num],argv[1]);
       strcpy(parFile[parfile_num]+strlen(parFile[parfile_num])-3,"par");
       timfile_num++; parfile_num++;
@@ -110,6 +111,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
     }
   else /* Have multiple command line arguments */
     {
+      printf("In this bit\n");
       for (i=1;i<argc;i++)
 	{
 	  if (strcmp(argv[i],"-f")==0) /* Have .par file */
@@ -123,6 +125,32 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 		}
 	      /*	      i+=2; */
 	      parfile_num++;
+	    }
+	  else if (strcasecmp(argv[i],"-allParTim")==0)
+	    {
+	      FILE *pin;
+	      char str[1000];
+
+	      // Load in all available par and tim files
+	      printf("Using all available .par and .tim files\n");
+	      sprintf(str,"ls `ls *.par | sed s/par/tim/` | sed s/.tim/\"\"/");
+	      pin = popen(str,"r");
+	      while (!feof(pin))
+		{
+		  if (fscanf(pin,"%s",str)==1)
+		    {
+		      sprintf(parFile[*npsr],"%s.par",str);
+		      sprintf(timFile[*npsr],"%s.tim",str);
+		      (*npsr)++;
+		      parfile_num++;
+		      timfile_num++;
+		      gotTim=1;
+
+		    }
+		}
+	      pclose(pin);
+	      printf("Obtained files for %d pulsars\n",*npsr);
+
 	    }
 	  else if (strcmp(argv[i],"-fitfunc")==0)
 	    strcpy(psr[0].fitFunc,argv[++i]);

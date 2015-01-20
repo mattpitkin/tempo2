@@ -401,8 +401,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   /* Dispersion measure and its derivative */
   for (k=1;k<psr->param[param_pb].aSize;k++)
     {
-      sprintf(temp,"PB_%d (d)",k); strcpy(psr->param[param_pb].label[k],temp);
-      sprintf(temp,"PB_%d",k); strcpy(psr->param[param_pb].shortlabel[k],temp);
+      sprintf(temp,"PB_%d (d)",k+1); strcpy(psr->param[param_pb].label[k],temp);
+      sprintf(temp,"PB_%d",k+1); strcpy(psr->param[param_pb].shortlabel[k],temp);
 	  
       sprintf(temp,"ECC_%d",k); strcpy(psr->param[param_ecc].label[k],temp);
       sprintf(temp,"ECC_%d",k); strcpy(psr->param[param_ecc].shortlabel[k],temp);

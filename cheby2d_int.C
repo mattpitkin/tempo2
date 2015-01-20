@@ -117,10 +117,13 @@ chebyModelFunc(long double *x, long double *y,
   if (info->compute_dispersion_constant)
   {
     int iref0 = nx/2, iref1 = nx/2 + (ny-1)*nx;
+    long double freq_ref0_sq = powl(psr->obsn[iref0].freq,2);
+    long double freq_ref1_sq = powl(psr->obsn[iref1].freq,2);
+
+
     info->model->dispersion_constant = 
       (psr->obsn[iref0].phase - psr->obsn[iref1].phase)
-      / (1.0/(psr->obsn[iref0].freq*psr->obsn[iref0].freq)
-	 - 1.0/(psr->obsn[iref1].freq*psr->obsn[iref1].freq));
+      / ((1.0/freq_ref0_sq)-(1.0/freq_ref1_sq));
   }
   //  info->model->dispersion_constant = 0.0;
 
