@@ -183,6 +183,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
 
   psr->nTNEF  = 0; // Number of TNEFACs
   psr->nTNEQ = 0; // Number of TNEQUADs
+  psr->nTNECORR = 0; // Number of TNECORRs
   psr->TNGlobalEF=0;
   psr->TNGlobalEQ=0;
   psr->nTNSQ = 0; // Number of TNEQUADs
