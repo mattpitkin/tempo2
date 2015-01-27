@@ -198,6 +198,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->TNBandDMAmp = 0;
   psr->TNBandDMGam = 0;
   psr->TNBandDMC = 0;
+  psr->nTNBandNoise = 0; //Number of band noise parameters
   psr->nTNGroupNoise = 0; // Number of TN Group Noise parameters
   psr->TNsubtractDM=0;
   psr->TNsubtractRed=0;

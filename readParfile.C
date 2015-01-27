@@ -1231,6 +1231,21 @@ else if (strcasecmp(str,"_DM")==0)
 		&psr->TNBandDMC);
 	}    
 
+   /* /-------------\
+      | TNBandNoise |
+      \-------------/ */
+
+  else if (strcasecmp(str,"TNBandNoise")==0){ /* TempoNest Band DM */
+	int nTNBandNoiseFlag = psr->nTNBandNoise;
+        fscanf( fin, "%lf %lf %lf %lf %d",
+                &psr->TNBandNoiseLF[nTNBandNoiseFlag],
+                &psr->TNBandNoiseHF[nTNBandNoiseFlag],
+                &psr->TNBandNoiseAmp[nTNBandNoiseFlag],	
+		&psr->TNBandNoiseGam[nTNBandNoiseFlag],
+		&psr->TNBandNoiseC[nTNBandNoiseFlag]);
+		( psr->nTNBandNoise )++;
+
+        }
 
 
    /* /-------------\

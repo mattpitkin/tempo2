@@ -10,7 +10,7 @@
 *    TEMPO2 is distributed in the hope that it will be useful, 
 *    but WITHOUT ANY WARRANTY; without even the implied warranty of 
 *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-*    GNU General Public License for more details. 
+*    GNU General Public License for more details.  
 *    You should have received a copy of the GNU General Public License 
 *    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>. 
 */
@@ -58,6 +58,7 @@
 #define MAX_TNEF           50    /* Maximum number of TNEFACs allowed                */
 #define MAX_TNEQ          50    /* Maximum number of TNEQUADs allowed               */
 #define MAX_TNGN	50 /* maximum number of TNGroupNoise parameters allowed*/
+#define MAX_TNBN        50 /*maximum number of TNBandNoise parameters allowd*/
 #define MAX_TNECORR       50    /* Maximum number of TNECORRss allowed               */
 #define MAX_TNDMEv		   10    /*Maximum number of TNDMEvents allowed */
 #define MAX_TNSQ          50    /* Maximum number of TNEQUADs allowed               */
@@ -614,6 +615,15 @@ typedef struct pulsar {
 	double TNBandDMAmp;
 	double TNBandDMGam;
 	int TNBandDMC;
+
+
+
+        int    nTNBandNoise;
+	double TNBandNoiseLF[MAX_TNBN];
+	double TNBandNoiseHF[MAX_TNBN];
+        double TNBandNoiseAmp[MAX_TNBN];
+        double TNBandNoiseGam[MAX_TNBN];
+        int TNBandNoiseC[MAX_TNBN];
 
 	int    nTNGroupNoise;
 	char   TNGroupNoiseFlagID[MAX_TNGN][MAX_FLAG_LEN],TNGroupNoiseFlagVal[MAX_TNGN][MAX_FLAG_LEN];
