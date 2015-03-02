@@ -58,5 +58,37 @@
 
 extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr) 
 {  
+  int i;
+  int flagid;
+
+  for (i=0;i<psr[0].nobs;i++)
+    {
+      flagid=psr[0].obsn[i].nFlags;
+      for(int k=0; k < flagid ; k++){
+	if(strcmp(psr[0].obsn[i].flagID[k],"-pnadd")==0){
+	  printf("Removing -pnadd flag\n");
+	  for (int kk=k; kk < flagid-1; kk++){
+	    strcpy(psr[0].obsn[i].flagID[kk],psr[0].obsn[i].flagID[kk+1]);
+	    strcpy(psr[0].obsn[i].flagVal[kk],psr[0].obsn[i].flagVal[kk+1]);
+	  }
+	  flagid-=1;
+	  k-=1;
+	}
+      }
+      psr[0].obsn[i].nFlags = flagid;
+      for(int k=0; k < flagid ; k++){
+	if(strcmp(psr[0].obsn[i].flagID[k],"-pn")==0){
+	  flagid=k;
+	  break;
+	}
+      }
+
+       strcpy(psr[0].obsn[i].flagID[flagid],"-pn");
+       sprintf(psr[0].obsn[i].flagVal[flagid],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
+       if (flagid==psr[0].obsn[i].nFlags)
+	 psr[0].obsn[i].nFlags++;
+       
+    }
+  writeTim("withpn.tim",psr,"tempo2");
   printf("In here\n");
 }
