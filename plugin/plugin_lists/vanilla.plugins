@@ -19,3 +19,4 @@ detectGWBnew_plug.C
 autoDM_plug.C
 pulsenumber_plug.C
 flattenErrors_plug.C
+add_pulseNumber_plug.C
