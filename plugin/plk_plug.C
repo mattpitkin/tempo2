@@ -1637,6 +1637,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 				  {
 					 psr[0].obsn[i].residual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
 					 psr[0].obsn[i].prefitResidual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
+					 psr[0].obsn[i].pulseN -= psr[0].phaseJumpDir[k];
 				  }
 			   }
 			   //if (key=='-') 
