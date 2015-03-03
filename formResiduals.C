@@ -1697,6 +1697,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /*	   psr[p].obsn[i].phase = phaseint+nphase+phase5-nphase+dphase+ddnprd; */	   
 	   psr[p].obsn[i].phase = phaseint+phase5[i];  
 	   psr[p].obsn[i].pulseN = (long long)(phaseint + fortran_nint(phase5[i])) - (long long)ntrk;
+
+	   // correct pulse numbering for phase wraps
+	   for (k=0;k<psr[p].nPhaseJump;k++)
+	   if (psr[p].obsn[i].sat > psr[p].obsn[psr[p].phaseJumpID[k]].sat)
+		  psr[p].obsn[i].pulseN -= psr[p].phaseJumpDir[k];
+
 	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
 
 	   
