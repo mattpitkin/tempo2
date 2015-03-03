@@ -50,7 +50,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FIL
 	    char timFile[][MAX_FILELEN],float lockx1,float lockx2,float locky1,float locky2,int xplot,int yplot,int publish,int argc,char *argv[],int menu,char *setupFile,
             int showChisq,int nohead,char* flagColour,char *bandsFile,int displayPP);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
-	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log);
+	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log,char *flagStr);
 void drawAxisSel(float x,float y,char *str,int sel1,int sel2);
 float findMinY(float *y,float *x,int count,float xmin,float xmax);
 float findMaxY(float *y,float *x,int count,float xmin,float xmax);
@@ -82,7 +82,7 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX
 void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoomX1,int setZoomX2,
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,longdouble centreEpoch,
 	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics,char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset);
-void setLabel(char *ystr,int yplot,int plotPhase,double unitFlag,longdouble centreEpoch,char *userValStr);
+void setLabel(char *ystr,int yplot,int plotPhase,double unitFlag,longdouble centreEpoch,char *userValStr,char *flagStr);
 void drawOption(float x,float y,char *str,int fit);
 void swapFit(pulsar *psr,int par,int k,int button);
 void newTim(pulsar *psr);
@@ -544,6 +544,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   int flagN=0;
   int paramOffset=0;
 
+  char flagStrX[1024]="NULL";
+  char flagStrY[1024]="NULL";
+
   for (i=0;i<100;i++)
     flagCol[i]= 1;
 
@@ -732,8 +735,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     if (centre==-1)     centreEpoch = psr[0].param[param_pepoch].val[0];
     else if (centre==1)	centreEpoch = (min1+max1)/2.0;
 
-    setLabel(xstr,xplot,plotPhase,unitFlag,centreEpoch,userValStr);
-    setLabel(ystr,yplot,plotPhase,unitFlag,centreEpoch,userValStr);
+    setLabel(xstr,xplot,plotPhase,unitFlag,centreEpoch,userValStr,flagStrX);
+    setLabel(ystr,yplot,plotPhase,unitFlag,centreEpoch,userValStr,flagStrY);
 
     count=0;
     for (i=0;i<psr[0].nobs;i++)
@@ -754,10 +757,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    freq[count]=(float)(psr[0].obsn[i].freq);
 	    id[count] = i;
 	    bad = setPlot(x,count,psr,i,unitFlag,plotPhase,xplot,&userValChange,userCMD,userValStr,userX,
-		    centreEpoch,logx);
+			  centreEpoch,logx,flagStrX);
 	    
 	    bad = setPlot(y,count,psr,i,unitFlag,plotPhase,yplot,&userValChange,userCMD,userValStr,userX,
-		    centreEpoch,logy);
+			  centreEpoch,logy,flagStrY);
 
 	    if (yplot==1)                            /* Get pre-fit residual */
 	      strcpy(fitType,"pre-fit");
@@ -1203,6 +1206,17 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	   else if (key==')') {xplot=12; yplot=2;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
 	   else if (key=='.') {xplot=2; setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
 	   else if (key==16) {plotPhase*=-1; setZoomY1 = 0; setZoomY2 =0;}
+	   else if (key=='O') { // Select flag ID for display
+	     printf("Enter flag ID for x-axis (NULL for nothing) ");
+	     scanf("%s",flagStrX);
+	     printf("Enter flag ID for y-axis (NULL for nothing) ");
+	     scanf("%s",flagStrY);
+	     if (strcmp(flagStrX,"NULL")!=0)
+	       xplot=18;
+	     if (strcmp(flagStrY,"NULL")!=0)
+	       yplot=18;
+	   }
+	    
 	   else if (key=='>') /* Select next point to right if available */
 	   {
 		  if (setZoomX2 != 0)
@@ -1904,8 +1918,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			   if (key=='0') xplot=10;// Year		     
 			   if (key=='-') xplot=11;// Elevation		     
 			   if (key=='=') xplot=12;// round MJD              
-			   setLabel(xstr,xplot,plotPhase,unitFlag,centreEpoch,userValStr);
-			   setLabel(ystr,yplot,plotPhase,unitFlag,centreEpoch,userValStr);
+			   setLabel(xstr,xplot,plotPhase,unitFlag,centreEpoch,userValStr,flagStrX);
+			   setLabel(ystr,yplot,plotPhase,unitFlag,centreEpoch,userValStr,flagStrY);
 			}
 			else if (key==25) /* cntr-Y -- set Y-scale */
 			{      
@@ -1923,8 +1937,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			   if (key=='0') yplot=10; // Year		          
 			   if (key=='-') yplot=11; // Elevation		     
 			   if (key=='=') yplot=12; // round MJD              
-			   setLabel(xstr,xplot,plotPhase,unitFlag,centreEpoch,userValStr);
-			   setLabel(ystr,yplot,plotPhase,unitFlag,centreEpoch,userValStr);
+			   setLabel(xstr,xplot,plotPhase,unitFlag,centreEpoch,userValStr,flagStrX);
+			   setLabel(ystr,yplot,plotPhase,unitFlag,centreEpoch,userValStr,flagStrY);
 
 			}
 			else if (key=='x') {  /* Do fit, but define start and finish by the zoom           */
@@ -3759,7 +3773,7 @@ void displayStatistics(float *x,float *y,int count,float plotx1,float plotx2,
    printf("\n\n");
 }
 
-int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log)
+int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log,char *flagStr)
 {
 
 
@@ -3980,7 +3994,28 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
 	
                 x[count]=(float)(psr[0].obsn[iobs].TNDMSignal*(DMKappa*pow(freq,2)) + dmDot);
         }
+     else if (plot==18) // Plot on flag value
+       {
+	 int i;
+	 int found=0;
+	 float val;
+	 for (i=0;i<psr[0].obsn[iobs].nFlags;i++)
+	   {
+	     if (strcmp(psr[0].obsn[iobs].flagID[i],flagStr)==0)
+	       {
+		 found=1;
+		 sscanf(psr[0].obsn[iobs].flagVal[i],"%f",&val);
+	       }
+	   }
+	 if (found==1)
+	   x[count] = val;
+	 else
+	   {
+	     printf("ERROR: Cannot get value for observation %s -- setting to -1\n",psr[0].obsn[iobs].fname);
+	     x[count] = -1;
+	   }
 
+       }
    if (log==1 && x[count]>0)
 	  x[count] = log10(x[count]);
    else if (log==1 && x[count]<0)
@@ -3989,7 +4024,7 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
    return 0;
 }
 
-void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centreEpoch,char *userValStr)
+void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centreEpoch,char *userValStr,char *flagStr)
 {
    if (plot==1)
    {
@@ -4026,6 +4061,7 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
    else if (plot==15)  sprintf(str,"Parallactic angle (deg)");
    else if (plot==16) sprintf(str,"Red Noise (sec)");
    else if (plot==17) sprintf(str,"DM Variations (cm^-3 pc)");
+   else if (plot==18) sprintf(str,flagStr);
 }
 
 void averagePts(float *x,float *y,int n,int width,float *meanX,float *meanY,int *nMean)
