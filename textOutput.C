@@ -1324,6 +1324,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      fprintf(fout2,"T2EQUAD %s %s %g\n", psr[p].T2equadFlagID[i], psr[p].T2equadFlagVal[i], psr[p].T2equadVal[i]);
 	    }
           /* Add TNEF / TNEQ */
+
+	if(psr[p].TNGlobalEF != 0){
+		fprintf(fout2,"TNGlobalEF %g\n", psr[p].TNGlobalEF);
+	}
+        if(psr[p].TNGlobalEQ != 0){
+                fprintf(fout2,"TNGlobalEQ %g\n", psr[p].TNGlobalEQ);
+        }
+
+
           for (i=0;i<psr[p].nTNEF;i++)
             {
               fprintf(fout2,"TNEF %s %s %g\n", psr[p].TNEFFlagID[i], psr[p].TNEFFlagVal[i], psr[p].TNEFVal[i]);
@@ -1333,6 +1342,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             {
               fprintf(fout2,"TNEQ %s %s %g\n", psr[p].TNEQFlagID[i], psr[p].TNEQFlagVal[i], psr[p].TNEQVal[i]);
             }
+	for (i=0;i<psr[p].nTNECORR; i++){
+
+		fprintf(fout2,"TNECORR %s %s %g\n", psr[p].TNECORRFlagID[i], psr[p].TNECORRFlagVal[i], psr[p].TNECORRVal[i]);
+
+	}
           if(psr[p].TNDMAmp != 0 && psr[p].TNDMGam != 0){
 		fprintf(fout2,"TNDMAmp %g\n", psr[p].TNDMAmp);	
 		fprintf(fout2,"TNDMGam %g\n", psr[p].TNDMGam);
@@ -1343,6 +1357,12 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 fprintf(fout2,"TNRedGam %g\n", psr[p].TNRedGam);
                 fprintf(fout2,"TNRedC %i\n", psr[p].TNRedC);
         }
+
+	for(i =0; i < psr[p].nTNGroupNoise; i++){
+
+		fprintf(fout2,"TNGroupNoise %s %s %g %g %i\n", psr[p].TNGroupNoiseFlagID[i], psr[p].TNGroupNoiseFlagVal[i], psr[p].TNGroupNoiseAmp[i], psr[p].TNGroupNoiseGam[i], psr[p].TNGroupNoiseC[i]);
+	
+	}
 
 
 	  /* Add whitening flags */
