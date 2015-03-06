@@ -42,7 +42,7 @@
 #define MAX_STRLEN           1000  /* Maximum length for strings                       */
 #define MAX_FILELEN          500   /* Maximum filename length                          */
 #define MAX_STOREPRECISION   50    /* How many routines in TEMPO2 store precision information */
-#define MAX_OBSN_VAL         10000 /* Maximum number of TOAs                           */ 
+#define MAX_OBSN_VAL         20000 /* Maximum number of TOAs                           */ 
 #define MAX_SITE             100   /* Maximum number of observatory sites              */
 #define MAX_PARAMS           1000   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
@@ -65,7 +65,7 @@
 #define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
 #define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
-#define MAX_DMX             256    /* Max number of DM steps allowed */
+#define MAX_DMX             512    /* Max number of DM steps allowed */
 #define MAX_FLAGS            20    /* Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /* Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /* Maximum number of steps in the correction to TT  */ 
