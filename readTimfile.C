@@ -657,35 +657,38 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 
       if (strcmp(fileFormat,"tempo2")==0) 
 	{
-        ///////////////////////////////////////////////////////////////////
-        ///////////// Undo what was done in preProcessSimple.C ////////////
-        ///////////////////////////////////////////////////////////////////
-        oldsat = psr->obsn[i].sat;
-        oldsat -= ((psr->obsn[i].phaseOffset/psr->param[param_f].val[0])/SECDAY);
+	  ///////////////////////////////////////////////////////////////////
+	  ///////////// Undo what was done in preProcessSimple.C ////////////
+	  ///////////////////////////////////////////////////////////////////
+	  oldsat = psr->obsn[i].sat;
 
-      // Correctly taking note of the phase offset
-      for (int k=0;k<psr->nToffset;k++) /* Calculate time offsets */
-	{
-	  char offsetSite[256], obsSite[256];
-	  lookup_observatory_alias(psr->tOffsetSite[k], offsetSite);
-	  lookup_observatory_alias(psr->obsn[i].telID, obsSite);
-	  if ((psr->tOffset_f1[k]==0.0 || (psr->obsn[i].freq > psr->tOffset_f1[k])) &&
-	      (psr->tOffset_f2[k]==0.0 || (psr->obsn[i].freq < psr->tOffset_f2[k])) &&
-	      (psr->tOffset_t1[k]==0.0 || (psr->obsn[i].sat  > psr->tOffset_t1[k])) &&
-	      (psr->tOffset_t2[k]==0.0 || (psr->obsn[i].sat  < psr->tOffset_t2[k])) && 
-	      (strcmp(offsetSite,"0")==0 || 
-	       strcmp(offsetSite,obsSite)==0))
+	  // If we don't do this then createRealisation fails
+	  if (psr->param[param_f].val[0] > 0)
+	    oldsat -= ((psr->obsn[i].phaseOffset/psr->param[param_f].val[0])/SECDAY);
+	  
+	  // Correctly taking note of the phase offset
+	  for (int k=0;k<psr->nToffset;k++) /* Calculate time offsets */
 	    {
-	      int use=1;
-	      /* Check for flags */
-	      if (strlen(psr->tOffsetFlags[k])>0)
+	      char offsetSite[256], obsSite[256];
+	      lookup_observatory_alias(psr->tOffsetSite[k], offsetSite);
+	      lookup_observatory_alias(psr->obsn[i].telID, obsSite);
+	      if ((psr->tOffset_f1[k]==0.0 || (psr->obsn[i].freq > psr->tOffset_f1[k])) &&
+		  (psr->tOffset_f2[k]==0.0 || (psr->obsn[i].freq < psr->tOffset_f2[k])) &&
+		  (psr->tOffset_t1[k]==0.0 || (psr->obsn[i].sat  > psr->tOffset_t1[k])) &&
+		  (psr->tOffset_t2[k]==0.0 || (psr->obsn[i].sat  < psr->tOffset_t2[k])) && 
+		  (strcmp(offsetSite,"0")==0 || 
+		   strcmp(offsetSite,obsSite)==0))
 		{
-		  char *myStr,str1[1000],flagID[100];
-		  use=0;
-		  strcpy(str1,psr->tOffsetFlags[k]);
-		  myStr = strtok(str1," ");
-		  do {
-		    if (myStr[0]=='-' && (myStr[1]<48 || myStr[1]>57)) /* Look for flag */
+		  int use=1;
+		  /* Check for flags */
+		  if (strlen(psr->tOffsetFlags[k])>0)
+		    {
+		      char *myStr,str1[1000],flagID[100];
+		      use=0;
+		      strcpy(str1,psr->tOffsetFlags[k]);
+		      myStr = strtok(str1," ");
+		      do {
+			if (myStr[0]=='-' && (myStr[1]<48 || myStr[1]>57)) /* Look for flag */
 		      {
 			strcpy(flagID,myStr);
 			myStr = strtok(NULL," ");
@@ -722,6 +725,8 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 	  sscanf(psr->obsn[i].fname,"%s",name);
 	  interim_error = psr->obsn[i].origErr/current_efac;
 	  interim_error = sqrt(pow(interim_error,2.0)-(pow(current_equad,2.0)));
+
+	  printf("Writing out: %.15Lg %.15Lg\n",oldsat,psr->obsn[i].sat);
 	  fprintf(fout," %s %.8f %.17Lf %.5f %s ", name,psr->obsn[i].freq,
 		  // psr->obsn[i].sat, (psr->obsn[i].toaErr/current_efac),psr->obsn[i].telID);
 		  oldsat, interim_error,psr->obsn[i].telID);
