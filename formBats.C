@@ -61,7 +61,17 @@ void formBats(pulsar *psr,int npsr)
 		  (psr[p].obsn[i].shapiroDelayVenus+
 		   psr[p].obsn[i].shapiroDelayJupiter+psr[p].obsn[i].shapiroDelaySaturn
 		   +psr[p].obsn[i].shapiroDelayUranus + psr[p].obsn[i].shapiroDelayNeptune);
-	      //	      	      printf("Forming bat with sat = %g TT = %g TT_TB = %g trop = %g roemer = %g shap = %g tdis1 = %g tdis2 = %g\n",(double)psr[p].obsn[i].sat,(double)getCorrectionTT(psr[p].obsn+i),(double)psr[p].obsn[i].correctionTT_TB,(double)psr[p].obsn[i].troposphericDelay,(double)psr[p].obsn[i].roemer,(double)shapiroDelay,(double)psr[p].obsn[i].tdis1,(double)psr[p].obsn[i].tdis2);
+	     	   //if(i==0){printf("Forming bat with sat = %.15g TT = %.15g TT_TB = %.15g trop = %.15g roemer = %.15g shap = %.15g tdis1 = %.15g tdis2 = %.15g\n",(double)psr[p].obsn[i].sat,(double)getCorrectionTT(psr[p].obsn+i),(double)psr[p].obsn[i].correctionTT_TB,(double)psr[p].obsn[i].troposphericDelay,(double)psr[p].obsn[i].roemer,(double)shapiroDelay,(double)psr[p].obsn[i].tdis1,(double)psr[p].obsn[i].tdis2);}
+		     
+
+		long double batcorr=getCorrectionTT(psr[p].obsn+i)/SECDAY
+                + (psr[p].obsn[i].correctionTT_TB
+                   -psr[p].obsn[i].troposphericDelay
+                   +psr[p].obsn[i].roemer -
+                   shapiroDelay - psr[p].obsn[i].tdis1 - psr[p].obsn[i].tdis2)/SECDAY;
+
+                psr[p].obsn[i].batCorr = batcorr;
+
 	      psr[p].obsn[i].bat = psr[p].obsn[i].sat + 
 		getCorrectionTT(psr[p].obsn+i)/SECDAY 
 		+ (psr[p].obsn[i].correctionTT_TB

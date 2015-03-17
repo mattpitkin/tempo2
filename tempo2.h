@@ -289,7 +289,9 @@ typedef struct
 
 typedef struct observation {
   longdouble sat;                 /* Site arrival time                                          */
+  longdouble origsat;
   longdouble bat;                 /* Infinite frequency barycentric arrival time                */
+  longdouble batCorr;
   longdouble bbat;                /* Arrival time at binary barycentre                          */
   longdouble pet;                 /* Pulsar emission time                                       */
   int clockCorr;                  /* = 1 for clock corrections to be applied, = 0 for BAT       */
@@ -604,11 +606,13 @@ typedef struct pulsar {
 	double TNRedAmp;
 	double TNRedGam;
 	int TNRedC;
+	double TNRedCoeffs[200];
 	double TNRedFLow;
 	double TNRedCorner;
 	double TNDMAmp;
 	double TNDMGam;
 	int TNDMC;
+	double TNDMCoeffs[200];
 	int TNsubtractDM;
 	int TNsubtractRed;
   
@@ -752,8 +756,10 @@ void tai2tt(pulsar *psr,int npsr);
 void tai2ut1(pulsar *psr,int npsr);
 void vectorPulsar(pulsar *psr,int npsr);
 void readEphemeris(pulsar *psr,int npsr,int addEphemNoise);
+void readOneEphemeris(pulsar *psr,int npsr,int addEphemNoise, int obsNumber);
 void readEphemeris_calceph(pulsar *psr,int npsr);
 void get_obsCoord(pulsar *psr,int npsr);
+void get_OneobsCoord(pulsar *psr,int npsr, int obs);
 double calcRMS(pulsar *psr,int p);
 
 void allocateMemory(pulsar *psr,int realloc);

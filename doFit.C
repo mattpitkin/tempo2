@@ -3447,6 +3447,10 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		FitRedCoeff=2*pulse->TNRedC;
                 RedFLow=pow(10.0, pulse->TNRedFLow);
                 RedCorner=pulse->TNRedCorner/maxtspan;
+
+		for(int i = 0; i < 200; i++){
+			pulse->TNRedCoeffs[i] = 0;
+		}
 	
 
 		printf("\nIncluding Red noise with %i Frequencies, %g Log_10 Amplitude, %g Spectral Index\n", FitRedCoeff/2,RedAmp,RedIndex);
@@ -3455,6 +3459,13 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		DMAmp=pulse->TNDMAmp;
 		DMIndex=pulse->TNDMGam;
 		FitDMCoeff=2*pulse->TNDMC;
+
+
+                for(int i = 0; i < 200; i++){
+                        pulse->TNDMCoeffs[i] = 0;
+                }
+
+
 
 		printf("\nIncluding DM Variations with %i Frequencies, %g Log_10 Amplitude, %g Spectral Index\n", FitDMCoeff/2,DMAmp,DMIndex);
 	}
@@ -3913,7 +3924,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 			freqs[startpos+i]=((double)(i+1.0))/maxtspan;
 			freqs[startpos+i+BandC]=freqs[startpos+i];
 			
-			double rho = (BandAmp*BandAmp)*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-BandSpec))/(maxtspan*24*60*60);	
+			double rho = (BandAmp*BandAmp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freqs[startpos+i]*365.25,(-BandSpec))/(maxtspan*24*60*60);	
 			powercoeff[startpos+i]+=rho;
 			powercoeff[startpos+i+BandC]+=rho;
 		}
@@ -4112,6 +4123,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	int totalsize=numtofit+totCoeff+DMEventQuadTerms+ShapeEventTerms;
+	int totalnoisesize=numtofit+FitRedCoeff+FitDMCoeff+totalBandNoiseCoeff+6*pulse->TNBandDMC+totalGroupCoeff;
 	int totalDMsize = DMEventQuadTerms+ShapeEventTerms+FitDMCoeff;
 	
 	double **TotalMatrix=new double*[pulse->nobs];
@@ -4278,6 +4290,26 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	updateParameters(pulse,0,TempoCoeff,TempoErr);
 
 
+	//////////////////Get Red noise and DM Coeffs and errors/////////////////////
+	
+	int redcounter = 0;
+	int dmcounter = 0;
+	for(int j=0;j<totalsize; j++){
+		if(j>=numtofit && j < numtofit+FitRedCoeff){
+			//pulse->TNRedCoeffs[redcounter] = maxcoeff[j];
+			//pulse->TNRedCoeffs[redcounter+100] = Errorvec[j];
+			//printf("Red Coeff: %i %g +/- %g \n", redcounter, pulse->TNRedCoeffs[redcounter], pulse->TNRedCoeffs[redcounter+100]);
+			redcounter++;
+		}
+
+		if(j>=FitRedCoeff+numtofit && j < numtofit+FitRedCoeff+FitDMCoeff){
+		        //pulse->TNDMCoeffs[dmcounter] = maxcoeff[j];
+                        //pulse->TNDMCoeffs[dmcounter+100] = Errorvec[j];
+                        //printf("DM Coeff: %i %g +/- %g \n", dmcounter, pulse->TNDMCoeffs[dmcounter], pulse->TNDMCoeffs[dmcounter+100]);
+			dmcounter++;
+                }
+	}
+
 	double chisq=0;
 	printf("subtractRed is %i \n", pulse->TNsubtractRed);
 	printf("subtractDM is %i \n", pulse->TNsubtractDM);
@@ -4288,30 +4320,46 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		double rederr=0;
 		double dmsum=0;
 		double dmerr=0;
+		double shapesum=0;
+		double shapeerr=0;
 		for(int j=0;j<totalsize; j++){
 			//			if(i==0)printf("Max coeff: %i %g \n", j,maxcoeff[j]);		
 			dsum=dsum+TotalMatrix[i][j]*maxcoeff[j];
 
 			if(j>=numtofit && j < numtofit+FitRedCoeff){
+				//if(i==20){
+				//printf("TM: %i %g %g \n", j-numtofit, TotalMatrix[i][j], maxcoeff[j]);
+				//}
 				redsum+=TotalMatrix[i][j]*maxcoeff[j];
 				rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
 			}
 			if(j>=FitRedCoeff+numtofit && j < numtofit+FitRedCoeff+FitDMCoeff){
+				//if(i==20){
+                                //printf("TM: %i %g %g \n", j-numtofit, TotalMatrix[i][j], maxcoeff[j]);
+                                //}
+
 				dmsum+=TotalMatrix[i][j]*maxcoeff[j];
 				dmerr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
 			}
 
-			if(j>=numtofit+FitRedCoeff+FitDMCoeff && j < numtofit+totCoeff){
+			if(j>=numtofit+FitRedCoeff+FitDMCoeff && j < totalnoisesize){
 					redsum+=TotalMatrix[i][j]*maxcoeff[j];
 					rederr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
 			}		
                         if(j>=numtofit+totCoeff && j < numtofit+totCoeff+ShapeEventTerms){
+//					printf("Shapeevent terms %i %i %g %g \n", i, j, TotalMatrix[i][j]*maxcoeff[j], pow(TotalMatrix[i][j]*Errorvec[j],2));
                                         dmsum+=TotalMatrix[i][j]*maxcoeff[j];
                                         dmerr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
+					shapesum+=TotalMatrix[i][j]*maxcoeff[j];
+					shapeerr+=pow(TotalMatrix[i][j]*Errorvec[j],2);
                         }		
 			
 
 		}
+
+//		if(fabs(shapesum) > pow(10.0, -10)){printf("Shapeevent terms %i %.10g %g %g \n", i, (double)pulse->obsn[i].bat, shapesum/DMVec[i], sqrt(shapeerr)/DMVec[i]);}
+
+
 		double freq=(double)pulse->obsn[i].freqSSB;
 		long double yrs = (pulse->obsn[i].bat - pulse->param[param_dmepoch].val[0])/365.25;
 		long double arg = 1.0;

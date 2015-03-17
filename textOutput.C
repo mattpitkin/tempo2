@@ -1363,7 +1363,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		fprintf(fout2,"TNGroupNoise %s %s %g %g %i\n", psr[p].TNGroupNoiseFlagID[i], psr[p].TNGroupNoiseFlagVal[i], psr[p].TNGroupNoiseAmp[i], psr[p].TNGroupNoiseGam[i], psr[p].TNGroupNoiseC[i]);
 	
 	}
+	for(i =0; i < psr[p].nTNBandNoise; i++){
 
+		fprintf(fout2,"TNBandNoise %g %g %g %g %i\n", psr[p].TNBandNoiseLF[i], psr[p].TNBandNoiseHF[i], psr[p].TNBandNoiseAmp[i], psr[p].TNBandNoiseGam[i], psr[p].TNBandNoiseC[i]);
+
+	}
 
 	  /* Add whitening flags */
 	  if (psr[p].param[param_wave_om].paramSet[0]==1)
