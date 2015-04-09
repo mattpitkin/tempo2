@@ -171,6 +171,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     readValue(psr,str,fin,&(psr->param[param_tres]),0);
   else if (strcasecmp(str,"MODE")==0 || strcasecmp(str,"WEIGHT")==0) /* Fitting mode */
     fscanf(fin,"%d",&(psr->fitMode));
+  else if (strcasecmp(str,"ROBUST")==0) /* Robust Fitting mode */
+    fscanf(fin,"%d",&(psr->robust));
   else if (strcasecmp(str,"NOTRACK")==0)  /* TEMPO2 uses automatic tracking */
     psr->param[param_track].paramSet[0]=0;
   else if (strcasecmp(str,"WHITE_NOISE_MODEL")==0) // Use a white noise model file

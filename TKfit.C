@@ -102,20 +102,44 @@ void TKfitPoly(double x,double *v,int m)
 /* Least squares fitting routines */
 
 
-// returns the chisq.
+/**
+ * TKleastSquares performs a least squares fit.
+ *
+ *	double* b: Array of Y values.
+ *	double* white_b: Array of whitened Y values. (Uinv.Y)
+ *	double** designMatrix: Fit matrix
+ *	double** white_designMatrix: Whitened fit matrix
+ *	int n: size of "b"
+ *	int nf: number of fit parameters (i.e. columns of designMatrix)
+ *	double tol:  filter to remove small values of the SVD
+ *	char rescale_errors: boolean to say if resultant errors should be scaled by chisq
+ *	double* outP: output fit parameters
+ *	double* e: output error in fit parameters
+ *	double **cvm: nf*nf output covariance matrix for fit parameters.
+ *
+ */
 double TKleastSquares(double* b, double* white_b,
 	  double** designMatrix, double** white_designMatrix,
 	  int n,int nf, double tol, char rescale_errors,
 	  double* outP, double* e, double** cvm){
+   return TKrobustLeastSquares(b,white_b,
+		 designMatrix,white_designMatrix,
+		 n,nf,tol,rescale_errors,outP, e,cvm,0);
+}
+
+double TKrobustLeastSquares(double* b, double* white_b,
+	  double** designMatrix, double** white_designMatrix,
+	  int n,int nf, double tol, char rescale_errors,
+	  double* outP, double* e, double** cvm, int robust){
 
    double chisq = 0;
    int i,j,k;
 
    if (nf > MAX_PARAMS)
-     {
-       printf("Number of fitted parameters, %d, is greater than MAX_PARAMS. Please update MAX_PARAMS and reinstall\n",nf);
-       exit(1);
-     }
+   {
+	  printf("Number of fitted parameters, %d, is greater than MAX_PARAMS. Please update MAX_PARAMS and reinstall\n",nf);
+	  exit(1);
+   }
 
    logdbg("TKleastSquares n=%d nf=%d",n,nf);
    if(nf > n){
@@ -156,32 +180,32 @@ double TKleastSquares(double* b, double* white_b,
 	  logdbg("Writing out whitened residuals");
 	  FILE* wFile=fopen("prefit.res","w");
 	  if (!wFile){
-	    printf("Unable to write out whitened residuals: cannot open file prefit.res\n");
+		 printf("Unable to write out whitened residuals: cannot open file prefit.res\n");
 	  }
 	  else
-	    {
-	      for (i=0;i<n;i++)
-		fprintf(wFile,"%d %lg %lg\n",i,b[i],white_b[i]);
-	      fclose(wFile);
-	    }
+	  {
+		 for (i=0;i<n;i++)
+			fprintf(wFile,"%d %lg %lg\n",i,b[i],white_b[i]);
+		 fclose(wFile);
+	  }
 
    }
    if(writeResiduals==1){
 	  logdbg("Writing out design matrix");
 	  FILE * wFile=fopen("design.matrix","w");
 	  if (!wFile){
-	    printf("Unable to write out design matrix: cannot open file design.matrix\n");
+		 printf("Unable to write out design matrix: cannot open file design.matrix\n");
 	  }
 	  else
-	    {
-	      for (i=0;i<n;i++) {
-		for (j=0;j<nf;j++){
-		  fprintf(wFile,"%d %d %lg %lg\n",i,j,designMatrix[i][j],white_designMatrix[i][j]);
-		}
-		fprintf(wFile,"\n");
-	      }
-	      fclose(wFile);
-	    }
+	  {
+		 for (i=0;i<n;i++) {
+			for (j=0;j<nf;j++){
+			   fprintf(wFile,"%d %d %lg %lg\n",i,j,designMatrix[i][j],white_designMatrix[i][j]);
+			}
+			fprintf(wFile,"\n");
+		 }
+		 fclose(wFile);
+	  }
    }
 
    // Now go to longdouble precision!
@@ -231,23 +255,23 @@ double TKleastSquares(double* b, double* white_b,
 		 FILE *fout;
 		 fout = fopen("cvm.matrix","w");
 		 if (!fout){
-		   printf("Unable to open file cvm.matrix for writing\n");
+			printf("Unable to open file cvm.matrix for writing\n");
 		 }
 		 else{
-		   for (i=0;i<nf;i++)
-		     {
-		       for (j=0;j<=i;j++)
-			 {
-			   fprintf(fout,"%+.8f ",cvm[i][j]/sqrt(cvm[i][i]*cvm[j][j]));
-			 }
-		       fprintf(fout,"\n");
-		     }
-		   fclose(fout);
+			for (i=0;i<nf;i++)
+			{
+			   for (j=0;j<=i;j++)
+			   {
+				  fprintf(fout,"%+.8f ",cvm[i][j]/sqrt(cvm[i][i]*cvm[j][j]));
+			   }
+			   fprintf(fout,"\n");
+			}
+			fclose(fout);
 		 }
 	  }
 	  if(computeErrors){
-	  logdbg("Compute Errors");
-	  for (i=0;i<nf;i++){e[i]=sqrt(cvm[i][i]);}
+		 logdbg("Compute Errors");
+		 for (i=0;i<nf;i++){e[i]=sqrt(cvm[i][i]);}
 	  }
    }
 
@@ -276,11 +300,11 @@ double TKleastSquares(double* b, double* white_b,
 	  }
 
 	  if(computeErrors && rescale_errors){
-	    //	    printf("Error scaling = %g [chisq = %g] [n = %d] [nf = %d]\n",sqrt(chisq/(n-nf)),(double)chisq,n,nf);
-        // This is not the place for this message: this is the only thing one
-        // sees when a fit is done. Perhaps move to the results
-        // summary?    -- Rutger van Haasteren & Michele Vallisneri
-	    // printf("Error scaling = %g\n",sqrt(chisq/(n-nf)));
+		 //	    printf("Error scaling = %g [chisq = %g] [n = %d] [nf = %d]\n",sqrt(chisq/(n-nf)),(double)chisq,n,nf);
+		 // This is not the place for this message: this is the only thing one
+		 // sees when a fit is done. Perhaps move to the results
+		 // summary?    -- Rutger van Haasteren & Michele Vallisneri
+		 // printf("Error scaling = %g\n",sqrt(chisq/(n-nf)));
 		 for (j=0;j<nf;j++)
 			e[j] *= sqrt(chisq/(n-nf));
 	  }
@@ -288,22 +312,22 @@ double TKleastSquares(double* b, double* white_b,
 	  if (writeResiduals){
 		 FILE* wFile=fopen("postfit.res","w");
 		 if (!wFile){
-		   printf("Unable to open file postfit.res for writing\n");
+			printf("Unable to open file postfit.res for writing\n");
 		 }
 		 else
-		   {
-		     for (i=0;i<n;i++)
-		       {
-			 sum=0;
-			 sum_w=0;
-			 for (j=0;j<nf;j++){
-			   sum += designMatrix[i][j]*p[j];
-			   sum_w += white_designMatrix[i][j]*p[j];
-			 }
-			 fprintf(wFile,"%d %lg %lg\n",i,(double)(b[i]-sum),(double)(white_b[i]-sum_w));
-		       }
-		     fclose(wFile);
-		   }
+		 {
+			for (i=0;i<n;i++)
+			{
+			   sum=0;
+			   sum_w=0;
+			   for (j=0;j<nf;j++){
+				  sum += designMatrix[i][j]*p[j];
+				  sum_w += white_designMatrix[i][j]*p[j];
+			   }
+			   fprintf(wFile,"%d %lg %lg\n",i,(double)(b[i]-sum),(double)(white_b[i]-sum_w));
+			}
+			fclose(wFile);
+		 }
 	  }
    } // computeParam
 
@@ -316,8 +340,128 @@ double TKleastSquares(double* b, double* white_b,
 	  // we created CVM, so free it
 	  free_uinv(cvm);
    }
+
+   /** Robust Estimator code by Wang YiDi, Univ. Manchester 2015 **/
+   if(robust > 0){
+	  longdouble resid[n];//residual after the calculation of leastsquare
+	  longdouble Weight[n];//reweights
+
+	  longdouble sigma; // Median of the residuals
+	  double c0 = 1.345; // robust tunning parameter
+	  //robust estimation process-----wyd    
+	  for (j=0;j<n;j++)
+	  {
+		 sum = 0.0;
+		 for (k=0;k<nf;k++)
+		 {
+			sum += p[k]*white_designMatrix[j][k];
+		 }
+
+		 resid[j]=white_b[j]-sum;
+	  }
+
+	  //Finding the median of residuals
+	  longdouble median = 0.0;
+	  longdouble newval[n];
+	  longdouble resid_new[n];
+	  longdouble store;
+	  int changed;
+	  int count = n;
+
+	  for (i=0;i<count;i++)
+	  {
+		 newval[i]=fabs(resid[i]);
+	  }
+
+	  do
+	  {
+		 changed=0;
+		 for (j=0;j<n-1;j++)
+		 {
+			if (fabs(resid[i]) > fabs(resid[i+1]))
+			{
+			   store=newval[i+1];
+			   newval[i+1]=newval[i];
+			   newval[i]=store;
+			   changed=1;
+			}
+		 }
+	  }while (changed==1);
+
+
+	  if (count%2==0)
+	  {
+		 median = (newval[count/2-1]+newval[count/2])/2.0;
+	  }
+	  else
+	  {
+		 median = newval[(count-1)/2];
+	  }
+
+	  if(writeResiduals){
+		 FILE *fpp = fopen("Wmedian.txt", "w");
+		 fprintf(fpp, "%lg\n", (double)median);
+		 fclose(fpp);
+	  }
+
+	  //Reweight 
+	  c0 = 1.345;
+
+	  for (j=0;j<n;j++)
+	  {
+		 resid_new[j] = resid[j]/median;
+
+		 if (fabs(resid_new[j])<c0)
+		 {
+			Weight[j] = 1.0;
+		 }
+		 else
+		 {
+			Weight[j] = c0/fabs(resid_new[j]);
+		 }
+	  }
+
+	  for (i=0; i<n; i++)
+	  {
+		 white_b[i] *= Weight[i];
+
+		 for (j=0; j<nf; j++)  white_designMatrix[i][j] *= Weight[i];
+	  }
+
+	  if(writeResiduals){
+		 FILE *pp = fopen("Weight.txt", "w");
+		 for (i=0; i<n; i++)
+		 {
+			fprintf(pp, "%lg\n", (double)Weight[i]);
+		 }
+		 fclose(pp);
+	  }
+
+	  //Calcluation via robust estimation algorithm
+	  double newchisq = TKrobustLeastSquares(b, white_b, designMatrix, white_designMatrix, n, nf, tol, rescale_errors, outP, e, cvm, robust-1);
+
+	  if(writeResiduals){
+		 FILE *pp = fopen("Parameter_RLS.txt", "w");
+		 for (i=0; i<nf; i++)
+		 {
+			fprintf(pp, "%lg\n", outP[i]);
+		 }
+		 fclose(pp);
+		 FILE *fp_result = fopen("Wchisq.txt", "w");
+		 fprintf(fp_result, "WLS=%lg   RLS=%lg\n", chisq, newchisq);
+		 fclose(fp_result);
+	  }
+	  chisq=newchisq;
+
+   }
+   // End of Robust estimator code
+
    return chisq;
 }
+
+
+
+
 
 // routine for pulsar fitting.
 void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int, int),pulsar *psr,double tol, int *ip,char rescale_errors, double **uinv) {
@@ -328,9 +472,9 @@ void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double 
 
    TKfit_getPulsarDesignMatrix(x,y,n,nf,fitFuncs,psr,ip,uinv,0,&designMatrix,&white_designMatrix,&b,&white_b);
 
-   *chisq = TKleastSquares(b,white_b,designMatrix,white_designMatrix,
+   *chisq = TKrobustLeastSquares(b,white_b,designMatrix,white_designMatrix,
 		 n,nf,tol,rescale_errors,
-		 outP,e,cvm);
+		 outP,e,cvm,psr->robust);
 
    free_blas(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
    free_blas(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
@@ -400,9 +544,9 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
 
    // go ahead and do the fit!
 
-   *chisq = TKleastSquares(b,white_b,designMatrix,white_designMatrix,
+   *chisq = TKrobustLeastSquares(b,white_b,designMatrix,white_designMatrix,
 		 totalObs,totalFit,tol,rescale_errors,
-		 outP,e,cvm);
+		 outP,e,cvm,psr[0].robust);
 
    free_blas(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
    free_blas(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**

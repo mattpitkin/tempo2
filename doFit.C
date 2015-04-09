@@ -320,6 +320,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			count++;
 		}
 
+		
 
 		if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL")){
 			// fit with a covariance function.
@@ -410,6 +411,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 		int offset=nglobal;
 		for (p=0;p<npsr;p++) {
+		    psr[p].robust=psr[0].robust; // robust fitting is controled by psr 0.
 			psr[p].fitChisq = chisq; 
 			// G. Hobbs, update so that the global fitting 
 			// gives the same reduced chisq for each pulsar
