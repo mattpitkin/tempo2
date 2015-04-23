@@ -20,7 +20,7 @@ extern "C" {
  * An accelerated cholesky decomposion to form uinv in plac.
  * uinv is a lower triangular, row-major, matrix.
  */
-void accel_uinv(double* _m, int n){
+int accel_uinv(double* _m, int n){
    int i,j;
 
    double* _u=_m;
@@ -33,7 +33,7 @@ void accel_uinv(double* _m, int n){
    F77_dpotf2("L",&n,_u,&n,&i);
    if(i!=0){
 	  logerr("Error in Cholesky Decomp i=%d",i);
-	  exit(1);
+      return i;
    }
 
    // This code taken from the LAPACK documentation
@@ -52,7 +52,7 @@ void accel_uinv(double* _m, int n){
    F77_dtptri("L","N",&n,_t,&i);
    if(i!=0){
 	  logerr("Error in Invert i=%d",i);
-	  exit(1);
+      return i;
    }
 
    // Unpack the triangular matrix using reverse
@@ -74,6 +74,7 @@ void accel_uinv(double* _m, int n){
    free(_t);
 
    logdbg("Done Invert.",i);
+   return 0;
 }
 
 

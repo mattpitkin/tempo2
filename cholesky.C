@@ -132,7 +132,11 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
 
 
    logdbg("Form uinv from cholesky matrix 'm'");
-   cholesky_formUinv(uinv,m,np);
+   int ret = cholesky_formUinv(uinv,m,np);
+   if (ret!=0) {
+       logerr("Error with formUinv");
+       exit(ret);
+   }
    for(i=0;i<np+1;i++)free(m[i]);
    free(m);
 }
@@ -373,9 +377,9 @@ void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,
 /**
  * UINV is a lower triangluar matrix.
  * Matricies are row-major order, i.e. uinv[r][c].
- *
+ * returns 0 if ok.
  */
-void cholesky_formUinv(double **uinv,double** m,int np){
+int cholesky_formUinv(double **uinv,double** m,int np){
    int i,j,k;
    logtchk("forming Cholesky matrix ... do Cholesky decomposition");
 #ifdef ACCEL_UINV
@@ -384,7 +388,8 @@ void cholesky_formUinv(double **uinv,double** m,int np){
 	  for(i =0;i<np;i++){
 		 memcpy(uinv[i],m[i],np*sizeof(double));
 	  }
-	  accel_uinv(uinv[0],np);
+	  int ret = accel_uinv(uinv[0],np);
+      if (ret != 0) return ret;
 
 	  logtchk("forming Cholesky matrix ... complete calculate uinv");
    } else {
@@ -448,6 +453,7 @@ void cholesky_formUinv(double **uinv,double** m,int np){
 	  }
 	  fclose(file);
    }
+   return 0;
 
 }
 
