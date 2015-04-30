@@ -48,9 +48,9 @@ using namespace std;
 
 // float solar(pulsar *psr, int npsr, int p);
 
-void mcl2(float eclon,float eclat,int iyr,int iday,float secs,float vel,float helat[],float crlon[],float rots[],float *helate,float *crlne,float *rote,float elong,float beta,float dlon,float delng,float cl,float zlonan,float e[],float ble,float delcrle,int lp);
-float elsun2(int iyr,int iday,float secs,float gst,float sra,float sdec);
-void calcRotN(float crlne, float rote, int *irot1, int *irot2, float *bcrlon);
+void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,double helat[],double crlon[],double rots[],double *helate,double *crlne,double *rote,double elong,double beta,double dlon,double delng,double cl,double zlonan,double e[],double ble,double delcrle,int lp);
+double elsun2(int iyr,int iday,double secs,double gst,double sra,double sdec);
+void calcRotN(double crlne, double rote, int *irot1, int *irot2, double *bcrlon);
 double fast(double Rmin,double theta2,double theta1);
 double slow(double Rmin,double theta2,double theta1);
 void JulToGreg(long jd, long *year, long *month, long *day);
@@ -61,31 +61,31 @@ int calwy(int mjd);
 int calwn(int mjd);
 int ocalmjd(int wy,int wn,int wd);
 void mjd2date(int mjd,int *iyr,int *yy, int *mm, int *dd, int *iday);
-void convertEcliptic(double raj,double decj,float *elong,float *elat);
+void convertEcliptic(double raj,double decj,double *elong,double *elat);
  
-float solarWindModel(pulsar psr,int iobs)
+double solarWindModel(pulsar psr,int iobs)
 {
   int mjd;
   int yy,mm,dd,iyr,iday;
-  float pi=3.1415927,theta,dp,inc,cl0,e[2],h[3],delcrle;
+  double pi=3.1415927,theta,dp,inc,cl0,e[2],h[3],delcrle;
   int last,finished;
-  float a[3],b[3],c[3],x[3][3],helat[36],crlon[36],rots[36],pe1[36],pe2[36],pe3[36];
-  float eclon,eclat,vel=400.0;
-  float secs;
+  double a[3],b[3],c[3],x[3][3],helat[36],crlon[36],rots[36],pe1[36],pe2[36],pe3[36];
+  double eclon,eclat,vel=400.0;
+  double secs;
   int lp;
-  float elong,beta,dlon,delng,cl,zlonan,ble;
-  float crlne,rote,helate;
+  double elong,beta,dlon,delng,cl,zlonan,ble;
+  double crlne,rote,helate;
   int i,j;
-  float shiftangle=0.0;
+  double shiftangle=0.0;
   int istart;
   int irot1,irot2;
-  float bcrlon;
+  double bcrlon;
   int introts[36];
-  float crlon2[36]; /*using compare and give the minimum */
+  double crlon2[36]; /*using compare and give the minimum */
   int ijump; /*find where the longitude has about 360 jump*/
   ijump=1000;
   int npt=35; /*number of point with rots!=0*/
-  float elsun,gst,sra,sdec;
+  double elsun,gst,sra,sdec;
   const char *CVS_verNum = "$Revision$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("sw_delay.C","solarWindModel()",CVS_verNum);
@@ -141,8 +141,8 @@ float solarWindModel(pulsar psr,int iobs)
 	  break;
 	}
     }
-  float midp,minp=1000,minp2=1000;
-  float minrote=rots[1];
+  double midp,minp=1000,minp2=1000;
+  double minrote=rots[1];
   int minnumber;
   for(i=1;i<=npt;i++)
     {
@@ -182,18 +182,18 @@ float solarWindModel(pulsar psr,int iobs)
   irot2=irot1+1;
   FILE *fin,*fin1,*fin2;
   char str1[1000],str[100];
-  float data[100];
-  float lon[1000],lat[1000],m,d,x1,x2,nullx[1000],nully[1000];
+  double data[100];
+  double lon[1000],lat[1000],m,d,x1,x2,nullx[1000],nully[1000];
   int n=0,type;
-  float psrx[1000],psry[1000],xpos,px[2],py[2];
+  double psrx[1000],psry[1000],xpos,px[2],py[2];
   shiftangle=shiftangle*180.0/pi;
   midp=midp*180.0/pi; 
   int npp=0;
-  float *cont,contArray[5];
-  float vals[200][30];
+  double *cont,contArray[5];
+  double vals[200][30];
   int Ni = 49;
   int Nj = 29,pos;
-  float tr[6];
+  double tr[6];
   char name1[100],name2[100];
   char uplabel[100];
   int CTn;
@@ -205,6 +205,8 @@ float solarWindModel(pulsar psr,int iobs)
   else
     sprintf(uplabel,"PSR %s,  Rotation:%7.1f",psr.name,irot1+shiftangle/360+0.5);
   
+  printf("SW Using: %s and %s\n",name1,name2);
+
   fin1 = fopen(name1,"r");
   fin2 = fopen(name2,"r");
   for(j=1;j<=CTn;j++)
@@ -288,7 +290,7 @@ float solarWindModel(pulsar psr,int iobs)
     }
   fclose(fin2);
   Ni = n;
-  cont = (float *)malloc(Ni*Nj*sizeof(float));
+  /*  cont = (double *)malloc(Ni*Nj*sizeof(double));
   for (j=0;j<Nj;j++)
     {
       for (i=0;i<Ni;i++)
@@ -296,7 +298,7 @@ float solarWindModel(pulsar psr,int iobs)
 	  pos = j*Ni+(int)((lon[i])/360.0*72.0);
 	  cont[pos]=vals[i][j];
 	}
-    }
+	} */
   
   for (i=0;i<360;i+=30)
     {
@@ -329,9 +331,13 @@ float solarWindModel(pulsar psr,int iobs)
       psry[npp]=helat[npp];
       psry[npp]*=180.0/pi;
     }
+
+  // TRY1
+
+
   int nsm=5;
   int nli=71*nsm+1;
-  float lonli[nli],latli[nli];
+  double lonli[nli],latli[nli];
   for(i=0;i<71;i++)
     {
       for(j=0;j<nsm;j++)
@@ -343,10 +349,10 @@ float solarWindModel(pulsar psr,int iobs)
     }
   lonli[nli-1]=lon[71];
   latli[nli-1]=lat[71];
-  float lonsm[356+nsm],latsm[356+nsm];
-  float lon20p[nli],lat20p[nli];
-  float lon20n[nli],lat20n[nli];
-  float lonc,latc,slope;
+  double lonsm[356+nsm],latsm[356+nsm];
+  double lon20p[nli],lat20p[nli];
+  double lon20n[nli],lat20n[nli];
+  double lonc,latc,slope;
   for(i=1;i<nli-1;i++)
     {
       lonc=(lonli[i]+lonli[i+1])/2;
@@ -369,10 +375,10 @@ float solarWindModel(pulsar psr,int iobs)
 	}
     }
   int l,k;
-  float x20p[nli],y20p[nli];
-  float x20n[nli],y20n[nli];
-  float maxy20p,miny20n;
-  float xbg,xed;
+  double x20p[nli],y20p[nli];
+  double x20n[nli],y20n[nli];
+  double maxy20p,miny20n;
+  double xbg,xed;
   if(lon20n[0]<lon20p[0])
     {xbg=lon20n[0];}
   else
@@ -402,6 +408,8 @@ float solarWindModel(pulsar psr,int iobs)
 	    }
 	}
     }
+
+  // TRY 2
   
 
   tr[0] = -5.0;
@@ -414,20 +422,20 @@ float solarWindModel(pulsar psr,int iobs)
   contArray[1] = 0.0;
   
   /*calculate integration*/
-  float thetakey[100];
+  double thetakey[100];
   for(i=0;i<100;i++) thetakey[i]=0.0;
   int key1,key2,startkey;
   k=0;
-  float tht[180];
+  double tht[180];
   for(i=0;i<180;i++) tht[i]=0.0;
-  float dm=0.0;
-  float exdm=0.0;
-  float dm2=0.0;
+  double dm=0.0;
+  double exdm=0.0;
+  double dm2=0.0;
   for(i=0;i<npt*5;i++) /*degree of tracking line*/
     {
       tht[i]=(85-i*1.0)*pi/180; 
     }
-  float psryint[180],psrxint[180];
+  double psryint[180],psrxint[180];
   for(j=0;j<npt;j++)
     {
       for(i=0;i<5;i++) /*inteperation of tracking line*/
@@ -437,7 +445,7 @@ float solarWindModel(pulsar psr,int iobs)
 	}  
     }
 
-  float thtinte[2000];
+  double thtinte[2000];
   for(i=0;i<180;i++) thtinte[i]=0.0;
   thetakey[0]=tht[5];
   for(j=1;j<nli-1;j++)
@@ -450,6 +458,9 @@ float solarWindModel(pulsar psr,int iobs)
 	    startkey=1;
 	}
     }
+
+
+
   for(i=6;i<npt*5;i++) /*start from 80 degree psrx[1] or psrxint[6]*/
     {
       for(j=1;j<nli-1;j++)
@@ -473,7 +484,10 @@ float solarWindModel(pulsar psr,int iobs)
 	  thetakey[k]=(tht[i-1]+tht[i])/2;
 	}
     }
-  float thetaearth;
+
+  // Try 3
+
+  double thetaearth;
   double ne_sw,ctheta,freqf,r,rsa[3],posp[3],pospos,delt;
   freqf = psr.obsn[iobs].freqSSB;
   delt = (psr.obsn[iobs].sat-psr.param[param_posepoch].val[0] + 
@@ -495,14 +509,14 @@ float solarWindModel(pulsar psr,int iobs)
   thetaearth=pi/2-acos(ctheta);
   //      if(thetaearth>thetakey[k])(k=k-1);
   thetakey[k+1]=thetaearth;
-  float Rmin=(AU_DIST/SOLAR_RADIUS)*sin(thetaearth+pi/2);
+  double Rmin=(AU_DIST/SOLAR_RADIUS)*sin(thetaearth+pi/2);
   int N;
   //      for(j=0;j<=k+1;j++)printf("thetakey=%f\n",thetakey[j]*180/pi);
-  float thout[10]; /* 89 degree to 81 dgree */
-  float exdmfast=0.0,exdmslow=0.0;
+  double thout[10]; /* 89 degree to 81 dgree */
+  double exdmfast=0.0,exdmslow=0.0;
   for(i=0;i<10;i++)
     {
-      thout[i]=(float)(89-i)*pi/180;
+      thout[i]=(double)(89-i)*pi/180;
     }
   for(i=0;i<9;i++)
     {
@@ -624,7 +638,7 @@ float solarWindModel(pulsar psr,int iobs)
       thtinte[0]=thetaearth;
       for(j=1;j<N;j++)
 	{
-	  thtinte[j]=(float)((int)(thetaearth*180/pi)+j)*pi/180;
+	  thtinte[j]=(double)((int)(thetaearth*180/pi)+j)*pi/180;
 	}
       if(startkey==0)
 	{
@@ -671,17 +685,17 @@ float solarWindModel(pulsar psr,int iobs)
 //    dm =1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr.ne_sw*
 //		  acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)*DM_CONST*1e-12; 
 
-  return(dm);
+    return(dm);
       //	}
     
 }
 
-void mcl2(float eclon,float eclat,int iyr,int iday,float secs,float vel,float helat[],float crlon[],float rots[],float *helate,float *crlne,float *rote,float elong,float beta,float dlon,float delng,float cl,float zlonan,float e[],float ble,float delcrle,int lp)
+void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,double helat[],double crlon[],double rots[],double *helate,double *crlne,double *rote,double elong,double beta,double dlon,double delng,double cl,double zlonan,double e[],double ble,double delcrle,int lp)
 {
-  float pi,theta,dp,inc,cl0,h[3];
+  double pi,theta,dp,inc,cl0,h[3];
   int last,finished;
-  float gs,ra,de;
-  float a[3],b[3],c[3],x[3][3],pe1[36],pe2[36],pe3[36];
+  double gs,ra,de;
+  double a[3],b[3],c[3],x[3][3],pe1[36],pe2[36],pe3[36];
   int i,j;
   for(i=0;i++;i<3)
     for(j=0;j++;j<3)
@@ -691,13 +705,13 @@ void mcl2(float eclon,float eclat,int iyr,int iday,float secs,float vel,float he
   x[2][2]=0.9920;
   finished=0;
   last=0;
-  float	rad=180.0/3.141593;
-  float helatep,crlnep,rotep;
+  double	rad=180.0/3.141593;
+  double helatep,crlnep,rotep;
   pi = 3.1415927;
   zlonan=1.28573 + 7.89327 * (iyr + iday/365.+ 50. )/ 32400.;
-  float zkl=cos(eclat);
-  float ya=elsun2(iyr,iday,secs,gs,ra,de);
-  float delta_PA=atan(-.12722*cos(ya-zlonan));
+  double zkl=cos(eclat);
+  double ya=elsun2(iyr,iday,secs,gs,ra,de);
+  double delta_PA=atan(-.12722*cos(ya-zlonan));
   //  printf("ya,zlonana,delta_PA %f %f %f\n",ya*rad,zlonan*rad,delta_PA*rad);
   cl=cos(ya-eclon)*zkl;
   dp = sqrt(1.-cl*cl);
@@ -711,17 +725,17 @@ void mcl2(float eclon,float eclat,int iyr,int iday,float secs,float vel,float he
     {
 
 
-      float clan=cos(zlonan);
-      float slan=sin(zlonan);
+      double clan=cos(zlonan);
+      double slan=sin(zlonan);
       x[0][0]=clan;
       x[0][1]=slan;
       x[1][0]=-0.9920049497*slan;
       x[2][0]=0.1261989691*slan;
       x[1][1]=0.9920049497*clan;
       x[2][1]=-0.1261989691*clan;
-      float sl=sqrt((1.-cl0*cl0)+((cl0-cl)*(cl0-cl)));
-      float snx=-cos(ya);
-      float sny=-sin(ya);
+      double sl=sqrt((1.-cl0*cl0)+((cl0-cl)*(cl0-cl)));
+      double snx=-cos(ya);
+      double sny=-sin(ya);
       a[0]=cos(eclon)*zkl;
       a[1]=sin(eclon)*zkl;
       a[2]=sin(eclat);
@@ -752,38 +766,38 @@ void mcl2(float eclon,float eclat,int iyr,int iday,float secs,float vel,float he
       b[0]=x[0][0]*snx+x[0][1]*sny;
       b[1]=x[1][0]*snx+x[1][1]*sny;
       b[2]=x[2][0]*snx+x[2][1]*sny;
-      float b1b2=sqrt(b[0]*b[0]+b[1]*b[1]);
+      double b1b2=sqrt(b[0]*b[0]+b[1]*b[1]);
       e[0]=snx;
       e[1]=sny;
       h[0]=b[0];
       h[1]=b[1];
       h[2]=b[2];
       helatep=atan2(b[2],b1b2);
-      float cep=((-b[0]*c[0]-b[1]*c[1])/b1b2)/sqrt(c[0]*c[0]+c[1]*c[1]);
+      double cep=((-b[0]*c[0]-b[1]*c[1])/b1b2)/sqrt(c[0]*c[0]+c[1]*c[1]);
       if (cep > 1.) cep=1.;
       delng=atan2(sqrt(1.-cep*cep),cep);
-      float blp=atan2(a[1],a[0]);
+      double blp=atan2(a[1],a[0]);
       if(blp < 0.)blp=blp+6.283185;
       ble=atan2(b[1],b[0]);
       if(ble<0.)ble=ble+6.283185;
-      float zlagtm=1.496e8*sl/3600./vel;
+      double zlagtm=1.496e8*sl/3600./vel;
       int ileap=(iyr-69)/4;
-      float zhr= 24.*((iyr-69)*365.+ileap+iday-341.0) + secs/3600. -14.77;
-      float zle1=228.42-zhr/1.81835;   
-      float zle2= 228.42 - zhr/1.692002 + ble*rad;
+      double zhr= 24.*((iyr-69)*365.+ileap+iday-341.0) + secs/3600. -14.77;
+      double zle1=228.42-zhr/1.81835;   
+      double zle2= 228.42 - zhr/1.692002 + ble*rad;
       crlnep=360.+fmod(zle2,360.);
       //      printf("ileap,zhr,zle1,zle2,crlne %d %f %f %f %f\n",ileap,zhr,zle1,zle2,crlne);
       if(crlnep>360.) crlnep = fmod(crlnep,360.);
       delcrle = zlagtm/1.692002;
-      float rote1=1556.-zle1/360.;
-      float rote2=1556.-zle2/360.;
+      double rote1=1556.-zle1/360.;
+      double rote2=1556.-zle2/360.;
       rotep = (int)(rote1) + (rote2 - (int)(rote2));
       //      printf("rote=%f\n",rotep);
       if (rote1-rotep>(4./360.)) rotep = rotep + 1.;
       if (rote1-rotep<(-4./360.)) rotep = rotep - 1.;
       dlon=blp-ble;
-      float delcrl = zlagtm/1.692002 + dlon*rad;
-      float zlpp= zle2 + delcrl;
+      double delcrl = zlagtm/1.692002 + dlon*rad;
+      double zlpp= zle2 + delcrl;
       crlon[lp]= 360. + fmod(zlpp,360.);
       if(crlon[lp] > 360.)crlon[lp] = fmod(crlon[lp],360.);
       if(crlon[lp] > crlnep)
@@ -819,26 +833,26 @@ void mcl2(float eclon,float eclat,int iyr,int iday,float secs,float vel,float he
   *rote=rotep;
 }
 
-float elsun2(int iyr,int iday,float secs,float gst,float sra,float sdec)
+double elsun2(int iyr,int iday,double secs,double gst,double sra,double sdec)
 {
   double dj,fday;
-  float rad=57.29578;
-  float elsun3;
+  double rad=57.29578;
+  double elsun3;
   if(iyr<1 || iyr>199) return elsun3;
   fday= secs/(double)86400.0;
   int idd= 365*iyr + (iyr-1)/4 + iday;
   dj= idd + fday - (double)0.5;
-  float t= dj/(double)36525.;
-  float vl= fmod((double)279.696678+(double)0.9856473354*dj,(double)360.);
+  double t= dj/(double)36525.;
+  double vl= fmod((double)279.696678+(double)0.9856473354*dj,(double)360.);
   gst= fmod((double)279.690983+(double)0.9856473354*dj+360.*fday+180.,(double)360.);
-  float g= fmod((double)358.475845+(double)0.985600267*dj,(double)360.)/rad;
-  float elsun= vl+(1.91946-0.004789*t)*sin(g)+0.020094*sin(2.*g);
-  float obliq= (23.45229- 0.0130125*t)/rad;
-  float slp= (elsun-0.005686)/rad;
-  float sind= sin(obliq)*sin(slp);
-  float cosd= sqrt(1.-sind*sind);
+  double g= fmod((double)358.475845+(double)0.985600267*dj,(double)360.)/rad;
+  double elsun= vl+(1.91946-0.004789*t)*sin(g)+0.020094*sin(2.*g);
+  double obliq= (23.45229- 0.0130125*t)/rad;
+  double slp= (elsun-0.005686)/rad;
+  double sind= sin(obliq)*sin(slp);
+  double cosd= sqrt(1.-sind*sind);
   sdec= rad*atan(sind/cosd);
-  float cot= cos(obliq)/sin(obliq);
+  double cot= cos(obliq)/sin(obliq);
   sra= 180.-rad*atan2(sind/cosd*cot,-cos(slp)/cosd);
   elsun3= elsun/rad;
   sdec= sdec/rad;
@@ -846,7 +860,7 @@ float elsun2(int iyr,int iday,float secs,float gst,float sra,float sdec)
   return elsun3;
 }
 
-void calcRotN(float crlne, float rote, int *irot1, int *irot2, float *bcrlon)
+void calcRotN(double crlne, double rote, int *irot1, int *irot2, double *bcrlon)
 {
   (*bcrlon) = (double)((int)((.5+crlne*180./3.1415927)) + 180.);
 
@@ -908,7 +922,7 @@ int calmjd(int y,int m,int d) /*Date to MJD y=year-1900*/
   int l; 
   l=0; 
   if(m==1||m==2) l=1; 
-  return(14956+d+(int)(((float)y-(float)l)*365.25)+(int)(((float)m+1+l*12)*30.6001)); 
+  return(14956+d+(int)(((double)y-(double)l)*365.25)+(int)(((double)m+1+l*12)*30.6001)); 
 } 
 int calwd(int mjd) /*MJD to day in a week*/
 { 
@@ -917,28 +931,28 @@ int calwd(int mjd) /*MJD to day in a week*/
 int calwy(int mjd) /*MJD to day the number of week since 1900*/
 { 
   int w; 
-  w=(int)(((((float)mjd)/7)-2144.64)); 
-  return((int)(((float)w*28/1461)-0.0079)); 
+  w=(int)(((((double)mjd)/7)-2144.64)); 
+  return((int)(((double)w*28/1461)-0.0079)); 
 } 
 int calwn(int mjd) /* MJD to the number of the week due to ISO 8601*/
 { 
   int w,wy; 
-  w=(int)(((((float)mjd)/7)-2144.64)); 
-  wy=(int)(((float)w*28/1461)-0.0079); 
-  return(w-(int)(((float)wy*1461/28)+0.41)); 
+  w=(int)(((((double)mjd)/7)-2144.64)); 
+  wy=(int)(((double)w*28/1461)-0.0079); 
+  return(w-(int)(((double)wy*1461/28)+0.41)); 
 }
 
 int ocalmjd(int wy,int wn,int wd) 
 { 
-  return(15012+wd+7*(int)((float)wn+(((float)wy*1461/28)+0.41))); 
+  return(15012+wd+7*(int)((double)wn+(((double)wy*1461/28)+0.41))); 
 }
 
 void mjd2date(int mjd,int *iyr,int *yy, int *mm, int *dd, int *iday) /*MJD to date, to iyr=year-1900, to iday (number of the day in a year) */
 {
   int y1,m1,k; 
-  y1=(int)(((float)mjd-15078.2)/365.25); 
-  m1=(int)(((float)mjd-14956.1-(int)((float)y1*365.25))/30.6001); 
-  *dd=mjd-14956-(int)((float)y1*365.25)-(int)((float)m1*30.6001);
+  y1=(int)(((double)mjd-15078.2)/365.25); 
+  m1=(int)(((double)mjd-14956.1-(int)((double)y1*365.25))/30.6001); 
+  *dd=mjd-14956-(int)((double)y1*365.25)-(int)((double)m1*30.6001);
   k=0;
   if( m1==14 || m1==15 ) k=1; 
   *mm=m1-1-k*12;
@@ -980,7 +994,7 @@ void mjd2date(int mjd,int *iyr,int *yy, int *mm, int *dd, int *iday) /*MJD to da
 }
 
 
-void convertEcliptic(double raj,double decj,float *elong,float *elat)
+void convertEcliptic(double raj,double decj,double *elong,double *elat)
 {
   double sinb,beta,x,y,lambdap,lambda;
   double deg2rad = M_PI/180.0;
