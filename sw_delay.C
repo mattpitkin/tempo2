@@ -102,7 +102,7 @@ double solarWindModel(pulsar psr,int iobs)
   char uplabel[100];
   int CTn;
   double midp,minp=1000,minp2=1000;
-  double minrote=rots[1];
+  double minrote;
   int minnumber;
   int nsm=5;
   int nli=71*nsm+1;
@@ -160,6 +160,9 @@ double solarWindModel(pulsar psr,int iobs)
   mcl2(eclon,eclat,iyr,iday,secs,vel,helat,crlon,rots,&helate,&crlne,&rote,elong,beta,dlon,delng,cl,zlonan,e,ble,delcrle,lp);    
   elsun=elsun2(iyr,iday,secs,gst,sra,sdec);
   calcRotN(crlne, rote, &irot1, &irot2, &bcrlon);
+
+  printf("Here with %d %d\n",irot1,irot2);
+
   for(i=0;i<36;i++)
     {
       introts[i]=(int)rots[i];
@@ -192,7 +195,7 @@ double solarWindModel(pulsar psr,int iobs)
 	}
     }
 
-
+  minrote=rots[1];
 
   //  for(i=1;i<=npt;i++)
   // GH ERROR FOUND AT THIS POINT
@@ -223,6 +226,7 @@ double solarWindModel(pulsar psr,int iobs)
 //  else irot1=(int)minrote-1;
 
 
+  printf("irot1 A = %d %d\n",irot1,minrote);
   if(eclon>pi)
     {
       if(elsun>eclon-pi && elsun < eclon)
@@ -237,6 +241,7 @@ double solarWindModel(pulsar psr,int iobs)
       else
 	irot1=(int)minrote;
     }
+  printf("irot1 B = %d\n",irot1);
   int rotn;
   shiftangle=minp-0.5;
   if (shiftangle < 0.0) 
@@ -251,7 +256,7 @@ double solarWindModel(pulsar psr,int iobs)
   midp=midp*180.0/pi; 
   CTn=360/5-(int)(shiftangle/5);
   
-
+  printf("At this point, irot = %d %d\n",irot1,irot2);
   sprintf(name1,"%s/solarWindModel/CT%d.dat",getenv(TEMPO2_ENVIRON),irot1);
   sprintf(name2,"%s/solarWindModel/CT%d.dat",getenv(TEMPO2_ENVIRON),irot2);
   if(shiftangle/360+0.5>1)
