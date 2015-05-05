@@ -46,7 +46,7 @@ const double a7=2.99e14;
 
 using namespace std;
 
-// float solar(pulsar *psr, int npsr, int p);
+// double solar(pulsar *psr, int npsr, int p);
 
 void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,double helat[],double crlon[],double rots[],double *helate,double *crlne,double *rote,double elong,double beta,double dlon,double delng,double cl,double zlonan,double e[],double ble,double delcrle,int lp);
 double elsun2(int iyr,int iday,double secs,double gst,double sra,double sdec);
@@ -67,9 +67,9 @@ double solarWindModel(pulsar psr,int iobs)
 {
   int mjd;
   int yy,mm,dd,iyr,iday;
-  double pi=3.1415927,theta,dp,inc,cl0,e[2],delcrle;
+  double pi=3.1415927,theta,dp,inc,cl0,e[2],h[3],delcrle;
   int last,finished;
-  double helat[36],crlon[36],rots[36],pe1[36],pe2[36],pe3[36];
+  double a[3],b[3],c[3],x[3][3],helat[36],crlon[36],rots[36],pe1[36],pe2[36],pe3[36];
   double eclon,eclat,vel=400.0;
   double secs;
   int lp;
@@ -83,62 +83,24 @@ double solarWindModel(pulsar psr,int iobs)
   int introts[36];
   double crlon2[36]; /*using compare and give the minimum */
   int ijump; /*find where the longitude has about 360 jump*/
-  FILE *fin,*fin1,*fin2;
-  char str1[1000],str[100];
-  double data[100];
-  double lon[1000],lat[1000],m,d,x1,x2,nullx[1000],nully[1000];
-  int n=0,type;
-  double psrx[1000],psry[1000],xpos,px[2],py[2];
+  ijump=1000;
   int npt=35; /*number of point with rots!=0*/
   double elsun,gst,sra,sdec;
   const char *CVS_verNum = "$Revision$";
-  int npp=0;
-  double *cont,contArray[5];
-  double vals[500][30];
-  int Ni = 49;
-  int Nj = 29,pos;
-  double tr[6];
-  char name1[100],name2[100];
-  char uplabel[100];
-  int CTn;
-  double midp,minp=1000,minp2=1000;
-  double minrote;
-  int minnumber;
-  int nsm=5;
-  int nli=71*nsm+1;
-  double lonli[nli],latli[nli];
-  double lonsm[356+nsm],latsm[356+nsm];
-  double lon20p[nli],lat20p[nli];
-  double lon20n[nli],lat20n[nli];
-  double lonc,latc,slope;
-  int l,k;
-  double x20p[nli],y20p[nli];
-  double x20n[nli],y20n[nli];
-  double maxy20p,miny20n;
-  double xbg,xed;
-  double thetakey[100];
-  int key1,key2,startkey;
-  double tht[180];
-  double dm=0.0;
-  double exdm=0.0;
-  double dm2=0.0;
-  double psryint[180],psrxint[180];
-  double thtinte[2000];
-  double thetaearth;
-  double ne_sw,ctheta,freqf,r,rsa[3],posp[3],pospos;
-  long double delt;
-  double Rmin;
-  int N;
-  double thout[10]; /* 89 degree to 81 degree */
-  double exdmfast=0.0,exdmslow=0.0;
-
-
-  ijump=1000;
-
 
   if (displayCVSversion == 1) CVSdisplayVersion("sw_delay.C","solarWindModel()",CVS_verNum);
 
+  // GH added an initialisation stage
+  // This made a big change to formIdeal for J1022+1001
+    for (i=0;i<36;i++)
+    {
+      rots[i]=pe1[i]=pe2[i]=crlon[i]=helat[i]=pe3[i]=crlon2[i]=0;
+      introts[i]=0;
+    }
 
+  x[0][2]=0.0;
+  x[1][2]=0.1262;
+  x[2][2]=0.9920;
   if(psr.eclCoord==1)
     {
       eclat=psr.param[param_decj].val[0];
@@ -149,25 +111,17 @@ double solarWindModel(pulsar psr,int iobs)
       convertEcliptic(psr.param[param_raj].val[0],psr.param[param_decj].val[0],&eclon,&eclat);
     }
 
-
   //  printf("%d, %30.20Lf\n",iobs, psr.obsn[iobs].sat);
   mjd=(int)psr.obsn[iobs].sat;
   mjd2date(mjd, &iyr, &yy, &mm, &dd, &iday);
   secs=(psr.obsn[iobs].sat-mjd)*86400;
   //_new3.tim      printf("%d %d %d %d %d\n",yy,mm,dd,iyr,iday);
-  printf("Processing %Lf\n",psr.obsn[iobs].sat);
-
   mcl2(eclon,eclat,iyr,iday,secs,vel,helat,crlon,rots,&helate,&crlne,&rote,elong,beta,dlon,delng,cl,zlonan,e,ble,delcrle,lp);    
   elsun=elsun2(iyr,iday,secs,gst,sra,sdec);
+  //  printf("elsun=%f\n",elsun);
   calcRotN(crlne, rote, &irot1, &irot2, &bcrlon);
-
-  printf("Here with %d %d\n",irot1,irot2);
-
   for(i=0;i<36;i++)
-    {
-      introts[i]=(int)rots[i];
-    }
-
+    introts[i]=(int)rots[i];
 
   for(i=0;i<36;i++)crlon2[i]=crlon[i];
   for(i=1;i<35;i++)
@@ -176,17 +130,11 @@ double solarWindModel(pulsar psr,int iobs)
 	{
 	  if(crlon2[i+1]-crlon2[i]>4.0)
 	    {
-	      // GH
-	      //	      for(j=0;j<=i;j++)
-	      for(j=0;j<i;j++)
-		{
-		  crlon2[j]=crlon2[j]+2*pi;  
-		}
+	      for(j=0;j<=i;j++)
+		crlon2[j]=crlon2[j]+2*pi;  
 	    }
 	  else if(crlon2[i]-crlon2[i+1]>4.0)
-	    {
 	      crlon2[i+1]=crlon2[i+1]+2*pi;
-	    }
 	}
       else
 	{
@@ -194,17 +142,18 @@ double solarWindModel(pulsar psr,int iobs)
 	  break;
 	}
     }
-
-  minrote=rots[1];
+  double midp,minp=1000,minp2=1000;
+  double minrote=rots[1];
+  int minnumber;
+  //  printf("npt = %d\n",npt);
 
   //  for(i=1;i<=npt;i++)
-  // GH ERROR FOUND AT THIS POINT
+  // GH: changed <=npt to <npt as npt defaults to 35
   for(i=1;i<npt;i++)
     {
       if (i+1 > 35)
 	{
-	  printf("rots: error in array bounds (A)\n");
-	  printf("i = %d, npt = %d\n",i,npt);
+	  printf("ERROR in setting rots, i = %d, npt = %d\n",i,npt);
 	  exit(1);
 	}
       if(rots[i]!=rots[i+1])
@@ -214,19 +163,11 @@ double solarWindModel(pulsar psr,int iobs)
 	      minp=crlon2[i];
 	      minrote=rots[i];
 	    }
-	  if (i > 35)
-	    {
-	      printf("CROLON array error\n");
-	      exit(1);
-	    }
 	  if(crlon[i]<minp2)minp2=crlon[i];
 	}
     }
 //  if(crlon2[16]<crlon2[18]) irot1=(int)minrote;
 //  else irot1=(int)minrote-1;
-
-
-  printf("irot1 A = %d %d\n",irot1,minrote);
   if(eclon>pi)
     {
       if(elsun>eclon-pi && elsun < eclon)
@@ -241,8 +182,7 @@ double solarWindModel(pulsar psr,int iobs)
       else
 	irot1=(int)minrote;
     }
-  printf("irot1 B = %d\n",irot1);
-  int rotn;
+
   shiftangle=minp-0.5;
   if (shiftangle < 0.0) 
     {
@@ -250,13 +190,34 @@ double solarWindModel(pulsar psr,int iobs)
       irot1=irot1+1;
     }
   irot2=irot1+1;
-
-
+  FILE *fin,*fin1,*fin2;
+  char str1[1000],str[100];
+  double data[100];
+  double lon[1000],lat[1000],m,d,x1,x2,nullx[1000],nully[1000];
+  int n=0,type;
+  double psrx[1000],psry[1000],xpos,px[2],py[2];
   shiftangle=shiftangle*180.0/pi;
   midp=midp*180.0/pi; 
+  int npp=0;
+  double contArray[5];
+  double vals[200][30];
+  int Ni = 49;
+  int Nj = 29,pos;
+  double tr[6];
+  char name1[100],name2[100];
+  char uplabel[100];
+  int CTn;
+
+  // GH: intialise values
+  for (i=0;i<200;i++)
+    {
+      for (j=0;j<30;j++)
+	vals[i][j]=0;
+    }
+  for (i=0;i<1000;i++)
+    lon[i]=lat[i]=nullx[i]=nully[i]=psrx[i]=psry[i]=0.0;
+
   CTn=360/5-(int)(shiftangle/5);
-  
-  printf("At this point, irot = %d %d\n",irot1,irot2);
   sprintf(name1,"%s/solarWindModel/CT%d.dat",getenv(TEMPO2_ENVIRON),irot1);
   sprintf(name2,"%s/solarWindModel/CT%d.dat",getenv(TEMPO2_ENVIRON),irot2);
   if(shiftangle/360+0.5>1)
@@ -264,8 +225,6 @@ double solarWindModel(pulsar psr,int iobs)
   else
     sprintf(uplabel,"PSR %s,  Rotation:%7.1f",psr.name,irot1+shiftangle/360+0.5);
   
-  printf("SW Using: %s and %s\n",name1,name2);
-
   fin1 = fopen(name1,"r");
   fin2 = fopen(name2,"r");
   for(j=1;j<=CTn;j++)
@@ -274,23 +233,32 @@ double solarWindModel(pulsar psr,int iobs)
 	{
 	  for (i=0;i<29;i++)
 	    {
-	      fscanf(fin1,"%f",&data[i]);
+	      fscanf(fin1,"%lf",&data[i]);
+	      if (n > 199) {
+		printf("Pos1: error in n = %d\n",n);
+		exit(1);
+	      }
 	      vals[n][i] = data[i];
 	    }
 	}
+    }
+  if (feof(fin1))
+    {
+      printf("Already at the end of the file\n");
+      exit(1);
     }
   while (!feof(fin1))
     {
       if (fscanf(fin1,"%s",&str1)==1)
 	{
-	  if (n > 500)
-	    {
-	      printf("ERROR setting n\n");
-	      exit(1);
-	    }
+	  if (n > 199) {
+	    printf("Pos2: error in n = %d\n",n);
+	    exit(1);
+	  }
+
 	  for (i=0;i<29;i++)
 	    {
-	      fscanf(fin1,"%f",&data[i]);
+	      fscanf(fin1,"%lf",&data[i]);
 	      vals[n][i] = data[i];
 	    }
 	  sscanf(str1+strlen(str1)-3,"%f",&lon[n]);
@@ -304,6 +272,11 @@ double solarWindModel(pulsar psr,int iobs)
 	    {
 	      if (type==1 && data[i]<=0) break;
 	      if (type==-1 && data[i]>0) break;
+	    }
+	  if (i==0)
+	    {
+	      printf("Error with i = %d\n",i);
+	      exit(1);
 	    }
 	  x1 = 70.0-5.0*(i-1);
 	  x2 = 70.0-5.0*(i);
@@ -314,12 +287,16 @@ double solarWindModel(pulsar psr,int iobs)
 	}
     }
   fclose(fin1);
-  printf("n = %d\n",n);
   if (fscanf(fin2,"%s",&str1)==1)
     {
+      if (n > 199) {
+	printf("Pos3: error in n = %d\n",n);
+	exit(1);
+      }
+
       for (i=0;i<29;i++)
 	{
-	  fscanf(fin2,"%f",&data[i]);
+	  fscanf(fin2,"%lf",&data[i]);
 	  vals[n][i] = data[i];
 	}
     }
@@ -327,9 +304,14 @@ double solarWindModel(pulsar psr,int iobs)
     {
       if (fscanf(fin2,"%s",&str1)==1)
 	{
+	  if (n > 199) {
+	    printf("Pos4: error in n = %d\n",n);
+	    exit(1);
+	  }
+
 	  for (i=0;i<29;i++)
 	    {
-	      fscanf(fin2,"%f",&data[i]);
+	      fscanf(fin2,"%lf",&data[i]);
 	      vals[n][i] = data[i];
 	    }
 	  sscanf(str1+strlen(str1)-3,"%f",&lon[n]);
@@ -346,6 +328,11 @@ double solarWindModel(pulsar psr,int iobs)
 	    }
 	  x1 = 70.0-5.0*(i-1);
 	  x2 = 70.0-5.0*(i);
+	  if (i==0)
+	    {
+	      printf("Error here: i = %d\n",i);
+	      exit(1);
+	    }
 	  m = (data[i-1]-data[i])/(x1-x2);
 	  d = data[i]-m*x2;
 	  lat[n] = -d/m;
@@ -355,16 +342,20 @@ double solarWindModel(pulsar psr,int iobs)
     }
   fclose(fin2);
   Ni = n;
+
+  // This doesn't seem to do anything and is
+  // an unallocated array
+  // GH... commented out
   /*  cont = (double *)malloc(Ni*Nj*sizeof(double));
-  for (j=0;j<Nj;j++)
-    {
+      for (j=0;j<Nj;j++)
+      {
       for (i=0;i<Ni;i++)
-	{
-	  pos = j*Ni+(int)((lon[i])/360.0*72.0);
-	  cont[pos]=vals[i][j];
-	}
-	} */
-  
+      {
+      pos = j*Ni+(int)((lon[i])/360.0*72.0);
+      cont[pos]=vals[i][j];
+      }
+      } */
+
   for (i=0;i<360;i+=30)
     {
       xpos = i-shiftangle;
@@ -397,8 +388,15 @@ double solarWindModel(pulsar psr,int iobs)
       psry[npp]*=180.0/pi;
     }
 
-  // TRY1
+  
+  int nsm=5;
+  int nli=71*nsm+1;
+  double lonli[nli],latli[nli];
+  double lon20p[nli],lat20p[nli];
+  double lon20n[nli],lat20n[nli];
 
+  for (i=0;i<nli;i++)
+    lonli[i]=latli[i]=lon20p[i]=lat20p[i]=lon20n[i]=lat20n[i]=0.0;
 
   for(i=0;i<71;i++)
     {
@@ -411,6 +409,13 @@ double solarWindModel(pulsar psr,int iobs)
     }
   lonli[nli-1]=lon[71];
   latli[nli-1]=lat[71];
+
+  double lonsm[356+nsm],latsm[356+nsm];
+  double lonc,latc,slope;
+
+  for (i=0;i<356+nsm;i++)
+    lonsm[i]=latsm[i]=0.0;
+
   for(i=1;i<nli-1;i++)
     {
       lonc=(lonli[i]+lonli[i+1])/2;
@@ -432,6 +437,15 @@ double solarWindModel(pulsar psr,int iobs)
 	  lat20n[i-1]=latc-sqrt(400.0/(1.0+1.0/slope/slope));
 	}
     }
+  int l,k;
+  double x20p[nli],y20p[nli];
+  double x20n[nli],y20n[nli];
+  double maxy20p=0,miny20n=0;
+  double xbg=0,xed=0;
+
+  for (i=0;i<nli;i++)
+    x20p[i]=y20p[i]=x20n[i]=y20n[i]=0.0;
+
   if(lon20n[0]<lon20p[0])
     {xbg=lon20n[0];}
   else
@@ -461,40 +475,45 @@ double solarWindModel(pulsar psr,int iobs)
 	    }
 	}
     }
-
-  // TRY 2
   
 
-  tr[0] = -5.0;
-  tr[1] = 5.0;
-  tr[2] = 0.0;
-  tr[3] = 75.0;
-  tr[4] = 0.0;
-  tr[5] = -5.0;
-  contArray[0] = 0.0;
-  contArray[1] = 0.0;
   
   /*calculate integration*/
+  double thetakey[100];
   for(i=0;i<100;i++) thetakey[i]=0.0;
+  int key1=0,key2=0,startkey=0; // GH: startkey may not be initialised
   k=0;
+  double tht[180];
   for(i=0;i<180;i++) tht[i]=0.0;
+  double dm=0.0;
+  double exdm=0.0;
+  double dm2=0.0;
   for(i=0;i<npt*5;i++) /*degree of tracking line*/
     {
+      if (i>179)
+	{
+	  printf("error setting tht = %d\n",i);
+	  exit(1);
+	}
       tht[i]=(85-i*1.0)*pi/180; 
     }
-
-  //  for(j=0;j<npt;j++)
-  // GH TRY
-  for(j=0;j<npt-1;j++)
+  double psryint[180],psrxint[180];
+  for(j=0;j<npt;j++)
     {
       for(i=0;i<5;i++) /*inteperation of tracking line*/
 	{
+	  if (j*5+i > 179)
+	    {
+	      printf("Error setting psrxint\n");
+	      exit(1);
+	    }
 	  psrxint[j*5+i]=psrx[j]+(psrx[j+1]-psrx[j])/5*i; 
 	  psryint[j*5+i]=psry[j]+(psry[j+1]-psry[j])/5*i; 
 	}  
     }
 
-  for(i=0;i<180;i++) thtinte[i]=0.0;
+  double thtinte[2000];
+  for(i=0;i<2000;i++) thtinte[i]=0.0;
   thetakey[0]=tht[5];
   for(j=1;j<nli-1;j++)
     {
@@ -506,9 +525,6 @@ double solarWindModel(pulsar psr,int iobs)
 	    startkey=1;
 	}
     }
-
-
-
   for(i=6;i<npt*5;i++) /*start from 80 degree psrx[1] or psrxint[6]*/
     {
       for(j=1;j<nli-1;j++)
@@ -529,27 +545,24 @@ double solarWindModel(pulsar psr,int iobs)
       if(key1!=key2)
 	{
 	  k++;
-	  if (k > 99)
+	  if (k>99)
 	    {
-	      printf("array error with thetakey\n");
-	      exit(1);
-	    }
-	  if (k==0)
-	    {
-	      printf("array error with tht\n");
-	      exit(1);
+	      // This is important for J1022+1001
+	      // GH: what should this be set to?
+	      // GH: THIS MUST BE SORTED OUT
+	      printf("WARNING: Error setting thetakey, k = %d\n",k);
+	      //	      exit(1);
+	      k=99;
 	    }
 	  thetakey[k]=(tht[i-1]+tht[i])/2;
 	}
     }
-
-  // Try 3
-  // THIS IS NOT USED
+  double thetaearth;
+  double ne_sw,ctheta,freqf,r,rsa[3],posp[3],pospos,delt;
   freqf = psr.obsn[iobs].freqSSB;
-
   delt = (psr.obsn[iobs].sat-psr.param[param_posepoch].val[0] + 
 	  (getCorrectionTT(psr.obsn+iobs)+psr.obsn[iobs].correctionTT_TB)/SECDAY)/36525.0;
-
+  
   for (j=0;j<3;j++)
     {
       rsa[j] = -psr.obsn[iobs].sun_ssb[j] + psr.obsn[iobs].earth_ssb[j] + 
@@ -562,24 +575,24 @@ double solarWindModel(pulsar psr,int iobs)
   
   r = sqrt(dotproduct(rsa,rsa));
   ctheta = dotproduct(posp,rsa)/r;
-
- 
   //      printf("%d %d %d %f\n",yy,mm,dd,acos(ctheta)*180/pi);
   thetaearth=pi/2-acos(ctheta);
-  Rmin =(AU_DIST/SOLAR_RADIUS)*sin(thetaearth+pi/2);
-
   //      if(thetaearth>thetakey[k])(k=k-1);
-  if (k>99)
+  if (k>98)
     {
-      printf("Error with thetakey 2\n");
-      exit(1);
+      printf("ERROR 2 WITH THETAKEY\n");
+      // GH: WHAT SHOULD THIS BE SET TO?
+      k=98;
     }
   thetakey[k+1]=thetaearth;
+  double Rmin=(AU_DIST/SOLAR_RADIUS)*sin(thetaearth+pi/2);
+  int N;
   //      for(j=0;j<=k+1;j++)printf("thetakey=%f\n",thetakey[j]*180/pi);
+  double thout[10]; /* 89 degree to 81 dgree */
+  double exdmfast=0.0,exdmslow=0.0;
   for(i=0;i<10;i++)
-    {
-      thout[i]=(double)(89-i)*pi/180;
-    }
+    thout[i]=(double)(89-i)*pi/180;
+
   for(i=0;i<9;i++)
     {
       exdmslow=exdmslow+slow(Rmin,thout[i],thout[i+1]);
@@ -597,44 +610,32 @@ double solarWindModel(pulsar psr,int iobs)
       if(k==0)
 	{
 	  N=(int)((thetakey[k]-thetakey[k+1])*180/pi);
-	  printf("N here is %d %g %g %g\n",N,thetaearth,thetakey[k],thetakey[k+1]);
-	  if (N > 1999)
+	  if (N > 1999 || N < 1)
 	    {
-	      printf("ERROR: thtinte overwriting array\n");
-	      exit(1);
+	      printf("Error setting thtinte F\n");
+	      		      if (N < 1)
+			{
+			  printf("... continuing\n");
+			  N = 1;
+			}
+		      else
+			exit(1);
+
 	    }
-	  if (N < 1)
-	    {
-	      printf("We have a problem with N ... setting N = 0\n");
-	      N=0;
-	    }
-	  printf("N = %d\n",N);
-	  // GH
-	  //	  for(j=0;j<=N;j++)
-	  for(j=0;j<N;j++)
-	    {
-	      thtinte[j]=thetakey[k]-(thetakey[k]-thetakey[k+1])/N*j;
-	    }
+	  for(j=0;j<=N;j++)
+	    thtinte[j]=thetakey[k]-(thetakey[k]-thetakey[k+1])/N*j;
 	  if(startkey==0)
 	    {
 	      dm2=dm2+a4/Rmin*(thetakey[k]-thetakey[k+1]);
-	      //	      for(j=0;j<N;j++)
-	      // GH
-	      for(j=0;j<N-1;j++)
-		{
-		  exdm=exdm+slow(Rmin,thtinte[j],thtinte[j+1]);
-		}
+	      for(j=0;j<N;j++)
+		exdm=exdm+slow(Rmin,thtinte[j],thtinte[j+1]);
 	      exdm=exdm+exdmslow;
 	    }
 	  else
 	    {
 	      dm2=dm2+a1/Rmin*(thetakey[k]-thetakey[k+1]);
-	      //	      for(j=0;j<N;j++)
-	      // GH
-	      for(j=0;j<N-1;j++)
-		{
-		  exdm=exdm+fast(Rmin,thtinte[j],thtinte[j+1]);
-		}
+	      for(j=0;j<N;j++)
+		exdm=exdm+fast(Rmin,thtinte[j],thtinte[j+1]);
 	      exdm=exdm+exdmfast;
 	    }
 	}
@@ -642,42 +643,45 @@ double solarWindModel(pulsar psr,int iobs)
 	{
 	  if(startkey==0)
 	    {
-	      // GH
-	      //	      for(i=0;i<=k;i=i+2)
-	      for(i=0;i<k;i=i+2)
+	      for(i=0;i<=k;i=i+2)
 		{
 		  dm2=dm2+a4/Rmin*(thetakey[i]-thetakey[i+1]);
 		  N=(int)((thetakey[i]-thetakey[i+1])*180/pi);
-		  printf("N this point = %d\n",N);
-	  if (N < 1)
-	    {
-	      printf("We have a problem with N\n");
-	      exit(1);
-	    }
-
-		  // GH
-		  //		  for(j=0;j<=N;j++)
-		  for(j=0;j<N;j++)
+		  if (N>1998 || N < 1)
 		    {
+		      printf("Error setting thtinte E, N = %d\n",N);
+		      if (N < 1)
+			{
+			  printf("... continuing\n");
+			  N = 1;
+			}
+		      else
+			exit(1);
+		    }
+		  for(j=0;j<=N;j++)
 		      thtinte[j]=thetakey[i]-(thetakey[i]-thetakey[i+1])/N*j;
-		    }
-		  // GH
-		  //		  for(j=0;j<N;j++)
-		  for(j=0;j<N-1;j++)
-		    {
+		  for(j=0;j<N;j++)
 		      exdm=exdm+slow(Rmin,thtinte[j],thtinte[j+1]);
-		    }
 		}
 	      for(l=1;l<=k;l=l+2)
 		{
 		  dm2=dm2+a1/Rmin*(thetakey[l]-thetakey[l+1]);
 		  N=(int)((thetakey[l]-thetakey[l+1])*180/pi);
-		  // GH
-		  for(j=0;j<N;j++)
-		  //		  for(j=0;j<=N;j++)
+		  if (N > 1998 || N < 1)
 		    {
-		      thtinte[j]=thetakey[l]-(thetakey[l]-thetakey[l+1])/N*j;
+		      printf("Error calculating thtine D\n");
+		      if (N < 1)
+			{
+			  printf("... continuing\n");
+			  N = 1;
+			}
+		      else
+			exit(1);
+
+
 		    }
+		  for(j=0;j<=N;j++)
+		      thtinte[j]=thetakey[l]-(thetakey[l]-thetakey[l+1])/N*j;
 		  for(j=0;j<N;j++)
 		    {
 		      exdm=exdm+fast(Rmin,thtinte[j],thtinte[j+1]);
@@ -687,22 +691,24 @@ double solarWindModel(pulsar psr,int iobs)
 	    }
 	  else
 	    {
-	      //	      for(i=0;i<=k;i=i+2)
-	      // GH
-	      for(i=0;i<k;i=i+2)
+	      for(i=0;i<=k;i=i+2)
 		{
 		  dm2=dm2+a1/Rmin*(thetakey[i]-thetakey[i+1]);
 		  N=(int)((thetakey[i]-thetakey[i+1])*180/pi);
-		  printf("N this point 2 = %d\n",N);
-	  if (N < 1)
-	    {
-	      printf("We have a problem with N\n");
-	      exit(1);
-	    }
+		  if (N > 1998 || N < 1)
+		    {
+		      printf("Error calculating thtine C\n");
+		      		      if (N < 1)
+			{
+			  printf("... continuing\n");
+			  N = 1;
+			}
+		      else
+			exit(1);
 
-		  // GH
-		  for(j=0;j<N;j++)
-		    //		  for(j=0;j<=N;j++)
+		    }
+
+		  for(j=0;j<=N;j++)
 		    {
 		      thtinte[j]=thetakey[i]-(thetakey[i]-thetakey[i+1])/N*j;
 		    }
@@ -715,15 +721,24 @@ double solarWindModel(pulsar psr,int iobs)
 		{
 		  dm2=dm2+a4/Rmin*(thetakey[l]-thetakey[l+1]);
 		  N=(int)((thetakey[l]-thetakey[l+1])*180/pi);
-		  // GH
-		  //		  for(j=0;j<=N;j++)
-		  for(j=0;j<N;j++)
+		  if (N > 1998 || N < 1)
+		    {
+		      printf("Error calculating thtine B\n");
+		      		      if (N < 1)
+			{
+			  printf("... continuing\n");
+			  N = 1;
+			}
+		      else
+			exit(1);
+
+		    }
+
+		  for(j=0;j<=N;j++)
 		    {
 		      thtinte[j]=thetakey[l]-(thetakey[l]-thetakey[l+1])/N*j;
 		    }
-		  //		  for(j=0;j<N;j++)
-		  // GH
-		  for(j=0;j<N-1;j++)
+		  for(j=0;j<N;j++)
 		    {
 		      exdm=exdm+slow(Rmin,thtinte[j],thtinte[j+1]);
 		    }
@@ -745,19 +760,23 @@ double solarWindModel(pulsar psr,int iobs)
 	    }
 	}
       N=(89-(int)(thetaearth*180/pi))+1;
-
-      printf("N this point 3 = %d\n",N);
-      if (N < 1)
-	{
-	  printf("We have a problem with N\n");
-	  exit(1);
-	}
-      
       thtinte[0]=thetaearth;
-      for(j=1;j<N;j++)
+      if (N > 1998 || N < 1)
 	{
-	  thtinte[j]=(double)((int)(thetaearth*180/pi)+j)*pi/180;
+	  printf("Error calculating thtine A\n");
+	  		      if (N < 1)
+			{
+			  printf("... continuing\n");
+			  N = 1;
+			}
+		      else
+			exit(1);
+
 	}
+
+      for(j=1;j<N;j++)
+	  thtinte[j]=(double)((int)(thetaearth*180/pi)+j)*pi/180;
+
       if(startkey==0)
 	{
 	  dm2=dm2+a4/Rmin*(pi/2-thetaearth);
@@ -784,8 +803,6 @@ double solarWindModel(pulsar psr,int iobs)
     }
   dm2=dm2*1.0e-6*(SOLAR_RADIUS/PCM); 
   exdm=exdm*1.0e-6*(SOLAR_RADIUS/PCM); 
-  // GH
-  printf("exdm = %g, dm2 = %g\n",exdm,dm2);
   dm=dm2+exdm;
   //      if(thetaearth*180/pi<-30)
   //	{
@@ -805,10 +822,7 @@ double solarWindModel(pulsar psr,int iobs)
 //    dm =1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr.ne_sw*
 //		  acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)*DM_CONST*1e-12; 
 
-//    return(dm);
-  printf("DM = %g\n",dm);
-  //  dm = 1000;
-  return dm;
+  return(dm);
       //	}
     
 }
@@ -818,51 +832,50 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,doub
   double pi,theta,dp,inc,cl0,h[3];
   int last,finished;
   double gs,ra,de;
+  double clan,slan;
+  double sl,snx,sny;
+  double blp,cep,b1b2;
+  double delcrl,zlpp,rote1,rote2,zle2,zle1,zhr,zlagtm;
+  int ileap;
   double a[3],b[3],c[3],x[3][3],pe1[36],pe2[36],pe3[36];
   int i,j;
-  double b1b2,cep,blp,zlagtm,zhr,zle1,zle2,rote1,rote2,delcrl,zlpp;
-  int ileap;
-  double rad=180.0/3.141593;
-  double helatep,crlnep,rotep;
-  double clan,slan,sl,snx,sny;
- double zkl;
- double ya;
- double delta_PA;
 
+  for (i=0;i<36;i++)
+    {
+      pe1[i]=pe2[i]=pe3[i]=0.0;
+    }
   for(i=0;i++;i<3)
-    for(j=0;j++;j<3)
-      x[i][j]=0.0;
+    {
+      for(j=0;j++;j<3)
+	x[i][j]=0.0;
+    }
   x[0][2]=0.0;
   x[1][2]=0.1262;
   x[2][2]=0.9920;
-
   finished=0;
   last=0;
-
-
+  double rad=180.0/3.141593;
+  double helatep,crlnep,rotep;
   pi = 3.1415927;
   zlonan=1.28573 + 7.89327 * (iyr + iday/365.+ 50. )/ 32400.;
-  zkl=cos(eclat);
-  ya=elsun2(iyr,iday,secs,gs,ra,de);
-  delta_PA=atan(-.12722*cos(ya-zlonan));
+  double zkl=cos(eclat);
+  double ya=elsun2(iyr,iday,secs,gs,ra,de);
+  double delta_PA=atan(-.12722*cos(ya-zlonan));
   //  printf("ya,zlonana,delta_PA %f %f %f\n",ya*rad,zlonan*rad,delta_PA*rad);
-
   cl=cos(ya-eclon)*zkl;
   dp = sqrt(1.-cl*cl);
   elong=atan2(dp,cl);
   lp=0;
-
   cl0=cl;
   inc = 5./rad;
   theta = pi/2 - inc;
   cl = cl0 + dp*tan(theta);
 
-
-  
   while(finished==0)
     {
       clan=cos(zlonan);
       slan=sin(zlonan);
+
       x[0][0]=clan;
       x[0][1]=slan;
       x[1][0]=-0.9920049497*slan;
@@ -872,13 +885,17 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,doub
       sl=sqrt((1.-cl0*cl0)+((cl0-cl)*(cl0-cl)));
       snx=-cos(ya);
       sny=-sin(ya);
-
       a[0]=cos(eclon)*zkl;
       a[1]=sin(eclon)*zkl;
       a[2]=sin(eclat);
       b[0]=a[0]*cl+snx;
       b[1]=a[1]*cl+sny;
       b[2]=a[2]*cl;
+      if (lp > 35 || lp < 0)
+	{
+	  printf("ERROR: problem with array size for lp=%d\n",lp);
+	  exit(1);
+	}
       pe1[lp]=b[0];
       pe2[lp]=b[1];
       pe3[lp]=b[2];
@@ -899,20 +916,10 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,doub
 	      a[i]=a[i]+x[i][j]*b[j];
 	    }
 	}
-
-      if (lp > 35)
-	{
-	  printf("ERROR lp array bounds (1)\n");
-	  exit(1);
-	}
-	    
       helat[lp]=atan2(a[2],sqrt(a[0]*a[0]+a[1]*a[1]));
-
       b[0]=x[0][0]*snx+x[0][1]*sny;
       b[1]=x[1][0]*snx+x[1][1]*sny;
       b[2]=x[2][0]*snx+x[2][1]*sny;
-
-
       b1b2=sqrt(b[0]*b[0]+b[1]*b[1]);
       e[0]=snx;
       e[1]=sny;
@@ -920,41 +927,39 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,doub
       h[1]=b[1];
       h[2]=b[2];
       helatep=atan2(b[2],b1b2);
-
       cep=((-b[0]*c[0]-b[1]*c[1])/b1b2)/sqrt(c[0]*c[0]+c[1]*c[1]);
       if (cep > 1.) cep=1.;
       delng=atan2(sqrt(1.-cep*cep),cep);
       blp=atan2(a[1],a[0]);
+
+
       if(blp < 0.)blp=blp+6.283185;
       ble=atan2(b[1],b[0]);
       if(ble<0.)ble=ble+6.283185;
-
       zlagtm=1.496e8*sl/3600./vel;
       ileap=(iyr-69)/4;
       zhr= 24.*((iyr-69)*365.+ileap+iday-341.0) + secs/3600. -14.77;
       zle1=228.42-zhr/1.81835;   
       zle2= 228.42 - zhr/1.692002 + ble*rad;
+
+
       crlnep=360.+fmod(zle2,360.);
       //      printf("ileap,zhr,zle1,zle2,crlne %d %f %f %f %f\n",ileap,zhr,zle1,zle2,crlne);
       if(crlnep>360.) crlnep = fmod(crlnep,360.);
       delcrle = zlagtm/1.692002;
-
-
       rote1=1556.-zle1/360.;
       rote2=1556.-zle2/360.;
+
+
       rotep = (int)(rote1) + (rote2 - (int)(rote2));
       //      printf("rote=%f\n",rotep);
       if (rote1-rotep>(4./360.)) rotep = rotep + 1.;
       if (rote1-rotep<(-4./360.)) rotep = rotep - 1.;
       dlon=blp-ble;
 
+
       delcrl = zlagtm/1.692002 + dlon*rad;
       zlpp= zle2 + delcrl;
-      if (lp > 35)
-	{
-	  printf("ERROR array bound crlon\n");
-	  exit(1);
-	}
       crlon[lp]= 360. + fmod(zlpp,360.);
       if(crlon[lp] > 360.)crlon[lp] = fmod(crlon[lp],360.);
       if(crlon[lp] > crlnep)
@@ -970,38 +975,18 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,doub
       crlnep=crlnep/rad;
       //      printf("n,theta,cl %d %f %f %f %f %f\n",lp,theta*rad,cl,helat[lp]*rad,crlon[lp]*rad,rots[lp]);     
       theta = theta - inc;
-      cl = cl0 + dp*tanl(theta);
-      //      printf("cl = %g %g %g %.10f %.10f\n",(double)cl,(double)cl0,(double)dp,(double)theta,(double)tan(theta));
-      // GEORGE: Added lp > 35. This needs checking
+      cl = cl0 + dp*tan(theta);
       if (last==1) finished=1;
-      //      if (finished==0 && lp > 35)
-      //	{
-      //	  printf("WARNING in sw_delay.C. array pointer > 35. This should not happen **\n");
-      //	  finished=1;
-      //	}
-      if (lp > 35)
-	{
-	  printf("ERRRORR:\n");
-	  exit(1);
-	}
-      if (cl<0. || cl > 1000.0)
+      // GH added || cl>1000.0
+      if (cl<0. || cl>1000.0)
 	{
 	  cl = 0.;
 	  last=1;
 	}
       lp=lp+1;
-    } // End of loop
-
-
-  
+    }
   for(i=lp+1;i<36;i++)
     {
-      if (i > 35)
-	{
-	  printf("ERROR lp array bounds (2)\n");
-	  exit(1);
-	}
-
       helat[i] = helat[lp];
       crlon[i] = crlon[lp];
       rots[i] = rots[lp];
@@ -1016,32 +1001,21 @@ double elsun2(int iyr,int iday,double secs,double gst,double sra,double sdec)
   double dj,fday;
   double rad=57.29578;
   double elsun3;
-  int idd;
-  double t;
-  double vl;
-  double g;
-  double elsun;
-  double obliq;
-  double slp;
-  double sind;
-  double cosd;
-  double cot;
-
   if(iyr<1 || iyr>199) return elsun3;
   fday= secs/(double)86400.0;
-  idd= 365*iyr + (iyr-1)/4 + iday;
+  int idd= 365*iyr + (iyr-1)/4 + iday;
   dj= idd + fday - (double)0.5;
-  t= dj/(double)36525.;
-  vl= fmod((double)279.696678+(double)0.9856473354*dj,(double)360.);
+  double t= dj/(double)36525.;
+  double vl= fmod((double)279.696678+(double)0.9856473354*dj,(double)360.);
   gst= fmod((double)279.690983+(double)0.9856473354*dj+360.*fday+180.,(double)360.);
-  g= fmod((double)358.475845+(double)0.985600267*dj,(double)360.)/rad;
-  elsun= vl+(1.91946-0.004789*t)*sin(g)+0.020094*sin(2.*g);
-  obliq= (23.45229- 0.0130125*t)/rad;
-  slp= (elsun-0.005686)/rad;
-  sind= sin(obliq)*sin(slp);
-  cosd= sqrt(1.-sind*sind);
+  double g= fmod((double)358.475845+(double)0.985600267*dj,(double)360.)/rad;
+  double elsun= vl+(1.91946-0.004789*t)*sin(g)+0.020094*sin(2.*g);
+  double obliq= (23.45229- 0.0130125*t)/rad;
+  double slp= (elsun-0.005686)/rad;
+  double sind= sin(obliq)*sin(slp);
+  double cosd= sqrt(1.-sind*sind);
   sdec= rad*atan(sind/cosd);
-  cot= cos(obliq)/sin(obliq);
+  double cot= cos(obliq)/sin(obliq);
   sra= 180.-rad*atan2(sind/cosd*cot,-cos(slp)/cosd);
   elsun3= elsun/rad;
   sdec= sdec/rad;
@@ -1138,14 +1112,14 @@ int ocalmjd(int wy,int wn,int wd)
 
 void mjd2date(int mjd,int *iyr,int *yy, int *mm, int *dd, int *iday) /*MJD to date, to iyr=year-1900, to iday (number of the day in a year) */
 {
-  int y1,m1,k,mk; 
+  int y1,m1,k; 
   y1=(int)(((double)mjd-15078.2)/365.25); 
   m1=(int)(((double)mjd-14956.1-(int)((double)y1*365.25))/30.6001); 
   *dd=mjd-14956-(int)((double)y1*365.25)-(int)((double)m1*30.6001);
   k=0;
   if( m1==14 || m1==15 ) k=1; 
   *mm=m1-1-k*12;
-  mk=m1-1-k*12;
+  int mk=m1-1-k*12;
   *iyr=y1+k;
   *yy=*iyr+1900;
   if((*yy%4==0 && *yy%100!=0) || (*yy%400==0))
