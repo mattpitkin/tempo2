@@ -44,7 +44,7 @@
 #define MAX_STOREPRECISION   50    /* How many routines in TEMPO2 store precision information */
 #define MAX_OBSN_VAL         20000 /* Maximum number of TOAs                           */ 
 #define MAX_SITE             100   /* Maximum number of observatory sites              */
-#define MAX_PARAMS           1000   /* Maximum number of parameters                     */
+#define MAX_PARAMS           2000   /* Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
 #define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
 #define MAX_IFUNC            1000   /* Maximum number of parameters for interpolation function  */
@@ -787,7 +787,7 @@ void copyParam(parameter p1,parameter *p2);
 void copyPSR(pulsar *p,int p1,int p2);
 longdouble getParameterValue(pulsar *psr,int param,int arr);
 void simplePlot(pulsar *psr, double unitFlag);
-float solarWindModel(pulsar psr,int iobs);
+double solarWindModel(pulsar psr,int iobs);
 
 /* BINARY MODELS */
 double MSSmodel(pulsar *psr,int p,int obs,int param);
