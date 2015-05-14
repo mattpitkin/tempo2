@@ -604,8 +604,8 @@ void allocateMemory(pulsar *psr, int realloc)
 
       for (j=0;j<psr->param[i].aSize;j++)
 	{
-	  psr->param[i].label[j] = (char *)malloc(sizeof(char)*100);
-	  psr->param[i].shortlabel[j] = (char *)malloc(sizeof(char)*100);
+	  psr->param[i].label[j] = (char *)calloc(100, sizeof(char));
+	  psr->param[i].shortlabel[j] = (char *)calloc(100, sizeof(char));
 
 	  psr->param[i].fitFlag[j]  = 0;
 	  psr->param[i].paramSet[j] = 0;
