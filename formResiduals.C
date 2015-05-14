@@ -1545,7 +1545,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             *    to a negative or a positive number is calculated differently. 
 	    */
 	   phase5[i] -= phas1;
-	   nphase = (longdouble)fortran_nint(phase5[i]);
+	   nphase = (longdouble)fortran_nlong(phase5[i]);
 	   psr[p].obsn[i].nphase = nphase;
 
 	   residual = phase5[i] - nphase;
@@ -1631,7 +1631,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   // M. Keith 2013. Changed to be referenced to bat0 rather than pepoch
 	       ntpd = ((int)psr[p].obsn[i].bbat-(int)psr[p].obsn[0].bbat);
 	       phaseint = nf0*ntpd*86400.0;
-	       pnNew = (long long)(phaseint + fortran_nint(phase5[i]));
+	       pnNew = (long long)(phaseint + fortran_nlong(phase5[i]));
 	       logdbg("Have %g %lld %lld %lld",(double)psr[p].obsn[i].sat,pnNew-pn0,pn0,pnNew);
 	       if (pn0 == -1)
 		 {
@@ -1696,14 +1696,14 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /* dt in resid.f */
 	   /*	   psr[p].obsn[i].phase = phaseint+nphase+phase5-nphase+dphase+ddnprd; */	   
 	   psr[p].obsn[i].phase = phaseint+phase5[i];  
-	   psr[p].obsn[i].pulseN = (long long)(phaseint + fortran_nint(phase5[i])) - (long long)ntrk;
+	   psr[p].obsn[i].pulseN = (long long)(phaseint + fortran_nlong(phase5[i])) - (long long)ntrk;
 
 	   // correct pulse numbering for phase wraps
 	   for (k=0;k<psr[p].nPhaseJump;k++)
 	   if (psr[p].obsn[i].sat > psr[p].obsn[psr[p].phaseJumpID[k]].sat)
 		  psr[p].obsn[i].pulseN -= psr[p].phaseJumpDir[k];
 
-	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nint(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
+	   //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nlong(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
 
 	   
 	   if (psr[p].obsn[i].deleted!=1)

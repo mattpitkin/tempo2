@@ -208,6 +208,18 @@ int fortran_nint(double x)
   return(i);
 }
 
+long fortran_nlong(longdouble x)
+{
+  long i;
+  if(x>0.){
+    i=(long)(x+0.5);
+  }
+  else{
+    i=(long)(x-0.5);
+  }
+  return(i);
+}
+
 /* print out a long double to a std::string */
 std::string print_longdouble(const longdouble &ld)
 {

@@ -782,6 +782,7 @@ double hms_turn(char *line);
 double turn_deg(double turn);
 longdouble fortran_mod(longdouble a,longdouble p);
 int fortran_nint(double x);
+long fortran_nlong(longdouble x);
 void equ2ecl(double *x);
 void copyParam(parameter p1,parameter *p2);
 void copyPSR(pulsar *p,int p1,int p2);
