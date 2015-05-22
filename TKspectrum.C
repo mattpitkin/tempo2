@@ -1734,9 +1734,14 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
   int ip[nres];
   double param[nfit],error[nfit];
 
+  psr = (pulsar *)malloc(sizeof(pulsar));
+  initialiseOne(psr,0,1);
+
   cvm = (double **)malloc(sizeof(double *)*nfit);
   for (i=0;i<nfit;i++)
     cvm[i] = (double *)malloc(sizeof(double)*nfit);
+
+  printf("Entering calcSpectra\n");
 
   // Should fit independently to all frequencies
   for (i=0;i<nres;i++)
@@ -1758,8 +1763,10 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
       //      if(specE!=NULL){
       //	      specE[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(error[1],2)+pow(error[2],2))/pow(365.25*86400.0,2);
       //      }
-
       TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,2,cvm,&chisq,fitCosSineFunc,0,psr,1.0e-40,ip,uinv);
+
+
+
       v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[0],2)+pow(param[1],2))/pow(365.25*86400.0,2); 
       specX[k] = GLOBAL_OMEGA/2.0/M_PI;
       specY[k] = v[k];
@@ -1775,6 +1782,8 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
   if(verbose_calc_spectra){
 	  printf("\b\b\b\b\b\b\b\b100.0%%\n");
   }
+  free(psr);
+  printf("Leaving calcSpectra\n");
   return nfit;
 }
 
