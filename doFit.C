@@ -596,9 +596,18 @@ int getNglobal(pulsar *psr,int npsr){
 
 
 	if (psr[0].param[param_ifunc].fitFlag[0]==2){
-		for (i=0;i<psr->ifuncN;i++)
+	  if (psr[0].param[param_ifunc].val[0] == 0)
+	    {
+	      for (i=0;i<psr->ifuncN-1;i++)
 		{psr->fitParamI[nGlobal+i]  = param_ifunc; psr->fitParamK[nGlobal+i]  = i;}
-		nGlobal+=psr[0].ifuncN;
+	      nGlobal+=psr[0].ifuncN-1;
+	    }
+	  else
+	    {
+	      for (i=0;i<psr->ifuncN;i++)
+		{psr->fitParamI[nGlobal+i]  = param_ifunc; psr->fitParamK[nGlobal+i]  = i;}
+	      nGlobal+=psr[0].ifuncN;
+	    }
 	}
 	if (psr[0].param[param_quad_om].fitFlag[0]==2){
 		for (i=0;i<psr->nQuad*4;i++)
@@ -742,10 +751,20 @@ int getNparams(pulsar *psr,int offset)
 	}
 	if (psr->param[param_ifunc].fitFlag[0]==1)
 	{
-		for (i=0;i<psr->ifuncN-1;i++)
+	  if (psr->param[param_ifunc].val[0] == 0)
+	    {
+	      for (i=0;i<psr->ifuncN-1;i++)
 		{psr->fitParamI[npol+i+offset]  = param_ifunc; psr->fitParamK[npol+i+offset]  = i;}
-
-		npol+=(psr->ifuncN-1);
+	      
+	      npol+=(psr->ifuncN-1);
+	    }
+	  else
+	    {
+	      for (i=0;i<psr->ifuncN-1;i++)
+		{psr->fitParamI[npol+i+offset]  = param_ifunc; psr->fitParamK[npol+i+offset]  = i;}
+	      
+	      npol+=(psr->ifuncN-1);
+	    }
 	}
 	if (psr->param[param_clk_offs].fitFlag[0]==1)
 	{
@@ -867,12 +886,24 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int p){
 				  }
 
 				else if(i==param_ifunc){
-					for (j=0;j<psr[p].ifuncN;j++)
+				  if (psr[p].param[param_ifunc].val[0] == 0)
+				    {
+				      for (j=0;j<psr[p].ifuncN-1;j++)
 					{
-						afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
-						//                printf("ifc=%d %d %g\n",counter,c,afunc[c]);
-						c++;
+					  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+					  //                printf("ifc=%d %d %g\n",counter,c,afunc[c]);
+					  c++;
 					}
+				    }
+				  else
+				    {
+				      for (j=0;j<psr[p].ifuncN;j++)
+					{
+					  afunc[c] = getParamDeriv(&psr[p],ipos,x,i,j);
+					  //                printf("ifc=%d %d %g\n",counter,c,afunc[c]);
+					  c++;
+					}
+				    }
 
 				}
 				else if(i==param_quad_ifunc_p){
@@ -1030,8 +1061,16 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr)
 					}
 					else if (i==param_ifunc)
 					{
-						for (j=0;j<psr->ifuncN;j++)
-							afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+					  if (psr->param[param_ifunc].val[0] == 0)
+					    {
+					      for (j=0;j<psr->ifuncN-1;j++)
+						afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+					    }
+					  else
+					    {
+					      for (j=0;j<psr->ifuncN;j++)
+						afunc[n++] = getParamDeriv(psr,ipos,x,i,j);
+					    }
 					}
 					else if (i==param_ifunc)
 					{
@@ -1877,6 +1916,14 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 				}
 			}
 		}
+		else if (psr->param[param_ifunc].val[0]==0) // No interpolation
+		{
+		  if (psr->ifuncT[k] <= psr->obsn[ipos].sat &&
+		      psr->ifuncT[k+1] > psr->obsn[ipos].sat)
+		    return 1;
+		  else
+		    return 0;
+		}
 	}
 	else if (i==param_quad_ifunc_p) /* Whitening procedure using interpolated function */
 	{
@@ -2473,16 +2520,32 @@ void updateGlobalParameters(pulsar* psr,int npsr, double* val,double* error){
 
 				else if(i==param_ifunc) {
 					printf("Updating %d point\n",psr[0].ifuncN);
-					for (j=0;j<psr[0].ifuncN;j++)
-					{
+					if (psr[0].param[param_ifunc].val[0]==0)
+					  {
+					    for (j=0;j<psr[0].ifuncN-1;j++)
+					      {
 						printf("Updating %d %g\n",offset,val[offset]);
 						for (p=0;p<npsr;p++)
-						{
-							psr[p].ifuncV[j]-=val[offset];
-							psr[p].ifuncE[j]=error[offset];
-						}
+						  {
+						    psr[p].ifuncV[j]-=val[offset];
+						    psr[p].ifuncE[j]=error[offset];
+						  }
 						offset++;
-					}
+					      }
+					  }
+					else
+					  {
+					    for (j=0;j<psr[0].ifuncN;j++)
+					      {
+						printf("Updating %d %g\n",offset,val[offset]);
+						for (p=0;p<npsr;p++)
+						  {
+						    psr[p].ifuncV[j]-=val[offset];
+						    psr[p].ifuncE[j]=error[offset];
+						  }
+						offset++;
+					      }
+					  }
 					offset--;
 				}
 				else if (i==param_quad_ifunc_p)
