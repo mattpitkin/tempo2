@@ -943,6 +943,20 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     }
 		   phaseW += (psr[p].param[param_f].val[0]*ival); 				
 		 }
+	       else if (psr[p].param[param_ifunc].val[0] == 0) // No interpolation
+		 {
+		   int k;
+		   double m,c,ival;
+		   for (k=0;k<psr[p].ifuncN-1;k++)
+		     {
+		       if ((double)psr[p].obsn[i].sat >= psr[p].ifuncT[k])
+			 {
+			   ival = psr[p].ifuncV[k];
+			   break;
+			 }
+		     }
+		   phaseW += (psr[p].param[param_f].val[0]*ival); 				
+		 }
 	     }
 
 	   /* Add in extra phase due to interpolation */
