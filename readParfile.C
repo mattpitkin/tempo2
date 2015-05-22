@@ -811,6 +811,10 @@ else if (strcasecmp(str,"_DM")==0)
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
       }
 
+      if(strcasecmp(cname,"IFUNC_ONLYPHI0")==0){
+	      psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+      }
+
       if(strcasecmp(cname,"IFUNC")==0){
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
 	      psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
