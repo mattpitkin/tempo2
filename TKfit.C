@@ -134,7 +134,6 @@ double TKrobustLeastSquares(double* b, double* white_b,
 
    double chisq = 0;
    int i,j,k;
-
    if (nf > MAX_PARAMS)
    {
 	  printf("Number of fitted parameters, %d, is greater than MAX_PARAMS. Please update MAX_PARAMS and reinstall\n",nf);
@@ -469,13 +468,10 @@ void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double 
    double **designMatrix, **white_designMatrix;
    double *b,*white_b;
 
-
    TKfit_getPulsarDesignMatrix(x,y,n,nf,fitFuncs,psr,ip,uinv,0,&designMatrix,&white_designMatrix,&b,&white_b);
-
    *chisq = TKrobustLeastSquares(b,white_b,designMatrix,white_designMatrix,
 		 n,nf,tol,rescale_errors,
 		 outP,e,cvm,psr->robust);
-
    free_blas(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
    free_blas(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
    free(b);

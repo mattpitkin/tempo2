@@ -255,7 +255,7 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
 // note: uinv array must start from 0, not 1
 // NEW FEATURE:
 // set nfit < 0 to automatically set it to nres/2-1
-int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit);
+int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar *psr);
 int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char useCM,pulsar* psr);
 
 
