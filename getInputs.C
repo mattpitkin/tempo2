@@ -111,7 +111,6 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
     }
   else /* Have multiple command line arguments */
     {
-      printf("In this bit\n");
       for (i=1;i<argc;i++)
 	{
 	  if (strcmp(argv[i],"-f")==0) /* Have .par file */

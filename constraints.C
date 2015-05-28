@@ -227,7 +227,7 @@ void matrixDMConstraintWeights(pulsar *psr){
  *
  */
 void computeConstraintWeights(pulsar *psr){
-  printf("GH: in computeConstraintWeights with %s\n",psr->name);
+  // printf("GH: in computeConstraintWeights with %s\n",psr->name);
    for (int k=0; k < psr->ifuncN; k++){
 	  psr->ifunc_weights[k]=1.0/(double)psr->ifuncN;
    }   
