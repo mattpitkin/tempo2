@@ -36,6 +36,8 @@ using namespace std;
 
 bool write_debug_files=true;
 double OMEGA0=0;
+double GLOBAL_MEANSUB=0;
+double GLOBAL_COSVAL=0;
 
 void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,double toffset,double startOverlap,double endOverlap,double stepMJD,char* covarFuncFile);
 void formCholeskyMatrixPlugin(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
@@ -43,6 +45,10 @@ int calcSpectra_plugin(double **uinv,double *resx,double *resy,int nres,double *
 double psrangle(double centre_long,double centre_lat,double psr_long,double psr_lat);
 void hdfunc(double x,double *p,int ma);
 void hdfunc_offs(double x,double *p,int ma);
+void hdfunc_meanSub(double x,double *p,int ma);
+void hdfunc_removeCosine(double x,double *p,int ma);
+void hdfunc_cosineSub(double x,double *p,int ma);
+void cosineFunc(double x,double *p,int ma);
 
 void help() /* Display help */
 {
@@ -89,7 +95,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double red_alpha2,red_pwr2;
 
   double toffset;
-  double maxOverlap = 500; // Only consider pairs where the overlap is larger than this value
+  double maxOverlap = 300; // Only consider pairs where the overlap is larger than this value
   char dcmFile[128];
   char covarFuncFile[128];
   char newname[128];
@@ -100,6 +106,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   int giveHD=0;
   char hdFile[128];
+
 
   strcpy(dcmFile,"NULL");
   strcpy(covarFuncFile,"PSRJ");
@@ -297,13 +304,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		      crossX[i] = px1[i]; 
 		      crossY_r[i] = (py_r1[i]*py_r2[i]+py_i1[i]*py_i2[i]); // /(toverlap/365.25);
 		      crossY_i[i] = (py_i1[i]*py_r2[i]-py_i2[i]*py_r1[i]); // /(toverlap/365.25);
-		      if (write_debug_files) fprintf(fout2,"%g %g %g %g %g %g %g %g %g %g %g\n",crossX[i],crossY_r[i],crossY_i[i],px1[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],px2[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i], py_r1[i],py_i1[i],py_r2[i],py_i2[i]);
 		    }
-		  if (write_debug_files) fclose(fout2);
+
 		  angle[npair]  = (double)psrangle(psr[p1].param[param_raj].val[0],
 						   psr[p1].param[param_decj].val[0],
 						   psr[p2].param[param_raj].val[0],
 						   psr[p2].param[param_decj].val[0]);
+		  for (i=0;i<nSpec;i++)
+		    {
+		      if (write_debug_files) fprintf(fout2,"%g %g %g %g %g %g %g %g %g %g %g %g\n",crossX[i],crossY_r[i],crossY_i[i],px1[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],px2[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i], py_r1[i],py_i1[i],py_r2[i],py_i2[i],angle[npair]);
+		    }
+		  if (write_debug_files) fclose(fout2);
+
 		  cx = (1.0-cos(angle[npair]*M_PI/180.0))/2.0;
 		  zeta = 3.0/2.0*(cx*log(cx)-cx/6.0+1.0/3.0);
 		  
@@ -323,7 +335,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		      exit(1);
 		    }
 		  fclose(fin); 
-		  
+
 		  sprintf(fname,"%s.model",psr[p2].name);
 		  fin = fopen(fname,"r");
 		  fscanf(fin,"%s %s",dummy,dummy);
@@ -455,17 +467,25 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     fclose(fin);
 
   }
+
   // Fit for the amplitude of the HD curve and get its error
   // Currently not including errors in this fit
   {
     double p[2],e[2];
     double **cvm,**cvm1;
     double chisq;
+    double storeA2zeta[4096];
     int nf=1;
     float fx[180],fy[180];
     double amp;
+    
     double p1,e1,p2,e2,p3,e3,c1;
+    double p4,p5,p6,e4,e5,e6;
+    double p7,e7,p8,e8;
     FILE *fout;
+    double meanCovar=0;
+
+
 
     printf("Calculating the significance\n");
     cvm = (double**)malloc(sizeof(double *)*2);
@@ -506,14 +526,108 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     e3 = e[0];
 
     // Now fit for an offset as well as the hd curve
+
     TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,2,cvm,&chisq,hdfunc_offs,1);
     printf("4] A2 = %g +/- %g\n",p[0],e[0]);
     printf("4] Significance = %g\n",p[0]/e[0]);
     printf("4] offset = %g +/- %g\n",p[1],e[1]);
     printf("4] chisq = %g\n",chisq);
     printf("4] chisq reduced = %g\n",chisq/(double)(npair-2));
+    p4 = p[0];
+    e4 = e[0];
+
+    // Now calculate using the mean subtracted HD curve
+    {
+      double ctheta,cx;
+
+      GLOBAL_MEANSUB=0;
+      for (i=0;i<npair;i++)
+	{
+	  ctheta = cos(angle[i]*M_PI/180.0);
+	  cx = (1.0-ctheta)/2.0;
+	  GLOBAL_MEANSUB += (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0;
+	}
+      GLOBAL_MEANSUB /= (double)npair;
+    }
+    printf("Global mean subtracted value from HD curve is %g\n",GLOBAL_MEANSUB);
+
+
+    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,nf,cvm,&chisq,hdfunc_meanSub,1);
+    printf("5] A2 = %g +/- %g\n",p[0],e[0]);
+    printf("5] Significance = %g\n",p[0]/e[0]);
+    printf("5] offset = %g +/- %g\n",p[1],e[1]);
+    printf("5] chisq = %g\n",chisq);
+    printf("5] chisq reduced = %g\n",chisq/(double)(npair-2));
+    p5 = p[0];
+    e5 = e[0];
+
+
+    // Now remove the mean from the covariance estimates
+    printf("Removing mean from the measured covariance estimates\n");
+    for (i=0;i<npair;i++)
+      meanCovar += a2zeta[i];
+    meanCovar /= (double)npair;
+    printf(" .. mean value = %g\n",meanCovar);
+    for (i=0;i<npair;i++)
+      {
+	storeA2zeta[i] = a2zeta[i];
+	a2zeta[i] -= meanCovar;
+      }
+    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,nf,cvm,&chisq,hdfunc_meanSub,1);
+    printf("6] A2 = %g +/- %g\n",p[0],e[0]);
+    printf("6] Significance = %g\n",p[0]/e[0]);
+    printf("6] offset = %g +/- %g\n",p[1],e[1]);
+    printf("6] chisq = %g\n",chisq);
+    printf("6] chisq reduced = %g\n",chisq/(double)(npair-2));
+    p6 = p[0];
+    e6 = e[0];
+
+
+    // Now fit simultaneously for the A^2 and the amplitude of a cosine
+    for (i=0;i<npair;i++)
+      a2zeta[i] = storeA2zeta[i];
+    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,2,cvm,&chisq,hdfunc_removeCosine,1);
+    printf("7] Fit for A^2 and cosine: A2 = %g +/- %g\n",p[0],e[0]);
+    printf("7] cosine amplitude = %g +/- %g\n",p[1],e[1]);
+    p7 = p[0];
+    e7 = e[0];
+
+    // Now calculate the cosine component of the actual HD curve
+    // Now calculate using the mean subtracted HD curve
+    {
+      double ctheta,cx;
+      double cpx[npair];
+      double cpy[npair];
+      
+      GLOBAL_COSVAL=0;
+      for (i=0;i<npair;i++)
+	{
+	  cpx[i] = angle[i];
+
+	  ctheta = cos(angle[i]*M_PI/180.0);
+	  cx = (1.0-ctheta)/2.0;
+	  cpy[i] = (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0;
+	}
+      TKleastSquares_svd(cpx,cpy,a2zeta_e,npair,p,e,1,cvm,&chisq,cosineFunc,0);
+      GLOBAL_COSVAL = p[0];
+      printf("The fit of a cosine to the HD curve gives amplitude = %g +/- %g\n",p[0],e[0]);
+    }
+
+
+    TKleastSquares_svd(angle,a2zeta,a2zeta_e,npair,p,e,1,cvm,&chisq,hdfunc_cosineSub,1);
+    printf("8] A2 = %g +/- %g\n",p[0],e[0]);
+    printf("8] Significance = %g\n",p[0]/e[0]);
+    printf("8] chisq = %g\n",chisq);
+    printf("8] chisq reduced = %g\n",chisq/(double)(npair-2));
+    p8 = p[0];
+    e8 = e[0];
+
+
+
+    
+
     fout = fopen("result.dat","w");
-    fprintf(fout,"%g %g %g %g %g %g %g %g %g %g\n",p1,e1,p1/e1,c1,p2,e2,p2/e2,p3,e3,p3/e3,chisq);
+    fprintf(fout,"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",p1,e1,p1/e1,c1,p2,e2,p2/e2,p3,e3,p3/e3,p4,e4,p4/e4,p5,e5,p5/e5,p6,e6,p6/e6,p7,e7,p7/e7,p8,e8,p8/e8,chisq);
     fclose(fout);
 
     free(cvm1[0]);
@@ -541,6 +655,7 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
    printf("In get spectrum\n");
    fakepsr->obsn = (observation*) malloc(sizeof(observation)*psr->ifuncN);
    fakepsr->ToAextraCovar = NULL;
+   fakepsr->robust=1;
    strcpy(fakepsr->name,psr->name);
 
    *nSpec = (int)((((endOverlap-startOverlap)/(double)(stepMJD))-1)/2.0);
@@ -588,11 +703,11 @@ void getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,dou
 
    // Must calculate uinv for the pulsar
    printf("calculating spectra\n");
-   calcSpectra_ri(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec);
+   printf("fake_psr.robust = %d\n",fakepsr->robust);
+   calcSpectra_ri(uinv,resx,resy,fakepsr->nobs,px,py_r,py_i,*nSpec,psr);
    printf("complete calculating spectra\n");
    // Free uinv
    free_uinv(uinv);
-
    free(fakepsr->obsn);
    free(fakepsr);
 }
@@ -615,6 +730,30 @@ double psrangle(double centre_long,double centre_lat,double psr_long,double psr_
   return c;
 }
 
+
+
+void hdfunc_meanSub(double x,double *p,int ma)
+{
+  double ctheta,cx;
+
+  ctheta = cos(x*M_PI/180.0);
+  cx = (1.0-ctheta)/2.0;
+  p[0] = (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0-GLOBAL_MEANSUB;
+
+}
+
+
+void hdfunc_cosineSub(double x,double *p,int ma)
+{
+  double ctheta,cx;
+
+  ctheta = cos(x*M_PI/180.0);
+  cx = (1.0-ctheta)/2.0;
+  p[0] = (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0-GLOBAL_COSVAL;
+
+}
+
+
 void hdfunc(double x,double *p,int ma)
 {
   double ctheta,cx;
@@ -635,6 +774,20 @@ void hdfunc_offs(double x,double *p,int ma)
   p[1] = 1.0;
 }
 
+void hdfunc_removeCosine(double x,double *p,int ma)
+{
+  double ctheta,cx;
+
+  ctheta = cos(x*M_PI/180.0);
+  cx = (1.0-ctheta)/2.0;
+  p[0] = (cx*log(cx)-cx/6.0+1.0/3.0)*3.0/2.0;
+  p[1] = ctheta;
+}
+
+void cosineFunc(double x,double *p,int ma)
+{
+  p[0] = cos(x*M_PI/180.0);
+}
 
 
 

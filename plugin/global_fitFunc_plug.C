@@ -259,6 +259,11 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
     val[i]=0.0;
   printf("Doing the fit: npol = %d\n",npol);
   TKleastSquares_svd_psr(x,y,sig,count,val,error,npol,covar,&chisq,globalFITfuncs,weightfit,psr,tol,ip);
+  for (p=0;p<npsr;p++)
+    {
+      psr[p].fitChisq= chisq;
+      psr[p].fitNfree = count-npol;
+    }
   printf("Done the fit\n");
   //  for (i=0;i<npol;i++)
   //    printf("covar diag = %g\n",covar[i][i]);
@@ -364,7 +369,17 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		}
 	      else if (i==param_tel_dx)
 		{
-		  if (psr[0].param[param_tel_dx].val[0] < 2)
+		  if (psr[0].param[param_tel_dx].val[0]==-1)
+		    {
+		      printf("UPDATING IN HERE %g %g\n",(double)psr[0].telDX_v[0],(double)val[offset]);
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].telDX_v[0]-=val[offset];
+			  psr[p].telDX_e[0]=error[offset];
+			}
+		      offset++;
+		    }
+		  else if (psr[0].param[param_tel_dx].val[0] < 2)
 		    {
 		      for (j=0;j<psr[0].nTelDX;j++)
 			{
@@ -393,7 +408,16 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		}
 	      else if (i==param_tel_dy)
 		{
-		  if (psr[0].param[param_tel_dy].val[0] < 2)
+		  if (psr[0].param[param_tel_dy].val[0]==-1)
+		    {
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].telDY_v[0]-=val[offset];
+			  psr[p].telDY_e[0]=error[offset];
+			}
+		      offset++;
+		    }
+		  else if (psr[0].param[param_tel_dy].val[0] < 2)
 		    {
 		      for (j=0;j<psr[0].nTelDY;j++)
 			{
@@ -420,7 +444,16 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		}
 	      else if (i==param_tel_dz)
 		{
-		  if (psr[0].param[param_tel_dz].val[0] < 2)
+		  if (psr[0].param[param_tel_dz].val[0]==-1)
+		    {
+		      for (p=0;p<npsr;p++)
+			{
+			  psr[p].telDZ_v[0]-=val[offset];
+			  psr[p].telDZ_e[0]=error[offset];
+			}
+		      offset++;
+		    }
+		  else if (psr[0].param[param_tel_dz].val[0] < 2)
 		    {
 		      for (j=0;j<psr[0].nTelDZ;j++)
 			{
@@ -444,6 +477,66 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 			  offset++;
 			}
 		    }
+		}
+	      else if (i==param_tel_x0)
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      psr[p].param[param_tel_x0].val[0]-=val[offset];
+		      psr[p].param[param_tel_x0].err[0]=error[offset];
+		    }
+		  offset++;
+
+		}
+	      else if (i==param_tel_y0)
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      psr[p].param[param_tel_y0].val[0]-=val[offset];
+		      psr[p].param[param_tel_y0].err[0]=error[offset];
+		    }
+		  offset++;
+
+		}
+	      else if (i==param_tel_z0)
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      psr[p].param[param_tel_z0].val[0]-=val[offset];
+		      psr[p].param[param_tel_z0].err[0]=error[offset];
+		    }
+		  offset++;
+
+		}
+	      else if (i==param_tel_vx)
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      psr[p].param[param_tel_vx].val[0]-=val[offset];
+		      psr[p].param[param_tel_vx].err[0]=error[offset];
+		    }
+		  offset++;
+
+		}
+	      else if (i==param_tel_vy)
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      psr[p].param[param_tel_vy].val[0]-=val[offset];
+		      psr[p].param[param_tel_vy].err[0]=error[offset];
+		    }
+		  offset++;
+
+		}
+	      else if (i==param_tel_vz)
+		{
+		  for (p=0;p<npsr;p++)
+		    {
+		      psr[p].param[param_tel_vz].val[0]-=val[offset];
+		      psr[p].param[param_tel_vz].err[0]=error[offset];
+		    }
+		  offset++;
+
 		}
 	      else if (i==param_quad_ifunc_p)
 		{

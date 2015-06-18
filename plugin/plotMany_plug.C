@@ -31,9 +31,10 @@
 #include "tempo2.h"
 #include <cpgplot.h>
 
-/* using namespace std; */  /* Is this required for a plugin ? */
+// using namespace std;   /* Is this required for a plugin ? */
+char covarFuncFile2[MAX_FILELEN];
 
-void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,float fontsize,float centreMJD,int ptStyle,float ptSize);
+void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,float fontsize,float centreMJD,int ptStyle,float ptSize,int error,float miny,float maxy,float minx,float maxx,int nOverlay,float labelsize,float fracX);
 float findMin(float *x,pulsar *psr,int p,int i1,int i2);
 float findMax(float *x,pulsar *psr,int p,int i1,int i2);
 float findMean(float *x,pulsar *psr,int p,int i1,int i2);
@@ -45,6 +46,7 @@ double lmst2(double mjd,double olong,double *tsid,double *tsid_der);
 void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat );
 void slaCalyd ( int iy, int im, int id, int *ny, int *nd, int *j );
 float calcYr(float mjd);
+
 
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
@@ -62,19 +64,22 @@ void help()
   printf("-ptstyle val   Set the point style to 'val'\n");
   printf("-reverse       Reverse the ordering of the pulsars\n");
 
-  
   exit(1);
 }
 
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
   char parFile[MAX_PSR][MAX_FILELEN];
+  char oparFile[MAX_PSR][MAX_FILELEN]; // Overlay files
   char timFile[MAX_PSR][MAX_FILELEN];
+  char otimFile[MAX_PSR][MAX_FILELEN];
+  char tpar[MAX_PSR][MAX_FILELEN];
+  char ttim[MAX_PSR][MAX_FILELEN];
   int i;
   int plotUs=0;
   float scale[1000];
   int nScale=0;
-    char grDev[100]="/vps";
+  char grDev[100]="/vps";
   //  char grDev[100]="/xs";
   FILE *pin;
   FILE *fin;
@@ -84,8 +89,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int ptStyle=16;
   float ptSize = 1;
   int reverse=0;
-
-  *npsr = 0;  /* This graphical interface will only show results for one pulsar */
+  int error=1;
+  float miny=-1;
+  float maxy=-1;
+  float minx=-1;
+  float maxx=-1;
+  int nOverlay=0;
+  float labelsize=-1;
+  float fracX = 0.85;
+  *npsr = 0; 
+  strcpy(covarFuncFile2,"NULL");
 
   printf("Graphical Interface: plotMany\n");
   printf("Author:              George Hobbs\n");
@@ -105,6 +118,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      exit(1);
 	    } 
 	}
+      else if (strcmp(argv[i],"-overlay")==0)
+	sscanf(argv[i+1],"%d",&nOverlay);
+      else if (strcmp(argv[i],"-dcf")==0){
+        strcpy(covarFuncFile2,argv[++i]);
+	  }
       else if (strcmp(argv[i],"-g")==0)
 	strcpy(grDev,argv[++i]);
       else if (strcmp(argv[i],"-h")==0)
@@ -116,19 +134,33 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-fontsize")==0)
 	sscanf(argv[i+1],"%f",&fontsize);
+      else if (strcasecmp(argv[i],"-fracX")==0)
+	sscanf(argv[i+1],"%f",&fracX);
+      else if (strcasecmp(argv[i],"-labelSize")==0)
+	sscanf(argv[i+1],"%f",&labelsize);
       else if (strcmp(argv[i],"-ptstyle")==0)
 	  sscanf(argv[i+1],"%d",&ptStyle);
       else if (strcmp(argv[i],"-ptsize")==0)
 	  sscanf(argv[i+1],"%f",&ptSize);
+      else if (strcmp(argv[i],"-miny")==0)
+	  sscanf(argv[i+1],"%f",&miny);
+      else if (strcmp(argv[i],"-maxy")==0)
+	  sscanf(argv[i+1],"%f",&maxy);
+      else if (strcmp(argv[i],"-minx")==0)
+	  sscanf(argv[i+1],"%f",&minx);
+      else if (strcmp(argv[i],"-maxx")==0)
+	  sscanf(argv[i+1],"%f",&maxx);
       else if (strcmp(argv[i],"-reverse")==0)
 	reverse=1;
       else if (strcmp(argv[i],"-centremjd")==0)
 	sscanf(argv[i+1],"%f",&centreMJD);
       else if (strcmp(argv[i],"-plotus")==0)
 	plotUs=1;
+      else if (strcmp(argv[i],"-noerror")==0)
+	error=0;
     }
 
-if (*npsr==0) /* Select all files */
+  if (*npsr==0) /* Select all files */
     {
       printf("Using all available .par and .tim files\n");
       sprintf(str,"ls `ls *.par | sed s/par/tim/` | sed s/.tim/\"\"/");
@@ -147,26 +179,32 @@ if (*npsr==0) /* Select all files */
     }
  if (reverse==1) // Reverse order of .par and .tim files
    {
-     char tpar[*npsr][128];
-     char ttim[*npsr][128];
      for (i=0;i<*npsr;i++)
        {
-	 strcpy(tpar[i],parFile[i]);
-	 strcpy(ttim[i],timFile[i]);	 
+     	 strcpy(tpar[i],parFile[i]);
+     	 strcpy(ttim[i],timFile[i]);	 
        }
      for (i=0;i<*npsr;i++)
        {
-	 strcpy(parFile[i],tpar[*npsr-i-1]);
-	 strcpy(timFile[i],ttim[*npsr-i-1]);
+	 //	 printf("Have %d %d %d >%s< >%s<\n",i,*npsr,(*npsr)-i-1,tpar[(*npsr)-i-1],ttim[(*npsr)-i-1]);
+	 strcpy(parFile[i],tpar[(*npsr)-i-1]);
+	 strcpy(timFile[i],ttim[(*npsr)-i-1]);
+	 //	 strcpy(timFile[i],"J0900-3144.new2.tim");
        }
    }
 
-  initialise(psr,0);              /* Initialise the structures */
-  readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
-  readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+ printf("Starting plugin1\n");
+ //  initialise(psr,0);              /* Initialise the structures */
+ readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+ printf("Starting plugin2\n");
+ readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+ printf("Starting plugin3\n");
   preProcess(psr,*npsr,argc,argv);
+ printf("Starting plugin4\n");
   callFit(psr,*npsr);             /* Do all the fitting routines */
-  doPlot(psr,*npsr,scale,nScale,grDev,plotUs,fontsize,centreMJD,ptStyle,ptSize);              /* Do plot */
+ printf("Starting plugin5\n");
+ doPlot(psr,*npsr,scale,nScale,grDev,plotUs,fontsize,centreMJD,ptStyle,ptSize,error,miny,maxy,minx,maxx,nOverlay,labelsize,fracX);              /* Do plot */
+ printf("Starting plugin6\n");
 }
 
 /* This function calls all of the fitting routines.             */
@@ -183,14 +221,14 @@ void callFit(pulsar *psr,int npsr)
       formBatsAll(psr,npsr);
       formResiduals(psr,npsr,1);
       /* Do the fitting */
-      if (iteration==0) doFitAll(psr,npsr,"NULL");
+      if (iteration==0) doFitAll(psr,npsr,covarFuncFile2);
       else textOutput(psr,npsr,globalParameter,0,0,0,"");
     }
 
 }
 
 
-void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,float fontSize,float centreMJD,int ptStyle,float ptSize)
+void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,float fontSize,float centreMJD,int ptStyle,float ptSize,int error,float minyv,float maxyv,float minxv,float maxxv,int nOverlay,float labelsize,float fracX)
 {
   int i,j,fitFlag=2,exitFlag=0,scale1=0,scale2,count[MAX_PSR],p,xautoscale=0,k,graphics=1;
   int yautoscale=0,plotpre=1;
@@ -270,11 +308,22 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
 	}
     	  
       /* Get scaling for graph */
-      minx[p] = findMin(x[p],psr,p,scale1,count[p]);
-      maxx[p] = findMax(x[p],psr,p,scale1,count[p]);
-
-      miny[p] = findMin(y[p],psr,p,scale1,count[p]);
-      maxy[p] = findMax(y[p],psr,p,scale1,count[p]);
+      if (minxv == maxxv) {
+	minx[p] = findMin(x[p],psr,p,scale1,count[p]);
+	maxx[p] = findMax(x[p],psr,p,scale1,count[p]);
+      }
+      else {
+	minx[p] = minxv;
+	maxx[p] = maxxv;
+      }
+      if (minyv == maxyv){
+	miny[p] = findMin(y[p],psr,p,scale1,count[p]);
+	maxy[p] = findMax(y[p],psr,p,scale1,count[p]);
+      }
+      else {
+	miny[p] = minyv;
+	maxy[p] = maxyv;
+      }
       sminy[p] = miny[p]/1e6;
       smaxy[p] = maxy[p]/1e6;
     }
@@ -320,10 +369,12 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
       /*  cpgenv(plotx1,plotx2,ploty1,ploty2+(ploty2-ploty1)*(npsr-1),0,0); */
   //  cpgenv(plotx1,plotx2,0,npsr+1,0,-1);
 
-  cpgsvp(0.85,1.0,0.1,1.0);
+  if (labelsize!=-1)
+    cpgsch(labelsize);
+  cpgsvp(fracX,1.0,0.1,1.0);
   cpgswin(0,1,0,npsr);
   cpgbox("ABC",0.0,0,"C",0.0,0);
-
+  cpgsch(fontSize);
   char str[1000];
   for (p=0;p<npsr;p++)
     {
@@ -334,7 +385,7 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
       if (plotUs==0)
 	{
 	  sprintf(str,"%.2f",(double)((smaxy[p]-sminy[p])*psr[p].param[param_f].val[0]));
-	  cpgtext(0,p+0.1,str);
+	  cpgtext(0,p+0.4,str);
 	  //	  cpgtext(tmax+(tmax-tmin)*0.05,p+1.1-0.5,str);
 	}
       else
@@ -352,11 +403,14 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
       cpgline(2,px,py);
       
     }
+  if (labelsize!=-1)
+    cpgsch(labelsize);
 
-  cpgsvp(0.1,0.87,0.1,1.0);
+  cpgsvp(0.1,fracX,0.1,1.0);
   cpgswin(plotx1,plotx2,0,npsr);
   cpgbox("ATNSBC",0.0,0,"B",0.0,0);
   cpglab(xstr,"","");	    
+  cpgsch(fontSize);
 
   for (p=0;p<npsr;p++)
     {
@@ -408,7 +462,8 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
 	  cpgsci(colour+1);
 	  cpgsch(ptSize);
 	  cpgpt(num,xx,yy,ptStyle);
-	  cpgerry(num,xx,yyerr1,yyerr2,1);
+	  if (error==1)
+	    cpgerry(num,xx,yyerr1,yyerr2,1);
 	  cpgsch(fontSize);
 	  // Plot arrow giving one period
 	  fx[0] = fx[1] = tmin-(tmax-tmin)*0.05;

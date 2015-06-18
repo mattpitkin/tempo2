@@ -448,11 +448,9 @@ void callFit(pulsar *psr,int npsr)
           
           /* Do the fitting */
           if (iteration==0) 
-            {
-			  doFitAll(psr,npsr,covarFuncFile);
-
-            }
-          else textOutput(psr,npsr,globalParameter,0,0,0,"");
+	    doFitAll(psr,npsr,covarFuncFile);
+          else 
+	    textOutput(psr,npsr,globalParameter,0,0,0,"");
         }
     }
   if (psr[0].nFit==0)

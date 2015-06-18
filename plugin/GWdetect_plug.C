@@ -57,7 +57,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int posFileN=0;
   char posFile[128];
   char app[128]="";
+  int randPos=0;
   FILE *fin;
+  long idum = TKsetSeed();
 
   *npsr = 0; 
 
@@ -87,6 +89,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%d",&nlat);
       else if (strcmp(argv[i],"-nlong")==0)
 	sscanf(argv[++i],"%d",&nlong);
+      else if (strcmp(argv[i],"-randpos")==0)
+	randPos=1;
     }
 
   gridPos=0;
@@ -94,6 +98,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
   preProcess(psr,*npsr,argc,argv);
+
+  // If requested randomise the pulsar positions for use in the GW angles
+  if (randPos==1)
+    {
+      for (p=0;p<*npsr;p++)
+	{
+	  psr[p].param[param_raj].val[1] = TKranDev(&idum)*2*M_PI;   
+	  psr[p].param[param_decj].val[1] = acos((TKranDev(&idum)-0.5)*2);
+	  psr[p].param[param_raj].fitFlag[1] = 0;
+	  psr[p].param[param_decj].fitFlag[1] = 0;
+	  psr[p].param[param_raj].paramSet[1] = 1;
+	  psr[p].param[param_decj].paramSet[1] = 1;
+	}
+    }
   
   if (posFileN==1)
     {

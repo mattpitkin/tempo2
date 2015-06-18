@@ -69,29 +69,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int simplePlot=0;
   int harmTaper=0;
   int covarError=0;
+  int shuffle=0;
   double whiteErr[MAX_IFUNC];
   int showName=1;
+  long seed = TKsetSeed();
+  char grDev[1024]="?";
 
   strcpy(covarFuncFile,"NULL");
 
   *npsr = 0;  /* For a graphical interface that only shows results for one pulsar */
 
-  printf("Graphical Interface: name\n");
-  printf("Author:              author\n");
+  printf("Graphical Interface: clock\n");
+  printf("Author:              G. Hobbs\n");
   printf("Version:             version number\n");
   printf(" --- type 'h' for help information\n");
-
-
-  printf("SHOULD BE USING ORTHONORMAL POLYNOMIALS OR BILL'S TECHNIQUE OF INDIVIDUAL POINTS?? \n");
-
-  /* Obtain the .par and the .tim file from the command line */
-  if (argc==4) /* Only provided .tim name */
-    {
-      strcpy(timFile[0],argv[3]);
-      strcpy(parFile[0],argv[3]);
-      parFile[0][strlen(parFile[0])-3] = '\0';
-      strcat(parFile[0],"par");
-    }
 
   /* Obtain all parameters from the command line */
   for (i=2;i<argc;i++)
@@ -126,6 +117,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	strcpy(overlay,argv[++i]);
       else if (strcmp(argv[i],"-simple")==0)
 	simplePlot=1;
+      else if (strcmp(argv[i],"-shuffle")==0)
+	shuffle=1;
+      else if (strcmp(argv[i],"-g")==0)
+	strcpy(grDev,argv[++i]);
       else if (strcmp(argv[i],"-dcf")==0){
 		cholmode=true;
 		strcpy(covarFuncFile,argv[++i]);
@@ -135,6 +130,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
   preProcess(psr,*npsr,argc,argv);
+  if (shuffle==1) // Shuffle all the ToAs by their error bars
+    {
+      printf("WARNING: shuffling ToAs\n");
+      for (p=0;p<*npsr;p++)
+	{
+	  for (i=0;i<psr[p].nobs;i++)
+	    {
+	      psr[p].obsn[i].sat += (TKgaussDev(&seed)*psr[p].obsn[i].toaErr*1e-6)/86400.0L;
+	    }
+	}
+
+    }
+
 
   if (psr[0].param[param_wave_om].paramSet[0]==1 && harmTaper==0)
     {
@@ -224,6 +232,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       psr[0].ifuncE[k] *= 1e6; // Convert to microseconds
       psr[0].ifuncV[k] *= 1e6;
     }
+
+  // Remove last ifunc if using no interpolation
+  if (psr[0].param[param_ifunc].val[0]==0)
+    psr[0].ifuncN--;
+    
 
   //  for (p=0;p<*npsr;p++)
   //    {
@@ -620,9 +633,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  printf("Using: %g %g %g\n",dx[k],dy[k],de[k]);
 	}
       ne = psr[0].ifuncN;
-      //      TKleastSquares_svd(dx,dy,de,ne,out_p,out_e,3,cvm,&chisq,TKfitPoly,1);
-      //      for (i=0;i<ne;i++)
-      //	ey0[i] = dy[i] - (out_p[0] + out_p[1]*dx[i] + out_p[2]*dx[i]*dx[i]);
+
+      // Removing a weighted quadratic from the IFUNCS
+      TKleastSquares_svd(dx,dy,de,ne,out_p,out_e,3,cvm,&chisq,TKfitPoly,1);
+      for (i=0;i<ne;i++)
+	{
+	  printf("ifunc output: %g %g %g %g\n",ex[i],ey0[i],dy[i] - (out_p[0] + out_p[1]*dx[i] + out_p[2]*dx[i]*dx[i]),de[i]);
+	  ey0[i] = dy[i] - (out_p[0] + out_p[1]*dx[i] + out_p[2]*dx[i]*dx[i]);
+	}
       //TKremovePoly_f(ex,ey0,ne,3);
       for (i=0;i<3;i++)
 	free(cvm[i]);
@@ -640,7 +658,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   fclose(fout_clkcurve);
   fclose(fout_newclk);
 
-  cpgbeg(0,"?",1,1);
+  cpgbeg(0,grDev,1,1);
   cpgsfs(2);
   cpgslw(3);
   cpgsch(1.4);
@@ -703,7 +721,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   cpgsch(1.4);
   //  cpgsci(2);
   //      cpgsls(4);cpgline(npt,px,fy);cpgsls(1);
-  cpgsci(1); cpgsls(2);cpgline(npt,px,fyTaper);cpgsls(1);
+  //  cpgsci(1); cpgsls(2);cpgline(npt,px,fyTaper);cpgsls(1);
   cpgsci(1);
 
   printf("GOT HERE\n");
@@ -810,6 +828,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else
 	TKremovePoly_d(rx,ry,nr,3);
+
       for (i=0;i<nr;i++)
 	{
 	  frx[i]=(float)rx[i];

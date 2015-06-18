@@ -35,10 +35,12 @@
 using namespace std;
 
 
-void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,char *flagVal2,char *grDev);
+void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,char *flagVal2,char *grDev,double maxTimeDiff);
 
 void help() /* Display help */
 {
+  printf("-dt set threshold for time difference between ToAs (minutes)\n");
+  printf("-grDev set graphical device\n");
 }
 
 
@@ -51,6 +53,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char flagID1[128],flagID2[128];
   char flagVal1[128],flagVal2[128];
   char grDev[128]="/xs";
+  double maxTimeDiff = 5; // Minutes
 
   strcpy(flagID1,"-f");
   strcpy(flagID2,"-f");
@@ -74,6 +77,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcasecmp(argv[i],"-grDev")==0)
 	strcpy(grDev,argv[++i]);
+      else if (strcasecmp(argv[i],"-dt")==0)
+	sprintf(argv[++i],"%lf",&maxTimeDiff);
+      else if (strcmp(argv[i],"-h")==0)
+	help();
     }
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
@@ -96,20 +103,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   printf("Backend 2: enter flagID flagVal ");
   scanf("%s %s",flagID2,flagVal2);
 
-  runPlugin(psr,*npsr,flagID1,flagID2,flagVal1,flagVal2,grDev);
+  runPlugin(psr,*npsr,flagID1,flagID2,flagVal1,flagVal2,grDev,maxTimeDiff);
 
 
   return 0;
 }
 
-void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,char *flagVal2,char *grDev)
+void runPlugin(pulsar *psr,int npsr,char *flagID1,char *flagID2,char *flagVal1,char *flagVal2,char *grDev,double maxTimeDiff)
 {
   int i;
   int j,k;
   int found1=-1;
   int found2=-1;
   int ploterr=1;
-  double maxTimeDiff = 5.0; // Minutes
+  //  double maxTimeDiff = 5.0; // Minutes
   double dres,ebar;
   float xval[10][MAX_OBSN],yval[10][MAX_OBSN],e1[10][MAX_OBSN],e2[10][MAX_OBSN];
   int id1[10][MAX_OBSN],id2[10][MAX_OBSN];
