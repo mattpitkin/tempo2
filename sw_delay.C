@@ -101,7 +101,7 @@ double solarWindModel(pulsar psr,int iobs)
   int iAngle;
 
 
-  double fast_ne = 3;
+  double fast_ne = 2.5; // From 3. This change was suggested by Bill Coles by phone to G. Hobbs
   double slow_ne = 10;
   double integral=0;
   double DM_sun;
