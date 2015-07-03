@@ -726,7 +726,7 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 	  interim_error = psr->obsn[i].origErr/current_efac;
 	  interim_error = sqrt(pow(interim_error,2.0)-(pow(current_equad,2.0)));
 
-	  printf("Writing out: %.15Lg %.15Lg\n",oldsat,psr->obsn[i].sat);
+	  logdbg("Writing out: %.15Lg %.15Lg\n",oldsat,psr->obsn[i].sat);
 	  fprintf(fout," %s %.8f %.17Lf %.5f %s ", name,psr->obsn[i].freq,
 		  // psr->obsn[i].sat, (psr->obsn[i].toaErr/current_efac),psr->obsn[i].telID);
 		  oldsat, interim_error,psr->obsn[i].telID);
