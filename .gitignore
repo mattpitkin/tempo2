@@ -1,5 +1,7 @@
 *.o
 *.la
+*.lo
+*.Plo
 config.h.in
 configure
 autoconf
@@ -10,3 +12,14 @@ plugin/build_settings
 Makefile.common
 Makefile.config
 Makefile.in
+Makefile
+libtool
+*.Po
+.libs
+plugin/.deps
+config.h
+config.log
+config.status
+stamp-h1
+tempo2
+unsupported_plugins/toasim/read_toasim
