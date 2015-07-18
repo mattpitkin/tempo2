@@ -132,6 +132,9 @@ double **malloc_blas(int rows,int cols){
    int *dimM;
    double** uinv;
    int i;
+   
+   if(rows*cols ==0) return NULL;
+
    if (sizeof(int) > sizeof(double)){
       logerr("Error, somehow you have a system with sizeof(int) > sizeof(double) %d %d",sizeof(int),sizeof(double));
       exit(1);

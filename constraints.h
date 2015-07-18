@@ -29,3 +29,5 @@ double consFunc_qifunc_p_year(pulsar *psr,int i,int k,int order);
 double consFunc_qifunc_c_year(pulsar *psr,int i,int k,int order);
 
 void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double end, bool fixCMgrid);
+
+void CONSTRAINTfuncs(pulsar *psr, int nparams,int iconstraint, double* OUT);

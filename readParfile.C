@@ -175,7 +175,6 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       char str[80];
       int i;
       fgets(str,80,fin);
-      logmsg("RRR '%s'",str);
       for(i=0; i < 80; i++){
           if(str[i] > 47){
               psr->robust=str[i];

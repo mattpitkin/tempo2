@@ -36,7 +36,6 @@
 #include <dlfcn.h>
 #include "tempo2.h"
 #include "TKfit.h"
-#include "constraints.h"
 #include "TKsvd.h"
 #include "T2accel.h"
 void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
@@ -121,7 +120,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	double newStart=-1.0,newFinish=-1.0;
 	long double meanRes=0.0;
 	int count;
-	int nobs_and_constraints;
+	int ndata;
 	int offsetNp = 0;
 	bool DO_GLOBAL_FIT=false;
 
@@ -225,9 +224,9 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		// if we are doing a Cholesky fit, we need to sort the data or it will fail!
 		if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL"))sortToAs(psr+p);
 		if (psr[p].auto_constraints)autoConstraints(psr,p,npsr);
-		nobs_and_constraints = psr[p].nobs + psr[p].nconstraints;
+		ndata = psr[p].nobs; // there are no constraints in here anymore.
 		nobs_noconstrain += psr[p].nobs;
-		ip[p]=(int*)malloc(sizeof(int)*nobs_and_constraints);
+		ip[p]=(int*)malloc(sizeof(int)*ndata);
 		if (ip[p]==NULL) {printf("Unable to allocate memory in doFit.C (ip[p])\n"); exit(1);}
 		logtchk("Processing pulsar %d",p);
 
@@ -256,13 +255,13 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 		logtchk("Complete determining which parameters we are fitting for");
 		// Note that x gets free'd as xx
-		x     = (double *)malloc(nobs_and_constraints*sizeof(double));
+		x     = (double *)malloc(ndata*sizeof(double));
 		if (x == NULL) {printf("Unable to allocate memory in doFit.C (x)\n"); exit(1);}
-		y     = (double *)malloc(nobs_and_constraints*sizeof(double));
+		y     = (double *)malloc(ndata*sizeof(double));
 		if (y == NULL) {printf("Unable to allocate memory in doFit.C (y)\n"); exit(1);}
 		xx[p]=x;
 		yy[p]=y;
-		sig   = (double *)malloc(nobs_and_constraints*sizeof(double));
+		sig   = (double *)malloc(ndata*sizeof(double));
 		if (sig == NULL) {printf("Unable to allocate memory in doFit.C (sig)\n"); exit(1);}
 		count=0;
 		for (i=0;i<psr[p].nobs;i++)
@@ -306,21 +305,6 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			printf("Perhaps you have filtered out all the observations?\n");
 			exit(1);
 		}
-		int last=count-1;
-		// add constraints as extra pseudo observations
-		// These point to non-existant observations after the nobs array
-		// These are later caught by getParamDeriv.
-		double constraint_sigma=1e-12;
-		if (psr[p].fitMode == 0) constraint_sigma=1e-6;
-		for (i=0; i < psr[p].nconstraints; i++){
-			ip[p][count] = psr[p].nobs+i;
-			x[count]=x[last];
-			y[count]=0;
-			sig[count]=constraint_sigma;
-			count++;
-		}
-
-		
 
 		if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL")){
 			// fit with a covariance function.
@@ -337,7 +321,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 			if(psr[p].fitMode == 0){
 				logdbg("Doing an UNWEIGHTED fit");
 				// unweighted fit - set sigma to 1 (except for constraints)
-				for (i=0; i <= last; i++){
+				for (i=0; i < ndata; i++){
 					sig[i]=1.0;
 				}
 			} else {
@@ -371,11 +355,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		   psr[p].obsn[i].residual-=meanRes;
 		   logtchk("complete removing mean from the residuals??  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 		   */
-		logdbg("Get constraint weghts");
-		logtchk("Get Constraint weights");
-		//		 printf("COMPUTING constraint weights for PSR %d %s\n",p,psr[p].name);
-		computeConstraintWeights(psr+p);
-		psr[p].nParam = npol;
+				psr[p].nParam = npol;
 		psr[p].nGlobal = nglobal;
 		free(sig);
 	}
@@ -1007,13 +987,18 @@ void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr)
 	psr+=ipsr; // this avoids having to change the code now we have unified with global fitting.
 
 	/*
-	 * IMPORTANT NOTICE: To allow for constraints, ipos may be larger than psr->nobs!
+     * NEW NOTICE: As of July 2015 the constraints have moved out of this function into a 
+     * constraints matrix! You can now continue to assume that ipos is always less than psr->nobs
+     *
+     * *** Old notice below can be disregarded ***
+	 * OLD NOTICE: To allow for constraints, ipos may be larger than psr->nobs!
 	 * 
 	 * Therefore, if you modify this function, make sure to check (ipos < psr->nobs) before
 	 * using ipos, and call getParamDeriv to get the derivative since this function checks
 	 * for constraints and calls the appropriate constraint function/
 	 * 
 	 * M. Keith August 2011
+     * *** end of old notice ***
 	 *
 	 */
 
@@ -1213,14 +1198,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 
 	
 
-	if(ipos >= psr->nobs)
-	{
-		//      printf("In here with ipos = %d, psr->nobs=%d, i=%d, str = %s, k= %d\n",ipos,psr->nobs,i,psr->param[i].shortlabel[0],k);
-		afunc= getConstraintDeriv(psr,ipos-psr->nobs,i,k); // this is a constraint pseudo observation.
-		//      printf("In here afunc = %g\n",afunc);
-	}
-	//	  printf("MJK -- get deriv for constraint %d i=%d x=%lf k=%d af=%f\n",ipos-psr->nobs,i,x,k,afunc);
-	else if (i==param_f)         /* Rotational frequency */
+	if (i==param_f)         /* Rotational frequency */
 	{
 		if (k==0)
 		  {
@@ -3179,130 +3157,6 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 	logdbg("Complete updating parameters");
 }
 
-
-
-/*
- *
- * Constraint functions are in constraints.C
- *
- */
-double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
-	int order=0;
-	switch(psr->constraints[iconstraint]){
-		case constraint_dmmodel_mean:
-			return consFunc_dmmodel_mean(psr,i,k);
-
-			// Notice that these case statements fall through, so order is defined
-			// based on which constraint name is used.
-                case constraint_dmmodel_dm1:
-                       return consFunc_dmmodel_dm1(psr,i,k);
-		case constraint_dmmodel_cw_3:
-			order++;
-		case constraint_dmmodel_cw_2:
-			order++;
-		case constraint_dmmodel_cw_1:
-			order++;
-		case constraint_dmmodel_cw_0:
-			return consFunc_dmmodel_cw(psr,i,k,order);
-		case constraint_ifunc_2:
-			order++;
-		case constraint_ifunc_1:
-			order++;
-		case constraint_ifunc_0:
-			return consFunc_ifunc(psr,i,k,order);
-		case constraint_tel_dx_2:
-			order++;
-		case constraint_tel_dx_1:
-			order++;
-		case constraint_tel_dx_0:
-			return consFunc_tel_dx(psr,i,k,order);
-		case constraint_tel_dy_2:
-			order++;
-		case constraint_tel_dy_1:
-			order++;
-		case constraint_tel_dy_0:
-			return consFunc_tel_dy(psr,i,k,order);
-		case constraint_tel_dz_2:
-			order++;
-		case constraint_tel_dz_1:
-			order++;
-		case constraint_tel_dz_0:
-			return consFunc_tel_dz(psr,i,k,order);
-		case constraint_quad_ifunc_p_2:
-			order++;
-		case constraint_quad_ifunc_p_1:
-			order++;
-		case constraint_quad_ifunc_p_0:
-			return consFunc_quad_ifunc_p(psr,i,k,order);
-		case constraint_quad_ifunc_c_2:
-			order++;
-		case constraint_quad_ifunc_c_1:
-			order++;
-		case constraint_quad_ifunc_c_0:
-			return consFunc_quad_ifunc_c(psr,i,k,order);
-
-			// DMMODEL annual terms
-		case constraint_dmmodel_cw_px:
-			order++;
-		case constraint_dmmodel_cw_year_cos2:
-			order++;
-		case constraint_dmmodel_cw_year_sin2:
-			order++;
-		case constraint_dmmodel_cw_year_xcos:
-			order++;
-		case constraint_dmmodel_cw_year_xsin:
-			order++;
-		case constraint_dmmodel_cw_year_cos:
-			order++;
-		case constraint_dmmodel_cw_year_sin:
-			return consFunc_dmmodel_cw_year(psr,i,k,order);
-
-			// IFUNC annual terms
-		case constraint_ifunc_year_cos2:
-			order++;
-		case constraint_ifunc_year_sin2:
-			order++;
-		case constraint_ifunc_year_xcos:
-			order++;
-		case constraint_ifunc_year_xsin:
-			order++;
-		case constraint_ifunc_year_cos:
-			order++;
-		case constraint_ifunc_year_sin:
-			return consFunc_ifunc_year(psr,i,k,order);
-
-			// QIFUNC_p annual terms
-		case constraint_qifunc_p_year_cos2:
-			order++;
-		case constraint_qifunc_p_year_sin2:
-			order++;
-		case constraint_qifunc_p_year_xcos:
-			order++;
-		case constraint_qifunc_p_year_xsin:
-			order++;
-		case constraint_qifunc_p_year_cos:
-			order++;
-		case constraint_qifunc_p_year_sin:
-			return consFunc_qifunc_p_year(psr,i,k,order);
-
-			// QIFUNC_c annual terms
-		case constraint_qifunc_c_year_cos2:
-			order++;
-		case constraint_qifunc_c_year_sin2:
-			order++;
-		case constraint_qifunc_c_year_xcos:
-			order++;
-		case constraint_qifunc_c_year_xsin:
-			order++;
-		case constraint_qifunc_c_year_cos:
-			order++;
-		case constraint_qifunc_c_year_sin:
-			return consFunc_qifunc_c_year(psr,i,k,order);
-
-		default:
-			return 0;
-	}
-}
 
 #ifdef HAVE_LAPACK
 #ifdef HAVE_BLAS
