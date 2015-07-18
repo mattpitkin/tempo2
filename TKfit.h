@@ -41,7 +41,7 @@ double TKleastSquares(double* b, double* white_b,
 double TKrobustLeastSquares(double* b, double* white_b,
 	  double** designMatrix, double** white_designMatrix,
 	  int n,int nf, double tol, char rescale_errors,
-	  double* outP, double* e, double** cvm, int robust);
+	  double* outP, double* e, double** cvm, char robust);
 
 // legacy convinience methods
 void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int),int weight);
