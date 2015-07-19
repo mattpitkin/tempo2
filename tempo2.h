@@ -166,7 +166,7 @@ extern char TEMPO2_ENVIRON[];
 /* TEMPO2 error messages */
 extern char TEMPO2_ERROR[];
 
-enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
+typedef enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
 	    param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
 	    param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_a1dot,
@@ -184,12 +184,13 @@ enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
 	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
-	    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1};
+	    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1} param_label;
+
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
  */
-enum constraint {
+typedef enum constraint {
 	constraint_dmmodel_mean,
 	constraint_dmmodel_dm1,
 	constraint_dmmodel_cw_0,
@@ -239,7 +240,11 @@ enum constraint {
 	constraint_qifunc_c_year_xcos,
 	constraint_qifunc_c_year_sin2,
 	constraint_qifunc_c_year_cos2,
-};
+} constraint_label;
+
+
+
+
 
 
 extern int MAX_PSR;
@@ -255,6 +260,29 @@ extern char dcmFile[MAX_FILELEN];
 extern char covarFuncFile[MAX_FILELEN];
 extern char tempo2_plug_path[32][MAX_STRLEN];
 extern int tempo2_plug_path_len;
+
+
+struct pulsar; // forward declaration
+// double paramDerivFunc(pulsar* psr, int ipsr, double x, int obsnid, param_label label, int subparamid)
+typedef double (*paramDerivFunc)(struct pulsar*, int,double,int,param_label,int);
+// double constraintDerivFunc(pulsar* psr, int ipsr, constraint_label label, param_label plab, int csubid, int subparamid)
+typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param_label,int,int);
+
+// void updateParameterFunction(pulsar* psr, int ipsr, param_label param, int subparamid, double param, double err);
+typedef void (*paramUpdateFunc)(struct pulsar*, int,param_label,int,double,double);
+
+typedef struct FitInfo {
+unsigned nParams;
+unsigned nConstraints;
+param_label paramIndex[MAX_FIT];
+constraint_label constraintIndex[MAX_FIT];
+int paramCounters[MAX_FIT];
+int constraintCounters[MAX_FIT];
+paramDerivFunc paramDerivs[MAX_FIT];
+constraintDerivFunc constraintDerivs[MAX_FIT];
+paramUpdateFunc updateFunctions[MAX_FIT];
+} FitInfo;
+
 
 typedef struct storePrecision {
   longdouble minPrec;
@@ -364,6 +392,7 @@ typedef struct observation {
   double equad;                   /* Value to add in quadrature                                 */
 } observation;
 
+struct fit_info;
 typedef struct pulsar {
   char  name[100];
   /*                                                                 */
@@ -674,7 +703,12 @@ typedef struct pulsar {
   int nconstraints;                       /* Number of fit constraints specified                      */
   enum constraint constraints[MAX_PARAMS];/* Which constraints are specified */
   char auto_constraints;
+
+  FitInfo fitinfo;
+
+
 } pulsar;
+
 
 // PLUGIN FUNCTIONS
 
