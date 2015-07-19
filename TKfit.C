@@ -248,11 +248,12 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
     }
 
     // add the extra equations for constraints to the end of the least-squares problem.
+    logmsg("nparams=%d nconst=%d",nparams,nconstraints);
     for (i=0;i<nconstraints;i++){
         augmented_white_data[i+ndata] = 0;
         for (j=0;j<nparams;j++) {
-            augmented_DM[i+ndata][j] = constraintsMatrix[i][j]*1e12;
-            logmsg("Cmatrix ic=%d ip=%d %lg",i,j,constraintsMatrix[i][j]);
+            augmented_DM[i+ndata][j] = constraintsMatrix[i][j];
+            //if(i==j)logmsg("Cmatrix ic=%d ip=%d %lg",i,j,constraintsMatrix[i][j]);
         }
     }
 
