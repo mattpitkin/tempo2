@@ -166,7 +166,11 @@ extern char TEMPO2_ENVIRON[];
 /* TEMPO2 error messages */
 extern char TEMPO2_ERROR[];
 
-typedef enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
+
+typedef int param_label;
+typedef int constraint_label;
+enum label {
+        param_zero,param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
 	    param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
 	    param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_a1dot,
@@ -184,13 +188,15 @@ typedef enum label {param_raj,param_decj,param_f,param_pepoch,param_posepoch,
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
 	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
-	    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1} param_label;
+	    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1
+};
+ 
 
 
 /*
  * These represent the possible constraints to the fit that have been implemented.
  */
-typedef enum constraint {
+enum constraint {
 	constraint_dmmodel_mean,
 	constraint_dmmodel_dm1,
 	constraint_dmmodel_cw_0,
@@ -240,11 +246,12 @@ typedef enum constraint {
 	constraint_qifunc_c_year_xcos,
 	constraint_qifunc_c_year_sin2,
 	constraint_qifunc_c_year_cos2,
-} constraint_label;
+};
 
 
 
 
+extern char NEWFIT;
 
 
 extern int MAX_PSR;

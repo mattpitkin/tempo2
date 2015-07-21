@@ -2,6 +2,7 @@
 #include "tempo2.h"
 #include "T2accel.h"
 #include "TKmatrix.h"
+#include <assert.h>
 
 
 void TKmultMatrix( double **idcm, double **u,int ndata,int ndata2,int npol,double **uout)
@@ -133,7 +134,7 @@ double **malloc_blas(int rows,int cols){
    double** uinv;
    int i;
    
-   if(rows*cols ==0) return NULL;
+   assert(rows*cols!=0);
 
    if (sizeof(int) > sizeof(double)){
       logerr("Error, somehow you have a system with sizeof(int) > sizeof(double) %d %d",sizeof(int),sizeof(double));
