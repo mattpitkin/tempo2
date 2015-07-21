@@ -1276,6 +1276,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  if (plotErr==3) plotErr=0;
 	   }
 	   else if (key=='\''){
+           NEWFIT=!NEWFIT;
+           printf("newfit is %s\n",NEWFIT ? "true" : "false");
+           /*
 		  errtype++;
 		  switch (errtype){
 			 case 1:
@@ -1289,6 +1292,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 				errtype=0;
 				break;
 		  }
+          */
 	   }
 	   else if (key=='"'){
 		  for(i=0; i < psr[0].dmoffsCMnum; i++){
@@ -3726,6 +3730,7 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 		 }
 	  }
    }
+   timer_clk=clock();
    doFitAll(psr,npsr,covarFuncFile);
    formBatsAll(psr,npsr);	  
    /* Form residuals */

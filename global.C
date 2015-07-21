@@ -37,6 +37,8 @@
 char TEMPO2_ENVIRON[MAX_STRLEN]="TEMPO2";
 char TEMPO2_ERROR[MAX_STRLEN]="";
 
+char NEWFIT=true;
+
 int MAX_PSR   = MAX_PSR_VAL;    /* Maximum number of pulsars to fit simultaneously  */
 int MAX_OBSN  = MAX_OBSN_VAL;
 double ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;

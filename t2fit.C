@@ -146,6 +146,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, char *covarFuncFile){
                 psr_x,psr_y,psr_e,
                 psr_ndata,0,psr_toaidx);
 
+        logtchk("got Uinv");
 
         // define some convinience variables
         const unsigned nParams=psr[ipsr].fitinfo.nParams;
@@ -167,6 +168,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, char *covarFuncFile){
         }
 
 
+        logtchk("made design matrix");
 
         /**
          * The constraints matrix is similar to the design matrix, but here we are solving:
@@ -187,6 +189,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, char *covarFuncFile){
             }
         }
 
+        logtchk("made constraints matrix");
 
         /**
          * Now we multiply the design matrix and the data vector by the whitening matrix.
@@ -205,6 +208,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, char *covarFuncFile){
             }
         }
 
+        logtchk("done whitening");
         /*
          * Now - if we are going to do a global fit, we store all the above for later
          *       otherwise
@@ -423,6 +427,11 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                         OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdFreq;
                         ++OUT.nParams;
                         break;
+                    case param_brake:
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdFreq;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+                        ++OUT.nParams;
+                        break;
                     case param_sini:
                     case param_pb:
                     case param_fb:
@@ -462,7 +471,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                     case param_dm:
                         // Dispersion measure and derivatives
                         OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdDm;
-                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdDm;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
                         ++OUT.nParams;
                         break;
                     case param_fddc:
@@ -482,19 +491,23 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                         break;
                     case param_wave_om:
                         // fitwaves has many parameters to fit.
-                        for (unsigned i = 0; i < psr->nWhite; ++i){
+                        N=2;
+                        if (psr->waveScale == 2)N=4;
+                        for (unsigned i = 0; i < psr->nWhite*N; ++i){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fitwaves;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fitwaves;
                             OUT.paramCounters[OUT.nParams]=i;
+                            OUT.paramIndex[OUT.nParams]=fit_param;
                             ++OUT.nParams;
                         }
                         break;
                     case param_wave_dm:
                         // fitwaves has many parameters to fit.
-                        for (unsigned i = 0; i < psr->nWhite_dm; ++i){
+                        for (unsigned i = 0; i < psr->nWhite_dm*2; ++i){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fitwaves;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fitwaves;
                             OUT.paramCounters[OUT.nParams]=i;
+                            OUT.paramIndex[OUT.nParams]=fit_param;
                             ++OUT.nParams;
                         }
                         break;
@@ -503,12 +516,13 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                     case param_glph:
                     case param_glf0:
                     case param_glf1:
-                    case param_glf2:
                     case param_glf0d:
                     case param_gltd:
+                    case param_glf2:
                         // glitches
                         OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGlitch;
-                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGlitch;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+                        if(fit_param==param_glf2)OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGlitch;
                         ++OUT.nParams;
                         break;
 
@@ -533,6 +547,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                         for (unsigned i = 0; i < N; ++i){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos;
+                            OUT.paramIndex[OUT.nParams]=fit_param;
                             ++OUT.nParams;
                         }
                         break;
@@ -551,6 +566,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ifunc;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ifunc;
                             OUT.paramCounters[OUT.nParams]=i;
+                            OUT.paramIndex[OUT.nParams]=fit_param;
                             ++OUT.nParams;
                         }
                         break;

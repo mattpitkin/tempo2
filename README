@@ -1,4 +1,4 @@
-CVS INSTALLATION README
+Git INSTALLATION README
 =======================
 
 0. Contents
@@ -12,7 +12,9 @@ CVS INSTALLATION README
 
 1. What this package is
 ------------------------
-You (or someone else) have checked out tempo2 from the CVS.
+You (or someone else) have checked out tempo2 from the Git
+(https://bitbucket.org/mkeith/tempo2)
+
 This is the best way to get the latest/cutting edge version, and develop your
 own additions to the tempo2 code or via plugins.
 

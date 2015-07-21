@@ -1,6 +1,7 @@
 #include "t2fit_stdFitFuncs.h"
 #include <math.h>
 #include <string.h>
+#include <assert.h>
 
 /**
  *
@@ -19,6 +20,7 @@ void t2UpdateFunc_zero(pulsar *psr, int ipsr ,param_label label,int k, double va
  * The pulse frequency, and derivatives
  */
 double t2FitFunc_stdFreq(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    assert(label==param_f || label==param_brake);
 
     // this seems to be something to do with the breaking index fitting??
     long double arg3,arg4;
@@ -33,20 +35,25 @@ double t2FitFunc_stdFreq(pulsar *psr, int ipsr ,double x ,int ipos ,param_label 
 
     f0 = psr[ipsr].param[param_f].val[0];
     f1 = psr[ipsr].param[param_f].val[1];
-    bindex = 0;//psr->param[param_brake].val[0];
+
+    bindex = 0;//psr[ipsr].param[param_brake].val[0];
+
+    if (label==param_brake) return f1*f1/f0*arg3/6.0L + (4*bindex-1)*f1*f1*f1/f0/f0*arg4/24.L;
+
+
     double v=0;
 
     switch(k){
         case 0:
             v = x*24.0L*3600.0L/f0;
-            if (psr->param[param_brake].paramSet[0] ==1)
+            if (psr[ipsr].param[param_brake].paramSet[0] ==1)
             {
                 v += (-bindex*f1*f1/f0/f0*arg3/6.L -2*bindex*(2*bindex-1)*f1*f1*f1/f0/f0/f0*arg4/24.) *84000.L/f0;
             }
             return v;
         case 1:
             v = 0.5L*x*x;
-            if (psr->param[param_brake].paramSet[0] ==1)
+            if (psr[ipsr].param[param_brake].paramSet[0] ==1)
             {
                 v += (2*bindex*f1/f0*arg3/6.L + 3*bindex*(2*bindex-1)*f1*f1/f0/f0*arg4/24.L)
                     *86400.L*86400.L/f0;
@@ -82,11 +89,11 @@ double t2FitFunc_stdFreq(pulsar *psr, int ipsr ,double x ,int ipos ,param_label 
     }
 
 }
-void t2UpdateFunc_stdFreq(pulsar *psr, int p ,param_label label,int k, double val, double error){
+void t2UpdateFunc_stdFreq(pulsar *psr, int ipsr ,param_label label,int k, double val, double error){
     if (k==0)
     {
-        psr[p].param[param_f].val[k] *= (1.0-val/psr[p].param[param_f].val[0]);
-        psr[p].param[param_f].err[k]  = error;
+        psr[ipsr].param[param_f].val[k] *= (1.0-val/psr[ipsr].param[param_f].val[0]);
+        psr[ipsr].param[param_f].err[k]  = error;
     }
     else
     {
@@ -96,10 +103,10 @@ void t2UpdateFunc_stdFreq(pulsar *psr, int p ,param_label label,int k, double va
         else if (k>2 && k<10)  scale=1.0e18L;
         else if (k>9) scale=1.0e23L;
 
-        psr[p].param[param_f].val[k] = psr[p].param[param_f].val[k] -
-            (psr[p].param[param_f].val[0]*(val/pow(24.0*3600.0,k+1))/scale);
-        psr[p].param[param_f].err[k] = error/(pow(24.0*3600.0,k+1))/scale*
-            psr[p].param[param_f].val[0];
+        psr[ipsr].param[param_f].val[k] = psr[ipsr].param[param_f].val[k] -
+            (psr[ipsr].param[param_f].val[0]*(val/pow(24.0*3600.0,k+1))/scale);
+        psr[ipsr].param[param_f].err[k] = error/(pow(24.0*3600.0,k+1))/scale*
+            psr[ipsr].param[param_f].val[0];
     }
 }
 
@@ -108,36 +115,36 @@ void t2UpdateFunc_stdFreq(pulsar *psr, int p ,param_label label,int k, double va
 
 
 /**
- * Binary models - need to select on psr->binaryModel
+ * Binary models - need to select on psr[ipsr].binaryModel
  */
 double t2FitFunc_binaryModels(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     double afunc;
     psr+=ipsr; // cheap way to get pointer to current pulsar.
-    if (strcmp(psr->binaryModel,"BT")==0) /* Must be below other parameters */
+    if (strcmp(psr[ipsr].binaryModel,"BT")==0) /* Must be below other parameters */
         afunc = BTmodel(psr,0,ipos,label);
-    else if (strcmp(psr->binaryModel,"BTJ")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"BTJ")==0)
         afunc = BTJmodel(psr,0,ipos,label,k);
-    else if (strcmp(psr->binaryModel,"BTX")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"BTX")==0)
         afunc = BTXmodel(psr,0,ipos,label,k);
-    else if (strcmp(psr->binaryModel,"ELL1")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"ELL1")==0)
         afunc = ELL1model(psr,0,ipos,label);
-    else if (strcmp(psr->binaryModel,"DD")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"DD")==0)
         afunc = DDmodel(psr,0,ipos,label);
-    else if (strcmp(psr->binaryModel,"DDK")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"DDK")==0)
         afunc = DDKmodel(psr,0,ipos,label);
-    else if (strcmp(psr->binaryModel,"DDS")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"DDS")==0)
         afunc = DDSmodel(psr,0,ipos,label);
-    else if (strcmp(psr->binaryModel,"DDGR")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"DDGR")==0)
         afunc = DDGRmodel(psr,0,ipos,label);
-    else if (strcmp(psr->binaryModel,"MSS")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"MSS")==0)
         afunc = MSSmodel(psr,0,ipos,label);
-    else if (strcmp(psr->binaryModel,"T2")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"T2")==0)
         afunc = T2model(psr,0,ipos,label,k);
-    else if (strcmp(psr->binaryModel,"T2-PTA")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"T2-PTA")==0)
         afunc = T2_PTAmodel(psr,0,ipos,label,k);
-    else if (strcmp(psr->binaryModel,"DDH")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"DDH")==0)
         afunc = DDHmodel(psr,0,ipos,label);
-    else if (strcmp(psr->binaryModel,"ELL1H")==0)
+    else if (strcmp(psr[ipsr].binaryModel,"ELL1H")==0)
         afunc = ELL1Hmodel(psr,0,ipos,label);
     return afunc;
 
@@ -176,12 +183,31 @@ void t2UpdateFunc_binaryModels(pulsar *psr, int ipsr ,param_label label,int k, d
 double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
 void t2UpdateFunc_planet(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
-double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_stdDm(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
+double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    assert(label==param_dm);
+    // freq=0 is infinite frequency, so no effect.
+    if(psr[ipsr].obsn[ipos].freq==0) return 0;
+    else if (k==0)
+        return 1.0/(DM_CONST*powl(psr[ipsr].obsn[ipos].freqSSB/1.0e6,2));
+    else
+    {
+        double yrs = (psr[ipsr].obsn[ipos].sat - psr[ipsr].param[param_dmepoch].val[0])/365.25;
+        return 1.0/(DM_CONST*pow(psr[ipsr].obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k);
+    }
+
+}
+void t2UpdateFunc_simpleAdd(pulsar *psr, int ipsr ,param_label label,int k, double val, double error){
+    psr[ipsr].param[label].val[k] += val;
+    psr[ipsr].param[label].err[k]  = error;
+}
+
+void t2UpdateFunc_simpleMinus(pulsar *psr, int ipsr ,param_label label,int k, double val, double error){
+    psr[ipsr].param[label].val[k] -= val;
+    psr[ipsr].param[label].err[k]  = error;
+}
 
 
-double t2FitFunc_stdGlitch(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_stdGlitch(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
+
 
 double t2FitFunc_stdGravWav(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
 void t2UpdateFunc_stdGravWav(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
@@ -189,9 +215,6 @@ void t2UpdateFunc_stdGravWav(pulsar *psr, int ipsr ,param_label label,int k, dou
 
 double t2FitFunc_telPos(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
 void t2UpdateFunc_telPos(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
-
-double t2FitFunc_fitwaves(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_fitwaves(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_ifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
 void t2UpdateFunc_ifunc(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
