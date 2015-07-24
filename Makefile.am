@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I autoconf
 
-SUBDIRS=sofa . #plugin
+SUBDIRS=sofa .
 DIST_SUBDIRS=sofa plugin unsupported_plugins temponest
 
 bin_PROGRAMS=tempo2
@@ -117,6 +117,8 @@ complete-install: core-install unsupported-install plugins-install
 complete-clean: plugins-clean unsupported-clean core-clean
 	@echo "Clean core, plugins, unsupported"
 
+check: all
+	$(MAKE) -C tests check
 
 
 
@@ -124,7 +126,7 @@ complete-clean: plugins-clean unsupported-clean core-clean
    unsupported unsupported-install unsupported-clean \
    complete complete-install complete-clean \
    temponest temponest-install \
-   core core-install core-clean
+   core core-install core-clean test
 
 
 install-data-hook:

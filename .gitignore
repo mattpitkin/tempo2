@@ -25,3 +25,4 @@ tempo2
 unsupported_plugins/toasim/read_toasim
 T2runtime/plugins
 *..t2
+.*.swp
