@@ -4,7 +4,7 @@ ACLOCAL_AMFLAGS = -I autoconf
 SUBDIRS=sofa .
 DIST_SUBDIRS=sofa plugin unsupported_plugins temponest
 
-bin_PROGRAMS=tempo2
+bin_PROGRAMS=tempo2 getPeriod
 lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
 
 BUILT_SOURCES=TKcholesky.h
@@ -60,6 +60,9 @@ libtempo2pred_la_include_HEADERS = tempo2pred.h tempo2pred_int.h
 
 tempo2_SOURCES = $(headers) tempo2.C 
 tempo2_LDADD = libtempo2.la sofa/libsofa.la @FLIBS@ $(LIBADD_DLOPEN)
+
+getPeriod_SOURCES= getPeriod.C
+getPeriod_LDADD = libtempo2pred.la
 
 
 # Specify to include the T2runtime in distributions
