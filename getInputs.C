@@ -95,6 +95,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 	  printf("-reminder         Saves the command line to T2command.input for future reference.\n");
 	  printf("-norescale        Do not rescale parameter uncertainties by the sqrt(red. chisq)\n");
 	  printf("-displayVersion   Display detailed CVS version number of every file used.\n");
+	  printf("-noaccel          Disable LAPACK/BLAS acceleration.\n");
 	  printf("-v                Print verson number.\n");
 	  printf("\n\n");
 	  printf("Available plugins\n");
