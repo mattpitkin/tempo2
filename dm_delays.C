@@ -34,14 +34,14 @@
 #include <string.h>
 #include "tempo2.h"
 
-long double solarWindModel(pulsar psr);
+longdouble solarWindModel(pulsar psr);
 
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 {
   double ctheta,freqf,pospos,r,voverc,dmval,dmval2;
   double rsa[3],pos[3],vobs[3],yrs;
   double dmDot;
-  long double dt;
+  longdouble dt;
   int j,k;
   const char *CVS_verNum = "$Revision: 1.30 $";
   if (displayCVSversion == 1) CVSdisplayVersion("dm_delays.C","dm_delays()",CVS_verNum);

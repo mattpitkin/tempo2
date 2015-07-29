@@ -100,8 +100,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
       // Update TZRMJD
       {
-	long double centrePos;
-	long double closestV,check;
+	longdouble centrePos;
+	longdouble closestV,check;
 	int closestI=-1;
 	centrePos = (psr[p].param[param_start].val[0]+
 		     psr[p].param[param_finish].val[0])/2.0L;
@@ -357,8 +357,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
 		  printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
 			 i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
-			 (long double)  om,       // Wave frequency (yr^-1) 
-			 (long double) 1./om, // Wave period (yrs)
+			 (longdouble)  om,       // Wave frequency (yr^-1) 
+			 (longdouble) 1./om, // Wave period (yrs)
 			 psr[p].wave_cos[i],       // Wave cosine amplitude
 			 psr[p].wave_cos_err[i],   // Wave cosine amplitude uncertainty
 			 psr[p].wave_sine[i],      // Wave sine amplitude
@@ -685,10 +685,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      
 // M2 and SINI from DDH model (FW10)
         if( psr[p].param[param_h3].paramSet[0] == 1 ){ 
-          long double h3 = psr[p].param[param_h3].val[0];
-          long double m2, sini;
+          longdouble h3 = psr[p].param[param_h3].val[0];
+          longdouble m2, sini;
           if( psr[p].param[param_stig].paramSet[0] == 1 ){
-            long double stig = psr[p].param[param_stig].val[0];
+            longdouble stig = psr[p].param[param_stig].val[0];
             // Freire & Wex, Eq. 20:
             m2 = h3 / 4.925490947e-6 * pow( stig, -3.0 );
             // Freire & Wex, Eq. 22:
@@ -696,7 +696,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             printf( " DDH-model Derived parameters:  M2 = %lg\n", (double)m2 );
             printf( "                              SINI = %lg\n", (double)sini );
           }else if( psr[p].param[param_h4].paramSet[0] == 1 ){
-            long double h4 = psr[p].param[param_h4].val[0];
+            longdouble h4 = psr[p].param[param_h4].val[0];
             // Freire & Wex, Eq. 26:
             if( h4 != 0.0 )
               m2 = pow( h3, 4.0 ) / pow( h4, 3.0 ) / 4.925490947e-6;
@@ -714,7 +714,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
            psr[p].param[param_a1].paramSet[0]*
            psr[p].param[param_pb].paramSet[0]==1
            && psr[p].param[param_sini].nLinkTo==0){
-          long double mp[2];
+          longdouble mp[2];
           double DAY2S = (24.0L*3600.0L);
           mp[0] = -psr[p].param[param_m2].val[0]+
             sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
@@ -902,9 +902,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  if (psr[p].param[param_eps1].paramSet[0]==1 &&
 	      psr[p].param[param_eps2].paramSet[0]==1)
 	    {
-	      long double om,ecc,t0,pb;
-	      long double ecc_err,om_err,t0_err;
-	      long double eps1,eps2,tasc,err1,err2,err3;
+	      longdouble om,ecc,t0,pb;
+	      longdouble ecc_err,om_err,t0_err;
+	      longdouble eps1,eps2,tasc,err1,err2,err3;
 
 	      eps1 = psr[p].param[param_eps1].val[0];
 	      eps2 = psr[p].param[param_eps2].val[0];
@@ -953,7 +953,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	printGlitch(psr[p]);
       if (psr[p].param[param_dmassplanet].paramSet[4]==1)
 	{
-	  long double diff,err;
+	  longdouble diff,err;
 	  if (strstr(psr[p].JPL_EPHEMERIS,"DE405")!=NULL)
 	    {
 	      printf("M_Jupiter fit   = %.15Lg +/- %.15Lg (Solar masses)\n",psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L,psr[p].param[param_dmassplanet].err[4]);

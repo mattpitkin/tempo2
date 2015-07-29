@@ -403,11 +403,11 @@ int main(int argc, char *argv[])
     }
     else if (flagPolyco==2)
     {
-      long double seg_length;
+      longdouble seg_length;
       int ntimecoeff, nfreqcoeff;
       char sitename[64];
-      long double mjd_start, mjd_end;
-      long double freq_start, freq_end;
+      longdouble mjd_start, mjd_end;
+      longdouble freq_start, freq_end;
       printf("Calculating predictor >%s<\n",psr[0].tzrsite);
       if (sscanf(polyco_args, "%s %Lf %Lf %Lf %Lf %d %d %Lf", sitename,
 		 &mjd_start, &mjd_end, &freq_start, &freq_end,
@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
       }
       ChebyModelSet_Write(&cms, f);
       fclose(f);
-      long double rms, mav;
+      longdouble rms, mav;
       ChebyModelSet_Test(&cms, psr, ntimecoeff*5*cms.nsegments, 
 			 nfreqcoeff*5*cms.nsegments, &rms, &mav);
       printf("Predictive model constructed and written to t2pred.dat.\n");

@@ -77,7 +77,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int bunching=0; // flag on whether or not observations occur in groups
   // size of gap between observing runs, and length of observing runs.
   // These defaults give 7 observations every 28 days.
-  long double gapsize=21,hillsize=7,gapstartmjd;
+  longdouble gapsize=21,hillsize=7,gapstartmjd;
   // Flag whether or not to ask for red noise variables.
   *npsr = 1;
 

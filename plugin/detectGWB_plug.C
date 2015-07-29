@@ -72,7 +72,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   
   double angle[4096];
   double a2zeta[4096],a2zeta_im[4096],a2zeta_e[4096];
-  long double sum1,sum2,sum3,sum4,weight1;
+  longdouble sum1,sum2,sum3,sum4,weight1;
   double cx,zeta;
   int    npair=0;
   char fname[4096];

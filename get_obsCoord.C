@@ -361,7 +361,7 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      zenith_trs[1]= obs->height_grs80 
 			* sin(obs->longitude_grs80) * cos(obs->latitude_grs80);
 		      zenith_trs[2] = obs->height_grs80*sin(obs->latitude_grs80);
-		      long double utc = psr[p].obsn[i].sat;
+		      longdouble utc = psr[p].obsn[i].sat;
 		      if (psr[p].obsn[i].clockCorr!=0 && psr[p].obsn[i].clockCorr!=2)
 			utc += getCorrection(psr[p].obsn+i, 
 					     psr[p].clockFromOverride,

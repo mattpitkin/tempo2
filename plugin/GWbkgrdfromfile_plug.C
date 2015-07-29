@@ -38,12 +38,12 @@
 
 using namespace std;
 
-void doPlot(pulsar *psr,int npsr,gwSrc *gw,long double **gwRes,long double timeOffset,int ngw,long double tspan);
-void doGenPlot(pulsar *psr,int npsr,gwgeneralSrc *gw,long double **gwRes,long double timeOffset,int ngw,long double tspan);
-long double getTspan(pulsar *psr,int npsr);
-void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,int plotType);
-void plotSpectrum(gwSrc *gw,int ngw,long double tspan);
-void plotGenSpectrum(gwgeneralSrc *gw,int ngw,long double tspan);
+void doPlot(pulsar *psr,int npsr,gwSrc *gw,longdouble **gwRes,longdouble timeOffset,int ngw,longdouble tspan);
+void doGenPlot(pulsar *psr,int npsr,gwgeneralSrc *gw,longdouble **gwRes,longdouble timeOffset,int ngw,longdouble tspan);
+longdouble getTspan(pulsar *psr,int npsr);
+void plotResiduals(pulsar *psr,longdouble **gwRes,int p,longdouble timeOffset,int plotType);
+void plotSpectrum(gwSrc *gw,int ngw,longdouble tspan);
+void plotGenSpectrum(gwgeneralSrc *gw,int ngw,longdouble tspan);
 void plotPosn(pulsar *psr,int npsr,gwSrc *gw,int ngw);
 void plotGenPosn(pulsar *psr,int npsr,gwgeneralSrc *gw,int ngw);
 void draw_grid(double start_gl,double end_gl,double start_gb,double end_gb,double gstep,double bstep,int celestialCoords);
@@ -100,15 +100,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char bkgrdFile[MAX_FILELEN];
   int bkgrdreal=0;
   int plotIt=0;
-  long double timeOffset;
-  long double ra_p,dec_p;
-  long double flo=0.0,fhi=0.0;
-  long double kp[3];            /* Vector pointing to pulsar           */
-  long double tspan;
-  long double time;
-  long double **gwRes;
-  long double dist[MAX_PSR];
-  long double mean;
+  longdouble timeOffset;
+  longdouble ra_p,dec_p;
+  longdouble flo=0.0,fhi=0.0;
+  longdouble kp[3];            /* Vector pointing to pulsar           */
+  longdouble tspan;
+  longdouble time;
+  longdouble **gwRes;
+  longdouble dist[MAX_PSR];
+  longdouble mean;
   int clock=0;
   int distNum=0;
   int logspacing=1;
@@ -224,9 +224,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       		exit(1); 
 	}
   }
-  gwRes = (long double **)malloc(MAX_PSR*sizeof(long double*));
+  gwRes = (longdouble **)malloc(MAX_PSR*sizeof(longdouble*));
   for (i=0;i<MAX_PSR;i++)
-    gwRes[i] = (long double *)malloc(MAX_OBSN*sizeof(long double));
+    gwRes[i] = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr);         /* Load the arrival times    */
@@ -307,7 +307,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  }
 	  mean += gwRes[p][i];
 	}
-      mean /= (long double)psr[p].nobs;
+      mean /= (longdouble)psr[p].nobs;
       for (i=0;i<psr[p].nobs;i++)
 	{
 	  if (clock==1)
@@ -320,9 +320,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		fprintf(fout2,"%.10f %.10g\n",(double)psr[p].obsn[i].sat,(double)gwRes[p][i]);
 	    }
 	  gwRes[p][i]-=mean;
-	  psr[p].obsn[i].sat += (gwRes[p][i]/(long double)SECDAY);
+	  psr[p].obsn[i].sat += (gwRes[p][i]/(longdouble)SECDAY);
 	  if (addWhite==1)
-	    psr[p].obsn[i].sat += (long double)TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1.0e-6)/(long double)SECDAY;
+	    psr[p].obsn[i].sat += (longdouble)TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1.0e-6)/(longdouble)SECDAY;
 	}
     }
   if (clock==1)
@@ -350,7 +350,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-void doPlot(pulsar *psr,int npsr,gwSrc *gw,long double **gwRes,long double timeOffset,int ngw,long double tspan)
+void doPlot(pulsar *psr,int npsr,gwSrc *gw,longdouble **gwRes,longdouble timeOffset,int ngw,longdouble tspan)
 {
   int plot=1;
   int pulsar=0;
@@ -411,7 +411,7 @@ void doPlot(pulsar *psr,int npsr,gwSrc *gw,long double **gwRes,long double timeO
   cpgend();
 }
 
-void doGenPlot(pulsar *psr,int npsr,gwgeneralSrc *gw,long double **gwRes,long double timeOffset,int ngw,long double tspan)
+void doGenPlot(pulsar *psr,int npsr,gwgeneralSrc *gw,longdouble **gwRes,longdouble timeOffset,int ngw,longdouble tspan)
 {
   int plot=1;
   int pulsar=0;
@@ -562,7 +562,7 @@ void plotGenPosn(pulsar *psr,int npsr,gwgeneralSrc *gw,int ngw)
     }
 }
 
-void plotSpectrum(gwSrc *gw,int ngw,long double tspan)
+void plotSpectrum(gwSrc *gw,int ngw,longdouble tspan)
 {
   float maxx,minx,maxy,miny;
   float fx[ngw],fy[ngw];
@@ -588,7 +588,7 @@ void plotSpectrum(gwSrc *gw,int ngw,long double tspan)
   
 }
 
-void plotGenSpectrum(gwgeneralSrc *gw,int ngw,long double tspan)
+void plotGenSpectrum(gwgeneralSrc *gw,int ngw,longdouble tspan)
 {
   float maxx,minx,maxy,miny;
   float fx[5][ngw],fy[5][ngw],allx[ngw],ally[ngw];
@@ -654,7 +654,7 @@ void plotGenSpectrum(gwgeneralSrc *gw,int ngw,long double tspan)
   
 }
 
-void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,int plotType)
+void plotResiduals(pulsar *psr,longdouble **gwRes,int p,longdouble timeOffset,int plotType)
 {
   float px[MAX_OBSN],py[MAX_OBSN];
   float minx,maxx,miny,maxy;
@@ -697,9 +697,9 @@ void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,
     cpgerry(psr[p].nobs,px,yerr1,yerr2,1);
 }
 
-long double getTspan(pulsar *psr,int npsr)
+longdouble getTspan(pulsar *psr,int npsr)
 {
-  long double first,last;
+  longdouble first,last;
   int i,p;
     
   

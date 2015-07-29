@@ -7,7 +7,7 @@ DIST_SUBDIRS=sofa plugin unsupported_plugins temponest
 bin_PROGRAMS=tempo2 getPeriod
 lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
 
-BUILT_SOURCES=TKcholesky.h
+BUILT_SOURCES=TKcholesky.h TKlongdouble.h
 
 
 # Source files used by plugins that are not part of libtempo2
@@ -123,7 +123,13 @@ complete-clean: plugins-clean unsupported-clean core-clean
 check: all
 	$(MAKE) -C tests check
 
-
+if HAVE_FLOAT128
+TKlongdouble.h: TKlongdouble.float128.h
+	cp %< $@
+else
+TKlongdouble.h: TKlongdouble.ld.h
+	cp %< $@
+endif
 
 .PHONY: plugins-install plugins plugins-clean \
    unsupported unsupported-install unsupported-clean \

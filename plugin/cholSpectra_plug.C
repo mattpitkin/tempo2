@@ -53,7 +53,7 @@ using namespace std;
 
 double OMEGA0=0; 
 
-long double toffset = 52601.0L;
+longdouble toffset = 52601.0L;
 void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i,int outWhite,int outUinv);
 
 void help() /* Display help */

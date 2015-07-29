@@ -213,7 +213,7 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
   mjd1 = afmjd + (wait-maxha)/24.0+tspan/(2.0*1440.0); /* Compute start time */
   nmjd = (int)mjd1;
   mjd1 = fortran_nint(48.0*(mjd1-(int)mjd1))/48.0; /* Round to nearest 1/2 hour, accurate precision not required here */
-  *nsets = (int)((long double)(120.0L*maxha+tspan-1)/(long double)tspan);
+  *nsets = (int)((longdouble)(120.0L*maxha+tspan-1)/(longdouble)tspan);
 
   mjd2 = mjd1;
   /* MJD2 is rounded to 1.e-10 -- WHY DO THIS? */  

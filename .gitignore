@@ -27,3 +27,10 @@ T2runtime/plugins
 *..t2
 .*.swp
 getPeriod
+tests/test-suite.log
+tests/testTempo2
+tests/testTempo2.log
+tests/testTempo2.trs
+tests/testTKfit
+tests/testTKfit.log
+tests/testTKfit.trs

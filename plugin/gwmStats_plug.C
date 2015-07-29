@@ -54,7 +54,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   const char *CVS_verNum = "$Revision: 1.1 $";
   long seed = TKsetSeed();
   double a1,a1e,a2,a2e,epoch,raj,decj;
-  long double ep,ep0,ep1,eps;
+  longdouble ep,ep0,ep1,eps;
   double ra,dec,d;
   toasim_header_t* read_header;
   char fname[MAX_CORR][MAX_FILELEN];
@@ -263,13 +263,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 void calculateAngularFactors(pulsar *psr)
 {
-  long double wi,t1,t2;
-  long double dt,speriod,tt;
+  longdouble wi,t1,t2;
+  longdouble dt,speriod,tt;
   int k;
   double m,c,ival;
   double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
   //	       double res_e,res_i;
-  long double resp,resc,res_r,res_i;
+  longdouble resp,resc,res_r,res_i;
   double theta_p,theta_g,phi_p,phi_g;
   double lambda_p,beta_p,lambda,beta;
   double n1,n2,n3;

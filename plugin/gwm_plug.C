@@ -51,7 +51,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int ndec,nra;
   int addWhite=0;
   const char *CVS_verNum = "$Revision: 1.1 $";
-  long double **sat0;
+  longdouble **sat0;
   double gwm_amp=0.0;
   double gwm_phi;
   int count=0;
@@ -102,10 +102,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   // Allocate memory for ideal sats
   if (addWhite==1)
     {
-      sat0 = (long double **)malloc(sizeof(long double*)*(*npsr));
+      sat0 = (longdouble **)malloc(sizeof(longdouble*)*(*npsr));
       for (p=0;p<*npsr;p++)
 	{
-	  sat0[p] = (long double *)malloc(sizeof(long double)*(psr[p].nobs));
+	  sat0[p] = (longdouble *)malloc(sizeof(longdouble)*(psr[p].nobs));
 	  for (i=0;i<psr[p].nobs;i++)
 	    sat0[p][i] = psr[p].obsn[i].sat;
 	}

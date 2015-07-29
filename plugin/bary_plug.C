@@ -55,7 +55,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int i,j;
   double globalParameter;
   int defineMJD=0;
-  long double mjd,bat;
+  longdouble mjd,bat;
   int defineTelCoord=0;
   double telx,tely,telz;
   int definePsrCoord=0;
@@ -121,9 +121,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
 
   // Set up pulsar structure
-  psr[0].param[param_raj].val[0] = (long double)raj;
+  psr[0].param[param_raj].val[0] = (longdouble)raj;
   psr[0].param[param_raj].paramSet[0] = 1;
-  psr[0].param[param_decj].val[0] = (long double)decj;
+  psr[0].param[param_decj].val[0] = (longdouble)decj;
   psr[0].param[param_decj].paramSet[0] = 1;
   psr[0].obsn[0].sat = mjd;
   psr[0].obsn[0].clockCorr=1;
@@ -171,7 +171,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   zenith_trs[1]= newObs.height_grs80 
     * sin(newObs.longitude_grs80) * cos(newObs.latitude_grs80);
   zenith_trs[2] = newObs.height_grs80*sin(newObs.latitude_grs80);
-  long double utc = psr[0].obsn[0].sat;
+  longdouble utc = psr[0].obsn[0].sat;
   //  if (psr[p].obsn[i].clockCorr!=0 && psr[p].obsn[i].clockCorr!=2)
   //    utc += getCorrection(psr[p].obsn+i, 
   //			 psr[p].clockFromOverride,
@@ -206,7 +206,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   tt2tb(psr,1);
 
 
-  bat = mjd + (long double)(roemer-shapiro+clockCor+psr[0].obsn[0].correctionTT_TB)/86400.0L;
+  bat = mjd + (longdouble)(roemer-shapiro+clockCor+psr[0].obsn[0].correctionTT_TB)/86400.0L;
 
   printf("\n\n");
   printf("site arrival time        = %.15Lf\n",mjd);

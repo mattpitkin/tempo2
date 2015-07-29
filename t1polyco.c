@@ -32,9 +32,9 @@
  
 /* Tempo1 polyco functions destined for tempo2pred library (C linkage) */
 
-long double T1Polyco_GetPhase(T1Polyco *t1p, long double mjd, long double freq)
+longdouble T1Polyco_GetPhase(T1Polyco *t1p, longdouble mjd, longdouble freq)
 {
-  long double dt, arg, phase, spin_freq;
+  longdouble dt, arg, phase, spin_freq;
   int ic;
 
   /* Evaluate polynomial in phase and frequency */
@@ -59,10 +59,10 @@ long double T1Polyco_GetPhase(T1Polyco *t1p, long double mjd, long double freq)
   return phase;
 }
 
-long double T1Polyco_GetFrequency(T1Polyco *t1p, long double mjd, 
-				  long double freq)
+longdouble T1Polyco_GetFrequency(T1Polyco *t1p, longdouble mjd, 
+				  longdouble freq)
 {
-  long double dt, arg, spin_freq;
+  longdouble dt, arg, spin_freq;
   int ic;
 
   dt = (mjd-t1p->mjd_mid)*1440;
@@ -118,10 +118,10 @@ void T1P_grabString(char *str, int istart, int nchar, char *out)
   sscanf(grabbed, "%s", out);// remove leading/trailing whitespace
 }
 
-long double T1P_grabLongDouble(char *str, int istart, int nchar)
+longdouble T1P_grabLongDouble(char *str, int istart, int nchar)
 {
   char grabbed[64];
-  long double res;
+  longdouble res;
   char *c;
 
   T1P_grabString(str, istart, nchar, grabbed);
@@ -136,7 +136,7 @@ long double T1P_grabLongDouble(char *str, int istart, int nchar)
   return res;
 }
 
-long double T1P_grabInt(char *str, int istart, int nchar)
+longdouble T1P_grabInt(char *str, int istart, int nchar)
 {
   char grabbed[64];
   int res;
@@ -212,10 +212,10 @@ int T1Polyco_Read(T1Polyco *t1p, FILE *f)
   return 0;
 }
  
-T1Polyco *T1PolycoSet_GetNearest(T1PolycoSet *t1ps, long double mjd)
+T1Polyco *T1PolycoSet_GetNearest(T1PolycoSet *t1ps, longdouble mjd)
 {
   int inearest=0;
-  long double best_offset=1e6, offset;
+  longdouble best_offset=1e6, offset;
   int iseg;
   for (iseg=0; iseg < t1ps->nsegments ; iseg++)
   {
@@ -230,12 +230,12 @@ T1Polyco *T1PolycoSet_GetNearest(T1PolycoSet *t1ps, long double mjd)
   return &t1ps->segments[inearest];
 }
 
-long double T1PolycoSet_GetPhase(T1PolycoSet *t1ps, long double mjd, long double freq)
+longdouble T1PolycoSet_GetPhase(T1PolycoSet *t1ps, longdouble mjd, longdouble freq)
 {
   return T1Polyco_GetPhase(T1PolycoSet_GetNearest(t1ps, mjd), mjd, freq);
 }
 
-long double T1PolycoSet_GetFrequency(T1PolycoSet *t1ps, long double mjd, long double freq)
+longdouble T1PolycoSet_GetFrequency(T1PolycoSet *t1ps, longdouble mjd, longdouble freq)
 {
   return T1Polyco_GetFrequency(T1PolycoSet_GetNearest(t1ps, mjd), mjd, freq);
 }

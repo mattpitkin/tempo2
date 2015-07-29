@@ -54,6 +54,18 @@ fi
 # Math library is required for the tempo2 predictor library
 AC_CHECK_LIB(m, cos)
 
+AC_MSG_CHECKING(if compiler knows __float128)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[__float128 x;]])],
+have_float128=yes,
+have_float128=no)]);;
+
+AC_MSG_RESULT($have_float128)
+
+if test X$have_float128 != Xyes; then
+    AC_WARN("may be limited to 10ns precision from lack of 128bit floats")
+fi
+AM_CONDITIONAL(HAVE_FLOAT128,[test "$have_float128" = yes])
+
 # look for third-party packages in various places (or not)
 SWIN_LOCAL
 

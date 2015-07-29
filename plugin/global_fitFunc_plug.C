@@ -59,7 +59,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   int ip[MAX_OBSN];
   double *val,*error;
   double *x,*y,*sig,**covar;
-  long double toffset;
+  longdouble toffset;
   double chisq;
   int offset;
   int count=0;

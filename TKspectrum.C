@@ -497,7 +497,7 @@ void sineFunc(double x,double *v,int ma)
 //void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN)
 void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im)
 {
-  long double s1,s2,s3,s4,s5;
+  longdouble s1,s2,s3,s4,s5;
   //double recA[MAX_OBSN],recB[MAX_OBSN];
   double pred;
   double omega=0.0;
@@ -527,11 +527,11 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
 	  si = sin(omega*x[i]);
 	  ci = cos(omega*x[i]);
 	  
-	  s1 += (long double)(y[i]*si/sig[i]/sig[i]);
-	  s2 += (long double)(si*si/sig[i]/sig[i]);
-	  s3 += (long double)(si*ci/sig[i]/sig[i]);
-	  s4 += (long double)(y[i]*ci/sig[i]/sig[i]);
-	  s5 += (long double)ci*ci/sig[i]/sig[i];    //NB!!!!!!!!!!!!!!!! THIS IS NOT TYPECAST PROPERLY!!!! - DY
+	  s1 += (longdouble)(y[i]*si/sig[i]/sig[i]);
+	  s2 += (longdouble)(si*si/sig[i]/sig[i]);
+	  s3 += (longdouble)(si*ci/sig[i]/sig[i]);
+	  s4 += (longdouble)(y[i]*ci/sig[i]/sig[i]);
+	  s5 += (longdouble)ci*ci/sig[i]/sig[i];    //NB!!!!!!!!!!!!!!!! THIS IS NOT TYPECAST PROPERLY!!!! - DY
 	}
       b = (double)((s4-s1/s2)/(s5-s3/s2));  //the real Fourier component (since it has y*cos) George's solution
       a = (double)((s1-b*s3)/s2);           //the imaginary Fourier component (since it has y*sin) George

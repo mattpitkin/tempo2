@@ -238,8 +238,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int i,j,k;
   double globalParameter;
   char timeList[MAX_STRLEN];
-  long double *mjd1,*mjd2;
-  long double centreMJD;
+  longdouble *mjd1,*mjd2;
+  longdouble centreMJD;
   char parFileName[MAX_TIMES][MAX_STRLEN];
   char timFileName[MAX_TIMES][MAX_STRLEN];
   double *epoch;
@@ -274,16 +274,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   float yscale_max[100];
   int   yscale_set[100];
   int removeF2=0;
-  long double storeEpoch;
-  long double storeExpectedF0,storeExpectedF1,storeExpectedF2;
-  long double storeOrigF0,storeOrigF1,storeOrigF2;
+  longdouble storeEpoch;
+  longdouble storeExpectedF0,storeExpectedF1,storeExpectedF2;
+  longdouble storeOrigF0,storeOrigF1,storeOrigF2;
   int removeExpected=0;
 
   // Allocate memory
   printf("Allocating memory\n");
-  if (!(mjd1 = (long double *)malloc(sizeof(long double)*MAX_TIMES)))
+  if (!(mjd1 = (longdouble *)malloc(sizeof(longdouble)*MAX_TIMES)))
     {printf("Sorry: out of memory\n"); exit(1);}
-  if (!(mjd2 = (long double *)malloc(sizeof(long double)*MAX_TIMES)))
+  if (!(mjd2 = (longdouble *)malloc(sizeof(longdouble)*MAX_TIMES)))
     {printf("Sorry: out of memory\n"); exit(1);}
   if (!(epoch = (double *)malloc(sizeof(double)*MAX_TIMES)))
     {printf("Sorry: out of memory\n"); exit(1);}
@@ -1553,7 +1553,7 @@ void interactivePlot(double *epoch,double *f0,double *f0e,int *nFit,int *id,int 
   float end=-1;
   int istart=0;
   int iend=0;
-  long double removeA=0.0,removeB=0.0,removeC=0.0; // slope removal
+  longdouble removeA=0.0,removeB=0.0,removeC=0.0; // slope removal
   double f0val,f1val,f2val,forig;
   double toffset=epoch[0];
   double dt;

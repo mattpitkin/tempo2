@@ -122,44 +122,8 @@
 
 /* Type for doing extra precision computations: longdouble */
 
-/* OSes/architectures that have built-in long double */
+/* OSes/architectures that have built-in longdouble */
 //#if defined sun || defined linux || (defined __APPLE__ && defined __GNUC__ && __GNUC__ >= 4)
-#ifndef TEMPO2_USE_QD
-#define USE_BUILTIN_LONGDOUBLE
-#endif
-
-#ifdef sun
-#include <sunmath.h> 
-//* there is no such file ! J. Wang */
-// Note: you sometimes need a compile line e.g. -I/opt/SUNWspro/WS6U2/include/cc
-#endif
-
-#ifdef USE_BUILTIN_LONGDOUBLE
-typedef long double longdouble;
-#define LONGDOUBLE_ONE 1.0L
-/* OSes/architectures lacking built-in double; use "qd" library */
-#else
-#include "dd.h"
-typedef dd_real longdouble;
-#define LONGDOUBLE_ONE "1.0"
-dd_real pow(const dd_real &a, const dd_real &b);
-//operator float(const dd_real &a);
-#endif
-
-/* function to get longdouble as string (%g style). This returns
-  std::string, from which you can get a normal C char * like this:
-  print_longdouble(x).c_str(). Unfortunately we can't just return char *
-  directly as it would end up pointing to de-allocated memory, and we
-  can't do it statically in case you want to say call this twice for
-  one printf */
-#ifdef __cplusplus
-#include <string>
-std::string print_longdouble(const longdouble &ld);
-#endif
-
-/* function to parse a string as longdouble */
-longdouble parse_longdouble(const char *str);
-
 /* TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
 
@@ -328,7 +292,7 @@ typedef struct observation {
   double einsteinRate;            /* Derivative of correctionTT_TB   */
   longdouble correctionTT_Teph;   /* Correction to Teph              */
   longdouble correctionUT1;       /* Correction from site TOA to UT1 */
-  /*  long double a1utcf; */
+  /*  longdouble a1utcf; */
 
   double sun_ssb[6];              /* Ephemeris values for Sun w.r.t SSB (sec)             (RCS) */
   double sun_earth[6];            /* Ephemeris values for Sun w.r.t Earth (sec)                 */
@@ -347,7 +311,7 @@ typedef struct observation {
   double nutations[6];
   double siteVel[3];              /* Observatory velocity w.r.t. geocentre                      */
 
-  long double shklovskii;         /* Shklovskii delay term                                      */
+  longdouble shklovskii;         /* Shklovskii delay term                                      */
   double shapiroDelaySun;         /* Shapiro Delay due to the Sun                               */
   double shapiroDelayJupiter;     /* Shapiro Delay due to Jupiter                               */
   double shapiroDelaySaturn;      /* Shapiro Delay due to Saturn                                */
@@ -453,7 +417,7 @@ typedef struct pulsar {
   // General pulsar information
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
   double velPulsar[3];            /* 3-vector giving pulsar's velocity                          */  
-  long double phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */
+  longdouble phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */
   int    phaseJumpDir[MAX_JUMPS]; /* Size and direction of phase jump                           */
   int    phaseJumpID[MAX_JUMPS];  /* ID of closest point to the phase jump */
   int    nPhaseJump;              /* Number of phase jumps                                      */
@@ -812,7 +776,7 @@ double BTXmodel(pulsar *psr,int p,int obs,int param,int arr);
 void updateBTX(pulsar *psr,double val,double err,int pos,int arr);
 double ELL1model(pulsar *psr,int p,int obs,int param);
 void updateELL1(pulsar *psr,double val,double err,int pos);
-long double DDmodel(pulsar *psr,int p,int obs,int param);
+longdouble DDmodel(pulsar *psr,int p,int obs,int param);
 void updateDD(pulsar *psr,double val,double err,int pos);
 double T2model(pulsar *psr,int p,int obs,int param,int arr);
 void updateT2(pulsar *psr,double val,double err,int pos,int arr);

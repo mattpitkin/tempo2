@@ -50,8 +50,8 @@ float plotHistogram(float *x,int count,int *flagCol,int nFlag,char flagV[100][16
 void doSummary(pulsar *psr,float errStep);
 
 int nit = 1;
-long double gwamp = 0;
-long double alpha = 1;
+longdouble gwamp = 0;
+longdouble alpha = 1;
 char plotout[20]="/xs";
 int plotoutSet = 0;
 int script = 0;
@@ -90,8 +90,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   float errStep = 1e-6;
   float dstep = 100;
   //  int nit = 1;
-  //  long double gwamp = 0;
-  //  long double alpha = 1;
+  //  longdouble gwamp = 0;
+  //  longdouble alpha = 1;
 
   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
   summary=0;
@@ -558,7 +558,7 @@ void doSummary(pulsar *psr,float errStep)
   float minx,maxx,miny,maxy;
   float err;
   double errfac,vsf,mverr;
-  long double sat1[psr[0].nobs];
+  longdouble sat1[psr[0].nobs];
   int it,nit;
   int npts_sf;
   long seed = TKsetSeed();
@@ -691,7 +691,7 @@ void doSummary(pulsar *psr,float errStep)
 // Check whether the data are white
 void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[])
 {
-  long double sat0[MAX_OBSN];
+  longdouble sat0[MAX_OBSN];
   int i,j,p;
   long seed = -23;
   int it;
@@ -705,18 +705,18 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
   float fx[MAX_OBSN],fy[MAX_OBSN],t95[MAX_OBSN],t5[MAX_OBSN];
   int specN;
   // GW
-  long double a;
-  long double toffset;
-  long double kp[3];
-  long double flo,fhi;
-  long double res[MAX_OBSN],mean;
+  longdouble a;
+  longdouble toffset;
+  longdouble kp[3];
+  longdouble flo,fhi;
+  longdouble res[MAX_OBSN],mean;
   double dist;
   int addGW=0,ngw,k;
   gwSrc *gw;
-  //  long double gwamp = 18e-14;
+  //  longdouble gwamp = 18e-14;
 
   //alpha = 0.8; //2.5/2.0;
-  a = (long double)gwamp*pow(86400.0*365.25,alpha);
+  a = (longdouble)gwamp*pow(86400.0*365.25,alpha);
   dist =  3.08568025e19; // 1 kpc in m
   setupPulsar_GWsim(psr[0].param[param_raj].val[0],
 		    psr[0].param[param_decj].val[0],kp);
@@ -760,7 +760,7 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
       formBatsAll(psr,1);         /* Form the barycentric arrival times */
       formResiduals(psr,1,0);    /* Form the residuals                 */
       for (i=0;i<psr[0].nobs;i++)
-	psr[0].obsn[i].sat -= (long double)psr[0].obsn[i].residual/86400.0L;
+	psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/86400.0L;
     }
   for (i=0;i<psr[0].nobs;i++)
     sat0[i] = psr[0].obsn[i].sat;

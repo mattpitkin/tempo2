@@ -67,7 +67,7 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 {
   t_calcephbin *eph;
   int i,p;
-  long double jd;
+  longdouble jd;
   double jd0,jd1;
  
 

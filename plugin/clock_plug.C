@@ -389,7 +389,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       double wmean,mean;
       int nvalue[*npsr];
       double wi,s1,s2;
-      long double ls1,ls2;
+      longdouble ls1,ls2;
       int np;
       
       for (i=0;i<npt-1;i+=nstep)

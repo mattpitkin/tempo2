@@ -794,7 +794,7 @@ void T2writeCovarFuncModel(double alpha,double fc,double val,double white,char *
 void T2cholDecomposition(double **a, int n, double *p)
 {
    int i,j,k;
-   long double sum;
+   longdouble sum;
    // float sum;
    /*  for (i=0;i<n;i++)
 	   {

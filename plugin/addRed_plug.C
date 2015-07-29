@@ -25,11 +25,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
   double globalParameter;
-  long double a;
-  long double alpha,toffset;
-  long double kp[3];
-  long double flo,fhi;
-  long double res[MAX_OBSN],mean;
+  longdouble a;
+  longdouble alpha,toffset;
+  longdouble kp[3];
+  longdouble flo,fhi;
+  longdouble res[MAX_OBSN],mean;
   double dist;
   int addGW=0,ngw,k;
   int j;
@@ -38,7 +38,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double varywLevel=0;
   double whitet,whitett;
   gwSrc *gw;
-  long double amp;
+  longdouble amp;
   
 
 
@@ -91,7 +91,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
 
-  a = (long double)amp*pow(86400.0*365.25,alpha);
+  a = (longdouble)amp*pow(86400.0*365.25,alpha);
   dist =  3.08568025e19; // 1 kpc in m
   setupPulsar_GWsim(psr[0].param[param_raj].val[0],
 		    psr[0].param[param_decj].val[0],kp);

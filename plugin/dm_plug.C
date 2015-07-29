@@ -62,8 +62,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   char timeList[100];
   int i,j,k,nread;
-  long double mjd1[MAX_TIMES],mjd2[MAX_TIMES];
-  long double centreMJD;
+  longdouble mjd1[MAX_TIMES],mjd2[MAX_TIMES];
+  longdouble centreMJD;
   double epoch[MAX_TIMES],dmVal[MAX_TIMES],dmE[MAX_TIMES];
   char parFileName[MAX_TIMES][MAX_STRLEN];
   char tname[100]="";

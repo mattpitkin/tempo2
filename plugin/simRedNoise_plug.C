@@ -115,7 +115,7 @@ void doPlugin(pulsar *psr,int npsr,double amp,double alpha,double fc,int removeQ
 {
   int i,p,j;
   int nit=2;
-  long double sat0[MAX_OBSN];
+  longdouble sat0[MAX_OBSN];
   long seed = TKsetSeed();
   char fname[100];
   int addToaError=1;
@@ -138,7 +138,7 @@ void doPlugin(pulsar *psr,int npsr,double amp,double alpha,double fc,int removeQ
       for (p=0;p<npsr;p++)
 	{
 	  for (i=0;i<psr[p].nobs;i++)
-	    psr[p].obsn[i].sat -= (long double)psr[p].obsn[i].residual/SECDAY;
+	    psr[p].obsn[i].sat -= (longdouble)psr[p].obsn[i].residual/SECDAY;
 	}
       formBatsAll(psr,npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,npsr,1);     /* Form the residuals                 */

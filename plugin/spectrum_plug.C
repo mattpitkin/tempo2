@@ -740,7 +740,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
   
   // Obtain white level
   /*  {
-    long double sat0[MAX_OBSN];
+    longdouble sat0[MAX_OBSN];
     double avSpecY[MAX_OBSN];
     int count;
 
@@ -760,7 +760,7 @@ void model(pulsar *psr, char parFile[MAX_PSR_VAL][MAX_FILELEN], char timFile[MAX
 	formBatsAll(psr,1);         
 	formResiduals(psr,1,0);   
 	for (i=0;i<psr[0].nobs;i++)
-	  psr[0].obsn[i].sat -= (long double)psr[0].obsn[i].residual/86400.0L;
+	  psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/86400.0L;
       }
     printf("Getting sat0\n");
     for (i=0;i<psr[0].nobs;i++)

@@ -35,19 +35,19 @@
 /* Timing model      */
 /* Based on bnrydd.f */
 
-long double DDmodel(pulsar *psr,int p,int ipos,int param)
+longdouble DDmodel(pulsar *psr,int p,int ipos,int param)
 {
-  long double an;
-  long double pb,k;
-  long double rad2deg = 180.0/M_PI;
-  long double SUNMASS = 4.925490947e-6;
-  long double m2,tt0,t0,x,ecc,er,xdot,edot,dr,dth,eth,am2,ct;
-  long double pbdot,xpbdot,phase,u,du,gamma;
-  long double orbits;
+  longdouble an;
+  longdouble pb,k;
+  longdouble rad2deg = 180.0/M_PI;
+  longdouble SUNMASS = 4.925490947e-6;
+  longdouble m2,tt0,t0,x,ecc,er,xdot,edot,dr,dth,eth,am2,ct;
+  longdouble pbdot,xpbdot,phase,u,du,gamma;
+  longdouble orbits;
   int norbits;
-  long double  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,anhat,su;
-  long double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
-  long double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
+  longdouble  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,anhat,su;
+  longdouble sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
+  longdouble csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
   const char *CVS_verNum = "$Revision: 1.7 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("DDmodel.C","DDmodel()",CVS_verNum);

@@ -2104,7 +2104,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			   {
 				  while (!feof(fin))
 				  {
-				    long double lx1,lx2;
+				    longdouble lx1,lx2;
 				    if (fscanf(fin,"%Lf %Lf %s %s",&lx1,&lx2,temp,temp)==4)
 				      {
 
@@ -4009,8 +4009,8 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
      else if(plot==17){
 		double DMKappa=2.410*pow(10.0,-16);
 		double freq=(double)psr[0].obsn[iobs].freqSSB;
-                long double yrs = (psr[0].obsn[iobs].sat - psr[0].param[param_dmepoch].val[0])/365.25;
-                long double arg = 1.0;
+                longdouble yrs = (psr[0].obsn[iobs].sat - psr[0].param[param_dmepoch].val[0])/365.25;
+                longdouble arg = 1.0;
                 double dmDot=0;
                 double dmDotErr=0;
                 for (int d=1;d<9;d++){

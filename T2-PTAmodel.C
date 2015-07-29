@@ -35,25 +35,25 @@
 #include <math.h>
 #include "tempo2.h"
 
-long double computeU(long double phase,long double e);
+longdouble computeU(longdouble phase,longdouble e);
 
 double T2_PTAmodel(pulsar *psr,int p,int ipos,int param,int arr)
 {
   const char *CVS_verNum = "$Revision: 1.1 $";
-  long double SUNMASS = 4.925490947e-6;
-  long double T0,tbbat,dt;
-  long double e,e0,edot;
-  long double pb,nval,orbits;
-  long double u;
+  longdouble SUNMASS = 4.925490947e-6;
+  longdouble T0,tbbat,dt;
+  longdouble e,e0,edot;
+  longdouble pb,nval,orbits;
+  longdouble u;
   int norbits;
-  long double phase;
-  long double Ae,kval;
-  long double omega;
-  long double Sval,basicRoemer,x;
-  long double pbdot;
-  long double deltaB=0.0L,dDB;
-  long double deltaSB=0.0L,model,r,s,deltaSR=0.0L,deltaAOP=0.0;
-  long double kom,kin,pmra,pmdec,dt0,Cval;
+  longdouble phase;
+  longdouble Ae,kval;
+  longdouble omega;
+  longdouble Sval,basicRoemer,x;
+  longdouble pbdot;
+  longdouble deltaB=0.0L,dDB;
+  longdouble deltaSB=0.0L,model,r,s,deltaSR=0.0L,deltaAOP=0.0;
+  longdouble kom,kin,pmra,pmdec,dt0,Cval;
 	
 
   // MUST CHECK IMPLEMENTATION OF OMDOT -- DIFFERENT FROM DD MODEL
@@ -180,8 +180,8 @@ double T2_PTAmodel(pulsar *psr,int p,int ipos,int param,int arr)
 
 	// Equation 74
 	{
-	  long double pi_daop,rdote1,rdote2,r1,r2,r3,sin_delta,cos_delta,sin_alpha,cos_alpha;
-	  long double px;
+	  longdouble pi_daop,rdote1,rdote2,r1,r2,r3,sin_delta,cos_delta,sin_alpha,cos_alpha;
+	  longdouble px;
 	  
 	  r1 = psr->obsn[ipos].earth_ssb[0]/AULTSC;
 	  r2 = psr->obsn[ipos].earth_ssb[1]/AULTSC;
@@ -217,9 +217,9 @@ double T2_PTAmodel(pulsar *psr,int p,int ipos,int param,int arr)
   if (param==-1) return -model;
 
   // Calculate differentials
-  long double du_dpb,dD_dpb,dD_da1,dD_domega,du_dT0,dD_dT0;
-  long double du_de,dD_de,du_dpdot,dD_dpdot,dD_domegaDot;
-  long double domega_domegaDot,dD_dkom,dD_di,dD_dm2;
+  longdouble du_dpb,dD_dpb,dD_da1,dD_domega,du_dT0,dD_dT0;
+  longdouble du_de,dD_de,du_dpdot,dD_dpdot,dD_domegaDot;
+  longdouble domega_domegaDot,dD_dkom,dD_di,dD_dm2;
 
   // Not including time derivatives of anything yet
   //  du_dpb = (-2.0L*M_PI*dt/pb/pb - 2.0*M_PI*dt*dt*pbdot/powl(pb,3))/(1.0L-e*cosl(u));
@@ -279,10 +279,10 @@ double T2_PTAmodel(pulsar *psr,int p,int ipos,int param,int arr)
     return dD_de;
 }
 
-long double computeU(long double phase,long double ecc)
+longdouble computeU(longdouble phase,longdouble ecc)
 {
-  long double du;
-  long double u;
+  longdouble du;
+  longdouble u;
 
   // DD uses this. T2 uses the one below.
   u=phase+ecc*sin(phase)*(1.0+ecc*cos(phase));
@@ -295,7 +295,7 @@ long double computeU(long double phase,long double ecc)
 }
 
 void updateT2_PTA(pulsar *psr,double val,double err,int pos,int arr){
-  long double SUNMASS = 4.925490947e-6;
+  longdouble SUNMASS = 4.925490947e-6;
   if (pos==param_pb) // || pos==param_t0)
     {
       printf("In here with param_pb: %g %g %g\n",(double)psr->param[pos].val[0],(double)val,(double)err);

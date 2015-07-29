@@ -295,7 +295,7 @@ double consFunc_dmmodel_dm1(pulsar *psr,int i,int k){
      * Only operate on param=dmmodel and when fit parameter is 
      * one of the frequency dependant parts (i.e. first dmoffsNum)
      */
-    long double epoch = psr->param[param_dmepoch].val[0];
+    longdouble epoch = psr->param[param_dmepoch].val[0];
     int nDM=psr->dmoffsDMnum;
     printf("WE ARE IN HERE\n");
     if(i==param_dmmodel && k < nDM){
@@ -312,8 +312,8 @@ double consFunc_dmmodel_cw(pulsar *psr,int i,int k,int order){
     int nDM=psr->dmoffsDMnum;
     if(i==param_dmmodel && k >= nDM){
         k-=nDM;
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double w=psr->dmoffsCM_weight[k];
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble w=psr->dmoffsCM_weight[k];
         return w*pow(psr->dmoffsCM_mjd[k]-epoch,order);
     } else return 0;
 
@@ -329,10 +329,10 @@ double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k,int order){
         k-=nDM;
         double rc;
         double s[3];
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double t = psr->dmoffsCM_mjd[k]-epoch;
-        long double x = 2.0*M_PI*t/365.25;
-        long double w=psr->dmoffsCM_weight[k];
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble t = psr->dmoffsCM_mjd[k]-epoch;
+        longdouble x = 2.0*M_PI*t/365.25;
+        longdouble w=psr->dmoffsCM_weight[k];
         switch (order){
             case 0:
                 return w*sin(x);
@@ -364,7 +364,7 @@ double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k,int order){
 
 double consFunc_tel_dx(pulsar *psr,int i,int k,int order){
     if(i==param_tel_dx){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->telDX_t[k]-epoch,order);
     }
     else return 0;
@@ -372,7 +372,7 @@ double consFunc_tel_dx(pulsar *psr,int i,int k,int order){
 
 double consFunc_tel_dy(pulsar *psr,int i,int k,int order){
     if(i==param_tel_dy){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->telDY_t[k]-epoch,order);
     }
     else return 0;
@@ -381,7 +381,7 @@ double consFunc_tel_dy(pulsar *psr,int i,int k,int order){
 double consFunc_tel_dz(pulsar *psr,int i,int k,int order){
     if(i==param_tel_dz){
         //    printf("In contraint with k = %d, order = %d\n",k,order); 
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->telDZ_t[k]-epoch,order);
     }
     else return 0;
@@ -393,7 +393,7 @@ double consFunc_ifunc(pulsar *psr,int i,int k,int order){
      * one of the frequency independant parts (i.e. last ifuncN).
      */
     if(i==param_ifunc){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         //	  printf("IFUNC: CONSTRAINT: %s %g %g %d\n",psr->name,psr->ifunc_weights[k],(double)epoch,order);
         return psr->ifunc_weights[k]*pow(psr->ifuncT[k]-epoch,order);
 
@@ -407,9 +407,9 @@ double consFunc_qifunc_p_year(pulsar *psr,int i,int k,int order){
      * one of the frequency independant parts (i.e. last dmoffsNum).
      */
     if(i==param_quad_ifunc_p && k < psr->quad_ifuncN_p){
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double t = psr->quad_ifuncT_p[k%psr->quad_ifuncN_p]-epoch;
-        long double x = 2.0*M_PI*t/365.25;
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble t = psr->quad_ifuncT_p[k%psr->quad_ifuncN_p]-epoch;
+        longdouble x = 2.0*M_PI*t/365.25;
         switch (order){
             case 0:
                 return sin(x);
@@ -436,9 +436,9 @@ double consFunc_qifunc_c_year(pulsar *psr,int i,int k,int order){
      * one of the frequency independant parts (i.e. last dmoffsNum).
      */
     if(i==param_quad_ifunc_c && k < psr->quad_ifuncN_c){
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double t = psr->quad_ifuncT_c[k%psr->quad_ifuncN_c]-epoch;
-        long double x = 2.0*M_PI*t/365.25;
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble t = psr->quad_ifuncT_c[k%psr->quad_ifuncN_c]-epoch;
+        longdouble x = 2.0*M_PI*t/365.25;
         switch (order){
             case 0:
                 return sin(x);
@@ -464,9 +464,9 @@ double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
      * one of the frequency independant parts (i.e. last dmoffsNum).
      */
     if(i==param_ifunc && k < psr->ifuncN){
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double t = psr->ifuncT[k%psr->ifuncN]-epoch;
-        long double x = 2.0*M_PI*t/365.25;
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble t = psr->ifuncT[k%psr->ifuncN]-epoch;
+        longdouble x = 2.0*M_PI*t/365.25;
         switch (order){
             case 0:
                 return psr->ifunc_weights[k]*sin(x);
@@ -494,7 +494,7 @@ double consFunc_quad_ifunc_p(pulsar *psr,int i,int k,int order){
      * one of the frequency independant parts (i.e. last ifuncN).
      */
     if(i==param_quad_ifunc_p){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->quad_ifuncT_p[k]-epoch,order);
     }
     else return 0;
@@ -505,7 +505,7 @@ double consFunc_quad_ifunc_c(pulsar *psr,int i,int k,int order){
      * one of the frequency independant parts (i.e. last ifuncN).
      */
     if(i==param_quad_ifunc_c){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->quad_ifuncT_c[k]-epoch,order);
     }
     else return 0;

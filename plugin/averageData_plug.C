@@ -45,10 +45,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i,j,k,l,m,argn=0;
   double globalParameter;
-  long double centreMJD;
-  long double avMJD;
+  longdouble centreMJD;
+  longdouble avMJD;
   int nav;
-  long double newTOA;
+  longdouble newTOA;
   const char *CVS_verNum = "$Revision: 1.4 $";
   char timeList[MAX_STRLEN];
   char parFileName[MAX_TIMES][MAX_STRLEN];
@@ -56,7 +56,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int nStride=0;
   FILE *fin;
   int nread;
-  long double mjd1[MAX_TIMES],mjd2[MAX_TIMES];
+  longdouble mjd1[MAX_TIMES],mjd2[MAX_TIMES];
   char tname[100];
   FILE *fout;
   FILE *fout2;
@@ -64,7 +64,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char str[1024];
   int closeID,t,fitF0=0;
   double distance=0;
-  long double oldF0;
+  longdouble oldF0;
   int autoblock=0;
 
   int addFlags=0;
@@ -251,7 +251,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  exit(1);
 	}
 
-      avMJD/=(long double)nav;
+      avMJD/=(longdouble)nav;
       centreMJD = avMJD;
       fclose(fout3);
 
@@ -391,11 +391,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	
 	for (j=0;j<3;j++) // Iterate to converge
 	  {
-	    psr[0].obsn[psr[0].nobs-1].sat  -= (long double)(psr[0].obsn[psr[0].nobs-1].residual-psr[0].offset)/SECDAY;
+	    psr[0].obsn[psr[0].nobs-1].sat  -= (longdouble)(psr[0].obsn[psr[0].nobs-1].residual-psr[0].offset)/SECDAY;
 	    formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
 	    formResiduals(psr,*npsr,0);    /* Form the residuals                 */
 	  }
-	//      psr[0].obsn[psr[0].nobs-1].sat += (long double)psr[0].offset/SECDAY;
+	//      psr[0].obsn[psr[0].nobs-1].sat += (longdouble)psr[0].offset/SECDAY;
 	formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
 	formResiduals(psr,*npsr,0);    /* Form the residuals                 */
 	if (psr[0].nobs==2) // Only dealing with one point

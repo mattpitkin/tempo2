@@ -118,7 +118,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 	double *error;
 	double tol = 1.0e-27;  /* Tolerence for singular value decomposition routine */
 	double newStart=-1.0,newFinish=-1.0;
-	long double meanRes=0.0;
+	longdouble meanRes=0.0;
 	int count;
 	int ndata;
 	int offsetNp = 0;
@@ -339,7 +339,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		else
 		  {
 		    getCholeskyMatrix(uinvs[p],covarFuncFile,psr+p,x,y,sig,count,psr[p].nconstraints,ip[p]);
-		    logtchk("Completed computing uinv usign long doubles");
+		    logtchk("Completed computing uinv usign longdoubles");
 		  }
 		psr[p].nFit = count;
 		psr[p].param[param_start].val[0] = newStart-0.001; 
@@ -349,8 +349,8 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		/*
 		   logtchk("removing mean from the residuals??  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
 		   for (i=0;i<psr[p].nobs;i++)
-		   meanRes+=(long double)psr[p].obsn[i].residual;
-		   meanRes/=(long double)psr[p].nobs;
+		   meanRes+=(longdouble)psr[p].obsn[i].residual;
+		   meanRes/=(longdouble)psr[p].nobs;
 		   for (i=0;i<psr[p].nobs;i++)
 		   psr[p].obsn[i].residual-=meanRes;
 		   logtchk("complete removing mean from the residuals??  (%.2f)",(clock()-clk)/(float)CLOCKS_PER_SEC);
@@ -1180,10 +1180,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	 */
 	//  printf("In here with %s %d %d %d\n",psr->name,psr->nobs,ipos,i);
 
-	long double arg3,arg4;
+	longdouble arg3,arg4;
 	
-	long double f1,f0,bindex;
-	long double t2;
+	longdouble f1,f0,bindex;
+	longdouble t2;
 	
 	t2 = x*86400.L;
 	    
@@ -1409,7 +1409,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		  } */
 	else if (i==param_telx)
 	{
-		long double dt,arg;
+		longdouble dt,arg;
 		if (psr->param[param_telEpoch].paramSet[0]==1)
 			dt = (x + psr->param[param_pepoch].val[0]) - psr->param[param_telEpoch].val[0];
 		else
@@ -1429,7 +1429,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
 	else if (i==param_tely)
 	{
-		long double dt,arg;
+		longdouble dt,arg;
 		if (psr->param[param_telEpoch].paramSet[0]==1)
 			dt = (x + psr->param[param_pepoch].val[0]) - psr->param[param_telEpoch].val[0];
 		else
@@ -1449,7 +1449,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
 	else if (i==param_telz)
 	{
-		long double dt,arg;
+		longdouble dt,arg;
 		if (psr->param[param_telEpoch].paramSet[0]==1)
 			dt = (x + psr->param[param_pepoch].val[0]) - psr->param[param_telEpoch].val[0];
 		else
@@ -1809,7 +1809,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
 	else if (i==param_tel_vx) // Velocity of satellite
 	{
-		long double dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
+		longdouble dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
 		if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
 			return psr->posPulsar[0]/SPEED_LIGHT*1000.0*dt;
 		else
@@ -1817,7 +1817,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
 	else if (i==param_tel_vy) // Velocity of satellite
 	{
-		long double dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
+		longdouble dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
 		if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
 			return psr->posPulsar[1]/SPEED_LIGHT*1000.0*dt;
 		else
@@ -1825,7 +1825,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	}
 	else if (i==param_tel_vz) // Velocity of satellite
 	{
-		long double dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
+		longdouble dt = (psr->obsn[ipos].sat - psr->param[param_telEpoch].val[0])*SECDAY;
 		if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
 			return psr->posPulsar[2]/SPEED_LIGHT*1000.0*dt;
 		else
@@ -1971,10 +1971,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 		double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 		double cosTheta,omega_g;
-		long double resp,resc,res_r,res_i;
+		longdouble resp,resc,res_r,res_i;
 		double theta_p,theta_g,phi_p,phi_g;
 		double lambda_p,beta_p,lambda,beta;
-		long double time;
+		longdouble time;
 		time    = (psr->obsn[ipos].bbat - psr->quadEpoch)*86400.0L;
 		if (psr->param[param_raj].paramSet[1] == 1)
 			lambda_p = (double)psr->param[param_raj].val[1];
@@ -2064,10 +2064,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 		double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 		double cosTheta,omega_g;
-		long double resp,resc,res_r,res_i;
+		longdouble resp,resc,res_r,res_i;
 		double theta_p,theta_g,phi_p,phi_g;
 		double lambda_p,beta_p,lambda,beta;
-		long double time;
+		longdouble time;
 
 		time    = (psr->obsn[ipos].bbat - psr->gwsrc_epoch)*86400.0L;
 		lambda_p = (double)psr->param[param_raj].val[0];
@@ -2131,8 +2131,8 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 
 	 else if (i== param_gwb_amp)
      {
-       long double dt;
-       long double prefac;
+       longdouble dt;
+       longdouble prefac;
        if (psr->param[param_gwb_amp].paramSet[1]==1)
 	 {
 	   dt = (psr->obsn[ipos].bbat - psr->gwb_epoch)/psr->gwb_width;
@@ -2158,7 +2158,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 
 	else if (i==param_gwm_amp)
 	{
-		long double dt;
+		longdouble dt;
 
 		if (psr->param[param_gwm_amp].paramSet[1]==1){
 			dt = (psr->obsn[ipos].bbat - psr->gwm_epoch)*86400.0L;
@@ -2177,10 +2177,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 			double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 			double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 			double cosTheta,omega_g;
-			long double resp,resc,res_r,res_i;
+			longdouble resp,resc,res_r,res_i;
 			double theta_p,theta_g,phi_p,phi_g;
 			double lambda_p,beta_p,lambda,beta;
-			long double time;
+			longdouble time;
 			double g1,g2,g3;
 
 			time    = (psr->obsn[ipos].bbat - psr->gwm_epoch)*86400.0L;
@@ -2213,7 +2213,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 			/* Only has effect after the glitch epoch */
 			if (psr->obsn[ipos].sat >= psr->gwm_epoch)
 			{
-				long double dt,scale;
+				longdouble dt,scale;
 				double cos2Phi;
 				double cosPhi;
 				double l1,l2,l3,n5,m1,m2,m3;
@@ -4167,7 +4167,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	double *maxcoeff=new double[totalsize];
 	dgemv(GNG,dG,maxcoeff,totalsize,totalsize,'N');
 
-	long double *Errorvec=new long double[totalsize];
+	longdouble *Errorvec=new longdouble[totalsize];
 
 	for(int i =0; i < totalsize; i++){
 //		printf("GNG %i %g \n", i, GNG[i][i]);
@@ -4175,7 +4175,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	}
 
 	double *Scoeff=new double[numtofit];
-	long double *Serr=new long double[numtofit];
+	longdouble *Serr=new longdouble[numtofit];
 
 	/*	for(int i =0; i < numtofit; i++){
 		if(S[i] >= 0){
@@ -4194,7 +4194,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 	for(int i=0;i<numtofit; i++){
 
-		//		long double errsum=0;
+		//		longdouble errsum=0;
 		//          	for(int j=0;j<numtofit; j++){
 		//			errsum += pow(V[i][j]*Serr[j],2);
 		//               }
@@ -4280,8 +4280,8 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 
 		double freq=(double)pulse->obsn[i].freqSSB;
-		long double yrs = (pulse->obsn[i].bat - pulse->param[param_dmepoch].val[0])/365.25;
-		long double arg = 1.0;
+		longdouble yrs = (pulse->obsn[i].bat - pulse->param[param_dmepoch].val[0])/365.25;
+		longdouble arg = 1.0;
 		double dmDot=0;
 		double dmDotErr=0;
 		for (int d=0;d<9;d++){
@@ -4307,7 +4307,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 		if(pulse->param[param_f].paramSet[1]==1){
 			arg=0.5*pow((double)(pulse->obsn[i].bat - pulse->param[param_pepoch].val[0]), 2);
-			long double argerr = (pulse->param[param_f].err[1]/ \
+			longdouble argerr = (pulse->param[param_f].err[1]/ \
 					pulse[0].param[param_f].val[0])*86400.0*86400;
 			pDotErr+=pow((double)(argerr*arg),2);
 		}

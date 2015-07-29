@@ -60,16 +60,16 @@ using namespace std;
 #define MAX_FREQ 1000
 #define MAX_ITERATION 25000
 
-void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int fast,int npsr,long double **Func);
+void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int fast,int npsr,longdouble **Func);
 void cumulativeHistogram(double val[MAX_ITERATION][MAX_FREQ],int nval,double *freqVal,int nFreq,double limit,double *threshold);
 void cumulativeHistogram2(double *val,int nval,double limit,double *threshold);
 void sortit(int n, double array[], double rasort[]);
-void shuffle(long double *R, double *toaE, long double *R2, double *toaE2, int N,long *idum);
+void shuffle(longdouble *R, double *toaE, longdouble *R2, double *toaE2, int N,long *idum);
 void checkReal(pulsar psr,double *freqVal,int *nFreq,double *threshold,double alpha);
-void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int checkBackground,double alpha,double *dist,int distNum,double maxAmp,int fast,int npsr,int numberGW,long double alpha,long double **Func);
-void setupPulsar(long double ra_p,long double dec_p,long double *kp);
-//void GramSchmidt(long double x[], long double y[], long double err[], int ObsAmt, int Npoly, long double CoeffArray[],int wtyn,long double **Func);
-void GramSchmidt(long double x[], long double y[], long double err[], int ObsAmt, int Npoly, long double CoeffArray[],int wtyn);
+void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int checkBackground,double alpha,double *dist,int distNum,double maxAmp,int fast,int npsr,int numberGW,longdouble alpha,longdouble **Func);
+void setupPulsar(longdouble ra_p,longdouble dec_p,longdouble *kp);
+//void GramSchmidt(longdouble x[], longdouble y[], longdouble err[], int ObsAmt, int Npoly, longdouble CoeffArray[],int wtyn,longdouble **Func);
+void GramSchmidt(longdouble x[], longdouble y[], longdouble err[], int ObsAmt, int Npoly, longdouble CoeffArray[],int wtyn);
 void writeCommands(int argc, char *argv[]);
 
 double storeVal[MAX_ITERATION][MAX_FREQ];
@@ -105,15 +105,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double dist[MAX_PSR];  /* Distance to pulsar */
   int distNum=0;
   double maxAmp=-1;
-  long double index=-2.0L/3.0L;
+  longdouble index=-2.0L/3.0L;
   double scale;
   int p;
   int numberGW=1000;
   /* The value of function x at observation y */
-  long double **Func;
-  Func = (long double **)malloc(MAX_POLY*sizeof(long double *));
+  longdouble **Func;
+  Func = (longdouble **)malloc(MAX_POLY*sizeof(longdouble *));
   for (i=0;i<MAX_POLY;i++)
-    Func[i] = (long double *)malloc(MAX_OBSN_VAL*sizeof(long double));
+    Func[i] = (longdouble *)malloc(MAX_OBSN_VAL*sizeof(longdouble));
 
   /* Set all distances to zero */
   for (i=0;i<MAX_PSR;i++) dist[i]=0.0;
@@ -264,26 +264,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 /* This function is used to obtain limits on the existence of a single GW source in the data */
 /* It works in a similar fashion to the function to obtain the threshold values              */
 
-void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int checkBackground,double alphaMult,double *dist,int distNum,double maxAmp,int fast,int npsr,int numberGW,long double alpha,long double **Func)
+void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int checkBackground,double alphaMult,double *dist,int distNum,double maxAmp,int fast,int npsr,int numberGW,longdouble alpha,longdouble **Func)
 {
   printf("Starting getLimit\n");
 
-  long double **sat1;
-  long double **residual,***shuffled;
-  long double ***res;
+  longdouble **sat1;
+  longdouble **residual,***shuffled;
+  longdouble ***res;
   double ***err;
   long idumStore;
   int nFlags[MAX_PSR],foundFlag;
   int nPts[MAX_PSR][10];
   char flag[MAX_PSR][10][100];
   double xval[MAX_OBSN],yval[MAX_OBSN],py[MAX_OBSN],var[MAX_OBSN];
-  long double GSmean,variance,meanX,meanY,rangeX,minXval;
+  longdouble GSmean,variance,meanX,meanY,rangeX,minXval;
   double globalParameter;
   double gwAmp,minAmp=0.0,amp1,amp2,amp3;
   double limit[MAX_FREQ];
   double **toaE,***shuffledToaE;
-  long double kp[MAX_PSR][3];            /* Vector pointing to pulsar           */
-  long double gx[MAX_OBSN],gy[MAX_OBSN],ge[MAX_OBSN],coeffArray[10];
+  longdouble kp[MAX_PSR][3];            /* Vector pointing to pulsar           */
+  longdouble gx[MAX_OBSN],gy[MAX_OBSN],ge[MAX_OBSN],coeffArray[10];
   double gsVal,gsValp[MAX_POLY][MAX_PSR],GSspec[MAX_POLY];
   int  nPoly=8;
   FILE *fout,*fout2;
@@ -294,7 +294,7 @@ void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *id
   int i,j,p,iFreq,sig, stopIt;
   int jmax;
   double prob,val2,val1,val3;
-  long double fhi,flo,max,min;
+  longdouble fhi,flo,max,min;
   double storeJumpVal[MAX_PSR][MAX_JUMPS];
   int wtyn;
 
@@ -311,27 +311,27 @@ void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *id
   printf("Attempting to allocate memory\n");
   fout3 = fopen("results.dat","a");
 
-  sat1     = (long double **)malloc(MAX_PSR*sizeof(long double*));
-  residual = (long double **)malloc(MAX_PSR*sizeof(long double*));
+  sat1     = (longdouble **)malloc(MAX_PSR*sizeof(longdouble*));
+  residual = (longdouble **)malloc(MAX_PSR*sizeof(longdouble*));
   toaE     = (double **)malloc(MAX_PSR*sizeof(double*));
-  shuffled = (long double ***)malloc(MAX_PSR*sizeof(long double **));
-  res      = (long double ***)malloc(MAX_PSR*sizeof(long double **));
+  shuffled = (longdouble ***)malloc(MAX_PSR*sizeof(longdouble **));
+  res      = (longdouble ***)malloc(MAX_PSR*sizeof(longdouble **));
   err      = (double ***)malloc(MAX_PSR*sizeof(double **));
   shuffledToaE = (double ***)malloc(MAX_PSR*sizeof(double **));
 
   for (i=0;i<MAX_PSR;i++)
     {
-      sat1[i]     = (long double *)malloc(MAX_OBSN*sizeof(long double));
-      residual[i] = (long double *)malloc(MAX_OBSN*sizeof(long double));
+      sat1[i]     = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
+      residual[i] = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
       toaE[i]     = (double *)malloc(MAX_OBSN*sizeof(double));
-      shuffled[i] = (long double **)malloc(MAX_FLAG*sizeof(long double *));
-      res[i]      = (long double **)malloc(MAX_FLAG*sizeof(long double *));
+      shuffled[i] = (longdouble **)malloc(MAX_FLAG*sizeof(longdouble *));
+      res[i]      = (longdouble **)malloc(MAX_FLAG*sizeof(longdouble *));
       err[i]      = (double **)malloc(MAX_FLAG*sizeof(double *));
       shuffledToaE[i] = (double **)malloc(MAX_FLAG*sizeof(double *));
       for (j=0;j<MAX_FLAG;j++)
 	{
-	  shuffled[i][j] = (long double *)malloc(MAX_OBSN*sizeof(long double));
-	  res[i][j]      = (long double *)malloc(MAX_OBSN*sizeof(long double));
+	  shuffled[i][j] = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
+	  res[i][j]      = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
 	  err[i][j]      = (double *)malloc(MAX_OBSN*sizeof(double));
 	  shuffledToaE[i][j] = (double *)malloc(MAX_OBSN*sizeof(double));	  
 	}
@@ -597,8 +597,8 @@ void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *id
 		  rangeX = gx[psr[p].nobs-1]-gx[0];
 		  /* Remove mean from residuals */
 		  mean/=(double)psr[p].nobs;
-		  meanY /=(long double)psr[p].nobs;
-		  meanX /=(long double)psr[p].nobs;
+		  meanY /=(longdouble)psr[p].nobs;
+		  meanX /=(longdouble)psr[p].nobs;
 		  
 		  
 		  for (i=0;i<psr[p].nobs;i++) 
@@ -630,13 +630,13 @@ void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *id
 		      GSmean = 0.0;
 		      for (i=0;i<psr[p].nobs;i++)
 			GSmean += gy[i];
-		      GSmean/=(long double)psr[p].nobs;
+		      GSmean/=(longdouble)psr[p].nobs;
 		      //		      for (i=0;i<psr[p].nobs;i++)
 		      //			variance+=((gy[i]-GSmean)*(gy[i]-GSmean));
 		      //		      variance/=(psr[p].nobs-1.0);
 		      for (i=0;i<psr[p].nobs;i++)
 			variance+=(pow(gy[i]-GSmean,2)/powl(ge[i],2));
-		      variance/=(long double)(psr[p].nobs);
+		      variance/=(longdouble)(psr[p].nobs);
 
 		      /* Scale coefficients */
 		      for (i=0;i<nPoly;i++)	
@@ -869,25 +869,25 @@ void checkReal(pulsar psr,double *freqVal,int *nFreq,double *threshold,double al
 }
 
 /* Obtain a threshold power for each frequency bin in a Lomb periodogram */
-void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int fast,int npsr,long double **Func)
+void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int fast,int npsr,longdouble **Func)
 {
   int i,j,k,it=0;
-  long double **sat1; 
-  long double **residual;
-  /*  long double shuffled[MAX_PSR][MAX_FLAG][MAX_OBSN]; */
-  long double ***shuffled;
-  long double ***res,meanX,meanY,rangeX,minXval;
+  longdouble **sat1; 
+  longdouble **residual;
+  /*  longdouble shuffled[MAX_PSR][MAX_FLAG][MAX_OBSN]; */
+  longdouble ***shuffled;
+  longdouble ***res,meanX,meanY,rangeX,minXval;
   double ***err;
   double mean;
   char flag[MAX_PSR][MAX_FLAG][20];
   int nFlags[MAX_PSR],foundFlag;
   double **toaE,***shuffledToaE;
   int    nPts[MAX_PSR][MAX_FLAG];
-  long double gx[MAX_OBSN],gy[MAX_OBSN],ge[MAX_OBSN],coeffArray[100];
+  longdouble gx[MAX_OBSN],gy[MAX_OBSN],ge[MAX_OBSN],coeffArray[100];
   double gsVal[MAX_ITERATION],***gsValp,GSthreshold,GSspec[MAX_POLY][MAX_ITERATION];
   int    nPoly = 8;
   double xval[MAX_OBSN],yval[MAX_OBSN],py[MAX_OBSN],var[MAX_OBSN];
-  long double variance,GSmean;
+  longdouble variance,GSmean;
   double globalParameter;
   double alpha,alphaMax,alphaMin;
   int printRes = 10;
@@ -901,16 +901,16 @@ void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long 
   double sum1,sum2,sval[MAX_OBSN],BGthreshold;
   int wtyn=1;
   int ngreater;
-  long double datastat = 0.0;
+  longdouble datastat = 0.0;
 
   /* Memory allocation */
   printf("Attempting to allocate memory\n");
   
-  sat1     = (long double **)malloc(MAX_PSR*sizeof(long double*));
-  residual = (long double **)malloc(MAX_PSR*sizeof(long double*));
+  sat1     = (longdouble **)malloc(MAX_PSR*sizeof(longdouble*));
+  residual = (longdouble **)malloc(MAX_PSR*sizeof(longdouble*));
   toaE     = (double **)malloc(MAX_PSR*sizeof(double*));
-  shuffled = (long double ***)malloc(MAX_PSR*sizeof(long double **));
-  res      = (long double ***)malloc(MAX_PSR*sizeof(long double **));
+  shuffled = (longdouble ***)malloc(MAX_PSR*sizeof(longdouble **));
+  res      = (longdouble ***)malloc(MAX_PSR*sizeof(longdouble **));
   err      = (double ***)malloc(MAX_PSR*sizeof(double **));
   shuffledToaE = (double ***)malloc(MAX_PSR*sizeof(double **));
   gsValp = (double ***)malloc(MAX_POLY*sizeof(double **));
@@ -925,17 +925,17 @@ void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long 
 
   for (i=0;i<MAX_PSR;i++)
     {
-      sat1[i]     = (long double *)malloc(MAX_OBSN*sizeof(long double));
-      residual[i] = (long double *)malloc(MAX_OBSN*sizeof(long double));
+      sat1[i]     = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
+      residual[i] = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
       toaE[i]     = (double *)malloc(MAX_OBSN*sizeof(double));
-      shuffled[i] = (long double **)malloc(MAX_FLAG*sizeof(long double *));
-      res[i]      = (long double **)malloc(MAX_FLAG*sizeof(long double *));
+      shuffled[i] = (longdouble **)malloc(MAX_FLAG*sizeof(longdouble *));
+      res[i]      = (longdouble **)malloc(MAX_FLAG*sizeof(longdouble *));
       err[i]      = (double **)malloc(MAX_FLAG*sizeof(double *));
       shuffledToaE[i] = (double **)malloc(MAX_FLAG*sizeof(double *));
       for (j=0;j<MAX_FLAG;j++)
 	{
-	  shuffled[i][j] = (long double *)malloc(MAX_OBSN*sizeof(long double));
-	  res[i][j]      = (long double *)malloc(MAX_OBSN*sizeof(long double));
+	  shuffled[i][j] = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
+	  res[i][j]      = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
 	  err[i][j]      = (double *)malloc(MAX_OBSN*sizeof(double));
 	  shuffledToaE[i][j] = (double *)malloc(MAX_OBSN*sizeof(double));	  
 	}
@@ -1002,8 +1002,8 @@ void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long 
        rangeX = gx[psr[p].nobs-1]-gx[0];
        /* Remove mean from residuals */
        mean/=(double)psr[p].nobs; 
-       meanY /=(long double)psr[p].nobs;
-       meanX /=(long double)psr[p].nobs;
+       meanY /=(longdouble)psr[p].nobs;
+       meanX /=(longdouble)psr[p].nobs;
        
        for (i=0;i<psr[p].nobs;i++) 
 	 {
@@ -1016,11 +1016,11 @@ void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long 
        GSmean = 0.0L;
        for (i=0;i<psr[p].nobs;i++)
 	 GSmean += gy[i];
-       GSmean/=(long double)psr[p].nobs;
+       GSmean/=(longdouble)psr[p].nobs;
        
        for (i=0;i<psr[p].nobs;i++)
 	 variance+=(pow(gy[i]-GSmean,2)/powl(ge[i],2));
-       variance/=(long double)(psr[p].nobs);
+       variance/=(longdouble)(psr[p].nobs);
        /* Scale coefficients */
        for (i=0;i<nPoly;i++)	
 	 {
@@ -1177,8 +1177,8 @@ void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long 
 	  rangeX = gx[psr[p].nobs-1]-gx[0];
 	  /* Remove mean from residuals */
 	  mean/=(double)psr[p].nobs; 
-	  meanY /=(long double)psr[p].nobs;
-	  meanX /=(long double)psr[p].nobs;
+	  meanY /=(longdouble)psr[p].nobs;
+	  meanX /=(longdouble)psr[p].nobs;
 
 	  for (i=0;i<psr[p].nobs;i++) 
 	    {
@@ -1222,14 +1222,14 @@ void getThreshold(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long 
 	  GSmean = 0.0L;
 	  for (i=0;i<psr[p].nobs;i++)
 	    GSmean += gy[i];
-	  GSmean/=(long double)psr[p].nobs;
+	  GSmean/=(longdouble)psr[p].nobs;
 	  //	  for (i=0;i<psr[p].nobs;i++)
 	  //	    variance+=((gy[i]-GSmean)*(gy[i]-GSmean));
 	  //	    variance/=(psr[p].nobs-1.0);
 
 	  for (i=0;i<psr[p].nobs;i++)
 	    variance+=(pow(gy[i]-GSmean,2)/powl(ge[i],2));
-	  variance/=(long double)(psr[p].nobs);
+	  variance/=(longdouble)(psr[p].nobs);
 	  /* Scale coefficients */
 	  /*	  printf("Variance = %g %g\n",(double)variance,(double)(sqrt(variance)*1.0e9));*/
 	  for (i=0;i<nPoly;i++)	
@@ -1372,10 +1372,10 @@ void cumulativeHistogram2(double *val,int nval,double limit,double *threshold)
 
 
 
-void shuffle(long double *R, double *toaE, long double *R2, double *toaE2, int N,long *idum)
+void shuffle(longdouble *R, double *toaE, longdouble *R2, double *toaE2, int N,long *idum)
 {
   int j,k,i;
-  long double temp;
+  longdouble temp;
   double temp2;
 
   for (i=0; i<N; i++)
@@ -1445,9 +1445,9 @@ void sortit(int n, double array[], double rasort[])
 
 /* Set up pulsar: note: in KJ this is based in Gwave.cpp: Load_Pulsar_Data */
 /* Sets up the vector pointing at the pulsar                               */
-void setupPulsar(long double ra_p,long double dec_p,long double *kp)
+void setupPulsar(longdouble ra_p,longdouble dec_p,longdouble *kp)
 {
-  long double deg2rad = M_PI/180.0;
+  longdouble deg2rad = M_PI/180.0;
 
   kp[0] = cos(dec_p)*cos(ra_p);
   kp[1] = cos(dec_p)*sin(ra_p);
@@ -1455,8 +1455,8 @@ void setupPulsar(long double ra_p,long double dec_p,long double *kp)
 }
 
 
-//void GramSchmidt(long double *x, long double *y, long double *err, int ObsAmt, int Npoly, long double *CoeffArray, int wtyn,long double **Func){
-void GramSchmidt(long double *x, long double *y, long double *err, int ObsAmt, int Npoly, long double *CoeffArray, int wtyn) {
+//void GramSchmidt(longdouble *x, longdouble *y, longdouble *err, int ObsAmt, int Npoly, longdouble *CoeffArray, int wtyn,longdouble **Func){
+void GramSchmidt(longdouble *x, longdouble *y, longdouble *err, int ObsAmt, int Npoly, longdouble *CoeffArray, int wtyn) {
   /* x is an array with the TOA's (any unit will do.)
      y is an array with residuals (units irrelevant, but same units as err)
      err is an array with 1sigma standard deviations on y
@@ -1468,16 +1468,16 @@ void GramSchmidt(long double *x, long double *y, long double *err, int ObsAmt, i
      the order of the polynomial term under consideration */
   int poly, obs, odr,i;
 
-  long double a[Npoly][Npoly]; 
+  longdouble a[Npoly][Npoly]; 
 
   /* The value of function x at observation y */
 
-long double **Func;
-Func = (long double **)malloc(MAX_POLY*sizeof(long double *));
+longdouble **Func;
+Func = (longdouble **)malloc(MAX_POLY*sizeof(longdouble *));
 for (i=0;i<MAX_POLY;i++)
-    Func[i] = (long double *)malloc(MAX_OBSN_VAL*sizeof(long double));
-  long double N1[Npoly], D1[Npoly], D2[Npoly];
-  long double sw;
+    Func[i] = (longdouble *)malloc(MAX_OBSN_VAL*sizeof(longdouble));
+  longdouble N1[Npoly], D1[Npoly], D2[Npoly];
+  longdouble sw;
 
   /*  for (i=0;i<ObsAmt;i++)
       err[i] = 1.0; */
@@ -1610,7 +1610,7 @@ for (i=0;i<MAX_POLY;i++)
 
   /* Check orthonormality */
   /*  {
-    long double sum=0.0L;
+    longdouble sum=0.0L;
     int i,j,k;
     
     for (i=0;i<Npoly;i++)

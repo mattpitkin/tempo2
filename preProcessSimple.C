@@ -312,7 +312,7 @@ void preProcessSimple2 (pulsar *psr,
 	{
 	  if (strcmp(psr->obsn[i].flagID[k],"-to")==0)
 	    {
-	      long double v;
+	      longdouble v;
 	      sscanf(psr->obsn[i].flagVal[k],"%Lf",&v);
 	      psr->obsn[i].sat += v/SECDAY;
 	    }

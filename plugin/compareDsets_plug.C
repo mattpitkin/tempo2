@@ -444,7 +444,7 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 int findOverlap(pulsar *psr,int *npsr,int *overlap1,int *overlap2,double maxDiff,char *compare,char *compare2)
 {
   int i,j,found;
-  long double tdiff;
+  longdouble tdiff;
   int nOverlap=0;
   int good;
 

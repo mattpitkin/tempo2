@@ -617,7 +617,7 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
   double current_efac;
   double current_equad;
   double interim_error;
-  long double oldsat;
+  longdouble oldsat;
 
   if (!(fout = fopen(timname,"w")))
     {
@@ -713,7 +713,7 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 	{
 	  if (strcmp(psr->obsn[i].flagID[k],"-to")==0)
 	    {
-	      long double v;
+	      longdouble v;
 	      sscanf(psr->obsn[i].flagVal[k],"%Lf",&v);
 	      oldsat -= v/SECDAY;
 	    }

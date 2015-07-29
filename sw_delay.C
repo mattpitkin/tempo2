@@ -64,7 +64,7 @@ double solarWindModel(pulsar psr,int iobs)
   const char *CVS_verNum = "$Revision: 1.11 $";
   int i,j;
   double deg2rad = M_PI/180.0;
-  long double mjd;
+  longdouble mjd;
 
   // Inputs
   

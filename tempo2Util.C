@@ -220,7 +220,7 @@ long fortran_nlong(longdouble x)
   return(i);
 }
 
-/* print out a long double to a std::string */
+/* print out a longdouble to a std::string */
 std::string print_longdouble(const longdouble &ld)
 {
   char buf[1024];
@@ -436,7 +436,7 @@ longdouble getParameterValue(pulsar *psr,int param,int arr)
 	{
 	  if (psr->param[param].linkTo[0] == param_stig)
 	    {
-	      long double stig = psr->param[param_stig].val[0];
+	      longdouble stig = psr->param[param_stig].val[0];
 	      //	      printf("kin = %g\n",(double)((2.0*stig)/(1+stig*stig)));
 	      return asin((2.0*stig)/(1+stig*stig))*180.0/M_PI;
 	    }

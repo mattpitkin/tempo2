@@ -447,10 +447,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     {
 	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 	       //	       double res_e,res_i;
-	       long double resp,resc,res_r,res_i;
+	       longdouble resp,resc,res_r,res_i;
 	       double theta_p,theta_g,phi_p,phi_g;
 	       double lambda_p,beta_p,lambda,beta;
-	       long double time;
+	       longdouble time;
 	       double n1,n2,n3;
 	       double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
@@ -613,10 +613,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     {
 	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 	       //	       double res_e,res_i;
-	       long double resp,resc,res_r,res_i;
+	       longdouble resp,resc,res_r,res_i;
 	       double theta_p,theta_g,phi_p,phi_g;
 	       double lambda_p,beta_p,lambda,beta;
-	       long double time;	      
+	       longdouble time;	      
 	       double n1,n2,n3;
 	       double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
@@ -760,10 +760,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     {
 	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 	       //	       double res_e,res_i;
-	       long double resp,resc,res_r,res_i;
+	       longdouble resp,resc,res_r,res_i;
 	       double theta_p,theta_g,phi_p,phi_g;
 	       double lambda_p,beta_p,lambda,beta;
-	       long double time;	      
+	       longdouble time;	      
 	       double n1,n2,n3;
 	       double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 	       double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
@@ -803,7 +803,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       /* Only has effect after the glitch epoch */
 	       if (psr[p].obsn[i].sat >= psr[p].gwm_epoch)
 		 {
-		   long double dt,scale;
+		   longdouble dt,scale;
 		   double cos2Phi;
 		   double cosPhi;
 		   double l1,l2,l3,m1,m2,m3;
@@ -921,13 +921,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	     {
 	       if (psr[p].obsn[i].bbat >= psr[p].gwm_epoch)
 		 {
-		   long double wi,t1,t2;
-		   long double dt,speriod,tt;
+		   longdouble wi,t1,t2;
+		   longdouble dt,speriod,tt;
 		   int k;
 		   double m,c,ival;
 		   double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 		   //	       double res_e,res_i;
-		   long double resp,resc,res_r,res_i;
+		   longdouble resp,resc,res_r,res_i;
 		   double theta_p,theta_g,phi_p,phi_g;
 		   double lambda_p,beta_p,lambda,beta;
 		   double n1,n2,n3;
@@ -1030,28 +1030,28 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /* Add in extra phase due to interpolation */
 	   if (psr[p].param[param_ifunc].paramSet[0] == 1)
 	     {
-	       long double wi,t1,t2;
-	       long double dt,speriod,tt;
+	       longdouble wi,t1,t2;
+	       longdouble dt,speriod,tt;
 
 	       if (psr[p].param[param_ifunc].val[0] == 1) // Sinc interpolation
 		 {
 		   t1=0.0L,t2=0.0L;
-		   speriod = (long double)(psr[p].ifuncT[1]-psr[p].ifuncT[0]); 
+		   speriod = (longdouble)(psr[p].ifuncT[1]-psr[p].ifuncT[0]); 
 		   //	       printf("ifuncN = %d\n",psr[p].ifuncN);
 		   for (k=0;k<psr[p].ifuncN;k++)
 		     //	       for (k=3;k<4;k++)
 		     {
 		       //		   printf("Have %g %g\n",psr[p].ifuncT[k],psr[p].ifuncV[k]);
-		       dt = psr[p].obsn[i].bbat - (long double)psr[p].ifuncT[k];
+		       dt = psr[p].obsn[i].bbat - (longdouble)psr[p].ifuncT[k];
 		       wi=1;
 		       if (dt==0)
 			 {
-			   t1 += wi*(long double)psr[p].ifuncV[k];
+			   t1 += wi*(longdouble)psr[p].ifuncV[k];
 			 }
 		       else
 			 {
 			   tt = M_PI/speriod*(dt);
-			   t1 += wi*(long double)psr[p].ifuncV[k]*sinl(tt)/(tt);
+			   t1 += wi*(longdouble)psr[p].ifuncV[k]*sinl(tt)/(tt);
 			   //		       t2 += wi*sinl(tt)/(tt);
 			 }
 		     }
@@ -1094,13 +1094,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   /* Add in extra phase due to interpolation */
 	   if (psr[p].param[param_quad_ifunc_p].paramSet[0] == 1)
 	     {
-	       long double wi,t1,t2;
-	       long double dt,speriod,tt;
+	       longdouble wi,t1,t2;
+	       longdouble dt,speriod,tt;
 	       int k;
 	       double m,c,ival;
 	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 	       //	       double res_e,res_i;
-	       long double resp,resc,res_r,res_i;
+	       longdouble resp,resc,res_r,res_i;
 	       double theta_p,theta_g,phi_p,phi_g;
 	       double lambda_p,beta_p,lambda,beta;
 	       double n1,n2,n3;
@@ -1173,13 +1173,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   // Cross term
 	   if (psr[p].param[param_quad_ifunc_c].paramSet[0] == 1 && psr[p].param[param_quad_ifunc_c].val[0] > 0)
 	     {
-	       long double wi,t1,t2;
-	       long double dt,speriod,tt;
+	       longdouble wi,t1,t2;
+	       longdouble dt,speriod,tt;
 	       int k;
 	       double m,c,ival;
 	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 	       //	       double res_e,res_i;
-	       long double resp,resc,res_r,res_i;
+	       longdouble resp,resc,res_r,res_i;
 	       double theta_p,theta_g,phi_p,phi_g;
 	       double lambda_p,beta_p,lambda,beta;
 	       double n1,n2,n3;
@@ -1340,7 +1340,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   fprintf(stderr, "%.3e\n", phi);
 		  
 
-		   long double resp;
+		   longdouble resp;
 
 		   resp =0.5*(1-ctheta)*c2phi;
 	       
@@ -1462,7 +1462,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		   cphi = (rhox*polx + rhoy*poly + rhoz*polz)/rho/pol;
 		   c2phi = 2*cphi*cphi-1;
 
-		   long double resc;
+		   longdouble resc;
 
 		   resc =0.5*(1-ctheta)*c2phi;
 	       
@@ -1498,13 +1498,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	       psr[p].param[param_gwb_amp].paramSet[1]==1)
 	     {
 	       
-	       //long double wi,t1,t2;
-	       long double dt, prefac;
+	       //longdouble wi,t1,t2;
+	       longdouble dt, prefac;
 	       int k;
 	       double m,c,ival;
 	       double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
 	       //	       double res_e,res_i;
-	       long double resp,resc,res_r,res_i;
+	       longdouble resp,resc,res_r,res_i;
 	       double theta_p,theta_g,phi_p,phi_g;
 	       double lambda_p,beta_p,lambda,beta;
 	       double n1,n2,n3;
@@ -1863,7 +1863,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
        
        if (removeMean==1)
 	 {
-	   mean/=(long double)nmean;
+	   mean/=(longdouble)nmean;
 	   for (i=0;i<psr[p].nobs;i++)
 	     psr[p].obsn[i].residual-=mean;
 	     // psr[p].obsn[i].residual-=0;
