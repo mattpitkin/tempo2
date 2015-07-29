@@ -396,7 +396,7 @@ void doPlot(pulsar *psr,int npsr,gwSrc *gw,longdouble **gwRes,longdouble timeOff
 	  fout = fopen(fname,"w");
 	  for (i=0;i<psr[j].nobs;i++)
 	    {
-	      fprintf(fout,"%.15Lf %g %g\n",psr[j].obsn[i].sat,(double)psr[j].obsn[i].residual,(double)psr[j].obsn[i].toaErr);
+	      ld_fprintf(fout,"%.15Lf %g %g\n",psr[j].obsn[i].sat,(double)psr[j].obsn[i].residual,(double)psr[j].obsn[i].toaErr);
 	    }
 	  fclose(fout);
 	}
@@ -457,7 +457,7 @@ void doGenPlot(pulsar *psr,int npsr,gwgeneralSrc *gw,longdouble **gwRes,longdoub
 	  fout = fopen(fname,"w");
 	  for (i=0;i<psr[j].nobs;i++)
 	    {
-	      fprintf(fout,"%.15Lf %g %g\n",psr[j].obsn[i].sat,(double)psr[j].obsn[i].residual,(double)psr[j].obsn[i].toaErr);
+	      ld_fprintf(fout,"%.15Lf %g %g\n",psr[j].obsn[i].sat,(double)psr[j].obsn[i].residual,(double)psr[j].obsn[i].toaErr);
 	    }
 	  fclose(fout);
 	}

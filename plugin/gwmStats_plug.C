@@ -196,7 +196,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       sprintf(outputName,"%s.res",psr[p].name);
       fout = fopen(outputName,"w");
       for (i=0;i<psr[p].nobs;i++)
-	fprintf(fout,"%.15Lf %.5g %.5g\n",psr[p].obsn[i].sat,(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr*1e-6);
+	ld_fprintf(fout,"%.15Lf %.5g %.5g\n",psr[p].obsn[i].sat,(double)psr[p].obsn[i].residual,(double)psr[p].obsn[i].toaErr*1e-6);
       fclose(fout);
     }
 
@@ -314,7 +314,7 @@ void calculateAngularFactors(pulsar *psr)
   if ((1-cosTheta)==0.0)
     resp = 0.0;  // Check if this is sensible
   else
-    resp = 1.0L/(2.0L*(1.0L-cosTheta))*(resp); 
+    resp = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resp); 
   
   psr->quad_ifunc_geom_p = resp;
   
@@ -341,7 +341,7 @@ void calculateAngularFactors(pulsar *psr)
   if ((1-cosTheta)==0.0)
     resc = 0.0;  // Check if this is sensible
   else
-    resc = 1.0L/(2.0L*(1.0L-cosTheta))*(resc); 
+    resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
   psr->quad_ifunc_geom_c = resc;
   
 

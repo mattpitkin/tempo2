@@ -160,7 +160,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 	    psr[p].obsn[i].correctionTT_Teph/SECDAY+2400000.5; 
 	  jd_teph[0] = (double)((int)jd); /* 2452620.0; */
 	  jd_teph[1] = (double)(jd - (int)jd); /* 0.08342753346369;  */
-	  /*	  if (psr[0].obsn[i].deleted==0) printf("Giving ephemeris reader: %.14Lf %.14f %.14f\n",jd,jd_teph[0],jd_teph[1]); */
+	  /*	  if (psr[0].obsn[i].deleted==0) ld_printf("Giving ephemeris reader: %.14Lf %.14f %.14f\n",jd,jd_teph[0],jd_teph[1]); */
 	  
 	  /* Convert to TDB if necessary */ 
 	  // 	  if (psr[p].units == SI_UNITS)

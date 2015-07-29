@@ -57,7 +57,7 @@ AC_CHECK_LIB(m, cos)
 AC_MSG_CHECKING(if compiler knows __float128)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[__float128 x;]])],
 have_float128=yes,
-have_float128=no)]);;
+have_float128=no)
 
 AC_MSG_RESULT($have_float128)
 

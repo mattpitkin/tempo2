@@ -346,7 +346,7 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
       //            resetDMandF0(psr);
     } else if (debugFlag==1) {
       printf("==============================\nNOT ENOUGH POINTS FOR FITTING IN THE BIN\n");
-      printf("STARTING AT %Lf (%d freq1 and %d freq2 points)   \n==============================\n", binStart, bin_fitCount_inc, bin_dmCount_inc);
+      ld_printf("STARTING AT %Lf (%d freq1 and %d freq2 points)   \n==============================\n", binStart, bin_fitCount_inc, bin_dmCount_inc);
       lastUsedSession++;
     }
     if (debugFlag==1) printf("moving to next bin\n");
@@ -952,7 +952,7 @@ void output(char *outFileName, int ascii, double dm0, int header, int outDM, dou
 
     if (header == 1) fprintf(outFile, "#%lf %d\n", dm0, ddmCount);
     for (i = 0; i < ddmCount; ++i) {
-      fprintf(outFile, "%Lf %Lf %Lf\n", ddmMJD[i] - (longdouble) (meanMJD * (*meanMJDval)), ddm[i] + (longdouble) ((outDM - mean * outDM) * dm0) - *meanVal, ddmErr[i]);
+      ld_fprintf(outFile, "%Lf %Lf %Lf\n", ddmMJD[i] - (longdouble) (meanMJD * (*meanMJDval)), ddm[i] + (longdouble) ((outDM - mean * outDM) * dm0) - *meanVal, ddmErr[i]);
     }
 
     fclose(outFile);

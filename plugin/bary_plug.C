@@ -206,15 +206,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   tt2tb(psr,1);
 
 
-  bat = mjd + (longdouble)(roemer-shapiro+clockCor+psr[0].obsn[0].correctionTT_TB)/86400.0L;
+  bat = mjd + (longdouble)(roemer-shapiro+clockCor+psr[0].obsn[0].correctionTT_TB)/longdouble(86400.0);
 
   printf("\n\n");
-  printf("site arrival time        = %.15Lf\n",mjd);
+  ld_printf("site arrival time        = %.15Lf\n",mjd);
   printf("site to TT correction (s)= %g\n",clockCor);
   printf("TT to TB correction      = %g\n",(double)psr[0].obsn[0].correctionTT_TB);
   printf("Roemer delay (s)         = %g\n",roemer);
   printf("Shapiro delay (s)        = %g\n",shapiro);
-  printf("barycentric arrival time = %.15Lf\n",bat);
+  ld_printf("barycentric arrival time = %.15Lf\n",bat);
   return 0;
 }
 

@@ -427,7 +427,7 @@ void simWhiteFunc(pulsar *psr,long *idum,char parFile[MAX_PSR_VAL][MAX_FILELEN],
       formBatsAll(psr,1);         /* Form the barycentric arrival times */
       formResiduals(psr,1,0);    /* Form the residuals                 */
       for (i=0;i<psr[0].nobs;i++)
-	psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/86400.0L;
+	psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/longdouble(86400.0);
     }
   for (i=0;i<psr[0].nobs;i++)
     sat0[i] = psr[0].obsn[i].sat;
@@ -507,7 +507,7 @@ void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][
       formBatsAll(psr,1);         /* Form the barycentric arrival times */
       formResiduals(psr,1,0);    /* Form the residuals                 */
       for (i=0;i<psr[0].nobs;i++)
-	psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/86400.0L;
+	psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/longdouble(86400.0);
     }
   for (i=0;i<psr[0].nobs;i++)
     sat0[i] = psr[0].obsn[i].sat;
@@ -534,8 +534,8 @@ void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][
   dist[0] =  3.08568025e19; // 1 kpc in m
   setupPulsar_GWsim(psr[0].param[param_raj].val[0],
 		    psr[0].param[param_decj].val[0],kp);
-  flo = 1.0L/(30*365.25*86400.0L);
-  fhi = 1.0L/(2.0*86400.0L);
+  flo = longdouble(1.0)/(30*365.25*longdouble(86400.0));
+  fhi = longdouble(1.0)/(2.0*longdouble(86400.0));
 
   toffset = psr[0].param[param_pepoch].val[0];
 
@@ -553,14 +553,14 @@ void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][
 	//      printf("Calc backgroud\n");
 	GWbackground(gw,ngw,idum,flo,fhi,a,alpha,1);
 	//printf("done Calc backgroud\n");
-	mean=0.0L;
+	mean=longdouble(0.0);
 	//printf("Calc residuals 1\n");
 	for (j=0;j<psr[0].nobs;j++)
 	  {
-	    res[j]=0.0L;
+	    res[j]=longdouble(0.0);
 	    for (k=0;k<ngw;k++)
 	      res[j]+=calculateResidualGW(kp,&gw[k],
-					  (psr[0].obsn[j].sat-toffset)*86400.0L,
+					  (psr[0].obsn[j].sat-toffset)*longdouble(86400.0),
 					dist[0]);	  
 	  mean+=res[j];
 	}
@@ -777,7 +777,7 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
       for (p=0;p<npsr;p++)
 	{
 	  for (i=0;i<psr[p].nobs;i++)
-	    psr[p].obsn[i].sat -= (longdouble)psr[p].obsn[i].residual/86400.0L;
+	    psr[p].obsn[i].sat -= (longdouble)psr[p].obsn[i].residual/longdouble(86400.0);
 	}
     }
   writeTim("ideal.tim",&psr[0],"tempo2");  
@@ -814,8 +814,8 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
       setupPulsar_GWsim(psr[p].param[param_raj].val[0],
 			psr[p].param[param_decj].val[0],kp[p]);
     }
-  flo = 1.0L/(30*365.25*86400.0L);
-  fhi = 1.0L/(2.0*86400.0L);
+  flo = longdouble(1.0)/(30*365.25*longdouble(86400.0));
+  fhi = longdouble(1.0)/(2.0*longdouble(86400.0));
 
   toffset = psr[0].param[param_pepoch].val[0];
   if (sameBackground==1)
@@ -825,13 +825,13 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
       GWbackground(gw,ngw,idum,flo,fhi,a,alpha,1);
       for (p=0;p<npsr;p++)
 	{
-	  mean=0.0L;
+	  mean=longdouble(0.0);
 	  for (j=0;j<psr[p].nobs;j++)
 	    {
-	      res[j]=0.0L;
+	      res[j]=longdouble(0.0);
 	      for (k=0;k<ngw;k++)
 		res[j]+=calculateResidualGW(kp[p],&gw[k],
-					 (psr[p].obsn[j].sat-toffset)*86400.0L,
+					 (psr[p].obsn[j].sat-toffset)*longdouble(86400.0),
 					    dist[p]);	  
 	      mean+=res[j];
 	    }
@@ -879,8 +879,8 @@ void convert_gravWaveBackground_noFit(pulsar *psr,int npsr,double convertGW,long
       setupPulsar_GWsim(psr[p].param[param_raj].val[0],
 			psr[p].param[param_decj].val[0],kp[p]);
     }
-  flo = 1.0L/(100*365.25*86400.0L);
-  fhi = 2.0L/(86400.0L);
+  flo = longdouble(1.0)/(100*365.25*longdouble(86400.0));
+  fhi = longdouble(2.0)/(longdouble(86400.0));
 
   toffset = psr[0].param[param_pepoch].val[0];
   printf("In here with a = %g %d\n",(double)a,sameBackground);
@@ -895,14 +895,14 @@ void convert_gravWaveBackground_noFit(pulsar *psr,int npsr,double convertGW,long
 	      res=0.0;
 	      for (k=0;k<ngw;k++)
 		res+=calculateResidualGW(kp[p],&gw[k],
-					 (psr[p].obsn[j].sat-toffset)*86400.0L,
-					 dist[p])/86400.0L;	  
+					 (psr[p].obsn[j].sat-toffset)*longdouble(86400.0),
+					 dist[p])/longdouble(86400.0);	  
 	      psr[p].obsn[j].residual = res;
 	      mean+=res;
 	    }
 	}
 
-	      printf("Haveres %Lg %g\n",psr[p].obsn[j].sat,res);
+	      ld_printf("Haveres %Lg %g\n",psr[p].obsn[j].sat,res);
 
     }
 }

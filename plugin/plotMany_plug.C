@@ -259,7 +259,7 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
     {
       scale2 = psr[p].nobs;
       
-      /*      sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val[0]); */
+      /*      ld_sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val[0]); */
       if (centreMJD == -1)
 	sprintf(xstr,"Year"); 
       else

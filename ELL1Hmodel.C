@@ -128,7 +128,7 @@ double ELL1Hmodel(pulsar *psr,int p,int ipos,int param){
                  "SIN I > 1.0, setting to 1: should probably use DDS model",
                  "",psr[p].noWarnings);
       si = 1.0;
-      psr[p].param[param_sini].val[0] = 1.0L;
+      psr[p].param[param_sini].val[0] = longdouble(1.0);
     }
   }else if( mode == 2 || mode == 3 ){
     // fw10, Eq. 25:
@@ -140,7 +140,7 @@ double ELL1Hmodel(pulsar *psr,int p,int ipos,int param){
                  "SIN I > 1.0, setting to 1: should probably use DDS model",
                  "",psr[p].noWarnings);
       si = 1.0;
-      psr[p].param[param_sini].val[0] = 1.0L;
+      psr[p].param[param_sini].val[0] = longdouble(1.0);
     }
   }else if( mode == 0 ){
     // Cannot determine m2 and/or sini. Will have to determine the

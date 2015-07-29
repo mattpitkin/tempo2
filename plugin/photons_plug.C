@@ -410,9 +410,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     fits_close_file(ft_in, &status);
 
-    printf("MJDREF: %Lf\n",mjd_ref);
-    printf("First photon date in input: %lf MET (s), MJD %Lf\n",minFT1time,minFT1time/86400.+mjd_ref);
-    printf(" Last photon date in input: %lf MET (s), MJD %Lf\n\n",maxFT1time,maxFT1time/86400.+mjd_ref);
+    ld_printf("MJDREF: %Lf\n",mjd_ref);
+    ld_printf("First photon date in input: %lf MET (s), MJD %Lf\n",minFT1time,minFT1time/86400.+mjd_ref);
+    ld_printf(" Last photon date in input: %lf MET (s), MJD %Lf\n\n",maxFT1time,maxFT1time/86400.+mjd_ref);
     
     // Copy input file to output file, possibly adding room for a new column
     if (phase_replace) {
@@ -565,10 +565,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         {
             time_MJD_TDB = time_MET_TDB[i]/86400.+mjd_ref;      
             if (psr[0].units == TDB_UNITS) {
-                fprintf(temp_tim," photons 0.0 %.12Lf 0.00000 @\n",time_MJD_TDB);
+                ld_fprintf(temp_tim," photons 0.0 %.12Lf 0.00000 @\n",time_MJD_TDB);
             } else {
-                fprintf(temp_tim," photons 0.0 %.12Lf 0.00000 @\n",tdb2tcb(time_MJD_TDB));
-                //printf("TDB->TCB->TDB roundtrip error: %Lg s\n",
+                ld_fprintf(temp_tim," photons 0.0 %.12Lf 0.00000 @\n",tdb2tcb(time_MJD_TDB));
+                //ld_printf("TDB->TCB->TDB roundtrip error: %Lg s\n",
                 //       (tcb2tdb(tdb2tcb(time_MJD_TDB))-time_MJD_TDB)*86400);
             }
         }
@@ -613,8 +613,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         // Form barycentric arrival times - step 1
         // ------------------------------------------------- //
         formBatsAll(psr,*npsr);
-        //printf("%Lf\t%Lf\n",psr->obsn[0].sat,psr->obsn[0].bat);
-        //printf("%Lf\t%Lf\n",psr->obsn[1].sat,psr->obsn[1].bat);
+        //ld_printf("%Lf\t%Lf\n",psr->obsn[0].sat,psr->obsn[0].bat);
+        //ld_printf("%Lf\t%Lf\n",psr->obsn[1].sat,psr->obsn[1].bat);
 
         // ------------------------------------------------- //
         // Calculate event phases - step 1
@@ -650,7 +650,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             if (output_file)
             {
                 fprintf(outputf,"%d\t",event + rows_status);
-                fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[i].bat,phase[event]);
+                ld_fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[i].bat,phase[event]);
             }
     
             event++;
@@ -700,7 +700,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         if (output_file)
         {
             fprintf(outputf,"%d\t",event + rows_status);
-            fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[1].bat,phase[event]);
+            ld_fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[1].bat,phase[event]);
         }
 
         // ------------------------------------------------- //

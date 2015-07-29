@@ -201,7 +201,7 @@ void doPlot(pulsar *psr,int npsr)
   do {
 
     /*    if (fitFlag==1 || fitFlag==2)
-	  sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val); 
+	  ld_sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val); 
 	  else if (fitFlag==3 || fitFlag==4)
 	  sprintf(xstr,"Orbital phase");
 	  else if (fitFlag==5 || fitFlag==6)
@@ -212,7 +212,7 @@ void doPlot(pulsar *psr,int npsr)
 	  sprintf(xstr,"Frequency (MHz)");
 	  sprintf(ystr,"Residual (sec)"); */
     if (xfitFlag==1) sprintf(xstr,"TOA number");
-    else if (xfitFlag==2) sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val[0]);
+    else if (xfitFlag==2) ld_sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val[0]);
     else if (xfitFlag==3) sprintf(xstr,"Observing Frequency (MHz)");
     else if (xfitFlag==4) sprintf(xstr,"Day of year");
     else if (xfitFlag==5) sprintf(xstr,"Orbital phase");
@@ -302,7 +302,7 @@ void doPlot(pulsar *psr,int npsr)
 	    else if (yfitFlag==9)
 	      {
 		y[count] = (double)psr[0].obsn[i].tdis1;
-		printf("Have %d %Lf %g %g %g\n",i,psr[0].obsn[i].sat,x[count],y[count],psr[0].obsn[i].tdis1);
+		ld_printf("Have %d %Lf %g %g %g\n",i,psr[0].obsn[i].sat,x[count],y[count],psr[0].obsn[i].tdis1);
 	      }
 	    else if (yfitFlag==10)
 	      y[count] = (double)psr[0].obsn[i].roemer;
@@ -545,10 +545,10 @@ float idPoint(pulsar *psr,int npsr,float *x,float *y,float mouseX,float mouseY,i
     }
   printf("---------------------------------------------------\n");
   printf("Closest point has TOA number %d (starting from 1)\n",iclosest+1);
-  printf("SAT = %Lf\n",psr[0].obsn[iclosest].sat);
-  printf("BAT = %Lf\n",psr[0].obsn[iclosest].bat);
-  printf("Pre-fit residual = %Lf\n",psr[0].obsn[iclosest].prefitResidual);
-  printf("Post-fit residual = %Lf\n",psr[0].obsn[iclosest].residual);
+  ld_printf("SAT = %Lf\n",psr[0].obsn[iclosest].sat);
+  ld_printf("BAT = %Lf\n",psr[0].obsn[iclosest].bat);
+  ld_printf("Pre-fit residual = %Lf\n",psr[0].obsn[iclosest].prefitResidual);
+  ld_printf("Post-fit residual = %Lf\n",psr[0].obsn[iclosest].residual);
   printf("Observing frequency = %f\n",psr[0].obsn[iclosest].freq);
   printf("---------------------------------------------------\n");
   ihighlight[*nhighlight] = iclosest;

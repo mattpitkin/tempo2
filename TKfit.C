@@ -292,7 +292,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         wmax = TKfindMax_Ld(w,nparams);
         longdouble sensible_wmax=pow(2,sizeof(longdouble)*8-17);
         if (wmax > sensible_wmax){
-            logerr("Warning: wmax very large. Precision issues likely to break fit\nwmax=%Lf\ngood=%Lf",wmax,sensible_wmax);
+            logerr("Warning: wmax very large. Precision issues likely to break fit\nwmax=%lf\ngood=%lf",(double)wmax,(double)sensible_wmax);
         }
 
         for (i=0;i<nparams;i++)
@@ -526,7 +526,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                             }   
                         }
                     }
-                    fprintf(rp, "%d r=%Lg   nr=%lg   eb=%lg  W=%lg\n", j+1, resid[j], resid_new[j], white_data[j]/data[j], (double)Weight[j]); 
+                    ld_fprintf(rp, "%d r=%Lg   nr=%lg   eb=%lg  W=%lg\n", j+1, resid[j], resid_new[j], white_data[j]/data[j], (double)Weight[j]); 
 
                 }
                 break;

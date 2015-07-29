@@ -508,7 +508,7 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
   int i,j;
   
   //omega0 = 2.0*M_PI/TKrange_d(x,n);
-  omega0 = 2.0L*M_PI/(TKrange_d(x,n) * (double)n / (double)(n-1));
+  omega0 = longdouble(2.0)*M_PI/(TKrange_d(x,n) * (double)n / (double)(n-1));
   *outN = n/2 - 1;
 
   

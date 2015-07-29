@@ -125,10 +125,10 @@ check: all
 
 if HAVE_FLOAT128
 TKlongdouble.h: TKlongdouble.float128.h
-	cp %< $@
+	cp TKlongdouble.float128.h $@
 else
 TKlongdouble.h: TKlongdouble.ld.h
-	cp %< $@
+	cp TKlongdouble.ld.h $@
 endif
 
 .PHONY: plugins-install plugins plugins-clean \

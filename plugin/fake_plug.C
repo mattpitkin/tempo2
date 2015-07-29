@@ -206,8 +206,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if(hamax<0 && nday!=1)  {  
       printf("Enter max absolute HA...................... "); scanf("%lf", &hamax);}
   if(setrand!=1){ printf("Random HA coverage? (y/n) ................. "); scanf("%s",&random);}
-  if(imjd<0)   {  printf("Enter initial MJD ......................... "); scanf("%Lf",&imjd);}
-  if(fmjd<0)   {  printf("Enter final MJD ........................... "); scanf("%Lf",&fmjd);}
+  if(imjd<0)   {  ld_printf("Enter initial MJD ......................... "); scanf("%Lf",&imjd);}
+  if(fmjd<0)   {  ld_printf("Enter final MJD ........................... "); scanf("%Lf",&fmjd);}
   if(giveRMS<0){
     printf("Enter Gaussian noise rms  (ms/auto)........ "); scanf("%s",temp);
     giveRMS = sscanf(temp,"%Lf",&grms);

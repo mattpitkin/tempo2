@@ -323,12 +323,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (flo==0)
     {
       flo=0.01/tspan;
-      printf("flo = %.5Lg, tspan = %.5Lg\n",flo,tspan);
+      ld_printf("flo = %.5Lg, tspan = %.5Lg\n",flo,tspan);
     }
   if (fhi==0)
     {
       fhi = 1.0/(longdouble)SECDAY;
-      printf("fhi = %.5Lg\n",fhi);
+      ld_printf("fhi = %.5Lg\n",fhi);
     }
 
   timeOffset = psr[0].param[param_pepoch].val[0];
@@ -468,7 +468,7 @@ void doPlot(pulsar *psr,int npsr,gwgeneralSrc *gw,longdouble **gwRes,longdouble 
 	  fout = fopen(fname,"w");
 	  for (i=0;i<psr[j].nobs;i++)
 	    {
-	      fprintf(fout,"%.15Lf %g %g\n",psr[j].obsn[i].sat,(double)psr[j].obsn[i].residual,(double)psr[j].obsn[i].toaErr);
+	      ld_fprintf(fout,"%.15Lf %g %g\n",psr[j].obsn[i].sat,(double)psr[j].obsn[i].residual,(double)psr[j].obsn[i].toaErr);
 	    }
 	  fclose(fout);
 	}

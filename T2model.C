@@ -108,8 +108,8 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
   double mtot,m1,xk,xomdot,afac,kom;
   longdouble DK011,DK012, DK021, DK022, DK031,DK032, DK041,DK042,C,S;
   longdouble DK013, DK014, DK023, DK024, DK033, DK034, DK043, DK044;
-  longdouble DAOP=0.0L, DSR=0.0L;
-  longdouble DOP=0.0L; // Orbital parallax time delay
+  longdouble DAOP=longdouble(0.0), DSR=longdouble(0.0);
+  longdouble DOP=longdouble(0.0); // Orbital parallax time delay
   double daop;// DAOP is the time delay due to annual orbital
               // parallax. daop is the aop distance.
 
@@ -208,7 +208,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
       
       /* Obtain phase of orbit */
       phase=2.0*M_PI*(orbits-norbits);
-      //      printf("Orbit phase = %.15Lf %.15g\n",psr[p].obsn[ipos].bbat,phase);
+      //      ld_printf("Orbit phase = %.15Lf %.15g\n",psr[p].obsn[ipos].bbat,phase);
       if (psr[p].param[param_ecc].paramSet[com]==1)
         {
 	  //          logdbg("going to compute U");
@@ -375,7 +375,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
 			   "SIN I > 1.0, setting to 1: should probably use DDS model",
 			   "",psr[p].noWarnings);
 		si = 1.0;
-		psr[p].param[param_sini].val[0] = 1.0L;
+		psr[p].param[param_sini].val[0] = longdouble(1.0);
 	      }
 	    }else if( mode == 2 || mode == 3 ){
 	      // fw10, Eq. 25:
@@ -387,7 +387,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
 			   "SIN I > 1.0, setting to 1: should probably use DDS model",
 			   "",psr[p].noWarnings);
 		si = 1.0;
-		psr[p].param[param_sini].val[0] = 1.0L;
+		psr[p].param[param_sini].val[0] = longdouble(1.0);
 	      }
 	    }else if( mode == 0 ){
 	      // Cannot determine m2 and/or sini. Will have to determine the

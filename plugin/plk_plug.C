@@ -31,11 +31,11 @@
 /* points and redo the fit.                                        */
 /* The plotting commands are the same as in the 'plk' package      */
 
+#include "tempo2.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "tempo2.h"
 #include "T2toolkit.h"
 #include <time.h>
 #include <cpgplot.h>
@@ -2112,7 +2112,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 					fx2[0] = (float)(lx2 - centreEpoch);
 					fx[1] = fx[0];
 					fx2[1] = fx2[0];
-					printf("Loaded %.15Lf %.15Lf,%g %g %.15Lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
+					ld_printf("Loaded %.15Lf %.15Lf,%g %g %.15Lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
 					fy[0] = ploty1; fy[1] = ploty2;
 					cpgsci(2); cpgline(2,fx,fy);
 					cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);
@@ -2659,8 +2659,8 @@ int idPoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float m
    printf("SAT = %s\n",psr[0].obsn[iclosest].fname);
    /*  printf("SAT = %s\n",print_longdouble(psr[0].obsn[iclosest].sat).c_str());
 	   printf("BAT = %s\n",print_longdouble(psr[0].obsn[iclosest].bat).c_str()); */
-   printf("SAT = %.14Lf, TOA error = %.3f (us)\n",psr[0].obsn[iclosest].sat,(double)psr[0].obsn[iclosest].toaErr);
-   printf("BAT = %.14Lf\n",psr[0].obsn[iclosest].bat);
+   ld_printf("SAT = %.14Lf, TOA error = %.3lf (us)\n",psr[0].obsn[iclosest].sat,(double)psr[0].obsn[iclosest].toaErr);
+   ld_printf("BAT = %.14Lf\n",psr[0].obsn[iclosest].bat);
    printf("Pre-fit residual = %lg\n",(double)psr[0].obsn[iclosest].prefitResidual);
    printf("Post-fit residual = %lg\n",(double)psr[0].obsn[iclosest].residual);
    printf("Observing frequency = %f\n",psr[0].obsn[iclosest].freq);
@@ -3468,7 +3468,7 @@ void newTim(pulsar *psr)
 	   {
 	   if (psr[0].obsn[i].deleted==1)
 	   fprintf(fout,"C");
-	   fprintf(fout," %s %8.3f  %.13Lf    0.00 %7.2f        %s",psr[0].obsn[i].fname,(double)psr[0].obsn[i].freq,
+	   ld_fprintf(fout," %s %8.3f  %.13Lf    0.00 %7.2f        %s",psr[0].obsn[i].fname,(double)psr[0].obsn[i].freq,
 	   psr[0].obsn[i].sat,(double)psr[0].obsn[i].toaErr,psr[0].obsn[i].telID);
 	   fprintf(fout,"\n");
 	   for (j=0;j<psr[0].nPhaseJump;j++)

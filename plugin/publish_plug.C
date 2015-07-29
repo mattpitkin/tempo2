@@ -87,13 +87,13 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
   else
     fprintf(fout,"Pulsar name\\dotfill & J%s \\\\ \n",name);
 
-  fprintf(fout,"MJD range\\dotfill & %7.1Lf---%7.1Lf \\\\ \n",
+  ld_fprintf(fout,"MJD range\\dotfill & %7.1Lf---%7.1Lf \\\\ \n",
           psr[0].param[param_start].val[0],
 	 psr[0].param[param_finish].val[0]);
-  fprintf(fout,"Data span (yr)\\dotfill & %.2Lf \\\\ \n",
+  ld_fprintf(fout,"Data span (yr)\\dotfill & %.2Lf \\\\ \n",
           (psr[0].param[param_finish].val[0]-psr[0].param[param_start].val[0])/365.25);
   fprintf(fout,"Number of TOAs\\dotfill & %d \\\\\n",psr[0].nFit);
-  fprintf(fout,"Rms timing residual ($\\mu s$)\\dotfill & %.1Lf \\\\\n",
+  ld_fprintf(fout,"Rms timing residual ($\\mu s$)\\dotfill & %.1Lf \\\\\n",
           psr[0].param[param_tres].val[0]);
   fprintf(fout,"Weighted fit\\dotfill & ");
   if (psr[0].fitMode==1) 
@@ -164,11 +164,11 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
    fprintf(fout,"\\hline\n");
 
    // First waves reference epoch
-   fprintf(fout,"Reference epoch for fitwaves\\dotfill & %Lg \\\\ \n",
+   ld_fprintf(fout,"Reference epoch for fitwaves\\dotfill & %Lg \\\\ \n",
            psr[0].param[param_waveepoch].val[0]);
    // Then fundamental wave frequency
    fprintf(fout,"Fundamental wave frequency, $\\omega_{\\rm pw}$ (yr$^{-1}$)\\dotfill");
-   fprintf(fout," & %Lg \\\\ \n",psr[0].param[param_wave_om].val[0]*365.25);
+   ld_fprintf(fout," & %Lg \\\\ \n",psr[0].param[param_wave_om].val[0]*365.25);
 
    // Finally the amplitudes of the waves:
    int lv,le;
@@ -355,7 +355,7 @@ void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac,int us
           sprintf(valStr,"%s(%s)",cval,cerr);
         }
       else
-        sprintf(valStr,"%Lg",psr[0].param[i].val[k]);
+        ld_sprintf(valStr,"%Lg",psr[0].param[i].val[k]);
    }
   parseMinus(valStr);
   parseExp(valStr);

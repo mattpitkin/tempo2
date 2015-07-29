@@ -1,10 +1,14 @@
 #define USE_BUILTIN_LONGDOUBLE
+#include <math.h>
 
 #ifdef sun
 #include <sunmath.h> 
 //* there is no such file ! J. Wang */
 // Note: you sometimes need a compile line e.g. -I/opt/SUNWspro/WS6U2/include/cc
 #endif
+
+#define longdouble(a) a##L
+#define LD_PI M_PI
 
 #ifdef USE_BUILTIN_LONGDOUBLE
 typedef long double longdouble;
@@ -33,3 +37,6 @@ std::string print_longdouble(const longdouble &ld);
 longdouble parse_longdouble(const char *str);
 
 
+#define ld_printf printf
+#define ld_fprintf fprintf
+#define ld_sprintf sprintf

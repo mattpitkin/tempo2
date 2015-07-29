@@ -71,9 +71,9 @@ chebyModelFunc(longdouble *x, longdouble *y,
     for (ix=0; ix < nx; ix++)
     {
       psr->obsn[iobs].sat = info->model->mjd_start + 
-	(x[ix]+1.0L)*0.5L*(info->model->mjd_end-info->model->mjd_start);
+	(x[ix]+longdouble(1.0))*longdouble(0.5)*(info->model->mjd_end-info->model->mjd_start);
       psr->obsn[iobs].freq =  info->model->freq_start + 
-       (y[iy]+1.0L)*0.5L*(info->model->freq_end-info->model->freq_start);
+       (y[iy]+longdouble(1.0))*longdouble(0.5)*(info->model->freq_end-info->model->freq_start);
       //      printf("Setting freq to %g %g %d\n",(double)psr->obsn[iobs].freq,
       //	     (double)y[iy],iy);
       psr->obsn[iobs].deleted = 0;
@@ -135,7 +135,7 @@ chebyModelFunc(longdouble *x, longdouble *y,
       - info->model->dispersion_constant 
       / (psr->obsn[iobs].freq*psr->obsn[iobs].freq);
   }
-//   printf("%Lg %Lg %Lg\n", z[0]+rphase, rphase, z[0]);
+//   ld_printf("%Lg %Lg %Lg\n", z[0]+rphase, rphase, z[0]);
 //   exit(1);
     // this is what we should use, only it gets set to something wierd
     //    z[iobs] = psr->obsn[iobs].phase;

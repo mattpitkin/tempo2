@@ -110,10 +110,10 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
   double **gwbRes;
 
   gw_background = (gwSrc *)malloc(sizeof(gwSrc)*ngw);
-  flo = 1.0L/(30*365.25*86400.0L);
-  fhi = 1.0L/(2.0*86400.0L);
+  flo = longdouble(1.0)/(30*365.25*longdouble(86400.0));
+  fhi = longdouble(1.0)/(2.0*longdouble(86400.0));
   gwbA = 1.0e-19L;
-  alpha = -2.0/3.0L;
+  alpha = -2.0/longdouble(3.0);
 
 
   checkResY = (double **)malloc(MAX_PSR*sizeof(double *));
@@ -166,7 +166,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
       for (p=0;p<npsr;p++)
 	{
 	  for (i=0;i<psr[p].nobs;i++)
-	    psr[p].obsn[i].sat -= (longdouble)psr[p].obsn[i].residual/86400.0L;
+	    psr[p].obsn[i].sat -= (longdouble)psr[p].obsn[i].residual/longdouble(86400.0);
 	}
     }
 
@@ -208,7 +208,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
 	ndetected=0;
 	GWamp = sqrt(GWamp1*GWamp2);
 	//		GWamp = 7.0e-13;
-	printf("GWamp = %Lg\n",GWamp);
+	ld_printf("GWamp = %Lg\n",GWamp);
 	for (it=0;it<nit;it++)
 	  {
 	    if ((it+1)%100 == 0)
@@ -233,7 +233,7 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
 			gwbRes[p][i] = 0.0;
 			for (k=0;k<ngw;k++)
 			  gwbRes[p][i]+=calculateResidualGW(kp[p],&gw_background[k],
-							 (psr[p].obsn[i].sat-toffset)*86400.0L,dist[p]);
+							 (psr[p].obsn[i].sat-toffset)*longdouble(86400.0),dist[p]);
 			mean+=gwbRes[p][i];
 		      }
 		    for (i=0;i<psr[p].nobs;i++)
@@ -286,11 +286,11 @@ void doPlugin(pulsar *psr,int npsr,int doFitV,char parFile[MAX_PSR_VAL][MAX_FILE
 		  {
 		    for (i=0;i<psr[p].nobs;i++)
 		      {
-			gwres = calculateResidualGW(kp[p],&gw,(longdouble)resX[p][i]*86400.0L,dist[p]);
+			gwres = calculateResidualGW(kp[p],&gw,(longdouble)resX[p][i]*longdouble(86400.0),dist[p]);
 			//		if (doFitV==0)
-			//		  checkResY[0][i]=resY[0][i]+calculateResidualGW(kp,&gw,(longdouble)resX[0][i]*86400.0L,dist);
-			psr[p].obsn[i].sat = sat0[p][i]+((longdouble)(resY[p][i])+gwres+gwbRes[p][i])/86400.0L;
-			//			psr[p].obsn[i].sat = sat0[p][i]+(gwbRes[p][i])/86400.0L; 
+			//		  checkResY[0][i]=resY[0][i]+calculateResidualGW(kp,&gw,(longdouble)resX[0][i]*longdouble(86400.0),dist);
+			psr[p].obsn[i].sat = sat0[p][i]+((longdouble)(resY[p][i])+gwres+gwbRes[p][i])/longdouble(86400.0);
+			//			psr[p].obsn[i].sat = sat0[p][i]+(gwbRes[p][i])/longdouble(86400.0); 
 		    //		printf("gwres = %g %g\n",(double)resX[0][i],(double)gwres);
 		      }
 		  }

@@ -63,7 +63,7 @@ longdouble DDmodel(pulsar *psr,int p,int ipos,int param)
     {
       displayMsg(1,"BIN1","SIN I > 1.0, setting to 1: should probably use DDS model","",psr[p].noWarnings);
       si = 1.0;
-      psr[p].param[param_sini].val[0] = 1.0L;
+      psr[p].param[param_sini].val[0] = longdouble(1.0);
     }
 
   if (psr[p].param[param_m2].paramSet[0]==1) am2 = psr[p].param[param_m2].val[0];
@@ -109,11 +109,11 @@ longdouble DDmodel(pulsar *psr,int p,int ipos,int param)
 
   if (ecc < 0.0 || ecc > 1.0)
     {
-      printf("DDmodel: problem with eccentricity = %Lg [%s]\n",psr[p].param[param_ecc].val[0],psr[p].name);
+      ld_printf("DDmodel: problem with eccentricity = %Lg [%s]\n",psr[p].param[param_ecc].val[0],psr[p].name);
       exit(1);
     }
 
-  orbits = tt0/pb - 0.5L*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
+  orbits = tt0/pb - longdouble(0.5)*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
   norbits = (int)orbits;
   if (orbits<0.0) norbits--;
   phase=2.0*M_PI*(orbits-norbits);

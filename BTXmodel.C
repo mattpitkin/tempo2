@@ -66,7 +66,7 @@ double BTXmodel(pulsar *psr,int p,int ipos,int param,int k)
 
   if (ecc < 0.0 || ecc > 1.0)
     {
-      printf("BTXmodel: problem with eccentricity = %Lg\n",psr[p].param[param_ecc].val[0]);
+      ld_printf("BTXmodel: problem with eccentricity = %Lg\n",psr[p].param[param_ecc].val[0]);
       exit(1);
     }
 

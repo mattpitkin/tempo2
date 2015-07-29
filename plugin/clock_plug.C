@@ -137,7 +137,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  for (i=0;i<psr[p].nobs;i++)
 	    {
-	      psr[p].obsn[i].sat += (TKgaussDev(&seed)*psr[p].obsn[i].toaErr*1e-6)/86400.0L;
+	      psr[p].obsn[i].sat += (TKgaussDev(&seed)*psr[p].obsn[i].toaErr*1e-6)/longdouble(86400.0);
 	    }
 	}
 
@@ -364,7 +364,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  fye2[i] = (float)(sy2[i] + sye[i]);
 	  //      printf("fye = %g %g\n",fye1[i],fye2[i]);
 	  fprintf(fout_clkcurve,"%g %g %g %g %g\n",px[i],sx[i],sy[i],sy2[i],sx[i]+(double)psr[0].param[param_waveepoch].val[0]);
-	  fprintf(fout_newclk,"%g %.15f\n",sx[i]+(double)psr[0].param[param_waveepoch].val[0],(double)(32.184L+taperY1[i]));
+	  fprintf(fout_newclk,"%g %.15f\n",sx[i]+(double)psr[0].param[param_waveepoch].val[0],(double)(longdouble(32.184)+taperY1[i]));
 	}
     }
   else
@@ -461,7 +461,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    {
 	      var = ls1/(ls2)/(((double)nvar-1.0)/(double)nvar); 
 	      //	  var = ls1/(double)nvar;
-	      printf("var = %g %Lg %Lg\n",var,ls1,ls2);
+	      ld_printf("var = %g %Lg %Lg\n",var,ls1,ls2);
 	      ex[ne]=0.5*(px[i]+px[i+nstep]);
 	      ey[ne] = sqrt(var);
 	      ey0[ne] = fy[i+(int)(nstep/2.0+0.5)];

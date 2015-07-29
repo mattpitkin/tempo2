@@ -90,7 +90,7 @@ void chebpc(longdouble *c,longdouble *d, int n);
 void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,int nspan,int ncoeff,
 	    longdouble maxha,char *sitename,longdouble freq,longdouble coeff[MAX_COEFF],int trueDM,char* polyco_file)
 {
-  longdouble tsid = 1.0L/1.002737909L;
+  longdouble tsid = longdouble(1.0)/longdouble(1.002737909);
   longdouble tmidMJD;
   double doppler,rms;
   int dspan;
@@ -179,7 +179,7 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
   int    nmjd;
   int    j;
   double alng;
-  longdouble mjd1,val0=0.0L,bma,bpa;
+  longdouble mjd1,val0=longdouble(0.0),bma,bpa;
 
   *retTspan = tspan;
 
@@ -213,7 +213,7 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
   mjd1 = afmjd + (wait-maxha)/24.0+tspan/(2.0*1440.0); /* Compute start time */
   nmjd = (int)mjd1;
   mjd1 = fortran_nint(48.0*(mjd1-(int)mjd1))/48.0; /* Round to nearest 1/2 hour, accurate precision not required here */
-  *nsets = (int)((longdouble)(120.0L*maxha+tspan-1)/(longdouble)tspan);
+  *nsets = (int)((longdouble)(longdouble(120.0)*maxha+tspan-1)/(longdouble)tspan);
 
   mjd2 = mjd1;
   /* MJD2 is rounded to 1.e-10 -- WHY DO THIS? */  
@@ -222,7 +222,7 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
     int ntmp1,ntmp2;
     
     ntmp1 = (int)(mjd2*1.0e8L);
-    ntmp2 = (int)((mjd2*1.0e8L-ntmp1)*100.0L);
+    ntmp2 = (int)((mjd2*1.0e8L-ntmp1)*longdouble(100.0));
     mjd2 = ntmp2*1e-10L+ntmp1*1.0e-8L;
   }
   mjd1 = mjd2;
@@ -254,13 +254,13 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
   psr->obsn[0].nFlags = 0;
 
   for (k=1;k<=ntoas;k++)
-    x[k-1]=cosl(M_PI*(k-0.5L)/ntoas)*bma+bpa;
+    x[k-1]=cosl(M_PI*(k-longdouble(0.5))/ntoas)*bma+bpa;
 
   i = -1;
   for (j=0;j<*nsets;j++)
     {
       /* Part of the Chebyshev fit routine */
-      mjd2 = mjd1 + (j)*tspan/1440.0L;
+      mjd2 = mjd1 + (j)*tspan/longdouble(1440.0);
 
       for (k=0;k<ntoas;k++)
 	{
@@ -271,13 +271,13 @@ void atimfake(pulsar *psr,int npsr,int tspan,int ncoeff,longdouble maxha,char *s
 	      exit(1);
 	    }
 	  /* ************************************* */
-	  val[i] = mjd2 + x[k]/1440.0L;
+	  val[i] = mjd2 + x[k]/longdouble(1440.0);
 	  /* Do some more rounding */
 	  {
 	    int ntmp1,ntmp2;
 	    
 	    ntmp1 = (int)(val[i]*1.0e8L);
-	    ntmp2 = (int)((val[i]*1.0e8L-ntmp1)*100.0L);
+	    ntmp2 = (int)((val[i]*1.0e8L-ntmp1)*longdouble(100.0));
 	    val[i] = ntmp2*1e-10L+ntmp1*1.0e-8L;
 	  }	  	  
 	  if (i==0) val0=val[i];
@@ -340,13 +340,13 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
       strftime(date,100,"%d-%b-%y",timePtr);
       if (date[0]=='0') date[0]=' ';
       rphase = psr->obsn[iref].phase;
-      //      printf("rphase = %d %d %Lg\n",ntoas,iref,rphase);
+      //      ld_printf("rphase = %d %d %Lg\n",ntoas,iref,rphase);
       i=iref-(int)((ntoas-1)/2.0)-1; /* -1;*/ /* Maybe another -1 */
       for (j=1;j<ntoas;j++) 
 	{      
 	  i++;
 	  t[j]  = tmin[i]-rtime; 
-	  ph[j] = phase[i]-rphase-t[j]*psr->param[param_f].val[0]*60.0L;        
+	  ph[j] = phase[i]-rphase-t[j]*psr->param[param_f].val[0]*longdouble(60.0);        
 	}
       
       /* This bit of code is based on 'chebft' in numerical recipes for fitting
@@ -404,7 +404,7 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
 	  ct = ct2 + (psr->obsn[iref].sat-psr->obsn[1].sat);
 	  phifac=8.64e4/(psr->param[param_pb].val[0]*86400.0);
 	  phi0=fortran_mod((ct-psr->param[param_t0].val[0])*phifac+90000.0,1.0); 
-	  sprintf(binPhase,"%7.4Lf%9.4Lf",phi0,phifac);
+	  ld_sprintf(binPhase,"%7.4Lf%9.4Lf",phi0,phifac);
 	}
       *doppler = ((psr->obsn[iref].freqSSB-psr->obsn[iref].freq*1.0e6)/(psr->obsn[iref].freq*1.0e6));
       (*doppler)*=1.0e6/100.0; /* WHY THIS SCALING? */
@@ -423,7 +423,7 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
       fprintf(fout,"%6.3f",*doppler);
       fprintf(fout,"%7.3f",*rms);
       fprintf(fout,"\n");
-      fprintf(fout,"%20.6Lf",rphase);
+      ld_fprintf(fout,"%20.6Lf",rphase);
       fprintf(fout,"%18.12f",(double)psr->param[param_f].val[0]);
       fprintf(fout,"%5s",sitename);
       fprintf(fout,"%5d",tspan);
@@ -443,12 +443,12 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
       else fprintf(fout2,"%-10.10s\n",psr->name);
       fprintf(fout2,"%-9.9s\n",date);
       fprintf(fout2,"%-11.2f\n",*utc);
-      fprintf(fout2,"%-.20Lf\n",(afmjd+tmidMJD));
-      fprintf(fout2,"%-25.10Lf\n",dm);
+      ld_fprintf(fout2,"%-.20Lf\n",(afmjd+tmidMJD));
+      ld_fprintf(fout2,"%-25.10Lf\n",dm);
       fprintf(fout2,"%-10.7f\n",*doppler);
       fprintf(fout2,"%-7.3f\n",*rms);
-      fprintf(fout2,"%-.15Lf\n",rphase);
-      fprintf(fout2,"%-.20Lf\n",psr->param[param_f].val[0]);
+      ld_fprintf(fout2,"%-.15Lf\n",rphase);
+      ld_fprintf(fout2,"%-.20Lf\n",psr->param[param_f].val[0]);
       fprintf(fout2,"%-5s\n",sitename);
       fprintf(fout2,"%-5d\n",tspan);
       fprintf(fout2,"%-5d\n",ncoeff);

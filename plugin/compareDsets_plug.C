@@ -368,7 +368,7 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	    fout = fopen("overlap.dat","w");
 	    for (i=0;i<nOverlap;i++)
 	      {
-		fprintf(fout,"%s %s %.5Lf %g %g\n",psr[0].obsn[overlap1[i]].fname,psr[1].obsn[overlap2[i]].fname,psr[0].obsn[overlap1[i]].sat,
+		ld_fprintf(fout,"%s %s %.5Lf %g %g\n",psr[0].obsn[overlap1[i]].fname,psr[1].obsn[overlap2[i]].fname,psr[0].obsn[overlap1[i]].sat,
 			(double)(psr[0].obsn[overlap1[i]].residual - psr[1].obsn[overlap2[i]].residual), sqrt(pow(psr[0].obsn[overlap1[i]].toaErr*1e-6,2)+pow(psr[1].obsn[overlap2[i]].toaErr*1e-6,2)));
 	      }
 	    fclose(fout);

@@ -786,7 +786,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		for (i=0;i<nrows2;i++)
 		{
 			time_MJD_TT = met2mjd(time_MET_TT[i]);		
-			fprintf(temp_tim," fermi 0.0 %.12Lf 0.00000 BAT\n",time_MJD_TT);
+			ld_fprintf(temp_tim," fermi 0.0 %.12Lf 0.00000 BAT\n",time_MJD_TT);
 		}
 
 		fclose(temp_tim);
@@ -1045,7 +1045,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				if (graph == 0)	fprintf(outputf,"%d\t",event + rows_status);
 				else fprintf(outputf,"%d\t",event + 1);
 			
-				fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%.0lf\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event],intpart);
+				ld_fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%.0lf\n",psr[0].obsn[i].sat,psr[0].obsn[i].bat,phase[event],intpart);
 			}
 	
 			event++;
@@ -1132,7 +1132,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			if (graph == 0) fprintf(outputf,"%d\t",event + rows_status);
 			else fprintf(outputf,"%d\t",event + 1);
 			
-			fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%.0lf\n",psr[0].obsn[1].sat,psr[0].obsn[1].bat,phase[event],intpart);
+			ld_fprintf(outputf,"%20.12Lf\t%20.12Lf\t%12.10le\t%.0lf\n",psr[0].obsn[1].sat,psr[0].obsn[1].bat,phase[event],intpart);
 		}
 
 		// ------------------------------------------------- //

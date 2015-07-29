@@ -158,7 +158,7 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      if (psr[p].param[param_telEpoch].paramSet[0]==1)
 			t0 = psr[p].param[param_telEpoch].val[0];
 		      else
-			t0 = 0.0L;
+			t0 = longdouble(0.0);
 
 		      deltaT = (psr[p].obsn[i].sat - t0)*SECDAY;		
 		      arg = deltaT;
@@ -172,7 +172,7 @@ void get_obsCoord(pulsar *psr,int npsr)
 			  }
 		      }
 		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[2] == 1) pos += (0.5*psr[p].param[param_telx].val[2]*arg);
-		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_telx].val[3]*arg);
+		      arg *= deltaT; if (psr[p].param[param_telx].paramSet[3] == 1) pos += (longdouble(1.0)/longdouble(6.0)*psr[p].param[param_telx].val[3]*arg);
 		      psr[p].obsn[i].observatory_earth[0] = (double)pos;
 		      //logdbg("Setting x to %g",(double)psr[p].obsn[i].observatory_earth[0]);
 		    }
@@ -183,14 +183,14 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      if (psr[p].param[param_telEpoch].paramSet[0]==1)
 			t0 = psr[p].param[param_telEpoch].val[0];
 		      else
-			t0 = 0.0L;
+			t0 = longdouble(0.0);
 
 		      deltaT = (psr[p].obsn[i].sat - t0)*SECDAY;		
 		      arg = deltaT;
 		      pos = psr[p].param[param_tely].val[0];
 		      if (psr[p].param[param_tely].paramSet[1] == 1) pos += psr[p].param[param_tely].val[1]*arg;
 		      arg *= deltaT; if (psr[p].param[param_tely].paramSet[2] == 1) pos += (0.5*psr[p].param[param_tely].val[2]*arg);
-		      arg *= deltaT; if (psr[p].param[param_tely].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_tely].val[3]*arg);
+		      arg *= deltaT; if (psr[p].param[param_tely].paramSet[3] == 1) pos += (longdouble(1.0)/longdouble(6.0)*psr[p].param[param_tely].val[3]*arg);
 		      psr[p].obsn[i].observatory_earth[1] = (double)pos;
 		      //		      printf("Setting y to %g\n",(double)psr[p].obsn[i].observatory_earth[1]);
 		    }
@@ -201,14 +201,14 @@ void get_obsCoord(pulsar *psr,int npsr)
 		      if (psr[p].param[param_telEpoch].paramSet[0]==1)
 			t0 = psr[p].param[param_telEpoch].val[0];
 		      else
-			t0 = 0.0L;
+			t0 = longdouble(0.0);
 
 		      deltaT = (psr[p].obsn[i].sat - t0)*SECDAY;		
 		      arg = deltaT;
 		      pos = psr[p].param[param_telz].val[0];
 		      if (psr[p].param[param_telz].paramSet[1] == 1) pos += psr[p].param[param_telz].val[1]*arg;
 		      arg *= deltaT; if (psr[p].param[param_telz].paramSet[2] == 1) pos += (0.5*psr[p].param[param_telz].val[2]*arg);
-		      arg *= deltaT; if (psr[p].param[param_telz].paramSet[3] == 1) pos += (1.0L/6.0L*psr[p].param[param_telz].val[3]*arg);
+		      arg *= deltaT; if (psr[p].param[param_telz].paramSet[3] == 1) pos += (longdouble(1.0)/longdouble(6.0)*psr[p].param[param_telz].val[3]*arg);
 		      psr[p].obsn[i].observatory_earth[2] = (double)pos;
 		      //		      printf("Setting z to %g\n",(double)psr[p].obsn[i].observatory_earth[2]);
 		    }

@@ -1202,20 +1202,20 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	{
 		if (k==0)
 		  {
-		    afunc = x*24.0L*3600.0L/psr->param[param_f].val[0];
+		    afunc = x*longdouble(24.0)*longdouble(3600.0)/psr->param[param_f].val[0];
 		    if (psr->param[param_brake].paramSet[0] ==1)
 		      {
 			afunc +=   (-bindex*f1*f1/f0/f0*arg3/6.L -2*bindex*(2*bindex-1)*f1*f1*f1/f0/f0/f0*arg4/24.)
 			  *84000.L/f0;
 
-			//printf("Braking part %Lg %Lg %Lg \n", bindex, arg3, arg4);
+			//ld_printf("Braking part %Lg %Lg %Lg \n", bindex, arg3, arg4);
 		      }
 		    
 		    
 		  }
 		else if (k==1)    /* Rotational frequency derivative */
 		  {
-		    afunc = 0.5L*x*x;
+		    afunc = longdouble(0.5)*x*x;
 		    if (psr->param[param_brake].paramSet[0] ==1)
 		      {
 			afunc += (2*bindex*f1/f0*arg3/6.L + 3*bindex*(2*bindex-1)*f1*f1/f0/f0*arg4/24.L)
@@ -1226,34 +1226,34 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		  }
 		else if (k==2)    /* Rotational frequency second derivative */
 		  {
-		    afunc = 1.0L/6.0L*x*x*x/1.0e9L;
+		    afunc = longdouble(1.0)/longdouble(6.0)*x*x*x/1.0e9L;
 		 
 		  }
 
 		else if (k==3)
 		  {
-		    afunc = 1.0L/24.0L*x/1.0e18L*x*x*x;
+		    afunc = longdouble(1.0)/longdouble(24.0)*x/1.0e18L*x*x*x;
 		  }
 		else if (k==4)
-			afunc = 1.0L/120.0L*x*x*x*x*x/1.0e18L;
+			afunc = longdouble(1.0)/longdouble(120.0)*x*x*x*x*x/1.0e18L;
 		else if (k==5)
-			afunc = 1.0L/720.0L*powl(x,6.0L)/1.0e18L;
+			afunc = longdouble(1.0)/longdouble(720.0)*powl(x,longdouble(6.0))/1.0e18L;
 		else if (k==6)
-			afunc = 1.0L/5040.0L*powl(x,7.0L)/1.0e18L;
+			afunc = longdouble(1.0)/longdouble(5040.0)*powl(x,longdouble(7.0))/1.0e18L;
 		else if (k==7)
-			afunc = 1.0L/40320.0L*powl(x,8.0L)/1.0e18L;
+			afunc = longdouble(1.0)/longdouble(40320.0)*powl(x,longdouble(8.0))/1.0e18L;
 		else if (k==8)
-			afunc = 1.0L/362880.0L*powl(x,9.0L)/1.0e18L;
+			afunc = longdouble(1.0)/longdouble(362880.0)*powl(x,longdouble(9.0))/1.0e18L;
 		else if (k==9)
-			afunc = 1.0L/3628800.0L*powl(x,10.0L)/1.0e18L;
+			afunc = longdouble(1.0)/longdouble(3628800.0)*powl(x,longdouble(10.0))/1.0e18L;
 		else if (k==10)
-			afunc = 1.0L/3628800.0L/11.0L*powl(x,11.0L)/1.0e23L;
+			afunc = longdouble(1.0)/longdouble(3628800.0)/longdouble(11.0)*powl(x,longdouble(11.0))/1.0e23L;
 		else if (k==11)
-			afunc = 1.0L/3628800.0L/11.0L/12.0L*powl(x,12.0L)/1.0e23L;
+			afunc = longdouble(1.0)/longdouble(3628800.0)/longdouble(11.0)/longdouble(12.0)*powl(x,longdouble(12.0))/1.0e23L;
 		else if (k==12)
-			afunc = 1.0L/3628800.0L/11.0L/12.0L/13.0L*powl(x,13.0L)/1.0e23L;
+			afunc = longdouble(1.0)/longdouble(3628800.0)/longdouble(11.0)/longdouble(12.0)/longdouble(13.0)*powl(x,longdouble(13.0))/1.0e23L;
 		else if (k==13)
-			afunc = 1.0L/3628800.0L/11.0L/12.0L/13.0L/14.0L*powl(x,14.0L)/1.0e23L;
+			afunc = longdouble(1.0)/longdouble(3628800.0)/longdouble(11.0)/longdouble(12.0)/longdouble(13.0)/longdouble(14.0)*powl(x,longdouble(14.0))/1.0e23L;
 	}
 	else if (i==param_brake)
 	  {
@@ -1261,7 +1261,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	    
 
 	    
-	    afunc = f1*f1/f0*arg3/6.0L + (4*bindex-1)*f1*f1*f1/f0/f0*arg4/24.L;
+	    afunc = f1*f1/f0*arg3/longdouble(6.0) + (4*bindex-1)*f1*f1*f1/f0/f0*arg4/24.L;
 
 
 
@@ -1275,7 +1275,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		longdouble t0;
 		t0 = ((x + psr->param[param_pepoch].val[0])
 				- psr->param[param_posepoch].val[0])*SECDAY; 
-		afunc = t0*t0/2.0L/SPEED_LIGHT*(psr->param[param_pmra].val[0]*psr->param[param_pmra].val[0]*
+		afunc = t0*t0/longdouble(2.0)/SPEED_LIGHT*(psr->param[param_pmra].val[0]*psr->param[param_pmra].val[0]*
 				mas_yr2rad_s*mas_yr2rad_s+
 				psr->param[param_pmdec].val[0]*psr->param[param_pmdec].val[0]*
 				mas_yr2rad_s*mas_yr2rad_s)*kpc2m;
@@ -1314,13 +1314,13 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	{
 		longdouble dt1,expf,tp,tgl;
 
-		tp = (psr->obsn[ipos].bbat-psr->param[param_pepoch].val[0])*86400.0L;
-		tgl = (psr->param[param_glep].val[k] - psr->param[param_pepoch].val[0])*86400.0L;
+		tp = (psr->obsn[ipos].bbat-psr->param[param_pepoch].val[0])*longdouble(86400.0);
+		tgl = (psr->param[param_glep].val[k] - psr->param[param_pepoch].val[0])*longdouble(86400.0);
 
 		dt1 = tp-tgl;
 
 		if (psr->param[param_gltd].val[k]!=0.0)
-			expf = exp(-dt1/86400.0L/psr->param[param_gltd].val[k]);
+			expf = exp(-dt1/longdouble(86400.0)/psr->param[param_gltd].val[k]);
 		else
 			expf = 1.0;
 
@@ -1348,7 +1348,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 	{
 		if (psr->obsn[ipos].bbat >= psr->param[param_glep].val[k])
 		{
-			afunc = (double)(1.0L/6.0L*powl((psr->obsn[ipos].bbat-psr->param[param_glep].val[k])*86400.0L/1.0e9,3)/psr->param[param_f].val[0]);
+			afunc = (double)(longdouble(1.0)/longdouble(6.0)*powl((psr->obsn[ipos].bbat-psr->param[param_glep].val[k])*longdouble(86400.0)/1.0e9,3)/psr->param[param_f].val[0]);
 			//	  printf("Fit = %.15g\n",afunc);
 		}
 		else
@@ -1401,7 +1401,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		  {
 		  if (ipos>5)
 		  {
-		  printf("HERE with %.14Lf\n",psr->obsn[ipos].sat);
+		  ld_printf("HERE with %.14Lf\n",psr->obsn[ipos].sat);
 		  afunc = 1.0;
 		  }
 		  else
@@ -1434,7 +1434,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 			dt = (x + psr->param[param_pepoch].val[0]) - psr->param[param_telEpoch].val[0];
 		else
 			dt = 0.0;
-		dt*=86400.0L;
+		dt*=longdouble(86400.0);
 
 		printf("k = %d\n",k);
 		if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
@@ -1454,7 +1454,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 			dt = (x + psr->param[param_pepoch].val[0]) - psr->param[param_telEpoch].val[0];
 		else
 			dt = 0.0;
-		dt *= 86400.0L;
+		dt *= longdouble(86400.0);
 
 		printf("k = %d\n",k);
 		if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0)
@@ -1534,7 +1534,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 
 				t0 = ((x + psr->param[param_pepoch].val[0])
 						- psr->param[param_posepoch].val[0])*SECDAY; 
-				afunc2 = (t0*t0/2.0L/SPEED_LIGHT*
+				afunc2 = (t0*t0/longdouble(2.0)/SPEED_LIGHT*
 						(psr->param[param_pmra].val[0]*psr->param[param_pmra].val[0]*
 						 mas_yr2rad_s*mas_yr2rad_s+
 						 psr->param[param_pmdec].val[0]*psr->param[param_pmdec].val[0]*
@@ -1975,7 +1975,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		double theta_p,theta_g,phi_p,phi_g;
 		double lambda_p,beta_p,lambda,beta;
 		longdouble time;
-		time    = (psr->obsn[ipos].bbat - psr->quadEpoch)*86400.0L;
+		time    = (psr->obsn[ipos].bbat - psr->quadEpoch)*longdouble(86400.0);
 		if (psr->param[param_raj].paramSet[1] == 1)
 			lambda_p = (double)psr->param[param_raj].val[1];
 		else
@@ -2030,31 +2030,31 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		omega_g = (double)psr->param[param_quad_om].val[0]*((int)(k/4.0)+1);
 
 		//            printf("In fitting with k = %d %d\n",k,k%4);
-		if ((1.0L-cosTheta)==0)
+		if ((longdouble(1.0)-cosTheta)==0)
 			afunc=0;
 		else
 		{
-			if (k%4==0)      afunc = resp*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_re
-			else if (k%4==1) afunc = resp*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-			else if (k%4==2) afunc = resc*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_re
-			else if (k%4==3) afunc = resc*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
-			//	  if (k%4==0)      afunc = resp*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_re
-			// else if (k%4==1) afunc = resp*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-			//else if (k%4==2) afunc = resc*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_re
-			//else if (k%4==3) afunc = resc*cos(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+			if (k%4==0)      afunc = resp*sin(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_re
+			else if (k%4==1) afunc = resp*cos(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
+			else if (k%4==2) afunc = resc*sin(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // across_re
+			else if (k%4==3) afunc = resc*cos(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // across_im
+			//	  if (k%4==0)      afunc = resp*sin(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_re
+			// else if (k%4==1) afunc = resp*cos(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
+			//else if (k%4==2) afunc = resc*sin(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // across_re
+			//else if (k%4==3) afunc = resc*cos(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // across_im
 
 			if (psr->gwsrc_psrdist > 0) // Add in the pulsar term
 			{
-				if (k%4==0) afunc      -=  resp*sinl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-				else if (k%4==1) afunc -=  resp*cosl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-				else if (k%4==2) afunc -=  resc*sinl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-				else if (k%4==3) afunc -=  resc*cosl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
+				if (k%4==0) afunc      -=  resp*sinl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
+				else if (k%4==1) afunc -=  resp*cosl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
+				else if (k%4==2) afunc -=  resc*sinl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
+				else if (k%4==3) afunc -=  resc*cosl(omega_g*time-(1-cosTheta)*psr->gwsrc_psrdist/SPEED_LIGHT*omega_g)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
 			}
 
 
 			//	  printf("Here with %d %d %g %g %g %g %g %g %g\n",k,k%4,afunc,sin(omega_g*time),cos(omega_g*time),(double)(omega_g*time),(double)resp,(double)resc,(double)cosTheta);
-			//	  else if (k%4==2) afunc = resp*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-			// else if (k%4==3) afunc = resc*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+			//	  else if (k%4==2) afunc = resp*(cos(omega_g*time)-1)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
+			// else if (k%4==3) afunc = resc*(cos(omega_g*time)-1)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // across_im
 		}
 		//      printf("Returning: %g %g %g\n",(double)afunc,(double)omega_g,(double)time);
 	}
@@ -2069,7 +2069,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		double lambda_p,beta_p,lambda,beta;
 		longdouble time;
 
-		time    = (psr->obsn[ipos].bbat - psr->gwsrc_epoch)*86400.0L;
+		time    = (psr->obsn[ipos].bbat - psr->gwsrc_epoch)*longdouble(86400.0);
 		lambda_p = (double)psr->param[param_raj].val[0];
 		beta_p   = (double)psr->param[param_decj].val[0];
 		lambda   = psr->gwsrc_ra;
@@ -2115,17 +2115,17 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 				n2*(n1*e21c+n2*e22c+n3*e23c)+
 				n3*(n1*e31c+n2*e32c+n3*e33c));
 
-		if ((1.0L-cosTheta)==0)
+		if ((longdouble(1.0)-cosTheta)==0)
 			afunc=0;
 		else
 		{
-			if (k==0)      afunc = resp*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_re
-			else if (k==1) afunc = resc*sin(omega_g*time)/(2.0L*omega_g*(1.0L-cosTheta)); // across_re
-			else if (k==2) afunc = resp*(cos(omega_g*time))/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-			else if (k==3) afunc = resc*(cos(omega_g*time))/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+			if (k==0)      afunc = resp*sin(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_re
+			else if (k==1) afunc = resc*sin(omega_g*time)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // across_re
+			else if (k==2) afunc = resp*(cos(omega_g*time))/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
+			else if (k==3) afunc = resc*(cos(omega_g*time))/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // across_im
 
-			//	  else if (k==2) afunc = resp*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // aplus_im
-			//	  else if (k==3) afunc = resc*(cos(omega_g*time)-1)/(2.0L*omega_g*(1.0L-cosTheta)); // across_im
+			//	  else if (k==2) afunc = resp*(cos(omega_g*time)-1)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // aplus_im
+			//	  else if (k==3) afunc = resc*(cos(omega_g*time)-1)/(longdouble(2.0)*omega_g*(longdouble(1.0)-cosTheta)); // across_im
 		}
 	}
 
@@ -2161,7 +2161,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		longdouble dt;
 
 		if (psr->param[param_gwm_amp].paramSet[1]==1){
-			dt = (psr->obsn[ipos].bbat - psr->gwm_epoch)*86400.0L;
+			dt = (psr->obsn[ipos].bbat - psr->gwm_epoch)*longdouble(86400.0);
 			if (dt > 0)
 			{
 				if (k==0)
@@ -2183,7 +2183,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 			longdouble time;
 			double g1,g2,g3;
 
-			time    = (psr->obsn[ipos].bbat - psr->gwm_epoch)*86400.0L;
+			time    = (psr->obsn[ipos].bbat - psr->gwm_epoch)*longdouble(86400.0);
 
 			if (psr->param[param_raj].paramSet[1] == 1)
 				lambda_p = (double)psr->param[param_raj].val[1];
@@ -2715,7 +2715,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
 					else 
 					{
 						longdouble scale;
-						scale=1.0L;
+						scale=longdouble(1.0);
 						if (k==2)      scale=1.0e9L;
 						else if (k>2 && k<10)  scale=1.0e18L;
 						else if (k>9) scale=1.0e23L;

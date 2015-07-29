@@ -53,7 +53,7 @@ using namespace std;
 
 double OMEGA0=0; 
 
-longdouble toffset = 52601.0L;
+longdouble toffset = longdouble(52601.0);
 void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i,int outWhite,int outUinv);
 
 void help() /* Display help */
@@ -515,8 +515,8 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
        }
        for (i=0;i<nobs;i++)
 	 {
-	   printf("%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
-	   fprintf(fout,"%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
+	   ld_printf("%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
+	   ld_fprintf(fout,"%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
 	 }
        fclose(fout);
      }

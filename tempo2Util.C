@@ -225,7 +225,11 @@ std::string print_longdouble(const longdouble &ld)
 {
   char buf[1024];
 #ifdef USE_BUILTIN_LONGDOUBLE
-  sprintf(buf, "%Lg", ld);
+#ifdef LONGDOUBLE_IS_FLOAT128
+  quadmath_snprintf(buf,1024, "%Qg", ld);
+#else
+  ld_sprintf(buf, "%Lg", ld);
+#endif
 #else
   ld.write(buf);
 #endif
@@ -237,7 +241,11 @@ longdouble parse_longdouble(const char *str)
 {
   longdouble ld;
 #ifdef USE_BUILTIN_LONGDOUBLE
+  ld = strtoflt128(str,NULL);
+#ifdef LONGDOUBLE_IS_FLOAT128
+#else
   sscanf(str, "%Lf", &ld);
+#endif
 #else
   ld = str;
 #endif
@@ -259,7 +267,8 @@ void equ2ecl(double *x)
 {
   longdouble tmpy,tmpz;
   longdouble ce,se;
-  longdouble arcsec2rad = 1.0/60.0/60.0*M_PI/180.0;
+  //longdouble arcsec2rad = 1.0/60.0/60.0*LD_PI/180.0;
+  longdouble arcsec2rad = longdouble(1.0)*LD_PI/longdouble(648000.0);
 
   /*  ce = 0.91748213149438;
       se = 0.39777699580108;  */
@@ -459,3 +468,100 @@ longdouble getParameterValue(pulsar *psr,int param,int arr)
     }
   return psr->param[param].val[arr];
 }
+
+
+
+
+#ifdef LONGDOUBLE_IS_FLOAT128
+#include <stdarg.h>
+#define BUFSIZE 1024
+int ld_vsprintf(char *buf, const char *__format, va_list args){
+    char fmt[BUFSIZE];
+    char qfmt[BUFSIZE];
+    va_list oargs;
+    const char *c;
+    const char *e;
+    char* o=fmt;
+    c=__format;
+    do {
+        if (*c!='%'){
+            *o=*c;
+            ++o;
+            continue;
+        }
+
+        e=c+1;
+        do {
+            if (*e=='L' && (*(e+1)=='f' || *(e+1)=='g' || *(e+1) == 'e')){
+                longdouble ld = va_arg(args,longdouble);
+                size_t n=e-c;
+                ++e;
+                memcpy(qfmt,c,n);
+                qfmt[n]='Q';
+                qfmt[n+1]=*e;
+                qfmt[n+2]='\0';
+                quadmath_snprintf(o,BUFSIZE-(o-fmt),qfmt, ld);
+                while(*(++o)!='\0'){
+                    continue;
+                }
+                c+=n+1;
+                break;
+            }
+            if (
+                    (*e > 65 && *e < 90) ||
+                    (*e > 97 && *e < 141)
+               ) {
+                va_copy(oargs,args);
+                while(c <= e){
+                    *o=*c;
+                    ++o;
+                    ++c;
+                }
+                --c;
+                break;
+            }
+        } while(*(++e) != '\0');
+    } while(*(++c) != '\0');
+
+    *o='\0';
+    int ret_status = vsnprintf(buf,BUFSIZE,fmt,oargs);
+
+    va_end(args);
+    va_end(oargs);
+    return ret_status;
+}
+
+int ld_fprintf(FILE* __stream, const char *__format, ...) {
+    char buf[BUFSIZE];
+    va_list args;
+    va_start(args,__format);
+    int ret = ld_vsprintf(buf,__format,args);
+    va_end(args);
+    fprintf(__stream,buf);
+    return ret;
+}
+
+
+int ld_printf(const char *__format, ...) {
+    char buf[BUFSIZE];
+    va_list args;
+    va_start(args,__format);
+    int ret = ld_vsprintf(buf,__format,args);
+    va_end(args);
+    printf(buf);
+    return ret;
+}
+
+int ld_sprintf(char *buf, const char *__format, ...){
+    va_list args;
+    va_start(args,__format);
+    int ret = ld_vsprintf(buf,__format,args);
+    va_end(args);
+    return ret;
+}
+
+
+#undef BUFSIZE
+
+#endif
+

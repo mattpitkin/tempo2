@@ -464,7 +464,7 @@ int main(int argc, char *argv[])
       ChebyModelSet_Test(&cms, psr, ntimecoeff*5*cms.nsegments, 
 			 nfreqcoeff*5*cms.nsegments, &rms, &mav);
       printf("Predictive model constructed and written to t2pred.dat.\n");
-      printf("RMS error = %.3Lg s MAV= %.3Lg s\n", 
+      ld_printf("RMS error = %.3Lg s MAV= %.3Lg s\n", 
 	     rms/psr[0].param[param_f].val[0], mav/psr[0].param[param_f].val[0]);
       ChebyModelSet_Destroy(&cms);
     }

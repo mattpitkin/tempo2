@@ -808,28 +808,28 @@ void T2cholDecomposition(double **a, int n, double *p)
 		 for (sum=a[i][j],k=i-1;k>=0;k--) sum-=a[i][k]*a[j][k]; 
 		 if (i==j)
 		 {
-			//	      printf("Currently have %d %d %Lg\n",i,j,sum);
+			//	      ld_printf("Currently have %d %d %Lg\n",i,j,sum);
 			if (sum <= 0.0)
 			{
-			   printf("Here with %d %d %g %Lg\n",i,j,a[i][j],sum);
+			   ld_printf("Here with %d %d %g %Lg\n",i,j,a[i][j],sum);
 			   for (sum=a[i][j],k=i-1;k>=0;k--)
 			   {
 				  sum-=a[i][k]*a[j][k];
-				  printf("Failed: %d %d %d %g %g %Lg\n",i,j,k,a[i][k],a[j][k],sum);
+				  ld_printf("Failed: %d %d %d %g %g %Lg\n",i,j,k,a[i][k],a[j][k],sum);
 			   }
 			   printf("Failed - the matrix is not positive definite\n");
 			   exit(1);
 			}
 			p[i] = sqrt(sum);
-			//	      printf("Currently have %d %d %Lg %g\n",i,j,sum,p[i]);
+			//	      ld_printf("Currently have %d %d %Lg %g\n",i,j,sum,p[i]);
 		 }
 		 else
 		 {
 			a[j][i] = (double)(sum/p[i]);
 			/*	      if (j==120)
-					  printf("j=120, setting %g %Lg %g %d\n",a[j][i],sum,p[i],i);
+					  ld_printf("j=120, setting %g %Lg %g %d\n",a[j][i],sum,p[i],i);
 					  if (j==130)
-					  printf("j=130, setting %g %Lg %g %d\n",a[j][i],sum,p[i],i);*/
+					  ld_printf("j=130, setting %g %Lg %g %d\n",a[j][i],sum,p[i],i);*/
 		 }
 	  }
    }

@@ -82,7 +82,7 @@ double DDHmodel(pulsar *psr,int p,int ipos,int param){
                "SIN I > 1.0, setting to 1: should probably use DDS model",
                "",psr[p].noWarnings);
     si = 1.0;
-    psr[p].param[param_sini].val[0] = 1.0L;
+    psr[p].param[param_sini].val[0] = longdouble(1.0);
   }
 
   pb = psr[p].param[param_pb].val[0]*SECDAY;
@@ -135,12 +135,12 @@ double DDHmodel(pulsar *psr,int p,int ipos,int param){
   eth = ecc*(1.0+dth);
   
   if (ecc < 0.0 || ecc > 1.0){
-    printf("DDHmodel: problem with eccentricity = %Lg [%s]\n",
+    ld_printf("DDHmodel: problem with eccentricity = %Lg [%s]\n",
            psr[p].param[param_ecc].val[0],psr[p].name);
     exit(1);
   }
   
-  orbits = tt0/pb - 0.5L*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
+  orbits = tt0/pb - longdouble(0.5)*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
   norbits = (int)orbits;
   if (orbits<0.0) norbits--;
   phase=2.0*M_PI*(orbits-norbits);

@@ -232,9 +232,9 @@ longdouble calculateResidualGW(longdouble *kp,gwSrc *gw,longdouble time,longdoub
   longdouble tempVal_im[3];
   longdouble geo;
   longdouble residual;
-  longdouble deg2rad = M_PI/180.0L;
-  //  longdouble VC = 299792456.200L;
-  longdouble VC = 299792458.0L; /* Speed of light (m/s)                       */
+  longdouble deg2rad = M_PI/longdouble(180.0);
+  //  longdouble VC = longdouble(299792456.200);
+  longdouble VC = longdouble(299792458.0); /* Speed of light (m/s)                       */
   int i,k;
 
   for (i=0;i<3;i++)
@@ -256,11 +256,11 @@ longdouble calculateResidualGW(longdouble *kp,gwSrc *gw,longdouble time,longdoub
   //  printf(" cosmu = %g\n",(double)cosMu);
   if ((1+cosMu)!=0) 
   {
-    psrVal1    = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal); 
-    psrVal1_im = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal_im);
+    psrVal1    = longdouble(0.5)/(longdouble(1.0)+cosMu)*dotProduct(kp,tempVal); 
+    psrVal1_im = longdouble(0.5)/(longdouble(1.0)+cosMu)*dotProduct(kp,tempVal_im);
     //    printf("psrval1 = %g %g %g\n",(double)psrVal1,(double)(1+cosMu),(double)(1-cosMu));
   }
-  else psrVal1 = 0.0L;
+  else psrVal1 = longdouble(0.0);
   
   geo      = psrVal1;
   //  printf("psrVal = %g %g\n",(double)psrVal1,(double)psrVal1_im);
@@ -270,7 +270,7 @@ longdouble calculateResidualGW(longdouble *kp,gwSrc *gw,longdouble time,longdoub
   //    earthVal1 = 0;
   //  printf("dist = %g\n",(double)dist);
   if (dist==0) /* No pulsar term */
-    psrVal2=0.0L;
+    psrVal2=longdouble(0.0);
   else
     psrVal2 = psrVal1*sinl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g) + psrVal1_im*cosl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g); 
 
@@ -499,7 +499,7 @@ longdouble eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double 
 	
       }
 
-      printf("Have pert %Lg\n",pert);
+      ld_printf("Have pert %Lg\n",pert);
       return pert;
       
 
@@ -668,7 +668,7 @@ longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_
 
       }
 
-      printf("Have pert %Lg energy %f\n",pert,*eOut);
+      ld_printf("Have pert %Lg energy %f\n",pert,*eOut);
       return pert;
       
 
@@ -884,10 +884,10 @@ void setupgeneralGW(gwgeneralSrc *gw)
   gw->h_im[0][2] = gw->avx_im_g;
   gw->h_im[1][2] = gw->avy_im_g;
  
-  /*printf("%10.8Le %10.8Le %10.8Le\n",gw->aplus_g,gw->ast_g,gw->asl_g);
+  /*printf("%longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e\n",gw->aplus_g,gw->ast_g,gw->asl_g);
   for (int jj=0;jj<3;jj++) {
                 for (int kk=0;kk<3;kk++) {
-                        printf("%10.8Le ",gw->h[jj][kk]);
+                        printf("%longdouble(10.8)e ",gw->h[jj][kk]);
                 }
         }
         printf("\n");*/
@@ -1031,8 +1031,8 @@ longdouble calculateResidualgeneralGW(longdouble *kp,gwgeneralSrc *gw,longdouble
   longdouble tempVal_im[3];
   longdouble geo;
   longdouble residual;
-  longdouble deg2rad = M_PI/180.0L;
-  longdouble VC = 299792456.200L;
+  longdouble deg2rad = M_PI/longdouble(180.0);
+  longdouble VC = longdouble(299792456.200);
   int i,k;
 
   for (i=0;i<3;i++)
@@ -1043,7 +1043,7 @@ longdouble calculateResidualgeneralGW(longdouble *kp,gwgeneralSrc *gw,longdouble
 	{
 	  tempVal[i]    += gw->h[i][k]*kp[k];
 	  tempVal_im[i] += gw->h_im[i][k]*kp[k];
-	  //printf("%10.8Le ",gw->h[i][k]);
+	  //printf("%longdouble(10.8)e ",gw->h[i][k]);
 	}
             //printf("tempVal[%d] = %g ",i,(double)tempVal[i]);
     }
@@ -1055,24 +1055,24 @@ longdouble calculateResidualgeneralGW(longdouble *kp,gwgeneralSrc *gw,longdouble
   //    printf(" cosmu = %g\n",(double)cosMu);
   if ((1+cosMu)!=0) 
   {
-    psrVal1    = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal); 
-    psrVal1_im = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal_im);
+    psrVal1    = longdouble(0.5)/(longdouble(1.0)+cosMu)*dotProduct(kp,tempVal); 
+    psrVal1_im = longdouble(0.5)/(longdouble(1.0)+cosMu)*dotProduct(kp,tempVal_im);
     //    printf("psrval1 = %g %g %g\n",(double)psrVal1,(double)(1+cosMu),(double)(1-cosMu));
   }
-  else psrVal1 = 0.0L;
+  else psrVal1 = longdouble(0.0);
   
   geo      = psrVal1;
   //  printf("psrVal = %g %g\n",(double)psrVal1,(double)psrVal1_im);
   earthVal1 = psrVal1*sinl(gw->phase_g+time*gw->omega_g)+ 
     psrVal1_im*cosl(gw->phase_g+time*gw->omega_g); // sin -> cos
   if (dist==0) /* No pulsar term */
-    psrVal2=0.0L;
+    psrVal2=longdouble(0.0);
   else
     psrVal2 = psrVal1*sinl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g) + 
       psrVal1_im*cosl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g); 
 
-  //printf("%10.8Le %10.8Le %10.8Le\n",tempVal[0],tempVal[1],tempVal[2]);
-  //printf("%10.8Le %10.8Le %10.8Le %10.8Le %10.8Le\n",psrVal1, psrVal1_im,earthVal1,psrVal2,gw->omega_g);
+  //printf("%longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e\n",tempVal[0],tempVal[1],tempVal[2]);
+  //printf("%longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e\n",psrVal1, psrVal1_im,earthVal1,psrVal2,gw->omega_g);
   residual = (earthVal1-psrVal2)/gw->omega_g; 
   //    printf("GWsim %g %g %g %g %g %g %g %g %g %g %g %g %g\n",(double)residual,(double)earthVal1,(double)psrVal2,(double)psrVal1,(double)cosMu,(double)psrVal1_im,(double)kp[0],(double)kp[1],(double)kp[2],(double)cosMu,(double)gw->h_im[0][0],(double)gw->h_im[0][1],(double)gw->h_im[1][0]);
   return residual;
@@ -1161,7 +1161,7 @@ void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,lo
 		}
       		gw[k].theta_g=acos(-1.+((double)((int)(highindx/Ngrid)))*2./((double)(Ngrid))+dcth*TKranDev(idum));
       		gw[k].phi_g=(((double)(highindx%Ngrid))+TKranDev(idum))*dphi;
-      		//printf("OUTPUT %Lf %Lf %i %i %lf\n",cosl(gw[k].theta_g),gw[k].phi_g,(int)(highindx/Ngrid),(highindx%Ngrid),dphi);
+      		//ld_printf("OUTPUT %Lf %Lf %i %i %lf\n",cosl(gw[k].theta_g),gw[k].phi_g,(int)(highindx/Ngrid),(highindx%Ngrid),dphi);
       		gw[k].phi_polar_g = 0.0;  
       		gw[k].phase_g     = TKranDev(idum)*2*M_PI;   
 		if (loglin==1)  /* Use equal sampling in log */
@@ -1180,15 +1180,15 @@ void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,lo
                         	gw[k].asl_g=gwAmps.sl_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.sl_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
                         	gw[k].aplus_g=gw[k].across_g=gw[k].ast_g=gw[k].avx_g=gw[k].avy_g=(longdouble)0.0;
                         	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(longdouble)0.0;
-			//printf("%i %i %6.4Le %6.4Le\n",k,polj,gw[k].asl_g,gw[k].avx_g);
+			//printf("%i %i %longdouble(6.4)e %longdouble(6.4)e\n",k,polj,gw[k].asl_g,gw[k].avx_g);
                 	} else if (polj == 3) {
                         	gw[k].avx_g=gwAmps.vl_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.vl_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
                         	gw[k].avy_g=gwAmps.vl_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.vl_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
                         	gw[k].ast_g=gw[k].asl_g=gw[k].aplus_g=gw[k].across_g=(longdouble)0.0;
                         	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(longdouble)0.0;
-			//printf("%i %i %6.4Le %6.4Le\n",k,polj,gw[k].avx_g,gw[k].avy_g);
+			//printf("%i %i %longdouble(6.4)e %longdouble(6.4)e\n",k,polj,gw[k].avx_g,gw[k].avy_g);
                 	}
-			//printf("%i %i %6.4Le %6.4Le\n",k,polj,gw[k].aplus_g,gw[k].ast_g);
+			//printf("%i %i %longdouble(6.4)e %longdouble(6.4)e\n",k,polj,gw[k].aplus_g,gw[k].ast_g);
         	} else {
           		gw[k].omega_g = 2*M_PI*(TKranDev(idum)*(fhi-flo)+flo);
 			if (polj == 0) {
@@ -1299,7 +1299,7 @@ void GWanisotropicbackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,lo
 	}
       gw[k].theta_g=acos(-1.+((double)((int)(highindx/Ngrid)))*2./((double)(Ngrid))+dcth*TKranDev(idum));
       gw[k].phi_g=(((double)(highindx%Ngrid))+TKranDev(idum))*dphi;
-      //printf("OUTPUT %Lf %Lf %i %i\n",cos(gw[k].theta_g),gw[k].phi_g,(int)(highindx/Ngrid),(highindx%Ngrid));
+      //ld_printf("OUTPUT %Lf %Lf %i %i\n",cos(gw[k].theta_g),gw[k].phi_g,(int)(highindx/Ngrid),(highindx%Ngrid));
       gw[k].phi_polar_g = 0.0;  
       gw[k].phase_g     = TKranDev(idum)*2*M_PI;   
       if (loglin==1)  /* Use equal sampling in log */
@@ -1355,7 +1355,7 @@ void GWdipolebackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdou
       
       gw[k].theta_g     = acos(cth);
       gw[k].phi_g       = Findphi(TKranDev(idum),dipamp*sqrt(1.-cth*cth)/(0.5+twopi*cth*dipoleamps[0]),dipphs);   
-      //printf("OUTPUT %6.4e %Lf\n",cth,gw[k].phi_g);
+      //ld_printf("OUTPUT %6.4e %Lf\n",cth,gw[k].phi_g);
 
       gw[k].phi_polar_g = 0.0; 
       gw[k].phase_g     = TKranDev(idum)*twopi;

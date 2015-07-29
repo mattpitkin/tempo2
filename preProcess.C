@@ -121,7 +121,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
       else if (strcmp(argv[i],"-set")==0)
 	{
 	  strcpy(setStr[setN],argv[i+1]);
-	  sscanf(argv[i+2],"%Lf",&setVal[setN]);
+	  //sscanf(argv[i+2],"%Lf",&setVal[setN]);
+      setVal[setN] = parse_longdouble(argv[i+2]);
 	  setN++;
 	}
       else if (strcmp(argv[i],"-simulate")==0)
@@ -377,12 +378,12 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 		tt0 = (nMJD-psr[p].param[param_tasc].val[0])*SECDAY;
 	      else
 		tt0 = (nMJD-psr[p].param[param_t0].val[0])*SECDAY;
-	      printf("tt0 = %.14Lf %.14Lf %.14Lf %.14Lf\n",tt0,nMJD,psr[p].param[param_t0].val[0],
+	      ld_printf("tt0 = %.14Lf %.14Lf %.14Lf %.14Lf\n",tt0,nMJD,psr[p].param[param_t0].val[0],
 		     nMJD-psr[p].param[param_t0].val[0]);
 
 	      orbits = tt0/pb - 0.5*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
 	      norbits = (int)(orbits+0.5);
-	      printf("Orbits = %.5Lf  (%d)\n",orbits,norbits);
+	      ld_printf("Orbits = %.5Lf  (%d)\n",orbits,norbits);
 
 	      if (xpbdot > 0 || pbdot > 0)
 		{
@@ -428,7 +429,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 		  psr[p].param[param_t0].val[0] = t0p;
 		  psr[p].param[param_t0].prefit[0] = psr[p].param[param_t0].val[0];
 		}
-	      printf("Result = %.14Lf %.14Lf\n",t0p,t0m);
+	      ld_printf("Result = %.14Lf %.14Lf\n",t0p,t0m);
 	      
 	      psr[p].param[param_pb].val[0] += psr[p].param[param_pbdot].val[0]*tt0/SECDAY;
 	      psr[p].param[param_pb].prefit[0] = psr[p].param[param_pb].val[0];

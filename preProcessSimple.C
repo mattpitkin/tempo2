@@ -313,7 +313,7 @@ void preProcessSimple2 (pulsar *psr,
 	  if (strcmp(psr->obsn[i].flagID[k],"-to")==0)
 	    {
 	      longdouble v;
-	      sscanf(psr->obsn[i].flagVal[k],"%Lf",&v);
+          v = parse_longdouble(psr->obsn[i].flagVal[k]);
 	      psr->obsn[i].sat += v/SECDAY;
 	    }
 	}

@@ -25,6 +25,7 @@
 */
 
 #ifndef __Tempo2_h
+#include "TKlongdouble.h"
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
