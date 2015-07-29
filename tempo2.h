@@ -290,6 +290,8 @@ typedef struct
 typedef struct observation {
   longdouble sat;                 /* Site arrival time                                          */
   longdouble origsat;
+  longdouble sat_day;
+  longdouble sat_sec;
   longdouble bat;                 /* Infinite frequency barycentric arrival time                */
   longdouble batCorr;
   longdouble bbat;                /* Arrival time at binary barycentre                          */
@@ -305,12 +307,18 @@ typedef struct observation {
   double      TNRedErr;		  /* Error on Model red noise signal from temponest fit */
   double      TNDMSignal;         /* Model DM signal from temponest fit */
   double      TNDMErr;            /* Error on Model DM signal from temponest fit */
+  double      TNGroupSignal;      /* Model Group Noise signal from temponest fit */
+  double      TNGroupErr;         /* Error on Model Group Noise signal from temponest fit */
   double      freq;               /* Frequency of observation (in MHz)                          */
   double      freqSSB;            /* Frequency of observation in barycentric frame (in Hz)      */
   double      toaErr;             /* Error on TOA (in us)                                       */
   double      toaDMErr;           /* Error on TOA due to DM (in us)                             */
   double      origErr;            /* Original error on TOA after reading tim file (in us)       */
   double      phaseOffset;        /* Phase offset                                               */
+
+  double averagebat;
+  double averageres;
+  double averageerr;
   char        fname[MAX_FILELEN]; /* Name of data file giving TOA                               */
   char        telID[100];         /* Telescope ID                                               */
   clock_correction correctionsTT[MAX_CLK_CORR]; /* chain of corrections from site TOA to chosen realisation of TT */
@@ -480,7 +488,7 @@ typedef struct pulsar {
   int    fitParamI[MAX_FIT];
   int    fitParamK[MAX_FIT];
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
-  char    robust;                 /* robust fitting mode, 0= no robust */
+  char    robust;
   int    rescaleErrChisq;         /* = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
   double offset;                  /* Offset, always fitted for */
   double offset_e;                /* Error in the offset */
@@ -616,7 +624,10 @@ typedef struct pulsar {
 	double TNDMCoeffs[200];
 	int TNsubtractDM;
 	int TNsubtractRed;
-  
+	int AverageResiduals; 
+	char AverageFlag[MAX_FLAG_LEN];
+	float AverageEpochWidth; 
+
 	double TNBandDMAmp;
 	double TNBandDMGam;
 	int TNBandDMC;
