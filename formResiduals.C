@@ -33,9 +33,137 @@
 #include <math.h>
 #include "tempo2.h"
 #include "GWsim.h"
-
+#include <vector>
+#include <algorithm>
 /* Form the timing residuals from the timing model and the barycentric arrival times */
 void residualTracking(pulsar *psr);
+
+void averageResiduals(pulsar *psr, int npsr){
+
+	int systemcount = 0;
+        std::vector<std::string>systemnames;
+
+	double mintime=100000.0;
+	double maxtime=0.0;
+	float timestep = psr[0].AverageEpochWidth;
+	char* flagName = psr[0].AverageFlag;
+	fprintf(stderr, "width %.3e flag %s\n", timestep, flagName);
+
+        for(int o=0;o<psr[0].nobs;o++){
+                int found=0;
+		if((double)psr[0].obsn[o].bat > maxtime){maxtime=(double)psr[0].obsn[o].bat;}
+		if((double)psr[0].obsn[o].bat < mintime){mintime=(double)psr[0].obsn[o].bat;}
+                for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+                        if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+
+        	        fprintf(stderr, "found flag\n");                
+			if(std::find(systemnames.begin(), systemnames.end(), psr[0].obsn[o].flagVal[f]) != systemnames.end()) {
+                                } else {
+
+                                        systemnames.push_back(psr[0].obsn[o].flagVal[f]);
+                                        systemcount++;
+                                }
+                                found=1;
+                        }
+		}
+
+		if(found==0){
+                        printf("Observation %i is missing the -f flag, please check before continuing\n",o);return;
+                }
+	}
+
+	mintime=floor(mintime);
+	maxtime=ceil(maxtime);
+	
+
+	int numbins=ceil((maxtime-mintime)/timestep);
+	double **AverageRes = new double*[systemcount];
+	double **AverageWeight = new double*[systemcount];
+	double **AverageBat = new double*[systemcount];
+	for(int i = 0; i < systemcount; i++){
+		AverageRes[i] = new double[numbins];
+		AverageWeight[i] = new double[numbins];
+		AverageBat[i] = new double[numbins];
+		for(int j = 0; j < numbins; j++){
+			AverageRes[i][j] = 0;
+			AverageWeight[i][j] = 0;
+			AverageBat[i][j] = 0;
+		}
+	}
+
+
+
+
+        for(int o=0;o<psr[0].nobs;o++){
+
+                for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+                        if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+
+				int flagindex=-1;
+                                for(int s = 0; s < systemnames.size(); s++){
+                                        if(strcasecmp(psr[0].obsn[o].flagVal[f],systemnames[s].c_str())==0){
+                                                flagindex = s;
+                                        }
+                                }
+
+				int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+				double adjustedErr = pow(psr[0].obsn[o].toaErr*pow(10.0, -6), 2);
+				AverageWeight[flagindex][bin] += 1.0/adjustedErr;
+				AverageRes[flagindex][bin] += (double)psr[0].obsn[o].residual/adjustedErr;
+				AverageBat[flagindex][bin] += (double)psr[0].obsn[o].bat/adjustedErr;
+                        }
+                }
+        }
+
+        for(int o=0;o<psr[0].nobs;o++){
+
+
+		//Is there an ECORR??
+		double EcorrVal=0;
+                for (int j=0;j<psr->obsn[o].nFlags;j++){
+                        for (int k=0;k<psr->nTNECORR;k++){
+                                if (strcmp(psr->obsn[o].flagID[j], psr->TNECORRFlagID[k])==0){
+                                        if (strcmp(psr->obsn[o].flagVal[j],psr->TNECORRFlagVal[k])==0){
+                                                EcorrVal=psr->TNECORRVal[k]*pow(10.0, -6);
+						//printf("Ecorr: %i %g \n", o, EcorrVal);
+                                        }
+                                }
+                        }
+                }
+                for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+                        if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+				int flagindex=-1;
+				for(int s = 0; s < systemnames.size(); s++){
+					if(strcasecmp(psr[0].obsn[o].flagVal[f],systemnames[s].c_str())==0){
+						flagindex = s;
+					}
+				}
+				int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+				psr[0].obsn[o].averagebat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
+				psr[0].obsn[o].averageres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
+				psr[0].obsn[o].averageerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
+			}
+		}
+	}
+
+	for(int o=0;o<psr[0].nobs;o++){
+//		printf("Average: %g %g %g \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
+	}
+
+
+
+	for(int i = 0; i < systemcount; i++){
+		delete[] AverageRes[i];
+		delete[] AverageWeight[i];
+		delete[] AverageBat[i];
+	}
+	delete[] AverageRes;
+	delete[] AverageWeight;
+	delete[] AverageBat;
+
+
+}
+
 
 void formResiduals(pulsar *psr,int npsr,int removeMean)
 {
@@ -228,7 +356,11 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		     }
 		 }
 	     }
-	   
+	  
+
+		if(psr[p].param[param_glep].aSize>0){
+			//printf("Glitch %i %g %Lg %Lg\n", i, (double) psr[p].obsn[i].bat, phase4/psr[p].param[param_f].val[0], (1.0/psr[p].param[param_f].val[0]) );
+		} 
 	   /* Add in extra phase due to jumps */
 	   phaseJ = 0.0;
 	   for (k=1;k<=psr[p].nJumps;k++)	    
@@ -1474,7 +1606,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 	   // END of Ryan's code
 
 	   
-
+	
 
 	   phase5[i] = phase2+phase3+phase4+phaseJ+phaseW+phase2state;
 	   //	   printf("Point 1: %.5f %.5f %.5f %.5f %.5f %.5f\n",(double)phase5[i],(double)phase2,(double)phase3,(double)phase4,(double)phaseJ,(double)phaseW);
@@ -1739,19 +1871,42 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 
 
+        double newmean = 0;
+        for (i=0;i<psr[p].nobs;i++){
+                newmean+=((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNRedSignal);
+        }
+        newmean = newmean/psr[p].nobs;
 
 
 
         if(psr[p].TNsubtractRed==1){
                  for (i=0;i<psr[p].nobs;i++){
+		std::string ProfileName =  psr[p].obsn[i].fname;
+		//if(psr[p].obsn[i].freq > 0 && psr[p].obsn[i].freq < 1000){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq,(double)psr[p].obsn[i].bat,  psr[p].obsn[i].TNRedSignal, psr[p].obsn[i].TNRedErr, (double) (psr[p].obsn[i].residual - psr[p].obsn[i].TNDMSignal), (double)psr[p].obsn[i].toaErr*pow(10.0, -6));}
+		//printf("%s %g %g %g %g\n", ProfileName.c_str(), psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  (double)psr[p].obsn[i].residual, psr[p].obsn[i].toaErr*pow(10.0, -6));
                 psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
                 }
         }
         if(psr[p].TNsubtractDM==1){
                 for (i=0;i<psr[p].nobs;i++){
+		double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
+//		if(psr[p].obsn[i].freq > 2000 && psr[p].obsn[i].freq < 10000){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
+//		if(psr[p].obsn[i].freq > 0 && psr[p].obsn[i].freq < 750){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNGroupSignal), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNGroupSignal)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
+//		if(psr[p].obsn[i].freq > 0 && psr[p].obsn[i].freq < 10000){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNRedSignal-newmean), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNRedSignal-newmean)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
                 psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
+//		if(psr[p].obsn[i].freq > 750 && psr[p].obsn[i].freq < 1000){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
+		//if(psr[p].obsn[i].freq > 0 && psr[p].obsn[i].freq < 750){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNGroupSignal), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNGroupSignal)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
+		 if(psr[p].obsn[i].freq < 2500 && psr[p].obsn[i].freq  > 2000){printf("%g %g %g %g %g %g \n", psr[p].obsn[i].freq,(double)psr[p].obsn[i].bat,  (double)psr[p].obsn[i].residual, psr[p].obsn[i].toaErr*pow(10.0, -6), (double)psr[p].obsn[i].residual*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
+
+//		printf("%s %g %g %g %g %g %g \n", psr[p].obsn[i].fname, psr[p].obsn[i].freq,(double)psr[p].obsn[i].sat,  psr[p].obsn[i].TNDMSignal, psr[p].obsn[i].TNDMErr/dmkap, psr[p].obsn[i].TNDMSignal*dmkap, psr[p].obsn[i].TNDMErr);
                 }
         }
+	if(psr[p].AverageResiduals == 1){
+		averageResiduals(psr, 1);
+	}
+	
+
+
 
 
 	 }
