@@ -203,6 +203,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
   psr->nTNGroupNoise = 0; // Number of TN Group Noise parameters
   psr->TNsubtractDM=0;
   psr->TNsubtractRed=0;
+  psr->AverageResiduals=0;
   psr->nDMEvents=0;
   psr->nTNShapeletEvents=0;
   psr->sorted=0;
