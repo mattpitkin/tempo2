@@ -16,10 +16,10 @@ char useT2accel=1;
 
 
 extern "C" {
-   extern void F77_dpotf2(char* uplo, int* n, double* a, int* lda, int* info);
-   extern void F77_dtptri(char* uplo,char* diag, int* n, double* a, int* info);
-   extern void F77_dgels(char *trans, int *m, int *n, int *nhrs, double* A, int *lda, double* B, int *ldb, double* work, int *lwork, int *info);
-   extern void F77_dtrmm(char* lr,char* uplo, char* tr, char* diag, int* n, int*m, double* alp, double* a, int* lda, double* b, int* ldb);
+   extern void F77_dpotf2(const char* uplo, int* n, double* a, int* lda, int* info);
+   extern void F77_dtptri(const char* uplo,const char* diag, int* n, double* a, int* info);
+   extern void F77_dgels(const char *trans, int *m, int *n, int *nhrs, double* A, int *lda, double* B, int *ldb, double* work, int *lwork, int *info);
+   extern void F77_dtrmm(const char* lr,const char* uplo, const char* tr, const char* diag, int* n, int*m, double* alp, double* a, int* lda, double* b, int* ldb);
 }
 
 
@@ -55,7 +55,7 @@ int accel_uinv(double* _m, int n){
 	  jc=jc+n-j;
    }
 
-   logdbg("Done CholDecomp... Inverting...",i);
+   logdbg("Done CholDecomp... Inverting...");
    F77_dtptri("L","N",&n,_t,&i);
    if(i!=0){
 	  logerr("Error in Invert i=%d",i);
@@ -80,7 +80,7 @@ int accel_uinv(double* _m, int n){
    }
    free(_t);
 
-   logdbg("Done Invert.",i);
+   logdbg("Done Invert.");
    return 0;
 }
 
@@ -126,7 +126,7 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
             jc=jc+n-j;
         }
 
-        logdbg("Inverting...",i);
+        logdbg("Inverting...");
         F77_dtptri("L","N",&n,_t,&i);
         if(i!=0){
             logerr("Error in Invert i=%d",i);
@@ -177,11 +177,11 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
 
 #define F77_dgemm F77_FUNC(dgemm,DGEMM)
 extern "C" {
-    extern void F77_dgemm(char* ta, char* tb, int* m, int* n, int* k, double* alpha, 
+    extern void F77_dgemm(const char* ta, const char* tb, int* m, int* n, int* k, double* alpha, 
             double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
 
 #define F77_dgemv F77_FUNC(dgemv,DGEMV)
-    extern void F77_dgemv(char* trans, int* m, int* n, double* alpha, 
+    extern void F77_dgemv(const char* trans, int* m, int* n, double* alpha, 
             double* a, int* lda, double* x, int* incx, double* beta, double* y, int* incy);
 }
 

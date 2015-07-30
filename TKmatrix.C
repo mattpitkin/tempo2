@@ -87,12 +87,12 @@ longdouble** malloc_2dLL(int rows,int cols){
 	  logerr("Cannot allocate enough memory for array");
 	  exit(1);
    }
-   logdbg("Allocated mem=0x%016x m=0x%016x",memory,m);
+   logdbg("Allocated mem=0x%016llx m=0x%016llx",reinterpret_cast<uint64_t>(memory),reinterpret_cast<uint64_t>(m));
    for(i=0;i<rows;i++){
 	  m[i]=memory+cols*i;
    }
 
-   logdbg("Accessible memory 0x%016x -> 0x%016x",memory,memory+rows*cols);
+   logdbg("Accessible memory 0x%016llx -> 0x%016llx",reinterpret_cast<uint64_t>(memory),reinterpret_cast<uint64_t>(memory+rows*cols));
 
    return m;
 
@@ -136,7 +136,7 @@ double **malloc_blas(int rows,int cols){
    if(rows*cols ==0) return NULL;
 
    if (sizeof(int) > sizeof(double)){
-      logerr("Error, somehow you have a system with sizeof(int) > sizeof(double) %d %d",sizeof(int),sizeof(double));
+      logerr("Error, somehow you have a system with sizeof(int) > sizeof(double)");
       exit(1);
    }
    logdbg("Allocate %d x %d double array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(double)/1024.0));
@@ -147,7 +147,7 @@ double **malloc_blas(int rows,int cols){
       logerr("Cannot allocate enough memory for array");
       exit(1);
    }
-   logdbg("Allocated mem=0x%016x uinv=0x%016x",memory,uinv);
+   logdbg("Allocated mem=0x%016llx uinv=0x%016llx",reinterpret_cast<uint64_t>(memory),reinterpret_cast<uint64_t>(uinv));
    memory+=2; // the first two bytes are for the dimensions.
    dimN=(int*)(memory-2);
    dimM=(int*)(memory-1);
@@ -155,9 +155,9 @@ double **malloc_blas(int rows,int cols){
    *dimN = rows;
    *dimM = cols;
 
-   logdbg("Secret memory rows=0x%016x cols=0x%016x",dimN,dimM);
+   logdbg("Secret memory rows=0x%016llx cols=0x%016llx",reinterpret_cast<uint64_t>(dimN),reinterpret_cast<uint64_t>(dimM));
 
-   logdbg("Accessible memory 0x%016x -> 0x%016x",memory,memory+rows*cols);
+   logdbg("Accessible memory 0x%016llx -> 0x%016llx",reinterpret_cast<uint64_t>(memory),reinterpret_cast<uint64_t>((memory+rows*cols)));
    for(i=0;i<rows;i++){
       uinv[i]=memory+cols*i;
    }
@@ -166,12 +166,12 @@ double **malloc_blas(int rows,int cols){
 
 void free_blas(double** m){
    if(debugFlag){
-	  logdbg("free 0x%016x",m[0]-2);
+	  logdbg("free 0x%016llx",reinterpret_cast<uint64_t>(m[0])-2);
 	  logdbg("m was %d x %d",get_blas_rows(m),get_blas_cols(m));
    }
    fflush(stdout);
    free(m[0]-2);
-   logdbg("free 0x%016x",m);
+   logdbg("free 0x%016llx",reinterpret_cast<uint64_t>(m));
    fflush(stdout);
    free(m);
    logdbg("leaving free_blas");
@@ -204,12 +204,12 @@ float** malloc_2df(int rows,int cols){
 	  logerr("Cannot allocate enough memory for array");
 	  exit(1);
    }
-   logdbg("Allocated mem=0x%016x m=0x%016x",memory,m);
+   logdbg("Allocated mem=0x%016llx m=0x%016llx",reinterpret_cast<uint64_t>(memory),reinterpret_cast<uint64_t>(m));
    for(i=0;i<rows;i++){
 	  m[i]=memory+cols*i;
    }
 
-   logdbg("Accessible memory 0x%016x -> 0x%016x",memory,memory+rows*cols);
+   logdbg("Accessible memory 0x%016llx -> 0x%016llx",reinterpret_cast<uint64_t>(memory),reinterpret_cast<uint64_t>(memory+rows*cols));
 
    return m;
 

@@ -621,8 +621,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  bindex= psr[0].param[param_brake].val[0];
 	  F2brake= bindex*F1*F1/F0;
 	  F3brake= bindex*(2*bindex-1)*F1*F1*F1/F0/F0;
-	  printf("F2 derived from braking index %.5Le\n", F2brake);
-	  printf("F3 derived from braking index %.5Le\n", F3brake);
+	  ld_printf("F2 derived from braking index %.5Le\n", F2brake);
+	  ld_printf("F3 derived from braking index %.5Le\n", F3brake);
   
 
 

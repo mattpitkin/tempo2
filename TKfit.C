@@ -44,7 +44,6 @@ void TKremovePoly_f(float *px,float *py,int n,int m)
     int i,j;
     double x[n],y[n];
     double p[m];
-    double chisq;
     double v[m];
 
     for (i=0;i<n;i++)
@@ -66,7 +65,6 @@ void TKremovePoly_d(double *x,double *y,int n,int m)
 {
     int i,j;
     double p[m];
-    double chisq;
     double v[m];
 
     logdbg("Remove polynomial n=%d m=%d",n,m);
@@ -81,9 +79,6 @@ void TKremovePoly_d(double *x,double *y,int n,int m)
 }
 
 void TKfindPoly_d(double *x,double *y,int n,int m,double* p){
-    int i,j;
-    double chisq;
-    double v[m];
 
     TKleastSquares_svd_noErr(x,y,n, p, m, TKfitPoly);  
 
@@ -264,7 +259,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         longdouble wt[nparams];
         longdouble p[nparams];
         // other variables
-        longdouble sum,wmax,sum_w;
+        longdouble sum,wmax;
 
         logdbg("TKleastSquares()");
 
@@ -429,7 +424,6 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         double median = 0.0;
         double newval[ndata];
         longdouble resid_new[ndata];
-        longdouble store;
 
         //Calculating the residual
         for (j=0;j<ndata;j++)
@@ -692,7 +686,7 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
     double **designMatrix, **white_designMatrix;
     double basisFunc[nf];
     double *b,*white_b;
-    int    i,j,k;
+    int    i,j;
     int nrows=get_blas_rows(uinv);
     int ncols=get_blas_cols(uinv);
     if (ncols!=n){
@@ -787,7 +781,7 @@ void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *
     double **designMatrix, **white_designMatrix;
     double basisFunc[nf];
     double *b,*white_b;
-    int    i,j,k;
+    int    i,j;
 
     // double arrays
     white_designMatrix=malloc_blas(n,nf);

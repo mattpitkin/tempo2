@@ -256,7 +256,7 @@ void printplugs(bool full){
 			continue;
 		}
 		int count=0;
-		while(pent = readdir(d)){
+		while((pent = readdir(d))){
 			char* name=pent->d_name;
 			strcpy(pname,"");
 			int j=0;

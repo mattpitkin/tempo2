@@ -277,6 +277,7 @@ double T2_PTAmodel(pulsar *psr,int p,int ipos,int param,int arr)
     }
   else if (param==param_ecc)
     return dD_de;
+  else return 0;
 }
 
 longdouble computeU(longdouble phase,longdouble ecc)

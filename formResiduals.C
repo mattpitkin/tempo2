@@ -100,7 +100,7 @@ void averageResiduals(pulsar *psr, int npsr){
                         if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
 
 				int flagindex=-1;
-                                for(int s = 0; s < systemnames.size(); s++){
+                                for(int s = 0; s < static_cast<int>(systemnames.size()); s++){
                                         if(strcasecmp(psr[0].obsn[o].flagVal[f],systemnames[s].c_str())==0){
                                                 flagindex = s;
                                         }
@@ -133,7 +133,7 @@ void averageResiduals(pulsar *psr, int npsr){
                 for (int f=0;f<psr[0].obsn[o].nFlags;f++){
                         if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
 				int flagindex=-1;
-				for(int s = 0; s < systemnames.size(); s++){
+				for(int s = 0; s < static_cast<int>(systemnames.size()); s++){
 					if(strcasecmp(psr[0].obsn[o].flagVal[f],systemnames[s].c_str())==0){
 						flagindex = s;
 					}

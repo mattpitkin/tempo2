@@ -457,7 +457,7 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
       else fprintf(fout2,"%-16s\n",binPhase);
       
       for (i=0;i<ncoeff;i++)
-	fprintf(fout2,"%-.30Le\n",coeff[i]);
+          ld_fprintf(fout2,"%-.30Le\n",coeff[i]);
     }
   fclose(fout);
   fclose(fout2);

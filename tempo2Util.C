@@ -361,7 +361,7 @@ void copyParam(parameter p1,parameter *p2)
 /* type = 1 for warning, = 2 for error            */
 /* key = e.g. CLK1                                */
 
-void displayMsg(int type,char *key,char *searchStr,char *variableStr,int noWarnings)
+void displayMsg(int type,const char *key,const char *searchStr,const char *variableStr,int noWarnings)
 {
   static char msg[MAX_MSG][1000];
   static char keyRec[MAX_MSG][10];

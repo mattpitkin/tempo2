@@ -62,7 +62,7 @@ void preProcessSimple1 (pulsar *psr, int tempo1, double thelast)
 	}
       psr->param[param_wave_om].val[0] = 2.0*M_PI/(last-first)/
 	(1.0+4.0/(double)(psr->nWhite));
-      fprintf(stderr, "%.3e\n",   psr->param[param_wave_om].val[0]);
+      fprintf(stderr, "%.3le\n",   (double)psr->param[param_wave_om].val[0]);
      
     }
 
@@ -414,7 +414,7 @@ void preProcessSimple3 (pulsar *psr)
   // Now link phase jumps to a particular site-arrival-time
   for (i=0;i<psr->nPhaseJump;i++)
     {
-      if (psr->phaseJumpID[i] = -1)
+      if ((psr->phaseJumpID[i] = -1))
 	{
 	  // Find closest TOA
 	  if (i==0) printf("WARNING: Use of phase jumps => .tim file must be sorted in time order\n");

@@ -558,7 +558,7 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useB
    else
      p_r[0]=modelA*pow(fabs(0)/modelFc,betaVal)/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
 
-   if (noTF==0) fprintf(tf,"%g %g\n",0,p_r[0]);
+   if (noTF==0) fprintf(tf,"%g %g\n",0.0,p_r[0]);
    for (i=1;i<=npts/2;i++){
 	  freq=double(i)/(N*delta);
 	  if (useBeta==0)

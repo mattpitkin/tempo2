@@ -103,7 +103,7 @@ T2Predictor_FWrite(const T2Predictor *t2p, FILE *f)
 void 
 T2Predictor_Init(T2Predictor *t2p)
 {
-  t2p->kind = None;
+  t2p->kind = NonePredType;
   memset (&t2p->modelset, 0, sizeof(t2p->modelset));
 }
 
@@ -117,7 +117,7 @@ T2Predictor_Copy(T2Predictor *into_t2p, const T2Predictor *from_t2p)
 int
 T2Predictor_Insert(T2Predictor *into_t2p, const T2Predictor *from_t2p)
 {
-  if (into_t2p->kind == None)
+  if (into_t2p->kind == NonePredType)
     into_t2p->kind = from_t2p->kind;
 
   if (into_t2p->kind != from_t2p->kind) {
@@ -136,6 +136,7 @@ T2Predictor_Insert(T2Predictor *into_t2p, const T2Predictor *from_t2p)
     exit (-1);
     break;
   }
+  return 0;
 }
 
 void T2Predictor_Keep(T2Predictor* t2p, unsigned nmjd, const longdouble* mjd)
@@ -164,7 +165,7 @@ T2Predictor_Destroy(T2Predictor *t2p)
     T1PolycoSet_Destroy(&t2p->modelset.t1);
     break;
   }
-  t2p->kind = None;
+  t2p->kind = NonePredType;
 }
 
   /* Information */
@@ -306,7 +307,7 @@ int T2Predictor_GetPlan(char *filename,
 			int *nsegments,
 			longdouble *pulse_frequencies)
 {
-  T2Predictor_GetPlan_Ext(filename, mjd_start, mjd_end, step, freq,
+ return T2Predictor_GetPlan_Ext(filename, mjd_start, mjd_end, step, freq,
 			  NULL, NULL, phase0, nsegments, pulse_frequencies);
 }
 

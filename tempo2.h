@@ -681,7 +681,7 @@ void initialise (pulsar *psr, int noWarnings);
 void initialiseOne (pulsar *psr, int noWarnings, int fullSetup);
 void destroyOne (pulsar *psr);
 
-void recordPrecision(pulsar *psr,longdouble prec,char *routine,char *comment);
+void recordPrecision(pulsar *psr,longdouble prec,const char *routine,const char *comment);
 void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr);
 void formBats(pulsar *psr,int npsr);
 void formBatsAll(pulsar *psr,int npsr);
@@ -751,7 +751,7 @@ void readObsFile(double alat[MAX_SITE],double along[MAX_SITE],
 double dotproduct(double *v1,double *v2);
 void vectorsum(double *res, double *v1,double *v2);
 void vectorscale(double *v, double k);
-void writeTim(char *timname,pulsar *psr,char *fileFormat);
+void writeTim(const char *timname,pulsar *psr,const char *fileFormat);
 int turn_hms(double turn, char *hms);
 int turn_dms(double turn, char *dms);
 double dms_turn(char *line);
@@ -798,7 +798,7 @@ void updateDDH( pulsar *psr, double val, double err, int pos );
 double ELL1Hmodel( pulsar *psr, int p, int obs, int param );
 void updateELL1H( pulsar *psr, double val, double err, int pos );
 
-void displayMsg(int type,char *key,char *searchStr,char *variableStr,int noWarnings);
+void displayMsg(int type,const char *key,const char *searchStr,const char *variableStr,int noWarnings);
 void CVSdisplayVersion(const char *file,const char *func,const char *verNum);
 
 /* stuff for SI/TDB units */
@@ -818,7 +818,7 @@ void defineClockCorrectionSequence(char *fileList,int dispWarnings);
    observation and stores them in obs->clock_corrections.  Uses one
    of the pre-defined sequences (from defineClockCorrectionSequence) if
    available, otherwise makes one automatically.  */
-void getClockCorrections(observation *obs, char *clockFrom, char *clockTo,int warnings);
+void getClockCorrections(observation *obs, const char *clockFrom, const char *clockTo,int warnings);
 
 /* getCorrectionTT : convenience function to return the sum of all
    correctionsTT terms in an observation */
@@ -826,7 +826,7 @@ double getCorrectionTT(observation *obs);
 /* convenience function to obtain correction to a named clock 
 (for intermediate use e.g. in obtaining Earth orientation parameters;
   does not store steps used in obs->correctionsTT */
-double getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings);
+double getCorrection(observation *obs, const char *clockFrom, const char *clockTo, int warnings);
 
 /* redwards stuff for tempo2 to look after the database of observatories */
 

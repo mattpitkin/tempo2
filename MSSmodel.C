@@ -264,7 +264,8 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
   else if (param==param_shapmax) return shapparam;
   else if (param==param_m2) return cm2*SUNMASS;
 
-  else if (param==param_sini) return csi;
+  // this doesn't get set ever
+  //else if (param==param_sini) return csi;
   else if (param==param_edot) return ce*tt0;
   else if (param==param_e2dot) return 1e-20*0.5*ce*tt0*tt0;
   else if (param==param_orbpx) return 1./3.086e21*cpx;

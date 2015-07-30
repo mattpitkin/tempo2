@@ -267,7 +267,7 @@ IFTE_get_Vals(double JDeph0, double JDeph1, int kind,
     if ((int)nread < ncoeff)
     {
       fprintf(stderr, "Error reading time ephemeris: Only read %d coefficients, wanted %d!\n", 
-	      nread, ncoeff);
+	      static_cast<int>(nread), static_cast<int>(ncoeff));
       exit(1);
     }
     if (ifte.swap_endian) IFTswapDoubles(ifte.buf, ncoeff); 

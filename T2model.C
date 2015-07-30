@@ -1042,5 +1042,6 @@ static double calcDH( double ae, double h3, double h4, int nharm, int sel ){
     return( sd3 + sd4 + sd5 );
   else{
     printf( "ERROR in ELL1Hmodel! This shouldn't be happening.\n" );
+    return 0;
   }
 }

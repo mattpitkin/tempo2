@@ -7,7 +7,7 @@ if [[ "$mode" == "O" ]] ; then
 	export CFLAGS="-O3 -g0 -march=corei7 -pipe -fomit-frame-pointer $CFLAGS"
 	export CXXFLAGS="$CFLAGS"
 elif [[ "$mode" == "D" ]] ; then
-    export CFLAGS="-O0 -g3 -Wall -Wfatal-errors -Wall $CFLAGS"
+    export CFLAGS="-O0 -g3 -Wall -Wfatal-errors -Werror -Wno-error=switch -Wno-error=unused-variable -Wno-error=unused-but-set-variable $CFLAGS"
 	export CXXFLAGS="$CFLAGS"
 else
 	export CFLAGS="-O2 -g $CFLAGS"

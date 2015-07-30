@@ -246,7 +246,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 			      if (strchr(line+i,' ')!=NULL)
 				{
 				  int j;
-				  for (j=i;j<strlen(line);j++)
+				  for (j=i;j<(int)strlen(line);j++)
 				    {
 				      if (line[j]!=' ')
 					{
@@ -609,7 +609,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 
 
 /* Write an arrival time file in the tempo2 format */
-void writeTim(char *timname,pulsar *psr,char *fileFormat)
+void writeTim(const char *timname,pulsar *psr,const char *fileFormat)
 {
   FILE *fout;
   int i,j;

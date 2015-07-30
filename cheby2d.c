@@ -331,7 +331,7 @@ void testCheby2D()
   Cheby2D_Construct(&cheby, testFunc, NULL);
   printf("\nTesting..."); fflush(stdout);
   Cheby2D_Test(&cheby, nx*3, ny*3,testFunc, NULL, &rms, &mav);
-  printf("\nRMS= %Lg MAV= %Lg\n", rms, mav);
+  ld_printf("\nRMS= %Lg MAV= %Lg\n", rms, mav);
   Cheby2D_Destroy(&cheby);
 }
 
@@ -402,9 +402,9 @@ void ChebyModel_Write(const ChebyModel *cm, FILE *f)
   fprintf(f, "ChebyModel BEGIN\n");
   fprintf(f, "PSRNAME %s\n", cm->psrname);
   fprintf(f, "SITENAME %s\n", cm->sitename);
-  fprintf(f, "TIME_RANGE %.34Lg %.34Lg\n", cm->mjd_start, cm->mjd_end);
-  fprintf(f, "FREQ_RANGE %.34Lg %.34Lg\n", cm->freq_start, cm->freq_end);
-  fprintf(f, "DISPERSION_CONSTANT %.34Lg\n", cm->dispersion_constant);
+  ld_fprintf(f, "TIME_RANGE %.34Lg %.34Lg\n", cm->mjd_start, cm->mjd_end);
+  ld_fprintf(f, "FREQ_RANGE %.34Lg %.34Lg\n", cm->freq_start, cm->freq_end);
+  ld_fprintf(f, "DISPERSION_CONSTANT %.34Lg\n", cm->dispersion_constant);
   fprintf(f, "NCOEFF_TIME %d\n", cm->cheby.nx);
   fprintf(f, "NCOEFF_FREQ %d\n", cm->cheby.ny);
 
@@ -414,7 +414,7 @@ void ChebyModel_Write(const ChebyModel *cm, FILE *f)
     for (iy=0; iy < cm->cheby.ny; iy++)
       {
 	//	fprintf(f, " %.34Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
-	fprintf(f, " %.25Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
+	ld_fprintf(f, " %.25Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
 	if ((iy+1)%3==0) fprintf(f, "\n");  // Every 3 coefficients put a new line
       }
     fprintf(f, "\n");
@@ -431,6 +431,8 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
   int ichar, nread;
 
   cm->cheby.coeff=NULL;
+  char str1[128];
+  char str2[128];
 
   do
   {
@@ -452,18 +454,23 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
       strcpy(cm->sitename, arg);
     else if (!strcasecmp(keyword, "TIME_RANGE"))
     {
-      if (sscanf(line, "%*s %Lf %Lf", &cm->mjd_start, &cm->mjd_end)!=2)
+      if (sscanf(line, "%*s %s %s", str1,str2)!=2)
 	return -4;
+      cm->mjd_start = parse_longdouble(str1);
+      cm->mjd_end = parse_longdouble(str2);
     }
     else if (!strcasecmp(keyword, "FREQ_RANGE"))
     {
-      if (sscanf(line, "%*s %Lf %Lf", &cm->freq_start, &cm->freq_end)!=2)
+      if (sscanf(line, "%*s %s %s", str1, str2)!=2)
 	return -5;
+      cm->freq_start = parse_longdouble(str1);
+      cm->freq_end = parse_longdouble(str2);
     }
     else if (!strcasecmp(keyword, "DISPERSION_CONSTANT"))
     {
-      if (sscanf(arg, "%Lf", &cm->dispersion_constant)!=1)
+      if (sscanf(arg, "%s", str1)!=1)
 	return -6;
+      cm->dispersion_constant = parse_longdouble(str1);
     }
     else if (!strcasecmp(keyword, "NCOEFF_TIME"))
     {
@@ -491,9 +498,9 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
 	{
 	  for (iy=0; iy < cm->cheby.ny; iy++)
 	    {
-	      if (sscanf(line+ichar, "%Lf %n", 
-			 &cm->cheby.coeff[iy*cm->cheby.nx+ix], &nread)!=1)
+	      if (sscanf(line+ichar, "%s %n",str1, &nread)!=1)
 		return -10;
+          cm->cheby.coeff[iy*cm->cheby.nx+ix] = parse_longdouble(str1);
 	      ichar += nread;
 	    }
 	}
@@ -501,9 +508,9 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
 	{
 	  for (iy=0; iy < cm->cheby.ny; iy++)
 	    {
-	      if (sscanf(line+ichar, "%Lf %n", 
-			 &cm->cheby.coeff[iy*cm->cheby.nx+ix], &nread)!=1)
+	      if (sscanf(line+ichar, "%s %n",str1, &nread)!=1)
 		return -10;
+          cm->cheby.coeff[iy*cm->cheby.nx+ix] = parse_longdouble(str1);
 	      ichar += nread;
 	      if ((iy+1)%3==0)
 		{
@@ -649,6 +656,7 @@ int ChebyModelSet_Insert(ChebyModelSet *cms, const ChebyModelSet *from)
     ChebyModel_Init(&cms->segments[iseg], 0, 0);
     ChebyModel_Copy(&cms->segments[iseg], &from->segments[iseg-old_nseg]);
   }
+  return 0;
 }
 
 /*

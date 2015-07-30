@@ -1011,7 +1011,7 @@ int TK_fft(short int dir,long n,double *x,double *y)
    int m;
    
    m = (int)(log(n)/log(2)+0.1);
-   printf("m = %d, n = %d %g %g %g %d\n",m,n,log(n),log(2),log(n)/log(2),(int)(log(n)/log(2)+0.1));
+   printf("m = %d, n = %ld %g %g %g %d\n",m,n,log(n),log(2),log(n)/log(2),(int)(log(n)/log(2)+0.1));
    /* Do the bit reversal */
    i2 = n >> 1;
    j = 0;
@@ -1126,6 +1126,8 @@ void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,doub
   tauday = tausec/86400.0;
   ntau = 0;
   ncubics=0;
+  // Should check nbintype
+  ndostats=0;
   if (nusewt >= 0)
     {
       tauyear = tauday/365.25;
@@ -1144,8 +1146,6 @@ void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,doub
 	    }
 	}
     }
-  // Should check nbintype
-  ndostats=0;
 
   // 110 continue statement
   do {
@@ -1506,7 +1506,7 @@ void readin(pulsar psr)
   int nalv,nread,n;
   static int idiag = 0;
   double tlast,ave,rms,var,sumwt,alv,t,x,sig,wt,t1,xr,xi,tautest;
-  double xold,rootvar,permin;
+  double rootvar,permin;
   static double unitfact = 1.0;
   double mean=0.0;
   int i;
@@ -1596,7 +1596,7 @@ void readin(pulsar psr)
     if (npt > 1)
       {
 	nalv++;
-	alv = alv+pow(x-xold,2);
+	alv = alv+pow(x,2);
       }
   } while (breakit==0);
   // Ave different because I have a better mean removal or something similar

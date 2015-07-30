@@ -108,17 +108,13 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
  * Master fitting routine with or without cholesky, global or not.
  */
 void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
-	int i,j,k;
-	double whiteres[MAX_OBSN],sum;
-	FILE *fin,*fout;
-	char fname[100],temp[100];
+	int i,j;
 	int p,okay;
 	int nobs_noconstrain=0;
 	double *x,*y,*sig,*val,chisq;
 	double *error;
 	double tol = 1.0e-27;  /* Tolerence for singular value decomposition routine */
 	double newStart=-1.0,newFinish=-1.0;
-	longdouble meanRes=0.0;
 	int count;
 	int ndata;
 	int offsetNp = 0;
@@ -137,7 +133,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 
 	//If TNRed or TNDM or ECORR parameters defined, call TempoNest maxlike function and return
-	if((psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) || (psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0 || (psr[0].nTNECORR != 0))){
+	if((psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) || ((psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0) || (psr[0].nTNECORR != 0))){
 
 
 #ifdef HAVE_LAPACK
@@ -412,8 +408,8 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 		// global variables are always assigned first
 
-		int iglobal, kglobal;
-		int pglobal, qglobal;
+		int iglobal;
+		int pglobal;
 		// print out covariance matrix of qifunc?
 
 		//fprintf(stderr, "%d %d\n",nglobal, psr[0].nGlobal);
@@ -421,7 +417,6 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 		{
 
 			iglobal = psr[0].fitParamGlobalI[ii];
-			kglobal = psr[0].fitParamGlobalK[ii];
 			//fprintf(stderr, "%d %d %d\n", ii,param_quad_ifunc_p, param_quad_ifunc_c);
 
 			if ((iglobal == param_quad_ifunc_p) || (iglobal == param_quad_ifunc_c))
@@ -430,7 +425,6 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 				for(jj=0;jj<nglobal;jj++)
 				{
 					pglobal =  psr[0].fitParamGlobalI[jj];
-					qglobal = psr[0].fitParamGlobalK[jj];
 
 					if ((pglobal == param_quad_ifunc_p) || (pglobal  == param_quad_ifunc_c))
 					{
@@ -536,7 +530,7 @@ void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
 
 int getNglobal(pulsar *psr,int npsr){
 	int nGlobal=0;
-	int i,k,j;
+	int i,k;
 	// Add global parameters
 	for (i=0;i<MAX_PARAMS;i++)
 	{
@@ -690,7 +684,7 @@ int getNparams(pulsar *psr,int offset)
 	/* Add extra parameters for sinusoidal whitening */
 	if (psr->param[param_wave_om].fitFlag[0]==1)
 	{
-		printf("waveScale at this point = %d\n",psr->waveScale);
+		printf("waveScale at this point = %d\n",static_cast<int>(psr->waveScale));
 		if (psr->waveScale==1)
 		{
 			for (i=0;i<psr->nWhite*2-1;i++)
@@ -1852,8 +1846,6 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 			double dt = (x + psr->param[param_pepoch].val[0]) - psr->ifuncT[k];
 			double tt = M_PI/(psr->ifuncT[1] - psr->ifuncT[0])*dt;
 			double t1;
-			double t2=0.0;
-			int l;
 
 			t1 = sin(tt)/tt;
 			afunc = t1;
@@ -1971,8 +1963,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 		double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 		double cosTheta,omega_g;
-		longdouble resp,resc,res_r,res_i;
-		double theta_p,theta_g,phi_p,phi_g;
+		longdouble resp,resc;
 		double lambda_p,beta_p,lambda,beta;
 		longdouble time;
 		time    = (psr->obsn[ipos].bbat - psr->quadEpoch)*longdouble(86400.0);
@@ -2064,8 +2055,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
 		double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
 		double cosTheta,omega_g;
-		longdouble resp,resc,res_r,res_i;
-		double theta_p,theta_g,phi_p,phi_g;
+        longdouble resp,resc;
 		double lambda_p,beta_p,lambda,beta;
 		longdouble time;
 
@@ -2174,16 +2164,10 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 		else
 		{
 			double n1,n2,n3;
-			double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
-			double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
-			double cosTheta,omega_g;
-			longdouble resp,resc,res_r,res_i;
-			double theta_p,theta_g,phi_p,phi_g;
+			double cosTheta;
 			double lambda_p,beta_p,lambda,beta;
-			longdouble time;
 			double g1,g2,g3;
 
-			time    = (psr->obsn[ipos].bbat - psr->gwm_epoch)*longdouble(86400.0);
 
 			if (psr->param[param_raj].paramSet[1] == 1)
 				lambda_p = (double)psr->param[param_raj].val[1];
@@ -2216,8 +2200,7 @@ double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k)
 				longdouble dt,scale;
 				double cos2Phi;
 				double cosPhi;
-				double l1,l2,l3,n5,m1,m2,m3;
-				double beta_m;
+				double l1,l2,l3,m1,m2,m3;
 				double d1,d2,d3,md;
 				double a1,a2,a3,ma;
 
@@ -3168,7 +3151,6 @@ void othpl(int n,double x,double *pl){
 
 	double a=2.0;
 	double b=0.0;
-	double c=1.0;
 	double y0=1.0;
 	double y1=2.0*x;
 	pl[0]=1.0;
@@ -3394,7 +3376,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		for(int i=0; i < pulse->nDMEvents; i++){
 
 
-			printf("\nIncluding DM Event %i : %g Start, %g  Length, %g Log_10 Amp, %g Spectral Index\n", pulse->TNDMEvStart[i], pulse->TNDMEvLength[i], pulse->TNDMEvAmp[i], pulse->TNDMEvGam[i]);
+			printf("\nIncluding DM Event %i : %g Start, %g  Length, %g Log_10 Amp, %g Spectral Index\n", i,pulse->TNDMEvStart[i], pulse->TNDMEvLength[i], pulse->TNDMEvAmp[i], pulse->TNDMEvGam[i]);
 
 			DMEventInfo[i]=new double[4];
 			DMEventInfo[i][0]=pulse->TNDMEvStart[i]; //Start time
@@ -3532,7 +3514,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		powercoeff[o]=0;
 	}
 
-	double Tspan = maxtspan;
 	double f1yr = 1.0/3.16e7;
 
 
@@ -4043,7 +4024,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 	int totalsize=numtofit+totCoeff+DMEventQuadTerms+ShapeEventTerms;
 	int totalnoisesize=numtofit+FitRedCoeff+FitDMCoeff+totalBandNoiseCoeff+6*pulse->TNBandDMC+totalGroupCoeff;
-	int totalDMsize = DMEventQuadTerms+ShapeEventTerms+FitDMCoeff;
 	
 	double **TotalMatrix=new double*[pulse->nobs];
 	for(int i =0;i<pulse->nobs;i++){
@@ -4174,8 +4154,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		Errorvec[i]=pow(GNG[i][i], 0.5);
 	}
 
-	double *Scoeff=new double[numtofit];
-	longdouble *Serr=new longdouble[numtofit];
 
 	/*	for(int i =0; i < numtofit; i++){
 		if(S[i] >= 0){
@@ -4279,7 +4257,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 //		if(fabs(shapesum) > pow(10.0, -10)){printf("Shapeevent terms %i %.10g %g %g \n", i, (double)pulse->obsn[i].bat, shapesum/DMVec[i], sqrt(shapeerr)/DMVec[i]);}
 
 
-		double freq=(double)pulse->obsn[i].freqSSB;
 		longdouble yrs = (pulse->obsn[i].bat - pulse->param[param_dmepoch].val[0])/365.25;
 		longdouble arg = 1.0;
 		double dmDot=0;
@@ -4473,7 +4450,6 @@ void dgesvd(double **A, int m, int n, double *S, double **U, double **VT)
 	int lda, ldu, ldvt, lwork, info;
 	double *a, *u, *vt, *work;
 
-	int minmn, maxmn;
 
 	jobu = 'A'; /* Specifies options for computing U.
 A: all M columns of U are returned in array U;
@@ -4501,8 +4477,6 @@ computed. */
 	ldu = m;
 
 
-	maxmn = m;
-	minmn = n;
 
 	ldu = m; // Left singular vector matrix
 	u = new double[ldu*ldu];
@@ -4554,7 +4528,6 @@ void dgesvd_ftoc(double *in, double **out, int rows, int cols)
 void dgemv(double **A, double *vecin,double *vecout,int rowa, int cola, char AT)
 {
 
-	int M,N,K;
 	double *a;
 
 	double alpha=1;

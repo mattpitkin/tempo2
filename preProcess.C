@@ -50,14 +50,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
   char selectFname[1000]="";
   char globalFname[1000]="";
   char selectPlugName[1000]="";
-  char select1[100][100];
-  char select2[100][100];
   char line[MAX_STRLEN];
   char hashcheck;
-  double select3[100];
-  double select4[100];
-  int nSelect=0;
-  int v5;
   char name[100];
   char dmfile[100]="";
   int setName=0;
@@ -692,7 +686,7 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
   char line[1000];
   char first[1000];
   char second[1000];
-  double v1,v2,v3;
+  double v1,v2;
   int nread;
   FILE *fin;
   
@@ -714,10 +708,12 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 		{
 		  for (i=0;i<psr[p].nobs;i++)
 		    {
-		      if ((double)psr[p].obsn[i].sat < v1 ||
-			  (double)psr[p].obsn[i].sat > v2 &&
-			  psr[p].obsn[i].deleted==0)
-			psr[p].obsn[i].deleted=1;			
+		      if (psr[p].obsn[i].deleted==0 &&
+                      (
+                       (double)psr[p].obsn[i].sat < v1 ||
+                       (double)psr[p].obsn[i].sat > v2 )
+                      )
+                  psr[p].obsn[i].deleted=1;
 		    }
 		}
 	    }
@@ -742,8 +738,8 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 		{
 		  for (i=0;i<psr[p].nobs;i++)
 		    {
-		      if ((double)psr[p].obsn[i].toaErr < v1 ||
-			  (double)psr[p].obsn[i].toaErr > v2 &&
+		      if ( ( (double)psr[p].obsn[i].toaErr < v1 ||
+			  (double)psr[p].obsn[i].toaErr > v2 ) &&
 			  psr[p].obsn[i].deleted==0)
 			psr[p].obsn[i].deleted=1;			
 		    }
@@ -770,8 +766,8 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 		{
 		  for (i=0;i<psr[p].nobs;i++)
 		    {
-		      if ((double)psr[p].obsn[i].freq < v1 ||
-			  (double)psr[p].obsn[i].freq > v2 &&
+		      if ( ( (double)psr[p].obsn[i].freq < v1 ||
+			  (double)psr[p].obsn[i].freq > v2 ) &&
 			  psr[p].obsn[i].deleted==0)
 			psr[p].obsn[i].deleted=1;			
 		    }
@@ -855,9 +851,8 @@ void useSelectFile(char *fname,pulsar *psr,int npsr)
 // Function to process specified flags
 void logicFlag(char *line,pulsar *psr,int npsr)
 {
-  char t1[100],flagID[100],flagV[100],s1[100],s2[100],s3[100],s4[100],s5[100],s6[100];
-  double v1,v2;
-  int p,i,j,k,found;
+  char t1[100],flagID[100],s1[100],s2[100],s3[100];
+  int p,i,k,found;
   int fVal=0;
 
   sscanf(line,"%s %s %s %s %s",t1,flagID,s1,s2,s3);
@@ -923,9 +918,9 @@ void logicFlag(char *line,pulsar *psr,int npsr)
 // Function to process specified flags
 void processFlag(char *line,pulsar *psr,int npsr)
 {
-  char t1[100],flagID[100],flagV[100],s1[100],s2[100],s3[100],s4[100],s5[100],s6[100];
+  char t1[100],flagID[100],flagV[100],s1[100];
   double v1,v2;
-  int p,i,j,k,found;
+  int p,i,k,found;
 
   sscanf(line,"%s %s %s %s %lf %lf",t1,flagID,flagV,s1,&v1,&v2);
   for (p=0;p<npsr;p++)
@@ -1095,14 +1090,12 @@ void processSimultaneous(char *line,pulsar *psr, int npsr)
 
 void readWhiteNoiseModelFile(pulsar *psr,int p)
 {
-  int i,j,k;
+  int i,j;
   FILE *fin;
   char str[128];
-  int ival;
   char f1_id[128];
   char f1_val[128];
   char f2_id[128];
-  char f2_val[128];
   double e0;
   double tobs;
 
@@ -1158,7 +1151,7 @@ void readWhiteNoiseModelFile(pulsar *psr,int p)
 	    }
 	  else if (strcmp(str,"START_TIME_JITTER")==0)
 	    {
-	      double t0,w0,wn;
+	      double w0;
 	      int process;
 	      fscanf(fin,"%s",f1_id);
 	      fscanf(fin,"%s",f1_val);
