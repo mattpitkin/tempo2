@@ -13,6 +13,7 @@ typedef __float128 longdouble;
 #define LD_PI M_PIq
 #define cosl cosq
 #define sinl sinq
+#define floorl floorq
 
 /* function to get longdouble as string (%g style). This returns
   std::string, from which you can get a normal C char * like this:

@@ -156,10 +156,10 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 	  // the ephemeris
 	  /* Note, interpolation takes place within the JPL reader.  */
 	  /* JPL ephemeris is based on ephemeris time */
-	  jd = psr[p].obsn[i].sat + getCorrectionTT(psr[p].obsn+i)/SECDAY + 
-	    psr[p].obsn[i].correctionTT_Teph/SECDAY+2400000.5; 
-	  jd_teph[0] = (double)((int)jd); /* 2452620.0; */
-	  jd_teph[1] = (double)(jd - (int)jd); /* 0.08342753346369;  */
+	  jd = psr[p].obsn[i].sat + getCorrectionTT(psr[p].obsn+i)/SECDAYl + 
+	    psr[p].obsn[i].correctionTT_Teph/SECDAYl+longdouble(2400000.5); 
+	  jd_teph[0] = (double)(floorl(jd)); /* 2452620.0; */
+	  jd_teph[1] = (double)(jd - floorl(jd)); /* 0.08342753346369;  */
 	  /*	  if (psr[0].obsn[i].deleted==0) ld_printf("Giving ephemeris reader: %.14Lf %.14f %.14f\n",jd,jd_teph[0],jd_teph[1]); */
 	  
 	  /* Convert to TDB if necessary */ 

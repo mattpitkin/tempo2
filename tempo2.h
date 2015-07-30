@@ -71,6 +71,7 @@
 #define MAX_FLAG_LEN         32    /* Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /* Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /* Number of seconds in 1 day                 */
+#define SECDAYl              longdouble(86400.0)       /* Number of seconds in 1 day                 */
 #define SPEED_LIGHT          299792458.0 /* Speed of light (m/s)                       */
 #define SOLAR_MASS  1.98892e30           /* Mass of Sun (kg)                           */
 #define SOLAR_RADIUS 6.96e8              /* Radius of the Sun (in meters)              */
@@ -798,7 +799,7 @@ double ELL1Hmodel( pulsar *psr, int p, int obs, int param );
 void updateELL1H( pulsar *psr, double val, double err, int pos );
 
 void displayMsg(int type,char *key,char *searchStr,char *variableStr,int noWarnings);
-void CVSdisplayVersion(char *file,char *func,const char *verNum);
+void CVSdisplayVersion(const char *file,const char *func,const char *verNum);
 
 /* stuff for SI/TDB units */
 void transform_units(struct pulsar *psr, int from, int to);

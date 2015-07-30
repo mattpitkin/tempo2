@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
   int npsr;      /* The number of pulsars */
   int noWarnings=1;
   double globalParameter=0.0;
-  int  displayParams,p;
+  int  p;
   int nGlobal,i,flagPolyco=0,it,k;
   char polyco_args[128];
   char polyco_file[128]; /* buffer for optional polyco filenames */
@@ -254,8 +254,8 @@ int main(int argc, char *argv[])
 
   if (sizeof(longdouble)!=16 && noWarnings<1)
     {
-      printf("Warning: the size of a longdouble is only %d bytes\n",sizeof(longdouble));
-      printf(" --- the size of a double is %d bytes\n",sizeof(double));
+      printf("Warning: the size of a longdouble is only %u bytes\n",(unsigned)sizeof(longdouble));
+      printf(" --- the size of a double is %u bytes\n",(unsigned)sizeof(double));
     }
   strcpy(outputSO,"");
   if (argc==1) /* No command line arguments */
@@ -277,7 +277,6 @@ int main(int argc, char *argv[])
       exit(1);
     }
   npsr = 0;   /* Initialise the number of pulsars */
-  displayParams=0;
   nGlobal=0;
   /* Obtain command line arguments */
   logdbg("Running getInputs %d",psr[0].nits);
@@ -368,15 +367,22 @@ int main(int argc, char *argv[])
     {
       longdouble mjd1, mjd2,maxha,freq;
       int ncoeff,nspan; 
-      double seg_length; 
       char sitename[128];
-      if (sscanf(polyco_args, "%Lf %Lf %d %d %Lf %s %Lf", &mjd1, &mjd2, &nspan,
-		 &ncoeff, &maxha,sitename,&freq)!=7)
+      char str1[128];
+      char str2[128];
+      char str3[128];
+      char str4[128];
+      if (sscanf(polyco_args, "%s %s %d %d %s %s %s", str1, str2, &nspan,
+		 &ncoeff, str3,sitename,str4)!=7)
       {
 	fprintf(stderr, "Error parsing -polyco arguments! See tempo2 -h.\n");
 	printf("Have: %s\n",polyco_args);
 	exit(1);
       }
+      mjd1  = parse_longdouble(str1);
+      mjd2  = parse_longdouble(str2);
+      maxha = parse_longdouble(str3);
+      freq  = parse_longdouble(str4);
       if (psr[0].tempo1 == 0)
 	printf("WARNING: Should probably use -tempo1 option\n");
 
@@ -406,19 +412,29 @@ int main(int argc, char *argv[])
       longdouble seg_length;
       int ntimecoeff, nfreqcoeff;
       char sitename[64];
+      char str1[128];
+      char str2[128];
+      char str3[128];
+      char str4[128];
+      char str5[128];
       longdouble mjd_start, mjd_end;
       longdouble freq_start, freq_end;
       printf("Calculating predictor >%s<\n",psr[0].tzrsite);
-      if (sscanf(polyco_args, "%s %Lf %Lf %Lf %Lf %d %d %Lf", sitename,
-		 &mjd_start, &mjd_end, &freq_start, &freq_end,
-		 &ntimecoeff, &nfreqcoeff, &seg_length)!=8)
+      if (sscanf(polyco_args, "%s %s %s %s %s %d %d %s", sitename,
+		 str1, str2, str3, str4,
+		 &ntimecoeff, &nfreqcoeff, str5)!=8)
       {
 	fprintf(stderr, "Error parsing -pred arguments! See tempo2 -h.\n");
 	printf("Have: %s\n",polyco_args);
 	exit(1);
       }
+      mjd_start  = parse_longdouble(str1);
+      mjd_end    = parse_longdouble(str2);
+      freq_start = parse_longdouble(str3);
+      freq_end   = parse_longdouble(str4);
+      seg_length = parse_longdouble(str5);
       /* Actually want seg_length in days */
-      seg_length /= SECDAY;
+      seg_length /= SECDAYl;
 
       if (ntimecoeff%2)
       {
@@ -604,8 +620,8 @@ int main(int argc, char *argv[])
 void
 thwart_annoying_dynamic_library_stuff(int never_call_me, float or_sink)
 {
-  ChebyModel *cm;
-  T2Predictor *t2p;
+  ChebyModel *cm=0;
+  T2Predictor *t2p=0;
   ChebyModel_Init(cm, 0, 0);
   T2Predictor_GetPhase(t2p, 0, 0);
 }

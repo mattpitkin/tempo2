@@ -1095,7 +1095,9 @@ else if (strcasecmp(str,"_DM")==0)
   /* ---------------- */
   else if (strcasecmp(str,"PHASE")==0)
   {
-	 fscanf(fin,"%d %Lf",&psr->phaseJumpDir[psr->nPhaseJump],&psr->phaseJump[psr->nPhaseJump]);
+      char str[1024];
+	 fscanf(fin,"%d %s",&psr->phaseJumpDir[psr->nPhaseJump],str);
+     psr->phaseJump[psr->nPhaseJump] = parse_longdouble(str);
 	 psr->phaseJumpID[psr->nPhaseJump]=-1;
 	 psr->nPhaseJump++;
   }  

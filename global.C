@@ -144,7 +144,7 @@ void updateBatsAll(pulsar *psr, int npsr)
 
 
 // Display the version number if it hasn't already been displayed
-void CVSdisplayVersion(char *file,char *func,const char *verNum)
+void CVSdisplayVersion(const char *file,const char *func,const char *verNum)
 {
   static char alreadyFunc[MAX_FUNCTIONS][64],alreadyFile[MAX_FUNCTIONS][64];
   static int counter=0;
