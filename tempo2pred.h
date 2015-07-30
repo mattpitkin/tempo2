@@ -28,8 +28,8 @@
 #ifndef TEMPO2PRED_H
 #define TEMPO2PRED_H
 
-typedef __float128 longdouble;
 #include <stdio.h>
+#include "TKlongdouble.h"
 
 #ifdef __cplusplus
 #include <string>

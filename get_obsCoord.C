@@ -440,7 +440,7 @@ void get_obsCoord(pulsar *psr,int npsr)
 		}
 	    }
 	  else if (i==0)
-	    printf("Delay correction turned off for psr %d\n", p);
+	    if(!psr[p].noWarnings)printf("Delay correction turned off for psr %d\n", p);
 	}
     }
 }

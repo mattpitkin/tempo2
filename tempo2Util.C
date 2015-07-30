@@ -224,13 +224,15 @@ long fortran_nlong(longdouble x)
 std::string print_longdouble(const longdouble &ld)
 {
   char buf[1024];
-#ifdef USE_BUILTIN_LONGDOUBLE
 #ifdef LONGDOUBLE_IS_FLOAT128
   quadmath_snprintf(buf,1024, "%Qg", ld);
-#else
+#endif
+
+#ifdef LONGDOUBLE_IS_IEEE754
   ld_sprintf(buf, "%Lg", ld);
 #endif
-#else
+
+#ifdef LONGDOUBLE_IS_DDREAL
   ld.write(buf);
 #endif
   return std::string(buf);
@@ -240,13 +242,15 @@ std::string print_longdouble(const longdouble &ld)
 longdouble parse_longdouble(const char *str)
 {
   longdouble ld;
-#ifdef USE_BUILTIN_LONGDOUBLE
-  ld = strtoflt128(str,NULL);
 #ifdef LONGDOUBLE_IS_FLOAT128
-#else
+  ld = strtoflt128(str,NULL);
+#endif
+
+#ifdef LONGDOUBLE_IS_IEEE754
   sscanf(str, "%Lf", &ld);
 #endif
-#else
+
+#ifdef LONGDOUBLE_IS_DDREAL
   ld = str;
 #endif
   return ld;

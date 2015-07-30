@@ -19,4 +19,4 @@ fi
 echo "CFLAGS='$CFLAGS'"
 echo "LDFLAGS='$LDFLAGS'"
 
-./configure --prefix=/usr/pulsar
+./configure --prefix=/usr/pulsar $2 $3 $4 $5 $6

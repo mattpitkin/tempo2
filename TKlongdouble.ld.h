@@ -1,4 +1,5 @@
 #define USE_BUILTIN_LONGDOUBLE
+
 #include <math.h>
 
 #ifdef sun
@@ -11,10 +12,12 @@
 #define LD_PI M_PI
 
 #ifdef USE_BUILTIN_LONGDOUBLE
+#define LONGDOUBLE_IS_IEEE754
 typedef long double longdouble;
 #define LONGDOUBLE_ONE 1.0L
 /* OSes/architectures lacking built-in double; use "qd" library */
 #else
+#define LONGDOUBLE_IS_DDREAL
 #include "dd.h"
 typedef dd_real longdouble;
 #define LONGDOUBLE_ONE "1.0"

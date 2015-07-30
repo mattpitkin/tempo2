@@ -34,3 +34,4 @@ tests/testTempo2.trs
 tests/testTKfit
 tests/testTKfit.log
 tests/testTKfit.trs
+TKlongdouble.h

@@ -252,10 +252,12 @@ int main(int argc, char *argv[])
 #endif
     }
 
-  if (sizeof(longdouble)!=16 && noWarnings<1)
+  if (noWarnings<1)
     {
-      printf("Warning: the size of a longdouble is only %u bytes\n",(unsigned)sizeof(longdouble));
+#ifdef LONGDOUBLE_IS_IEEE754
+      printf("Warning: longdouble is an IEEE754 80-bit float.\n");
       printf(" --- the size of a double is %u bytes\n",(unsigned)sizeof(double));
+#endif
     }
   strcpy(outputSO,"");
   if (argc==1) /* No command line arguments */

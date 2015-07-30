@@ -1,0 +1,14 @@
+PSRJ           J0000-0000
+RAJ             01:00:00.00000
+DECJ           -00:00:00.00000
+F0             1.00
+PEPOCH         50000.0
+POSEPOCH         50000.0
+DMEPOCH         50000.0
+DM             100.0
+EPHVER         5
+CLK            TT(TAI)
+EPHEM          DE405
+TZRMJD 50000.0
+TZRFREQ 1400.0
+TZRSITE @
