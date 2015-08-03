@@ -139,7 +139,7 @@ T2Predictor_Insert(T2Predictor *into_t2p, const T2Predictor *from_t2p)
   return 0;
 }
 
-void T2Predictor_Keep(T2Predictor* t2p, unsigned nmjd, const longdouble* mjd)
+void T2Predictor_Keep(T2Predictor* t2p, unsigned nmjd, const long double* mjd)
 {
   switch (t2p->kind)
   {
@@ -198,9 +198,9 @@ char * T2Predictor_GetSiteName(T2Predictor *t2p)
   }
   return ret;
 }
-longdouble T2Predictor_GetStartMJD(T2Predictor *t2p)
+long double T2Predictor_GetStartMJD(T2Predictor *t2p)
 {
-  longdouble ret;
+  long double ret;
   switch (t2p->kind)
   {
   case Cheby:
@@ -213,9 +213,9 @@ longdouble T2Predictor_GetStartMJD(T2Predictor *t2p)
   }
   return ret;
 }
-longdouble T2Predictor_GetEndMJD(T2Predictor *t2p)
+long double T2Predictor_GetEndMJD(T2Predictor *t2p)
 {
-  longdouble ret;
+  long double ret;
   switch (t2p->kind)
   {
   case Cheby:
@@ -230,9 +230,9 @@ longdouble T2Predictor_GetEndMJD(T2Predictor *t2p)
   }
   return ret;
 } 
-longdouble T2Predictor_GetStartFreq(T2Predictor *t2p) // MHz
+long double T2Predictor_GetStartFreq(T2Predictor *t2p) // MHz
 {
-  longdouble ret;
+  long double ret;
   switch (t2p->kind)
   {
   case Cheby:
@@ -244,9 +244,9 @@ longdouble T2Predictor_GetStartFreq(T2Predictor *t2p) // MHz
   }
   return ret;
 }
-longdouble T2Predictor_GetEndFreq(T2Predictor *t2p)  // MHz
+long double T2Predictor_GetEndFreq(T2Predictor *t2p)  // MHz
 {
-  longdouble ret;
+  long double ret;
   switch (t2p->kind)
   {
   case Cheby:
@@ -264,10 +264,10 @@ T2PredictorKind T2Predictor_Kind(T2Predictor *t2p)
 }
 
 /* Prediction */
-longdouble T2Predictor_GetPhase(const T2Predictor *t2p, longdouble mjd,
-				 longdouble freq) // freq in MHz
+long double T2Predictor_GetPhase(const T2Predictor *t2p, long double mjd,
+				 long double freq) // freq in MHz
 {
-  longdouble ret;
+  long double ret;
   switch (t2p->kind)
   {
   case Cheby:
@@ -280,10 +280,10 @@ longdouble T2Predictor_GetPhase(const T2Predictor *t2p, longdouble mjd,
   return ret;
 }
 
-longdouble T2Predictor_GetFrequency(const T2Predictor *t2p, longdouble mjd,
-				     longdouble freq) // freq in MHz
+long double T2Predictor_GetFrequency(const T2Predictor *t2p, long double mjd,
+				     long double freq) // freq in MHz
 {
-  longdouble ret;
+  long double ret;
   switch (t2p->kind)
   {
   case Cheby:
@@ -298,32 +298,32 @@ longdouble T2Predictor_GetFrequency(const T2Predictor *t2p, longdouble mjd,
 
 
 int T2Predictor_GetPlan(char *filename,
-			longdouble mjd_start,
-			longdouble mjd_end,
-			longdouble step, // seconds
-			longdouble freq, // MHz
+			long double mjd_start,
+			long double mjd_end,
+			long double step, // seconds
+			long double freq, // MHz
 			// remaining arguments are returned
-			longdouble *phase0,
+			long double *phase0,
 			int *nsegments,
-			longdouble *pulse_frequencies)
+			long double *pulse_frequencies)
 {
  return T2Predictor_GetPlan_Ext(filename, mjd_start, mjd_end, step, freq,
 			  NULL, NULL, phase0, nsegments, pulse_frequencies);
 }
 
 int T2Predictor_GetPlan_Ext(char *filename,
-			longdouble mjd_start,
-			longdouble mjd_end,
-			longdouble step, // seconds
-			longdouble freq, // MHz
+			long double mjd_start,
+			long double mjd_end,
+			long double step, // seconds
+			long double freq, // MHz
 			// remaining arguments are returned
 			char *psrname, char *sitename,
-			longdouble *phase0,
+			long double *phase0,
 			int *nsegments,
-			longdouble *pulse_frequencies)
+			long double *pulse_frequencies)
 {
   int iseg, ret;
-  longdouble lastphase, phase, mjd, lastmjd;
+  long double lastphase, phase, mjd, lastmjd;
   T2Predictor pred;
 
   if ((ret=T2Predictor_Read(&pred, filename)))

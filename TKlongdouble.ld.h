@@ -36,9 +36,17 @@ dd_real pow(const dd_real &a, const dd_real &b);
 std::string print_longdouble(const longdouble &ld);
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* function to parse a string as longdouble */
 longdouble parse_longdouble(const char *str);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #define ld_printf printf
 #define ld_fprintf fprintf

@@ -78,7 +78,7 @@ void Cheby2D_Init(Cheby2D *cheby, int nx, int ny)
   cheby->nx = nx;
   cheby->ny = ny;
   if (nx && ny)
-    cheby->coeff = (longdouble*)malloc(nx*ny*sizeof(longdouble));
+    cheby->coeff = (long double*)malloc(nx*ny*sizeof(long double));
   else
     cheby->coeff = 0;
 }
@@ -92,14 +92,14 @@ void Cheby2D_Copy(Cheby2D *cheby, const Cheby2D* from)
 {
   Cheby2D_Destroy (cheby);
   Cheby2D_Init (cheby, from->nx, from->ny);
-  memcpy (cheby->coeff, from->coeff, from->nx*from->ny*sizeof(longdouble));
+  memcpy (cheby->coeff, from->coeff, from->nx*from->ny*sizeof(long double));
 }
 
 void
 Cheby2D_Construct(Cheby2D *cheby,
 		  void
-		  (*func)(longdouble *x, longdouble *y, 
-			  int nx, int ny, longdouble *z, void *info),
+		  (*func)(long double *x, long double *y, 
+			  int nx, int ny, long double *z, void *info),
 		  void *info)
 {
   int i, j, a, b;
@@ -107,17 +107,17 @@ Cheby2D_Construct(Cheby2D *cheby,
   int ny = cheby->ny;
 
   // first of all pre-compute all the x's and y's
-  longdouble *x = (longdouble *)malloc(nx*sizeof(longdouble));
-  longdouble *y = (longdouble *)malloc(ny*sizeof(longdouble));
+  long double *x = (long double *)malloc(nx*sizeof(long double));
+  long double *y = (long double *)malloc(ny*sizeof(long double));
 
-  longdouble *f = (longdouble*)malloc(nx*ny*sizeof(longdouble));
-  longdouble *fcurr = f;
+  long double *f = (long double*)malloc(nx*ny*sizeof(long double));
+  long double *fcurr = f;
 
-  longdouble *Tx = (longdouble*)malloc(nx*nx*sizeof(longdouble));
-  longdouble *Txcurr = Tx;
+  long double *Tx = (long double*)malloc(nx*nx*sizeof(long double));
+  long double *Txcurr = Tx;
 
-  longdouble *Ty = (longdouble*)malloc(ny*ny*sizeof(longdouble));
-  longdouble *Tycurr = Ty;
+  long double *Ty = (long double*)malloc(ny*ny*sizeof(long double));
+  long double *Tycurr = Ty;
   for (i=0; i < nx; i++)
     x[i] = cosl(M_PIl * (i+0.5L) / nx);
   for (i=0; i < ny; i++)
@@ -147,11 +147,11 @@ Cheby2D_Construct(Cheby2D *cheby,
     Tycurr = Ty;
     for (j=0; j < ny; j++)
     {
-      longdouble sum = 0.0L;
+      long double sum = 0.0L;
       fcurr = f;
       for (b=0; b < ny; b++) // for each row
       {
-	longdouble sum2 = 0.0L;
+	long double sum2 = 0.0L;
 	Txcurr = Tx+i*nx;
 	for (a=0; a < nx; a++) // get inner prod of f with x-basis
 	  sum2 += *(fcurr++) * *(Txcurr++);  //=f(xa,xb)*Ti(xa)
@@ -204,13 +204,13 @@ Cheby2D_Construct_x_Derivative(Cheby2D *dcheby, const Cheby2D *cheby)
 //   d_j = 2xd_(j+1) - d_(j+2) + c_j
 //   d_(m+1) = d_m = 0
 
-longdouble 
-Cheby2D_Evaluate(const Cheby2D *cheby, longdouble x, longdouble y)
+long double 
+Cheby2D_Evaluate(const Cheby2D *cheby, long double x, long double y)
 {
-  longdouble di, di1, di2; // inner loop values d_i, d_(i+1), d_(i+2)
-  longdouble dj, dj1, dj2; // as above, for outer loop
+  long double di, di1, di2; // inner loop values d_i, d_(i+1), d_(i+2)
+  long double dj, dj1, dj2; // as above, for outer loop
   int i, j;
-  longdouble *coeffcurr = cheby->coeff;
+  long double *coeffcurr = cheby->coeff;
 
   dj = dj1 = 0.0L;
   for (j=cheby->ny-1; j >= 0; j--)
@@ -239,17 +239,17 @@ Cheby2D_Evaluate(const Cheby2D *cheby, longdouble x, longdouble y)
 void
 Cheby2D_Test(Cheby2D *cheby, int nx_test, int ny_test,
 	     void
-	     (*func)(longdouble *x, longdouble *y, 
-		     int nx, int ny, longdouble *z, void *info),
+	     (*func)(long double *x, long double *y, 
+		     int nx, int ny, long double *z, void *info),
 	     void *info,
-	     longdouble *residualRMS, longdouble *residualMAV)
+	     long double *residualRMS, long double *residualMAV)
 {
   int ix_test, iy_test;
-  longdouble  fprime;
-  longdouble sdiff, ssdiff, maxdiff, diff;
-  longdouble *f = (longdouble*)malloc(nx_test*ny_test*sizeof(longdouble));
-  longdouble *x = (longdouble *)malloc(nx_test*sizeof(longdouble));
-  longdouble *y = (longdouble *)malloc(ny_test*sizeof(longdouble));
+  long double  fprime;
+  long double sdiff, ssdiff, maxdiff, diff;
+  long double *f = (long double*)malloc(nx_test*ny_test*sizeof(long double));
+  long double *x = (long double *)malloc(nx_test*sizeof(long double));
+  long double *y = (long double *)malloc(ny_test*sizeof(long double));
 
   sdiff=ssdiff=maxdiff=0.0L;
 
@@ -272,20 +272,20 @@ Cheby2D_Test(Cheby2D *cheby, int nx_test, int ny_test,
       {
       // redwards hack to simulate 1-D polyco.. first get prediction from
       // centre freq
-      longdouble phase1d = Cheby2D_Evaluate(cheby, x[ix_test], 0.0);
+      long double phase1d = Cheby2D_Evaluate(cheby, x[ix_test], 0.0);
       // second, get instantaneous freq at band center
-      longdouble dx = 1.0e-5L;
-      longdouble freq1 = 
+      long double dx = 1.0e-5L;
+      long double freq1 = 
 	(Cheby2D_Evaluate(cheby, x[ix_test]+dx*0.5L, y[iy_test])-
 	 Cheby2D_Evaluate(cheby, x[ix_test]-dx*0.5L, y[iy_test])) / dx;
-      longdouble freq=
+      long double freq=
 	(Cheby2D_Evaluate(cheby, x[ix_test]+dx*0.5L, 0.0L)-
       	 Cheby2D_Evaluate(cheby, x[ix_test]-dx*0.5L, 0.0L)) / dx;
-      longdouble skyfreq = 653.0L+y[iy_test]*32.0L; // MHzx
-      longdouble dmdelay = 1.0L/2.41e-4L *(1.0L/ (skyfreq*skyfreq) -1.0L/(653.0L*653.0L))
+      long double skyfreq = 653.0L+y[iy_test]*32.0L; // MHzx
+      long double dmdelay = 1.0L/2.41e-4L *(1.0L/ (skyfreq*skyfreq) -1.0L/(653.0L*653.0L))
 	*48.901787L; // s
-      longdouble dphase = -freq*dmdelay;
-      longdouble diff1d = f[iy_test*nx_test+ix_test]-(phase1d+dphase);
+      long double dphase = -freq*dmdelay;
+      long double diff1d = f[iy_test*nx_test+ix_test]-(phase1d+dphase);
 
       freq *= 2.0L/0.03L / 86400.0L; // normalized->day^-1->Hz
       freq1 *= 2.0L/0.03L / 86400.0L;
@@ -312,8 +312,8 @@ Cheby2D_Test(Cheby2D *cheby, int nx_test, int ny_test,
   free(y);
 }
 
-void testFunc(longdouble *x, longdouble *y, 
-	      int nx, int ny, longdouble *z, void *info)
+void testFunc(long double *x, long double *y, 
+	      int nx, int ny, long double *z, void *info)
 {
   int ix, iy;
   for (iy=0; iy < ny; iy++)
@@ -324,7 +324,7 @@ void testFunc(longdouble *x, longdouble *y,
 void testCheby2D()
 {
   int nx=30, ny=30;
-  longdouble rms, mav;
+  long double rms, mav;
   Cheby2D cheby;
   Cheby2D_Init(&cheby, nx, ny);
   printf("Constructing..."); fflush(stdout);
@@ -365,8 +365,8 @@ ChebyModel_Destroy(ChebyModel *cm)
   Cheby2D_Destroy(&cm->frequency_cheby);
 }
 
-longdouble
-ChebyModel_GetPhase(const ChebyModel *cm, longdouble mjd, longdouble freq)
+long double
+ChebyModel_GetPhase(const ChebyModel *cm, long double mjd, long double freq)
 {
   if (!cm)
     return -1;
@@ -378,8 +378,8 @@ ChebyModel_GetPhase(const ChebyModel *cm, longdouble mjd, longdouble freq)
     +      cm->dispersion_constant / (freq*freq);
 }
 
-longdouble
-ChebyModel_GetFrequency(const ChebyModel *cm, longdouble mjd, longdouble freq)
+long double
+ChebyModel_GetFrequency(const ChebyModel *cm, long double mjd, long double freq)
 {
   if (!cm)
     return -1;
@@ -456,21 +456,21 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
     {
       if (sscanf(line, "%*s %s %s", str1,str2)!=2)
 	return -4;
-      cm->mjd_start = parse_longdouble(str1);
-      cm->mjd_end = parse_longdouble(str2);
+      cm->mjd_start = (long double)parse_longdouble(str1);
+      cm->mjd_end = (long double)parse_longdouble(str2);
     }
     else if (!strcasecmp(keyword, "FREQ_RANGE"))
     {
       if (sscanf(line, "%*s %s %s", str1, str2)!=2)
 	return -5;
-      cm->freq_start = parse_longdouble(str1);
-      cm->freq_end = parse_longdouble(str2);
+      cm->freq_start = (long double)parse_longdouble(str1);
+      cm->freq_end = (long double)parse_longdouble(str2);
     }
     else if (!strcasecmp(keyword, "DISPERSION_CONSTANT"))
     {
       if (sscanf(arg, "%s", str1)!=1)
 	return -6;
-      cm->dispersion_constant = parse_longdouble(str1);
+      cm->dispersion_constant = (long double)parse_longdouble(str1);
     }
     else if (!strcasecmp(keyword, "NCOEFF_TIME"))
     {
@@ -500,7 +500,7 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
 	    {
 	      if (sscanf(line+ichar, "%s %n",str1, &nread)!=1)
 		return -10;
-          cm->cheby.coeff[iy*cm->cheby.nx+ix] = parse_longdouble(str1);
+          cm->cheby.coeff[iy*cm->cheby.nx+ix] = (long double)parse_longdouble(str1);
 	      ichar += nread;
 	    }
 	}
@@ -510,7 +510,7 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
 	    {
 	      if (sscanf(line+ichar, "%s %n",str1, &nread)!=1)
 		return -10;
-          cm->cheby.coeff[iy*cm->cheby.nx+ix] = parse_longdouble(str1);
+          cm->cheby.coeff[iy*cm->cheby.nx+ix] = (long double)parse_longdouble(str1);
 	      ichar += nread;
 	      if ((iy+1)%3==0)
 		{
@@ -552,11 +552,11 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
 }
 
 
-int ChebyModelSet_GetNearestIndex(const ChebyModelSet *cms, longdouble mjd)
+int ChebyModelSet_GetNearestIndex(const ChebyModelSet *cms, long double mjd)
 {
   int inearest=-1;
 
-  longdouble best_offset=1e6, offset;
+  long double best_offset=1e6, offset;
   int iseg;
 
   ChebyModelSet_OutOfRange = 0;
@@ -584,7 +584,7 @@ int ChebyModelSet_GetNearestIndex(const ChebyModelSet *cms, longdouble mjd)
 int ChebyModelSet_OutOfRange = 0;
 
 
-ChebyModel *ChebyModelSet_GetNearest(const ChebyModelSet *cms, longdouble mjd)
+ChebyModel *ChebyModelSet_GetNearest(const ChebyModelSet *cms, long double mjd)
 {
   int inearest = ChebyModelSet_GetNearestIndex(cms,mjd);
 
@@ -597,11 +597,11 @@ ChebyModel *ChebyModelSet_GetNearest(const ChebyModelSet *cms, longdouble mjd)
 }
 
 
-longdouble ChebyModelSet_GetPhase(const ChebyModelSet *cms, longdouble mjd, longdouble freq)
+long double ChebyModelSet_GetPhase(const ChebyModelSet *cms, long double mjd, long double freq)
 {
   return ChebyModel_GetPhase(ChebyModelSet_GetNearest(cms, mjd), mjd, freq);
 }
-longdouble ChebyModelSet_GetFrequency(const ChebyModelSet *cms, longdouble mjd, longdouble freq)
+long double ChebyModelSet_GetFrequency(const ChebyModelSet *cms, long double mjd, long double freq)
 {
   return ChebyModel_GetFrequency(ChebyModelSet_GetNearest(cms, mjd), mjd, freq);
 }
@@ -665,7 +665,7 @@ int ChebyModelSet_Insert(ChebyModelSet *cms, const ChebyModelSet *from)
   to each MJD is kept.
 */ 
 void
-ChebyModelSet_Keep(ChebyModelSet *cms, unsigned nmjd, const longdouble* mjd)
+ChebyModelSet_Keep(ChebyModelSet *cms, unsigned nmjd, const long double* mjd)
 {
   unsigned nseg = cms->nsegments;  // number of segments in input
   unsigned new_nseg = nseg;        // number of segments kept

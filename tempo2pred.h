@@ -29,7 +29,6 @@
 #define TEMPO2PRED_H
 
 #include <stdio.h>
-#include "TKlongdouble.h"
 
 #ifdef __cplusplus
 #include <string>
@@ -51,7 +50,7 @@ extern "C" {
   typedef struct 
   {
     int nx, ny;
-    longdouble *coeff;
+    long double *coeff;
   } Cheby2D;
   
   /* Chebyshev predictive phase model */
@@ -59,9 +58,9 @@ extern "C" {
   {
     char psrname[64];
     char sitename[64];
-    longdouble mjd_start, mjd_end;
-    longdouble freq_start, freq_end;
-    longdouble dispersion_constant; // phase = polyco + d_c/f^2
+    long double mjd_start, mjd_end;
+    long double freq_start, freq_end;
+    long double dispersion_constant; // phase = polyco + d_c/f^2
     Cheby2D cheby;
     Cheby2D frequency_cheby;
   } ChebyModel;
@@ -82,19 +81,19 @@ extern "C" {
     char psrname[64];
     char date_string[10];
     char utc_string[13];
-    longdouble mjd_mid;
+    long double mjd_mid;
     double dm;
     double doppler;
     double log10rms;
-    longdouble reference_phase;
-    longdouble frequency_psr_0;
+    long double reference_phase;
+    long double frequency_psr_0;
     char sitename[5];
     int span;
     int ncoeff;
     double frequency_obs;
     double binary_phase;
     double binary_frequency;
-    longdouble coeff[32];
+    long double coeff[32];
   } T1Polyco;
   
   /* Set of TEMPO1-style polycos */
@@ -124,7 +123,7 @@ extern "C" {
   void T2Predictor_Init(T2Predictor *t2p);
   void T2Predictor_Copy(T2Predictor *into_t2p, const T2Predictor *from_t2p);
   int  T2Predictor_Insert(T2Predictor *into_t2p, const T2Predictor *from_t2p);
-  void T2Predictor_Keep(T2Predictor*, unsigned nmjd, const longdouble* mjd);
+  void T2Predictor_Keep(T2Predictor*, unsigned nmjd, const long double* mjd);
   void T2Predictor_Destroy(T2Predictor *t2p);
 
   /* I/O etc */
@@ -136,39 +135,39 @@ extern "C" {
   /* Information */
   char * T2Predictor_GetPSRName(T2Predictor *t2p);
   char * T2Predictor_GetSiteName(T2Predictor *t2p);
-  longdouble T2Predictor_GetStartMJD(T2Predictor *t2p);
-  longdouble T2Predictor_GetEndMJD(T2Predictor *t2p);
-  longdouble T2Predictor_GetStartFreq(T2Predictor *t2p); // MHz
-  longdouble T2Predictor_GetEndFreq(T2Predictor *t2p);  // MHz
+  long double T2Predictor_GetStartMJD(T2Predictor *t2p);
+  long double T2Predictor_GetEndMJD(T2Predictor *t2p);
+  long double T2Predictor_GetStartFreq(T2Predictor *t2p); // MHz
+  long double T2Predictor_GetEndFreq(T2Predictor *t2p);  // MHz
   T2PredictorKind T2Predictor_Kind(T2Predictor *t2p);
 
   /* Prediction */
-  longdouble T2Predictor_GetPhase(const T2Predictor *t2p, longdouble mjd,
-				   longdouble freq); // freq in MHz
-  longdouble T2Predictor_GetFrequency(const T2Predictor *t2p, longdouble mjd,
-				       longdouble freq); // freq in MHz
+  long double T2Predictor_GetPhase(const T2Predictor *t2p, long double mjd,
+				   long double freq); // freq in MHz
+  long double T2Predictor_GetFrequency(const T2Predictor *t2p, long double mjd,
+				       long double freq); // freq in MHz
   /* This function makes a piecewise approximation. At the moment it just
      interpolates between phase evaluations. In future it will minimise
      the mean offset. Returns 0 on success */
   int T2Predictor_GetPlan(char *filename,
-			   longdouble mjd_start,
-			   longdouble mjd_end,
-			   longdouble step, // seconds
-			   longdouble freq, // MHz
+			   long double mjd_start,
+			   long double mjd_end,
+			   long double step, // seconds
+			   long double freq, // MHz
 			   // remaining arguments are returned
-			   longdouble *phase0,
+			   long double *phase0,
 			   int *nsegments,
-			   longdouble *pulse_frequencies);
+			   long double *pulse_frequencies);
    int T2Predictor_GetPlan_Ext(char *filename,
-			   longdouble mjd_start,
-			   longdouble mjd_end,
-			   longdouble step, // seconds
-			   longdouble freq, // MHz
+			   long double mjd_start,
+			   long double mjd_end,
+			   long double step, // seconds
+			   long double freq, // MHz
 			   // remaining arguments are returned
 			       char *psrname, char *sitename,
-			   longdouble *phase0,
+			   long double *phase0,
 			   int *nsegments,
-			   longdouble *pulse_frequencies);
+			   long double *pulse_frequencies);
  
 
 #ifdef __cplusplus

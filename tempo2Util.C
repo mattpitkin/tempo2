@@ -220,41 +220,6 @@ long fortran_nlong(longdouble x)
   return(i);
 }
 
-/* print out a longdouble to a std::string */
-std::string print_longdouble(const longdouble &ld)
-{
-  char buf[1024];
-#ifdef LONGDOUBLE_IS_FLOAT128
-  quadmath_snprintf(buf,1024, "%Qg", ld);
-#endif
-
-#ifdef LONGDOUBLE_IS_IEEE754
-  ld_sprintf(buf, "%Lg", ld);
-#endif
-
-#ifdef LONGDOUBLE_IS_DDREAL
-  ld.write(buf);
-#endif
-  return std::string(buf);
-
-}
-
-longdouble parse_longdouble(const char *str)
-{
-  longdouble ld;
-#ifdef LONGDOUBLE_IS_FLOAT128
-  ld = strtoflt128(str,NULL);
-#endif
-
-#ifdef LONGDOUBLE_IS_IEEE754
-  sscanf(str, "%Lf", &ld);
-#endif
-
-#ifdef LONGDOUBLE_IS_DDREAL
-  ld = str;
-#endif
-  return ld;
-}
 
 /* Rotates the vector x(0,1,2) from equatorial coordinates to ecliptic coordinates 
  * i.e. rotate about "x" axis by angle epsilon 
@@ -287,14 +252,6 @@ void equ2ecl(double *x)
   x[1] = ce*tmpy+se*tmpz;
   x[2] = -se*tmpy+ce*tmpz;
 }
-
-/* Long double support routines */
-#ifndef USE_BUILTIN_LONGDOUBLE
-dd_real pow(const dd_real &a, const dd_real &b)
-{ return exp(b*log(a)); }
-// operator float(const dd_real &a) 
-// {return (float)(double)a;}
-#endif
 
 /* Function to copy one pulsar to another */
 void copyPSR(pulsar *p,int p1,int p2)
@@ -475,97 +432,4 @@ longdouble getParameterValue(pulsar *psr,int param,int arr)
 
 
 
-
-#ifdef LONGDOUBLE_IS_FLOAT128
-#include <stdarg.h>
-#define BUFSIZE 1024
-int ld_vsprintf(char *buf, const char *__format, va_list args){
-    char fmt[BUFSIZE];
-    char qfmt[BUFSIZE];
-    va_list oargs;
-    const char *c;
-    const char *e;
-    char* o=fmt;
-    c=__format;
-    do {
-        if (*c!='%'){
-            *o=*c;
-            ++o;
-            continue;
-        }
-
-        e=c+1;
-        do {
-            if (*e=='L' && (*(e+1)=='f' || *(e+1)=='g' || *(e+1) == 'e')){
-                longdouble ld = va_arg(args,longdouble);
-                size_t n=e-c;
-                ++e;
-                memcpy(qfmt,c,n);
-                qfmt[n]='Q';
-                qfmt[n+1]=*e;
-                qfmt[n+2]='\0';
-                quadmath_snprintf(o,BUFSIZE-(o-fmt),qfmt, ld);
-                while(*(++o)!='\0'){
-                    continue;
-                }
-                c+=n+1;
-                break;
-            }
-            if (
-                    (*e > 65 && *e < 90) ||
-                    (*e > 97 && *e < 141)
-               ) {
-                va_copy(oargs,args);
-                while(c <= e){
-                    *o=*c;
-                    ++o;
-                    ++c;
-                }
-                --c;
-                break;
-            }
-        } while(*(++e) != '\0');
-    } while(*(++c) != '\0');
-
-    *o='\0';
-    int ret_status = vsnprintf(buf,BUFSIZE,fmt,oargs);
-
-    va_end(args);
-    va_end(oargs);
-    return ret_status;
-}
-
-int ld_fprintf(FILE* __stream, const char *__format, ...) {
-    char buf[BUFSIZE];
-    va_list args;
-    va_start(args,__format);
-    int ret = ld_vsprintf(buf,__format,args);
-    va_end(args);
-    fprintf(__stream,buf);
-    return ret;
-}
-
-
-int ld_printf(const char *__format, ...) {
-    char buf[BUFSIZE];
-    va_list args;
-    va_start(args,__format);
-    int ret = ld_vsprintf(buf,__format,args);
-    va_end(args);
-    printf(buf);
-    return ret;
-}
-
-int ld_sprintf(char *buf, const char *__format, ...){
-    va_list args;
-    va_start(args,__format);
-    int ret = ld_vsprintf(buf,__format,args);
-    va_end(args);
-    return ret;
-}
-
-
-#undef BUFSIZE
-
-#endif
 

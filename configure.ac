@@ -73,6 +73,7 @@ if test X$have_float128 != Xyes; then
 fi
 
 AM_CONDITIONAL(HAVE_FLOAT128,[test "$have_float128" = yes])
+rm -f TKlongdouble.h
 
 # look for third-party packages in various places (or not)
 SWIN_LOCAL
