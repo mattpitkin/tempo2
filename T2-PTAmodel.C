@@ -171,7 +171,7 @@ double T2_PTAmodel(pulsar *psr,int p,int ipos,int param,int arr)
 	kin = psr[p].param[param_kin].val[0]*M_PI/180.0;
 	kom = psr[p].param[param_kom].val[0]*M_PI/180.0;
 	pmra = psr[p].param[param_pmra].val[0]*M_PI/(180.0*3600.0e3)/(365.25*longdouble(86400.0));
-	pmra = psr[p].param[param_pmdec].val[0]*M_PI/(180.0*3600.0e3)/(365.25*longdouble(86400.0));
+	pmdec= psr[p].param[param_pmdec].val[0]*M_PI/(180.0*3600.0e3)/(365.25*longdouble(86400.0));
 
 	Cval = cosl(omega)*(cosl(u)-e)-sinl(omega)*sqrtl(longdouble(1.0)-e*e)*sinl(u);
 	
