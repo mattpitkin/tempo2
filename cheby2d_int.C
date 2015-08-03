@@ -47,8 +47,8 @@ typedef struct
 } ChebyModelInfo;
 
 void
-chebyModelFunc(longdouble *x, longdouble *y, 
-	       int nx, int ny, longdouble *z, void *info_in)
+chebyModelFunc(long double *x, long double *y, 
+	       int nx, int ny, long double *z, void *info_in)
 {
   ChebyModelInfo *info = (ChebyModelInfo *)info_in;
   pulsar *psr = const_cast<pulsar*>( info->psr );
@@ -117,8 +117,8 @@ chebyModelFunc(longdouble *x, longdouble *y,
   if (info->compute_dispersion_constant)
   {
     int iref0 = nx/2, iref1 = nx/2 + (ny-1)*nx;
-    longdouble freq_ref0_sq = powl(psr->obsn[iref0].freq,2);
-    longdouble freq_ref1_sq = powl(psr->obsn[iref1].freq,2);
+    long double freq_ref0_sq = powl(psr->obsn[iref0].freq,2);
+    long double freq_ref1_sq = powl(psr->obsn[iref1].freq,2);
 
 
     info->model->dispersion_constant = 
@@ -128,7 +128,7 @@ chebyModelFunc(longdouble *x, longdouble *y,
   //  info->model->dispersion_constant = 0.0;
 
   // fill in the "z" array with the phases
-  longdouble rphase = psr->obsn[0].phase;
+  long double rphase = psr->obsn[0].phase;
   for (iobs=1; iobs < psr->nobs; iobs++)
   {
     z[iobs-1] = psr->obsn[iobs].phase-rphase
@@ -160,7 +160,7 @@ ChebyModel_Construct(ChebyModel *cm, const pulsar *psr)
 
 void
 ChebyModel_Test(ChebyModel *cm, const pulsar *psr, int nmjd, int nfreq,
-		longdouble *residualRMS, longdouble *residualMAV)
+		long double *residualRMS, long double *residualMAV)
 {
   ChebyModelInfo info;
   info.model = cm;
@@ -173,9 +173,9 @@ ChebyModel_Test(ChebyModel *cm, const pulsar *psr, int nmjd, int nfreq,
 
 void ChebyModelSet_Construct(ChebyModelSet *cms, const pulsar *psr,
 			     const char *sitename,
-			     longdouble mjd_start, longdouble mjd_end,
-			     longdouble segment_length, longdouble overlap,
-			     longdouble freq_start,longdouble freq_end,
+			     long double mjd_start, long double mjd_end,
+			     long double segment_length, long double overlap,
+			     long double freq_start,long double freq_end,
 			     int ntimecoeff, int nfreqcoeff)
 {
   cms->nsegments = (int)ceil((mjd_end-mjd_start)/(segment_length-overlap));
@@ -227,10 +227,10 @@ void ChebyModelSet_Construct(ChebyModelSet *cms, const pulsar *psr,
 
 void ChebyModelSet_Test(ChebyModelSet *cms, const pulsar *psr,
 			int nmjd, int nfreq,
-			longdouble *residualRMS, longdouble *residualMAV)
+			long double *residualRMS, long double *residualMAV)
 {
   *residualRMS = *residualMAV = 0.0;
-  longdouble rms, mav;
+  long double rms, mav;
   int iseg;
   for (iseg=0; iseg < cms->nsegments ; iseg++)
   {
