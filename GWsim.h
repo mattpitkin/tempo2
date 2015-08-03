@@ -107,15 +107,11 @@ longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_
 
 
 /* Some useful functions */
-longdouble matrixMult(longdouble m1[3][3],longdouble m2[3][3],longdouble out[3][3]);
-longdouble dotProduct(longdouble *m1,longdouble *m2);
-
-
 
 
 void setupGW(gwSrc *gw);
 
-longdouble matrixMult(longdouble m1[3][3],longdouble m2[3][3],longdouble out[3][3]);
+void matrixMult(longdouble m1[3][3],longdouble m2[3][3],longdouble out[3][3]);
 
 longdouble dotProduct(longdouble *m1,longdouble *m2);
 

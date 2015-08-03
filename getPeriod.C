@@ -8,7 +8,7 @@ int main (int argc, char** argv){
     char* pred_fname = argv[1];
     double mjd=atof(argv[2]);
 
-    int res = T2Predictor_Read(&pred, pred_fname);
+    T2Predictor_Read(&pred, pred_fname);
 
     const double psr_freq = (double)T2Predictor_GetFrequency(&pred,mjd,1400);
 

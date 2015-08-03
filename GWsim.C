@@ -61,7 +61,6 @@ extern "C"
 #endif
 void setupGW(gwSrc *gw)
 {
-  longdouble deg2rad = M_PI/180.0;
   longdouble convert[3][3],trans[3][3];
   longdouble out[3][3];
   longdouble out_im[3][3];
@@ -157,7 +156,7 @@ void setupGW(gwSrc *gw)
 #ifdef __cplusplus
 extern "C"
 #endif
-longdouble matrixMult(longdouble m1[3][3],longdouble m2[3][3],longdouble out[3][3])
+void matrixMult(longdouble m1[3][3],longdouble m2[3][3],longdouble out[3][3])
 {
   int i,j,k;
   for (i=0;i<3;i++)
