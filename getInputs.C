@@ -60,7 +60,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
   int timfile_num = 0;  /* Have we got a timfile? */
   int gotTim=0;
   *list = 0;  /* Don't list parameters */
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.17 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("getInputs.C","getInputs()",CVS_verNum);
   //  *nGlobal=0; /* How many global parameters are we fitting? */

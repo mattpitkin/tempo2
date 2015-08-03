@@ -649,7 +649,7 @@ getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings)
   char *currClock;
   ClockCorrectionFunction *func;
   double correction = 0.0;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.10 $";
 
   if (clockFrom[0]=='\0')
     site = getObservatory(obs->telID);

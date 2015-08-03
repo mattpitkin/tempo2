@@ -102,7 +102,7 @@ void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,i
   longdouble tmin[800];
   double globalParameter,utc;
   int nsets;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.8 $";
 
   /* buffers for three polyco outputs -- any input from the user is
    * prepended to the default file names */

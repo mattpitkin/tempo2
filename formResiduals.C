@@ -73,7 +73,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
    double prev_a_p;
    int coalesceFlag_p = 0;
 
-   const char *CVS_verNum = "$Revision$";
+   const char *CVS_verNum = "$Revision: 1.68 $";
 
 
    

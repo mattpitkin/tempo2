@@ -54,7 +54,7 @@ int bootstrap(pulsar *psr,int p,int npsr)
   int il1,il2,ih1,ih2;
   double globalParam;
   long idum = -999;              /* Should be set be clock, or user */
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.6 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("bootstrap.C","bootstrap()",CVS_verNum);
 

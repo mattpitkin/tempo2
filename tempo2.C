@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
   FILE *alias;
   char **commandLine;
   clock_t startClock,endClock;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.36 $";
 
   polyco_file[0] = '\0';
 
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
       exit(1); 
     }
   logdbg("Have allocated memory for pulsar");
-  psr[0].jboFormat = 0;
+  bool jboFormat = false;
 
   for (i=1;i<argc;i++)
     {
@@ -150,8 +150,10 @@ int main(int argc, char *argv[])
 	noWarnings=2;
       else if (strcasecmp(commandLine[i],"-allInfo")==0)
 	noWarnings=0;
-      else if (strcmp(commandLine[i],"-jbo")==0)
-	psr[0].jboFormat=1;
+      else if (strcmp(commandLine[i],"-jbo")==0){
+          logmsg("Reading JBO format!!");
+	jboFormat=true;
+      }
       else if (strcmp(commandLine[i],"-test")==0) /* Use TEMPO2_TEST environment variable */
 	strcpy(TEMPO2_ENVIRON,"TEMPO2_TEST");
       else
@@ -230,6 +232,7 @@ int main(int argc, char *argv[])
   /* If running from the command line ... */
   logdbg("Running initialise");
   initialise(psr,noWarnings); /* Initialise all */
+  if(jboFormat) psr[0].jboFormat=1;
   logdbg("Completed running initialise %d",psr[0].nits);
   /* Obtain login architecture */
   if (strlen(tempo2MachineType)==0)

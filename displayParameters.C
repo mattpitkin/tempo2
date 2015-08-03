@@ -44,7 +44,7 @@
 void displayParameters(int pos,char timFile[][MAX_FILELEN],char parFile[][MAX_FILELEN],pulsar *psr,int npsr)
 {
   int i, ic, p;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.5 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("displayParameters.C","displayParameters()",CVS_verNum);
   

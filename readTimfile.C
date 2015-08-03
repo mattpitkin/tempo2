@@ -58,7 +58,7 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
   int p,i;
   int jumpVal=0;
   FILE *fin;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.29 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("readTimfile.C","readTimfile()",CVS_verNum);
 
@@ -78,8 +78,10 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
       psr[p].jumpVal[i]=0.0; */
       jumpVal=0;
 
-      if (psr[0].jboFormat!=0)
+      if (psr[0].jboFormat!=0){
+          logmsg("Reading JBO format!?");
 	readJBO_bat(timFile[p],&psr[p],p);
+      }
       else
 	readTim(timFile[p],&psr[p],&jumpVal);
       logdbg("Checking for deleted points >%s<",psr[0].deleteFileName);
@@ -726,7 +728,7 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 	  interim_error = psr->obsn[i].origErr/current_efac;
 	  interim_error = sqrt(pow(interim_error,2.0)-(pow(current_equad,2.0)));
 
-	  logdbg("Writing out: %.15Lg %.15Lg\n",oldsat,psr->obsn[i].sat);
+	  printf("Writing out: %.15Lg %.15Lg\n",oldsat,psr->obsn[i].sat);
 	  fprintf(fout," %s %.8f %.17Lf %.5f %s ", name,psr->obsn[i].freq,
 		  // psr->obsn[i].sat, (psr->obsn[i].toaErr/current_efac),psr->obsn[i].telID);
 		  oldsat, interim_error,psr->obsn[i].telID);

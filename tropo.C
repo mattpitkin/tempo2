@@ -373,7 +373,7 @@ compute_tropospheric_delays(pulsar *psr,int npsr)
   observatory *obs;
   double source_elevation;
   double pressure;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.9 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("tropo.C","computer_tropospheric_delays()",CVS_verNum);
 

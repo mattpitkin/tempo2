@@ -60,7 +60,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
   double mean_pre=0.0,mean_post=0.0,chisqr;
   int i,p,count,k;
   FILE *fout;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.68 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion((char *)"textOutput.C",(char *)"textOutput()",CVS_verNum);
 	
