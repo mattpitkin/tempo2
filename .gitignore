@@ -1,0 +1,12 @@
+*.o
+*.la
+config.h.in
+configure
+autoconf
+autom4te.cache
+config
+CVS
+plugin/build_settings
+Makefile.common
+Makefile.config
+Makefile.in
