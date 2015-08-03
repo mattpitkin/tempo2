@@ -51,13 +51,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    int p,i;
 
 
-   const char *CVS_verNum = "$Revision$";
+   const char *CVS_verNum = "$Revision: 1.1 $";
 
    if (displayCVSversion == 1) CVSdisplayVersion("autoDM.C","plugin",CVS_verNum);
 
    printf("Graphical Interface: autoDM\n");
    printf("Author:              M. Keith\n");
-   printf("CVS Version:         $Revision$\n");
+   printf("CVS Version:         $Revision: 1.1 $\n");
 
    /* Obtain all parameters from the command line */
    for (i=2;i<argc;i++)

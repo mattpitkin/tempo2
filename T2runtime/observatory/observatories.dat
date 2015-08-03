@@ -73,12 +73,15 @@
 #
 ####### From Jodrell obsys.dat file
 #
- 383395.727    -173759.585      5077751.313      MKIII               j  
+ 383395.727    -173759.585      5077751.313      MKIII               jbmk3
  3817176.557   -162921.170      5089462.046      TABLEY              k  
  3828714.504   -169458.987      5080647.749      DARNHALL            l
  3859711.492   -201995.082      5056134.285      KNOCKIN             m  
  3923069.135   -146804.404      5009320.570      DEFFORD             n  
        0.0           1.0              0.0        COE                 coe  
+# MJK Approximate location for Princeton observatory
+ 1288748.38 -4694221.77 4107418.80              PRINCETON           princeton
+3788815.62 1131748.336 5035101.190 HAMBURG hamburg
 #
 ###### Telescope ID changed from the Jodrell obsys.dat file
 #

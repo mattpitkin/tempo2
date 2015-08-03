@@ -44,7 +44,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
   double globalParameter;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.7 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("grTemplate.C","plugin",CVS_verNum);
 
@@ -52,7 +52,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: name\n");
   printf("Author:              author\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.7 $\n");
   printf(" --- type 'h' for help information\n");
 
 

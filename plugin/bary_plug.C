@@ -66,7 +66,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   observatory newObs;
   double clockCor;
 
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.1 $";
 
 
   if (displayCVSversion == 1) CVSdisplayVersion((char *)"bary.C",(char *)"plugin",CVS_verNum);
@@ -75,7 +75,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: bary\n");
   printf("Author:              G. Hobbs, D. Kaplan\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.1 $\n");
   printf(" --- type 'h' for help information\n");
 
 

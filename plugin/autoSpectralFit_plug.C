@@ -55,7 +55,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char covarFuncName[128];
   char modelName[128];
 
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.4 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("autoSpectralFit_plug.C","plugin",CVS_verNum);
 
@@ -63,7 +63,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: autoSpectralFit\n");
   printf("Author:              R. Shannon, G. Hobbs\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.4 $\n");
   printf(" --- type 'h' for help information\n");
 
 

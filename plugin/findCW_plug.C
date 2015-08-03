@@ -46,7 +46,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char covarFuncFile[128];
   int i;
   double globalParameter;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.2 $";
   FILE *fout;
 
   strcpy(covarFuncFile,"NULL");
@@ -57,7 +57,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: findCW\n");
   printf("Author:              X. Zhu, G. Hobbs\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.2 $\n");
   printf(" --- type 'h' for help information\n");
 
   /* Obtain all parameters from the command line */

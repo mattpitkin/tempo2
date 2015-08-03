@@ -46,7 +46,7 @@ typedef struct sample {
   int    actual;
 } sample;
 
-#define MAX_SAMPLES 20000
+#define MAX_SAMPLES 25000
 
 void plotResiduals(pulsar *psr,sample *samples,int nSample,int drawFig);
 void plotModel(pulsar *psr,double startSample,double endSample,double spacingSample,sample *samples,int nSamples,int actualSamples,int drawFig);
@@ -93,7 +93,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   spacingSample = -1;
   setModelA=setModelFc=setModelAlpha=-1;
 
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.6 $";
 
 
   if (displayCVSversion == 1) CVSdisplayVersion("interpolate.C","plugin",CVS_verNum);
@@ -102,7 +102,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: interpolate\n");
   printf("Author:              Xinping Deng, G. Hobbs\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.6 $\n");
   printf(" --- type 'h' for help information\n");
 
   /* Obtain all parameters from the command line */
@@ -561,7 +561,7 @@ void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,
     fftw_destroy_plan(transform_plan);  
     if (ndays > MAX_SAMPLES)
       {
-	printf("ERROR in interpolate: ndays > MAX_SAMPLES\n");
+	printf("ERROR in interpolate: ndays > MAX_SAMPLES (%d  >%d)\n",ndays,MAX_SAMPLES);
 	exit(1);
       }
     for (i=0;i<ndays;i++) 

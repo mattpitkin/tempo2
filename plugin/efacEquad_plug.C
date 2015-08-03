@@ -78,7 +78,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i,j,k;
   double globalParameter;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.6 $";
   char flagID[128];
   int nFlag=0;
   char flagVal[100][1024];
@@ -116,7 +116,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: efacEquad\n");
   printf("Author:              G. Hobbs\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.6 $\n");
   printf(" --- type 'h' for help information\n");
 
 

@@ -83,7 +83,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
    int i,p;
    double globalParameter;
-   const char *CVS_verNum = "$Revision$";
+   const char *CVS_verNum = "$Revision: 1.18 $";
 
    if (displayCVSversion == 1) CVSdisplayVersion("cholSpecra_plug.C","plugin",CVS_verNum);
 
@@ -91,7 +91,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
    printf("Graphical Interface: cholSpectra\n");
    printf("Author:              M. Keith, G. Hobbs\n");
-   printf("CVS Version:         $Revision$\n");
+   printf("CVS Version:         $Revision: 1.18 $\n");
    printf(" --- type 'h' for help information\n");
 
    /* Obtain all parameters from the command line */

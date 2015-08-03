@@ -48,7 +48,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
   double globalParameter;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.9 $";
   double modelAlpha,modelFc,modelA;
   int np,ndays;
   double resx[MAX_OBSN],resy[MAX_OBSN],rese[MAX_OBSN];
@@ -71,7 +71,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: analyticChol\n");
   printf("Author:              G. Hobbs\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.9 $\n");
   printf(" --- type 'h' for help information\n");
 
   /* Obtain all parameters from the command line */

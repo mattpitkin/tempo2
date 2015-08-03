@@ -50,7 +50,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double ra,dec,raStep;
   int ndec,nra;
   int addWhite=0;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.1 $";
   long double **sat0;
   double gwm_amp=0.0;
   double gwm_phi;
@@ -68,7 +68,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: gwm\n");
   printf("Author:              J. Wang, G. Hobbs\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.1 $\n");
   printf(" --- type 'h' for help information\n");
 
 

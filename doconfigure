@@ -1,0 +1,22 @@
+#!/bin/bash
+
+mode="$1"
+
+if [[ "$mode" == "O" ]] ; then
+	# optimised
+	export CFLAGS="-O3 -g0 -march=corei7 -pipe -fomit-frame-pointer $CFLAGS"
+	export CXXFLAGS="$CFLAGS"
+elif [[ "$mode" == "D" ]] ; then
+	export CFLAGS="-O0 -g3 $CFLAGS"
+	export CXXFLAGS="$CFLAGS"
+else
+	export CFLAGS="-O2 -g $CFLAGS"
+	export CXXFLAGS="$CFLAGS"
+fi
+
+
+
+echo "CFLAGS='$CFLAGS'"
+echo "LDFLAGS='$LDFLAGS'"
+
+./configure --prefix=/usr/pulsar

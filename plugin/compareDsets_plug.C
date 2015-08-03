@@ -56,7 +56,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int autoRun=0;
   double globalParameter;
   double maxDiff = 120; // Number of seconds corresponding to overlap
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.5 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("compareDsets.C","plugin",CVS_verNum);
 
@@ -64,7 +64,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: compareDsets\n");
   printf("Author:              G. Hobbs, X. You\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.5 $\n");
   printf(" --- type 'h' for help information\n");
 
 

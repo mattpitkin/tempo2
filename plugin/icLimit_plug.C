@@ -79,7 +79,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double globalParameter;
   double realStatistic;
   double simStatistic;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.10 $";
   double gwAmp,gwAlpha,aHigh,aLow;
   double whiteNoise;
   int getLimit=0;
@@ -139,7 +139,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: icLimit\n");
   printf("Author:              R. Shannon, G. Hobbs, M. Keith\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.10 $\n");
   printf(" --- type 'h' for help information\n");
 
 

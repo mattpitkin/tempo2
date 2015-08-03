@@ -735,7 +735,7 @@ extern "C" int graphicalInterface(int argc, char **argv,
 	FILE *alias;
 	char **commandLine;
 	clock_t startClock,endClock;
-	const char *CVS_verNum = "$Revision$";
+	const char *CVS_verNum = "$Revision: 1.2 $";
 	int numFitJumps;
 	int numToMargin=0;
 

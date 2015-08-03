@@ -49,7 +49,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   long double avMJD;
   int nav;
   long double newTOA;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.4 $";
   char timeList[MAX_STRLEN];
   char parFileName[MAX_TIMES][MAX_STRLEN];
   char timFileName[MAX_TIMES][MAX_STRLEN];
@@ -79,7 +79,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: averageData\n");
   printf("Author:              G. Hobbs, R. Manchester\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.4 $\n");
   printf(" --- type 'h' for help information\n");
 
   printf("Plugin to average data to produce a new .tim file\n");

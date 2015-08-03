@@ -51,7 +51,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i,j,k,p;
   double globalParameter;
-  const char *CVS_verNum = "$Revision$";
+  const char *CVS_verNum = "$Revision: 1.1 $";
   long seed = TKsetSeed();
   double a1,a1e,a2,a2e,epoch,raj,decj;
   long double ep,ep0,ep1,eps;
@@ -93,7 +93,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   printf("Graphical Interface: gwmStats\n");
   printf("Author:              G. Hobbs\n");
-  printf("CVS Version:         $Revision$\n");
+  printf("CVS Version:         $Revision: 1.1 $\n");
   printf(" --- type 'h' for help information\n");
 
   /* Obtain all parameters from the command line */

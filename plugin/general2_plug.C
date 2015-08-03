@@ -287,44 +287,6 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);
 		      }
-		    if (strcasecmp(var,"tnwhite")==0) /* site arrival time */
-		      {
-			sprintf(disp,format,psr[0].obsn[varN].residual- psr[0].obsn[varN].TNRedSignal-psr[0].obsn[varN].TNDMSignal); 
-			fprintf(fout,"%s",disp);
-			pos+=strlen(disp);
-		      }
-		     if (strcasecmp(var,"dmtn")==0) /* temponest dm*/
-                      {
-	                      
-			double DMKappa=2.410*pow(10.0,-16);
-                	double freq=(double)psr[0].obsn[varN].freqSSB;
-                	long double yrs = (psr[0].obsn[varN].sat - psr[0].param[param_dmepoch].val[0])/365.25;
-               		 long double arg 	= 1.0;
-                	double dmDot=0;
-                	double dmDotErr=0;
-                	for (int d=1;d<9;d++){
-                        arg *= yrs;
-                        if (psr[0].param[param_dm].paramSet[d]==1){
-                                dmDot+=(double)(psr[0].param[param_dm].val[d]*arg);
-                        }
-                }
-
-		double dmsig;	
-                dmsig=(psr[0].obsn[varN].TNDMSignal*(DMKappa*pow(freq,2)) + dmDot);
-
-
-  		sprintf(disp,dformat,dmsig);
-        	        	fprintf(stderr, "DMerr %.3e %s\n", psr[0].obsn[varN].TNDMSignal,disp);        
-			fprintf(fout,"%s",disp);
-                        pos+=strlen(disp);
-                      }
-		     if (strcasecmp(var,"dmtnerr")==0) /* temponest dm error*/
-                      {
-	
-                        sprintf(disp,dformat,psr[0].obsn[varN].TNDMErr);
-                        fprintf(fout,"%s",disp);
-                        pos+=strlen(disp);
-                      }
 		    else if (strcasecmp(var,"solarangle")==0) // Angle from the Sun
 		      {
 			int k,j;
