@@ -167,8 +167,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-dist")==0) // Distance in kpc
 	{
-	  sscanf(argv[++i],"%Lf",&dist[distNum]);
-	  dist[distNum]*=3.086e19;
+      dist[distNum] = parse_longdouble(argv[++i]);
+	  dist[distNum]*=longdouble(3.086e19);
 	  distNum++;
 	}
       else if (strcmp(argv[i],"-plot")==0)
@@ -187,7 +187,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         specGRfile=1;
         strcpy(bkgrdFile,argv[i+1]);
       } else if (strcmp(argv[i],"-seed")==0)
-	sscanf(argv[++i],"%d",&seed);
+	sscanf(argv[++i],"%ld",&seed);
       else if (strcmp(argv[i],"-linear")==0)
 	logspacing=0;
     }
@@ -837,4 +837,4 @@ void convertXY_celestial(double raj,double decj,double *retx,double *rety)
   *retx = x_ret;
   *rety = y_ret;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

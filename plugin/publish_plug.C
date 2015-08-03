@@ -325,6 +325,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
       fprintf(fout,"\\end{document}\n");
     }
   fclose(fout);
+  return 0;
 }
 
 void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac,int useCompare,char *compareFile,int *useDagger)
@@ -565,7 +566,8 @@ void dispParameter(int i,int k,pulsar *psr,FILE *fout,int err,double efac,int us
 
 double fixRA(char *tstr,double err,char *valStr)
 {
-  int dp,ierr,sym=0,k;
+  int dp,ierr,sym=0;
+  unsigned k;
   double hr,min,sec;
   char disp[500];
   double ra;
@@ -596,7 +598,8 @@ double fixRA(char *tstr,double err,char *valStr)
 
 double fixDec(char *tstr,double err,char *valStr)
 {
-  int dp,ierr,sym=0,k;
+  int dp,ierr,sym=0;
+  unsigned k;
   char disp[500];
   double deg,min,sec;
   double dec;
@@ -787,7 +790,7 @@ int nint_derived(double x){
 
 void parseMinus(char *str)
 {
-  int i,j=0;
+  unsigned i,j=0;
   char str2[500];
 
   strcpy(str2,str);
@@ -811,7 +814,7 @@ void parseMinus(char *str)
 void parseExp(char *str)
 {
   char str2[500],str3[500],str4[500],str5[500],str6[500];
-  int i,j=0;
+  unsigned i,j=0;
   char *ptr,*ptr2;
 
   ptr = strtok(str,"E");
@@ -847,4 +850,4 @@ void parseExp(char *str)
   
 
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

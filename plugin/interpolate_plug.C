@@ -678,7 +678,7 @@ void sortSamples(sample *s,int n)
   
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
 
 #define NRANSI
 #define TINY 1.0e-20;

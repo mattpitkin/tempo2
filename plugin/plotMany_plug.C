@@ -205,6 +205,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
  printf("Starting plugin5\n");
  doPlot(psr,*npsr,scale,nScale,grDev,plotUs,fontsize,centreMJD,ptStyle,ptSize,error,miny,maxy,minx,maxx,nOverlay,labelsize,fracX);              /* Do plot */
  printf("Starting plugin6\n");
+ return 0;
 }
 
 /* This function calls all of the fitting routines.             */

@@ -51,7 +51,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FIL
             int showChisq,int nohead,char* flagColour,char *bandsFile,int displayPP);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
 	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log,char *flagStr);
-void drawAxisSel(float x,float y,char *str,int sel1,int sel2);
+void drawAxisSel(float x,float y,const char *str,int sel1,int sel2);
 float findMinY(float *y,float *x,int count,float xmin,float xmax);
 float findMaxY(float *y,float *x,int count,float xmin,float xmax);
 float findMean(float *x,pulsar *psr,int i1,int i2);
@@ -83,7 +83,7 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,longdouble centreEpoch,
 	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics,char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset);
 void setLabel(char *ystr,int yplot,int plotPhase,double unitFlag,longdouble centreEpoch,char *userValStr,char *flagStr);
-void drawOption(float x,float y,char *str,int fit);
+void drawOption(float x,float y,const char *str,int fit);
 void swapFit(pulsar *psr,int par,int k,int button);
 void newTim(pulsar *psr);
 void plotFITWAVES_spec();
@@ -660,7 +660,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      else if (strcasecmp(str,"flag")==0)
 		{
 		  fscanf(fin,"%s %s %d %d",flagIDstr[flagColourNum],
-			 &flagIDval[flagColourNum],&flagCol[flagColourNum],
+			 flagIDval[flagColourNum],&flagCol[flagColourNum],
 			 &flagStyle[flagColourNum]);	     
 		  flagColourNum++;
 		}
@@ -1280,7 +1280,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		else if(key == 'R'){
 			if(psr[0].AverageResiduals==0){
 
-				 printf("Average on flag and epoch width "); scanf("%s %f",&psr[0].AverageFlag,&psr[0].AverageEpochWidth);
+				 printf("Average on flag and epoch width "); scanf("%s %f",psr[0].AverageFlag,&psr[0].AverageEpochWidth);
 
 				printf("averaging TOAs on next fit\n");
 				psr[0].AverageResiduals=1;
@@ -1419,7 +1419,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			}
 			else if (key==26) /* ctrl-z list selected points (ctrl-D) */
 			{
-			   int len=0;
+			   unsigned len=0;
 			   char tstr[1000],nstr[1000];
 
 			   for (i=0;i<psr[0].nobs;i++)
@@ -2104,15 +2104,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			   {
 				  while (!feof(fin))
 				  {
-				    longdouble lx1,lx2;
-				    if (fscanf(fin,"%Lf %Lf %s %s",&lx1,&lx2,temp,temp)==4)
+				    double lx1,lx2;
+				    if (fscanf(fin,"%lf %lf %s %s",&lx1,&lx2,temp,temp)==4)
 				      {
 
 					fx[0] = (float)(lx1 - centreEpoch);
 					fx2[0] = (float)(lx2 - centreEpoch);
 					fx[1] = fx[0];
 					fx2[1] = fx2[0];
-					ld_printf("Loaded %.15Lf %.15Lf,%g %g %.15Lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
+					ld_printf("Loaded %.15lf %.15lf,%g %g %.15lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
 					fy[0] = ploty1; fy[1] = ploty2;
 					cpgsci(2); cpgline(2,fx,fy);
 					cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);
@@ -2453,7 +2453,7 @@ void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id,int *
 	  else 
 		 errBar[j] = (y[j]-yerr1[j])/1.0e-6*(double)psr[0].param[param_f].val[0];
 	  if(errBar[j] == 0){
-		 printf("ERROR: point %d has TOA error 0!!\n");
+		 printf("ERROR: point %d has TOA error 0!!\n",j);
 		 printf("Will not measure error bars for bins\n");
 		 noerr = 1;
 	  }
@@ -3413,7 +3413,7 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
    }
 }
 
-void drawAxisSel(float x,float y,char *str,int sel1,int sel2)
+void drawAxisSel(float x,float y,const char *str,int sel1,int sel2)
 {
    cpgsci(1);
    cpgtext(x,y-0.03,str);
@@ -3425,7 +3425,7 @@ void drawAxisSel(float x,float y,char *str,int sel1,int sel2)
    cpgrect(x+0.6,x+0.65,y,y-0.04); 
    cpgsci(1);
 }
-void drawOption(float x,float y,char *str,int fit)
+void drawOption(float x,float y,const char *str,int fit)
 {
    if (fit==0) cpgsci(1);
    else cpgsci(2);
@@ -4315,4 +4315,4 @@ double lmst2(double mjd,double olong,double *tsid,double *tsid_der)
 }
 
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

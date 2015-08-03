@@ -91,4 +91,5 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
     }
   writeTim("withpn.tim",psr,"tempo2");
   printf("In here\n");
+  return 0;
 }

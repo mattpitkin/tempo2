@@ -62,13 +62,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   char timeList[100];
   int i,j,k,nread;
-  longdouble mjd1[MAX_TIMES],mjd2[MAX_TIMES];
-  longdouble centreMJD;
+  double mjd1[MAX_TIMES],mjd2[MAX_TIMES];
+  double centreMJD;
   double epoch[MAX_TIMES],dmVal[MAX_TIMES],dmE[MAX_TIMES];
   char parFileName[MAX_TIMES][MAX_STRLEN];
   char tname[100]="";
   int nStride=0;
-  double globalParameter;
+  double globalParameter=0;
   int argn;
   int fitf0=0;
   int n=0;
@@ -116,7 +116,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   while (!feof(fin))
     {
       //      nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
-      nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],tname,tname);
+      nread = fscanf(fin,"%lf %lf %s %s",&mjd1[nStride],&mjd2[nStride],tname,tname);
       if (nread==3 || nread==4)
 	{
 	  strcpy(parFileName[nStride],parFile[0]);
@@ -676,4 +676,4 @@ void selectData(pulsar *psr,float *rx,float *ry,double f1,double f2,float *plotX
     }     
 
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

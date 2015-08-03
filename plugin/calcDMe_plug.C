@@ -1288,4 +1288,4 @@ void findSessions(pulsar *psr)
 }//findSessions
 
 //END
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

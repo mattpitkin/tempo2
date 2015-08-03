@@ -60,7 +60,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i,p,n,p1,p2;
-  double globalParameter;
+  double globalParameter=0;
   double startMJD,endMJD,stepMJD,t;
   char tstr[128]="";
   FILE *fout,*fin,*fout2;

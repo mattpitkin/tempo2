@@ -24,7 +24,7 @@
 *    timing model.
 */
 
-/* On linux: g++-3.2.3 -fPIC -c delays_plug.C -I/usr/local/pgplot -I/usr/local/include ; g77 -shared -o $TEMPO2PLUG/delays_linux_plug.so delays_plug.o -L/packages/linux/pgplot/ -lcpgplot -lpgplot -ltk8.0 -ltcl8.0 -L/usr/X11R6/lib -lX11 -lpng -lz -lg2c
+/* On linux: g++-3.2.3 -fPIC -c delays_plug.C -I/usr/local/pgplot -I/usr/local/include ; g77 -shared -o $TEMPO2PLUG/delays_linux_plug.so delays_plug.o -L/packages/linux/pgplot/ -lcpgplot -lpgplot -ltk8.0 -ltcl8.0 -L/usr/X11R6/lib -lX11 -lpng -lz -lg2c*/
 
 /* On sungcc: g++-3.1.1 -fPIC -c delays_plug.C ; g++-3.1.1 -shared -o ../delays_sungcc_plug.so delays_plug.o -lcpgplot -lpgplot -lM77 -lF77 -lsunmath */
 /* CC -c -I. -I../../include -I/psr/packages/include -I/psr/packages/sun4sol/include -I/usr/local/include -I/psr/include -I/psr/packages/sun4sol/include -I/usr/local/lib -o delays_plug.o delays_plug.C ; CC -G -o ../delays_plug.so delays_plug.o -L/usr/openwin/lib -lcpgplot -lpgplot -lM77 -lF77 -lsunmath -lXext -lX11 -lresolv -lsocket -lnsl */
@@ -628,4 +628,4 @@ void createNewArrivalTimes(pulsar *psr,int npsr)
     }
   callFit(psr,npsr);             /* Do all the fitting routines */
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

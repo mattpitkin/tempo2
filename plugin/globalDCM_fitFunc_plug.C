@@ -1625,4 +1625,4 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
   free(u);
   free(cholp);
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

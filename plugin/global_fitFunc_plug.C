@@ -1042,4 +1042,4 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
   //  n+=new_ma;
   //  exit(1);
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

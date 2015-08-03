@@ -322,7 +322,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				  psr[p2].param[param_raj].val[0],
 				  psr[p2].param[param_decj].val[0]);
 
-			if(write_python_files)fprintf(pyfile,"# % 14s % 14s % 8.3f % 12.4g % 12.4g\n",psr[p1].name,psr[p2].name,angle[npair],whitePSD[p1],whitePSD[p2]);
+			if(write_python_files)fprintf(pyfile,"# %-14s %-14s % 8.3f % 12.4g % 12.4g\n",psr[p1].name,psr[p2].name,angle[npair],whitePSD[p1],whitePSD[p2]);
 
 			// Form the cross power spectrum
 			for (i=0;i<nSpec;i++)
@@ -518,7 +518,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  e3 = e[0];
 
 	  fout = fopen("result.dat","w");
-	  fprintf(fout,"%g %g %g %g %g %g %g %g %g %g\n",p1,e1,p1/e1,c1,p2,e2,p2/e2,p3,e3,p3/e3,chisq);
+	  fprintf(fout,"%g %g %g %g %g %g %g %g %g %g %g\n",p1,e1,p1/e1,c1,p2,e2,p2/e2,p3,e3,p3/e3,chisq);
 	  fclose(fout);
 
 	  for (i=0;i<nf;i++)
@@ -669,7 +669,8 @@ double getSpectrum(pulsar *psr,double *px,double *py_r,double *py_i,int *nSpec,d
 	  t+=dt;
    }
 
-   logmsg("%lf %lf, %llf %llf, %s",startOverlap,endOverlap,fakepsr->obsn[0].sat,fakepsr->obsn[fakepsr->nobs-1].sat,fakepsr->name);
+   logmsg("%lf %lf, %lf %lf, %s",startOverlap,endOverlap,static_cast<double>(fakepsr->obsn[0].sat),
+           static_cast<double>(fakepsr->obsn[fakepsr->nobs-1].sat),fakepsr->name);
    /* From here on in we copy the cholSpectra plugin
    */
    double **uinv;
@@ -812,6 +813,7 @@ int offsetToCM(pulsar* psr){
 		 }
 	  }
    }
+   return n;
 }
 
 

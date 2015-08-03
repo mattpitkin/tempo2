@@ -112,11 +112,13 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
     }
   else if (file==0) /* Read from string */
     parseLine(psr,cline,&errMult,null,format,&rad);
+  return 0;
 }
 
 void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,int *rad)
 {
-  int i,j,k,l;
+  int l;
+  unsigned i,j,k;
   char var[500],type[100];
   int varN,varA,lv,le,parameter=0,parameterA=0,end=1;
   char cval[500],cerr[500],msg[500];
@@ -218,7 +220,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,in
 	    type[1]='\0';
 	    for (j=0;j<MAX_PARAMS;j++)
 	      {
-		for (k=0;k<psr[0].param[j].aSize;k++)
+		for (k=0;k<static_cast<unsigned>(psr[0].param[j].aSize);k++)
 		  {
 		    if (strcasecmp(var,psr[0].param[j].shortlabel[k])==0)
 		      {
@@ -305,7 +307,8 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,in
 			  /* More complicated if raj, decj in string format */
 			  if (varN==param_raj && *rad==0)
 			    {
-			      int dp,ierr,sym,k;
+			      int dp,ierr,sym;
+                  unsigned k;
 			      double err;
 			      strcpy(disp,psr[0].rajStrPost);
 			      err = psr[0].param[varN].err[0]*(*errMult);
@@ -327,7 +330,8 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,in
 			    }
 			  else if (varN==param_decj && *rad==0)
 			    {
-			      int dp,ierr,sym,k;
+			      int dp,ierr,sym;
+                  unsigned k;
 			      double err;
 			      strcpy(disp,psr[0].decjStrPost);
 			      err = psr[0].param[varN].err[0]*(*errMult);
@@ -540,4 +544,4 @@ int nint_derived(double x){
   return(i);
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

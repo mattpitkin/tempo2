@@ -121,6 +121,7 @@ if (*npsr==0) /* Select all files */
   preProcess(psr,*npsr,argc,argv);
   callFit(psr,*npsr);             /* Do all the fitting routines */
   doPlot(psr,*npsr,overlay);              /* Do plot */
+  return 0;
 }
 
 /* This function calls all of the fitting routines.             */
@@ -562,6 +563,7 @@ float deletePoint(pulsar *psr,int npsr,float *x,float *y,float mouseX,float mous
 	}
     }
   psr[0].obsn[iclosest].deleted=1;
+  return closest;
 }
 
 float idPoint(pulsar *psr,int npsr,float *x,float *y,float mouseX,float mouseY)
@@ -604,6 +606,7 @@ float idPoint(pulsar *psr,int npsr,float *x,float *y,float mouseX,float mouseY)
   ld_printf("Post-fit residual = %Lf\n",psr[0].obsn[iclosest].residual);
   printf("Observing frequency = %f\n",psr[0].obsn[iclosest].freq);
   printf("---------------------------------------------------\n");
+  return closest;
 }
 
 
@@ -662,4 +665,4 @@ double fortranMod(double a,double p)
   return ret;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

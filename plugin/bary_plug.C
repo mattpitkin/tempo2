@@ -85,7 +85,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       if (strcmp(argv[i],"-mjd")==0)
 	{
 	  defineMJD = 1;
-	  sscanf(argv[++i],"%Lf,",&mjd);
+      mjd = parse_longdouble(argv[++i]);
 	}
       else if (strcmp(argv[i],"-coord")==0)
 	{
@@ -218,7 +218,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-char * plugVersionCheck = (char *)TEMPO2_h_VER;
+const char * plugVersionCheck = (char *)TEMPO2_h_VER;
 
 // Geocentric to geodetic.
 // Uses Vermeille (2004)'s method:

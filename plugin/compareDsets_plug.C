@@ -706,5 +706,5 @@ int idPoint2(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouse
 }
 
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
 

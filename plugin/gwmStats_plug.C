@@ -384,4 +384,4 @@ double calculateD(pulsar *psr)
 
 }
 
-char * plugVersionCheck = (char *)TEMPO2_h_VER;
+const char * plugVersionCheck = (char *)TEMPO2_h_VER;

@@ -694,7 +694,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel); 
 void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
-void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname);
+void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname);
 void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void calculate_bclt(pulsar *psr,int npsr);

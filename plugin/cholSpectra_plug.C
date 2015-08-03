@@ -82,7 +82,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    int outUinv=0;
 
    int i,p;
-   double globalParameter;
+   double globalParameter=0;
    const char *CVS_verNum = "$Revision: 1.18 $";
 
    if (displayCVSversion == 1) CVSdisplayVersion("cholSpecra_plug.C","plugin",CVS_verNum);
@@ -416,7 +416,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    return 0;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
 
 void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i,int outWhite,int outUinv) {
    int i;

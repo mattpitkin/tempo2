@@ -1607,4 +1607,4 @@ void cpgpt(int n, const float *xpts, const longdouble *ypts, int symbol)
     cpgpt(n,xpts,farray,symbol);
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

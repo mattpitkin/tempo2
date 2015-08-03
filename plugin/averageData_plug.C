@@ -442,4 +442,4 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

@@ -236,10 +236,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   char origArgV[100][MAX_FILELEN];
   int i,j,k;
-  double globalParameter;
+  double globalParameter=0;
   char timeList[MAX_STRLEN];
-  longdouble *mjd1,*mjd2;
-  longdouble centreMJD;
+  double *mjd1,*mjd2;
+  double centreMJD;
   char parFileName[MAX_TIMES][MAX_STRLEN];
   char timFileName[MAX_TIMES][MAX_STRLEN];
   double *epoch;
@@ -281,9 +281,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   // Allocate memory
   printf("Allocating memory\n");
-  if (!(mjd1 = (longdouble *)malloc(sizeof(longdouble)*MAX_TIMES)))
+  if (!(mjd1 = (double *)malloc(sizeof(double)*MAX_TIMES)))
     {printf("Sorry: out of memory\n"); exit(1);}
-  if (!(mjd2 = (longdouble *)malloc(sizeof(longdouble)*MAX_TIMES)))
+  if (!(mjd2 = (double *)malloc(sizeof(double)*MAX_TIMES)))
     {printf("Sorry: out of memory\n"); exit(1);}
   if (!(epoch = (double *)malloc(sizeof(double)*MAX_TIMES)))
     {printf("Sorry: out of memory\n"); exit(1);}
@@ -383,7 +383,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       fin = fopen(timeList,"r");
       while (!feof(fin))
 	{
-	  nread = fscanf(fin,"%Lf %Lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
+	  nread = fscanf(fin,"%lf %lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
 	  if (nread==3 || nread==4)
 	    {
 	      if (nread==4)
@@ -530,7 +530,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  if (fitf1==0)
 	    {
-	      if (fscanf(fin,"%lf %lf %lf %d %d",&epoch[n],&f0[n],&f0e[n],&nFit[n],&id)==5)
+	      if (fscanf(fin,"%lf %lf %lf %d %d",&epoch[n],&f0[n],&f0e[n],&nFit[n],&id[n])==5)
 		{
 		  id[n]--;
 		  n++;
@@ -1554,7 +1554,7 @@ void interactivePlot(double *epoch,double *f0,double *f0e,int *nFit,int *id,int 
   int istart=0;
   int iend=0;
   longdouble removeA=0.0,removeB=0.0,removeC=0.0; // slope removal
-  double f0val,f1val,f2val,forig;
+  double f0val,f1val,f2val;
   double toffset=epoch[0];
   double dt;
   double model;
@@ -1588,7 +1588,7 @@ void interactivePlot(double *epoch,double *f0,double *f0e,int *nFit,int *id,int 
       printf("middle button - add glitch\n");
       printf("F             - non-linear fit\n");
       printf("-----------------------------------\n");
-      printf("F0  %.10f\n",f0val-forig);
+      printf("F0  %.10f\n",f0val);
       printf("F1  %g\n",f1val);
       printf("F2  %g\n",f2val);
       printf("\n");
@@ -3405,4 +3405,4 @@ double nonlinearFunc( double x, const double *par,int obsNum )
     }
   return fitfunc;
 }
-char * plugVersionCheck = (char *)TEMPO2_h_VER;
+const char * plugVersionCheck = (char *)TEMPO2_h_VER;

@@ -47,7 +47,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
-  double globalParameter;
+  double globalParameter=0;
   const char *CVS_verNum = "$Revision: 1.9 $";
   double modelAlpha,modelFc,modelA;
   int np,ndays;
@@ -161,4 +161,4 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

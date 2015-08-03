@@ -59,7 +59,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   char overlay[100]="NULL";
   int i,j,k,p;
-  double globalParameter;
+  double globalParameter=0;
   double maxy,miny;
   double wmean,wmeanE[MAX_OBSN];
   int setmaxy=0,setminy=0;
@@ -1125,4 +1125,4 @@ void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat )
    *ny = (int) ( 4L * k + i ) - 4716;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

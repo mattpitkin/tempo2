@@ -2187,4 +2187,4 @@ int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese,int
 
 
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

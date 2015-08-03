@@ -86,7 +86,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int i,summary;
   int plot=1;
   int removeQuad=0;
-  double globalParameter;
+  double globalParameter=0;
   float errStep = 1e-6;
   float dstep = 100;
   //  int nit = 1;
@@ -122,9 +122,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-numits")==0)
 	sscanf(argv[++i],"%d",&nit);
       else if (strcmp(argv[i],"-gwamp")==0)
-	sscanf(argv[++i],"%Lf",&gwamp);
+          gwamp=parse_longdouble(argv[++i]);
       else if (strcmp(argv[i],"-alpha")==0)
-	sscanf(argv[++i],"%Lf",&alpha);
+          alpha=parse_longdouble(argv[++i]);
       else if (strcmp(argv[i],"-errstep")==0)
 	sscanf(argv[++i],"%f",&errStep);
       else if (strcmp(argv[i],"-plotout")==0)
@@ -1284,4 +1284,4 @@ float plotHistogram(float *x,int count,int *flagCol,int nFlag,char flagV[100][16
     }*/
   return highest;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

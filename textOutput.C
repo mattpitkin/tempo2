@@ -54,7 +54,7 @@ double dglep(pulsar psr,int gn,double fph);
 /*                                              */
 /* Changes:                                     */
 /* ******************************************** */
-void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname)
+void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname)
 {
   double rms_pre=0.0,rms_post=0.0;
   double mean_pre=0.0,mean_post=0.0,chisqr;

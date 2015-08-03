@@ -77,6 +77,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         }
     }
 
+    return 0;
 }
 
 double psrangle(double centre_long,double centre_lat,double psr_long,double psr_lat)
