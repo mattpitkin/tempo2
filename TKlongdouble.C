@@ -82,14 +82,14 @@ dd_real pow(const dd_real &a, const dd_real &b)
 
 #ifdef LONGDOUBLE_IS_FLOAT128
 #include <stdarg.h>
-#define BUFSIZE 1024
+#define BUFSIZE 4096
 int ld_vsprintf(char *buf, const char *__format, va_list args){
     char fmt[BUFSIZE];
     char qfmt[BUFSIZE];
     va_list oargs;
     const char *c;
     const char *e;
-    char* o=fmt;
+    char* o=buf;
     c=__format;
     do {
         if (*c!='%'){
@@ -100,6 +100,12 @@ int ld_vsprintf(char *buf, const char *__format, va_list args){
 
         e=c+1;
         do {
+            if (*e=='%'){
+                *o='%';
+                ++o;
+                ++c;
+                break;
+            }
             if (*e=='L' && (*(e+1)=='f' || *(e+1)=='g' || *(e+1) == 'e')){
                 longdouble ld = va_arg(args,longdouble);
                 size_t n=e-c;
@@ -108,31 +114,67 @@ int ld_vsprintf(char *buf, const char *__format, va_list args){
                 qfmt[n]='Q';
                 qfmt[n+1]=*e;
                 qfmt[n+2]='\0';
-                quadmath_snprintf(o,BUFSIZE-(o-fmt),qfmt, ld);
+                quadmath_snprintf(o,BUFSIZE-(o-buf),qfmt, ld);
                 while(*(++o)!='\0'){
                     continue;
                 }
                 c+=n+1;
                 break;
             }
-            if (
-                    (*e > 65 && *e < 90) ||
-                    (*e > 97 && *e < 141)
-               ) {
-                va_copy(oargs,args);
-                while(c <= e){
-                    *o=*c;
-                    ++o;
-                    ++c;
+            if ( *e=='u' || *e=='d' || *e=='x' || *e=='X' || *e=='o' || *e=='i' || *e=='c'){ 
+                size_t n=e-c;
+                memcpy(qfmt,c,n+1);
+                qfmt[n+1]='\0';
+
+                if(*(e-1)=='l' && *(e-2)=='l'){
+                    long long int str = va_arg(args,long long int);
+                    sprintf(o,qfmt,str);
+                } else {
+                    int str = va_arg(args,int);
+                    sprintf(o,qfmt,str);
                 }
                 --c;
+                while(*(++o)!='\0'){
+                    continue;
+                }
+                c+=n+1;
+
+                break;
+
+            }
+            if ( *e=='f' || *e=='g' || *e=='e') {
+                size_t n=e-c;
+                memcpy(qfmt,c,n+1);
+                qfmt[n+1]='\0';
+                double str = va_arg(args,double);
+                sprintf(o,qfmt,str);
+                --c;
+                while(*(++o)!='\0'){
+                    continue;
+                }
+                c+=n+1;
+
+                break;
+            }
+            if ( *e=='s' ) {
+                size_t n=e-c;
+                memcpy(qfmt,c,n+1);
+                qfmt[n+1]='\0';
+                const char* str = va_arg(args,const char*);
+                sprintf(o,qfmt,str);
+                --c;
+                while(*(++o)!='\0'){
+                    continue;
+                }
+                c+=n+1;
+
                 break;
             }
         } while(*(++e) != '\0');
     } while(*(++c) != '\0');
 
     *o='\0';
-    int ret_status = vsnprintf(buf,BUFSIZE,fmt,oargs);
+    int ret_status = 0;
 
     va_end(args);
     va_end(oargs);

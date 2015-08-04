@@ -30,6 +30,13 @@ TEST(testLongDouble, printAndParse){
 
     longdouble ld2 = parse_longdouble(sb);
     ASSERT_EQ(ld,ld2);
+
+    unsigned uu = 2147483649;
+    long long int ll = 2147483649L;
+    long long int ll2 = 17179869185L;
+
+    ld_sprintf(sb,"%% %d %.1f %u %.1lf %lld %lld %s %.1Lf %% %c",-1,0.1,uu,0.1,ll,ll2,"t",ld,'x');
+    ASSERT_STREQ("% -1 0.1 2147483649 0.1 2147483649 17179869185 t 50000.1 % x",sb);
 }
 
 TEST(testFormResiduals, basicBATs){

@@ -23,7 +23,7 @@ libt2toolkit_la_CFLAGS=-fPIC
 libt2toolkit_la_LIBADD=
 
 libtempo2_la_LIBADD = sofa/libsofa.la
-libtempo2_la_CFLAGS = -fPIC
+libtempo2_la_CFLAGS = -fPIC 
 #libtempo2_la_LDFLAGS = -static
 
 if HAVE_LAPACK
