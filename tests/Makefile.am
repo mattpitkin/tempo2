@@ -1,6 +1,6 @@
 AM_DEFAULT_SOURCE_EXT=.C
 
-test_programs=testTKfit testTempo2
+test_programs=testTKfit testTempo2 testEndToEnd
 
 noinst_LTLIBRARIES=libgtest.la
 check_PROGRAMS=$(test_programs)

@@ -728,7 +728,6 @@ void writeTim(const char *timname,pulsar *psr,const char *fileFormat)
 	  interim_error = psr->obsn[i].origErr/current_efac;
 	  interim_error = sqrt(pow(interim_error,2.0)-(pow(current_equad,2.0)));
 
-	  //ld_printf("Writing out: %lf %.17Lf %.15lf\n",psr->obsn[i].freq,oldsat,psr->obsn[i].freq);
 	  ld_fprintf(fout," %s %.8lf %.17Lf %.5lf %s ", name,psr->obsn[i].freq,
 		  oldsat, interim_error,psr->obsn[i].telID);
 	  if(interim_error<longdouble(0.0)){
