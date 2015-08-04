@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
-#define TEMPO2_h_VER "$ID$"
+#define TEMPO2_h_VER "$Id$"
 #define TSUN longdouble(4.925490947e-6) // Solar constant for mass calculations.
 #define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
