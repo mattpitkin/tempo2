@@ -84,7 +84,7 @@ double ELL1model(pulsar *psr,int p,int ipos,int param)
     {
       displayMsg(1,"BIN1","SIN I > 1.0, setting to 1: should probably use DDS model","",psr[p].noWarnings);
       si = 1.0;
-      psr[p].param[param_sini].val[0] = 1.0L;
+      psr[p].param[param_sini].val[0] = longdouble(1.0);
     }
 
   x0    = psr[p].param[param_a1].val[0];

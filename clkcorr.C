@@ -183,7 +183,8 @@ defineClockCorrectionSequence(char *fileList_in,int dispWarnings)
   ClockCorrectionFunction *func;
   size_t ifunc;
   DynamicArray seq;
-  char fileList[2048], *c, *white=" \t\r\n";
+  char fileList[2048], *c;
+  const char *white=" \t\r\n";
   
   if  ( clockCorrections_initialized != 1 )
     initialize_ClockCorrections(dispWarnings);
@@ -217,7 +218,7 @@ defineClockCorrectionSequence(char *fileList_in,int dispWarnings)
 /* Function to make a clock correction sequence using Dijkstra's
    shortest path algorithm , see 
   http://en.wikipedia.org/wiki/Dijkstra%27s_algorithm */
-DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
+DynamicArray *makeClockCorrectionSequence(const char *clockFrom, const char *clockTo,
 					  double mjd,int warnings)
 {
   size_t slen = 16;
@@ -452,7 +453,7 @@ DynamicArray *makeClockCorrectionSequence(char *clockFrom, char *clockTo,
   return (DynamicArray *)DynamicArray_push_back(&clockCorrectionSequences, &seq);
 }
 
-DynamicArray *getClockCorrectionSequence(char *clockFrom, char *clockTo,
+DynamicArray *getClockCorrectionSequence(const char *clockFrom, const char *clockTo,
 					 double mjd,int warnings)
 {
   size_t iseq;
@@ -520,8 +521,8 @@ getClockCorrection(double mjd, char *clockFrom, char *clockTo)
 #endif
 
 void 
-getClockCorrections(observation *obs, char *clockFrom, 
-		    char *clockTo,int warnings)
+getClockCorrections(observation *obs, const char *clockFrom_const, 
+		    const char *clockTo,int warnings)
 {
   DynamicArray *sequence;
   size_t ifunc;
@@ -529,15 +530,17 @@ getClockCorrections(observation *obs, char *clockFrom,
   ClockCorrectionFunction *func;
   double correction = 0.0;
   obs->nclock_correction = 0;
+  char clockFrom[128];
+  strcpy(clockFrom,clockFrom_const);
 
-  char *clockFromOrig; 
+  char clockFromOrig[128]; 
   //  logdbg("In getClockCorrections");
 
   //logdbg("Getting clockFrom >%s<",obs->telID);
   if (clockFrom[0]=='\0') // get from observatory instead
-    clockFrom = getObservatory(obs->telID)->clock_name;
+    strcpy(clockFrom,getObservatory(obs->telID)->clock_name);
   //  logdbg("Got clockFrom");
-  clockFromOrig = clockFrom;
+  strcpy(clockFromOrig,clockFrom);
 
   if (!strcasecmp(clockTo, clockFrom))
   {
@@ -554,7 +557,7 @@ getClockCorrections(observation *obs, char *clockFrom,
     sprintf(msg,"Trying assuming UTC =");
     sprintf(msg2,"%s",clockFrom);
     displayMsg(1,"CLK4",msg,msg2,warnings);
-    clockFrom="UTC";
+    strcpy(clockFrom,"UTC");
     if (!strcasecmp(clockTo, clockFrom))
     {
       obs->nclock_correction = 0;
@@ -569,7 +572,7 @@ getClockCorrections(observation *obs, char *clockFrom,
       sprintf(msg,"Trying TT(TAI) instead of ");
       sprintf(msg2,"%s",clockTo);
       displayMsg(1,"CLK5",msg,msg2,warnings);
-      clockFrom = clockFromOrig;
+      strcpy(clockFrom,clockFromOrig);
       clockTo="TT(TAI)";
       if (!strcasecmp(clockTo, clockFrom))
       {
@@ -582,7 +585,7 @@ getClockCorrections(observation *obs, char *clockFrom,
      if (sequence == NULL)
      {
        displayMsg(1,"CLK8","Trying both","",warnings);       
-        clockFrom="UTC";
+        strcpy(clockFrom,"UTC");
 	if (!strcasecmp(clockTo, clockFrom))
 	{
 	  obs->nclock_correction = 0;
@@ -641,15 +644,17 @@ getCorrectionTT(observation *obs)
 }
 
 double
-getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings)
+getCorrection(observation *obs, const char *clockFrom_c, const char *clockTo, int warnings)
 {
     observatory *site;
   DynamicArray *sequence;
   size_t ifunc;
-  char *currClock;
   ClockCorrectionFunction *func;
   double correction = 0.0;
   const char *CVS_verNum = "$Revision: 1.10 $";
+  char clockFrom[128];
+  char currClock[128];
+  strcpy(clockFrom,clockFrom_c);
 
   if (clockFrom[0]=='\0')
     site = getObservatory(obs->telID);
@@ -657,8 +662,8 @@ getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings)
   if (displayCVSversion == 1) CVSdisplayVersion("clkcorr.C","getCorrection()",CVS_verNum);
 
   if (clockFrom[0]=='\0')
-    clockFrom = site->clock_name;
-  currClock = clockFrom;
+    strcpy(clockFrom,site->clock_name);
+  strcpy(currClock,clockFrom);
 
   if (!strcasecmp(clockTo, clockFrom))
     return 0.0;
@@ -678,7 +683,7 @@ getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings)
       return 0.0;
     sequence = getClockCorrectionSequence("UTC", clockTo, obs->sat,
 					  warnings); 
-    currClock = "UTC";
+    strcpy(currClock,"UTC");
     if (sequence == NULL)
     {
       if (warnings==0) 
@@ -697,7 +702,7 @@ getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings)
     correction += 
       ClockCorrectionFunction_getCorrection(func, obs->sat+correction/SECDAY)
       * (backwards ? -1.0 : 1.0);
-    currClock = (backwards ? func->clockFrom : func->clockTo);
+    strcpy(currClock,(backwards ? func->clockFrom : func->clockTo));
 /*     printf("--> %s\n", currClock); */
   }
 

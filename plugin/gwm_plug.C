@@ -51,7 +51,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int ndec,nra;
   int addWhite=0;
   const char *CVS_verNum = "$Revision: 1.1 $";
-  long double **sat0;
+  longdouble **sat0;
   double gwm_amp=0.0;
   double gwm_phi;
   int count=0;
@@ -102,10 +102,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   // Allocate memory for ideal sats
   if (addWhite==1)
     {
-      sat0 = (long double **)malloc(sizeof(long double*)*(*npsr));
+      sat0 = (longdouble **)malloc(sizeof(longdouble*)*(*npsr));
       for (p=0;p<*npsr;p++)
 	{
-	  sat0[p] = (long double *)malloc(sizeof(long double)*(psr[p].nobs));
+	  sat0[p] = (longdouble *)malloc(sizeof(longdouble)*(psr[p].nobs));
 	  for (i=0;i<psr[p].nobs;i++)
 	    sat0[p][i] = psr[p].obsn[i].sat;
 	}
@@ -151,7 +151,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		   for (p=0;p<*npsr;p++)
 		     {
 		       for (i=0;i<psr[p].nobs;i++)
-			 psr[p].obsn[i].sat = sat0[p][i];// -psr[p].obsn[i].residual/86400.0; // + (TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1e-6)/86400.0L);
+			 psr[p].obsn[i].sat = sat0[p][i];// -psr[p].obsn[i].residual/86400.0; // + (TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1e-6)/longdouble(86400.0));
 		     }		 
 		   for (wit = 0;wit<wnit;wit++)
 		     {
@@ -160,14 +160,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		       for (p=0;p<*npsr;p++)
 			 {
 			   for (i=0;i<psr[p].nobs;i++)
-			     psr[p].obsn[i].sat -= psr[p].obsn[i].residual/86400.0; // + (TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1e-6)/86400.0L);
+			     psr[p].obsn[i].sat -= psr[p].obsn[i].residual/86400.0; // + (TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1e-6)/longdouble(86400.0));
 			   
 			 }
 		     }
 		   for (p=0;p<*npsr;p++)
 		     {
 		       for (i=0;i<psr[p].nobs;i++)
-			 psr[p].obsn[i].sat += (TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1e-6)/86400.0L);
+			 psr[p].obsn[i].sat += (TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1e-6)/longdouble(86400.0));
 		       psr[p].param[param_gwm_amp].val[0] = 0.0;		       
 		     }
 		 }
@@ -216,4 +216,4 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-char * plugVersionCheck = (char *)TEMPO2_h_VER;
+const char * plugVersionCheck = (char *)TEMPO2_h_VER;

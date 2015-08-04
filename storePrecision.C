@@ -36,7 +36,7 @@
 #include <string.h>
 #include "tempo2.h"
 
-void recordPrecision(pulsar *psr,longdouble prec,char *routine,char *comment)
+void recordPrecision(pulsar *psr,longdouble prec,const char *routine,const char *comment)
 {  
   /*  int num = psr->nStorePrecision;
       psr->storePrec[num].minPrec = prec;

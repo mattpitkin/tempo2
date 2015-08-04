@@ -556,7 +556,7 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
    int istart=0;
    int iend=0;
 
-   logdbg("Adding matrix m to mm (MJD range: %lf -> %lf) %Lf %Lf",mjd_start,mjd_end,psr->obsn[ip[0]].sat,psr->obsn[ip[np-nc-1]].sat);
+   logdbg("Adding matrix m to mm (MJD range: %lf -> %lf) %lf %lf",mjd_start,mjd_end,(double)psr->obsn[ip[0]].sat,(double)psr->obsn[ip[np-nc-1]].sat);
    for(i=0;i<np-nc;i++){
 	  if(psr->obsn[ip[i]].sat>mjd_start){
 		 istart=i;

@@ -121,6 +121,7 @@ if (*npsr==0) /* Select all files */
   preProcess(psr,*npsr,argc,argv);
   callFit(psr,*npsr);             /* Do all the fitting routines */
   doPlot(psr,*npsr,overlay);              /* Do plot */
+  return 0;
 }
 
 /* This function calls all of the fitting routines.             */
@@ -175,7 +176,7 @@ void doPlot(pulsar *psr,int npsr,int overlay)
 	    if (j==0) fitFlag=1;
 	    else if (j==1) fitFlag=2;
 
-	    sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val[0]); 
+	    ld_sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val[0]); 
 	    sprintf(ystr,"Residual (\\gmsec)");
 
 	    count=0;
@@ -392,7 +393,7 @@ void doPlot(pulsar *psr,int npsr,int overlay)
 		fout = fopen(fname,"w");
 		/* Print header */
 		fprintf(fout,"#PSR %s\n",psr[ii].name);
-		fprintf(fout,"#F0  %.14Lf\n",psr[ii].param[param_f].val[0]);
+		ld_fprintf(fout,"#F0  %.14Lf\n",psr[ii].param[param_f].val[0]);
 		fprintf(fout,"#RAJ %s\n",psr[ii].rajStrPre);
 		fprintf(fout,"#DECJ %s\n",psr[ii].decjStrPre);
 		for (jj=0;jj<psr[ii].nobs;jj++)
@@ -562,6 +563,7 @@ float deletePoint(pulsar *psr,int npsr,float *x,float *y,float mouseX,float mous
 	}
     }
   psr[0].obsn[iclosest].deleted=1;
+  return closest;
 }
 
 float idPoint(pulsar *psr,int npsr,float *x,float *y,float mouseX,float mouseY)
@@ -598,12 +600,13 @@ float idPoint(pulsar *psr,int npsr,float *x,float *y,float mouseX,float mouseY)
     }
   printf("---------------------------------------------------\n");
   printf("Closest point has TOA number %d (starting from 1)\n",iclosest+1);
-  printf("SAT = %Lf\n",psr[0].obsn[iclosest].sat);
-  printf("BAT = %Lf\n",psr[0].obsn[iclosest].bat);
-  printf("Pre-fit residual = %Lf\n",psr[0].obsn[iclosest].prefitResidual);
-  printf("Post-fit residual = %Lf\n",psr[0].obsn[iclosest].residual);
+  ld_printf("SAT = %Lf\n",psr[0].obsn[iclosest].sat);
+  ld_printf("BAT = %Lf\n",psr[0].obsn[iclosest].bat);
+  ld_printf("Pre-fit residual = %Lf\n",psr[0].obsn[iclosest].prefitResidual);
+  ld_printf("Post-fit residual = %Lf\n",psr[0].obsn[iclosest].residual);
   printf("Observing frequency = %f\n",psr[0].obsn[iclosest].freq);
   printf("---------------------------------------------------\n");
+  return closest;
 }
 
 
@@ -662,4 +665,4 @@ double fortranMod(double a,double p)
   return ret;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

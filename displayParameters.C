@@ -176,7 +176,7 @@ void displayParameters(int pos,char timFile[][MAX_FILELEN],char parFile[][MAX_FI
 	  printf("--------------------------------------------------------------------------------------------------------------\n");
 	  for (i=0;i<psr[p].nobs;i++)
 	    {
-	      printf("%s %.12e %.12e %.10Lf %.10f\n",print_longdouble(psr[p].obsn[i].sat).c_str(),psr[p].obsn[i].shapiroDelaySun,
+	      ld_printf("%s %.12e %.12e %.10Lf %.10f\n",print_longdouble(psr[p].obsn[i].sat).c_str(),psr[p].obsn[i].shapiroDelaySun,
 		     psr[p].obsn[i].tdis1+psr[p].obsn[i].tdis2,psr[p].obsn[i].roemer,(double)psr[p].obsn[i].bat);
 	    }
 	  printf("--------------------------------------------------------------------------------------------------------------\n");

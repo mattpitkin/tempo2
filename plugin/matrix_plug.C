@@ -63,18 +63,18 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
       // Print top headers
       if (resultType==1)
 	{
-	  printf("% 11s\t","Param");
+	  printf("%-11s\t","Param");
 	  for (j=0;j<psr[p].nParam;j++)
 	    {
 	      getLabel(&psr[p],lab2,j);
-	      printf("% 11s\t",lab2);
+	      printf("%-11s\t",lab2);
 	    }
 	  printf("\n");
 	  
 	  for (i=0;i<psr[p].nParam;i++)
 	    {
 	      getLabel(&psr[p],lab1,i);
-	      printf("% 11s\t",lab1);
+	      printf("%-11s\t",lab1);
 	      for (j=0;j<=i;j++)
 		{
 		  printf("%+10.8f\t",psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]));
@@ -121,6 +121,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
 	}
     }
   printf("\n");
+  return 0;
 }
 
 void getLabel(pulsar *psr,char *lab,int i)
@@ -133,4 +134,4 @@ void getLabel(pulsar *psr,char *lab,int i)
   
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

@@ -40,8 +40,8 @@ long double T1Polyco_GetPhase(T1Polyco *t1p, long double mjd, long double freq)
   /* Evaluate polynomial in phase and frequency */
   dt = (mjd-t1p->mjd_mid)*1440;
   printf("WARNIGN WARNGING: Silly update in polyco read\n");
-  printf("Have %.20Lg %.20Lg\n",mjd,t1p->mjd_mid);
-  printf("Diff = %.15Lg\n",mjd-t1p->mjd_mid);
+  printf("Have %.20lg %.20lg\n",(double)mjd,(double)t1p->mjd_mid);
+  printf("Diff = %.15lg\n",(double)(mjd-t1p->mjd_mid));
 
   phase = t1p->reference_phase + dt*60*t1p->frequency_psr_0 + t1p->coeff[0];
   spin_freq = t1p->frequency_psr_0 + t1p->coeff[1]/60;
@@ -88,13 +88,13 @@ void T1Polyco_Write(T1Polyco *t1p, FILE *fout)
     fprintf(fout,"%-10.10s ",t1p->psrname);
   fprintf(fout,"%9.9s",t1p->date_string);
   fprintf(fout,"%11.11s",t1p->utc_string);
-  fprintf(fout,"%20.11Lf",t1p->mjd_mid);
+  fprintf(fout,"%20.11Lf",(long double)(t1p->mjd_mid));
   fprintf(fout,"%21.6lf ",t1p->dm);
   fprintf(fout,"%6.3lf",t1p->doppler);
   fprintf(fout,"%7.3lf",t1p->log10rms);
   fprintf(fout,"\n");
-  fprintf(fout,"%20.6Lf",t1p->reference_phase);
-  fprintf(fout,"%18.12Lf",t1p->frequency_psr_0);
+  fprintf(fout,"%20.6Lf",(long double)t1p->reference_phase);
+  fprintf(fout,"%18.12Lf",(long double)t1p->frequency_psr_0);
   fprintf(fout,"%5s",t1p->sitename);
   fprintf(fout,"%5d",t1p->span);
   fprintf(fout,"%5d",t1p->ncoeff);
@@ -103,7 +103,7 @@ void T1Polyco_Write(T1Polyco *t1p, FILE *fout)
   fprintf(fout,"\n");
   for (i=0;i<t1p->ncoeff;i++)
   {
-    fprintf(fout,"%25.17Le", t1p->coeff[i]);
+    fprintf(fout,"%25.17Le", (long double)t1p->coeff[i]);
     if ((i+1)%3==0) fprintf(fout,"\n");
   }
 }
@@ -133,7 +133,7 @@ long double T1P_grabLongDouble(char *str, int istart, int nchar)
 
   sscanf(grabbed, "%Lf", &res);
 
-  return res;
+  return (long double)res;
 }
 
 long double T1P_grabInt(char *str, int istart, int nchar)
@@ -151,19 +151,25 @@ int T1Polyco_Read_NewFormat(T1Polyco *t1p, FILE *f)
 {
   int ic;
   char junk[1024];
+  long double mjd_mid, reference_phase,frequency_psr_0,coeff;
 
   if (fscanf(f, "%s %s %s %Lf %lf %lf %lf %Lf %Lf %s %d %d %lf %lf %lf",
 	     t1p->psrname, t1p->date_string, t1p->utc_string,
-	     &t1p->mjd_mid, &t1p->dm, &t1p->doppler, &t1p->log10rms,
-	     &t1p->reference_phase, &t1p->frequency_psr_0,
+	     &mjd_mid, &t1p->dm, &t1p->doppler, &t1p->log10rms,
+	     &reference_phase, &frequency_psr_0,
 	     t1p->sitename, &t1p->span, &t1p->ncoeff,
 	     &t1p->frequency_obs, &t1p->binary_phase, &t1p->binary_frequency)
       != 15)
     return -1;
+  t1p->mjd_mid = mjd_mid;
+  t1p->reference_phase = reference_phase;
+  t1p->frequency_psr_0 = frequency_psr_0;
 
-  for (ic=0; ic < t1p->ncoeff; ic++)
-    if (fscanf(f, "%Lf", &t1p->coeff[ic])!=1)
+  for (ic=0; ic < t1p->ncoeff; ic++){
+    if (fscanf(f, "%Lf", &coeff)!=1)
       return -1;
+    t1p->coeff[ic] = coeff;
+  }
   fgets(junk, 1024, f); /* eat final newline */
   return 0;
 }

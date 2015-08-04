@@ -43,7 +43,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
-  double globalParameter;
+  double globalParameter=0;
   const char *CVS_verNum = "$Revision: 1.7 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("grTemplate.C","plugin",CVS_verNum);
@@ -90,4 +90,4 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

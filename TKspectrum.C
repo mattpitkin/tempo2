@@ -497,7 +497,7 @@ void sineFunc(double x,double *v,int ma)
 //void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN)
 void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im)
 {
-  long double s1,s2,s3,s4,s5;
+  longdouble s1,s2,s3,s4,s5;
   //double recA[MAX_OBSN],recB[MAX_OBSN];
   double pred;
   double omega=0.0;
@@ -508,7 +508,7 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
   int i,j;
   
   //omega0 = 2.0*M_PI/TKrange_d(x,n);
-  omega0 = 2.0L*M_PI/(TKrange_d(x,n) * (double)n / (double)(n-1));
+  omega0 = longdouble(2.0)*M_PI/(TKrange_d(x,n) * (double)n / (double)(n-1));
   *outN = n/2 - 1;
 
   
@@ -527,11 +527,11 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
 	  si = sin(omega*x[i]);
 	  ci = cos(omega*x[i]);
 	  
-	  s1 += (long double)(y[i]*si/sig[i]/sig[i]);
-	  s2 += (long double)(si*si/sig[i]/sig[i]);
-	  s3 += (long double)(si*ci/sig[i]/sig[i]);
-	  s4 += (long double)(y[i]*ci/sig[i]/sig[i]);
-	  s5 += (long double)ci*ci/sig[i]/sig[i];    //NB!!!!!!!!!!!!!!!! THIS IS NOT TYPECAST PROPERLY!!!! - DY
+	  s1 += (longdouble)(y[i]*si/sig[i]/sig[i]);
+	  s2 += (longdouble)(si*si/sig[i]/sig[i]);
+	  s3 += (longdouble)(si*ci/sig[i]/sig[i]);
+	  s4 += (longdouble)(y[i]*ci/sig[i]/sig[i]);
+	  s5 += (longdouble)ci*ci/sig[i]/sig[i];    //NB!!!!!!!!!!!!!!!! THIS IS NOT TYPECAST PROPERLY!!!! - DY
 	}
       b = (double)((s4-s1/s2)/(s5-s3/s2));  //the real Fourier component (since it has y*cos) George's solution
       a = (double)((s1-b*s3)/s2);           //the imaginary Fourier component (since it has y*sin) George
@@ -1011,7 +1011,7 @@ int TK_fft(short int dir,long n,double *x,double *y)
    int m;
    
    m = (int)(log(n)/log(2)+0.1);
-   printf("m = %d, n = %d %g %g %g %d\n",m,n,log(n),log(2),log(n)/log(2),(int)(log(n)/log(2)+0.1));
+   printf("m = %d, n = %ld %g %g %g %d\n",m,n,log(n),log(2),log(n)/log(2),(int)(log(n)/log(2)+0.1));
    /* Do the bit reversal */
    i2 = n >> 1;
    j = 0;
@@ -1126,6 +1126,8 @@ void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,doub
   tauday = tausec/86400.0;
   ntau = 0;
   ncubics=0;
+  // Should check nbintype
+  ndostats=0;
   if (nusewt >= 0)
     {
       tauyear = tauday/365.25;
@@ -1144,8 +1146,6 @@ void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,doub
 	    }
 	}
     }
-  // Should check nbintype
-  ndostats=0;
 
   // 110 continue statement
   do {
@@ -1506,7 +1506,7 @@ void readin(pulsar psr)
   int nalv,nread,n;
   static int idiag = 0;
   double tlast,ave,rms,var,sumwt,alv,t,x,sig,wt,t1,xr,xi,tautest;
-  double xold,rootvar,permin;
+  double rootvar,permin;
   static double unitfact = 1.0;
   double mean=0.0;
   int i;
@@ -1596,7 +1596,7 @@ void readin(pulsar psr)
     if (npt > 1)
       {
 	nalv++;
-	alv = alv+pow(x-xold,2);
+	alv = alv+pow(x,2);
       }
   } while (breakit==0);
   // Ave different because I have a better mean removal or something similar

@@ -36,7 +36,7 @@
 #include "tempo2Util.h"
 
 int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr);
-int getValue(char *str,int v1,int v2,pulsar *psr,int l,int arr);
+void getValue(char *str,int v1,int v2,pulsar *psr,int l,int arr);
 void removeCR(char *str);
 void checkLine(pulsar *p,char *str,FILE *fin,parameter *elong,parameter *elat);
 void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename);
@@ -1095,7 +1095,9 @@ else if (strcasecmp(str,"_DM")==0)
   /* ---------------- */
   else if (strcasecmp(str,"PHASE")==0)
   {
-	 fscanf(fin,"%d %Lf",&psr->phaseJumpDir[psr->nPhaseJump],&psr->phaseJump[psr->nPhaseJump]);
+      char str[1024];
+	 fscanf(fin,"%d %s",&psr->phaseJumpDir[psr->nPhaseJump],str);
+     psr->phaseJump[psr->nPhaseJump] = parse_longdouble(str);
 	 psr->phaseJumpID[psr->nPhaseJump]=-1;
 	 psr->nPhaseJump++;
   }  
@@ -2149,11 +2151,12 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
    /* Indicate that this parameter has been set */
    parameter->paramSet[arr] = 1;
    parameter->prefit[arr] = parameter->val[arr];
+   return 0;
 }
 
 
 
-int getValue(char *str,int v1,int v2,pulsar *psr,int label,int arr)
+void getValue(char *str,int v1,int v2,pulsar *psr,int label,int arr)
 {
    char segment[1000];
    char temp[1000],t1[1000],t2[1000],t3[1000];
@@ -2172,8 +2175,8 @@ int getValue(char *str,int v1,int v2,pulsar *psr,int label,int arr)
 	  psr->param[label].paramSet[arr] = 1;
 	  if (psr->param[label].val[arr]<0) 
 	  {
-		 printf("ERROR: have negative RAJ: %.14lf\n",(double)psr->param[label].val[arr]);
-		 return -1;
+		 logerr("Have negative RAJ: %.14lf",(double)psr->param[label].val[arr]);
+		 return;
 	  }
 	  psr->param[label].prefit[arr] = psr->param[label].val[arr];   
    }
@@ -2191,8 +2194,9 @@ int getValue(char *str,int v1,int v2,pulsar *psr,int label,int arr)
    }
    else
    {
-	  if (sscanf(segment,"%Lf",&(psr->param[label].val[arr]))==1)
-	  {
+       char str[128];
+	  if (sscanf(segment,"%s",str)==1){
+          psr->param[label].val[arr] = parse_longdouble(str);
 		 psr->param[label].paramSet[arr]=1;
 		 if (label==param_f && arr==0) /* Actually read in P0 */
 			psr->param[label].val[arr] = 1.0/psr->param[label].val[arr];

@@ -40,24 +40,24 @@
 /* Based on bnrydd.f */
 
 double DDHmodel(pulsar *psr,int p,int ipos,int param){
-  long double an; // angular velocity
-  long double pb,k; // orbital period and unitless orbital precession
+  longdouble an; // angular velocity
+  longdouble pb,k; // orbital period and unitless orbital precession
   // conversion factors
-  long double rad2deg = 180.0/M_PI; 
-  long double SUNMASS = 4.925490947e-6;
+  longdouble rad2deg = 180.0/M_PI; 
+  longdouble SUNMASS = 4.925490947e-6;
   // binary parameters
-  long double m2,tt0,t0,x,ecc,er,xdot,edot,dr,dth,eth,am2,ct;
+  longdouble m2,tt0,t0,x,ecc,er,xdot,edot,dr,dth,eth,am2,ct;
   // more obscure orbital parameters
-  long double pbdot,xpbdot,phase,u,du,gamma;
-  long double orbits;
+  longdouble pbdot,xpbdot,phase,u,du,gamma;
+  longdouble orbits;
   int norbits;
   // DDH specific orbital parameters:
-  long double h3, stig;// 3rd, 4th harmonics and harmonic ratio
+  longdouble h3, stig;// 3rd, 4th harmonics and harmonic ratio
   // needed for intermediate steps in calculations
-  long double  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,
+  longdouble  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,
     drep,drepp,anhat,su;
-  long double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
-  long double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
+  longdouble sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
+  longdouble csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
   // Aberration parameters (JPWV thinks so, at least).
   dr = 0.0; /* WHAT SHOULD THESE BE SET TO? */
   dth = 0.0; 
@@ -82,7 +82,7 @@ double DDHmodel(pulsar *psr,int p,int ipos,int param){
                "SIN I > 1.0, setting to 1: should probably use DDS model",
                "",psr[p].noWarnings);
     si = 1.0;
-    psr[p].param[param_sini].val[0] = 1.0L;
+    psr[p].param[param_sini].val[0] = longdouble(1.0);
   }
 
   pb = psr[p].param[param_pb].val[0]*SECDAY;
@@ -135,12 +135,12 @@ double DDHmodel(pulsar *psr,int p,int ipos,int param){
   eth = ecc*(1.0+dth);
   
   if (ecc < 0.0 || ecc > 1.0){
-    printf("DDHmodel: problem with eccentricity = %Lg [%s]\n",
+    ld_printf("DDHmodel: problem with eccentricity = %Lg [%s]\n",
            psr[p].param[param_ecc].val[0],psr[p].name);
     exit(1);
   }
   
-  orbits = tt0/pb - 0.5L*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
+  orbits = tt0/pb - longdouble(0.5)*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
   norbits = (int)orbits;
   if (orbits<0.0) norbits--;
   phase=2.0*M_PI*(orbits-norbits);
@@ -201,7 +201,7 @@ double DDHmodel(pulsar *psr,int p,int ipos,int param){
   cm2=-2*dlogbr;
   csi=2*m2*(sw*cume+sqr1me2*cw*su)/brace; 
 
-  long double lgf = log( ( 1.0 + ecc * cos( ae ) ) / 
+  longdouble lgf = log( ( 1.0 + ecc * cos( ae ) ) / 
                          (1.0 + pow( stig, 2.0 ) - 2.0 * stig * sin( ae + omega ) ) );
 
   if( param == param_pb )

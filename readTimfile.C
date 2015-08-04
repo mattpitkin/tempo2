@@ -246,7 +246,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 			      if (strchr(line+i,' ')!=NULL)
 				{
 				  int j;
-				  for (j=i;j<strlen(line);j++)
+				  for (j=i;j<(int)strlen(line);j++)
 				    {
 				      if (line[j]!=' ')
 					{
@@ -262,7 +262,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 				{
 				  double offVal;
 				  sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%lf",&offVal);
-				  psr->obsn[nObs].sat += (offVal/86400.0L);
+				  psr->obsn[nObs].sat += (offVal/longdouble(86400.0));
 				}
 
 			      // Check for DM changes
@@ -609,7 +609,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 
 
 /* Write an arrival time file in the tempo2 format */
-void writeTim(char *timname,pulsar *psr,char *fileFormat)
+void writeTim(const char *timname,pulsar *psr,const char *fileFormat)
 {
   FILE *fout;
   int i,j;
@@ -617,7 +617,7 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
   double current_efac;
   double current_equad;
   double interim_error;
-  long double oldsat;
+  longdouble oldsat;
 
   if (!(fout = fopen(timname,"w")))
     {
@@ -713,8 +713,8 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 	{
 	  if (strcmp(psr->obsn[i].flagID[k],"-to")==0)
 	    {
-	      long double v;
-	      sscanf(psr->obsn[i].flagVal[k],"%Lf",&v);
+	      longdouble v;
+          v = parse_longdouble(psr->obsn[i].flagVal[k]);
 	      oldsat -= v/SECDAY;
 	    }
 	}
@@ -728,11 +728,11 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 	  interim_error = psr->obsn[i].origErr/current_efac;
 	  interim_error = sqrt(pow(interim_error,2.0)-(pow(current_equad,2.0)));
 
-	  printf("Writing out: %.15Lg %.15Lg\n",oldsat,psr->obsn[i].sat);
-	  fprintf(fout," %s %.8f %.17Lf %.5f %s ", name,psr->obsn[i].freq,
+	  ld_printf("Writing out: %.15Lg %.15Lg\n",oldsat,psr->obsn[i].sat);
+	  ld_fprintf(fout," %s %.8f %.17Lf %.5f %s ", name,psr->obsn[i].freq,
 		  // psr->obsn[i].sat, (psr->obsn[i].toaErr/current_efac),psr->obsn[i].telID);
 		  oldsat, interim_error,psr->obsn[i].telID);
-	  if(interim_error<0.0L){
+	  if(interim_error<longdouble(0.0)){
 	    printf("ERROR - TOAerror < 0!!\n");
 	    exit(1);
 	  }
@@ -750,7 +750,7 @@ void writeTim(char *timname,pulsar *psr,char *fileFormat)
 	  if (strlen(psr[0].obsn[i].fname) > 22)
 	    psr[0].obsn[i].fname[22]='\0';
 	    
-	  fprintf(fout," %-25.25s%8.3f  %.13Lf    0.00 %7.2f        %s",
+	  ld_fprintf(fout," %-25.25s%8.3f  %.13Lf    0.00 %7.2f        %s",
 		  psr[0].obsn[i].fname,(double)psr[0].obsn[i].freq,
 		  psr[0].obsn[i].sat,(double)psr[0].obsn[i].origErr,psr[0].obsn[i].telID);
 	  fprintf(fout,"\n");

@@ -54,7 +54,7 @@ double dglep(pulsar psr,int gn,double fph);
 /*                                              */
 /* Changes:                                     */
 /* ******************************************** */
-void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname)
+void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname)
 {
   double rms_pre=0.0,rms_post=0.0;
   double mean_pre=0.0,mean_post=0.0,chisqr;
@@ -92,7 +92,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      //		    print_longdouble(psr[p].obsn[i].bat-psr[p].param[param_pepoch].val[0]).c_str(),
 	      //		    print_longdouble(psr[p].obsn[i].residual).c_str(),
 	      //		    print_longdouble(psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f].val[0]).c_str());
-	      // 	    fprintf(fout,"%Lf %Lg %Lg\n",psr[p].obsn[i].bat-psr[p].param[param_pepoch].val,psr[p].obsn[i].residual,psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f0].val);
+	      // 	    ld_fprintf(fout,"%Lf %Lg %Lg\n",psr[p].obsn[i].bat-psr[p].param[param_pepoch].val,psr[p].obsn[i].residual,psr[p].obsn[i].toaErr/1000.0/psr[p].param[param_f0].val);
 	      fclose(fout);
 	    }
 	}
@@ -100,11 +100,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
       // Update TZRMJD
       {
-	long double centrePos;
-	long double closestV,check;
+	longdouble centrePos;
+	longdouble closestV,check;
 	int closestI=-1;
 	centrePos = (psr[p].param[param_start].val[0]+
-		     psr[p].param[param_finish].val[0])/2.0L;
+		     psr[p].param[param_finish].val[0])/longdouble(2.0);
 	
 	
 	for (i=0;i<psr[p].nobs;i++)
@@ -126,7 +126,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  }
 	else
 	  {
-	    psr[p].param[param_tzrmjd].val[0] = psr[p].obsn[closestI].sat-psr[p].obsn[closestI].residual/86400.0L;
+	    psr[p].param[param_tzrmjd].val[0] = psr[p].obsn[closestI].sat-psr[p].obsn[closestI].residual/longdouble(86400.0);
 	    psr[p].param[param_tzrmjd].paramSet[0] = 1;
 	    psr[p].param[param_tzrfrq].val[0] = psr[p].obsn[closestI].freq;
 	    psr[p].param[param_tzrfrq].paramSet[0] = 1;
@@ -311,7 +311,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		{
 		  pwr = pow(psr[p].wave_cos[i],2)+pow(psr[p].wave_sine[i],2);
 		  perr = sqrt(pow(2*psr[p].wave_cos[i]*psr[p].wave_cos_err[i],2)+pow(2*psr[p].wave_sine[i]*psr[p].wave_sine_err[i],2));
-		  printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g  %-+10.5g %-+10.5g  \n",
+		  ld_printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g  %-+10.5g %-+10.5g  \n",
 			 i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
 			 (i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
 			 1.0/((i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25), // Wave period (yrs)
@@ -355,10 +355,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		  
 		
 
-		  printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
+		  ld_printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
 			 i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
-			 (long double)  om,       // Wave frequency (yr^-1) 
-			 (long double) 1./om, // Wave period (yrs)
+			 (longdouble)  om,       // Wave frequency (yr^-1) 
+			 (longdouble) 1./om, // Wave period (yrs)
 			 psr[p].wave_cos[i],       // Wave cosine amplitude
 			 psr[p].wave_cos_err[i],   // Wave cosine amplitude uncertainty
 			 psr[p].wave_sine[i],      // Wave sine amplitude
@@ -385,7 +385,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		{
 		  pwr = pow(psr[p].wave_cos_dm[i],2)+pow(psr[p].wave_sine_dm[i],2);
 		  perr = sqrt(pow(2*psr[p].wave_cos_dm[i]*psr[p].wave_cos_dm_err[i],2)+pow(2*psr[p].wave_sine_dm[i]*psr[p].wave_sine_dm_err[i],2));
-		  printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
+		  ld_printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g\n",
 			 i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
 			 (i+1)*psr[p].param[param_wave_dm].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
 			 1.0/((i+1)*psr[p].param[param_wave_dm].val[0]/2.0/M_PI*365.25), // Wave period (yrs)
@@ -621,8 +621,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  bindex= psr[0].param[param_brake].val[0];
 	  F2brake= bindex*F1*F1/F0;
 	  F3brake= bindex*(2*bindex-1)*F1*F1*F1/F0/F0;
-	  printf("F2 derived from braking index %.5Le\n", F2brake);
-	  printf("F3 derived from braking index %.5Le\n", F3brake);
+	  ld_printf("F2 derived from braking index %.5Le\n", F2brake);
+	  ld_printf("F3 derived from braking index %.5Le\n", F3brake);
   
 
 
@@ -635,7 +635,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  F0 = psr[0].param[param_f].val[0];
 	  F2 = psr[0].param[param_f].val[2];
 	  brake= F0*F2/(F1*F1);
-	  printf("Braking index derived from F0,F1,F2 %.3Lf\n", brake);
+	  ld_printf("Braking index derived from F0,F1,F2 %.3Lf\n",brake);
 
 	}
       
@@ -685,10 +685,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      
 // M2 and SINI from DDH model (FW10)
         if( psr[p].param[param_h3].paramSet[0] == 1 ){ 
-          long double h3 = psr[p].param[param_h3].val[0];
-          long double m2, sini;
+          longdouble h3 = psr[p].param[param_h3].val[0];
+          longdouble m2, sini;
           if( psr[p].param[param_stig].paramSet[0] == 1 ){
-            long double stig = psr[p].param[param_stig].val[0];
+            longdouble stig = psr[p].param[param_stig].val[0];
             // Freire & Wex, Eq. 20:
             m2 = h3 / 4.925490947e-6 * pow( stig, -3.0 );
             // Freire & Wex, Eq. 22:
@@ -696,7 +696,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             printf( " DDH-model Derived parameters:  M2 = %lg\n", (double)m2 );
             printf( "                              SINI = %lg\n", (double)sini );
           }else if( psr[p].param[param_h4].paramSet[0] == 1 ){
-            long double h4 = psr[p].param[param_h4].val[0];
+            longdouble h4 = psr[p].param[param_h4].val[0];
             // Freire & Wex, Eq. 26:
             if( h4 != 0.0 )
               m2 = pow( h3, 4.0 ) / pow( h4, 3.0 ) / 4.925490947e-6;
@@ -714,15 +714,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
            psr[p].param[param_a1].paramSet[0]*
            psr[p].param[param_pb].paramSet[0]==1
            && psr[p].param[param_sini].nLinkTo==0){
-          long double mp[2];
-          double DAY2S = (24.0L*3600.0L);
+          longdouble mp[2];
+          double DAY2S = (longdouble(24.0)*longdouble(3600.0));
           mp[0] = -psr[p].param[param_m2].val[0]+
             sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
                  pow(psr[p].param[param_m2].val[0]*
                      psr[p].param[param_sini].val[0]/
                      psr[p].param[param_a1].val[0],3.0));
           
-          longdouble Cte = sqrt(TSUN*pow(1/2.0L/M_PI,2.0));
+          longdouble Cte = sqrt(TSUN*pow(1/longdouble(2.0)/M_PI,2.0));
           mp[1] = sqrt(pow(psr[p].param[param_m2].err[0]*
                            (-1.0+1.5*Cte*DAY2S*psr[p].param[param_pb].val[0]*
                             pow(psr[p].param[param_sini].val[0]/
@@ -732,7 +732,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                            pow(psr[p].param[param_m2].val[0]*
                                psr[p].param[param_sini].val[0]/
                                psr[p].param[param_a1].val[0],1.5),2.0)+
-                       pow(psr[p].param[param_sini].err[0]*1.5L*
+                       pow(psr[p].param[param_sini].err[0]*longdouble(1.5)*
                            sqrt(psr[p].param[param_sini].val[0])*Cte*
                            psr[p].param[param_pb].val[0]*DAY2S*
                            pow(psr[p].param[param_m2].val[0]/
@@ -752,14 +752,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
            psr[p].param[param_a1].paramSet[0]*
            psr[p].param[param_pb].paramSet[0]==1){
           longdouble mp[2];
-          double DAY2S = (24.0L*3600.0L);
+          double DAY2S = (longdouble(24.0)*longdouble(3600.0));
           mp[0] = -psr[p].param[param_m2].val[0]+
             sqrt(TSUN*pow(psr[p].param[param_pb].val[0]*DAY2S/2.0/M_PI,2.0)*
                  pow(psr[p].param[param_m2].val[0]*
                      sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
                      psr[p].param[param_a1].val[0],3.0));
           
-          longdouble Cte = sqrt(TSUN*pow(1/2.0L/M_PI,2.0));
+          longdouble Cte = sqrt(TSUN*pow(1/longdouble(2.0)/M_PI,2.0));
           mp[1] = sqrt(pow(psr[p].param[param_m2].err[0]*
                            (-1.0+1.5*Cte*DAY2S*psr[p].param[param_pb].val[0]*
                             pow(sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
@@ -769,7 +769,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                            pow(psr[p].param[param_m2].val[0]*
                                sin(psr[p].param[param_kin].val[0]/180.0*M_PI)/
                                psr[p].param[param_a1].val[0],1.5),2.0)+
-                       pow(psr[p].param[param_kin].err[0]/180.0*M_PI*1.5L*
+                       pow(psr[p].param[param_kin].err[0]/180.0*M_PI*longdouble(1.5)*
                            cos(psr[p].param[param_kin].val[0]/180.0*M_PI)*
                            sqrt(sin(psr[p].param[param_kin].val[0]
                                     /180.0*M_PI))*Cte*
@@ -861,7 +861,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      err  = psr[p].param[param_shapmax].err[0];
 
 	      si = 1.0 - exp(-1.0*smax);
-	      printf("sini derived from SHAPMAX      = %.14Lf ",si);
+	      ld_printf("sini derived from SHAPMAX      = %.14Lf ",si);
 
 	      si_lo = 1.0-exp(-1.0*(smax-err));
 	      si_hi = 1.0-exp(-1.0*(smax+err));
@@ -902,9 +902,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  if (psr[p].param[param_eps1].paramSet[0]==1 &&
 	      psr[p].param[param_eps2].paramSet[0]==1)
 	    {
-	      long double om,ecc,t0,pb;
-	      long double ecc_err,om_err,t0_err;
-	      long double eps1,eps2,tasc,err1,err2,err3;
+	      longdouble om,ecc,t0,pb;
+	      longdouble ecc_err,om_err,t0_err;
+	      longdouble eps1,eps2,tasc,err1,err2,err3;
 
 	      eps1 = psr[p].param[param_eps1].val[0];
 	      eps2 = psr[p].param[param_eps2].val[0];
@@ -932,7 +932,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      printf("------------------------------------\n");
 	      printf("ECC = %.15lg +/- %.15g\n",(double)ecc,(double)ecc_err);
 	      printf("OM  = %.15g +/- %.15g degrees\n",(double)om,(double)om_err);
-	      printf("T0  = %.15Lg +/- %.15g\n",t0,(double)t0_err);
+	      ld_printf("T0  = %.15Lg +/- %.15g\n",t0,(double)t0_err);
 	      printf("------------------------------------\n");
 	    }
 	}
@@ -953,16 +953,16 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	printGlitch(psr[p]);
       if (psr[p].param[param_dmassplanet].paramSet[4]==1)
 	{
-	  long double diff,err;
+	  longdouble diff,err;
 	  if (strstr(psr[p].JPL_EPHEMERIS,"DE405")!=NULL)
 	    {
-	      printf("M_Jupiter fit   = %.15Lg +/- %.15Lg (Solar masses)\n",psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L,psr[p].param[param_dmassplanet].err[4]);
-	      printf("M_Jupiter DE405 = %.15Lg (Solar masses)\n",0.00095479193842432214L);
+	      ld_printf("M_Jupiter fit   = %.15Lg +/- %.15Lg (Solar masses)\n",psr[p].param[param_dmassplanet].val[4]+longdouble(0.00095479193842432214),psr[p].param[param_dmassplanet].err[4]);
+	      ld_printf("M_Jupiter DE405 = %.15Lg (Solar masses)\n",longdouble(0.00095479193842432214));
 	      printf("M_Jupiter best  = 0.000954791915(11) (Solar masses)\n");
-	      diff = psr[p].param[param_dmassplanet].val[4]+0.00095479193842432214L-0.000954791915;
+	      diff = psr[p].param[param_dmassplanet].val[4]+longdouble(0.00095479193842432214)-0.000954791915;
 	      err = sqrtl(powl(psr[p].param[param_dmassplanet].err[4],2)+powl(0.000000000011,2));
 								    
-	      printf("diff            = %.15Lg +/- %.15Lg (Solar masses)\n",diff,err);
+	      ld_printf("diff            = %.15Lg +/- %.15Lg (Solar masses)\n",diff,err);
 	    }
 	  else if (strstr(psr[p].JPL_EPHEMERIS,"DE200")!=NULL)
 	    {
@@ -1182,20 +1182,20 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		      if (psr[p].eclCoord==0 && i==param_raj)
 			fprintf(fout2,"%-25.25s",psr[p].rajStrPost);
 		      else if (psr[p].eclCoord==1 && i==param_raj)
-			fprintf(fout2,"%-25.25Lf",psr[p].param[i].val[k]*180.0/M_PI);
+			ld_fprintf(fout2,"%-25.25Lf",psr[p].param[i].val[k]*180.0/LD_PI);
 		      else if (psr[p].eclCoord==0 && i==param_decj)
 			fprintf(fout2,"%-25.25s",psr[p].decjStrPost);
 		      else if (psr[p].eclCoord==1 && i==param_decj)
-			fprintf(fout2,"%-25.25Lf",psr[p].param[i].val[k]*180.0/M_PI);
+			ld_fprintf(fout2,"%-25.25Lf",psr[p].param[i].val[k]*180.0/LD_PI);
 		      else if (i == param_sini && psr[p].param[i].nLinkTo>0){
 			fprintf(fout2," KIN\n"); 
-			fprintf(fout2,"#SINI\t\t%-25.20Lg",psr[p].param[i].val[k]);
+			ld_fprintf(fout2,"#SINI\t\t%-25.20Lg",psr[p].param[i].val[k]);
 		      }
 		      else if (i==param_tres)
-			fprintf(fout2,"%-10.3Lf",psr[p].param[i].val[k]);
+			ld_fprintf(fout2,"%-10.3Lf",psr[p].param[i].val[k]);
 		      else if (i==param_tzrfrq)
 			{
-			  fprintf(fout2,"%-25.20Lg\n",psr[p].param[i].val[k]);
+			  ld_fprintf(fout2,"%-25.20Lg\n",psr[p].param[i].val[k]);
 			  if (strcmp(psr[p].tzrsite,"NULL")!=0) 
 			    fprintf(fout2,"%-15.15s%s","TZRSITE",psr[p].tzrsite);
 			}
@@ -1206,7 +1206,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			      // Do nothing
 			    }
 			  else
-			    fprintf(fout2,"%-25.20Lg",psr[p].param[i].val[k]);
+			    ld_fprintf(fout2,"%-25.20Lg",psr[p].param[i].val[k]);
 			}
 		      if (psr[p].param[i].fitFlag[k]==1)
 			{
@@ -1215,20 +1215,20 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			    {
                               double fac = 12.0*60.0*60.0/M_PI;
                               if (psr[p].eclCoord==1) fac=180.0/M_PI;
-			      if (psr[p].param[i].err[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]*fac);
-			      else if (psr[p].param[i].err[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]*fac);
+			      if (psr[p].param[i].err[k]>1e-12) ld_fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]*fac);
+			      else if (psr[p].param[i].err[k]>0) ld_fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]*fac);
 			    }
 			  else if (i==param_decj)
 			    {
                               double fac = 180.0*60.0*60.0/M_PI;
                               if (psr[p].eclCoord==1) fac=180.0/M_PI;
-			      if (psr[p].param[i].err[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]*fac);
-			      else if (psr[p].param[i].err[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]*fac);
+			      if (psr[p].param[i].err[k]>1e-12) ld_fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]*fac);
+			      else if (psr[p].param[i].err[k]>0) ld_fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]*fac);
 			    }
 			  else
 			    {
-			      if (psr[p].param[i].err[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]);
-			      else if (psr[p].param[i].err[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]);
+			      if (psr[p].param[i].err[k]>1e-12) ld_fprintf(fout2," %-25.20Lf",psr[p].param[i].err[k]);
+			      else if (psr[p].param[i].err[k]>0) ld_fprintf(fout2," %-25.20Lg",psr[p].param[i].err[k]);
 			    }
 			}
 		      else
@@ -1238,20 +1238,20 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 			    {
                               double fac = 12.0*60.0*60.0/M_PI;
                               if (psr[p].eclCoord==1) fac=180.0/M_PI;
-			      if (psr[p].param[i].prefitErr[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]*fac);
-			      else if (psr[p].param[i].prefitErr[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]*fac);
+			      if (psr[p].param[i].prefitErr[k]>1e-12) ld_fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]*fac);
+			      else if (psr[p].param[i].prefitErr[k]>0) ld_fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]*fac);
 			    }
 			  else if (i==param_decj)
 			    {
                               double fac = 180.0*60.0*60.0/M_PI;
                               if (psr[p].eclCoord==1) fac=180.0/M_PI;
-			      if (psr[p].param[i].prefitErr[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]*fac);
-			      else if (psr[p].param[i].prefitErr[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]*fac);
+			      if (psr[p].param[i].prefitErr[k]>1e-12) ld_fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]*fac);
+			      else if (psr[p].param[i].prefitErr[k]>0) ld_fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]*fac);
 			    }
 			  else
 			    {
-			      if (psr[p].param[i].prefitErr[k]>1e-12) fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]);
-			      else if (psr[p].param[i].prefitErr[k]>0) fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]);
+			      if (psr[p].param[i].prefitErr[k]>1e-12) ld_fprintf(fout2," %-25.20Lf",psr[p].param[i].prefitErr[k]);
+			      else if (psr[p].param[i].prefitErr[k]>0) ld_fprintf(fout2," %-25.20Lg",psr[p].param[i].prefitErr[k]);
 			    }
 			}
 		      fprintf(fout2,"\n");
@@ -1375,16 +1375,16 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  /* Add whitening flags */
 	  if (psr[p].param[param_wave_om].paramSet[0]==1)
 	    {
-	      fprintf(fout2,"WAVEEPOCH %.14Lg\n",psr[p].param[param_waveepoch].val[0]);
-	      fprintf(fout2,"WAVE_OM %.14Lg 0\n",psr[p].param[param_wave_om].val[0]);
+	      ld_fprintf(fout2,"WAVEEPOCH %.14Lg\n",psr[p].param[param_waveepoch].val[0]);
+	      ld_fprintf(fout2,"WAVE_OM %.14Lg 0\n",psr[p].param[param_wave_om].val[0]);
 	      if (psr[p].waveScale!=0) fprintf(fout2,"WAVE_SCALE %g\n",psr[p].waveScale);
 	      for (i=0;i<psr[p].nWhite;i++)
 		fprintf(fout2,"WAVE%d %.14g %.14g\n",i+1,psr[p].wave_sine[i],psr[p].wave_cos[i]);
 	    }
 	   if (psr[p].param[param_wave_dm].paramSet[0]==1)
 	    {
-	      fprintf(fout2,"WAVEEPOCH_DM %.14Lg\n",psr[p].param[param_waveepoch_dm].val[0]);
-	      fprintf(fout2,"WAVDM_DM %.14Lg 0\n",psr[p].param[param_wave_dm].val[0]);
+	      ld_fprintf(fout2,"WAVEEPOCH_DM %.14Lg\n",psr[p].param[param_waveepoch_dm].val[0]);
+	      ld_fprintf(fout2,"WAVDM_DM %.14Lg 0\n",psr[p].param[param_wave_dm].val[0]);
 	      //if (psr[p].waveScale!=0) fprintf(fout2,"WAVE_SCALE %g\n",psr[p].waveScale);
 	      for (i=0;i<psr[p].nWhite_dm;i++)
 		fprintf(fout2,"WAVDM%d %.14g %.14g\n",i+1,psr[p].wave_sine_dm[i],psr[p].wave_cos_dm[i]);
@@ -1413,7 +1413,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	      if (psr[p].param[param_dmmodel].linkTo[0] == param_dm){
 		      fprintf(fout2,"DMMODEL DM %d\n",(int)psr[p].param[param_dmmodel].fitFlag[0]);
 	      } else {
-		      fprintf(fout2,"DMMODEL %.14Lg %d\n",psr[p].param[param_dmmodel].val[0],(int)psr[p].param[param_dmmodel].fitFlag[0]);
+		      ld_fprintf(fout2,"DMMODEL %.14Lg %d\n",psr[p].param[param_dmmodel].val[0],(int)psr[p].param[param_dmmodel].fitFlag[0]);
 	      }
 		  bool useDMOFF=psr[p].dmoffsDMnum==psr[p].dmoffsCMnum;
 		  if(useDMOFF)for (i=0;i<psr[p].dmoffsDMnum;i++){
@@ -1456,7 +1456,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 	  /* printf("Precision: routine, precision, comment\n");
 		 for (i=0;i<psr[p].nStorePrecision;i++)
 		 {
-		 printf("%s\t%Lg\t%s\n",psr[p].storePrec[i].routine,psr[p].storePrec[i].minPrec,
+		 ld_printf("%s\t%Lg\t%s\n",psr[p].storePrec[i].routine,psr[p].storePrec[i].minPrec,
 		 psr[p].storePrec[i].comment);
 		 } */
 	}

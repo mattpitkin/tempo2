@@ -104,7 +104,7 @@ extern "C" {
   } T1PolycoSet;
 
   /* Types of models available */
-  typedef enum  {None, Cheby, T1} T2PredictorKind;
+  typedef enum  {NonePredType, Cheby, T1} T2PredictorKind;
 
   /* Generic set-of-predictive models type */
   typedef struct

@@ -226,7 +226,7 @@ MeteorologyFunction_load(MeteorologyFunction *func, char *fileName)
 {
   TabulatedFunction_load(&func->table, fileName);
   if (sscanf(func->table.header_line+1, // skip # 
-	     "%s", &func->siteName)!=1)
+	     "%s", func->siteName)!=1)
   {
     fprintf(stderr, 
 	    "Error parsing meterology file %s: first line must be of form # site_name\n",
@@ -255,9 +255,9 @@ MeteorologyFunction_getEndMJD(MeteorologyFunction *func)
 
 void
 initialize_meteorology_table(int dispWarnings,
-			      char *path, char *extension,
+			      const char *path, const char *extension,
 			      DynamicArray *tables,
-			      char *description)
+			      const char *description)
 {
   glob_t g;
   char pattern[1024];

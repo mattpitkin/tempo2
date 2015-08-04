@@ -36,6 +36,7 @@
 #include "TKsvd.h"
 #include "TKmatrix.h"
 #include "T2toolkit.h"
+#include "T2accel.h"
 #include "TKfit.h"
 
 void TKremovePoly_f(float *px,float *py,int n,int m)
@@ -43,7 +44,6 @@ void TKremovePoly_f(float *px,float *py,int n,int m)
     int i,j;
     double x[n],y[n];
     double p[m];
-    double chisq;
     double v[m];
 
     for (i=0;i<n;i++)
@@ -65,7 +65,6 @@ void TKremovePoly_d(double *x,double *y,int n,int m)
 {
     int i,j;
     double p[m];
-    double chisq;
     double v[m];
 
     logdbg("Remove polynomial n=%d m=%d",n,m);
@@ -80,9 +79,6 @@ void TKremovePoly_d(double *x,double *y,int n,int m)
 }
 
 void TKfindPoly_d(double *x,double *y,int n,int m,double* p){
-    int i,j;
-    double chisq;
-    double v[m];
 
     TKleastSquares_svd_noErr(x,y,n, p, m, TKfitPoly);  
 
@@ -153,7 +149,7 @@ double TKrobustLeastSquares(double* b, double* white_b,
         double** designMatrix, double** white_designMatrix,
         int n,int nf, double tol, char rescale_errors,
         double* outP, double* e, double** cvm, char robust){
-return TKrobustConstrainedLeastSquares(b,white_b,
+    return TKrobustConstrainedLeastSquares(b,white_b,
             designMatrix,white_designMatrix,NULL,
             n,nf,0,tol,rescale_errors,outP, e,cvm,0);
 
@@ -178,23 +174,6 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
         return 0;
     }
-    // quad precision arrays for fitting.
-    
-    // the augmented data matrix
-    longdouble augmented_white_data[ndata+nconstraints];
-
-    // the augmented design matrix
-    longdouble **augmented_DM = malloc_2dLL(ndata+nconstraints,nparams);
-    longdouble **v=malloc_2dLL(nparams,nparams);
-    longdouble **u=malloc_2dLL(ndata+nconstraints,nparams);
-    longdouble w[nparams];
-    longdouble wt[nparams];
-    longdouble p[nparams];
-
-    logdbg("TKleastSquares()");
-    // other variables
-    longdouble sum,wmax,sum_w;
-
     bool computeErrors = (e!=NULL);
     bool computeCVM = (cvm!=NULL);
     bool computeParam = (outP!=NULL && data!=NULL);
@@ -241,149 +220,202 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
     }
 
-    // Now go to longdouble precision and augment the DM and data vector
-    for (i=0;i<ndata;i++){
-        augmented_white_data[i] = white_data[i];
-        for (j=0;j<nparams;j++) augmented_DM[i][j] = white_designMatrix[i][j];
-    }
 
-    // add the extra equations for constraints to the end of the least-squares problem.
-    logmsg("nparams=%d nconst=%d",nparams,nconstraints);
-    for (i=0;i<nconstraints;i++){
-        augmented_white_data[i+ndata] = 0;
-        for (j=0;j<nparams;j++) {
-            augmented_DM[i+ndata][j] = constraintsMatrix[i][j];
-            //if(i==j)logmsg("Cmatrix ic=%d ip=%d %lg",i,j,constraintsMatrix[i][j]);
+#ifdef ACCEL_LSQ
+    if(useT2accel){
+
+        double augmented_white_data[ndata+nconstraints];
+        double **augmented_DM = malloc_blas(ndata+nconstraints,nparams);
+        // Now go to longdouble precision and augment the DM and data vector
+        for (i=0;i<ndata;i++){
+            augmented_white_data[i] = white_data[i];
+            for (j=0;j<nparams;j++) augmented_DM[i][j] = white_designMatrix[i][j];
         }
-    }
 
-    /* Now carry out the singular value decomposition */
-    // note that this modifies svd_M
-    logdbg("Do SVD");
-    TKsingularValueDecomposition_lsq(augmented_DM,ndata+nconstraints,nparams,v,w,u);
-
-    wmax = TKfindMax_Ld(w,nparams);
-    longdouble sensible_wmax=pow(2,sizeof(longdouble)*8-17);
-    if (wmax > sensible_wmax){
-        logerr("Warning: wmax very large. Precision issues likely to break fit\nwmax=%Lf\ngood=%Lf",wmax,sensible_wmax);
-    }
-
-    for (i=0;i<nparams;i++)
-    {
-        if (w[i] < tol*wmax) w[i]=0.0;
-    }
-    /* Back substitution */
+        // add the extra equations for constraints to the end of the least-squares problem.
+        logmsg("QR nparams=%d nconst=%d",nparams,nconstraints);
+        for (i=0;i<nconstraints;i++){
+            augmented_white_data[i+ndata] = 0;
+            for (j=0;j<nparams;j++) {
+                augmented_DM[i+ndata][j] = constraintsMatrix[i][j];
+                //if(i==j)logmsg("Cmatrix ic=%d ip=%d %lg",i,j,constraintsMatrix[i][j]);
+            }
+        }
+        accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
+        free_blas(augmented_DM);
 
 
-    /* Now form the covariance matrix */
+    } else {
+#endif
+        // quad precision arrays for fitting if using SVD
+        // the augmented data matrix
+        longdouble augmented_white_data[ndata+nconstraints];
 
-    if(computeCVM){
-        logdbg("Compute CVM");
+        // the augmented design matrix
+        longdouble **augmented_DM = malloc_2dLL(ndata+nconstraints,nparams);
+        longdouble **v=malloc_2dLL(nparams,nparams);
+        longdouble **u=malloc_2dLL(ndata+nconstraints,nparams);
+        longdouble w[nparams];
+        longdouble wt[nparams];
+        longdouble p[nparams];
+        // other variables
+        longdouble sum,wmax;
+
+        logdbg("TKleastSquares()");
+
+        // Now go to longdouble precision and augment the DM and data vector
+        for (i=0;i<ndata;i++){
+            augmented_white_data[i] = white_data[i];
+            for (j=0;j<nparams;j++) augmented_DM[i][j] = white_designMatrix[i][j];
+        }
+
+        // add the extra equations for constraints to the end of the least-squares problem.
+        logmsg("SVD nparams=%d nconst=%d",nparams,nconstraints);
+        for (i=0;i<nconstraints;i++){
+            augmented_white_data[i+ndata] = 0;
+            for (j=0;j<nparams;j++) {
+                augmented_DM[i+ndata][j] = constraintsMatrix[i][j];
+                //if(i==j)logmsg("Cmatrix ic=%d ip=%d %lg",i,j,constraintsMatrix[i][j]);
+            }
+        }
+
+        /* Now carry out the singular value decomposition */
+        // note that this modifies svd_M
+        logdbg("Do SVD");
+        TKsingularValueDecomposition_lsq(augmented_DM,ndata+nconstraints,nparams,v,w,u);
+
+        wmax = TKfindMax_Ld(w,nparams);
+        longdouble sensible_wmax=pow(2,sizeof(longdouble)*8-17);
+        if (wmax > sensible_wmax){
+            logerr("Warning: wmax very large. Precision issues likely to break fit\nwmax=%lf\ngood=%lf",(double)wmax,(double)sensible_wmax);
+        }
+
         for (i=0;i<nparams;i++)
         {
-            if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
-            else wt[i] = 0.0;
+            if (w[i] < tol*wmax) w[i]=0.0;
         }
-        for (i=0;i<nparams;i++)
-        {
-            for (j=0;j<=i;j++)
+        /* Back substitution */
+
+
+        /* Now form the covariance matrix */
+
+        if(computeCVM){
+            logdbg("Compute CVM");
+            for (i=0;i<nparams;i++)
             {
-                sum=0.0;
-                for (k=0;k<nparams;k++)
-                    sum+=v[i][k]*v[j][k]*wt[k];
-                cvm[i][j] = cvm[j][i] = (double)sum;
+                if (w[i]!=0) wt[i] = 1.0/w[i]/w[i];
+                else wt[i] = 0.0;
             }
-        } 
-
-        if(debugFlag==1) {
-            FILE *fout;
-            fout = fopen("cvm.matrix","w");
-            if (!fout){
-                printf("Unable to open file cvm.matrix for writing\n");
-            }
-            else{
-                for (i=0;i<nparams;i++)
+            for (i=0;i<nparams;i++)
+            {
+                for (j=0;j<=i;j++)
                 {
-                    for (j=0;j<=i;j++)
+                    sum=0.0;
+                    for (k=0;k<nparams;k++)
+                        sum+=v[i][k]*v[j][k]*wt[k];
+                    cvm[i][j] = cvm[j][i] = (double)sum;
+                }
+            } 
+
+            if(debugFlag==1) {
+                FILE *fout;
+                fout = fopen("cvm.matrix","w");
+                if (!fout){
+                    printf("Unable to open file cvm.matrix for writing\n");
+                }
+                else{
+                    for (i=0;i<nparams;i++)
                     {
-                        fprintf(fout,"%+.8f ",cvm[i][j]/sqrt(cvm[i][i]*cvm[j][j]));
+                        for (j=0;j<=i;j++)
+                        {
+                            fprintf(fout,"%+.8f ",cvm[i][j]/sqrt(cvm[i][i]*cvm[j][j]));
+                        }
+                        fprintf(fout,"\n");
                     }
-                    fprintf(fout,"\n");
+                    fclose(fout);
                 }
-                fclose(fout);
             }
+            if(computeErrors){
+                logdbg("Compute Errors");
+                for (i=0;i<nparams;i++){e[i]=sqrt(cvm[i][i]);}
+            }
+
         }
-        if(computeErrors){
-            logdbg("Compute Errors");
-            for (i=0;i<nparams;i++){e[i]=sqrt(cvm[i][i]);}
-        }
+
+        if (computeParam) {
+
+            logdbg("Compute Params");
+
+            logdbg("Do backsubstitution");
+            TKbacksubstitution_svd(v, w, augmented_DM, augmented_white_data, p, ndata+nconstraints, nparams);
+
+            for (k=0;k<nparams;k++)outP[k]=(double)(p[k]);
+
+            // compute chisq
+            chisq = 0.0;
+            for (j=0;j<ndata;j++)
+            {
+                sum = 0.0;
+                for (k=0;k<nparams;k++)
+                {
+                    sum+=p[k]*white_designMatrix[j][k];
+                }
+                chisq += pow((white_data[j]-sum),2);
+            }
+        } // computeParam
+        // this funny method of freeing is because of the BLAS style matricies. M.Keith 2012
+        free_2dLL(v);     // free-TKleastSquares_svd_psr_dcm-v**
+        free_2dLL(u);     // free-TKleastSquares_svd_psr_dcm-u**
+        free_2dLL(augmented_DM);
+
+
+#ifdef ACCEL_LSQ
+    } // accel
+#endif
+
+
+
+    if(computeErrors && rescale_errors){
+        //	    printf("Error scaling = %g [chisq = %g] [n = %d] [nf = %d]\n",sqrt(chisq/(n-nf)),(double)chisq,n,nf);
+        // This is not the place for this message: this is the only thing one
+        // sees when a fit is done. Perhaps move to the results
+        // summary?    -- Rutger van Haasteren & Michele Vallisneri
+        // printf("Error scaling = %g\n",sqrt(chisq/(n-nf)));
+        for (j=0;j<nparams;j++)
+            e[j] *= sqrt(chisq/(ndata+nconstraints-nparams));
 
     }
 
-    if (computeParam){
-
-        logdbg("Compute Params");
-
-        logdbg("Do backsubstitution");
-        TKbacksubstitution_svd(v, w, augmented_DM, augmented_white_data, p, ndata+nconstraints, nparams);
-
-        for (k=0;k<nparams;k++)outP[k]=(double)(p[k]);
-        // compute chisq
-        chisq = 0.0;
-        for (j=0;j<ndata;j++)
+    if (writeResiduals){
+        double sum,sum_w;
+        FILE* wFile=fopen("postfit.txt","w");
+        if (!wFile){
+            printf("Unable to open file postfit.res for writing\n");
+        }
+        else
         {
-            sum = 0.0;
-            for (k=0;k<nparams;k++)
+            for (i=0;i<ndata;i++)
             {
-                sum+=p[k]*white_designMatrix[j][k];
-            }
-            chisq += pow((white_data[j]-sum),2);
-        }
-
-        if(computeErrors && rescale_errors){
-            //	    printf("Error scaling = %g [chisq = %g] [n = %d] [nf = %d]\n",sqrt(chisq/(n-nf)),(double)chisq,n,nf);
-            // This is not the place for this message: this is the only thing one
-            // sees when a fit is done. Perhaps move to the results
-            // summary?    -- Rutger van Haasteren & Michele Vallisneri
-            // printf("Error scaling = %g\n",sqrt(chisq/(n-nf)));
-            for (j=0;j<nparams;j++)
-                e[j] *= sqrt(chisq/(ndata+nconstraints-nparams));
-        }
-
-        if (writeResiduals){
-            FILE* wFile=fopen("postfit.txt","w");
-            if (!wFile){
-                printf("Unable to open file postfit.res for writing\n");
-            }
-            else
-            {
-                for (i=0;i<ndata;i++)
-                {
-                    sum=0;
-                    sum_w=0;
-                    for (j=0;j<nparams;j++){
-                        sum += designMatrix[i][j]*p[j];
-                        sum_w += white_designMatrix[i][j]*p[j];
-                    }
-                    fprintf(wFile,"%d %lg %lg\n",i,(double)(data[i]-sum),(double)(white_data[i]-sum_w));
+                sum=0;
+                sum_w=0;
+                for (j=0;j<nparams;j++){
+                    sum += designMatrix[i][j]*outP[j];
+                    sum_w += white_designMatrix[i][j]*outP[j];
                 }
-                fclose(wFile);
+                fprintf(wFile,"%d %lg %lg\n",i,(double)(data[i]-sum),(double)(white_data[i]-sum_w));
             }
+            fclose(wFile);
         }
-    } // computeParam
-
-    // this funny method of freeing is because of the BLAS style matricies. M.Keith 2012
-    free_2dLL(v);     // free-TKleastSquares_svd_psr_dcm-v**
-    free_2dLL(u);     // free-TKleastSquares_svd_psr_dcm-u**
-    free_2dLL(augmented_DM);
-
+    }
     if(needToFreeCVM){
         // we created CVM, so free it
         free_uinv(cvm);
     }
 
     /** Robust Estimator code by Wang YiDi, Univ. Manchester 2015 **/
+    
     if (robust > 48 ){
+        double sum;
         logmsg("ROBUST '%c'",robust);
 
         //parameters for robust estimation
@@ -392,7 +424,6 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         double median = 0.0;
         double newval[ndata];
         longdouble resid_new[ndata];
-        longdouble store;
 
         //Calculating the residual
         for (j=0;j<ndata;j++)
@@ -401,7 +432,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
             for (k=0;k<nparams;k++)
             {
-                sum += p[k]*white_designMatrix[j][k];
+                sum += outP[k]*white_designMatrix[j][k];
             }
 
             resid[j]=white_data[j]-sum;
@@ -489,7 +520,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                             }   
                         }
                     }
-                    fprintf(rp, "%d r=%Lg   nr=%lg   eb=%lg  W=%lg\n", j+1, resid[j], resid_new[j], white_data[j]/data[j], (double)Weight[j]); 
+                    ld_fprintf(rp, "%d r=%Lg   nr=%lg   eb=%lg  W=%lg\n", j+1, resid[j], resid_new[j], white_data[j]/data[j], (double)Weight[j]); 
 
                 }
                 break;
@@ -655,7 +686,7 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
     double **designMatrix, **white_designMatrix;
     double basisFunc[nf];
     double *b,*white_b;
-    int    i,j,k;
+    int    i,j;
     int nrows=get_blas_rows(uinv);
     int ncols=get_blas_cols(uinv);
     if (ncols!=n){
@@ -750,7 +781,7 @@ void TKleastSquares_svd(double *x,double *y,double *sig,int n,double *p,double *
     double **designMatrix, **white_designMatrix;
     double basisFunc[nf];
     double *b,*white_b;
-    int    i,j,k;
+    int    i,j;
 
     // double arrays
     white_designMatrix=malloc_blas(n,nf);

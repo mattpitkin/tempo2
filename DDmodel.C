@@ -35,19 +35,19 @@
 /* Timing model      */
 /* Based on bnrydd.f */
 
-long double DDmodel(pulsar *psr,int p,int ipos,int param)
+longdouble DDmodel(pulsar *psr,int p,int ipos,int param)
 {
-  long double an;
-  long double pb,k;
-  long double rad2deg = 180.0/M_PI;
-  long double SUNMASS = 4.925490947e-6;
-  long double m2,tt0,t0,x,ecc,er,xdot,edot,dr,dth,eth,am2,ct;
-  long double pbdot,xpbdot,phase,u,du,gamma;
-  long double orbits;
+  longdouble an;
+  longdouble pb,k;
+  longdouble rad2deg = 180.0/M_PI;
+  longdouble SUNMASS = 4.925490947e-6;
+  longdouble m2,tt0,t0,x,ecc,er,xdot,edot,dr,dth,eth,am2,ct;
+  longdouble pbdot,xpbdot,phase,u,du,gamma;
+  longdouble orbits;
   int norbits;
-  long double  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,anhat,su;
-  long double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
-  long double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
+  longdouble  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,anhat,su;
+  longdouble sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
+  longdouble csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
   const char *CVS_verNum = "$Revision: 1.7 $";
 
   if (displayCVSversion == 1) CVSdisplayVersion("DDmodel.C","DDmodel()",CVS_verNum);
@@ -63,7 +63,7 @@ long double DDmodel(pulsar *psr,int p,int ipos,int param)
     {
       displayMsg(1,"BIN1","SIN I > 1.0, setting to 1: should probably use DDS model","",psr[p].noWarnings);
       si = 1.0;
-      psr[p].param[param_sini].val[0] = 1.0L;
+      psr[p].param[param_sini].val[0] = longdouble(1.0);
     }
 
   if (psr[p].param[param_m2].paramSet[0]==1) am2 = psr[p].param[param_m2].val[0];
@@ -109,11 +109,11 @@ long double DDmodel(pulsar *psr,int p,int ipos,int param)
 
   if (ecc < 0.0 || ecc > 1.0)
     {
-      printf("DDmodel: problem with eccentricity = %Lg [%s]\n",psr[p].param[param_ecc].val[0],psr[p].name);
+      ld_printf("DDmodel: problem with eccentricity = %Lg [%s]\n",psr[p].param[param_ecc].val[0],psr[p].name);
       exit(1);
     }
 
-  orbits = tt0/pb - 0.5L*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
+  orbits = tt0/pb - longdouble(0.5)*(pbdot+xpbdot)*(tt0/pb)*(tt0/pb);
   norbits = (int)orbits;
   if (orbits<0.0) norbits--;
   phase=2.0*M_PI*(orbits-norbits);

@@ -205,6 +205,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
  printf("Starting plugin5\n");
  doPlot(psr,*npsr,scale,nScale,grDev,plotUs,fontsize,centreMJD,ptStyle,ptSize,error,miny,maxy,minx,maxx,nOverlay,labelsize,fracX);              /* Do plot */
  printf("Starting plugin6\n");
+ return 0;
 }
 
 /* This function calls all of the fitting routines.             */
@@ -259,7 +260,7 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
     {
       scale2 = psr[p].nobs;
       
-      /*      sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val[0]); */
+      /*      ld_sprintf(xstr,"MJD-%.1Lf",psr[0].param[param_pepoch].val[0]); */
       if (centreMJD == -1)
 	sprintf(xstr,"Year"); 
       else

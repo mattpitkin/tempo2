@@ -61,12 +61,11 @@ extern "C"
 #endif
 void setupGW(gwSrc *gw)
 {
-  long double deg2rad = M_PI/180.0;
-  long double convert[3][3],trans[3][3];
-  long double out[3][3];
-  long double out_im[3][3];
+  longdouble convert[3][3],trans[3][3];
+  longdouble out[3][3];
+  longdouble out_im[3][3];
   int i,j;
-  long double st,ct,cp,sp,cpp,spp;
+  longdouble st,ct,cp,sp,cpp,spp;
 
   st = sin(gw->theta_g);
   ct = cos(gw->theta_g);
@@ -157,7 +156,7 @@ void setupGW(gwSrc *gw)
 #ifdef __cplusplus
 extern "C"
 #endif
-long double matrixMult(long double m1[3][3],long double m2[3][3],long double out[3][3])
+void matrixMult(longdouble m1[3][3],longdouble m2[3][3],longdouble out[3][3])
 {
   int i,j,k;
   for (i=0;i<3;i++)
@@ -174,9 +173,9 @@ long double matrixMult(long double m1[3][3],long double m2[3][3],long double out
 #ifdef __cplusplus
 extern "C"
 #endif
-long double dotProduct(long double *m1,long double *m2)
+longdouble dotProduct(longdouble *m1,longdouble *m2)
 {
-  long double dprod;
+  longdouble dprod;
 
   dprod = m1[0]*m2[0] + m1[1]*m2[1] + m1[2]*m2[2];
   return dprod;
@@ -186,7 +185,7 @@ long double dotProduct(long double *m1,long double *m2)
 #ifdef __cplusplus
 extern "C"
 #endif
-void GWbackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double fhi,
+void GWbackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdouble fhi,
 		  double gwAmp,double alpha,int loglin)
 {
   int k;
@@ -223,18 +222,18 @@ void GWbackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double 
 #ifdef __cplusplus
 extern "C"
 #endif
-long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long double dist)
+longdouble calculateResidualGW(longdouble *kp,gwSrc *gw,longdouble time,longdouble dist)
 {
-  long double cosMu;
-  long double psrVal1,psrVal2,psrVal1_im;
-  long double earthVal1;
-  long double tempVal[3];
-  long double tempVal_im[3];
-  long double geo;
-  long double residual;
-  long double deg2rad = M_PI/180.0L;
-  //  long double VC = 299792456.200L;
-  long double VC = 299792458.0L; /* Speed of light (m/s)                       */
+  longdouble cosMu;
+  longdouble psrVal1,psrVal2,psrVal1_im;
+  longdouble earthVal1;
+  longdouble tempVal[3];
+  longdouble tempVal_im[3];
+  longdouble geo;
+  longdouble residual;
+  longdouble deg2rad = M_PI/longdouble(180.0);
+  //  longdouble VC = longdouble(299792456.200);
+  longdouble VC = longdouble(299792458.0); /* Speed of light (m/s)                       */
   int i,k;
 
   for (i=0;i<3;i++)
@@ -256,11 +255,11 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
   //  printf(" cosmu = %g\n",(double)cosMu);
   if ((1+cosMu)!=0) 
   {
-    psrVal1    = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal); 
-    psrVal1_im = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal_im);
+    psrVal1    = longdouble(0.5)/(longdouble(1.0)+cosMu)*dotProduct(kp,tempVal); 
+    psrVal1_im = longdouble(0.5)/(longdouble(1.0)+cosMu)*dotProduct(kp,tempVal_im);
     //    printf("psrval1 = %g %g %g\n",(double)psrVal1,(double)(1+cosMu),(double)(1-cosMu));
   }
-  else psrVal1 = 0.0L;
+  else psrVal1 = longdouble(0.0);
   
   geo      = psrVal1;
   //  printf("psrVal = %g %g\n",(double)psrVal1,(double)psrVal1_im);
@@ -270,7 +269,7 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
   //    earthVal1 = 0;
   //  printf("dist = %g\n",(double)dist);
   if (dist==0) /* No pulsar term */
-    psrVal2=0.0L;
+    psrVal2=longdouble(0.0);
   else
     psrVal2 = psrVal1*sinl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g) + psrVal1_im*cosl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g); 
 
@@ -286,7 +285,7 @@ long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long 
 #ifdef __cplusplus
 extern "C"
 #endif
-void setupPulsar_GWsim(long double ra_p,long double dec_p,long double *kp)
+void setupPulsar_GWsim(longdouble ra_p,longdouble dec_p,longdouble *kp)
 {
   kp[0] = cos(dec_p)*cos(ra_p);
   kp[1] = cos(dec_p)*sin(ra_p);
@@ -302,7 +301,7 @@ int GWbackground_read(gwSrc *gw, FILE *file, int ireal){
 	char key[13];
 	int nreal;
 	int ngw,id,igw,i;
-	const unsigned int gwsize = 9*sizeof(long double);
+	const unsigned int gwsize = 9*sizeof(longdouble);
 
 	for (i=0;i<=ireal;i++){
 		fread(&id,sizeof(int),1,file);
@@ -334,7 +333,7 @@ extern "C"
 #endif
 void GWbackground_write(gwSrc *gw, FILE *file,int ngw, int ireal){
 	int igw;
-	const unsigned int gwsize = 9*sizeof(long double);
+	const unsigned int gwsize = 9*sizeof(longdouble);
 	fwrite(&ireal,sizeof(int),1,file);
 	fwrite(&ngw,sizeof(int),1,file);
 	for (igw=0;igw<ngw;igw++){
@@ -349,11 +348,11 @@ void GWbackground_write(gwSrc *gw, FILE *file,int ngw, int ireal){
 #ifdef __cplusplus
 extern "C"
 #endif
-long double eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta) 
+longdouble eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta) 
 {
 
 
-  long double pert;
+  longdouble pert;
 
   if (*coalesceFlag==1) {
     pert=0.;
@@ -499,7 +498,7 @@ long double eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double
 	
       }
 
-      printf("Have pert %Lg\n",pert);
+      ld_printf("Have pert %Lg\n",pert);
       return pert;
       
 
@@ -510,11 +509,11 @@ long double eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double
 #ifdef __cplusplus
 extern "C"
 #endif
-long double eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta, float *eOut) 
+longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta, float *eOut) 
 {
 
 
-  long double pert;
+  longdouble pert;
 
   if (*coalesceFlag==1) {
     pert=0.;
@@ -668,7 +667,7 @@ long double eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev
 
       }
 
-      printf("Have pert %Lg energy %f\n",pert,*eOut);
+      ld_printf("Have pert %Lg energy %f\n",pert,*eOut);
       return pert;
       
 
@@ -845,12 +844,12 @@ extern "C"
 #endif
 void setupgeneralGW(gwgeneralSrc *gw)
 {
-  long double deg2rad = M_PI/180.0;
-  long double convert[3][3],trans[3][3];
-  long double out[3][3];
-  long double out_im[3][3];
+  longdouble deg2rad = M_PI/180.0;
+  longdouble convert[3][3],trans[3][3];
+  longdouble out[3][3];
+  longdouble out_im[3][3];
   int i,j;
-  long double st,ct,cp,sp,cpp,spp;
+  longdouble st,ct,cp,sp,cpp,spp;
 
   st = sin(gw->theta_g);
   ct = cos(gw->theta_g);
@@ -884,10 +883,10 @@ void setupgeneralGW(gwgeneralSrc *gw)
   gw->h_im[0][2] = gw->avx_im_g;
   gw->h_im[1][2] = gw->avy_im_g;
  
-  /*printf("%10.8Le %10.8Le %10.8Le\n",gw->aplus_g,gw->ast_g,gw->asl_g);
+  /*printf("%longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e\n",gw->aplus_g,gw->ast_g,gw->asl_g);
   for (int jj=0;jj<3;jj++) {
                 for (int kk=0;kk<3;kk++) {
-                        printf("%10.8Le ",gw->h[jj][kk]);
+                        printf("%longdouble(10.8)e ",gw->h[jj][kk]);
                 }
         }
         printf("\n");*/
@@ -954,7 +953,7 @@ void setupgeneralGW(gwgeneralSrc *gw)
 #ifdef __cplusplus
 extern "C"
 #endif
-void GWgeneralbackground(gwgeneralSrc *gw,int *numberGW,long *idum,long double flo,long double fhi,
+void GWgeneralbackground(gwgeneralSrc *gw,int *numberGW,long *idum,longdouble flo,longdouble fhi,
 		  gwgenSpec gwAmps, int loglin)
 {
   int j,k,l;
@@ -1022,17 +1021,17 @@ void GWgeneralbackground(gwgeneralSrc *gw,int *numberGW,long *idum,long double f
 #ifdef __cplusplus
 extern "C"
 #endif
-long double calculateResidualgeneralGW(long double *kp,gwgeneralSrc *gw,long double time,long double dist)
+longdouble calculateResidualgeneralGW(longdouble *kp,gwgeneralSrc *gw,longdouble time,longdouble dist)
 {
-  long double cosMu;
-  long double psrVal1,psrVal2,psrVal1_im;
-  long double earthVal1;
-  long double tempVal[3];
-  long double tempVal_im[3];
-  long double geo;
-  long double residual;
-  long double deg2rad = M_PI/180.0L;
-  long double VC = 299792456.200L;
+  longdouble cosMu;
+  longdouble psrVal1,psrVal2,psrVal1_im;
+  longdouble earthVal1;
+  longdouble tempVal[3];
+  longdouble tempVal_im[3];
+  longdouble geo;
+  longdouble residual;
+  longdouble deg2rad = M_PI/longdouble(180.0);
+  longdouble VC = longdouble(299792456.200);
   int i,k;
 
   for (i=0;i<3;i++)
@@ -1043,7 +1042,7 @@ long double calculateResidualgeneralGW(long double *kp,gwgeneralSrc *gw,long dou
 	{
 	  tempVal[i]    += gw->h[i][k]*kp[k];
 	  tempVal_im[i] += gw->h_im[i][k]*kp[k];
-	  //printf("%10.8Le ",gw->h[i][k]);
+	  //printf("%longdouble(10.8)e ",gw->h[i][k]);
 	}
             //printf("tempVal[%d] = %g ",i,(double)tempVal[i]);
     }
@@ -1055,24 +1054,24 @@ long double calculateResidualgeneralGW(long double *kp,gwgeneralSrc *gw,long dou
   //    printf(" cosmu = %g\n",(double)cosMu);
   if ((1+cosMu)!=0) 
   {
-    psrVal1    = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal); 
-    psrVal1_im = 0.5L/(1.0L+cosMu)*dotProduct(kp,tempVal_im);
+    psrVal1    = longdouble(0.5)/(longdouble(1.0)+cosMu)*dotProduct(kp,tempVal); 
+    psrVal1_im = longdouble(0.5)/(longdouble(1.0)+cosMu)*dotProduct(kp,tempVal_im);
     //    printf("psrval1 = %g %g %g\n",(double)psrVal1,(double)(1+cosMu),(double)(1-cosMu));
   }
-  else psrVal1 = 0.0L;
+  else psrVal1 = longdouble(0.0);
   
   geo      = psrVal1;
   //  printf("psrVal = %g %g\n",(double)psrVal1,(double)psrVal1_im);
   earthVal1 = psrVal1*sinl(gw->phase_g+time*gw->omega_g)+ 
     psrVal1_im*cosl(gw->phase_g+time*gw->omega_g); // sin -> cos
   if (dist==0) /* No pulsar term */
-    psrVal2=0.0L;
+    psrVal2=longdouble(0.0);
   else
     psrVal2 = psrVal1*sinl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g) + 
       psrVal1_im*cosl(gw->phase_g-(1+cosMu)*dist/VC*gw->omega_g+time*gw->omega_g); 
 
-  //printf("%10.8Le %10.8Le %10.8Le\n",tempVal[0],tempVal[1],tempVal[2]);
-  //printf("%10.8Le %10.8Le %10.8Le %10.8Le %10.8Le\n",psrVal1, psrVal1_im,earthVal1,psrVal2,gw->omega_g);
+  //printf("%longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e\n",tempVal[0],tempVal[1],tempVal[2]);
+  //printf("%longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e %longdouble(10.8)e\n",psrVal1, psrVal1_im,earthVal1,psrVal2,gw->omega_g);
   residual = (earthVal1-psrVal2)/gw->omega_g; 
   //    printf("GWsim %g %g %g %g %g %g %g %g %g %g %g %g %g\n",(double)residual,(double)earthVal1,(double)psrVal2,(double)psrVal1,(double)cosMu,(double)psrVal1_im,(double)kp[0],(double)kp[1],(double)kp[2],(double)cosMu,(double)gw->h_im[0][0],(double)gw->h_im[0][1],(double)gw->h_im[1][0]);
   return residual;
@@ -1083,7 +1082,7 @@ long double calculateResidualgeneralGW(long double *kp,gwgeneralSrc *gw,long dou
 #ifdef __cplusplus
 extern "C"
 #endif
-void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,long double flo,long double fhi,
+void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,longdouble flo,longdouble fhi,
 		  gwgenSpec gwAmps,int loglin, double ***harmlist, int *nharms)
 {
   int k,polj,l;
@@ -1161,7 +1160,7 @@ void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,lo
 		}
       		gw[k].theta_g=acos(-1.+((double)((int)(highindx/Ngrid)))*2./((double)(Ngrid))+dcth*TKranDev(idum));
       		gw[k].phi_g=(((double)(highindx%Ngrid))+TKranDev(idum))*dphi;
-      		//printf("OUTPUT %Lf %Lf %i %i %lf\n",cosl(gw[k].theta_g),gw[k].phi_g,(int)(highindx/Ngrid),(highindx%Ngrid),dphi);
+      		//ld_printf("OUTPUT %Lf %Lf %i %i %lf\n",cosl(gw[k].theta_g),gw[k].phi_g,(int)(highindx/Ngrid),(highindx%Ngrid),dphi);
       		gw[k].phi_polar_g = 0.0;  
       		gw[k].phase_g     = TKranDev(idum)*2*M_PI;   
 		if (loglin==1)  /* Use equal sampling in log */
@@ -1170,25 +1169,25 @@ void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,lo
                 	if (polj == 0) {
                         	gw[k].aplus_g  = gwAmps.tensor_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.tensor_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
                         	gw[k].across_g = gwAmps.tensor_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.tensor_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
-                        	gw[k].ast_g=gw[k].asl_g=gw[k].avx_g=gw[k].avy_g=(long double)0.0;
-                        	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(long double)0.0;
+                        	gw[k].ast_g=gw[k].asl_g=gw[k].avx_g=gw[k].avy_g=(longdouble)0.0;
+                        	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(longdouble)0.0;
                 	} else if (polj == 1) {
                         	gw[k].ast_g=gwAmps.st_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.st_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
-                        	gw[k].aplus_g=gw[k].across_g=gw[k].asl_g=gw[k].avx_g=gw[k].avy_g=(long double)0.0;
-                        	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(long double)0.0;
+                        	gw[k].aplus_g=gw[k].across_g=gw[k].asl_g=gw[k].avx_g=gw[k].avy_g=(longdouble)0.0;
+                        	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(longdouble)0.0;
                 	} else if (polj == 2) {
                         	gw[k].asl_g=gwAmps.sl_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.sl_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
-                        	gw[k].aplus_g=gw[k].across_g=gw[k].ast_g=gw[k].avx_g=gw[k].avy_g=(long double)0.0;
-                        	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(long double)0.0;
-			//printf("%i %i %6.4Le %6.4Le\n",k,polj,gw[k].asl_g,gw[k].avx_g);
+                        	gw[k].aplus_g=gw[k].across_g=gw[k].ast_g=gw[k].avx_g=gw[k].avy_g=(longdouble)0.0;
+                        	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(longdouble)0.0;
+			//printf("%i %i %longdouble(6.4)e %longdouble(6.4)e\n",k,polj,gw[k].asl_g,gw[k].avx_g);
                 	} else if (polj == 3) {
                         	gw[k].avx_g=gwAmps.vl_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.vl_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
                         	gw[k].avy_g=gwAmps.vl_amp*pow(gw[k].omega_g/(2.0*M_PI), gwAmps.vl_alpha)/sqrt((double)(numberGW[polj])/log(fhi/flo))*TKgaussDev(idum);
-                        	gw[k].ast_g=gw[k].asl_g=gw[k].aplus_g=gw[k].across_g=(long double)0.0;
-                        	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(long double)0.0;
-			//printf("%i %i %6.4Le %6.4Le\n",k,polj,gw[k].avx_g,gw[k].avy_g);
+                        	gw[k].ast_g=gw[k].asl_g=gw[k].aplus_g=gw[k].across_g=(longdouble)0.0;
+                        	gw[k].aplus_im_g=gw[k].across_im_g=gw[k].ast_im_g=gw[k].asl_im_g=gw[k].avx_im_g=gw[k].avy_im_g=(longdouble)0.0;
+			//printf("%i %i %longdouble(6.4)e %longdouble(6.4)e\n",k,polj,gw[k].avx_g,gw[k].avy_g);
                 	}
-			//printf("%i %i %6.4Le %6.4Le\n",k,polj,gw[k].aplus_g,gw[k].ast_g);
+			//printf("%i %i %longdouble(6.4)e %longdouble(6.4)e\n",k,polj,gw[k].aplus_g,gw[k].ast_g);
         	} else {
           		gw[k].omega_g = 2*M_PI*(TKranDev(idum)*(fhi-flo)+flo);
 			if (polj == 0) {
@@ -1225,7 +1224,7 @@ void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,lo
 #ifdef __cplusplus
 extern "C"
 #endif
-void GWanisotropicbackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double fhi,
+void GWanisotropicbackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdouble fhi,
 		  double gwAmp,double alpha,int loglin, double **harmlist, int nharms)
 {
   int k, Ngrid;
@@ -1299,7 +1298,7 @@ void GWanisotropicbackground(gwSrc *gw,int numberGW,long *idum,long double flo,l
 	}
       gw[k].theta_g=acos(-1.+((double)((int)(highindx/Ngrid)))*2./((double)(Ngrid))+dcth*TKranDev(idum));
       gw[k].phi_g=(((double)(highindx%Ngrid))+TKranDev(idum))*dphi;
-      //printf("OUTPUT %Lf %Lf %i %i\n",cos(gw[k].theta_g),gw[k].phi_g,(int)(highindx/Ngrid),(highindx%Ngrid));
+      //ld_printf("OUTPUT %Lf %Lf %i %i\n",cos(gw[k].theta_g),gw[k].phi_g,(int)(highindx/Ngrid),(highindx%Ngrid));
       gw[k].phi_polar_g = 0.0;  
       gw[k].phase_g     = TKranDev(idum)*2*M_PI;   
       if (loglin==1)  /* Use equal sampling in log */
@@ -1329,7 +1328,7 @@ void GWanisotropicbackground(gwSrc *gw,int numberGW,long *idum,long double flo,l
 #ifdef __cplusplus
 extern "C"
 #endif
-void GWdipolebackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double fhi,
+void GWdipolebackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdouble fhi,
 		  double gwAmp,double alpha,int loglin, double *dipoleamps)
 {
   int k;
@@ -1355,7 +1354,7 @@ void GWdipolebackground(gwSrc *gw,int numberGW,long *idum,long double flo,long d
       
       gw[k].theta_g     = acos(cth);
       gw[k].phi_g       = Findphi(TKranDev(idum),dipamp*sqrt(1.-cth*cth)/(0.5+twopi*cth*dipoleamps[0]),dipphs);   
-      //printf("OUTPUT %6.4e %Lf\n",cth,gw[k].phi_g);
+      //ld_printf("OUTPUT %6.4e %Lf\n",cth,gw[k].phi_g);
 
       gw[k].phi_polar_g = 0.0; 
       gw[k].phase_g     = TKranDev(idum)*twopi;
@@ -1397,7 +1396,7 @@ int GWgeneralbackground_read(gwgeneralSrc *gw, FILE *file, int ireal){
 	char key[13];
 	int nreal;
 	int ngw,id,igw,i;
-	const unsigned int gwsize = 17*sizeof(long double);
+	const unsigned int gwsize = 17*sizeof(longdouble);
 
 	for (i=0;i<=ireal;i++){
 		fread(&id,sizeof(int),1,file);
@@ -1426,7 +1425,7 @@ int GWgeneralbackground_read(gwgeneralSrc *gw, FILE *file, int ireal){
 
 void GWgeneralbackground_write(gwgeneralSrc *gw, FILE *file,int ngw, int ireal){
 	int igw;
-	const unsigned int gwsize = 17*sizeof(long double);
+	const unsigned int gwsize = 17*sizeof(longdouble);
 	fwrite(&ireal,sizeof(int),1,file);
 	fwrite(&ngw,sizeof(int),1,file);
 	for (igw=0;igw<ngw;igw++){

@@ -638,7 +638,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
   // put in negative x // this should simulate the absence of a planet?
 
-  long double x;
+  longdouble x;
  
 
   int it;
@@ -758,7 +758,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
 	      readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
 	      preProcess(psr,*npsr,argc,argv);
-	      psr[0].param[param_pb].val[0] = (long double) Pb/24./3600.;
+	      psr[0].param[param_pb].val[0] = (longdouble) Pb/24./3600.;
 	      psr[0].param[param_a1].val[0] = x;
 	      psr[0].param[param_t0].val[0] = 50000 + Pb/24./3600.*TKranDev(&idum);
 	      psr[0].param[param_ecc].val[0] = 0.8*TKranDev(&idum);
@@ -2187,4 +2187,4 @@ int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese,int
 
 
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

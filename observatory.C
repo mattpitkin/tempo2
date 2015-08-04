@@ -137,7 +137,7 @@ readObservatoryFile(char *fname)
     }
   }
 
-    logdbg( "readObservatoryFile: %d entries\n", observatories.nelem);
+    logdbg( "readObservatoryFile: %d entries\n", static_cast<int>(observatories.nelem));
 
   fclose(f);  /* Added by GH */
 }
@@ -230,7 +230,7 @@ initObservatories()
 
 void lookup_observatory_alias(char *incode, char *outcode)
 {
-  int ilist, ialias;
+  unsigned ilist, ialias;
   char *alias;
   ObservatoryAliasList *list;
 

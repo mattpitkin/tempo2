@@ -64,7 +64,7 @@ void formBats(pulsar *psr,int npsr)
 	     	   //if(i==0){printf("Forming bat with sat = %.15g TT = %.15g TT_TB = %.15g trop = %.15g roemer = %.15g shap = %.15g tdis1 = %.15g tdis2 = %.15g\n",(double)psr[p].obsn[i].sat,(double)getCorrectionTT(psr[p].obsn+i),(double)psr[p].obsn[i].correctionTT_TB,(double)psr[p].obsn[i].troposphericDelay,(double)psr[p].obsn[i].roemer,(double)shapiroDelay,(double)psr[p].obsn[i].tdis1,(double)psr[p].obsn[i].tdis2);}
 		     
 
-		long double batcorr=getCorrectionTT(psr[p].obsn+i)/SECDAY
+		longdouble batcorr=getCorrectionTT(psr[p].obsn+i)/SECDAY
                 + (psr[p].obsn[i].correctionTT_TB
                    -psr[p].obsn[i].troposphericDelay
                    +psr[p].obsn[i].roemer -

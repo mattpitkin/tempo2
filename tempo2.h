@@ -25,6 +25,7 @@
 */
 
 #ifndef __Tempo2_h
+#include "TKlongdouble.h"
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
@@ -70,6 +71,7 @@
 #define MAX_FLAG_LEN         32    /* Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /* Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /* Number of seconds in 1 day                 */
+#define SECDAYl              longdouble(86400.0)       /* Number of seconds in 1 day                 */
 #define SPEED_LIGHT          299792458.0 /* Speed of light (m/s)                       */
 #define SOLAR_MASS  1.98892e30           /* Mass of Sun (kg)                           */
 #define SOLAR_RADIUS 6.96e8              /* Radius of the Sun (in meters)              */
@@ -122,44 +124,8 @@
 
 /* Type for doing extra precision computations: longdouble */
 
-/* OSes/architectures that have built-in long double */
+/* OSes/architectures that have built-in longdouble */
 //#if defined sun || defined linux || (defined __APPLE__ && defined __GNUC__ && __GNUC__ >= 4)
-#ifndef TEMPO2_USE_QD
-#define USE_BUILTIN_LONGDOUBLE
-#endif
-
-#ifdef sun
-#include <sunmath.h> 
-//* there is no such file ! J. Wang */
-// Note: you sometimes need a compile line e.g. -I/opt/SUNWspro/WS6U2/include/cc
-#endif
-
-#ifdef USE_BUILTIN_LONGDOUBLE
-typedef long double longdouble;
-#define LONGDOUBLE_ONE 1.0L
-/* OSes/architectures lacking built-in double; use "qd" library */
-#else
-#include "dd.h"
-typedef dd_real longdouble;
-#define LONGDOUBLE_ONE "1.0"
-dd_real pow(const dd_real &a, const dd_real &b);
-//operator float(const dd_real &a);
-#endif
-
-/* function to get longdouble as string (%g style). This returns
-  std::string, from which you can get a normal C char * like this:
-  print_longdouble(x).c_str(). Unfortunately we can't just return char *
-  directly as it would end up pointing to de-allocated memory, and we
-  can't do it statically in case you want to say call this twice for
-  one printf */
-#ifdef __cplusplus
-#include <string>
-std::string print_longdouble(const longdouble &ld);
-#endif
-
-/* function to parse a string as longdouble */
-longdouble parse_longdouble(const char *str);
-
 /* TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
 
@@ -325,6 +291,8 @@ typedef struct
 typedef struct observation {
   longdouble sat;                 /* Site arrival time                                          */
   longdouble origsat;
+  longdouble sat_day;
+  longdouble sat_sec;
   longdouble bat;                 /* Infinite frequency barycentric arrival time                */
   longdouble batCorr;
   longdouble bbat;                /* Arrival time at binary barycentre                          */
@@ -340,12 +308,18 @@ typedef struct observation {
   double      TNRedErr;		  /* Error on Model red noise signal from temponest fit */
   double      TNDMSignal;         /* Model DM signal from temponest fit */
   double      TNDMErr;            /* Error on Model DM signal from temponest fit */
+  double      TNGroupSignal;      /* Model Group Noise signal from temponest fit */
+  double      TNGroupErr;         /* Error on Model Group Noise signal from temponest fit */
   double      freq;               /* Frequency of observation (in MHz)                          */
   double      freqSSB;            /* Frequency of observation in barycentric frame (in Hz)      */
   double      toaErr;             /* Error on TOA (in us)                                       */
   double      toaDMErr;           /* Error on TOA due to DM (in us)                             */
   double      origErr;            /* Original error on TOA after reading tim file (in us)       */
   double      phaseOffset;        /* Phase offset                                               */
+
+  double averagebat;
+  double averageres;
+  double averageerr;
   char        fname[MAX_FILELEN]; /* Name of data file giving TOA                               */
   char        telID[100];         /* Telescope ID                                               */
   clock_correction correctionsTT[MAX_CLK_CORR]; /* chain of corrections from site TOA to chosen realisation of TT */
@@ -355,7 +329,7 @@ typedef struct observation {
   double einsteinRate;            /* Derivative of correctionTT_TB   */
   longdouble correctionTT_Teph;   /* Correction to Teph              */
   longdouble correctionUT1;       /* Correction from site TOA to UT1 */
-  /*  long double a1utcf; */
+  /*  longdouble a1utcf; */
 
   double sun_ssb[6];              /* Ephemeris values for Sun w.r.t SSB (sec)             (RCS) */
   double sun_earth[6];            /* Ephemeris values for Sun w.r.t Earth (sec)                 */
@@ -374,7 +348,7 @@ typedef struct observation {
   double nutations[6];
   double siteVel[3];              /* Observatory velocity w.r.t. geocentre                      */
 
-  long double shklovskii;         /* Shklovskii delay term                                      */
+  longdouble shklovskii;         /* Shklovskii delay term                                      */
   double shapiroDelaySun;         /* Shapiro Delay due to the Sun                               */
   double shapiroDelayJupiter;     /* Shapiro Delay due to Jupiter                               */
   double shapiroDelaySaturn;      /* Shapiro Delay due to Saturn                                */
@@ -481,7 +455,7 @@ typedef struct pulsar {
   // General pulsar information
   double posPulsar[3];            /* 3-vector pointing at pulsar                                */
   double velPulsar[3];            /* 3-vector giving pulsar's velocity                          */  
-  long double phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */
+  longdouble phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */
   int    phaseJumpDir[MAX_JUMPS]; /* Size and direction of phase jump                           */
   int    phaseJumpID[MAX_JUMPS];  /* ID of closest point to the phase jump */
   int    nPhaseJump;              /* Number of phase jumps                                      */
@@ -516,7 +490,7 @@ typedef struct pulsar {
   int    fitParamI[MAX_FIT];
   int    fitParamK[MAX_FIT];
   int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
-  char    robust;                 /* robust fitting mode, 0= no robust */
+  char    robust;
   int    rescaleErrChisq;         /* = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
   double offset;                  /* Offset, always fitted for */
   double offset_e;                /* Error in the offset */
@@ -652,7 +626,10 @@ typedef struct pulsar {
 	double TNDMCoeffs[200];
 	int TNsubtractDM;
 	int TNsubtractRed;
-  
+	int AverageResiduals; 
+	char AverageFlag[MAX_FLAG_LEN];
+	float AverageEpochWidth; 
+
 	double TNBandDMAmp;
 	double TNBandDMGam;
 	int TNBandDMC;
@@ -745,7 +722,7 @@ void initialise (pulsar *psr, int noWarnings);
 void initialiseOne (pulsar *psr, int noWarnings, int fullSetup);
 void destroyOne (pulsar *psr);
 
-void recordPrecision(pulsar *psr,longdouble prec,char *routine,char *comment);
+void recordPrecision(pulsar *psr,longdouble prec,const char *routine,const char *comment);
 void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr);
 void formBats(pulsar *psr,int npsr);
 void formBatsAll(pulsar *psr,int npsr);
@@ -758,7 +735,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel); 
 void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
-void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,char *fname);
+void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname);
 void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void calculate_bclt(pulsar *psr,int npsr);
@@ -815,7 +792,7 @@ void readObsFile(double alat[MAX_SITE],double along[MAX_SITE],
 double dotproduct(double *v1,double *v2);
 void vectorsum(double *res, double *v1,double *v2);
 void vectorscale(double *v, double k);
-void writeTim(char *timname,pulsar *psr,char *fileFormat);
+void writeTim(const char *timname,pulsar *psr,const char *fileFormat);
 int turn_hms(double turn, char *hms);
 int turn_dms(double turn, char *dms);
 double dms_turn(char *line);
@@ -842,7 +819,7 @@ double BTXmodel(pulsar *psr,int p,int obs,int param,int arr);
 void updateBTX(pulsar *psr,double val,double err,int pos,int arr);
 double ELL1model(pulsar *psr,int p,int obs,int param);
 void updateELL1(pulsar *psr,double val,double err,int pos);
-long double DDmodel(pulsar *psr,int p,int obs,int param);
+longdouble DDmodel(pulsar *psr,int p,int obs,int param);
 void updateDD(pulsar *psr,double val,double err,int pos);
 double T2model(pulsar *psr,int p,int obs,int param,int arr);
 void updateT2(pulsar *psr,double val,double err,int pos,int arr);
@@ -862,8 +839,8 @@ void updateDDH( pulsar *psr, double val, double err, int pos );
 double ELL1Hmodel( pulsar *psr, int p, int obs, int param );
 void updateELL1H( pulsar *psr, double val, double err, int pos );
 
-void displayMsg(int type,char *key,char *searchStr,char *variableStr,int noWarnings);
-void CVSdisplayVersion(char *file,char *func,const char *verNum);
+void displayMsg(int type,const char *key,const char *searchStr,const char *variableStr,int noWarnings);
+void CVSdisplayVersion(const char *file,const char *func,const char *verNum);
 
 /* stuff for SI/TDB units */
 void transform_units(struct pulsar *psr, int from, int to);
@@ -882,7 +859,7 @@ void defineClockCorrectionSequence(char *fileList,int dispWarnings);
    observation and stores them in obs->clock_corrections.  Uses one
    of the pre-defined sequences (from defineClockCorrectionSequence) if
    available, otherwise makes one automatically.  */
-void getClockCorrections(observation *obs, char *clockFrom, char *clockTo,int warnings);
+void getClockCorrections(observation *obs, const char *clockFrom, const char *clockTo,int warnings);
 
 /* getCorrectionTT : convenience function to return the sum of all
    correctionsTT terms in an observation */
@@ -890,7 +867,7 @@ double getCorrectionTT(observation *obs);
 /* convenience function to obtain correction to a named clock 
 (for intermediate use e.g. in obtaining Earth orientation parameters;
   does not store steps used in obs->correctionsTT */
-double getCorrection(observation *obs, char *clockFrom, char *clockTo, int warnings);
+double getCorrection(observation *obs, const char *clockFrom, const char *clockTo, int warnings);
 
 /* redwards stuff for tempo2 to look after the database of observatories */
 

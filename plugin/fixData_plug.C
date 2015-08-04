@@ -50,8 +50,8 @@ float plotHistogram(float *x,int count,int *flagCol,int nFlag,char flagV[100][16
 void doSummary(pulsar *psr,float errStep);
 
 int nit = 1;
-long double gwamp = 0;
-long double alpha = 1;
+longdouble gwamp = 0;
+longdouble alpha = 1;
 char plotout[20]="/xs";
 int plotoutSet = 0;
 int script = 0;
@@ -86,12 +86,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int i,summary;
   int plot=1;
   int removeQuad=0;
-  double globalParameter;
+  double globalParameter=0;
   float errStep = 1e-6;
   float dstep = 100;
   //  int nit = 1;
-  //  long double gwamp = 0;
-  //  long double alpha = 1;
+  //  longdouble gwamp = 0;
+  //  longdouble alpha = 1;
 
   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
   summary=0;
@@ -122,9 +122,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-numits")==0)
 	sscanf(argv[++i],"%d",&nit);
       else if (strcmp(argv[i],"-gwamp")==0)
-	sscanf(argv[++i],"%Lf",&gwamp);
+          gwamp=parse_longdouble(argv[++i]);
       else if (strcmp(argv[i],"-alpha")==0)
-	sscanf(argv[++i],"%Lf",&alpha);
+          alpha=parse_longdouble(argv[++i]);
       else if (strcmp(argv[i],"-errstep")==0)
 	sscanf(argv[++i],"%f",&errStep);
       else if (strcmp(argv[i],"-plotout")==0)
@@ -558,7 +558,7 @@ void doSummary(pulsar *psr,float errStep)
   float minx,maxx,miny,maxy;
   float err;
   double errfac,vsf,mverr;
-  long double sat1[psr[0].nobs];
+  longdouble sat1[psr[0].nobs];
   int it,nit;
   int npts_sf;
   long seed = TKsetSeed();
@@ -640,13 +640,13 @@ void doSummary(pulsar *psr,float errStep)
 
   // Calculate errors
   for (i=0;i<psr[0].nobs;i++)
-    sat1[i] = psr[0].obsn[i].sat - psr[0].obsn[i].residual/86400.0L;
+    sat1[i] = psr[0].obsn[i].sat - psr[0].obsn[i].residual/longdouble(86400.0);
   nit = 100;
   for (it=0;it<nit;it++)
     {
       nplot=0;
       for (i=0;i<psr[0].nobs;i++)
-	psr[0].obsn[i].sat = sat1[i] + psr[0].obsn[i].toaErr*1.0e-6*TKgaussDev(&seed)/86400.0L;
+	psr[0].obsn[i].sat = sat1[i] + psr[0].obsn[i].toaErr*1.0e-6*TKgaussDev(&seed)/longdouble(86400.0);
       formBatsAll(psr,1);         /* Form the barycentric arrival times */
       formResiduals(psr,1,1);    /* Form the residuals                 */
 
@@ -691,7 +691,7 @@ void doSummary(pulsar *psr,float errStep)
 // Check whether the data are white
 void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int argc,char *argv[])
 {
-  long double sat0[MAX_OBSN];
+  longdouble sat0[MAX_OBSN];
   int i,j,p;
   long seed = -23;
   int it;
@@ -705,23 +705,23 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
   float fx[MAX_OBSN],fy[MAX_OBSN],t95[MAX_OBSN],t5[MAX_OBSN];
   int specN;
   // GW
-  long double a;
-  long double toffset;
-  long double kp[3];
-  long double flo,fhi;
-  long double res[MAX_OBSN],mean;
+  longdouble a;
+  longdouble toffset;
+  longdouble kp[3];
+  longdouble flo,fhi;
+  longdouble res[MAX_OBSN],mean;
   double dist;
   int addGW=0,ngw,k;
   gwSrc *gw;
-  //  long double gwamp = 18e-14;
+  //  longdouble gwamp = 18e-14;
 
   //alpha = 0.8; //2.5/2.0;
-  a = (long double)gwamp*pow(86400.0*365.25,alpha);
+  a = (longdouble)gwamp*pow(86400.0*365.25,alpha);
   dist =  3.08568025e19; // 1 kpc in m
   setupPulsar_GWsim(psr[0].param[param_raj].val[0],
 		    psr[0].param[param_decj].val[0],kp);
-  flo = 1.0L/(30*365.25*86400.0L);
-  fhi = 1.0L/(2.0*86400.0L);
+  flo = longdouble(1.0)/(30*365.25*longdouble(86400.0));
+  fhi = longdouble(1.0)/(2.0*longdouble(86400.0));
   ngw = 1000;
   if((gw = (gwSrc *)malloc(sizeof(gwSrc)*ngw))==NULL){
     printf("Unable to allocate memory for gwSrc.\n");
@@ -760,7 +760,7 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
       formBatsAll(psr,1);         /* Form the barycentric arrival times */
       formResiduals(psr,1,0);    /* Form the residuals                 */
       for (i=0;i<psr[0].nobs;i++)
-	psr[0].obsn[i].sat -= (long double)psr[0].obsn[i].residual/86400.0L;
+	psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/longdouble(86400.0);
     }
   for (i=0;i<psr[0].nobs;i++)
     sat0[i] = psr[0].obsn[i].sat;
@@ -780,20 +780,20 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
 
       // Add GW
       GWbackground(gw,ngw,&seed,flo,fhi,a,alpha,1);
-      mean=0.0L;
+      mean=longdouble(0.0);
       //printf("Calc residuals 1\n");
       for (j=0;j<psr[0].nobs;j++)
 	{
-	  res[j]=0.0L;
+	  res[j]=longdouble(0.0);
 	  for (k=0;k<ngw;k++)
 	    res[j]+=calculateResidualGW(kp,&gw[k],
-					(psr[0].obsn[j].sat-toffset)*86400.0L,
+					(psr[0].obsn[j].sat-toffset)*longdouble(86400.0),
 					dist);	  
 	  mean+=res[j];
 	}
       for (j=0;j<psr[0].nobs;j++)
 	{
-	  psr[0].obsn[j].sat+=(res[j]-mean/psr[0].nobs)/86400.0L;
+	  psr[0].obsn[j].sat+=(res[j]-mean/psr[0].nobs)/longdouble(86400.0);
 	  if (it==0)
 	    printf("gwres %g %g\n",(double)psr[0].obsn[j].sat,(double)res[j]);
 	}
@@ -1284,4 +1284,4 @@ float plotHistogram(float *x,int count,int *flagCol,int nFlag,char flagV[100][16
     }*/
   return highest;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

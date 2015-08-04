@@ -816,7 +816,7 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
   printf("Complete search\n");
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
 
 
 void kstwo(double data1[], unsigned long n1, double data2[], unsigned long n2,

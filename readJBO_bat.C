@@ -93,7 +93,7 @@ void readJBO_bat(char *fname,pulsar *psr,int p)
                 strcpy(sites[nsite]+8,cbuf[1]);
                 strcpy(sites[nsite]+16,cbuf[2]);
 
-                for (int i=0; i < strlen(sites[nsite]); i++){
+                for (unsigned i=0; i < strlen(sites[nsite]); i++){
                     if(sites[nsite][i] == ' ')sites[nsite][i]='\0';
                 }
                 nsite++;

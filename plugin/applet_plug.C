@@ -205,7 +205,7 @@ FILE *fin, *fout;
 
   
   if(header){
-	  fprintf(fout,"HDR\tP0\t%llf\n",1.0/psr[0].param[param_f].val[0]);
+	  ld_fprintf(fout,"HDR\tP0\t%Lf\n",1.0/psr[0].param[param_f].val[0]);
   }
 
   if (file==1) /* Read from file */
@@ -227,11 +227,12 @@ FILE *fin, *fout;
     }
   else if (file==0) /* Read from string */
     parseLine(psr,cline,&errMult,null,format,dformat,&rad,fout);
+  return 0;
 }
 
 void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,char *dformat,int *rad,FILE *fout)
 {
-  int i,j;
+  unsigned i,j;
   char var[500],type[100];
   int varN,lv,le,parameter=0,end=1;
   char cval[500],cerr[500],msg[500];
@@ -553,7 +554,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		    else if (strcasecmp(var,"npulse")==0) /* Pulse number */
 		      {
 			longdouble phase;
-			sprintf(disp,"%.0Lf",psr[0].obsn[varN].phase); 
+			ld_sprintf(disp,"%.0Lf",psr[0].obsn[varN].phase); 
 			fprintf(fout,"%s",disp);
 			pos+=strlen(disp);			
 		      }
@@ -820,4 +821,4 @@ double fortranMod(double a,double p)
   ret = a - (int)(a/p)*p;
   return ret;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

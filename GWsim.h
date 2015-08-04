@@ -61,29 +61,29 @@
 /* Have a structure to define a gravitational wave source */
 typedef struct gwSrc
 {
-  long double theta_g;     /* Angle of source from "z"-direction (e.g. 90-declination)             */
-  long double phi_g;       /* Azimuthal angle of source (e.g. right ascension)                     */
-  long double omega_g;     /* Frequency of gravitational wave source (Hz) in observer's rest frame */   
-  long double phi_polar_g; /* Polarization angle of the gravitational wave source w.r.t. the unit vector along te direction of increasing elevation*/
-  long double phase_g;
-  long double aplus_g;
-  long double aplus_im_g; /* imagainary part of plus polarization */
-  long double across_g;
-  long double across_im_g; /*imag part of cross polariation */
+  longdouble theta_g;     /* Angle of source from "z"-direction (e.g. 90-declination)             */
+  longdouble phi_g;       /* Azimuthal angle of source (e.g. right ascension)                     */
+  longdouble omega_g;     /* Frequency of gravitational wave source (Hz) in observer's rest frame */   
+  longdouble phi_polar_g; /* Polarization angle of the gravitational wave source w.r.t. the unit vector along te direction of increasing elevation*/
+  longdouble phase_g;
+  longdouble aplus_g;
+  longdouble aplus_im_g; /* imagainary part of plus polarization */
+  longdouble across_g;
+  longdouble across_im_g; /*imag part of cross polariation */
   
   /*Important if the source is a supermassive blackhole binary. These are parameters of the binary. */
   
-  long double phi_bin;    /* orientation of line of nodes on sky, recall line of nodes is intersection of plane of sky with plane of binary orbit. phi is
+  longdouble phi_bin;    /* orientation of line of nodes on sky, recall line of nodes is intersection of plane of sky with plane of binary orbit. phi is
 							 measured relative to the unit vector in the direction of increasing(?) right ascension */
-  long double theta_bin;  /* orbital phase, assume time stationary */
-  //long double chirp_mass; /* chirp mass of binary = (m_1+m_2)*[(m_1*m_2)/(m_1+m_2)^2]^(3/5) */
-  long double inc_bin;    /* orbital inclination angle w.r.t. plane of the sky*/
-  long double dist_bin;   /* proper distance to the binary system */
+  longdouble theta_bin;  /* orbital phase, assume time stationary */
+  //longdouble chirp_mass; /* chirp mass of binary = (m_1+m_2)*[(m_1*m_2)/(m_1+m_2)^2]^(3/5) */
+  longdouble inc_bin;    /* orbital inclination angle w.r.t. plane of the sky*/
+  longdouble dist_bin;   /* proper distance to the binary system */
 
   /* Derived parameters                                                             */
-  long double h[3][3];     /* The gravitational wave strain                         */
-  long double h_im[3][3];  /* same as h but with im amplitudes. Ideally would have h = h + i*h_im */
-  long double kg[3];       /* The gravitational wave unit vector                    */
+  longdouble h[3][3];     /* The gravitational wave strain                         */
+  longdouble h_im[3][3];  /* same as h but with im amplitudes. Ideally would have h = h + i*h_im */
+  longdouble kg[3];       /* The gravitational wave unit vector                    */
 }gwSrc;
 
 
@@ -101,38 +101,34 @@ double dedt(double ec, double a, double m1, double m2);
 double dtdt(double ec, double t, double p);
 double Rs(double m1); // in m
 
-long double eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta);
+longdouble eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta);
 
-long double eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta, float *eOut);
+longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta, float *eOut);
 
 
 /* Some useful functions */
-long double matrixMult(long double m1[3][3],long double m2[3][3],long double out[3][3]);
-long double dotProduct(long double *m1,long double *m2);
-
-
 
 
 void setupGW(gwSrc *gw);
 
-long double matrixMult(long double m1[3][3],long double m2[3][3],long double out[3][3]);
+void matrixMult(longdouble m1[3][3],longdouble m2[3][3],longdouble out[3][3]);
 
-long double dotProduct(long double *m1,long double *m2);
+longdouble dotProduct(longdouble *m1,longdouble *m2);
 
-void GWbackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double fhi,
+void GWbackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdouble fhi,
 		  double gwAmp,double alpha,int loglin);
 
-long double calculateResidualGW(long double *kp,gwSrc *gw,long double time,long double dist);
+longdouble calculateResidualGW(longdouble *kp,gwSrc *gw,longdouble time,longdouble dist);
 
-void setupPulsar_GWsim(long double ra_p,long double dec_p,long double *kp);
+void setupPulsar_GWsim(longdouble ra_p,longdouble dec_p,longdouble *kp);
 
 int GWbackground_read(gwSrc *gw, FILE *file, int ireal);
 
 void GWbackground_write(gwSrc *gw, FILE *file,int ngw, int ireal);
 
-long double eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta);
+longdouble eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta);
 
-long double eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta, float *eOut) ;
+longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double *prev_e, double *prev_a, double *prev_epoch, double *prev_theta, float *eOut) ;
 
 double Rs(double m1);
 
@@ -154,37 +150,37 @@ double psrangle(double centre_long,double centre_lat,double psr_long,double psr_
 /* Have a structure to define a gravitational wave source */
 typedef struct gwgeneralSrc
 {
-  long double theta_g;     /* Angle of source from "z"-direction (e.g. 90-declination)             */
-  long double phi_g;       /* Azimuthal angle of source (e.g. right ascension)                     */
-  long double omega_g;     /* Frequency of gravitational wave source (Hz) in observer's rest frame */   
-  long double phi_polar_g; /* Polarization angle of the gravitational wave source w.r.t. the unit vector along te direction of increasing elevation*/
-  long double phase_g;
-  long double aplus_g;
-  long double aplus_im_g; /* imagainary part of plus polarization */
-  long double across_g;
-  long double across_im_g; /*imag part of cross polarization */
-  long double ast_g; /* real part of scalar transverse polarization */
-  long double ast_im_g; /*imag part of scalar transverse polarization */
-  long double asl_g; /* real part of scalar longitudinal polarization */
-  long double asl_im_g; /*imag part of scalar longitudinal polarization */
-  long double avx_g; /* real part of X vector longitudinal polarization */
-  long double avx_im_g; /*imag part of X vector longitudinal polarization */
-  long double avy_g; /* real part of Y vector longitudinal polarization */
-  long double avy_im_g; /*imag part of Y vector longitudinal polarization */
+  longdouble theta_g;     /* Angle of source from "z"-direction (e.g. 90-declination)             */
+  longdouble phi_g;       /* Azimuthal angle of source (e.g. right ascension)                     */
+  longdouble omega_g;     /* Frequency of gravitational wave source (Hz) in observer's rest frame */   
+  longdouble phi_polar_g; /* Polarization angle of the gravitational wave source w.r.t. the unit vector along te direction of increasing elevation*/
+  longdouble phase_g;
+  longdouble aplus_g;
+  longdouble aplus_im_g; /* imagainary part of plus polarization */
+  longdouble across_g;
+  longdouble across_im_g; /*imag part of cross polarization */
+  longdouble ast_g; /* real part of scalar transverse polarization */
+  longdouble ast_im_g; /*imag part of scalar transverse polarization */
+  longdouble asl_g; /* real part of scalar longitudinal polarization */
+  longdouble asl_im_g; /*imag part of scalar longitudinal polarization */
+  longdouble avx_g; /* real part of X vector longitudinal polarization */
+  longdouble avx_im_g; /*imag part of X vector longitudinal polarization */
+  longdouble avy_g; /* real part of Y vector longitudinal polarization */
+  longdouble avy_im_g; /*imag part of Y vector longitudinal polarization */
   
   /*Important if the source is a supermassive blackhole binary. These are parameters of the binary. */
   
-  long double phi_bin;    /* orientation of line of nodes on sky, recall line of nodes is intersection of plane of sky with plane of binary orbit. phi is
+  longdouble phi_bin;    /* orientation of line of nodes on sky, recall line of nodes is intersection of plane of sky with plane of binary orbit. phi is
 							 measured relative to the unit vector in the direction of increasing(?) right ascension */
-  long double theta_bin;  /* orbital phase, assume time stationary */
-  //long double chirp_mass; /* chirp mass of binary = (m_1+m_2)*[(m_1*m_2)/(m_1+m_2)^2]^(3/5) */
-  long double inc_bin;    /* orbital inclination angle w.r.t. plane of the sky*/
-  long double dist_bin;   /* proper distance to the binary system */
+  longdouble theta_bin;  /* orbital phase, assume time stationary */
+  //longdouble chirp_mass; /* chirp mass of binary = (m_1+m_2)*[(m_1*m_2)/(m_1+m_2)^2]^(3/5) */
+  longdouble inc_bin;    /* orbital inclination angle w.r.t. plane of the sky*/
+  longdouble dist_bin;   /* proper distance to the binary system */
 
   /* Derived parameters                                                             */
-  long double h[3][3];     /* The gravitational wave strain                         */
-  long double h_im[3][3];  /* same as h but with im amplitudes. Ideally would have h = h + i*h_im */
-  long double kg[3];       /* The gravitational wave unit vector                    */
+  longdouble h[3][3];     /* The gravitational wave strain                         */
+  longdouble h_im[3][3];  /* same as h but with im amplitudes. Ideally would have h = h + i*h_im */
+  longdouble kg[3];       /* The gravitational wave unit vector                    */
 }gwgeneralSrc;
 
 typedef struct gwgenSpec {
@@ -212,16 +208,16 @@ double Findphi(double prob, double amp, double phase);
 void setupgeneralGW(gwgeneralSrc *gw);
 
 /* Produce a background of gravitational waves */
-void GWgeneralbackground(gwgeneralSrc *gw,int *numberGW,long *idum,long double flo,long double fhi,
+void GWgeneralbackground(gwgeneralSrc *gw,int *numberGW,long *idum,longdouble flo,longdouble fhi,
 		  gwgenSpec gwAmps, int loglin);
-void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,long double flo,long double fhi,
+void GWgeneralanisotropicbackground(gwgeneralSrc *gw,int *numberGW,long *idum,longdouble flo,longdouble fhi,
 		  gwgenSpec gwAmps,int loglin, double ***harmlist, int *nharms);
-void GWanisotropicbackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double fhi,
+void GWanisotropicbackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdouble fhi,
 		  double gwAmp,double alpha,int loglin, double **harmlist, int nharms);
-void GWdipolebackground(gwSrc *gw,int numberGW,long *idum,long double flo,long double fhi,
+void GWdipolebackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdouble fhi,
 		  double gwAmp,double alpha,int loglin, double *dipoleamps);
 
-long double calculateResidualgeneralGW(long double *kp,gwgeneralSrc *gw,long double time,long double dist);
+longdouble calculateResidualgeneralGW(longdouble *kp,gwgeneralSrc *gw,longdouble time,longdouble dist);
 
 int GWgeneralbackground_read(gwgeneralSrc *gw, FILE *file, int ireal);
 void GWgeneralbackground_write(gwgeneralSrc *gw, FILE *file,int ngw, int ireal);

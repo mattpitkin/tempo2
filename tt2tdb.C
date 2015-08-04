@@ -171,9 +171,9 @@ void tt2tb(pulsar *psr,int npsr)
 							   
 	    }
 
-	logdbg("corrn TT_Teph %llg",psr[p].obsn[i].correctionTT_Teph);
-	logdbg("corrn TT_TB %llg",psr[p].obsn[i].correctionTT_TB);
-	logdbg("corrn einstin %llg",psr[p].obsn[i].einsteinRate-1);
+	logdbg("corrn TT_Teph %lg",(double)psr[p].obsn[i].correctionTT_Teph);
+	logdbg("corrn TT_TB %lg",(double)psr[p].obsn[i].correctionTT_TB);
+	logdbg("corrn einstein %lg",(double)psr[p].obsn[i].einsteinRate-1.0);
 // 	  if (!first) printf("%g %g %g %g %g Einstein\n", (double)mjd_tt,
 // 		 deltaT, deltaTDot, obsTerm, obsTermDot);
 //	  if (!first)

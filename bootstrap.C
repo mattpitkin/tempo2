@@ -77,7 +77,7 @@ int bootstrap(pulsar *psr,int p,int npsr)
 	  if (psr[p].param[i].fitFlag[k] == 1)
 	    {
 	      param[nFit] = psr[p].param[i].val[k]; /* - psr[p].param[i].prefit[k]; */
-	      printf("Initial param = %s %Lf %Lf\n",psr[p].param[i].label[0],
+	      ld_printf("Initial param = %s %Lf %Lf\n",psr[p].param[i].label[0],
 		     psr[p].param[i].val[k], psr[p].param[i].prefit[k]);
 	      err[nFit]   = psr[p].param[i].err[k];
 	      psq[nFit]   = 0.0;
@@ -207,19 +207,19 @@ int bootstrap(pulsar *psr,int p,int npsr)
 	{
 	  if (psr[p].param[i].fitFlag[k] == 1)
 	    {
-	      mean=0.0L;
-	      meansq=0.0L;
+	      mean=longdouble(0.0);
+	      meansq=longdouble(0.0);
 	      for (l=0;l<nboot;l++)
 		{
 		  mean  += (result[nFit2][l])/nboot;
 		  meansq+= (result[nFit2][l]*result[nFit2][l])/nboot;
-		  printf("bootstrap parameters [%s] = %.14Lg\n",psr[p].param[i].shortlabel[k],
+		  ld_printf("bootstrap parameters [%s] = %.14Lg\n",psr[p].param[i].shortlabel[k],
 			 result[nFit2][l]+param[nFit2]);
 		}
 	      /*	      mean/=(longdouble)nboot;
 			      meansq/=(longdouble)nboot; */
 	      sdev = (longdouble)sqrt(meansq-mean*mean);
-	      printf("Bootstrap mean difference: %Lf mean squared: %.14Lf rms: %.14Lf; sigma: %.14Lf, mean value: %.14Lf\n",
+	      ld_printf("Bootstrap mean difference: %Lf mean squared: %.14Lf rms: %.14Lf; sigma: %.14Lf, mean value: %.14Lf\n",
 		     mean,(mean*mean),meansq,sdev,(mean+param[nFit2]));	      
 	      /* psr[p].param[i].val[k] = psr[npsr].param[i].val[k]; */
 	      psr[p].param[i].val[k] = mean+param[nFit2];

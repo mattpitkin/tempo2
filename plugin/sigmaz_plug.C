@@ -51,13 +51,13 @@ void sortTimes(pulsar psr,int *nobs,double *times,double *resid,double *error);
 void fitv(double x,double afunc[],int ma,pulsar *psr,int ipos);
 void plotOmega_g(double omega,float *px,float *py);
 void plotA_g(double a,double alpha,float *px,float *py);
-void shufflePts(long double *R, double *toaE, long double *R2, double *toaE2, int N,long *idum);
+void shufflePts(longdouble *R, double *toaE, longdouble *R2, double *toaE2, int N,long *idum);
 void convert_gravWaveBackground_noFit(pulsar *psr,int npsr,double convertGW,long *idum,int sameBackground);
 void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *idum,int sameBackground,  
 				    char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN]);
 void calcSpline(float *px,float *py,int count);
 float SplineBlend(int k,int t,int *u,float v);
-void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int weights,double mintau,long double gwamp,float mint,float maxt,float minsz,float maxsz,double *szbias,double *e1obs,double *e2obs,int nit,int ngw,long double lowAmp,long double hiAmp);
+void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int weights,double mintau,longdouble gwamp,float mint,float maxt,float minsz,float maxsz,double *szbias,double *e1obs,double *e2obs,int nit,int ngw,longdouble lowAmp,longdouble hiAmp);
  
 typedef struct XY
 {
@@ -140,9 +140,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int listing=0;
   int bound=0;
   double convertGW=0.0;
-  long double gwamp=0.0;
-  long double lowAmp=0.0;
-  long double hiAmp=0.0;
+  longdouble gwamp=0.0;
+  longdouble lowAmp=0.0;
+  longdouble hiAmp=0.0;
   int simWhite=0;
 
   double tau[MAX_PSR_VAL][100];
@@ -395,14 +395,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 void simWhiteFunc(pulsar *psr,long *idum,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int weights,double mintau)
 {
-  long double sat0[MAX_OBSN];
+  longdouble sat0[MAX_OBSN];
   int i,j,it;
   double tau[1000],szbias[1000],e1[1000],e2[1000];
   double avszbias[1000];
   float fx[1000],fy[1000];
   int nit=100;
   int nval;
-  long double min,max;
+  longdouble min,max;
 
   for (i=0;i<1000;i++)
     avszbias[i]=0.0;
@@ -412,7 +412,7 @@ void simWhiteFunc(pulsar *psr,long *idum,char parFile[MAX_PSR_VAL][MAX_FILELEN],
   max = psr[0].obsn[psr[0].nobs-1].sat;
   for (i=0;i<psr[0].nobs;i++)
     {
-      psr[0].obsn[i].sat = min+(max-min)*(long double)i/(long double)psr[0].nobs/10.0;
+      psr[0].obsn[i].sat = min+(max-min)*(longdouble)i/(longdouble)psr[0].nobs/10.0;
     }
   
 
@@ -427,7 +427,7 @@ void simWhiteFunc(pulsar *psr,long *idum,char parFile[MAX_PSR_VAL][MAX_FILELEN],
       formBatsAll(psr,1);         /* Form the barycentric arrival times */
       formResiduals(psr,1,0);    /* Form the residuals                 */
       for (i=0;i<psr[0].nobs;i++)
-	psr[0].obsn[i].sat -= (long double)psr[0].obsn[i].residual/86400.0L;
+	psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/longdouble(86400.0);
     }
   for (i=0;i<psr[0].nobs;i++)
     sat0[i] = psr[0].obsn[i].sat;
@@ -462,20 +462,20 @@ void simWhiteFunc(pulsar *psr,long *idum,char parFile[MAX_PSR_VAL][MAX_FILELEN],
 
 }
 
-void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int weights,double mintau,long double gwamp,float mint,float maxt,float minsz,float maxsz,double *szbiasObs,double *eObs1,double *eObs2,int nit,int ngw,long double lowAmp,long double hiAmp)
+void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int weights,double mintau,longdouble gwamp,float mint,float maxt,float minsz,float maxsz,double *szbiasObs,double *eObs1,double *eObs2,int nit,int ngw,longdouble lowAmp,longdouble hiAmp)
 {
   int i,j,k,p;
-  long double a;
-  long double alpha = -2.0/3.0,toffset;
-  long double kp[3];
-  long double flo,fhi;
-  long double res[MAX_OBSN],mean;
+  longdouble a;
+  longdouble alpha = -2.0/3.0,toffset;
+  longdouble kp[3];
+  longdouble flo,fhi;
+  longdouble res[MAX_OBSN],mean;
   double dist[MAX_PSR];
   double weight[MAX_OBSN];
   int addWhite=1;
   int fast=0;
   long storeSeed = *idum;
-  long double sat0[MAX_OBSN];
+  longdouble sat0[MAX_OBSN];
   float my[MAX_OBSN];
   gwSrc *gw;
   double tau[100],**szbias,e1[100],e2[100];
@@ -507,7 +507,7 @@ void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][
       formBatsAll(psr,1);         /* Form the barycentric arrival times */
       formResiduals(psr,1,0);    /* Form the residuals                 */
       for (i=0;i<psr[0].nobs;i++)
-	psr[0].obsn[i].sat -= (long double)psr[0].obsn[i].residual/86400.0L;
+	psr[0].obsn[i].sat -= (longdouble)psr[0].obsn[i].residual/longdouble(86400.0);
     }
   for (i=0;i<psr[0].nobs;i++)
     sat0[i] = psr[0].obsn[i].sat;
@@ -522,7 +522,7 @@ void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][
   readParfile(psr,parFile,timFile,1); /* Load the parameters       */
   
   printf("GW background calculation ...\n");
-  a = (long double)gwamp*pow(86400.0*365.25,alpha);
+  a = (longdouble)gwamp*pow(86400.0*365.25,alpha);
   hiAmp *=  pow(86400.0*365.25,alpha);
   lowAmp *= pow(86400.0*365.25,alpha);
 
@@ -534,8 +534,8 @@ void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][
   dist[0] =  3.08568025e19; // 1 kpc in m
   setupPulsar_GWsim(psr[0].param[param_raj].val[0],
 		    psr[0].param[param_decj].val[0],kp);
-  flo = 1.0L/(30*365.25*86400.0L);
-  fhi = 1.0L/(2.0*86400.0L);
+  flo = longdouble(1.0)/(30*365.25*longdouble(86400.0));
+  fhi = longdouble(1.0)/(2.0*longdouble(86400.0));
 
   toffset = psr[0].param[param_pepoch].val[0];
 
@@ -553,14 +553,14 @@ void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][
 	//      printf("Calc backgroud\n");
 	GWbackground(gw,ngw,idum,flo,fhi,a,alpha,1);
 	//printf("done Calc backgroud\n");
-	mean=0.0L;
+	mean=longdouble(0.0);
 	//printf("Calc residuals 1\n");
 	for (j=0;j<psr[0].nobs;j++)
 	  {
-	    res[j]=0.0L;
+	    res[j]=longdouble(0.0);
 	    for (k=0;k<ngw;k++)
 	      res[j]+=calculateResidualGW(kp,&gw[k],
-					  (psr[0].obsn[j].sat-toffset)*86400.0L,
+					  (psr[0].obsn[j].sat-toffset)*longdouble(86400.0),
 					dist[0]);	  
 	  mean+=res[j];
 	}
@@ -570,7 +570,7 @@ void calculateGWlim(pulsar *psr,long *idum,double obs,char parFile[MAX_PSR_VAL][
 	  psr[0].obsn[j].sat = (sat0[j]+(res[j]-mean/psr[0].nobs)/86400.0);
 	  if (addWhite>0)
 	    {
-	      psr[0].obsn[j].sat += (long double)((addWhite*TKgaussDev(idum)*psr[0].obsn[j].toaErr*1e-6)/86400.0);
+	      psr[0].obsn[j].sat += (longdouble)((addWhite*TKgaussDev(idum)*psr[0].obsn[j].toaErr*1e-6)/86400.0);
 	    }
 	}
       //printf("Done calc residuals\n");
@@ -749,12 +749,12 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
 				    char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN])
 {
   int i,j,k,p;
-  long double a;
-  long double alpha = -2.0/3.0,toffset;
+  longdouble a;
+  longdouble alpha = -2.0/3.0,toffset;
   int ngw = 10000;
-  long double kp[MAX_PSR][3];
-  long double flo,fhi;
-  long double res[MAX_OBSN],mean;
+  longdouble kp[MAX_PSR][3];
+  longdouble flo,fhi;
+  longdouble res[MAX_OBSN],mean;
   double dist[MAX_PSR];
   gwSrc *gw;
   int addWhite=0;
@@ -777,7 +777,7 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
       for (p=0;p<npsr;p++)
 	{
 	  for (i=0;i<psr[p].nobs;i++)
-	    psr[p].obsn[i].sat -= (long double)psr[p].obsn[i].residual/86400.0L;
+	    psr[p].obsn[i].sat -= (longdouble)psr[p].obsn[i].residual/longdouble(86400.0);
 	}
     }
   writeTim("ideal.tim",&psr[0],"tempo2");  
@@ -787,7 +787,7 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
       for (p=0;p<npsr;p++)
 	{
 	  for (i=0;i<psr[p].nobs;i++)
-	    psr[p].obsn[i].sat += (long double)(psr[p].obsn[i].toaErr*1.0e-6*TKgaussDev(idum))/86400.0;
+	    psr[p].obsn[i].sat += (longdouble)(psr[p].obsn[i].toaErr*1.0e-6*TKgaussDev(idum))/86400.0;
 	}
       writeTim("idealPlusWhite.tim",&psr[0],"tempo2");  
     }
@@ -801,7 +801,7 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
   readParfile(psr,parFile,timFile,npsr); /* Load the parameters       */
   
   printf("GW background calculation ...\n");
-  a = (long double)convertGW*pow(86400.0*365.25,alpha);
+  a = (longdouble)convertGW*pow(86400.0*365.25,alpha);
 
   if((gw = (gwSrc *)malloc(sizeof(gwSrc)*ngw))==NULL){
     printf("Unable to allocate memory for gwSrc.\n");
@@ -814,8 +814,8 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
       setupPulsar_GWsim(psr[p].param[param_raj].val[0],
 			psr[p].param[param_decj].val[0],kp[p]);
     }
-  flo = 1.0L/(30*365.25*86400.0L);
-  fhi = 1.0L/(2.0*86400.0L);
+  flo = longdouble(1.0)/(30*365.25*longdouble(86400.0));
+  fhi = longdouble(1.0)/(2.0*longdouble(86400.0));
 
   toffset = psr[0].param[param_pepoch].val[0];
   if (sameBackground==1)
@@ -825,13 +825,13 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
       GWbackground(gw,ngw,idum,flo,fhi,a,alpha,1);
       for (p=0;p<npsr;p++)
 	{
-	  mean=0.0L;
+	  mean=longdouble(0.0);
 	  for (j=0;j<psr[p].nobs;j++)
 	    {
-	      res[j]=0.0L;
+	      res[j]=longdouble(0.0);
 	      for (k=0;k<ngw;k++)
 		res[j]+=calculateResidualGW(kp[p],&gw[k],
-					 (psr[p].obsn[j].sat-toffset)*86400.0L,
+					 (psr[p].obsn[j].sat-toffset)*longdouble(86400.0),
 					    dist[p]);	  
 	      mean+=res[j];
 	    }
@@ -856,17 +856,17 @@ void convert_gravWaveBackground_fit(pulsar *psr,int npsr,double convertGW,long *
 void convert_gravWaveBackground_noFit(pulsar *psr,int npsr,double convertGW,long *idum,int sameBackground)
 {
   int i,j,k,p;
-  long double a;
-  long double alpha = -2.0/3.0,toffset;
+  longdouble a;
+  longdouble alpha = -2.0/3.0,toffset;
   int ngw = 10000;
-  long double kp[MAX_PSR][3];
-  long double flo,fhi;
+  longdouble kp[MAX_PSR][3];
+  longdouble flo,fhi;
   double res,mean;
   double dist[MAX_PSR];
   gwSrc *gw;
 
   printf("GW background calculation ...\n");
-  a = (long double)convertGW; //*pow(86400.0*365.25,alpha);
+  a = (longdouble)convertGW; //*pow(86400.0*365.25,alpha);
 
   if((gw = (gwSrc *)malloc(sizeof(gwSrc)*ngw))==NULL){
     printf("Unable to allocate memory for gwSrc.\n");
@@ -879,8 +879,8 @@ void convert_gravWaveBackground_noFit(pulsar *psr,int npsr,double convertGW,long
       setupPulsar_GWsim(psr[p].param[param_raj].val[0],
 			psr[p].param[param_decj].val[0],kp[p]);
     }
-  flo = 1.0L/(100*365.25*86400.0L);
-  fhi = 2.0L/(86400.0L);
+  flo = longdouble(1.0)/(100*365.25*longdouble(86400.0));
+  fhi = longdouble(2.0)/(longdouble(86400.0));
 
   toffset = psr[0].param[param_pepoch].val[0];
   printf("In here with a = %g %d\n",(double)a,sameBackground);
@@ -895,14 +895,14 @@ void convert_gravWaveBackground_noFit(pulsar *psr,int npsr,double convertGW,long
 	      res=0.0;
 	      for (k=0;k<ngw;k++)
 		res+=calculateResidualGW(kp[p],&gw[k],
-					 (psr[p].obsn[j].sat-toffset)*86400.0L,
-					 dist[p])/86400.0L;	  
+					 (psr[p].obsn[j].sat-toffset)*longdouble(86400.0),
+					 dist[p])/longdouble(86400.0);	  
 	      psr[p].obsn[j].residual = res;
 	      mean+=res;
 	    }
 	}
 
-	      printf("Haveres %Lg %g\n",psr[p].obsn[j].sat,res);
+	      ld_printf("Haveres %Lg %g\n",psr[p].obsn[j].sat,res);
 
     }
 }
@@ -1975,4 +1975,4 @@ void calcSpline(float *px,float *py,int count)
 
 
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

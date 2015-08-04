@@ -64,7 +64,7 @@ double solarWindModel(pulsar psr,int iobs)
   const char *CVS_verNum = "$Revision: 1.11 $";
   int i,j;
   double deg2rad = M_PI/180.0;
-  long double mjd;
+  longdouble mjd;
 
   // Inputs
   
@@ -119,7 +119,7 @@ double solarWindModel(pulsar psr,int iobs)
   else if(psr.eclCoord==0)
     convertEcliptic(psr.param[param_raj].val[0],psr.param[param_decj].val[0],&eclon,&eclat);
 
-  //  printf("%d, %30.20Lf\n",iobs, psr.obsn[iobs].sat);
+  //  ld_printf("%d, %30.20Lf\n",iobs, psr.obsn[iobs].sat);
   mjd=psr.obsn[iobs].sat;
 
   //  convertMJD(mjd,&iyr,&iday,&secs);
@@ -174,7 +174,7 @@ double solarWindModel(pulsar psr,int iobs)
 	}
     }
   DM_sun = integral*5*(M_PI/180)*4.85e-6/sin(elong);
-  printf("Integral = %.5Lg %g %g %d %d %g %g\n",mjd,integral,DM_sun,nSlow,nFast,elong,elong/deg2rad);
+  ld_printf("Integral = %.5Lg %g %g %d %d %g %g\n",mjd,integral,DM_sun,nSlow,nFast,elong,elong/deg2rad);
 
   return(DM_sun);
 }

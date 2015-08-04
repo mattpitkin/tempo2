@@ -220,29 +220,6 @@ long fortran_nlong(longdouble x)
   return(i);
 }
 
-/* print out a long double to a std::string */
-std::string print_longdouble(const longdouble &ld)
-{
-  char buf[1024];
-#ifdef USE_BUILTIN_LONGDOUBLE
-  sprintf(buf, "%Lg", ld);
-#else
-  ld.write(buf);
-#endif
-  return std::string(buf);
-
-}
-
-longdouble parse_longdouble(const char *str)
-{
-  longdouble ld;
-#ifdef USE_BUILTIN_LONGDOUBLE
-  sscanf(str, "%Lf", &ld);
-#else
-  ld = str;
-#endif
-  return ld;
-}
 
 /* Rotates the vector x(0,1,2) from equatorial coordinates to ecliptic coordinates 
  * i.e. rotate about "x" axis by angle epsilon 
@@ -259,7 +236,8 @@ void equ2ecl(double *x)
 {
   longdouble tmpy,tmpz;
   longdouble ce,se;
-  longdouble arcsec2rad = 1.0/60.0/60.0*M_PI/180.0;
+  //longdouble arcsec2rad = 1.0/60.0/60.0*LD_PI/180.0;
+  longdouble arcsec2rad = longdouble(1.0)*LD_PI/longdouble(648000.0);
 
   /*  ce = 0.91748213149438;
       se = 0.39777699580108;  */
@@ -274,14 +252,6 @@ void equ2ecl(double *x)
   x[1] = ce*tmpy+se*tmpz;
   x[2] = -se*tmpy+ce*tmpz;
 }
-
-/* Long double support routines */
-#ifndef USE_BUILTIN_LONGDOUBLE
-dd_real pow(const dd_real &a, const dd_real &b)
-{ return exp(b*log(a)); }
-// operator float(const dd_real &a) 
-// {return (float)(double)a;}
-#endif
 
 /* Function to copy one pulsar to another */
 void copyPSR(pulsar *p,int p1,int p2)
@@ -352,7 +322,7 @@ void copyParam(parameter p1,parameter *p2)
 /* type = 1 for warning, = 2 for error            */
 /* key = e.g. CLK1                                */
 
-void displayMsg(int type,char *key,char *searchStr,char *variableStr,int noWarnings)
+void displayMsg(int type,const char *key,const char *searchStr,const char *variableStr,int noWarnings)
 {
   static char msg[MAX_MSG][1000];
   static char keyRec[MAX_MSG][10];
@@ -436,7 +406,7 @@ longdouble getParameterValue(pulsar *psr,int param,int arr)
 	{
 	  if (psr->param[param].linkTo[0] == param_stig)
 	    {
-	      long double stig = psr->param[param_stig].val[0];
+	      longdouble stig = psr->param[param_stig].val[0];
 	      //	      printf("kin = %g\n",(double)((2.0*stig)/(1+stig*stig)));
 	      return asin((2.0*stig)/(1+stig*stig))*180.0/M_PI;
 	    }
@@ -459,3 +429,7 @@ longdouble getParameterValue(pulsar *psr,int param,int arr)
     }
   return psr->param[param].val[arr];
 }
+
+
+
+

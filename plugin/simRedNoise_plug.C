@@ -56,7 +56,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
-  double globalParameter;
+  double globalParameter=0;
   double amp=0,alpha=0,fc = 0;
   int removeQuad=0;
 
@@ -115,7 +115,7 @@ void doPlugin(pulsar *psr,int npsr,double amp,double alpha,double fc,int removeQ
 {
   int i,p,j;
   int nit=2;
-  long double sat0[MAX_OBSN];
+  longdouble sat0[MAX_OBSN];
   long seed = TKsetSeed();
   char fname[100];
   int addToaError=1;
@@ -130,7 +130,7 @@ void doPlugin(pulsar *psr,int npsr,double amp,double alpha,double fc,int removeQ
   int iclosest;
   double minx;
 
-  printf("Seed = %d\n",origSeed);
+  printf("Seed = %ld\n",origSeed);
 
   // Form idealised site arrival times
   for (j=0;j<nit;j++)
@@ -138,7 +138,7 @@ void doPlugin(pulsar *psr,int npsr,double amp,double alpha,double fc,int removeQ
       for (p=0;p<npsr;p++)
 	{
 	  for (i=0;i<psr[p].nobs;i++)
-	    psr[p].obsn[i].sat -= (long double)psr[p].obsn[i].residual/SECDAY;
+	    psr[p].obsn[i].sat -= (longdouble)psr[p].obsn[i].residual/SECDAY;
 	}
       formBatsAll(psr,npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,npsr,1);     /* Form the residuals                 */
@@ -247,4 +247,4 @@ void getRedNoiseRealisation(pulsar psr,double amp,double alpha,double fc,long *s
     }
 
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
