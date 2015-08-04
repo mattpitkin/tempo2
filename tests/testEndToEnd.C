@@ -11,8 +11,8 @@ TEST(testEndToEnd,checkIdeal){
     int npsr=1;
     initialise(psr,0); /* Initialise all */
 
-    strcpy(parFile[0],"test3.par");
-    strcpy(timFile[0],"test3.tim");
+    strcpy(parFile[0],DATDIR "/test3.par");
+    strcpy(timFile[0],DATDIR "/test3.tim");
 
     readParfile(psr,parFile,timFile,npsr);
     readTimfile(psr,timFile,npsr);
@@ -22,7 +22,7 @@ TEST(testEndToEnd,checkIdeal){
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
     for(int iobs = 0; iobs < psr->nobs; iobs++){
-        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),1e-10l) << "test3.par test3.tim do not give idealised ToAs";
+        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),1e-10l) << DATDIR "/test3.par test3.tim do not give idealised ToAs";
     }
 
     doFitAll(psr,npsr,"NULL");
@@ -46,8 +46,8 @@ TEST(testEndToEnd,checkFit){
     int npsr=1;
     initialise(psr,0); /* Initialise all */
 
-    strcpy(parFile[0],"test3b.par");
-    strcpy(timFile[0],"test3.tim");
+    strcpy(parFile[0],DATDIR "/test3b.par");
+    strcpy(timFile[0],DATDIR "/test3.tim");
 
     readParfile(psr,parFile,timFile,npsr);
     readTimfile(psr,timFile,npsr);
