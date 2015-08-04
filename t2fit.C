@@ -493,7 +493,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                         // fitwaves has many parameters to fit.
                         N=2;
                         if (psr->waveScale == 2)N=4;
-                        for (unsigned i = 0; i < psr->nWhite*N; ++i){
+                        for (unsigned i = 0; i < static_cast<unsigned>(psr->nWhite*N); ++i){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fitwaves;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fitwaves;
                             OUT.paramCounters[OUT.nParams]=i;
@@ -503,7 +503,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                         break;
                     case param_wave_dm:
                         // fitwaves has many parameters to fit.
-                        for (unsigned i = 0; i < psr->nWhite_dm*2; ++i){
+                        for (unsigned i = 0; i < static_cast<unsigned>(psr->nWhite_dm*2); ++i){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fitwaves;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fitwaves;
                             OUT.paramCounters[OUT.nParams]=i;

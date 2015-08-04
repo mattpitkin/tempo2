@@ -36,6 +36,7 @@
 #include <dlfcn.h>
 #include "tempo2.h"
 #include "TKfit.h"
+#include "t2fit.h"
 #include "TKsvd.h"
 #include "T2accel.h"
 void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
@@ -103,11 +104,21 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 		doFitAll(psr,npsr,covarFuncFile);
 	}
 }
-
+void doFitOLD(pulsar *psr,int npsr, char *covarFuncFile);
 /**
  * Master fitting routine with or without cholesky, global or not.
  */
 void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
+    if (NEWFIT)
+        t2Fit(psr,npsr,covarFuncFile);
+    else
+        doFitOLD(psr,npsr,covarFuncFile);
+}
+
+/**
+ * Master fitting routine with or without cholesky, global or not.
+ */
+void doFitOLD(pulsar *psr,int npsr, char *covarFuncFile) {
 	int i,j;
 	int p,okay;
 	int nobs_noconstrain=0;
