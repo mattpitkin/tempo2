@@ -51,7 +51,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   char covarFuncFile[128];
   int i, j;
-  double globalParameter;
+  double globalParameter=0;
   const char *CVS_verNum = "$Revision: 1.1 $";
   FILE *fout;
 

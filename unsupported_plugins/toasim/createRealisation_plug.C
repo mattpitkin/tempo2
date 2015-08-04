@@ -76,7 +76,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-pertf")==0)
         {
 	   strcpy(fname_pertf,argv[++i]);
-	   if(file = fopen(fname_pertf,"r")){
+	   if((file = fopen(fname_pertf,"r"))){
 		while(!feof(file)){
 			fscanf(file,"%s %d\n",fname[ncorr],ireal+ncorr);
 			ncorr++;
@@ -141,4 +141,4 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

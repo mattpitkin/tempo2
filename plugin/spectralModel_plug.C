@@ -46,13 +46,13 @@ double G_OMEGA;
 void plot6(double *cholSpecX,double *cholSpecY,int nCholSpec,double *cholWspecX,
 	   double *cholWspecY,int nCholWspec,double *highFreqSpecX,
 	   double *highFreqSpecY,int nHighFreqSpec,int makeps);
-void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file,int fc_auto,int nfit_auto,int exp_auto,int useBeta);
+void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,const char* dcf_file,int fc_auto,int nfit_auto,int exp_auto,int useBeta);
 int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese,int *ip);
 void fitSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *smoothModel,double *highFreqRes,double *hfNormCovar,int *hfNormCovarNpts,double hfZerolagNormCovar);
 void removeMean(double *resx,double *resy,int n);
-void fileOutput3(char *fname,double *x,double *y,double *z,int n);
-void fileOutput2(char *fname,double *x,double *y,int n);
+void fileOutput3(const char *fname,double *x,double *y,double *z,int n);
+void fileOutput2(const char *fname,double *x,double *y,int n);
 void findSmoothCurve(double *resx,double *resy,double *rese,
 		     int nres,double *cubicVal,double *smoothModel,double expSmooth);
 void getHighFreqRes(double *resy,double *smoothModel,int nres,double *highFreqRes);
@@ -103,7 +103,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char dcf_file[MAX_FILELEN];
   char covarFuncFile[MAX_FILELEN];
   int i;
-  double globalParameter;
+  double globalParameter=0;
   double idt=0;
   double ifc=-1;
   double iexp=0;
@@ -226,7 +226,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0; 
 } 
 
-void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,char* dcf_file,int fc_auto,int nfit_auto,int exp_auto,int useBeta)
+void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int makeps,double amp,const char* dcf_file,int fc_auto,int nfit_auto,int exp_auto,int useBeta)
 {
   int i,j;
 
@@ -655,7 +655,7 @@ void removeMean(double *resx,double *resy,int n)
     }
 }
 
-void fileOutput3(char *fname,double *x,double *y,double *z,int n)
+void fileOutput3(const char *fname,double *x,double *y,double *z,int n)
 {
   FILE *fout;
   int i;
@@ -669,7 +669,7 @@ void fileOutput3(char *fname,double *x,double *y,double *z,int n)
   fclose(fout);
 }
 
-void fileOutput2(char *fname,double *x,double *y,int n)
+void fileOutput2(const char *fname,double *x,double *y,int n)
 {
   FILE *fout;
   int i;

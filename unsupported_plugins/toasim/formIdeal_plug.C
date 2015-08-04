@@ -164,4 +164,4 @@ void copyObservation(observation *obs2,observation *obs1)
   obs2->equad = obs1->equad;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

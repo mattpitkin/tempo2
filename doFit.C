@@ -95,7 +95,7 @@ void doFit(pulsar *psr,int npsr,int writeModel)
 
 
 // Backwards compatibility
-void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeModel) {
+void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) {
 	logmsg("Deprecated call to doFitDCM() -> better to use doFitAll()");
 	if (strcmp(dcmFile,"NULL")){
 		doFitAll(psr,npsr,dcmFile);
@@ -107,7 +107,7 @@ void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeMo
 /**
  * Master fitting routine with or without cholesky, global or not.
  */
-void doFitAll(pulsar *psr,int npsr, char *covarFuncFile) {
+void doFitAll(pulsar *psr,int npsr, const char *covarFuncFile) {
 	int i,j;
 	int p,okay;
 	int nobs_noconstrain=0;

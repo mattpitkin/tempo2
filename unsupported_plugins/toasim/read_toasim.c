@@ -57,7 +57,7 @@ int main(int argc, char** argv){
 	printf("parfile             : %s\n",header->parfile_name);
 	printf("invocation          : %s\n",header->invocation);
 	printf("description         : %s\n",header->short_desc);
-	printf("seed                : %d\n",header->seed);
+	printf("seed                : %lld\n",header->seed);
 	printf("ntoa                : %d\n",header->ntoa);
 	printf("nrealisations       : %d\n",header->nrealisations);
 	printf("========================\n");
@@ -75,7 +75,7 @@ int main(int argc, char** argv){
 		   for(j=0;j<header->ntoa; j++){
 			fprintf(dump,"%d %lg\n",i,read_corr->offsets[j]);
 		   }
-		fprintf(dump,"\n",read_corr->offsets[j]);
+		fprintf(dump,"%lg\n",read_corr->offsets[j]);
 		}
 		if (read_corr == NULL){
 			printf("Failed to parse corrections %d\n",i);
