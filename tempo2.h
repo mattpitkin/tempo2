@@ -29,8 +29,8 @@
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
-#define TEMPO2_h_VER "$Revision: 1.112 $"
-#define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
+#define TEMPO2_h_VER "$ID$"
+#define TSUN longdouble(4.925490947e-6) // Solar constant for mass calculations.
 #define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
 #define MAX_PSR_VAL          40    /* Maximum number of pulsars                        */             

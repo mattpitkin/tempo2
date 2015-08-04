@@ -11,7 +11,7 @@ TESTS=$(test_programs)
 
 CPPFLAGS=-Igtest-1.7.0/include -Igtest-1.7.0
 
-libgtest_la_SOURCES=gtest-1.7.0/src/gtest-all.cc
+libgtest_la_SOURCES=gtest-1.7.0/src/gtest-all.cc gtest-1.7.0/include/gtest/gtest.h
 
 LDADD=libgtest.la ../libtempo2.la
 
