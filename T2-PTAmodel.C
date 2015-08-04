@@ -39,7 +39,7 @@ longdouble computeU(longdouble phase,longdouble e);
 
 double T2_PTAmodel(pulsar *psr,int p,int ipos,int param,int arr)
 {
-  const char *CVS_verNum = "$Revision: 1.1 $";
+  const char *CVS_verNum = "$Id$";
   longdouble SUNMASS = 4.925490947e-6;
   longdouble T0,tbbat,dt;
   longdouble e,e0,edot;

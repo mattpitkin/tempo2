@@ -39,7 +39,7 @@ void secularMotion(pulsar *psr,int npsr)
   longdouble t0;
   longdouble kpc2m = 3.08568025e19L;           /* 1 kpc in m        */
   longdouble mas_yr2rad_s = 1.536281850e-16L;  /* 1 mas/yr in rad/s */
-  const char *CVS_verNum = "$Revision: 1.5 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("secularMotion.C","secularMotion()",CVS_verNum);
 

@@ -51,7 +51,7 @@ double ut1red(double mjd,int warnings);
 void tai2ut1(pulsar *psr,int npsr)
 {
   int p,i;
-  const char *CVS_verNum = "$Revision: 1.6 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("tai2ut1.C","tai2ut1()",CVS_verNum);
 

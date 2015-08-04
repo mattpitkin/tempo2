@@ -50,7 +50,7 @@ double DDSmodel(pulsar *psr,int p,int ipos,int param)
   double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
   double csigma,ce,cx,comega,cgamma,cdth,cm2,csi=0.0;
   double shapmax,cshapmax,sdds;
-  const char *CVS_verNum = "$Revision: 1.5 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("DDSmodel.C","DDSmodel()",CVS_verNum);
 

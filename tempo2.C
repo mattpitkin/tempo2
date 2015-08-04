@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
   FILE *alias;
   char **commandLine;
   clock_t startClock,endClock;
-  const char *CVS_verNum = "$Revision: 1.36 $";
+  const char *CVS_verNum = "$Id$";
 
   polyco_file[0] = '\0';
 

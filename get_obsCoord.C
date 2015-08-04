@@ -65,7 +65,7 @@ get_obsCoord_IAU2000B(double observatory_trs[3],
   double ut1_jd1, ut1_jd2;
   double sprime=0.0;
   double one_on_c = 1.0/SPEED_LIGHT;
-  const char *CVS_verNum = "$Revision: 1.12 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("get_obsCoord.C","get_obsCoord_IAU2000B()",CVS_verNum);
 
@@ -133,7 +133,7 @@ void get_obsCoord(pulsar *psr,int npsr)
   double erad,hlt,alng,hrd,tsid,sdd,speed,sitera;
   int p;
   observatory *obs;
-  const char *CVS_verNum = "$Revision: 1.12 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("get_obsCoord.C","get_obsCoord()",CVS_verNum);
 

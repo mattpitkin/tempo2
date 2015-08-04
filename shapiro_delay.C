@@ -39,7 +39,7 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 {
   double delay,ctheta,r,rsa[3],pospos;
   int j,k;
-  const char *CVS_verNum = "$Revision: 1.9 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("shapiro_delay.C","shapiro_delay()",CVS_verNum);
   

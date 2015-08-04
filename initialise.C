@@ -38,7 +38,7 @@
 void initialise(pulsar *psr,int noWarnings)
 {
   int p;
-  const char *CVS_verNum = "$Revision: 1.59 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("initialise.C","initialise()",CVS_verNum);
 

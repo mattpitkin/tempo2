@@ -53,7 +53,7 @@
 void tai2tt(pulsar *psr,int npsr)
 {
   int i,p;
-  const char *CVS_verNum = "$Revision: 1.5 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("tai2tt.C","tai2tt()",CVS_verNum);
 

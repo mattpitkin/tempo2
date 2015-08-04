@@ -58,7 +58,7 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
   int p,i;
   int jumpVal=0;
   FILE *fin;
-  const char *CVS_verNum = "$Revision: 1.29 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("readTimfile.C","readTimfile()",CVS_verNum);
 
