@@ -42,7 +42,7 @@ void calculate_bclt(pulsar *psr,int npsr)
   double rr,pxConv;
   double rca[3];
   int loop;
-  const char *CVS_verNum = "$Revision: 1.14 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("calculate_bclt.C","calculate_bclt()",CVS_verNum);
 

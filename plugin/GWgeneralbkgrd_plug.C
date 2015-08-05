@@ -110,7 +110,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   gwgenSpec gwAmps;
   longdouble timeOffset;
   longdouble ra_p,dec_p;
-  longdouble flo=0.0,fhi=0.0;
+  double flo=0.0,fhi=0.0;
   longdouble kp[3];            /* Vector pointing to pulsar           */
   longdouble tspan;
   longdouble time;
@@ -177,8 +177,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-dist")==0) // Distance in kpc
 	{
-	  sscanf(argv[++i],"%Lf",&dist[distNum]);
-	  dist[distNum]*=3.086e19;
+      dist[distNum] = parse_longdouble(argv[++i]);
+	  dist[distNum]*=longdouble(3.086e19);
 	  distNum++;
 	}
       else if (strcmp(argv[i],"-gwampTT")==0)
@@ -202,7 +202,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-plot")==0)
 	plotIt=1;
       else if (strcmp(argv[i],"-flo")==0)
-	sscanf(argv[++i],"%Lf",&flo);
+	sscanf(argv[++i],"%lf",&flo);
       else if (strcmp(argv[i],"-writebkgrd")==0) {
         writebkgrd=1;
         strcpy(bkgrdFile,argv[i+1]);
@@ -211,9 +211,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-zero")==0)
 	zeroResiduals=1;
       else if (strcmp(argv[i],"-fhi")==0)
-	sscanf(argv[++i],"%Lf",&fhi);
+	sscanf(argv[++i],"%lf",&fhi);
       else if (strcmp(argv[i],"-seed")==0)
-	sscanf(argv[++i],"%d",&seed);
+	sscanf(argv[++i],"%ld",&seed);
       else if (strcmp(argv[i],"-linear")==0)
 	logspacing=0;
     }

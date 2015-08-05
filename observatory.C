@@ -68,7 +68,7 @@ readObservatoryFile(char *fname)
   char line[1024];
   observatory newObs;
   int nread, iline=0;
-  const char *CVS_verNum = "$Revision: 1.9 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("observatory.C","observatory()",CVS_verNum);
 

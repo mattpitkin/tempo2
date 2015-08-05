@@ -41,8 +41,8 @@ typedef struct toasim_corrections {
 } toasim_corrections_t;
 
 FILE *toasim_write_header(toasim_header_t *toasim_header, char* filename);
-void *toasim_write_corrections(toasim_corrections_t* corr, toasim_header_t* header, FILE* file);
-void *toasim_write_corrections_array(double* offsets,double a0, double a1, double a2, char* param, toasim_header_t* header, FILE* file);
+void toasim_write_corrections(toasim_corrections_t* corr, toasim_header_t* header, FILE* file);
+void toasim_write_corrections_array(double* offsets,double a0, double a1, double a2, char* param, toasim_header_t* header, FILE* file);
 void toasim_free_corrections(toasim_corrections_t* corr);
 
 

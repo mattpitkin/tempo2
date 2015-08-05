@@ -64,7 +64,7 @@ void utc2tai(pulsar *psr,int npsr)
   /*  double a1utcf; */
   FILE *fin;
   char fname[MAX_FILELEN];
-  const char *CVS_verNum = "$Revision: 1.5 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("utc2tai.C","utc2tai()",CVS_verNum);
   

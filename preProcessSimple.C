@@ -32,7 +32,7 @@
 
 void preProcessSimple (pulsar *psr)
 {
-  const char *CVS_verNum = "$Revision: 1.9 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("preProcessSimple.C","preProcessSimple()",CVS_verNum);
 

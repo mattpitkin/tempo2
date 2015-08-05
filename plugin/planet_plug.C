@@ -51,8 +51,8 @@ int obtainTimingResiduals(pulsar *psr,double *resx,double *resy,double *rese,int
 void fitSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 void plot1(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *smoothModel,double *highFreqRes,double *hfNormCovar,int *hfNormCovarNpts,double hfZerolagNormCovar);
 void removeMean(double *resx,double *resy,int n);
-void fileOutput3(char *fname,double *x,double *y,double *z,int n);
-void fileOutput2(char *fname,double *x,double *y,int n);
+void fileOutput3(const char *fname,double *x,double *y,double *z,int n);
+void fileOutput2(const char *fname,double *x,double *y,int n);
 void findSmoothCurve(double *resx,double *resy,double *rese,
 		     int nres,double *cubicVal,double *smoothModel,double expSmooth);
 void getHighFreqRes(double *resy,double *smoothModel,int nres,double *highFreqRes);
@@ -190,7 +190,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char dcf_file[MAX_FILELEN];
   char covarFuncFile[MAX_FILELEN];
   int i;
-  double globalParameter;
+  double globalParameter=0;
   double idt=0;
   double ifc=-1;
   double iexp=0;
@@ -827,7 +827,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
 	  detfile = fopen("det_spec.dat", "a");
       
-	  fprintf(detfile,"%.3Le %.3le %.3le %.3e\n",  x , mass, cholSpecX[ispec], fdet);
+	  ld_fprintf(detfile,"%.3Le %.3le %.3le %.3e\n",  x , mass, cholSpecX[ispec], fdet);
 	  fclose(detfile);
 
 
@@ -919,7 +919,7 @@ void removeMean(double *resx,double *resy,int n)
     }
 }
 
-void fileOutput3(char *fname,double *x,double *y,double *z,int n)
+void fileOutput3(const char *fname,double *x,double *y,double *z,int n)
 {
   FILE *fout;
   int i;
@@ -933,7 +933,7 @@ void fileOutput3(char *fname,double *x,double *y,double *z,int n)
   fclose(fout);
 }
 
-void fileOutput2(char *fname,double *x,double *y,int n)
+void fileOutput2(const char *fname,double *x,double *y,int n)
 {
   FILE *fout;
   int i;

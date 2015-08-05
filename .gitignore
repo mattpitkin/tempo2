@@ -27,11 +27,11 @@ T2runtime/plugins
 *..t2
 .*.swp
 getPeriod
-tests/test-suite.log
 tests/testTempo2
-tests/testTempo2.log
-tests/testTempo2.trs
 tests/testTKfit
-tests/testTKfit.log
-tests/testTKfit.trs
+tests/*.log
+tests/*.trs
 TKlongdouble.h
+testEndToEnd
+tempo2-20*/
+tempo2-20*.tar.gz

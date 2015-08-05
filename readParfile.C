@@ -1757,7 +1757,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
    char str[1000];
    parameter elong,elat;	
    int noread=0,endit;
-   const char *CVS_verNum = "$Revision: 1.90 $";
+   const char *CVS_verNum = "$Id$";
 
    if (displayCVSversion == 1) CVSdisplayVersion((char *)"readParfile.C",(char *)"readParfile()",CVS_verNum);
 

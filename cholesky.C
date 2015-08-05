@@ -26,7 +26,7 @@
  * nc		(int)			Number of constraints in fit
  * ip		(int)			Mapping from fit point to observation number in pulsar struct.
  */
-void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
+void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
    FILE* modelDescriptionFile;
    char modelFileName[1024];
    char tmp[1024];
@@ -142,7 +142,7 @@ void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,dou
 }
 
 
-void cholesky_readT2CholModel_R(double **m, double **mm, char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr,char *_psrJ,double _mjd_start,double _mjd_end,int recursion){
+void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr,char *_psrJ,double _mjd_start,double _mjd_end,int recursion){
    int flag;
    char val[LINE_LENGTH];
    char dmy[LINE_LENGTH];
@@ -258,7 +258,7 @@ void cholesky_readT2CholModel_R(double **m, double **mm, char* fname,double *res
 
 }
 
-void cholesky_readFromCovarianceFunction(double **m, char* fname,double *resx,double *resy,double *rese,int np, int nc){
+void cholesky_readFromCovarianceFunction(double **m, const char* fname,double *resx,double *resy,double *rese,int np, int nc){
    int ndays = ceil((resx[np-1-nc]-resx[0])+1e-10);
    double covarFunc[ndays+1];
    double escaleFactor = 1.0;
@@ -517,7 +517,7 @@ void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *r
 
 
 
-void cholesky_readT2CholModel(double **m, char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
+void cholesky_readT2CholModel(double **m, const char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
    char psrJ[LINE_LENGTH];
    int i,j;
    psrJ[0]='\0';

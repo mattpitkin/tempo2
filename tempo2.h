@@ -29,8 +29,8 @@
 #include <stdio.h>
 #include <time.h>
 #define __Tempo2_h
-#define TEMPO2_h_VER "$Revision: 1.112 $"
-#define TSUN (4.925490947e-6L) // Solar constant for mass calculations.
+#define TEMPO2_h_VER "$Id$"
+#define TSUN longdouble(4.925490947e-6) // Solar constant for mass calculations.
 #define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
 #define MAX_PSR_VAL          40    /* Maximum number of pulsars                        */             
@@ -729,11 +729,11 @@ void formBatsAll(pulsar *psr,int npsr);
 void updateBatsAll(pulsar *psr,int npsr);
 void formResiduals(pulsar *psr,int npsr,int removeMean);
 int  bootstrap(pulsar *psr,int p,int npsr);
-void doFitAll(pulsar *psr,int npsr,char *covarFuncFile);
+void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile);
 void doFit(pulsar *psr,int npsr,int writeModel);
-void doFitDCM(pulsar *psr,char *dcmFile,char *covarFuncFile,int npsr,int writeModel);
+void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel);
 void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel); 
-void getCholeskyMatrix(double **uinv, char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
+void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
 void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname);
 void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);

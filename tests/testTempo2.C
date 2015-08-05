@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 #include <src/gtest_main.cc>
 #include "tempo2.h"
+#ifndef DATDIR
+#define DATDIR .
+#endif
 
 #ifdef LONGDOUBLE_IS_FLOAT128
 #include <quadmath.h>
@@ -30,6 +33,13 @@ TEST(testLongDouble, printAndParse){
 
     longdouble ld2 = parse_longdouble(sb);
     ASSERT_EQ(ld,ld2);
+
+    unsigned uu = 2147483649;
+    long long int ll = 2147483649L;
+    long long int ll2 = 17179869185L;
+
+    ld_sprintf(sb,"%% %d %.1f %u %.1lf %lld %lld %s %.1Lf %% %c",-1,0.1,uu,0.1,ll,ll2,"t",ld,'x');
+    ASSERT_STREQ("% -1 0.1 2147483649 0.1 2147483649 17179869185 t 50000.1 % x",sb);
 }
 
 TEST(testFormResiduals, basicBATs){
@@ -40,8 +50,8 @@ TEST(testFormResiduals, basicBATs){
     int npsr=1;
     initialise(psr,0); /* Initialise all */
 
-    strcpy(parFile[0],"test1.par");
-    strcpy(timFile[0],"test1.tim");
+    strcpy(parFile[0],DATDIR "/test1.par");
+    strcpy(timFile[0],DATDIR "/test1.tim");
 
     readParfile(psr,parFile,timFile,npsr);
     readTimfile(psr,timFile,npsr);
@@ -63,8 +73,8 @@ TEST(testFormResiduals, subtractBATs){
     int npsr=1;
     initialise(psr,0); /* Initialise all */
 
-    strcpy(parFile[0],"test1.par");
-    strcpy(timFile[0],"test1.tim");
+    strcpy(parFile[0],DATDIR "/test1.par");
+    strcpy(timFile[0],DATDIR "/test1.tim");
 
     readParfile(psr,parFile,timFile,npsr);
     readTimfile(psr,timFile,npsr);
@@ -107,8 +117,8 @@ TEST(testFormResiduals, subtractSATs){
     int npsr=1;
     initialise(psr,0); /* Initialise all */
 
-    strcpy(parFile[0],"test1.par");
-    strcpy(timFile[0],"test2.tim");
+    strcpy(parFile[0],DATDIR "/test1.par");
+    strcpy(timFile[0],DATDIR "/test2.tim");
 
     readParfile(psr,parFile,timFile,npsr);
     readTimfile(psr,timFile,npsr);
@@ -144,8 +154,8 @@ TEST(testFormBats, offsetSATs){
     int npsr=1;
     initialise(psr,0); /* Initialise all */
 
-    strcpy(parFile[0],"test1.par");
-    strcpy(timFile[0],"test2.tim");
+    strcpy(parFile[0],DATDIR "/test1.par");
+    strcpy(timFile[0],DATDIR "/test2.tim");
 
     readParfile(psr,parFile,timFile,npsr);
     readTimfile(psr,timFile,npsr);

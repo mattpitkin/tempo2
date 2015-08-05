@@ -292,7 +292,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                 fprintf(stderr, "Option -mjdref requires an argument\n");
                 exit(5);
             }
-            sscanf(argv[i],"%Lf",&mjd_ref);
+            mjd_ref=parse_longdouble(argv[i]);
             mjd_ref_set = 1;
         }   
         else if (strcmp(argv[i],"-h")==0)

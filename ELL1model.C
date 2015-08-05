@@ -64,7 +64,7 @@ double ELL1model(pulsar *psr,int p,int ipos,int param)
   double d2bar,torb,Csigma,Cx,Ceps1,Ceps2,Cm2,Csi,ct,t0asc,pbdot,xpbdot,x,xdot,am2;
   int norbits;
   double SUNMASS = 4.925490947e-6;
-  const char *CVS_verNum = "$Revision: 1.6 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("ELL1model.C","ELL1model()",CVS_verNum);
 

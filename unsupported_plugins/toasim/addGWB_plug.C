@@ -38,7 +38,7 @@
 
 using namespace std;
 
-long double getTspan(pulsar *psr,int npsr);
+longdouble getTspan(pulsar *psr,int npsr);
 
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
@@ -47,22 +47,22 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int i,nit,j,p,k;
   char fname[MAX_FILELEN];
   double globalParameter;
-  long double result;
+  longdouble result;
   long seed = TKsetSeed();
   // For the simulation
   gwSrc *gw;
-  long double timeOffset; 
-  long double scale;
-  long double alpha = -2.0/3.0;
-  long double gwAmp = 1e-14;
-  long double ra_p,dec_p;
-  long double flo=0.0,fhi=0.0;
-  long double kp[3];            /* Vector pointing to pulsar           */
-  long double tspan;
-  long double time;
-  long double gwRes[MAX_OBSN];
-  long double dist[MAX_PSR];
-  long double mean;
+  longdouble timeOffset; 
+  longdouble scale;
+  longdouble alpha = -2.0/3.0;
+  longdouble gwAmp = 1e-14;
+  longdouble ra_p,dec_p;
+  double flo=0.0,fhi=0.0;
+  longdouble kp[3];            /* Vector pointing to pulsar           */
+  longdouble tspan;
+  longdouble time;
+  longdouble gwRes[MAX_OBSN];
+  longdouble dist[MAX_PSR];
+  longdouble mean;
   int distNum=0;
   int logspacing=1;
   int ngw=1000;
@@ -87,8 +87,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   toasim_corrections_t* corr = (toasim_corrections_t*)malloc(sizeof(toasim_corrections_t));
 
   corr->offsets=offsets;
-  corr->params=""; // Normally leave as NULL. Can store this along with each realisation. 
-                   // Same length string in every iteration - defined in r_param_length see below
   corr->a0=0; // constant
   corr->a1=0; // a1*x
   corr->a2=0; // a2*x*X
@@ -115,29 +113,29 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-dist")==0) // Distance in kpc
 	{
-	  sscanf(argv[++i],"%Lf",&dist[distNum]);
-	  dist[distNum]*=3.086e19;
+      dist[distNum]=parse_longdouble(argv[++i]);
+	  dist[distNum]*=longdouble(3.086e19);
 	  distNum++;
 	}
       else if (strcmp(argv[i],"-gwamp")==0)
-	{sscanf(argv[++i],"%Lf",&gwAmp);}
+	{gwAmp=parse_longdouble(argv[++i]);}
       else if (strcmp(argv[i],"-alpha")==0)
-	{sscanf(argv[++i],"%Lf",&alpha);}
+	{alpha=parse_longdouble(argv[++i]);}
       else if (strcmp(argv[i],"-ngw")==0)
 	{sscanf(argv[++i],"%d",&ngw);}
       else if (strcmp(argv[i],"-flo")==0)
-	sscanf(argv[++i],"%Lf",&flo);
+	sscanf(argv[++i],"%lf",&flo);
       else if (strcmp(argv[i],"-fhi")==0)
-	sscanf(argv[++i],"%Lf",&fhi);
+	sscanf(argv[++i],"%lf",&fhi);
       else if (strcmp(argv[i],"-seed")==0)
-	sscanf(argv[++i],"%d",&seed);
+	sscanf(argv[++i],"%ld",&seed);
       else if (strcmp(argv[i],"-readGW")==0){
-	sscanf(argv[++i],"%s",&gwFileName);
+	sscanf(argv[++i],"%s",gwFileName);
 	readGW=1;
       } else if (strcmp(argv[i],"-outf")==0){
-	      sscanf(argv[++i],"%s",&fname);
+	      sscanf(argv[++i],"%s",fname);
       } else if (strcmp(argv[i],"-writeGW")==0){
-	sscanf(argv[++i],"%s",&gwFileName);
+	sscanf(argv[++i],"%s",gwFileName);
 	writeGW=1;
       }
 
@@ -175,12 +173,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (flo==0)
     {
       flo=0.01/tspan;
-      printf("flo = %.5Lg\n",flo);
+      printf("flo = %.5lg\n",flo);
     }
   if (fhi==0)
     {
-      fhi = 1.0/(long double)SECDAY;
-      printf("fhi = %.5Lg\n",fhi);
+      fhi = 1.0/(longdouble)SECDAY;
+      printf("fhi = %.5lg\n",fhi);
     }
 //  timeOffset = psr[0].param[param_pepoch].val[0];
     timeOffset=56000; // this needs to be the same for all pulsars!
@@ -196,11 +194,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       strcpy(header->short_desc,"addGWB");
       strcpy(header->invocation,argv[0]);
       strcpy(header->timfile_name,timFile[p]);
-      header->idealised_toas="NA"; // What should this be
-      header->gparam_desc=""; // Global parameters
-      header->gparam_vals="";
-      header->rparam_desc=""; // Desciprtion of the parameters
-      header->rparam_len=0; // Size of the string
       header->seed = seed;
 
       header->ntoa = psr[p].nobs;
@@ -260,9 +253,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 }
 
 
-long double getTspan(pulsar *psr,int npsr)
+longdouble getTspan(pulsar *psr,int npsr)
 {
-  long double first,last;
+  longdouble first,last;
   int i,p;
     
   
@@ -282,4 +275,4 @@ long double getTspan(pulsar *psr,int npsr)
 
   return last-first;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

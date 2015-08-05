@@ -54,7 +54,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char compare2[128]="null";
   int i;
   int autoRun=0;
-  double globalParameter;
+  double globalParameter=0;
   double maxDiff = 120; // Number of seconds corresponding to overlap
   const char *CVS_verNum = "$Revision: 1.5 $";
 

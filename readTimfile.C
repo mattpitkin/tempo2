@@ -58,7 +58,7 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
   int p,i;
   int jumpVal=0;
   FILE *fin;
-  const char *CVS_verNum = "$Revision: 1.29 $";
+  const char *CVS_verNum = "$Id$";
 
   if (displayCVSversion == 1) CVSdisplayVersion("readTimfile.C","readTimfile()",CVS_verNum);
 
@@ -728,9 +728,7 @@ void writeTim(const char *timname,pulsar *psr,const char *fileFormat)
 	  interim_error = psr->obsn[i].origErr/current_efac;
 	  interim_error = sqrt(pow(interim_error,2.0)-(pow(current_equad,2.0)));
 
-	  ld_printf("Writing out: %.15Lg %.15Lg\n",oldsat,psr->obsn[i].sat);
-	  ld_fprintf(fout," %s %.8f %.17Lf %.5f %s ", name,psr->obsn[i].freq,
-		  // psr->obsn[i].sat, (psr->obsn[i].toaErr/current_efac),psr->obsn[i].telID);
+	  ld_fprintf(fout," %s %.8lf %.17Lf %.5lf %s ", name,psr->obsn[i].freq,
 		  oldsat, interim_error,psr->obsn[i].telID);
 	  if(interim_error<longdouble(0.0)){
 	    printf("ERROR - TOAerror < 0!!\n");

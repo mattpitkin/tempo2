@@ -12,7 +12,7 @@ void sla_CALDJ(int IY, int IM, int ID, double *DJM, int *J);
 void sla_CLDJ (int IY, int IM, int ID, double *DJM, int *J);
 void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat );
 void slaCalyd ( int iy, int im, int id, int *ny, int *nd, int *j );
-int getParameter(pulsar psr,char *param, double *value);
+int getParameter(pulsar psr,const char *param, double *value);
 float fitwave_function(pulsar *psr, float x, float fitwaves_omega, float fitwaves_epoch);
 void indexx_patrick(unsigned long n, float arr[], unsigned long indx[]);
 
@@ -42,7 +42,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   char months[12][10];
   int i, j, k, n, bat, pgscript;
-  double globalParameter;
+  double globalParameter=0;
   float *resids[2], *resids_err[2], *resids_freq[2], *sats[2], *sats2[2], mean_resids;
   float x, y, y_10, y_20, y_50,y_40, ymin, ymax, ymin2, ymax2, xmin, xmax, rms[2], ticklength;
   int deviceID, windowwidth, windowheight, colorcode, plot_fitwaves, verbose;
@@ -276,7 +276,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    totaljump += (float)psr[0].phaseJumpDir[psr[0].nPhaseJump];
 	    resids[npar][i] = residold + totaljump/psr[0].param[param_f].val[0];
 	    if(verbose)
-	      printf("*** Add jump at %f (%d -> %.0f %f)\n", psr[0].phaseJump[psr[0].nPhaseJump], psr[0].phaseJumpDir[psr[0].nPhaseJump], totaljump, (float)(resids[npar][i]*psr[0].param[param_f].val[0]));
+	      printf("*** Add jump at %f (%d -> %.0f %f)\n", static_cast<float>(psr[0].phaseJump[psr[0].nPhaseJump]), psr[0].phaseJumpDir[psr[0].nPhaseJump], totaljump, static_cast<float>(resids[npar][i]*psr[0].param[param_f].val[0]));
 	    psr[0].nPhaseJump++;
 	  }
 	}
@@ -551,11 +551,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	else
 	  cpgsci(7);
 	if(pgscript) 
-	  fprintf(fout_pgplot, "pgmove %e %e\n", psr[n].phaseJump[j], ymin);
+	  fprintf(fout_pgplot, "pgmove %e %e\n", static_cast<float>(psr[n].phaseJump[j]), ymin);
 	else
 	  cpgmove(psr[n].phaseJump[j], ymin);
 	if(pgscript) 
-	  fprintf(fout_pgplot, "pgdraw %e %e\n", psr[n].phaseJump[j], ymax);
+	  fprintf(fout_pgplot, "pgdraw %e %e\n", static_cast<float>(psr[n].phaseJump[j]), ymax);
 	else
 	  cpgdraw(psr[n].phaseJump[j], ymax);
 	if(pgscript) 
@@ -806,7 +806,7 @@ void sla_CLDJ (int IY, int IM, int ID, double *DJM, int *J)
   }  /* End else year */
 }
 
-int getParameter(pulsar psr,char *param, double *value)
+int getParameter(pulsar psr,const char *param, double *value)
 {
   int i;
   int gotit=-1;
@@ -842,7 +842,7 @@ float fitwave_function(pulsar *psr, float x, float fitwaves_omega, float fitwave
 #define NSTACK 50
 #define NR_END 1
 #define FREE_ARG char*
-void nrerror(char error_text[])
+void nrerror(const char *error_text)
 /* Numerical Recipes standard error handler */
 {
 	fprintf(stderr,"Numerical Recipes run-time error...\n");
@@ -929,4 +929,4 @@ void indexx_patrick(unsigned long n, float arr[], unsigned long indx[])
 #undef NSTACK
 #undef SWAP
 #undef NRANSI
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

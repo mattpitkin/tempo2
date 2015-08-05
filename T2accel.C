@@ -102,6 +102,9 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
 
     free(work);
     // if info is not zero then the fit failed.
+    if(info!=0){
+        logerr("%d",info);
+    }
     assert(info==0);
 
     if(oparam!=NULL){

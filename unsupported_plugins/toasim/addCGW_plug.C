@@ -69,7 +69,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	double cgw_mc;    int set_mc=0;
 
 	corr->offsets=offsets;
-	corr->params=""; // Normally leave as NULL. Can store this along with each realisation. 
 	// Same length string in every iteration - defined in r_param_length see below
 	corr->a0=0; // constant
 	corr->a1=0; // a1*x
@@ -134,12 +133,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		strcpy(header->invocation,argv[0]);
 		strcpy(header->timfile_name,timFile[p]);
 		strcpy(header->parfile_name,"Unknown");
-		header->idealised_toas="NotSet"; // What should this be
-		header->orig_parfile="NA";
-		header->gparam_desc=""; // Global parameters
-		header->gparam_vals="";
-		header->rparam_desc=""; // Desciprtion of the parameters
-		header->rparam_len=0; // Size of the string
 		header->seed = seed;
 
 		header->ntoa = psr[p].nobs;
@@ -281,4 +274,4 @@ double calculateOffset(pulsar *psr,int p,int obs,double cgw_freq,double cgw_ra,d
 }
 
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
