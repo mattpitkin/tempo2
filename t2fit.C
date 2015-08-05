@@ -43,7 +43,7 @@
 // Remove elements from SVD sigma matrix below this value.
 #define T2_SVD_TOL 1e-27
 
-void t2Fit(pulsar *psr,unsigned int npsr, char *covarFuncFile){
+void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
     // if we have a model for the data covariance function, then use it.
     // Otherwise we we will just whiten using the error bars.
@@ -397,10 +397,24 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
     OUT.paramCounters[0]=0;
     OUT.paramDerivs[0]=t2FitFunc_zero;
     OUT.updateFunctions[0]=t2UpdateFunc_zero;
-    OUT.paramIndex[0]=param_zero;
+    OUT.paramIndex[0]=param_ZERO;
 
+
+    for (int i=1;i<=psr->nJumps;i++)
+    {
+        if (psr->fitJump[i]==1)
+        {
+            OUT.paramIndex[OUT.nParams]=param_JUMP;
+            OUT.paramCounters[OUT.nParams]=i;
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_jump;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_jump;
+            ++OUT.nParams;
+        }
+    }
+
+    bool sifunc;
     unsigned N;
-    for (param_label fit_param=0; fit_param < MAX_PARAMS; ++fit_param){
+    for (param_label fit_param=0; fit_param < param_LAST; ++fit_param){
         for(int k=0; k < psr->param[fit_param].aSize;k++){
             if (psr->param[fit_param].paramSet[k]==1 && psr->param[fit_param].fitFlag[k]==1) {
                 OUT.paramIndex[OUT.nParams]=fit_param;
@@ -463,6 +477,9 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                     case param_bpjec:
                     case param_bpjom:
                     case param_bpjpb:
+                    case param_h3:
+                    case param_h4:
+                    case param_stig:
                         // all binary models are handled by a routine that identifies the correct binary model.
                         OUT.paramDerivs[OUT.nParams]     =t2FitFunc_binaryModels;
                         OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_binaryModels;
@@ -558,13 +575,18 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                     case param_quad_ifunc_c:
                         // ifunc-alikes
                         N=0;
-                        if(fit_param==param_ifunc)N=psr->ifuncN;
+                        sifunc=psr->param[fit_param].val[0]==2; // use sinusoids?
+                        if(fit_param==param_ifunc){
+                            N=psr->clkOffsN;
+                            sifunc=!sifunc;
+                        }
                         if(fit_param==param_clk_offs)N=psr->clkOffsN;
                         if(fit_param==param_quad_ifunc_p)N=psr->quad_ifuncN_p;
                         if(fit_param==param_quad_ifunc_c)N=psr->quad_ifuncN_c;
                         for (unsigned i = 0; i < N; ++i){
-                            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ifunc;
-                            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ifunc;
+                            if(sifunc) OUT.paramDerivs[OUT.nParams] = t2FitFunc_sifunc;
+                            else OUT.paramDerivs[OUT.nParams] = t2FitFunc_ifunc;
+                            OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_ifunc;
                             OUT.paramCounters[OUT.nParams]=i;
                             OUT.paramIndex[OUT.nParams]=fit_param;
                             ++OUT.nParams;
@@ -579,8 +601,19 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                             ++OUT.nParams;
                         }
                         break;
-                    case param_gwb_amp:
-                    case param_gwm_amp:
+                    case param_dmmodel:
+                        for (int i = 0; i < psr->dmoffsDMnum; ++i){
+                            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelDM;
+                            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_dmmodelDM;
+                            OUT.paramCounters[OUT.nParams]=i;
+                            ++OUT.nParams;
+                        }
+                        for (int i = 0; i < psr->dmoffsCMnum; ++i){
+                            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelCM;
+                            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_dmmodelCM;
+                            OUT.paramCounters[OUT.nParams]=i;
+                            ++OUT.nParams;
+                        }
                         break;
 
                     default:

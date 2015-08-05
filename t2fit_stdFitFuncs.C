@@ -1,7 +1,7 @@
 #include "t2fit_stdFitFuncs.h"
-#include <math.h>
-#include <string.h>
+#include <cmath>
 #include <assert.h>
+#include <cstring>
 
 /**
  *
@@ -216,10 +216,18 @@ void t2UpdateFunc_stdGravWav(pulsar *psr, int ipsr ,param_label label,int k, dou
 double t2FitFunc_telPos(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
 void t2UpdateFunc_telPos(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
-double t2FitFunc_ifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_ifunc(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_miscDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
 void t2UpdateFunc_miscDm(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
+double t2FitFunc_jump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    for (int l=0;l<psr[ipsr].obsn[ipos].obsNjump;l++){
+        if (psr[ipsr].obsn[ipos].jump[l]==k) return -1.0;
+    }
+    return 0;
+}
+void t2UpdateFunc_jump(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
+    psr[ipsr].jumpVal[k] += val;
+    psr[ipsr].jumpValErr[k] = err;
+}
 

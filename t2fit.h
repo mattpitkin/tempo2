@@ -1,6 +1,6 @@
 #include <tempo2.h>
 
-void t2Fit(pulsar *psr,unsigned int npsr, char *covarFuncFile);
+void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile);
 
 unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
         double* e, int* ip);

@@ -136,7 +136,7 @@ extern char TEMPO2_ERROR[];
 typedef int param_label;
 typedef int constraint_label;
 enum label {
-        param_zero,param_raj,param_decj,param_f,param_pepoch,param_posepoch,
+        param_raj,param_decj,param_f,param_pepoch,param_posepoch,
 	    param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
 	    param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
 	    param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_a1dot,
@@ -154,7 +154,10 @@ enum label {
             param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
 	    param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
 	    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
-	    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1
+	    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
+        // ** ADD NEW PARAMETERS ABOVE HERE **
+        // THIS LINE MUST BE THE LAST LINE IN THIS ENUM
+        param_LAST,param_ZERO,param_JUMP // don't change the order of these
 };
  
 
@@ -729,12 +732,12 @@ void formBatsAll(pulsar *psr,int npsr);
 void updateBatsAll(pulsar *psr,int npsr);
 void formResiduals(pulsar *psr,int npsr,int removeMean);
 int  bootstrap(pulsar *psr,int p,int npsr);
-void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile);
-void doFit(pulsar *psr,int npsr,int writeModel);
-void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel);
-void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel); 
+void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile) DEPRECATED;
+void doFit(pulsar *psr,int npsr,int writeModel) DEPRECATED;
+void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) DEPRECATED;
+void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) DEPRECATED; 
 void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
-double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
+double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k) DEPRECATED;
 void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname);
 void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);

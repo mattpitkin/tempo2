@@ -88,7 +88,7 @@ extern "C" void dgemm_(char *jobu, char *jobvt, int *m, int *n,
 /////////////////End Functions for TempoNest maximum likelihood Fitting/////////////////////
 
 // Backwards compatibility
-void doFit(pulsar *psr,int npsr,int writeModel) 
+void doFit(pulsar *psr,int npsr,int writeModel)
 {
 	logmsg("Deprecated call to doFit() -> better to use doFitAll()");
 	doFitAll(psr,npsr,NULL);
