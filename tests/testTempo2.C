@@ -173,4 +173,3 @@ TEST(testFormBats, offsetSATs){
     }
 
 }
-

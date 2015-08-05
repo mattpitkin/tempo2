@@ -19,6 +19,7 @@ AC_SYS_LARGEFILE
 
 # Determine the machine endian
 AC_C_BIGENDIAN
+AC_LANG([C++])
 
 # Checks for compilers
 AC_PROG_CXX
@@ -60,7 +61,7 @@ AC_ARG_ENABLE([float128],
 AS_IF([test "x$enable_float128" != "xno"], [
 
            AC_MSG_CHECKING(if compiler knows __float128)
-           AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[__float128 x;]])],
+           AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[__float128 x = 1.0Q;]])],
            have_float128=yes,
            have_float128=no)
 
