@@ -5,28 +5,28 @@
 #include "tempo2.h"
 #include "TKfit.h"
 /*
-*    This file is part of TEMPO2. 
-* 
-*    TEMPO2 is free software: you can redistribute it and/or modify 
-*    it under the terms of the GNU General Public License as published by 
-*    the Free Software Foundation, either version 3 of the License, or 
-*    (at your option) any later version. 
-*    TEMPO2 is distributed in the hope that it will be useful, 
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of 
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-*    GNU General Public License for more details. 
-*    You should have received a copy of the GNU General Public License 
-*    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>. 
-*/
+ *    This file is part of TEMPO2. 
+ * 
+ *    TEMPO2 is free software: you can redistribute it and/or modify 
+ *    it under the terms of the GNU General Public License as published by 
+ *    the Free Software Foundation, either version 3 of the License, or 
+ *    (at your option) any later version. 
+ *    TEMPO2 is distributed in the hope that it will be useful, 
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ *    GNU General Public License for more details. 
+ *    You should have received a copy of the GNU General Public License 
+ *    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>. 
+ */
 
 /*
-*    If you use TEMPO2 then please acknowledge it by citing 
-*    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2, 
-*    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
-*    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
-*    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
-*    timing model.
-*/
+ *    If you use TEMPO2 then please acknowledge it by citing 
+ *    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2, 
+ *    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
+ *    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
+ *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
+ *    timing model.
+ */
 
 /* Routines useful for spectral analysis 
  * Based on work carried out by G. Hobbs
@@ -49,7 +49,7 @@ void TKsortit(double *x,double *y,int n);
 void TKaveragePts(double *x,double *y,int n,int width,double *meanX,double *meanY,int *nMean);
 void TKcmonot (int n, double x[], double y[], double yd[][4]);
 void TKspline_interpolate(int n,double *x,double *y,double yd[][4],double *interpX,
-			  double *interpY,int nInterp);
+        double *interpY,int nInterp);
 void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, double *interpX, double *interpY, int nInterp);
 void TKhann(double *x,double *y,int n,double *ox,double *oy,int *on,int width);
 void TKfirstDifference(double *x,double *y,int n);
@@ -67,8 +67,8 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
 
 
 typedef struct complexVal {
-  double real;
-  double imag;
+    double real;
+    double imag;
 }complexVal;
 
 /* ************************************************************** *
@@ -106,8 +106,8 @@ typedef struct complexVal {
  * ************************************************************** */
 
 double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smoothWidth,int smoothType,
-		int fitSpline,int preWhite,int specType,double ofac,double hifac,int specOut,double *outX,
-		double *outY,int *nout,int calcWhite,int output, double *outY_re, double *outY_im);
+        int fitSpline,int preWhite,int specType,double ofac,double hifac,int specOut,double *outX,
+        double *outY,int *nout,int calcWhite,int output, double *outY_re, double *outY_im);
 
 void TKfirstDifference(double *x,double *y,int n);
 
@@ -167,9 +167,9 @@ void TKhann(double *x,double *y,int n,double *ox,double *oy,int *on,int width);
 
 void TKcmonot (int n, double x[], double y[], double yd[][4]);
 /*****************************************************************************
-compute cubic interpolation coefficients via the Fritsch-Carlson method,
-which preserves monotonicity
-******************************************************************************
+  compute cubic interpolation coefficients via the Fritsch-Carlson method,
+  which preserves monotonicity
+ ******************************************************************************
 Input:
 n		number of samples
 x  		array[n] of monotonically increasing or decreasing abscissae
@@ -177,7 +177,7 @@ y		array[n] of ordinates
 
 Output:
 yd		array[n][4] of cubic interpolation coefficients (see notes)
-******************************************************************************
+ ******************************************************************************
 Notes:
 The computed cubic spline coefficients are as follows:
 yd[i][0] = y(x[i])    (the value of y at x = x[i])
@@ -202,16 +202,16 @@ Also, see the book by Kahaner, D., Moler, C., and Nash, S., 1989,
 Numerical Methods and Software, Prentice Hall.  This function was
 derived from SUBROUTINE PCHEZ contained on the diskette that comes
 with the book.
-******************************************************************************
+ ******************************************************************************
 Author:  Dave Hale, Colorado School of Mines, 09/30/89
 Modified:  Dave Hale, Colorado School of Mines, 02/28/91
-	changed to work for n=1.
+changed to work for n=1.
 Modified:  Dave Hale, Colorado School of Mines, 08/04/91
-	fixed bug in computation of left end derivative
-*****************************************************************************/
+fixed bug in computation of left end derivative
+ *****************************************************************************/
 // Interpolate the spline fit on to a given set of x-values
 void TKspline_interpolate(int n,double *x,double *y,double yd[][4],double *interpX,
-			  double *interpY,int nInterp);
+        double *interpY,int nInterp);
 
 void TKlomb_d(double *x,double *y,int n,double ofac,double hifac,double *ox,double *oy,int *outN,double *var);
 // Fourier transform
@@ -222,7 +222,7 @@ void TKlomb_d(double *x,double *y,int n,double ofac,double hifac,double *ox,doub
    x and y are the real and imaginary arrays of n = 2^m points.
    dir =  1 gives forward transform
    dir = -1 gives reverse transform 
-*/
+   */
 int TK_fft(short int dir,long n,double *x,double *y);
 
 
@@ -234,7 +234,7 @@ int TK_fft(short int dir,long n,double *x,double *y);
 //		int nSel,int *selPsr,int weights,int style,int average,
 //		float *avX,float *avY,int *nav)
 void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
-		double *ret_e2,int *ret_nval,double mintau);
+        double *ret_e2,int *ret_nval,double mintau);
 
 
 

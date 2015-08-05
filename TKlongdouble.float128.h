@@ -17,11 +17,11 @@ typedef __float128 longdouble;
 #define fabsl fabsq
 
 /* function to get longdouble as string (%g style). This returns
-  std::string, from which you can get a normal C char * like this:
-  print_longdouble(x).c_str(). Unfortunately we can't just return char *
-  directly as it would end up pointing to de-allocated memory, and we
-  can't do it statically in case you want to say call this twice for
-  one printf */
+   std::string, from which you can get a normal C char * like this:
+   print_longdouble(x).c_str(). Unfortunately we can't just return char *
+   directly as it would end up pointing to de-allocated memory, and we
+   can't do it statically in case you want to say call this twice for
+   one printf */
 #ifdef __cplusplus
 #include <string>
 std::string print_longdouble(const longdouble &ld);
@@ -33,11 +33,11 @@ std::string print_longdouble(const longdouble &ld);
 extern "C" {
 #endif
 
-longdouble parse_longdouble(const char *str);
+    longdouble parse_longdouble(const char *str);
 
-int ld_printf(const char *__format, ...);
-int ld_fprintf(FILE* __stream, const char *__format, ...);
-int ld_sprintf(char* __str, const char *__format, ...);
+    int ld_printf(const char *__format, ...);
+    int ld_fprintf(FILE* __stream, const char *__format, ...);
+    int ld_sprintf(char* __str, const char *__format, ...);
 
 #ifdef __cplusplus
 }

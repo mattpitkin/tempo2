@@ -16,10 +16,10 @@ char useT2accel=1;
 
 
 extern "C" {
-   extern void F77_dpotf2(const char* uplo, int* n, double* a, int* lda, int* info);
-   extern void F77_dtptri(const char* uplo,const char* diag, int* n, double* a, int* info);
-   extern void F77_dgels(const char *trans, int *m, int *n, int *nhrs, double* A, int *lda, double* B, int *ldb, double* work, int *lwork, int *info);
-   extern void F77_dtrmm(const char* lr,const char* uplo, const char* tr, const char* diag, int* n, int*m, double* alp, double* a, int* lda, double* b, int* ldb);
+    extern void F77_dpotf2(const char* uplo, int* n, double* a, int* lda, int* info);
+    extern void F77_dtptri(const char* uplo,const char* diag, int* n, double* a, int* info);
+    extern void F77_dgels(const char *trans, int *m, int *n, int *nhrs, double* A, int *lda, double* B, int *ldb, double* work, int *lwork, int *info);
+    extern void F77_dtrmm(const char* lr,const char* uplo, const char* tr, const char* diag, int* n, int*m, double* alp, double* a, int* lda, double* b, int* ldb);
 }
 
 
@@ -28,60 +28,60 @@ extern "C" {
  * uinv is a lower triangular, row-major, matrix.
  */
 int accel_uinv(double* _m, int n){
-   int i,j;
+    int i,j;
 
-   double* _u=_m;
-   double* _uinv=_m;
+    double* _u=_m;
+    double* _uinv=_m;
 
 
-   // LAPACK Cholesky factorisation.
-   // _u is a symetric matrix.
-   F77_dpotf2("L",&n,_u,&n,&i);
-   if(i!=0){
-	  logerr("Error in Cholesky Decomp i=%d",i);
-      return i;
-   }
+    // LAPACK Cholesky factorisation.
+    // _u is a symetric matrix.
+    F77_dpotf2("L",&n,_u,&n,&i);
+    if(i!=0){
+        logerr("Error in Cholesky Decomp i=%d",i);
+        return i;
+    }
 
-   double* _t=(double*)malloc(sizeof(double)*(n*(n+1))/2);
-   // This code taken from the LAPACK documentation
-   // to pack a triangular matrix.
-   int jc=0;
-   for (j=0;j<n;j++){ // cols
-	  for (i=j;i<n;i++){ //rows
-		 // note that at this point _u is ordered column major
-		 // because the LAPACK routine is a FORTRAN code.
-		 _t[jc+i-j] = _u[j*n+i];
-	  }
-	  jc=jc+n-j;
-   }
+    double* _t=(double*)malloc(sizeof(double)*(n*(n+1))/2);
+    // This code taken from the LAPACK documentation
+    // to pack a triangular matrix.
+    int jc=0;
+    for (j=0;j<n;j++){ // cols
+        for (i=j;i<n;i++){ //rows
+            // note that at this point _u is ordered column major
+            // because the LAPACK routine is a FORTRAN code.
+            _t[jc+i-j] = _u[j*n+i];
+        }
+        jc=jc+n-j;
+    }
 
-   logdbg("Done CholDecomp... Inverting...");
-   F77_dtptri("L","N",&n,_t,&i);
-   if(i!=0){
-	  logerr("Error in Invert i=%d",i);
-      return i;
-   }
+    logdbg("Done CholDecomp... Inverting...");
+    F77_dtptri("L","N",&n,_t,&i);
+    if(i!=0){
+        logerr("Error in Invert i=%d",i);
+        return i;
+    }
 
-   // Unpack the triangular matrix using reverse
-   // of code above, but unpacking into a row-major matrix
-   // for C compatibility.
-   jc=0;
-   for (j=0;j<n;j++){ // cols
-	  for (i=0; i < j; i++){
-		 // when unpacking we need to zero out the strict upper triangle.
-		 _u[i*n+j]=0;
-	  }
-	  for (i=j;i<n;i++){ //rows
-		 // here we arange _u in row-major order
-		 // to be C compatible on return.
-		 _u[i*n+j]=_t[jc+i-j];
-	  }
-	  jc=jc+n-j;
-   }
-   free(_t);
+    // Unpack the triangular matrix using reverse
+    // of code above, but unpacking into a row-major matrix
+    // for C compatibility.
+    jc=0;
+    for (j=0;j<n;j++){ // cols
+        for (i=0; i < j; i++){
+            // when unpacking we need to zero out the strict upper triangle.
+            _u[i*n+j]=0;
+        }
+        for (i=j;i<n;i++){ //rows
+            // here we arange _u in row-major order
+            // to be C compatible on return.
+            _u[i*n+j]=_t[jc+i-j];
+        }
+        jc=jc+n-j;
+    }
+    free(_t);
 
-   logdbg("Done Invert.");
-   return 0;
+    logdbg("Done Invert.");
+    return 0;
 }
 
 /**

@@ -949,9 +949,9 @@ void CONSTRAINTfuncs(pulsar *psr, int nparams,int iconstraint, double* OUT){
                     }
                     // we are fitting for this param
                     for (j=0; j < jmax; j++){
-                    OUT[pcount] += getConstraintDeriv(psr,iconstraint,i,k+j);
-                    logdbg("param=%d j+k=%d pcount=%d deriv=%g",i,k+j,pcount,OUT[pcount]);
-                    ++pcount;
+                        OUT[pcount] += getConstraintDeriv(psr,iconstraint,i,k+j);
+                        logdbg("param=%d j+k=%d pcount=%d deriv=%g",i,k+j,pcount,OUT[pcount]);
+                        ++pcount;
                     }
                 }
             }
