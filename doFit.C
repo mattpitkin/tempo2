@@ -137,6 +137,7 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
 	int npol;
 	int nglobal;
 	int **ip=(int**)malloc(sizeof(int*)*npsr);
+    logmsg("OLD FITTER");
 
 
 	//  printf("WARNING: Switching weighting off for the fit\n");

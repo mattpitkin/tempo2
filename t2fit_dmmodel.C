@@ -15,9 +15,11 @@ void t2UpdateFunc_dmmodelDM(pulsar *psr, int ipsr ,param_label label,int k, doub
     psr[ipsr].dmoffsDM_error[k] = err;
 }
 double t2FitFunc_dmmodelCM(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
-    return ifunc(psr[ipsr].dmoffsCM_mjd,static_cast<double>(psr[ipsr].obsn[ipos].sat),psr[ipsr].dmoffsCMnum,k);
+    int idx=k-psr[ipsr].dmoffsDMnum;
+    return ifunc(psr[ipsr].dmoffsCM_mjd,static_cast<double>(psr[ipsr].obsn[ipos].sat),psr[ipsr].dmoffsCMnum,idx);
 }
 void t2UpdateFunc_dmmodelCM(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
-    psr[ipsr].dmoffsCM[k] += val;
-    psr[ipsr].dmoffsCM_error[k] = err;
+    int idx=k-psr[ipsr].dmoffsDMnum;
+    psr[ipsr].dmoffsCM[idx] += val;
+    psr[ipsr].dmoffsCM_error[idx] = err;
 }

@@ -1,5 +1,6 @@
 #include "t2fit.h"
 #include "t2fit_stdFitFuncs.h"
+#include "constraints.h"
 #include <TKfit.h>
 #include <stdlib.h>
 #include <string.h>
@@ -400,8 +401,19 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
     OUT.paramIndex[0]=param_ZERO;
 
 
-    for (int i=1;i<=psr->nJumps;i++)
-    {
+    for (int i=0;i<psr->nconstraints;i++) {
+        OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
+        OUT.constraintCounters[OUT.nConstraints]=0;
+        switch(psr->constraints[i]){
+            default:
+                // this is a quick fix to avoid re-writing code.
+                OUT.constraintDerivs[OUT.nConstraints] = standardConstraintFunctions;
+                ++OUT.nConstraints;
+                break;
+        }
+    }
+
+    for (int i=1;i<=psr->nJumps;i++) {
         if (psr->fitJump[i]==1)
         {
             OUT.paramIndex[OUT.nParams]=param_JUMP;
@@ -598,6 +610,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGravWav;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGravWav;
                             OUT.paramCounters[OUT.nParams]=i;
+                            OUT.paramIndex[OUT.nParams]=fit_param;
                             ++OUT.nParams;
                         }
                         break;
@@ -606,12 +619,14 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelDM;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_dmmodelDM;
                             OUT.paramCounters[OUT.nParams]=i;
+                            OUT.paramIndex[OUT.nParams]=fit_param;
                             ++OUT.nParams;
                         }
                         for (int i = 0; i < psr->dmoffsCMnum; ++i){
                             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelCM;
                             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_dmmodelCM;
-                            OUT.paramCounters[OUT.nParams]=i;
+                            OUT.paramCounters[OUT.nParams]=i+psr->dmoffsDMnum;
+                            OUT.paramIndex[OUT.nParams]=fit_param;
                             ++OUT.nParams;
                         }
                         break;

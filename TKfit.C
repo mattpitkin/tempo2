@@ -241,6 +241,25 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                 //if(i==j)logmsg("Cmatrix ic=%d ip=%d %lg",i,j,constraintsMatrix[i][j]);
             }
         }
+        if(writeResiduals==1){
+            logdbg("Writing out augmented design matrix");
+            FILE * wFile=fopen("adesign.matrix","w");
+            if (!wFile){
+                printf("Unable to write out augmented design matrix: cannot open file adesign.matrix\n");
+            }
+            else
+            {
+                for (i=0;i<ndata+nconstraints;i++) {
+                    for (j=0;j<nparams;j++){
+                        fprintf(wFile,"%d %d %lg\n",i,j,augmented_DM[i][j]);
+                    }
+                    fprintf(wFile,"\n");
+                }
+                fclose(wFile);
+            }
+        }
+
+
         accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
         free_blas(augmented_DM);
 
@@ -413,7 +432,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
     }
 
     /** Robust Estimator code by Wang YiDi, Univ. Manchester 2015 **/
-    
+
     if (robust > 48 ){
         double sum;
         logmsg("ROBUST '%c'",robust);
@@ -571,7 +590,7 @@ void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double 
         logmsg("fill constraints matrix");
         constraintsMatrix = malloc_blas(psr->nconstraints,nf);
         for (int ic=0; ic < psr->nconstraints; ic++){
-            CONSTRAINTfuncs(psr,nf,ic,constraintsMatrix[ic]);
+            CONSTRAINTfuncs(psr,nf,psr->constraints[ic],constraintsMatrix[ic]);
         }
     }
 
