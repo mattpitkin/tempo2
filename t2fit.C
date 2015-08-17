@@ -386,12 +386,16 @@ void t2Fit_updateParameters(pulsar *psr,int ipsr,double *val,double *error){
     }
 }
 
+void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag);
 void t2Fit_fillGlobalFitInfo(pulsar* psr, unsigned int npsr,FitInfo &OUT){
     OUT.nParams=0;
     OUT.nConstraints=0;
+    // Use pulsar zero to define the global parameters.
+    t2Fit_fillFitInfo_INNER(psr,OUT,2);
 }
 
 void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
+
     OUT.nParams=1;
     OUT.nConstraints=0;
     // Add the zero offset
@@ -399,7 +403,6 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
     OUT.paramDerivs[0]=t2FitFunc_zero;
     OUT.updateFunctions[0]=t2UpdateFunc_zero;
     OUT.paramIndex[0]=param_ZERO;
-
 
     for (int i=0;i<psr->nconstraints;i++) {
         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
@@ -423,12 +426,15 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT){
             ++OUT.nParams;
         }
     }
+    t2Fit_fillFitInfo_INNER(psr,OUT,1);
+}
 
+void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
     bool sifunc;
     unsigned N;
     for (param_label fit_param=0; fit_param < param_LAST; ++fit_param){
         for(int k=0; k < psr->param[fit_param].aSize;k++){
-            if (psr->param[fit_param].paramSet[k]==1 && psr->param[fit_param].fitFlag[k]==1) {
+            if (psr->param[fit_param].paramSet[k]==1 && psr->param[fit_param].fitFlag[k]==globalflag) {
                 OUT.paramIndex[OUT.nParams]=fit_param;
                 OUT.paramCounters[OUT.nParams]=k;
                 switch(fit_param){
