@@ -49,7 +49,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
-  double globalParameter;
+  double globalParameter=0;
   double tsmooth;
   double expSmooth,fc_w,modelAlpha_out,modelVal,whiteNoiseLevel,fc_r;
   char covarFuncName[128];

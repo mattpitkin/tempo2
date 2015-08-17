@@ -31,11 +31,11 @@
 /* points and redo the fit.                                        */
 /* The plotting commands are the same as in the 'plk' package      */
 
+#include "tempo2.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "tempo2.h"
 #include "T2toolkit.h"
 #include <time.h>
 #include <cpgplot.h>
@@ -51,7 +51,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FIL
             int showChisq,int nohead,char* flagColour,char *bandsFile,int displayPP);
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,
 	    char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log,char *flagStr);
-void drawAxisSel(float x,float y,char *str,int sel1,int sel2);
+void drawAxisSel(float x,float y,const char *str,int sel1,int sel2);
 float findMinY(float *y,float *x,int count,float xmin,float xmax);
 float findMaxY(float *y,float *x,int count,float xmin,float xmax);
 float findMean(float *x,pulsar *psr,int i1,int i2);
@@ -83,7 +83,7 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
 	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,longdouble centreEpoch,
 	       int menu,int plotx,char parFile[][MAX_FILELEN], char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,int *yplot,int *graphics,char highlightID[100][100],char  highlightVal[100][100],int *highlightNum,float aspect,int fontType,int lineWidth,char *bkgrdColour,char *lineColour,int *jumpOffset);
 void setLabel(char *ystr,int yplot,int plotPhase,double unitFlag,longdouble centreEpoch,char *userValStr,char *flagStr);
-void drawOption(float x,float y,char *str,int fit);
+void drawOption(float x,float y,const char *str,int fit);
 void swapFit(pulsar *psr,int par,int k,int button);
 void newTim(pulsar *psr);
 void plotFITWAVES_spec();
@@ -403,6 +403,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   preProcess(psr,*npsr,argc,argv);
   if (debugFlag==1) printf("plk: calling callFit %d\n",psr[0].nobs);
   callFit(psr,*npsr);             /* Do all the fitting routines */
+
+	for(int i = 0; i < psr->nobs; i++){
+		psr->obsn[i].averagebat = (double)psr->obsn[i].bat;
+		psr->obsn[i].averageres = (double)psr->obsn[i].residual;
+		psr->obsn[i].averageerr = (double)psr->obsn[i].toaErr*pow(10.0, -6);
+	}
+
+
+
   if (newpar==1)
     textOutput(psr,*npsr,0,0,0,1,newParFile);
   if (debugFlag==1) printf("plk: calling doPlot\n");
@@ -651,7 +660,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	      else if (strcasecmp(str,"flag")==0)
 		{
 		  fscanf(fin,"%s %s %d %d",flagIDstr[flagColourNum],
-			 &flagIDval[flagColourNum],&flagCol[flagColourNum],
+			 flagIDval[flagColourNum],&flagCol[flagColourNum],
 			 &flagStyle[flagColourNum]);	     
 		  flagColourNum++;
 		}
@@ -755,10 +764,10 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    freq[count]=(float)(psr[0].obsn[i].freq);
 	    id[count] = i;
 	    bad = setPlot(x,count,psr,i,unitFlag,plotPhase,xplot,&userValChange,userCMD,userValStr,userX,
-			  centreEpoch,logx,flagStrX);
+		    centreEpoch,logx,flagStrX);
 	    
 	    bad = setPlot(y,count,psr,i,unitFlag,plotPhase,yplot,&userValChange,userCMD,userValStr,userX,
-			  centreEpoch,logy,flagStrY);
+		    centreEpoch,logy,flagStrY);
 
 	    if (yplot==1)                            /* Get pre-fit residual */
 	      strcpy(fitType,"pre-fit");
@@ -770,6 +779,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		    errBar[count] = psr[0].obsn[i].origErr;
 	    else 
 		    errBar[count] = psr[0].obsn[i].toaDMErr;
+	    if(yplot==2 && psr[0].AverageResiduals == 1){errBar[count] = psr[0].obsn[i].averageerr/1e-6;}
 	    if(yplot==16){errBar[count] = (float) psr[0].obsn[i].TNRedErr/1e-6;}
 	    if(yplot==17){errBar[count] = (float) psr[0].obsn[i].TNDMErr/1e-6;}
 	    if (bad==0) count++;	    
@@ -922,7 +932,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
   if (publish==0 && (strlen(setupFile)==0))
   {
 	 cpgsch(0.5); 
-	 cpgmtxt("B",6.5,0.92,0.0,"plk v.3.0 (G. Hobbs)"); 
+	 cpgmtxt("B",6.5,0.92,0.0," "); 
 	 cpgsch(fontSize); 
   }
 
@@ -1204,17 +1214,16 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	   else if (key==')') {xplot=12; yplot=2;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
 	   else if (key=='.') {xplot=2; setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
 	   else if (key==16) {plotPhase*=-1; setZoomY1 = 0; setZoomY2 =0;}
-	   else if (key=='O') { // Select flag ID for display
-	     printf("Enter flag ID for x-axis (NULL for nothing) ");
-	     scanf("%s",flagStrX);
-	     printf("Enter flag ID for y-axis (NULL for nothing) ");
-	     scanf("%s",flagStrY);
-	     if (strcmp(flagStrX,"NULL")!=0)
-	       xplot=18;
-	     if (strcmp(flagStrY,"NULL")!=0)
-	       yplot=18;
-	   }
-	    
+	    else if (key=='O') { // Select flag ID for display
+             printf("Enter flag ID for x-axis (NULL for nothing) ");
+             scanf("%s",flagStrX);
+             printf("Enter flag ID for y-axis (NULL for nothing) ");
+             scanf("%s",flagStrY);
+             if (strcmp(flagStrX,"NULL")!=0)
+               xplot=18;
+             if (strcmp(flagStrY,"NULL")!=0)
+               yplot=18;
+           }
 	   else if (key=='>') /* Select next point to right if available */
 	   {
 		  if (setZoomX2 != 0)
@@ -1257,6 +1266,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
 		}
 		else if(key=='K'){
+			printf("youve presssed K!!!\n");
 			if(psr[0].TNsubtractRed==0){
 	                        printf("will substract Red Noise on next Fit \n");
         	                psr[0].TNsubtractRed=1;
@@ -1267,6 +1277,20 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                         }
 
                 }
+		else if(key == 'R'){
+			if(psr[0].AverageResiduals==0){
+
+				 printf("Average on flag and epoch width "); scanf("%s %f",psr[0].AverageFlag,&psr[0].AverageEpochWidth);
+
+				printf("averaging TOAs on next fit\n");
+				psr[0].AverageResiduals=1;
+			}
+			else if(psr[0].AverageResiduals==1){
+				printf("un-averaging TOAs on next fit\n");
+                                psr[0].AverageResiduals=0;
+                        }
+
+		}	
 
 	   else if (key==3) /* Change central point */
 		  centre*=-1;
@@ -1276,6 +1300,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  if (plotErr==3) plotErr=0;
 	   }
 	   else if (key=='\''){
+           NEWFIT=!NEWFIT;
+           printf("newfit is %s\n",NEWFIT ? "true" : "false");
+           /*
 		  errtype++;
 		  switch (errtype){
 			 case 1:
@@ -1289,6 +1316,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 				errtype=0;
 				break;
 		  }
+          */
 	   }
 	   else if (key=='"'){
 		  for(i=0; i < psr[0].dmoffsCMnum; i++){
@@ -1395,7 +1423,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			}
 			else if (key==26) /* ctrl-z list selected points (ctrl-D) */
 			{
-			   int len=0;
+			   unsigned len=0;
 			   char tstr[1000],nstr[1000];
 
 			   for (i=0;i<psr[0].nobs;i++)
@@ -1635,7 +1663,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 				  {
 					 psr[0].obsn[i].residual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
 					 psr[0].obsn[i].prefitResidual += (double)psr[0].phaseJumpDir[k]/psr[0].param[param_f].val[0];
-					 psr[0].obsn[i].pulseN -= psr[0].phaseJumpDir[k];
+				   	 psr[0].obsn[i].pulseN -= psr[0].phaseJumpDir[k];
 				  }
 			   }
 			   //if (key=='-') 
@@ -2080,15 +2108,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 			   {
 				  while (!feof(fin))
 				  {
-				    long double lx1,lx2;
-				    if (fscanf(fin,"%Lf %Lf %s %s",&lx1,&lx2,temp,temp)==4)
+				    double lx1,lx2;
+				    if (fscanf(fin,"%lf %lf %s %s",&lx1,&lx2,temp,temp)==4)
 				      {
 
 					fx[0] = (float)(lx1 - centreEpoch);
 					fx2[0] = (float)(lx2 - centreEpoch);
 					fx[1] = fx[0];
 					fx2[1] = fx2[0];
-					printf("Loaded %.15Lf %.15Lf,%g %g %.15Lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
+					ld_printf("Loaded %.15lf %.15lf,%g %g %.15lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
 					fy[0] = ploty1; fy[1] = ploty2;
 					cpgsci(2); cpgline(2,fx,fy);
 					cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);
@@ -2429,7 +2457,7 @@ void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id,int *
 	  else 
 		 errBar[j] = (y[j]-yerr1[j])/1.0e-6*(double)psr[0].param[param_f].val[0];
 	  if(errBar[j] == 0){
-		 printf("ERROR: point %d has TOA error 0!!\n");
+		 printf("ERROR: point %d has TOA error 0!!\n",j);
 		 printf("Will not measure error bars for bins\n");
 		 noerr = 1;
 	  }
@@ -2635,8 +2663,8 @@ int idPoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float m
    printf("SAT = %s\n",psr[0].obsn[iclosest].fname);
    /*  printf("SAT = %s\n",print_longdouble(psr[0].obsn[iclosest].sat).c_str());
 	   printf("BAT = %s\n",print_longdouble(psr[0].obsn[iclosest].bat).c_str()); */
-   printf("SAT = %.14Lf, TOA error = %.3f (us)\n",psr[0].obsn[iclosest].sat,(double)psr[0].obsn[iclosest].toaErr);
-   printf("BAT = %.14Lf\n",psr[0].obsn[iclosest].bat);
+   ld_printf("SAT = %.14Lf, TOA error = %.3lf (us)\n",psr[0].obsn[iclosest].sat,(double)psr[0].obsn[iclosest].toaErr);
+   ld_printf("BAT = %.14Lf\n",psr[0].obsn[iclosest].bat);
    printf("Pre-fit residual = %lg\n",(double)psr[0].obsn[iclosest].prefitResidual);
    printf("Post-fit residual = %lg\n",(double)psr[0].obsn[iclosest].residual);
    printf("Observing frequency = %f\n",psr[0].obsn[iclosest].freq);
@@ -3389,7 +3417,7 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
    }
 }
 
-void drawAxisSel(float x,float y,char *str,int sel1,int sel2)
+void drawAxisSel(float x,float y,const char *str,int sel1,int sel2)
 {
    cpgsci(1);
    cpgtext(x,y-0.03,str);
@@ -3401,7 +3429,7 @@ void drawAxisSel(float x,float y,char *str,int sel1,int sel2)
    cpgrect(x+0.6,x+0.65,y,y-0.04); 
    cpgsci(1);
 }
-void drawOption(float x,float y,char *str,int fit)
+void drawOption(float x,float y,const char *str,int fit)
 {
    if (fit==0) cpgsci(1);
    else cpgsci(2);
@@ -3444,7 +3472,7 @@ void newTim(pulsar *psr)
 	   {
 	   if (psr[0].obsn[i].deleted==1)
 	   fprintf(fout,"C");
-	   fprintf(fout," %s %8.3f  %.13Lf    0.00 %7.2f        %s",psr[0].obsn[i].fname,(double)psr[0].obsn[i].freq,
+	   ld_fprintf(fout," %s %8.3f  %.13Lf    0.00 %7.2f        %s",psr[0].obsn[i].fname,(double)psr[0].obsn[i].freq,
 	   psr[0].obsn[i].sat,(double)psr[0].obsn[i].toaErr,psr[0].obsn[i].telID);
 	   fprintf(fout,"\n");
 	   for (j=0;j<psr[0].nPhaseJump;j++)
@@ -3726,6 +3754,7 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
 		 }
 	  }
    }
+   timer_clk=clock();
    doFitAll(psr,npsr,covarFuncFile);
    formBatsAll(psr,npsr);	  
    /* Form residuals */
@@ -3785,13 +3814,17 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
    }
    else if (plot==2)
    {
-	  if (plotPhase==-1)
+	  if (plotPhase==-1){
 		 x[count] = (float)(double)psr[0].obsn[iobs].residual/unitFlag;
+		if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averageres);}
+	  }
 	  else
 		 x[count] = (float)(double)psr[0].obsn[iobs].residual/unitFlag*psr[0].param[param_f].val[0];
    }
-   else if (plot==3)       /* Get barycentric arrival time */
+   else if (plot==3){       /* Get barycentric arrival time */
 	  x[count] = (float)(double)(psr[0].obsn[iobs].bat-centreEpoch);
+	  if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averagebat-centreEpoch);}
+   }
    else if (plot==4)       /* Orbital phase */
    {
 	  double pbdot=0.0;
@@ -3980,8 +4013,8 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
      else if(plot==17){
 		double DMKappa=2.410*pow(10.0,-16);
 		double freq=(double)psr[0].obsn[iobs].freqSSB;
-                long double yrs = (psr[0].obsn[iobs].sat - psr[0].param[param_dmepoch].val[0])/365.25;
-                long double arg = 1.0;
+                longdouble yrs = (psr[0].obsn[iobs].sat - psr[0].param[param_dmepoch].val[0])/365.25;
+                longdouble arg = 1.0;
                 double dmDot=0;
                 double dmDotErr=0;
                 for (int d=1;d<9;d++){
@@ -3995,24 +4028,24 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
         }
      else if (plot==18) // Plot on flag value
        {
-	 int i;
-	 int found=0;
-	 float val;
-	 for (i=0;i<psr[0].obsn[iobs].nFlags;i++)
-	   {
-	     if (strcmp(psr[0].obsn[iobs].flagID[i],flagStr)==0)
-	       {
-		 found=1;
-		 sscanf(psr[0].obsn[iobs].flagVal[i],"%f",&val);
-	       }
-	   }
-	 if (found==1)
-	   x[count] = val;
-	 else
-	   {
-	     printf("ERROR: Cannot get value for observation %s -- setting to -1\n",psr[0].obsn[iobs].fname);
-	     x[count] = -1;
-	   }
+         int i;
+         int found=0;
+         float val;
+         for (i=0;i<psr[0].obsn[iobs].nFlags;i++)
+           {
+             if (strcmp(psr[0].obsn[iobs].flagID[i],flagStr)==0)
+               {
+                 found=1;
+                 sscanf(psr[0].obsn[iobs].flagVal[i],"%f",&val);
+               }
+           }
+         if (found==1)
+           x[count] = val;
+         else
+           {
+             printf("ERROR: Cannot get value for observation %s -- setting to -1\n",psr[0].obsn[iobs].fname);
+             x[count] = -1;
+           }
 
        }
    if (log==1 && x[count]>0)
@@ -4060,7 +4093,7 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
    else if (plot==15)  sprintf(str,"Parallactic angle (deg)");
    else if (plot==16) sprintf(str,"Red Noise (sec)");
    else if (plot==17) sprintf(str,"DM Variations (cm^-3 pc)");
-   else if (plot==18) sprintf(str,flagStr);
+  else if (plot==18) sprintf(str,flagStr);
 }
 
 void averagePts(float *x,float *y,int n,int width,float *meanX,float *meanY,int *nMean)
@@ -4286,4 +4319,4 @@ double lmst2(double mjd,double olong,double *tsid,double *tsid_der)
 }
 
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

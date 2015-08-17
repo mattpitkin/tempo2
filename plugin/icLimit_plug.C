@@ -44,7 +44,7 @@ double getSpectra(pulsar *psr,int npsr,char *covarFuncFile,double **specX,double
 double getStatPS(pulsar *psr,int npsr,double gwAmp,double gwAlpha,int it,char *covarFuncFile,double noise,int plot,double *specX,double *specY,int *nSpec);
 void calculateWeighting(double *avSpecY,double *specX,int nSpec,double noiseLevel,double *weighting,double gwAmp,double gwAlpha);
 double calculateStatistic(double **specY,double **weighting,int *nSpec,int npsr);
-long double getTspan(pulsar *psr,int npsr);
+longdouble getTspan(pulsar *psr,int npsr);
 void formCholeskyMatrixPlugin(double *c,double *resx,double *resy,double *rese,int np,double **uinv);
 void calculateGWCholesky(double modelAlpha,double modelFc,double fitVar,double *covFunc, double dspan);
 void createGWcovarianceFunction(char *file,double gwAmp,double gwAlpha,pulsar *psr,int npsr,double *gwVar);
@@ -88,17 +88,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
   // For GW simulation
   long seed = TKsetSeed();
-  long double timeOffset;
-  long double ra_p,dec_p;
-  long double flo=0.0,fhi=0.0;
-  long double kp[3];            /* Vector pointing to pulsar           */
-  long double tspan;
-  long double time;
-  long double scale;
-  long double dist[MAX_PSR];
-  long double mean;
+  longdouble timeOffset;
+  longdouble ra_p,dec_p;
+  longdouble flo=0.0,fhi=0.0;
+  longdouble kp[3];            /* Vector pointing to pulsar           */
+  longdouble tspan;
+  longdouble time;
+  longdouble scale;
+  longdouble dist[MAX_PSR];
+  longdouble mean;
   double gwRes[MAX_OBSN];
-  long double satIdeal[MAX_PSR][MAX_OBSN]; // Should use malloc
+  longdouble satIdeal[MAX_PSR][MAX_OBSN]; // Should use malloc
 
   int ngw;
   gwSrc *gw;
@@ -272,7 +272,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  actDataY[p][i] = (float)psr[p].obsn[i].residual/1e-6;
 	  actDataE1[p][i] = actDataY[p][i]-(float)psr[p].obsn[i].toaErr;
 	  actDataE2[p][i] = actDataY[p][i]+(float)psr[p].obsn[i].toaErr;
-	  satIdeal[p][i] = psr[p].obsn[i].sat-psr[p].obsn[i].residual/86400.0L;
+	  satIdeal[p][i] = psr[p].obsn[i].sat-psr[p].obsn[i].residual/longdouble(86400.0);
 	}
     }
 
@@ -286,7 +286,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   // Should choose something sensible for these
   //
   flo=0.01/tspan;
-  fhi = 1.0/(long double)SECDAY;
+  fhi = 1.0/(longdouble)SECDAY;
   timeOffset = psr[0].param[param_pepoch].val[0];
 
   do {
@@ -323,9 +323,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		//		psr[p].obsn[i].toaErr = psr[p].obsn[i].origErr = 0.01;
 		//		psr[p].obsn[i].efac = 1;
 		//		psr[p].nT2efac = 0;
-		gwRes[i] -= (mean/(long double)psr[p].nobs);
+		gwRes[i] -= (mean/(longdouble)psr[p].nobs);
 		whiteNoise = TKgaussDev(&seed)*psr[p].obsn[i].toaErr*1.0e-6;
-		psr[p].obsn[i].sat = satIdeal[p][i] + (gwRes[i] + whiteNoise)/86400.0L;
+		psr[p].obsn[i].sat = satIdeal[p][i] + (gwRes[i] + whiteNoise)/longdouble(86400.0);
 	      }
 	    for (i=0;i<psr[p].nobs;i++)
 		x[i] = actDataX[p][i];
@@ -855,9 +855,9 @@ double getStatPS(pulsar *psr,int npsr,double gwAmp,double gwAlpha,int it,char *c
 }
 
 
-long double getTspan(pulsar *psr,int npsr)
+longdouble getTspan(pulsar *psr,int npsr)
 {
-  long double first,last;
+  longdouble first,last;
   int i,p;
     
   
@@ -1109,4 +1109,4 @@ void createGWcovarianceFunction(char *file,double gwAmp,double gwAlpha,pulsar *p
       //    exit(1);
     }
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

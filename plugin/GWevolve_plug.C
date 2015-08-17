@@ -106,7 +106,7 @@ void help() /* Display help */
   printf("tempo2 -gr GWevolve -f mypar.par mytim.tim -gwra 02:23:11.4 -gwdec 42:59:31 -e0 0.0001 -period 1.05 -theta0 60 -phi 45 -mc 1.3e10 -gwdist 80e6 -epoch 51981.0 -psrdist 1.0e3 \n");
 }
 
-long double calcAmp(gwSrc *gw);
+longdouble calcAmp(gwSrc *gw);
 
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
@@ -125,7 +125,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double gwRA,gwDEC,psrRA,psrDEC;
   double rPlus,rCross;
   double period;
-  long double res[MAX_VAL];
+  longdouble res[MAX_VAL];
   double t[MAX_VAL],t0;
   double yvals[3];
   double h1,eps,hmin;
@@ -362,8 +362,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       rPlus = rPlusE[i]-rPlusP[i];
       rCross = rCrossE[i]-rCrossP[i];
-      res[i] = psr[0].obsn[i].residual+(long double)(resE[i]-resP[i]); //0.5*(1+cos(mu))*(rPlus*cos(2.0*phi)+rCross*sin(2.0*phi));
-      psr[0].obsn[i].sat+=(long double)(resE[i]-resP[i])/86400.0L;
+      res[i] = psr[0].obsn[i].residual+(longdouble)(resE[i]-resP[i]); //0.5*(1+cos(mu))*(rPlus*cos(2.0*phi)+rCross*sin(2.0*phi));
+      psr[0].obsn[i].sat+=(longdouble)(resE[i]-resP[i])/longdouble(86400.0);
       fprintf(fo3,"residuals %g %g %g\n",(t[i]/86400.0/365.25)-toffset/365.25,(double)res[i],(double)psr[0].obsn[i].toaErr*1e-6);
     }
   fclose(fo1);
@@ -374,7 +374,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   // Now write a pure GW data-set
   for (i=0;i<nObs;i++)
     {
-      psr[0].obsn[i].sat-=(psr[0].obsn[i].residual/86400.0L);
+      psr[0].obsn[i].sat-=(psr[0].obsn[i].residual/longdouble(86400.0));
     }  
   writeTim("evolveGW.tim",psr,"tempo2");
 
@@ -613,4 +613,4 @@ double psrangle(double centre_long,double centre_lat,double psr_long,double psr_
   
   return c;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

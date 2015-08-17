@@ -60,11 +60,11 @@ int freqOffset[2]; //accepts values 0, 1, 2 and 3
 //if freqOffset[i] == 3, then its a flag identifying observations at given freq:
 char freq1f[MAX_STRLEN], freq2f[MAX_STRLEN];
 //DM after first callFit (which fits after choosing just 10cm data) and it's error
-long double dm0 = -1.0, dm0_err = -1.0;
+longdouble dm0 = -1.0, dm0_err = -1.0;
 //same for F0:
-long double f0_0 = -1.0, f0_0_err = -1.0;
+longdouble f0_0 = -1.0, f0_0_err = -1.0;
 //size of the bin:
-long double binSizeDays = 14;
+longdouble binSizeDays = 14;
 //variables needed to use only appropriate jumps
 int nf = 0;
 int valID[MAX_FLAGS];
@@ -78,9 +78,9 @@ int binObs[MAX_OBSN_VAL][2];
 int bin_fitCount = 0, bin_dmCount = 0;
 int bin_fitCount_inc = -1, bin_dmCount_inc = -1;
 //starting point of bin
-long double binStart = 1e10;
+longdouble binStart = 1e10;
 //arrays holding the calculated delta dm, its error and corresponding mjd
-long double ddm[MAX_OBSN_VAL], ddmMJD[MAX_OBSN_VAL], ddmErr[MAX_OBSN_VAL];
+longdouble ddm[MAX_OBSN_VAL], ddmMJD[MAX_OBSN_VAL], ddmErr[MAX_OBSN_VAL];
 int ddmCount = 0;
 //arrays for the daily ddm variations (both interpolated and smoothed)
 //we obtain them by interpolating ddm* and resampling daily and smoothing
@@ -136,8 +136,8 @@ void handleFreqPoints(pulsar *psr);
 void findSessions(pulsar *psr);
 void describe();
 double findMean(double *x, int count);
-void display(char *gr, int publish, double *xx, double *yy, long double *ddmMJD, long double *ddm, long double *ddmErr, int outInterpCount, int outSmoothCount, int ddmCount, char *xlab, char *ylab, char *title, double meanMJDval, double meanVal);
-void output(char *outFileName, int ascii, double dm0, int header, int outDM, double *outX, double *outY, int outInterpCount, int outSmoothCount, int mean, int meanMJD, double *meanMJDval, double *meanVal, int splineOut, int rawOut, long double *ddmMJD, long double *ddm, long double *ddmErr, int ddmCount);
+void display(char *gr, int publish, double *xx, double *yy, longdouble *ddmMJD, longdouble *ddm, longdouble *ddmErr, int outInterpCount, int outSmoothCount, int ddmCount, char *xlab, char *ylab, char *title, double meanMJDval, double meanVal);
+void output(char *outFileName, int ascii, double dm0, int header, int outDM, double *outX, double *outY, int outInterpCount, int outSmoothCount, int mean, int meanMJD, double *meanMJDval, double *meanVal, int splineOut, int rawOut, longdouble *ddmMJD, longdouble *ddm, longdouble *ddmErr, int ddmCount);
 
 void help() /* Display help */ {
   printf("\n\npress ENTER to continue\n");
@@ -346,7 +346,7 @@ extern "C" int graphicalInterface(int argc, char *argv[], pulsar *psr, int *npsr
       //            resetDMandF0(psr);
     } else if (debugFlag==1) {
       printf("==============================\nNOT ENOUGH POINTS FOR FITTING IN THE BIN\n");
-      printf("STARTING AT %Lf (%d freq1 and %d freq2 points)   \n==============================\n", binStart, bin_fitCount_inc, bin_dmCount_inc);
+      ld_printf("STARTING AT %Lf (%d freq1 and %d freq2 points)   \n==============================\n", binStart, bin_fitCount_inc, bin_dmCount_inc);
       lastUsedSession++;
     }
     if (debugFlag==1) printf("moving to next bin\n");
@@ -558,8 +558,8 @@ void handleFreqPoints(pulsar *psr) {
   //which frequencies are to be used as 'fit' and 'dm' data
   double fitFreq, dmFreq;
   //alternatively, their accepted range:
-  long double fitFreqMin = 0, fitFreqMax = 0;
-  long double dmFreqMin = 0, dmFreqMax = 0;
+  longdouble fitFreqMin = 0, fitFreqMax = 0;
+  longdouble dmFreqMin = 0, dmFreqMax = 0;
   char _tmp[100];
 
   //ensure freq1 > freq2 (i.e. use 10cm as fit and 50cm as dm)
@@ -576,15 +576,15 @@ void handleFreqPoints(pulsar *psr) {
   //adjust the range for first frequency:
   if (freqOffset[0] == 0) {
     fitFreq = 3100.0;
-    fitFreqMin = (long double) (fitFreq - 100.0);
-    fitFreqMax = (long double) (fitFreq + 100.0);
+    fitFreqMin = (longdouble) (fitFreq - 100.0);
+    fitFreqMax = (longdouble) (fitFreq + 100.0);
   } else if (freqOffset[0] == 1) {
     fitFreq = freqArray[0];
-    fitFreqMin = (long double) (fitFreq - freqArray[2]);
-    fitFreqMax = (long double) (fitFreq + freqArray[2]);
+    fitFreqMin = (longdouble) (fitFreq - freqArray[2]);
+    fitFreqMax = (longdouble) (fitFreq + freqArray[2]);
   } else if (freqOffset[0] == 2) {
-    fitFreqMin = (long double) (freqArray[4]);
-    fitFreqMax = (long double) (freqArray[5]);
+    fitFreqMin = (longdouble) (freqArray[4]);
+    fitFreqMax = (longdouble) (freqArray[5]);
     fitFreq = (fitFreqMax - fitFreqMin) / 2.0;
   } else {
     dmFreq = -1.0;
@@ -594,15 +594,15 @@ void handleFreqPoints(pulsar *psr) {
   //adjust the range for second frequency:
   if (freqOffset[1] == 0) {
     dmFreq = 685.0;
-    dmFreqMin = (long double) (dmFreq - 100.0);
-    dmFreqMax = (long double) (dmFreq + 100.0);
+    dmFreqMin = (longdouble) (dmFreq - 100.0);
+    dmFreqMax = (longdouble) (dmFreq + 100.0);
   } else if (freqOffset[1] == 1) {
     dmFreq = freqArray[1];
-    dmFreqMin = (long double) (dmFreq - freqArray[3]);
-    dmFreqMax = (long double) (dmFreq + freqArray[3]);
+    dmFreqMin = (longdouble) (dmFreq - freqArray[3]);
+    dmFreqMax = (longdouble) (dmFreq + freqArray[3]);
   } else if (freqOffset[1] == 2) {
-    dmFreqMin = (long double) (freqArray[6]);
-    dmFreqMax = (long double) (freqArray[7]);
+    dmFreqMin = (longdouble) (freqArray[6]);
+    dmFreqMax = (longdouble) (freqArray[7]);
     dmFreq = (dmFreqMax - dmFreqMin) / 2.0;
   } else {
     dmFreq = -1.0;
@@ -862,7 +862,7 @@ void interpolateWeightedSmooth() {
 //This function writes output
 //TODO: I think there's sth wrong with -mean -outDM or sth
 
-void output(char *outFileName, int ascii, double dm0, int header, int outDM, double *outX, double *outY, int outInterpCount, int outSmoothCount, int mean, int meanMJD, double *meanMJDval, double *meanVal, int splineOut, int rawOut, long double *ddmMJD, long double *ddm, long double *ddmErr, int ddmCount) {
+void output(char *outFileName, int ascii, double dm0, int header, int outDM, double *outX, double *outY, int outInterpCount, int outSmoothCount, int mean, int meanMJD, double *meanMJDval, double *meanVal, int splineOut, int rawOut, longdouble *ddmMJD, longdouble *ddm, longdouble *ddmErr, int ddmCount) {
   int i;
   double smoothX[MAX_OBSN], smoothY[MAX_OBSN];
   FILE *outFile;
@@ -952,7 +952,7 @@ void output(char *outFileName, int ascii, double dm0, int header, int outDM, dou
 
     if (header == 1) fprintf(outFile, "#%lf %d\n", dm0, ddmCount);
     for (i = 0; i < ddmCount; ++i) {
-      fprintf(outFile, "%Lf %Lf %Lf\n", ddmMJD[i] - (long double) (meanMJD * (*meanMJDval)), ddm[i] + (long double) ((outDM - mean * outDM) * dm0) - *meanVal, ddmErr[i]);
+      ld_fprintf(outFile, "%Lf %Lf %Lf\n", ddmMJD[i] - (longdouble) (meanMJD * (*meanMJDval)), ddm[i] + (longdouble) ((outDM - mean * outDM) * dm0) - *meanVal, ddmErr[i]);
     }
 
     fclose(outFile);
@@ -982,7 +982,7 @@ void get_binObs(pulsar *psr) {
   //auxilary variable for checking whether a point was used before
   int wasUsed;
   //effective bin size (it may be bigger than binSizeDays if sessionSeparation > 0)
-  long double effectiveBinEnd;
+  longdouble effectiveBinEnd;
 
   //set the bin size:
   if (sessionSeparation < 0) // fix the < and or > (next else if)
@@ -1163,7 +1163,7 @@ double findMean(double *x, int count) {
 //this function generates plot of raw, interpolated and smoothed results
 //displays it either on screen (using /XS device) or saves it to a postscript file
 
-void display(char *gr, int publish, double *xx, double *yy, long double *ddmMJD, long double *ddm, long double *ddmErr, int outInterpCount, int outSmoothCount, int ddmCount, char *xlab, char *ylab, char *title, double meanMJDval, double meanVal) {
+void display(char *gr, int publish, double *xx, double *yy, longdouble *ddmMJD, longdouble *ddm, longdouble *ddmErr, int outInterpCount, int outSmoothCount, int ddmCount, char *xlab, char *ylab, char *title, double meanMJDval, double meanVal) {
   int i;
   float fontSize = 1.0;
   int fontType = 1;
@@ -1288,4 +1288,4 @@ void findSessions(pulsar *psr)
 }//findSessions
 
 //END
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

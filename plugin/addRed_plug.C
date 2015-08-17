@@ -25,11 +25,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
   double globalParameter;
-  long double a;
-  long double alpha,toffset;
-  long double kp[3];
-  long double flo,fhi;
-  long double res[MAX_OBSN],mean;
+  longdouble a;
+  longdouble alpha,toffset;
+  longdouble kp[3];
+  longdouble flo,fhi;
+  longdouble res[MAX_OBSN],mean;
   double dist;
   int addGW=0,ngw,k;
   int j;
@@ -38,7 +38,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double varywLevel=0;
   double whitet,whitett;
   gwSrc *gw;
-  long double amp;
+  longdouble amp;
   
 
 
@@ -77,7 +77,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	sscanf(argv[++i],"%lf",&varywLevel);
     }
 
-  alpha=(alpha+3)/2.0L; // Convert to a gravitational wave alpha
+  alpha=(alpha+3)/longdouble(2.0); // Convert to a gravitational wave alpha
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
@@ -91,12 +91,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
 
-  a = (long double)amp*pow(86400.0*365.25,alpha);
+  a = (longdouble)amp*pow(86400.0*365.25,alpha);
   dist =  3.08568025e19; // 1 kpc in m
   setupPulsar_GWsim(psr[0].param[param_raj].val[0],
 		    psr[0].param[param_decj].val[0],kp);
-  flo = 1.0L/(30*365.25*86400.0L);
-  fhi = 1.0L/(2.0*86400.0L);
+  flo = longdouble(1.0)/(30*365.25*longdouble(86400.0));
+  fhi = longdouble(1.0)/(2.0*longdouble(86400.0));
   ngw = 1000;
   if((gw = (gwSrc *)malloc(sizeof(gwSrc)*ngw))==NULL){
     printf("Unable to allocate memory for gwSrc.\n");
@@ -104,20 +104,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   }
   toffset = psr[0].param[param_pepoch].val[0];
   GWbackground(gw,ngw,&seed,flo,fhi,a,alpha,1);
-  mean=0.0L;
+  mean=longdouble(0.0);
   //printf("Calc residuals 1\n");
   for (j=0;j<psr[0].nobs;j++)
     {
-      res[j]=0.0L;
+      res[j]=longdouble(0.0);
       for (k=0;k<ngw;k++)
 	res[j]+=calculateResidualGW(kp,&gw[k],
-				    (psr[0].obsn[j].sat-toffset)*86400.0L,
+				    (psr[0].obsn[j].sat-toffset)*longdouble(86400.0),
 				    dist);	  
       mean+=res[j];
     }
   for (j=0;j<psr[0].nobs;j++)
     {
-      psr[0].obsn[j].sat+=(res[j]-mean/psr[0].nobs)/86400.0L;
+      psr[0].obsn[j].sat+=(res[j]-mean/psr[0].nobs)/longdouble(86400.0);
       if (addwLevel>0)
 	{
 	  whitett = addwLevel;
@@ -126,7 +126,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      whitett = sqrt(pow(addwLevel+TKgaussDev(&seed)*varywLevel,2)+pow(100e-9,2));
 	    }
 	  whitet  =(TKgaussDev(&seed)*whitett);
-	  psr[0].obsn[j].sat+=(whitet)/86400.0L;
+	  psr[0].obsn[j].sat+=(whitet)/longdouble(86400.0);
 	  psr[0].obsn[j].toaErr = whitett/1.0e-6;
 	}
     }
@@ -143,4 +143,4 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

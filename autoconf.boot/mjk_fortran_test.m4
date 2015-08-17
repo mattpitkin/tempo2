@@ -9,7 +9,8 @@ AC_DEFUN([MJK_FORTRAN_TEST],
 
   fortran_c_links=no
   AC_F77_FUNC(mktest)
-  $ECHO "int main(int argc, char** argv){$mktest (); return 0;}" > conftest_c.c
+  $ECHO "void $mktest ();" > conftest_c.c
+  $ECHO "int main(int argc, char** argv){$mktest (); return 0;}" >> conftest_c.c
   $ECHO '      SUBROUTINE mktest ()' > conftest_for.f
   $ECHO '      write(*,*) "TEST"' >> conftest_for.f
   $ECHO '      END' >> conftest_for.f

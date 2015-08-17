@@ -45,13 +45,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   char covarFuncFile[128];
   int i;
-  double globalParameter;
+  double globalParameter=0;
   const char *CVS_verNum = "$Revision: 1.2 $";
   FILE *fout;
 
   strcpy(covarFuncFile,"NULL");
 
-  if (displayCVSversion == 1) CVSdisplayVersion((char *)"findCW.C",(char *)"plugin",CVS_verNum);
+  if (displayCVSversion == 1) CVSdisplayVersion("findCW.C","plugin",CVS_verNum);
 
   *npsr = 0;
 
@@ -86,7 +86,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
       logdbg("Calling doFit");
       if (i==0) doFitAll(psr,*npsr,covarFuncFile);   /* Do the fitting     */
-      else textOutput(psr,*npsr,globalParameter,0,0,0,(char *)"");  /* Display the output */
+      else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
 
   // Print A+ and Ax into a file
@@ -147,4 +147,4 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

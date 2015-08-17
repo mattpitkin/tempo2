@@ -25,3 +25,13 @@ tempo2
 unsupported_plugins/toasim/read_toasim
 T2runtime/plugins
 *..t2
+.*.swp
+getPeriod
+tests/testTempo2
+tests/testTKfit
+tests/*.log
+tests/*.trs
+TKlongdouble.h
+testEndToEnd
+tempo2-20*/
+tempo2-20*.tar.gz

@@ -55,7 +55,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i;
-  double globalParameter;
+  double globalParameter=0;
 
   *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
 
@@ -233,4 +233,4 @@ void doPlot(pulsar *psr,int *highFreq_id,int *lowFreq_id,double *dmVal,
 
   cpgend();  
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

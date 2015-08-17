@@ -80,12 +80,12 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 		int npol = psr[p].nFit - psr[p].fitNfree;
 		bool warn=false;
 		FILE* cvfile=fopen("dm.cv","w");
-		fprintf(cvfile,"% 7s","*");
+		fprintf(cvfile,"%-7s","*");
 		for (i=0;i<npol;i++){
-		    fprintf(cvfile,"% 7s",labels[i]);
+		    fprintf(cvfile,"%-7s",labels[i]);
 		}
 		for (i=0;i<npol;i++){
-		    fprintf(cvfile,"\n% 7s",labels[i]);
+		    fprintf(cvfile,"\n%-7s",labels[i]);
 			for (j=0;j<i;j++){
 				double cv=fabs(cvm[i][j]/sqrt((cvm[j][j])*(cvm[i][i])));
 				fprintf(cvfile,"% 7.3lf",cv);
@@ -94,7 +94,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
 						printf(" <DMMODEL> Warning: highly covariant parameters in fit!\n");
 						warn=true;
 					}
-					printf("  % 15s % 15s %lg\n",labels[i],labels[j],cv);
+					printf("  %-15s %-15s %lg\n",labels[i],labels[j],cv);
 				}
 			}
 		}

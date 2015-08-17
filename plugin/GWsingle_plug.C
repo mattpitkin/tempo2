@@ -44,10 +44,10 @@
 
 using namespace std;
 
-void doPlot(pulsar *psr,int npsr,gwSrc gw,long double **gwRes,long double timeOffset,long double tspan);
-long double getTspan(pulsar *psr,int npsr);
-void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,int plotType);
-void plotSpectrum(pulsar *psr,int p,long double timeOffset);
+void doPlot(pulsar *psr,int npsr,gwSrc gw,longdouble **gwRes,longdouble timeOffset,longdouble tspan);
+longdouble getTspan(pulsar *psr,int npsr);
+void plotResiduals(pulsar *psr,longdouble **gwRes,int p,longdouble timeOffset,int plotType);
+void plotSpectrum(pulsar *psr,int p,longdouble timeOffset);
 void plotPosn(pulsar *psr,int npsr,gwSrc gw);
 void draw_grid(double start_gl,double end_gl,double start_gb,double end_gb,double gstep,double bstep,int celestialCoords);
 void convertXY_celestial(double raj,double decj,double *retx,double *rety);
@@ -79,18 +79,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double globalParameter;
   int plotIt=0;
   int toas=0;
-  long double timeOffset;
-  long double ra_p,dec_p;
-  long double flo=0.0,fhi=0.0;
-  long double kp[3];            /* Vector pointing to pulsar           */
-  long double tspan;
-  long double time;
-  long double **gwRes;
-  long double dist[MAX_PSR];
-  long double mean;
-  long double aplus,across;
-  long double omega;
-  long double gra,gdec;
+  longdouble timeOffset;
+  longdouble ra_p,dec_p;
+  longdouble flo=0.0,fhi=0.0;
+  longdouble kp[3];            /* Vector pointing to pulsar           */
+  longdouble tspan;
+  longdouble time;
+  longdouble **gwRes;
+  longdouble dist[MAX_PSR];
+  longdouble mean;
+  longdouble aplus,across;
+  longdouble omega;
+  longdouble gra,gdec;
   int setAplus=0,setAcross=0,setOmega=0,setGra=0,setGdec=0;
   int distNum=0;
   int seed=-431;
@@ -164,9 +164,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       exit(1);
     }
 
-  gwRes = (long double **)malloc(MAX_PSR*sizeof(long double*));
+  gwRes = (longdouble **)malloc(MAX_PSR*sizeof(longdouble*));
   for (i=0;i<MAX_PSR;i++)
-    gwRes[i] = (long double *)malloc(MAX_OBSN*sizeof(long double));
+    gwRes[i] = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
   
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr);         /* Load the arrival times    */
@@ -199,7 +199,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  gwRes[p][i]+=calculateResidualGW(kp,&gw,time,dist[p]);
 	}
       for (i=0;i<psr[p].nobs;i++)	
-	psr[p].obsn[i].sat += (gwRes[p][i]/(long double)SECDAY);
+	psr[p].obsn[i].sat += (gwRes[p][i]/(longdouble)SECDAY);
     }
   formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
   formResiduals(psr,*npsr,0);           /* Form the residuals                 */
@@ -220,7 +220,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-void doPlot(pulsar *psr,int npsr,gwSrc gw,long double **gwRes,long double timeOffset,long double tspan)
+void doPlot(pulsar *psr,int npsr,gwSrc gw,longdouble **gwRes,longdouble timeOffset,longdouble tspan)
 {
   int plot=1;
   int pulsar=0;
@@ -286,7 +286,7 @@ void plotPosn(pulsar *psr,int npsr,gwSrc gw)
     }
 }
 
-void plotSpectrum(pulsar *psr,int p,long double timeOffset)
+void plotSpectrum(pulsar *psr,int p,longdouble timeOffset)
 {
   float maxx,minx,maxy,miny;
   float fx[MAX_OBSN],fy[MAX_OBSN];
@@ -318,7 +318,7 @@ void plotSpectrum(pulsar *psr,int p,long double timeOffset)
   cpgline(outN,fx,fy);
 }
 
-void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,int plotType)
+void plotResiduals(pulsar *psr,longdouble **gwRes,int p,longdouble timeOffset,int plotType)
 {
   float px[MAX_OBSN],py[MAX_OBSN];
   float minx,maxx,miny,maxy;
@@ -367,9 +367,9 @@ void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,
   cpgerry(psr[p].nobs,px,yerr1,yerr2,1);
 }
 
-long double getTspan(pulsar *psr,int npsr)
+longdouble getTspan(pulsar *psr,int npsr)
 {
-  long double first,last;
+  longdouble first,last;
   int i,p;
     
   
@@ -507,4 +507,4 @@ void convertXY_celestial(double raj,double decj,double *retx,double *rety)
   *retx = x_ret;
   *rety = y_ret;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

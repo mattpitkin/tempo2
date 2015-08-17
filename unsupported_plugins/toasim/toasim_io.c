@@ -4,15 +4,15 @@
 #include <stdint.h>
 #include "toasim.h"
 
-int fwrite_err(const void *ptr, size_t size, size_t count, FILE *stream){
-	int c=fwrite(ptr,size,count,stream);
+void fwrite_err(const void *ptr, size_t size, size_t count, FILE *stream){
+	unsigned c=fwrite(ptr,size,count,stream);
 	if(c!=count){
-		fprintf(stderr,"count %d != %d %d\n",count,c,size);
+		fprintf(stderr,"count %u != %u %u\n",(unsigned)count,c,(unsigned)size);
 		perror("toasim: write error");
-	}
+    }
 }
 
-int fread_err(void *ptr, size_t size, size_t count, FILE *stream){
+void fread_err(void *ptr, size_t size, size_t count, FILE *stream){
 	if(fread(ptr,size,count,stream)!=count){
 		if (ferror(stream)){
 			perror("toasim: read error");
@@ -74,20 +74,20 @@ void toasim_read_64(void* val, FILE* file){
 
 
 
-void toasim_write_str(char* fname, char* str,FILE *file){
+void toasim_write_str(const char* fname, const char* str,FILE *file){
 	uint32_t sz=(uint32_t)strlen(str);
 	fwrite_err(fname,4,1,file);
 	fwrite_err(&sz,sizeof(uint32_t),1,file);
 	fwrite_err(str,1,strlen(str),file);
 }
 
-void toasim_write_32(char* fname, void* val, FILE *file){
+void toasim_write_32(const  char* fname,const void* val, FILE *file){
 	uint32_t sz=4;
 	fwrite_err(fname,4,1,file);
 	fwrite_err(&sz,4,1,file);
 	fwrite_err(val,sz,1,file);
 }
-void toasim_write_64(char* fname, void* val, FILE *file){
+void toasim_write_64(const char* fname, const void* val, FILE *file){
 	uint32_t sz=8;
 	fwrite_err(fname,4,1,file);
 	fwrite_err(&sz,4,1,file);
@@ -177,7 +177,7 @@ toasim_header_t *toasim_read_header(FILE *file){
 }
 
 
-void *toasim_write_corrections_array(double* offsets,double a0, double a1, double a2, char* param, toasim_header_t* header, FILE* file){
+void toasim_write_corrections_array(double* offsets,double a0, double a1, double a2, char* param, toasim_header_t* header, FILE* file){
 	toasim_corrections_t *corr = (toasim_corrections_t*) malloc(sizeof(toasim_corrections_t));
 	corr->offsets = offsets;
 	corr->a0=a0;
@@ -200,7 +200,7 @@ void *toasim_write_corrections_array(double* offsets,double a0, double a1, doubl
 }
 
 
-void *toasim_write_corrections(toasim_corrections_t* corr, toasim_header_t* header, FILE* file){
+void toasim_write_corrections(toasim_corrections_t* corr, toasim_header_t* header, FILE* file){
 	char key[8];
 	strcpy(key,"CORR");
 	fwrite_err(key,4,1,file);

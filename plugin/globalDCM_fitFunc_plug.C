@@ -28,7 +28,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   double *val,*error;
   double *x,*y,*sig,*sigOrig,**covar,***uinv;
   double whiteres[MAX_OBSN];
-  long double toffset;
+  longdouble toffset;
   double chisq;
   int weight=0;
   int count=0;
@@ -1625,4 +1625,4 @@ void formCholeskyMatrix2(double *c,double *resx,double *resy,double *rese,int np
   free(u);
   free(cholp);
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

@@ -64,20 +64,25 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char random[100];
   char read_f=0;
   FILE *fout,*fin;
-  char addCubic[100]="n",temp[100];
-  char formstr[50]="tempo2";
-  char smooth[100]="n";
+  char addCubic[100],temp[100];
+  char formstr[50];
+  char smooth[100];
   int  psrNum,giveRMS=-1,setrand=-1,setred=-1,Npsr=0;
   int timesFile=0;
   char fake_fname[100];
   char have_outfile=0;
   char outfile[100];
   char timesfname[100];
-  char telID[128]="7"; // Hardcode to Parkes
+  char telID[128];
   int bunching=0; // flag on whether or not observations occur in groups
   // size of gap between observing runs, and length of observing runs.
   // These defaults give 7 observations every 28 days.
-  long double gapsize=21,hillsize=7,gapstartmjd;
+  longdouble gapsize=21,hillsize=7,gapstartmjd;
+  strcpy(formstr,"tempo2");
+  strcpy(smooth,"n");
+  strcpy(addCubic,"n");
+  strcpy(telID,"7"); // Hardcode to Parkes
+  
   // Flag whether or not to ask for red noise variables.
   *npsr = 1;
 
@@ -93,8 +98,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Have >>%d<< observations per day\n",nday);
     }
     if (strcmp(argv[i],"-idum")==0){
-	sscanf(argv[i+1],"%d",&idum);
-	printf("Have idum >>%d<<\n",idum);
+	sscanf(argv[i+1],"%ld",&idum);
+	printf("Have idum >>%ld<<\n",idum);
     }
     if(strcmp(argv[i],"-ha")==0){
       sscanf(argv[i+1],"%lf",&hamax);
@@ -106,23 +111,23 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       setrand=1;
     }
     if(strcmp(argv[i],"-start")==0){
-      sscanf(argv[i+1],"%Lf",&imjd);
+      imjd=parse_longdouble(argv[i+1]);
       printf("Have initial MJD >>%lf<<\n",(double)imjd);
     }
     if(strcmp(argv[i],"-tel")==0){
       sscanf(argv[i+1],"%s",telID);
     }
     if(strcmp(argv[i],"-end")==0){
-      sscanf(argv[i+1],"%Lf",&fmjd);
+      fmjd=parse_longdouble(argv[i+1]);
       printf("Have final MJD >>%lf<<\n",(double)fmjd);
     }
     if(strcmp(argv[i],"-rms")==0){
-      sscanf(argv[i+1],"%Lf",&grms);
+      grms=parse_longdouble(argv[i+1]);
       giveRMS=1;
       printf("Have Gaussian noise rms >>%lf<<\n",(double)grms);
     }
     if(strcmp(argv[i],"-format")==0){
-	sscanf(argv[i+1],"%s",&formstr);
+	sscanf(argv[i+1],"%s",formstr);
 	printf("Have output format >>%s<<\n",formstr);
     }
     if(strcmp(argv[i],"-nit")==0){
@@ -130,7 +135,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
     if (strcmp(argv[i],"-times")==0){
       timesFile=1;
-      sscanf(argv[i+1],"%s",&timesfname);
+      sscanf(argv[i+1],"%s",timesfname);
       printf("Timesfile = %s\n",timesfname);
     }
     if (strcmp(argv[i],"-setref")==0)
@@ -138,7 +143,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     if (strcmp(argv[i],"-o")==0){
       have_outfile=1;
-      sscanf(argv[i+1],"%s",&outfile);
+      sscanf(argv[i+1],"%s",outfile);
       printf("outfile = %s\n",outfile);
     }
 
@@ -150,8 +155,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     if(strcmp(argv[i],"-group")==0){
 	bunching = 1;
-	sscanf(argv[i+1],"%Lf",&hillsize);
-	sscanf(argv[i+2],"%Lf",&gapsize);
+    hillsize=parse_longdouble(argv[i+1]);
+    gapsize=parse_longdouble(argv[i+2]);
+
 	printf("Will simulate runs of %lg observing days long and leave a gap of %lg days between runs.\n",
 	       (double)hillsize,(double)gapsize);
     }
@@ -205,12 +211,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if(nday<0) {    printf("Enter number of observations/day .......... "); scanf("%d",&nday);}
   if(hamax<0 && nday!=1)  {  
       printf("Enter max absolute HA...................... "); scanf("%lf", &hamax);}
-  if(setrand!=1){ printf("Random HA coverage? (y/n) ................. "); scanf("%s",&random);}
-  if(imjd<0)   {  printf("Enter initial MJD ......................... "); scanf("%Lf",&imjd);}
-  if(fmjd<0)   {  printf("Enter final MJD ........................... "); scanf("%Lf",&fmjd);}
+  if(setrand!=1){ printf("Random HA coverage? (y/n) ................. "); scanf("%s",random);}
+  double d;
+  if(imjd<0)   {  ld_printf("Enter initial MJD ......................... "); scanf("%lf",&d);imjd=d;}
+  if(fmjd<0)   {  ld_printf("Enter final MJD ........................... "); scanf("%lf",&d);fmjd=d;}
   if(giveRMS<0){
     printf("Enter Gaussian noise rms  (ms/auto)........ "); scanf("%s",temp);
-    giveRMS = sscanf(temp,"%Lf",&grms);
+    giveRMS = sscanf(temp,"%lf",&d);
+    grms=d;
   }
 
   printf("GIVE RMS = %d\n",giveRMS);
@@ -288,22 +296,27 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       amjd =  trmjd;
       gapstartmjd = imjd+(hillsize)/solsid;
 
+                char s1[1024];
+                char s2[1024];
       do {
 	  for (j=0;j<nday;j++)
 	      {
 		if (timesFile==1)
 		  {
 		    if (read_f){
-		      if (fscanf(fin,"%s %Lf %Lf\n",fake_fname,&freq,&mjd)==3)
+		      if (fscanf(fin,"%s %s %s\n",fake_fname,s1,s2)==3) 
 			{
-			  printf("Read %g %f\n",(double)mjd, (double)freq);
-			  endit=0;
+                freq=parse_longdouble(s1);
+                mjd=parse_longdouble(s2);
+                printf("Read %g %f\n",(double)mjd, (double)freq);
+                endit=0;
 			}
 		      else
-			endit=1;
+                  endit=1;
 		    } else{
-		      if (fscanf(fin,"%Lf",&mjd)==1)
+		      if (fscanf(fin,"%s",s1)==1)
 			{
+                mjd=parse_longdouble(s1);
 			  printf("Read %g\n",(double)mjd);
 			  endit=0;
 			}
@@ -450,6 +463,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Output TOA file written to %s\n",str);
       writeTim(str,psr,formstr);      
   }
+  return 0;
 }
 
 /* This function calls all of the fitting routines.             */
@@ -473,4 +487,4 @@ void callFit(pulsar *psr,int npsr){
     }
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

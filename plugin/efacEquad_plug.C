@@ -58,7 +58,7 @@ void kstwo(double data1[], unsigned long n1, double data2[], unsigned long n2,
 double probks(double alam);
 double gaussFunc(double val);
 void sort(unsigned long n, double arr[]);
-void nrerror(char error_text[]);
+void nrerror(const char *error_text);
 double erff(double x);
 void ksone(double data[], unsigned long n, double (*func)(double), double *d,
 	   double *prob);
@@ -77,7 +77,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i,j,k;
-  double globalParameter;
+  double globalParameter=0;
   const char *CVS_verNum = "$Revision: 1.6 $";
   char flagID[128];
   int nFlag=0;
@@ -816,7 +816,7 @@ void calcEfacEquad2(double *px,double *py,double *pe,int npts,double *efacRet,do
   printf("Complete search\n");
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
 
 
 void kstwo(double data1[], unsigned long n1, double data2[], unsigned long n2,
@@ -935,7 +935,7 @@ int *ivector(long nl, long nh)
 	return v-nl+NR_END;
 }
 
-void nrerror(char error_text[])
+void nrerror(const char *error_text)
 /* Numerical Recipes standard error handler */
 {
 	fprintf(stderr,"Numerical Recipes run-time error...\n");
@@ -979,9 +979,9 @@ double erff(double x)
 
 double gammp(double a, double x)
 {
-	void gcf(double *gammcf, double a, double x, double *gln);
-	void gser(double *gamser, double a, double x, double *gln);
-	void nrerror(char error_text[]);
+//	void gcf(double *gammcf, double a, double x, double *gln);
+//	void gser(double *gamser, double a, double x, double *gln);
+//	void nrerror(char error_text[]);
 	double gamser,gammcf,gln;
 
 	if (x < 0.0 || a <= 0.0) nrerror("Invalid arguments in routine gammp");
@@ -999,8 +999,8 @@ double gammp(double a, double x)
 
 void gcf(double *gammcf, double a, double x, double *gln)
 {
-	double gammln(double xx);
-	void nrerror(char error_text[]);
+	//double gammln(double xx);
+	//void nrerror(char error_text[]);
 	int i;
 	double an,b,c,d,del,h;
 
@@ -1030,8 +1030,8 @@ void gcf(double *gammcf, double a, double x, double *gln)
 
 void gser(double *gamser, double a, double x, double *gln)
 {
-	double gammln(double xx);
-	void nrerror(char error_text[]);
+	//double gammln(double xx);
+	//void nrerror(char error_text[]);
 	int n;
 	double sum,del,ap;
 

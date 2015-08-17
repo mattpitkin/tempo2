@@ -9,8 +9,8 @@ typedef unsigned int JPLlong;
 /***** THERE IS NO NEED TO MODIFY THE REST OF THIS SOURCE (I hope) *********/
 
 
-            /* A JPL binary ephemeris header contains five doubles and */
-            /* (up to) 41 long integers,  so:                          */
+/* A JPL binary ephemeris header contains five doubles and */
+/* (up to) 41 long integers,  so:                          */
 
 
 #define JPL_HEADER_SIZE (5 * sizeof( double) + 41 * sizeof( JPLlong))
@@ -20,25 +20,25 @@ typedef unsigned int JPLlong;
 #pragma pack(1)
 
 struct jpl_eph_data {
-   double ephem_start, ephem_end, ephem_step;
-   JPLlong ncon;
-   double au;
-   double emrat;
-   JPLlong ipt[13][3];
-   JPLlong ephemeris_version;
-   JPLlong kernel_size, recsize, ncoeff;
-   JPLlong swap_bytes;
-   JPLlong curr_cache_loc;
-   double pvsun[6];
-   double *cache;
-   void *iinfo;
-   FILE *ifile;
-   };
+    double ephem_start, ephem_end, ephem_step;
+    JPLlong ncon;
+    double au;
+    double emrat;
+    JPLlong ipt[13][3];
+    JPLlong ephemeris_version;
+    JPLlong kernel_size, recsize, ncoeff;
+    JPLlong swap_bytes;
+    JPLlong curr_cache_loc;
+    double pvsun[6];
+    double *cache;
+    void *iinfo;
+    FILE *ifile;
+};
 
 struct interpolation_info
-   {
-   double pc[18],vc[18], twot;
-   int np, nv;
-   };
+{
+    double pc[18],vc[18], twot;
+    int np, nv;
+};
 
 #pragma pack()

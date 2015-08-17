@@ -8,11 +8,11 @@ void T2cubicFit(double *resx,double *resy,double *rese,int nres,double *cubicVal
 
 void T2findSmoothCurve(double *resx,double *resy,double *rese,int nres,double *cubicVal,double *smoothModel,double expSmooth);
 void T2interpolate(double *resx,double *resy,double *rese,
-		 int nres,double *cubicVal,double *interpX,
-		   double *interpY,int *nInterp,int interpTime,double expSmooth);
+        int nres,double *cubicVal,double *interpX,
+        double *interpY,int *nInterp,int interpTime,double expSmooth);
 void T2getHighFreqRes(double *resy,double *smoothModel,int nres,double *highFreqRes);
 int T2calculateSpectra(double *x,double *y,double *e,int n,int useErr,int preWhite,
-		     int specType,double *specX,double *specY);
+        int specType,double *specX,double *specY);
 
 //int fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt);
 

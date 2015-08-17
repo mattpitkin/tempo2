@@ -45,10 +45,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timFile[MAX_PSR][MAX_FILELEN];
   int i,j,k,l,m,argn=0;
   double globalParameter;
-  long double centreMJD;
-  long double avMJD;
+  longdouble centreMJD;
+  longdouble avMJD;
   int nav;
-  long double newTOA;
+  longdouble newTOA;
   const char *CVS_verNum = "$Revision: 1.4 $";
   char timeList[MAX_STRLEN];
   char parFileName[MAX_TIMES][MAX_STRLEN];
@@ -56,7 +56,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   int nStride=0;
   FILE *fin;
   int nread;
-  long double mjd1[MAX_TIMES],mjd2[MAX_TIMES];
+  longdouble mjd1[MAX_TIMES],mjd2[MAX_TIMES];
   char tname[100];
   FILE *fout;
   FILE *fout2;
@@ -64,7 +64,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char str[1024];
   int closeID,t,fitF0=0;
   double distance=0;
-  long double oldF0;
+  longdouble oldF0;
   int autoblock=0;
 
   int addFlags=0;
@@ -167,7 +167,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Have loaded %d strides\n",nStride);
       for (i=0;i<nStride;i++)
 	{
-	  printf("Stride at %d with %.15Lf %.15Lf\n",i,mjd1[i],mjd2[i]);
+	  ld_printf("Stride at %d with %.15Lf %.15Lf\n",i,mjd1[i],mjd2[i]);
 	}
     }
 
@@ -216,15 +216,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       fout3 = fopen("short.tim","w");
       fprintf(fout3,"FORMAT 1\n");
       nav=0;
-      avMJD = 0.0L;
+      avMJD = longdouble(0.0);
       for (k=0;k<psr[0].nobs;k++)
 	{
 	  if (psr[0].obsn[k].sat >= mjd1[i] && psr[0].obsn[k].sat < mjd2[i])
 	    {
-	      fprintf(fout3,"%s %.8f %.17Lf %.5f %s ",psr[0].obsn[k].fname,
+	      ld_fprintf(fout3,"%s %.8f %.17Lf %.5f %s ",psr[0].obsn[k].fname,
 		      psr[0].obsn[k].freq,psr[0].obsn[k].sat,
 		      psr[0].obsn[k].toaErr,psr[0].obsn[k].telID);
-	      printf("%s %.8f %.17Lf %.5f %s ",psr[0].obsn[k].fname,
+	      ld_printf("%s %.8f %.17Lf %.5f %s ",psr[0].obsn[k].fname,
 		      psr[0].obsn[k].freq,psr[0].obsn[k].sat,
 		      psr[0].obsn[k].toaErr,psr[0].obsn[k].telID);
 	      printf("** %d ** ",psr[0].obsn[k].nFlags);
@@ -247,11 +247,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("JUMP2: %d\n",psr[0].fitJump[2]);
       if (nav == 0)
 	{
-	  printf("Cannot identify any points within the current region: mjd = %.15Lf to %.15Lf\n",mjd1[i],mjd2[i]);
+	  ld_printf("Cannot identify any points within the current region: mjd = %.15Lf to %.15Lf\n",mjd1[i],mjd2[i]);
 	  exit(1);
 	}
 
-      avMJD/=(long double)nav;
+      avMJD/=(longdouble)nav;
       centreMJD = avMJD;
       fclose(fout3);
 
@@ -391,28 +391,28 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	
 	for (j=0;j<3;j++) // Iterate to converge
 	  {
-	    psr[0].obsn[psr[0].nobs-1].sat  -= (long double)(psr[0].obsn[psr[0].nobs-1].residual-psr[0].offset)/SECDAY;
+	    psr[0].obsn[psr[0].nobs-1].sat  -= (longdouble)(psr[0].obsn[psr[0].nobs-1].residual-psr[0].offset)/SECDAY;
 	    formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
 	    formResiduals(psr,*npsr,0);    /* Form the residuals                 */
 	  }
-	//      psr[0].obsn[psr[0].nobs-1].sat += (long double)psr[0].offset/SECDAY;
+	//      psr[0].obsn[psr[0].nobs-1].sat += (longdouble)psr[0].offset/SECDAY;
 	formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
 	formResiduals(psr,*npsr,0);    /* Form the residuals                 */
 	if (psr[0].nobs==2) // Only dealing with one point
 		  { 
 		    // NOT SURE WHY I DID THIS ... (commented out now)
-		    //		    fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1\n",psr[0].obsn[psr[0].nobs-2].fname,
+		    //		    ld_fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1\n",psr[0].obsn[psr[0].nobs-2].fname,
 		    //			    psr[0].obsn[psr[0].nobs-2].freq,psr[0].obsn[psr[0].nobs-2].sat,
 		    //			    psr[0].obsn[psr[0].nobs-2].toaErr,psr[0].obsn[psr[0].nobs-2].telID);
 
 		    // Note that error is NAN and so use the original eror
-		    fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit 1",psr[0].obsn[psr[0].nobs-1].fname,
+		    ld_fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit 1",psr[0].obsn[psr[0].nobs-1].fname,
 		    			    psr[0].obsn[psr[0].nobs-1].freq,psr[0].obsn[psr[0].nobs-1].sat,
 		    			    psr[0].obsn[psr[0].nobs-2].toaErr,psr[0].obsn[psr[0].nobs-1].telID);
 	  }
 	else
 	  {
-	    fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit %d",psr[0].obsn[psr[0].nobs-1].fname,
+	    ld_fprintf(fout,"%s %.8f %.17Lf %.5f %s -av 1 -nfit %d",psr[0].obsn[psr[0].nobs-1].fname,
 		    psr[0].obsn[psr[0].nobs-1].freq,psr[0].obsn[psr[0].nobs-1].sat,
 		    psr[0].obsn[psr[0].nobs-1].toaErr,psr[0].obsn[psr[0].nobs-1].telID,psr[0].nobs);
 	  }
@@ -442,4 +442,4 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

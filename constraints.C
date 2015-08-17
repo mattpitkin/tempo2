@@ -7,7 +7,7 @@
 
 //#define CONSTRAINT_WEIGHTS
 
-std::string get_constraint_name(enum constraint c){
+std::string get_constraint_name(unsigned c){
 #ifdef CONSTRAINT_WEIGHTS
     printf("[WT]");
 #endif
@@ -114,6 +114,9 @@ std::string get_constraint_name(enum constraint c){
         default:
             return "UNKNOWN!";
     }
+}
+std::string get_constraint_name(enum constraint c){
+    return get_constraint_name(static_cast<int>(c));
 }
 
 
@@ -279,7 +282,8 @@ void computeConstraintWeights(pulsar *psr){
     return;
 }
 
-double consFunc_dmmodel_mean(pulsar *psr,int i,int k){
+double consFunc_dmmodel_mean(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=dmmodel and when fit parameter is 
      * one of the frequency dependant parts (i.e. first dmoffsNum)
@@ -290,12 +294,13 @@ double consFunc_dmmodel_mean(pulsar *psr,int i,int k){
     } else return 0;
 }
 
-double consFunc_dmmodel_dm1(pulsar *psr,int i,int k){
+double consFunc_dmmodel_dm1(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=dmmodel and when fit parameter is 
      * one of the frequency dependant parts (i.e. first dmoffsNum)
      */
-    long double epoch = psr->param[param_dmepoch].val[0];
+    longdouble epoch = psr->param[param_dmepoch].val[0];
     int nDM=psr->dmoffsDMnum;
     printf("WE ARE IN HERE\n");
     if(i==param_dmmodel && k < nDM){
@@ -304,7 +309,8 @@ double consFunc_dmmodel_dm1(pulsar *psr,int i,int k){
     } else return 0;
 }
 
-double consFunc_dmmodel_cw(pulsar *psr,int i,int k,int order){
+double consFunc_dmmodel_cw(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=dmmodel and when fit parameter is 
      * one of the frequency independant parts (i.e. last dmoffsNum).
@@ -312,14 +318,15 @@ double consFunc_dmmodel_cw(pulsar *psr,int i,int k,int order){
     int nDM=psr->dmoffsDMnum;
     if(i==param_dmmodel && k >= nDM){
         k-=nDM;
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double w=psr->dmoffsCM_weight[k];
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble w=psr->dmoffsCM_weight[k];
         return w*pow(psr->dmoffsCM_mjd[k]-epoch,order);
     } else return 0;
 
 }
 
-double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k,int order){
+double consFunc_dmmodel_cw_year(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=dmmodel and when fit parameter is 
      * one of the frequency independant parts (i.e. last dmoffsNum).
@@ -329,29 +336,29 @@ double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k,int order){
         k-=nDM;
         double rc;
         double s[3];
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double t = psr->dmoffsCM_mjd[k]-epoch;
-        long double x = 2.0*M_PI*t/365.25;
-        long double w=psr->dmoffsCM_weight[k];
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble t = psr->dmoffsCM_mjd[k]-epoch;
+        longdouble x = longdouble(2.0)*M_PIq*t/longdouble(365.25);
+        longdouble w=psr->dmoffsCM_weight[k];
         switch (order){
             case 0:
-                return w*sin(x);
+                return w*sinl(x);
             case 1:
-                return w*cos(x);
+                return w*cosl(x);
             case 2:
-                return w*x*sin(x);
+                return w*x*sinl(x);
             case 3:
-                return w*x*cos(x);
+                return w*x*cosl(x);
             case 4:
-                return w*sin(2*x);
+                return w*sinl(2*x);
             case 5:
-                return w*cos(2*x);
+                return w*cosl(2*x);
             case 6:
                 t = psr->dmoffsCM_mjd[k]-52995.0;
                 x=2*M_PI*t/365.25;
-                s[0]=-500*sin(x);
-                s[1]=450*cos(x);
-                s[2]=200*cos(x);
+                s[0]=-500*sinl(x);
+                s[1]=450*cosl(x);
+                s[2]=200*cosl(x);
                 rc=dotproduct(psr[0].posPulsar,s) / sqrt(dotproduct(psr[0].posPulsar,psr[0].posPulsar)*dotproduct(s,s));
                 return w*rc;
             default:
@@ -362,38 +369,42 @@ double consFunc_dmmodel_cw_year(pulsar *psr,int i,int k,int order){
 }
 
 
-double consFunc_tel_dx(pulsar *psr,int i,int k,int order){
+double consFunc_tel_dx(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     if(i==param_tel_dx){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->telDX_t[k]-epoch,order);
     }
     else return 0;
 }
 
-double consFunc_tel_dy(pulsar *psr,int i,int k,int order){
+double consFunc_tel_dy(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     if(i==param_tel_dy){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->telDY_t[k]-epoch,order);
     }
     else return 0;
 }
 
-double consFunc_tel_dz(pulsar *psr,int i,int k,int order){
+double consFunc_tel_dz(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     if(i==param_tel_dz){
         //    printf("In contraint with k = %d, order = %d\n",k,order); 
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->telDZ_t[k]-epoch,order);
     }
     else return 0;
 }
 
-double consFunc_ifunc(pulsar *psr,int i,int k,int order){
+double consFunc_ifunc(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=ifunc and when fit parameter is 
      * one of the frequency independant parts (i.e. last ifuncN).
      */
     if(i==param_ifunc){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         //	  printf("IFUNC: CONSTRAINT: %s %g %g %d\n",psr->name,psr->ifunc_weights[k],(double)epoch,order);
         return psr->ifunc_weights[k]*pow(psr->ifuncT[k]-epoch,order);
 
@@ -401,15 +412,16 @@ double consFunc_ifunc(pulsar *psr,int i,int k,int order){
     else return 0;
 }
 
-double consFunc_qifunc_p_year(pulsar *psr,int i,int k,int order){
+double consFunc_qifunc_p_year(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=dmmodel and when fit parameter is 
      * one of the frequency independant parts (i.e. last dmoffsNum).
      */
     if(i==param_quad_ifunc_p && k < psr->quad_ifuncN_p){
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double t = psr->quad_ifuncT_p[k%psr->quad_ifuncN_p]-epoch;
-        long double x = 2.0*M_PI*t/365.25;
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble t = psr->quad_ifuncT_p[k%psr->quad_ifuncN_p]-epoch;
+        longdouble x = 2.0*M_PI*t/365.25;
         switch (order){
             case 0:
                 return sin(x);
@@ -430,15 +442,16 @@ double consFunc_qifunc_p_year(pulsar *psr,int i,int k,int order){
     } else return 0;
 }
 
-double consFunc_qifunc_c_year(pulsar *psr,int i,int k,int order){
+double consFunc_qifunc_c_year(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=dmmodel and when fit parameter is 
      * one of the frequency independant parts (i.e. last dmoffsNum).
      */
     if(i==param_quad_ifunc_c && k < psr->quad_ifuncN_c){
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double t = psr->quad_ifuncT_c[k%psr->quad_ifuncN_c]-epoch;
-        long double x = 2.0*M_PI*t/365.25;
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble t = psr->quad_ifuncT_c[k%psr->quad_ifuncN_c]-epoch;
+        longdouble x = 2.0*M_PI*t/365.25;
         switch (order){
             case 0:
                 return sin(x);
@@ -458,15 +471,16 @@ double consFunc_qifunc_c_year(pulsar *psr,int i,int k,int order){
     } else return 0;
 }
 
-double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
+double consFunc_ifunc_year(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=dmmodel and when fit parameter is 
      * one of the frequency independant parts (i.e. last dmoffsNum).
      */
     if(i==param_ifunc && k < psr->ifuncN){
-        long double epoch = psr->param[param_pepoch].val[0];
-        long double t = psr->ifuncT[k%psr->ifuncN]-epoch;
-        long double x = 2.0*M_PI*t/365.25;
+        longdouble epoch = psr->param[param_pepoch].val[0];
+        longdouble t = psr->ifuncT[k%psr->ifuncN]-epoch;
+        longdouble x = 2.0*M_PI*t/365.25;
         switch (order){
             case 0:
                 return psr->ifunc_weights[k]*sin(x);
@@ -488,24 +502,26 @@ double consFunc_ifunc_year(pulsar *psr,int i,int k,int order){
 }
 
 
-double consFunc_quad_ifunc_p(pulsar *psr,int i,int k,int order){
+double consFunc_quad_ifunc_p(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=ifunc and when fit parameter is 
      * one of the frequency independant parts (i.e. last ifuncN).
      */
     if(i==param_quad_ifunc_p){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->quad_ifuncT_p[k]-epoch,order);
     }
     else return 0;
 }
-double consFunc_quad_ifunc_c(pulsar *psr,int i,int k,int order){
+double consFunc_quad_ifunc_c(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=ifunc and when fit parameter is 
      * one of the frequency independant parts (i.e. last ifuncN).
      */
     if(i==param_quad_ifunc_c){
-        long double epoch = psr->param[param_pepoch].val[0];
+        longdouble epoch = psr->param[param_pepoch].val[0];
         return pow(psr->quad_ifuncT_c[k]-epoch,order);
     }
     else return 0;
@@ -792,15 +808,21 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
  *
  */
 double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
-    int order=0;
-    switch(psr->constraints[iconstraint]){
-        case constraint_dmmodel_mean:
-            return consFunc_dmmodel_mean(psr,i,k);
+    return standardConstraintFunctions(psr,0,iconstraint,i,0,k);
+}
 
+double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+    const int i = iparam;
+    int order=0;
+    double EFACTOR=1e20;
+    logdbg("%d: %s ipar=%d ck=%d pk=%d ipsr=%d",iconstraint,get_constraint_name(iconstraint).c_str(),iparam,constraintk,k,ipsr);
+    switch(iconstraint){
+        case constraint_dmmodel_mean:
+            return EFACTOR*consFunc_dmmodel_mean(psr,ipsr,i,k,0);
             // Notice that these case statements fall through, so order is defined
             // based on which constraint name is used.
         case constraint_dmmodel_dm1:
-            return consFunc_dmmodel_dm1(psr,i,k);
+            return EFACTOR*consFunc_dmmodel_dm1(psr,ipsr,i,k,0);
         case constraint_dmmodel_cw_3:
             order++;
         case constraint_dmmodel_cw_2:
@@ -808,43 +830,43 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
         case constraint_dmmodel_cw_1:
             order++;
         case constraint_dmmodel_cw_0:
-            return consFunc_dmmodel_cw(psr,i,k,order);
+            return EFACTOR*consFunc_dmmodel_cw(psr,ipsr,i,k,order);
         case constraint_ifunc_2:
             order++;
         case constraint_ifunc_1:
             order++;
         case constraint_ifunc_0:
-            return consFunc_ifunc(psr,i,k,order);
+            return EFACTOR*consFunc_ifunc(psr,ipsr,i,k,order);
         case constraint_tel_dx_2:
             order++;
         case constraint_tel_dx_1:
             order++;
         case constraint_tel_dx_0:
-            return consFunc_tel_dx(psr,i,k,order);
+            return EFACTOR*consFunc_tel_dx(psr,ipsr,i,k,order);
         case constraint_tel_dy_2:
             order++;
         case constraint_tel_dy_1:
             order++;
         case constraint_tel_dy_0:
-            return consFunc_tel_dy(psr,i,k,order);
+            return EFACTOR*consFunc_tel_dy(psr,ipsr,i,k,order);
         case constraint_tel_dz_2:
             order++;
         case constraint_tel_dz_1:
             order++;
         case constraint_tel_dz_0:
-            return consFunc_tel_dz(psr,i,k,order);
+            return EFACTOR*consFunc_tel_dz(psr,ipsr,i,k,order);
         case constraint_quad_ifunc_p_2:
             order++;
         case constraint_quad_ifunc_p_1:
             order++;
         case constraint_quad_ifunc_p_0:
-            return consFunc_quad_ifunc_p(psr,i,k,order);
+            return EFACTOR*consFunc_quad_ifunc_p(psr,ipsr,i,k,order);
         case constraint_quad_ifunc_c_2:
             order++;
         case constraint_quad_ifunc_c_1:
             order++;
         case constraint_quad_ifunc_c_0:
-            return consFunc_quad_ifunc_c(psr,i,k,order);
+            return EFACTOR*consFunc_quad_ifunc_c(psr,ipsr,i,k,order);
 
             // DMMODEL annual terms
         case constraint_dmmodel_cw_px:
@@ -860,7 +882,7 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
         case constraint_dmmodel_cw_year_cos:
             order++;
         case constraint_dmmodel_cw_year_sin:
-            return consFunc_dmmodel_cw_year(psr,i,k,order);
+            return EFACTOR*consFunc_dmmodel_cw_year(psr,ipsr,i,k,order);
 
             // IFUNC annual terms
         case constraint_ifunc_year_cos2:
@@ -874,7 +896,7 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
         case constraint_ifunc_year_cos:
             order++;
         case constraint_ifunc_year_sin:
-            return consFunc_ifunc_year(psr,i,k,order);
+            return EFACTOR*consFunc_ifunc_year(psr,ipsr,i,k,order);
 
             // QIFUNC_p annual terms
         case constraint_qifunc_p_year_cos2:
@@ -888,7 +910,7 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
         case constraint_qifunc_p_year_cos:
             order++;
         case constraint_qifunc_p_year_sin:
-            return consFunc_qifunc_p_year(psr,i,k,order);
+            return EFACTOR*consFunc_qifunc_p_year(psr,ipsr,i,k,order);
 
             // QIFUNC_c annual terms
         case constraint_qifunc_c_year_cos2:
@@ -902,7 +924,7 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
         case constraint_qifunc_c_year_cos:
             order++;
         case constraint_qifunc_c_year_sin:
-            return consFunc_qifunc_c_year(psr,i,k,order);
+            return EFACTOR*consFunc_qifunc_c_year(psr,ipsr,i,k,order);
 
         default:
             return 0;
@@ -913,7 +935,7 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 void CONSTRAINTfuncs(pulsar *psr, int nparams,int iconstraint, double* OUT){
     int i,j,k,jmax;
     int pcount=0;
-    logmsg("iconstraint=%d nparams=%d",iconstraint,nparams);
+    logdbg("iconstraint=%d nparams=%d",iconstraint,nparams);
     for (i=0;i<MAX_PARAMS;i++)
     { 
         if (i!=param_start && i!=param_finish)
@@ -927,9 +949,9 @@ void CONSTRAINTfuncs(pulsar *psr, int nparams,int iconstraint, double* OUT){
                     }
                     // we are fitting for this param
                     for (j=0; j < jmax; j++){
-                    OUT[pcount] += getConstraintDeriv(psr,iconstraint,i,k+j);
-                    logmsg("param=%d j+k=%d pcount=%d deriv=%g",i,k+j,pcount,OUT[pcount]);
-                    ++pcount;
+                        OUT[pcount] += getConstraintDeriv(psr,iconstraint,i,k+j);
+                        logdbg("param=%d j+k=%d pcount=%d deriv=%g",i,k+j,pcount,OUT[pcount]);
+                        ++pcount;
                     }
                 }
             }

@@ -59,7 +59,7 @@ extern "C" int pluginFitFunc(pulsar *psr,int npsr,int writeModel)
   int ip[MAX_OBSN];
   double *val,*error;
   double *x,*y,*sig,**covar;
-  long double toffset;
+  longdouble toffset;
   double chisq;
   int offset;
   int count=0;
@@ -1042,4 +1042,4 @@ void globalFITfuncs(double x,double afunc[],int ma,pulsar *psr,int counter)
   //  n+=new_ma;
   //  exit(1);
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

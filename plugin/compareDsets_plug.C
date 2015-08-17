@@ -54,7 +54,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char compare2[128]="null";
   int i;
   int autoRun=0;
-  double globalParameter;
+  double globalParameter=0;
   double maxDiff = 120; // Number of seconds corresponding to overlap
   const char *CVS_verNum = "$Revision: 1.5 $";
 
@@ -368,7 +368,7 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 	    fout = fopen("overlap.dat","w");
 	    for (i=0;i<nOverlap;i++)
 	      {
-		fprintf(fout,"%s %s %.5Lf %g %g\n",psr[0].obsn[overlap1[i]].fname,psr[1].obsn[overlap2[i]].fname,psr[0].obsn[overlap1[i]].sat,
+		ld_fprintf(fout,"%s %s %.5Lf %g %g\n",psr[0].obsn[overlap1[i]].fname,psr[1].obsn[overlap2[i]].fname,psr[0].obsn[overlap1[i]].sat,
 			(double)(psr[0].obsn[overlap1[i]].residual - psr[1].obsn[overlap2[i]].residual), sqrt(pow(psr[0].obsn[overlap1[i]].toaErr*1e-6,2)+pow(psr[1].obsn[overlap2[i]].toaErr*1e-6,2)));
 	      }
 	    fclose(fout);
@@ -444,7 +444,7 @@ void compareDatasets(pulsar *psr,int *npsr,char parFile[MAX_PSR_VAL][MAX_FILELEN
 int findOverlap(pulsar *psr,int *npsr,int *overlap1,int *overlap2,double maxDiff,char *compare,char *compare2)
 {
   int i,j,found;
-  long double tdiff;
+  longdouble tdiff;
   int nOverlap=0;
   int good;
 
@@ -706,5 +706,5 @@ int idPoint2(pulsar *psr,int np,float *x,float *y,int *id1,int count,float mouse
 }
 
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
 

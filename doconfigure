@@ -4,19 +4,19 @@ mode="$1"
 
 if [[ "$mode" == "O" ]] ; then
 	# optimised
-	export CFLAGS="-O3 -g0 -march=corei7 -pipe -fomit-frame-pointer $CFLAGS"
-	export CXXFLAGS="$CFLAGS"
+	ADDFLAGS="-O3 -g0 -march=corei7 -pipe -fomit-frame-pointer"
 elif [[ "$mode" == "D" ]] ; then
-	export CFLAGS="-O0 -g3 $CFLAGS"
-	export CXXFLAGS="$CFLAGS"
+    ADDFLAGS="-O0 -g3 -Wall -Wfatal-errors -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable"
 else
-	export CFLAGS="-O2 -g $CFLAGS"
-	export CXXFLAGS="$CFLAGS"
+	ADDFLAGS="-O2 -g"
 fi
 
+export CFLAGS="$ADDFLAGS $CFLAGS"
+export CXXFLAGS="$ADDFLAGS $CXXFLAGS"
 
 
-echo "CFLAGS='$CFLAGS'"
-echo "LDFLAGS='$LDFLAGS'"
+echo "CFLAGS   = '$CFLAGS'"
+echo "CXXFLAGS = '$CXXFLAGS'"
+echo "LDFLAGS  = '$LDFLAGS'"
 
-./configure --prefix=/usr/pulsar
+./configure --prefix=/usr/pulsar $2 $3 $4 $5 $6

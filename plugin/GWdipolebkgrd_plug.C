@@ -38,10 +38,10 @@
 
 using namespace std;
 
-void doPlot(pulsar *psr,int npsr,gwSrc *gw,long double **gwRes,long double timeOffset,int ngw,long double tspan,long double alpha,long double gwAmp);
-long double getTspan(pulsar *psr,int npsr);
-void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,int plotType);
-void plotSpectrum(gwSrc *gw,int ngw,long double tspan,long double alpha,long double gwAmp);
+void doPlot(pulsar *psr,int npsr,gwSrc *gw,longdouble **gwRes,longdouble timeOffset,int ngw,longdouble tspan,longdouble alpha,longdouble gwAmp);
+longdouble getTspan(pulsar *psr,int npsr);
+void plotResiduals(pulsar *psr,longdouble **gwRes,int p,longdouble timeOffset,int plotType);
+void plotSpectrum(gwSrc *gw,int ngw,longdouble tspan,longdouble alpha,longdouble gwAmp);
 void plotPosn(pulsar *psr,int npsr,gwSrc *gw,int ngw);
 void draw_grid(double start_gl,double end_gl,double start_gb,double end_gb,double gstep,double bstep,int celestialCoords);
 void convertXY_celestial(double raj,double decj,double *retx,double *rety);
@@ -107,16 +107,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double thdip,phidip,dipmag;
   dipmag=0.;
   int plotIt=0;
-  long double gwAmp,alpha;
-  long double timeOffset;
-  long double ra_p,dec_p;
-  long double flo=0.0,fhi=0.0;
-  long double kp[3];            /* Vector pointing to pulsar           */
-  long double tspan;
-  long double time;
-  long double **gwRes;
-  long double dist[MAX_PSR];
-  long double mean;
+  longdouble gwAmp,alpha;
+  longdouble timeOffset;
+  longdouble ra_p,dec_p;
+  double flo=0.0,fhi=0.0;
+  longdouble kp[3];            /* Vector pointing to pulsar           */
+  longdouble tspan;
+  longdouble time;
+  longdouble **gwRes;
+  longdouble dist[MAX_PSR];
+  longdouble mean;
   int clock=0;
   int distNum=0;
   int logspacing=1;
@@ -174,8 +174,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       else if (strcmp(argv[i],"-dist")==0) // Distance in kpc
 	{
-	  sscanf(argv[++i],"%Lf",&dist[distNum]);
-	  dist[distNum]*=3.086e19;
+      dist[distNum] = parse_longdouble(argv[++i]);
+	  dist[distNum]*=longdouble(3.086e19);
 	  distNum++;
 	}
       else if (strcmp(argv[i],"-dipoleamps")==0)
@@ -191,7 +191,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  if (amp > 1.) {
 			printf("Warning, dipole amplitude is too large. Renormalising to obtain proper pdf for sky location.\n");
 			for (int dj=0;dj<3;dj++)
-				dipoleamps[dj]/(amp);
+				dipoleamps[dj] /= (amp);
 	  	}
 	  	setdipoleamps=1;
 	  }
@@ -206,15 +206,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-dipolemag")==0)
 	{sscanf(argv[++i],"%lf",&dipmag); setdipolemag=1;}
       else if (strcmp(argv[i],"-gwamp")==0)
-	{sscanf(argv[++i],"%Lf",&gwAmp); setgwAmp=1;}
+	{gwAmp=parse_longdouble(argv[++i]);setgwAmp=1;}
       else if (strcmp(argv[i],"-alpha")==0)
-	{sscanf(argv[++i],"%Lf",&alpha); setAlpha=1;}
+	{alpha=parse_longdouble(argv[++i]); setAlpha=1;}
       else if (strcmp(argv[i],"-ngw")==0)
 	{sscanf(argv[++i],"%d",&ngw);}
       else if (strcmp(argv[i],"-plot")==0)
 	plotIt=1;
       else if (strcmp(argv[i],"-flo")==0)
-	sscanf(argv[++i],"%Lf",&flo);
+	sscanf(argv[++i],"%lf",&flo);
       else if (strcmp(argv[i],"-writebkgrd")==0) {
 	writebkgrd=1;
 	strcpy(bkgrdFile,argv[i+1]);
@@ -223,9 +223,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       else if (strcmp(argv[i],"-zero")==0)
 	zeroResiduals=1;
       else if (strcmp(argv[i],"-fhi")==0)
-	sscanf(argv[++i],"%Lf",&fhi);
+	sscanf(argv[++i],"%lf",&fhi);
       else if (strcmp(argv[i],"-seed")==0)
-	sscanf(argv[++i],"%d",&seed);
+	sscanf(argv[++i],"%ld",&seed);
       else if (strcmp(argv[i],"-linear")==0)
 	logspacing=0;
     }
@@ -297,9 +297,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Unable to allocate memory for %d GW sources\n",ngw);
       exit(1);
     }
-  gwRes = (long double **)malloc(MAX_PSR*sizeof(long double*));
+  gwRes = (longdouble **)malloc(MAX_PSR*sizeof(longdouble*));
   for (i=0;i<MAX_PSR;i++)
-    gwRes[i] = (long double *)malloc(MAX_OBSN*sizeof(long double));
+    gwRes[i] = (longdouble *)malloc(MAX_OBSN*sizeof(longdouble));
 
   readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
   readTimfile(psr,timFile,*npsr);         /* Load the arrival times    */
@@ -327,12 +327,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (flo==0)
     {
       flo=0.01/tspan;
-      printf("flo = %.5Lg, tspan = %.5Lg\n",flo,tspan);
+      ld_printf("flo = %.5Lg, tspan = %.5Lg\n",flo,tspan);
     }
   if (fhi==0)
     {
-      fhi = 1.0/(long double)SECDAY;
-      printf("fhi = %.5Lg\n",fhi);
+      fhi = 1.0/(longdouble)SECDAY;
+      ld_printf("fhi = %.5Lg\n",fhi);
     }
 
   timeOffset = psr[0].param[param_pepoch].val[0];
@@ -384,7 +384,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	    gwRes[p][i]+=calculateResidualGW(kp,&gw[k],time,dist[p]);
 	  mean += gwRes[p][i];
 	}
-      mean /= (long double)psr[p].nobs;
+      mean /= (longdouble)psr[p].nobs;
       for (i=0;i<psr[p].nobs;i++)
 	{
 	  if (clock==1)
@@ -397,9 +397,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		fprintf(fout2,"%.10f %.10g\n",(double)psr[p].obsn[i].sat,(double)gwRes[p][i]);
 	    }
 	  gwRes[p][i]-=mean;
-	  psr[p].obsn[i].sat += (gwRes[p][i]/(long double)SECDAY);
+	  psr[p].obsn[i].sat += (gwRes[p][i]/(longdouble)SECDAY);
 	  if (addWhite==1)
-	    psr[p].obsn[i].sat += (long double)TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1.0e-6)/(long double)SECDAY;
+	    psr[p].obsn[i].sat += (longdouble)TKgaussDev(&seed)*(psr[p].obsn[i].toaErr*1.0e-6)/(longdouble)SECDAY;
 	}
     }
   if (clock==1)
@@ -424,7 +424,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   return 0;
 }
 
-void doPlot(pulsar *psr,int npsr,gwSrc *gw,long double **gwRes,long double timeOffset,int ngw,long double tspan,long double alpha,long double gwAmp)
+void doPlot(pulsar *psr,int npsr,gwSrc *gw,longdouble **gwRes,longdouble timeOffset,int ngw,longdouble tspan,longdouble alpha,longdouble gwAmp)
 {
   int plot=1;
   int pulsar=0;
@@ -470,7 +470,7 @@ void doPlot(pulsar *psr,int npsr,gwSrc *gw,long double **gwRes,long double timeO
 	  fout = fopen(fname,"w");
 	  for (i=0;i<psr[j].nobs;i++)
 	    {
-	      fprintf(fout,"%.15Lf %g %g\n",psr[j].obsn[i].sat,(double)psr[j].obsn[i].residual,(double)psr[j].obsn[i].toaErr);
+	      ld_fprintf(fout,"%.15Lf %g %g\n",psr[j].obsn[i].sat,(double)psr[j].obsn[i].residual,(double)psr[j].obsn[i].toaErr);
 	    }
 	  fclose(fout);
 	}
@@ -517,7 +517,7 @@ void plotPosn(pulsar *psr,int npsr,gwSrc *gw,int ngw)
     }
 }
 
-void plotSpectrum(gwSrc *gw,int ngw,long double tspan,long double alpha,long double gwAmp)
+void plotSpectrum(gwSrc *gw,int ngw,longdouble tspan,longdouble alpha,longdouble gwAmp)
 {
   float maxx,minx,maxy,miny;
   float fx[ngw],fy[ngw];
@@ -555,7 +555,7 @@ void plotSpectrum(gwSrc *gw,int ngw,long double tspan,long double alpha,long dou
   cpgsci(3); cpgsls(3); cpgline(2,fx,fy); cpgsci(1); cpgsls(1);
 }
 
-void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,int plotType)
+void plotResiduals(pulsar *psr,longdouble **gwRes,int p,longdouble timeOffset,int plotType)
 {
   float px[MAX_OBSN],py[MAX_OBSN];
   float minx,maxx,miny,maxy;
@@ -598,9 +598,9 @@ void plotResiduals(pulsar *psr,long double **gwRes,int p,long double timeOffset,
     cpgerry(psr[p].nobs,px,yerr1,yerr2,1);
 }
 
-long double getTspan(pulsar *psr,int npsr)
+longdouble getTspan(pulsar *psr,int npsr)
 {
-  long double first,last;
+  longdouble first,last;
   int i,p;
     
   
@@ -738,4 +738,4 @@ void convertXY_celestial(double raj,double decj,double *retx,double *rety)
   *retx = x_ret;
   *rety = y_ret;
 }
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;

@@ -7,10 +7,10 @@ extern "C" {
 #include <stdio.h>
 #include <time.h>
 #endif
-   extern int debugFlag;   /* Global = 1 if debug mode is running */
-   extern int writeResiduals;   /* Global = 1 if we are writing out post-fit residuals */
-   extern int tcheck;   /* Global = 1 if time check message should be printed is running */
-   extern clock_t timer_clk;
+    extern int debugFlag;   /* Global = 1 if debug mode is running */
+    extern int writeResiduals;   /* Global = 1 if we are writing out post-fit residuals */
+    extern int tcheck;   /* Global = 1 if time check message should be printed is running */
+    extern clock_t timer_clk;
 
 #ifdef __cplusplus
 }
@@ -34,3 +34,8 @@ extern "C" {
 #define logerr(_fmt, ...) _LOG(WHEREERR _fmt ENDL, WHEREARG,##__VA_ARGS__)
 #define logtchk(_fmt, ...) if(tcheck)_LOG(WHERETCHK _fmt ENDL, WHEREARG,(clock()-timer_clk)/(float)CLOCKS_PER_SEC,##__VA_ARGS__)
 
+#ifdef __GNUC__
+#define DEPRECATED __attribute__ ((deprecated))
+#else
+#define DEPRECATED
+#endif

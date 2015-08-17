@@ -68,7 +68,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char parFile[MAX_PSR][MAX_FILELEN];
   char timFile[MAX_PSR][MAX_FILELEN];
   int i,j,k;
-  double globalParameter;
+  double globalParameter=0;
   double startSample,endSample,spacingSample;
   double modelA,modelFc,modelAlpha,x;
   int    setModelA,setModelFc,setModelAlpha;
@@ -678,7 +678,7 @@ void sortSamples(sample *s,int n)
   
 }
 
-char * plugVersionCheck = TEMPO2_h_VER;
+const char * plugVersionCheck = TEMPO2_h_VER;
 
 #define NRANSI
 #define TINY 1.0e-20;
@@ -691,7 +691,7 @@ void free_vector(double *v, long nl, long nh)
 	free((FREE_ARG) (v+nl-NR_END));
 }
 
-void nrerror(char error_text[])
+void nrerror(const char *error_text)
 /* Numerical Recipes standard error handler */
 {
 	fprintf(stderr,"Numerical Recipes run-time error...\n");
