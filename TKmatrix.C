@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include "tempo2.h"
 #include "T2accel.h"
 #include "TKmatrix.h"
