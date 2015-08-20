@@ -338,7 +338,7 @@ double consFunc_dmmodel_cw_year(pulsar *psr_array,int ipsr,int i,int k,int order
         double s[3];
         longdouble epoch = psr->param[param_pepoch].val[0];
         longdouble t = psr->dmoffsCM_mjd[k]-epoch;
-        longdouble x = longdouble(2.0)*M_PIq*t/longdouble(365.25);
+        longdouble x = longdouble(2.0)*LD_PI*t/longdouble(365.25);
         longdouble w=psr->dmoffsCM_weight[k];
         switch (order){
             case 0:
@@ -355,7 +355,7 @@ double consFunc_dmmodel_cw_year(pulsar *psr_array,int ipsr,int i,int k,int order
                 return w*cosl(2*x);
             case 6:
                 t = psr->dmoffsCM_mjd[k]-52995.0;
-                x=2*M_PI*t/365.25;
+                x=2*LD_PI*t/365.25;
                 s[0]=-500*sinl(x);
                 s[1]=450*cosl(x);
                 s[2]=200*cosl(x);
@@ -421,7 +421,7 @@ double consFunc_qifunc_p_year(pulsar *psr_array,int ipsr,int i,int k,int order){
     if(i==param_quad_ifunc_p && k < psr->quad_ifuncN_p){
         longdouble epoch = psr->param[param_pepoch].val[0];
         longdouble t = psr->quad_ifuncT_p[k%psr->quad_ifuncN_p]-epoch;
-        longdouble x = 2.0*M_PI*t/365.25;
+        longdouble x = 2.0*LD_PI*t/365.25;
         switch (order){
             case 0:
                 return sin(x);
@@ -451,7 +451,7 @@ double consFunc_qifunc_c_year(pulsar *psr_array,int ipsr,int i,int k,int order){
     if(i==param_quad_ifunc_c && k < psr->quad_ifuncN_c){
         longdouble epoch = psr->param[param_pepoch].val[0];
         longdouble t = psr->quad_ifuncT_c[k%psr->quad_ifuncN_c]-epoch;
-        longdouble x = 2.0*M_PI*t/365.25;
+        longdouble x = 2.0*LD_PI*t/365.25;
         switch (order){
             case 0:
                 return sin(x);
@@ -480,7 +480,7 @@ double consFunc_ifunc_year(pulsar *psr_array,int ipsr,int i,int k,int order){
     if(i==param_ifunc && k < psr->ifuncN){
         longdouble epoch = psr->param[param_pepoch].val[0];
         longdouble t = psr->ifuncT[k%psr->ifuncN]-epoch;
-        longdouble x = 2.0*M_PI*t/365.25;
+        longdouble x = 2.0*LD_PI*t/365.25;
         switch (order){
             case 0:
                 return psr->ifunc_weights[k]*sin(x);
