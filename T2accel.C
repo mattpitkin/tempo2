@@ -14,6 +14,16 @@ char useT2accel=1;
 #define F77_dgels F77_FUNC (dgels, DGELS)
 #define F77_dtrmm F77_FUNC (dtrmm, DTRMM)
 
+#define F77_dgemm F77_FUNC(dgemm,DGEMM)
+extern "C" {
+    extern void F77_dgemm(const char* ta, const char* tb, int* m, int* n, int* k, double* alpha, 
+            double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
+
+#define F77_dgemv F77_FUNC(dgemv,DGEMV)
+    extern void F77_dgemv(const char* trans, int* m, int* n, double* alpha, 
+            double* a, int* lda, double* x, int* incx, double* beta, double* y, int* incy);
+}
+
 
 extern "C" {
     extern void F77_dpotf2(const char* uplo, int* n, double* a, int* lda, int* info);
@@ -121,48 +131,54 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
 
         // This code taken from the LAPACK documentation
         // to pack a triangular matrix.
+        
+        // we want the upper triangular matrix part of A.
+        //
+        // pack upper triangle like (r,c)
+        // (1,1) (1,2) (2,2)
+        //  i+(2n-j)(j-1)/2
         int jc=0;
         for (j=0;j<n;j++){ // cols
-            for (i=j;i<n;i++){ //rows
-                _t[jc+i-j] = A[j][i];
+            for (i=0; i <=j; i++) { // rows
+                _t[jc] = A[j][i]; // A came from fortran, so is in [col][row] ordering
+                ++jc;
             }
-            jc=jc+n-j;
         }
 
         logdbg("Inverting...");
-        F77_dtptri("L","N",&n,_t,&i);
+        F77_dtptri("U","N",&n,_t,&i);
         if(i!=0){
             logerr("Error in Invert i=%d",i);
             return i;
         }
 
-        // quick and dirty - really we should use a triangle multiply, but we should update 
-        // tkmatrix to handle triangular matricies.
         double **Rinv = malloc_uinv(n);
 
-        // Unpack the triangular matrix using reverse
-        // of code above, but unpacking into a row-major matrix
-        // for C compatibility.
-        jc=0;
         for (j=0;j<n;j++){ // cols
-            for (i=0; i < j; i++){
-                // when unpacking we need to zero out the strict upper triangle.
-                Rinv[i][j]=0;
+            for (i=0;i<n;i++){ //rows
                 Ocvm[i][j]=0;
             }
-            for (i=j;i<n;i++){ //rows
-                // here we arange Rinv in row-major order
-                // to be C compatible on return.
-                Rinv[i][j]=_t[jc+i-j];
-                Ocvm[i][j]=_t[jc+i-j];
-            }
-            jc=jc+n-j;
         }
+        // Unpack the triangular matrix using reverse of above
+        // We will put it in fortran, so continue to use [col][row] order
+        jc=0;
+        for (j=0;j<n;j++){ // cols
+            for (i=0; i <=j; i++) { // rows
+                Rinv[j][i] = _t[jc];
+                Ocvm[j][i] = _t[jc];
+                ++jc;
+            }
+        }
+
         free(_t);
 
         double a=1;
-        // multiply Rinv.Rinv^T to get the covariance matrix
-        F77_dtrmm("R","U","T","N",&n,&n,&a,*Rinv,&n,*Ocvm,&n);
+        // multiply Rinv^T.Rinv to get the covariance matrix
+        // Note that Ocvm is input and output
+        // and that covar matrix will be transposed, but it is
+        // symetric so it doesn't matter!
+        F77_dtrmm(  "L",  "U",    "T",  "N", &n, &n,    &a, *Rinv,  &n, *Ocvm, &n);
+        // DTRMM ( SIDE, UPLO, TRANSA, DIAG,  M,  N, ALPHA,  A   , LDA,     B, LDB )
 
         free_uinv(Rinv);
     }
@@ -177,16 +193,6 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
 
 
 #ifdef HAVE_BLAS
-
-#define F77_dgemm F77_FUNC(dgemm,DGEMM)
-extern "C" {
-    extern void F77_dgemm(const char* ta, const char* tb, int* m, int* n, int* k, double* alpha, 
-            double* a, int* lda, double* b, int* ldb, double* beta, double* c, int* ldc);
-
-#define F77_dgemv F77_FUNC(dgemv,DGEMV)
-    extern void F77_dgemv(const char* trans, int* m, int* n, double* alpha, 
-            double* a, int* lda, double* x, int* incx, double* beta, double* y, int* incy);
-}
 
 
 void accel_multMatrixVec(double* m1,double* v, int ndata,int npol, double* out){

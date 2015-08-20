@@ -160,30 +160,28 @@ double TKrobustLeastSquares(double* b, double* white_b,
 double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         double** designMatrix, double** white_designMatrix,
         double** constraintsMatrix, int ndata,int nparams, int nconstraints, double tol, char rescale_errors,
-        double* outP, double* e, double** cvm, char robust){
+        double* outP, double* e, double** Ocvm, char robust){
     double chisq = 0;
     int i,j,k;
 
     logdbg("TKleastSquares ndata=%d nparams=%d nconstraints=%d",ndata,nparams,nconstraints);
     if(nparams > ndata + nconstraints){
         logerr("Number of fit parameters exceeds number of data points\nFit will crash");
-        for (k=0;k<nparams;k++)outP[k]=0;
-        for (k=0;k<nparams;k++)e[k]=0;
-        for (i=0;i<nparams;i++){
-            for (k=0;k<nparams;k++)cvm[i][k]=0;
-        }
         return 0;
     }
     bool computeErrors = (e!=NULL);
-    bool computeCVM = (cvm!=NULL);
+    bool computeCVM = (Ocvm!=NULL);
     bool computeParam = (outP!=NULL && data!=NULL);
     bool needToFreeCVM=false;  
 
     if(computeErrors && ! computeCVM){
         // we can't easily compute the errors without the CVM matrix
         // so we have to create one.
-        cvm=malloc_uinv(nparams);
         computeCVM=true;
+    }
+    double** cvm=NULL;
+    if (computeCVM){
+        cvm=malloc_uinv(nparams);
         needToFreeCVM=true;
     }
 
@@ -263,6 +261,23 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
         free_blas(augmented_DM);
 
+        if (computeParam){
+            longdouble sum;
+            chisq = 0.0;
+            for (j=0;j<ndata;j++)
+            {
+                sum = 0.0;
+                for (k=0;k<nparams;k++)
+                {
+                    sum+=outP[k]*white_designMatrix[j][k];
+                }
+                chisq += pow((white_data[j]-sum),2);
+            }
+        }
+
+        if (computeErrors){
+            for (i=0;i<nparams;i++){e[i]=sqrt(cvm[i][i]);}
+        }
 
     } else {
 #endif
@@ -427,6 +442,13 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
     }
     if(needToFreeCVM){
+        if (Ocvm != NULL){
+            for (i=0; i < nparams; i++){
+                for(j=0; j < nparams; j++){
+                    Ocvm[i][j] = cvm[i][j]; // deal with the fact that the cvm matrix may not be allocated properly
+                }
+            }
+        }
         // we created CVM, so free it
         free_uinv(cvm);
     }
@@ -569,7 +591,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                 designMatrix, white_designMatrix, 
                 constraintsMatrix,
                 ndata, nparams, nconstraints, 
-                tol, rescale_errors, outP, e, cvm,0);
+                tol, rescale_errors, outP, e, Ocvm,0);
     }//end of if robust
 
 
