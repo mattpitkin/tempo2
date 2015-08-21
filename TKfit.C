@@ -685,7 +685,7 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
             computeConstraintWeights(psr+ipsr);
             logmsg("fill constraints matrix");
             for (int ic=0; ic < psr[ipsr].nconstraints; ic++){
-                CONSTRAINTfuncs(psr+ipsr,nf[ipsr],ic,constraintsMatrix[ic+off_c]+off_f);
+                CONSTRAINTfuncs(psr+ipsr,nf[ipsr],psr->constraints[ic],constraintsMatrix[ic+off_c]+off_f);
             }
         }
 

@@ -815,7 +815,7 @@ double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int ipa
     const int i = iparam;
     int order=0;
     double EFACTOR=1e20;
-    logdbg("%d: %s ipar=%d ck=%d pk=%d ipsr=%d",iconstraint,get_constraint_name(iconstraint).c_str(),iparam,constraintk,k,ipsr);
+    logdbg("%d: %s ipar=%d ck=%d pk=%d psr=%s",iconstraint,get_constraint_name(iconstraint).c_str(),iparam,constraintk,k,psr[ipsr].name);
     switch(iconstraint){
         case constraint_dmmodel_mean:
             return EFACTOR*consFunc_dmmodel_mean(psr,ipsr,i,k,0);
@@ -941,7 +941,7 @@ void CONSTRAINTfuncs(pulsar *psr, int nparams,int iconstraint, double* OUT){
         if (i!=param_start && i!=param_finish)
         {
             for (k=0;k<psr->param[i].aSize;k++){
-                if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]==1) /* If we are fitting for this parameter */
+                if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]>0) /* If we are fitting for this parameter */
                 {
                     jmax=1;
                     if (i==param_dmmodel){

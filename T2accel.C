@@ -140,7 +140,8 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
         int jc=0;
         for (j=0;j<n;j++){ // cols
             for (i=0; i <=j; i++) { // rows
-                _t[jc] = A[j][i]; // A came from fortran, so is in [col][row] ordering
+                _t[jc] = A[i][j]; // A came from fortran, so is in [col][row] ordering
+                                  // BUT - we have transposed A, so we have to un-transpose it
                 ++jc;
             }
         }
@@ -173,12 +174,18 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
         free(_t);
 
         double a=1;
-        // multiply Rinv^T.Rinv to get the covariance matrix
+        // (X^T X)^-1 = Rinv.Rinv^T gives parameter covariance matrix
         // Note that Ocvm is input and output
         // and that covar matrix will be transposed, but it is
         // symetric so it doesn't matter!
-        F77_dtrmm(  "L",  "U",    "T",  "N", &n, &n,    &a, *Rinv,  &n, *Ocvm, &n);
+        F77_dtrmm(  "R",  "U",    "T",  "N", &n, &n,    &a, *Rinv,  &n, *Ocvm, &n);
         // DTRMM ( SIDE, UPLO, TRANSA, DIAG,  M,  N, ALPHA,  A   , LDA,     B, LDB )
+
+        for(i=0;i<n;i++){
+            for(j=0;j<n;j++){
+                logmsg("COVAR %d %d %lg",i,j,Ocvm[i][j]);
+            }
+        }
 
         free_uinv(Rinv);
     }
