@@ -97,7 +97,7 @@ int accel_uinv(double* _m, int n){
 /**
  * Do the least squares using QR decomposition
  */
-int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam, double** Ocvm){
+double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam, double** Ocvm){
     int nhrs=1;
     int nwork = nparam*1024;
     int info=0;
@@ -121,6 +121,8 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
         // copy out the output parameters, which are written into the "data" array.
         memcpy(oparam,data,sizeof(double)*nparam);
     }
+    double chisq=0;
+    for( i = nparam; i < ndata; i++ ) chisq += data[i] * data[i];
     if (Ocvm != NULL){
 
         int n=nparam;
@@ -131,7 +133,7 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
 
         // This code taken from the LAPACK documentation
         // to pack a triangular matrix.
-        
+
         // we want the upper triangular matrix part of A.
         //
         // pack upper triangle like (r,c)
@@ -141,7 +143,7 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
         for (j=0;j<n;j++){ // cols
             for (i=0; i <=j; i++) { // rows
                 _t[jc] = A[i][j]; // A came from fortran, so is in [col][row] ordering
-                                  // BUT - we have transposed A, so we have to un-transpose it
+                // BUT - we have transposed A, so we have to un-transpose it
                 ++jc;
             }
         }
@@ -173,7 +175,7 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
 
         free(_t);
 
-        double a=1;
+        double a=chisq/(double)(ndata-nparam);
         // (X^T X)^-1 = Rinv.Rinv^T gives parameter covariance matrix
         // Note that Ocvm is input and output
         // and that covar matrix will be transposed, but it is
@@ -181,9 +183,11 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
         F77_dtrmm(  "R",  "U",    "T",  "N", &n, &n,    &a, *Rinv,  &n, *Ocvm, &n);
         // DTRMM ( SIDE, UPLO, TRANSA, DIAG,  M,  N, ALPHA,  A   , LDA,     B, LDB )
 
-        for(i=0;i<n;i++){
-            for(j=0;j<n;j++){
-                logmsg("COVAR %d %d %lg",i,j,Ocvm[i][j]);
+        if(debugFlag){
+            for(i=0;i<n;i++){
+                for(j=0;j<n;j++){
+                    logmsg("COVAR %d %d %lg",i,j,Ocvm[i][j]);
+                }
             }
         }
 
@@ -191,7 +195,7 @@ int accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam
     }
 
 
-    return info;
+    return chisq;
 }
 
 
