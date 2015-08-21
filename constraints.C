@@ -815,7 +815,7 @@ double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int ipa
     const int i = iparam;
     int order=0;
     double EFACTOR=1e20;
-    logdbg("%d: %s ipar=%d ck=%d pk=%d psr=%s",iconstraint,get_constraint_name(iconstraint).c_str(),iparam,constraintk,k,psr[ipsr].name);
+    logdbg("%d: %s ipar=%d (%s) ck=%d pk=%d psr=%s",iconstraint,get_constraint_name(iconstraint).c_str(),iparam,psr[ipsr].param[iparam].shortlabel[0],constraintk,k,psr[ipsr].name);
     switch(iconstraint){
         case constraint_dmmodel_mean:
             return EFACTOR*consFunc_dmmodel_mean(psr,ipsr,i,k,0);
@@ -932,29 +932,43 @@ double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int ipa
 }
 
 
-void CONSTRAINTfuncs(pulsar *psr, int nparams,int iconstraint, double* OUT){
+void CONSTRAINTfuncs(pulsar *psr,int ipsr, int nparams,int iconstraint, double* OUT){
+    psr+=ipsr; // hacky
     int i,j,k,jmax;
     int pcount=0;
-    logdbg("iconstraint=%d nparams=%d",iconstraint,nparams);
-    for (i=0;i<MAX_PARAMS;i++)
-    { 
-        if (i!=param_start && i!=param_finish)
-        {
-            for (k=0;k<psr->param[i].aSize;k++){
-                if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]>0) /* If we are fitting for this parameter */
-                {
-                    jmax=1;
-                    if (i==param_dmmodel){
-                        jmax+=psr->dmoffsDMnum + psr->dmoffsCMnum;
-                    }
-                    // we are fitting for this param
-                    for (j=0; j < jmax; j++){
-                        OUT[pcount] += getConstraintDeriv(psr,iconstraint,i,k+j);
-                        logdbg("param=%d j+k=%d pcount=%d deriv=%g",i,k+j,pcount,OUT[pcount]);
-                        ++pcount;
+    int FITFLAG=1;
+    if(ipsr==0)FITFLAG=2; // for psr0 do global constraints
+    while(FITFLAG > 0){
+        logdbg("iconstraint=%d nparams=%d (%d)",iconstraint,nparams,FITFLAG);
+        for (i=0;i<MAX_PARAMS;i++)
+        { 
+            if (i!=param_start && i!=param_finish)
+            {
+                for (k=0;k<psr->param[i].aSize;k++){
+                    if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]==FITFLAG )
+                        /* If we are fitting for this parameter */
+                    {
+                        jmax=1;
+
+                        if (i==param_dmmodel)
+                            jmax=psr->dmoffsDMnum + psr->dmoffsCMnum;
+
+                        if (i==param_quad_ifunc_p)
+                            jmax = psr->quad_ifuncN_p;
+
+                        if (i==param_quad_ifunc_c)
+                            jmax = psr->quad_ifuncN_c;
+
+                        // we are fitting for this param
+                        for (j=0; j < jmax; j++){
+                            OUT[pcount] += getConstraintDeriv(psr,iconstraint,i,k+j);
+                            logdbg("param=%d j+k=%d pcount=%d deriv=%g",i,k+j,pcount,OUT[pcount]);
+                            ++pcount;
+                        }
                     }
                 }
             }
         }
+        FITFLAG--;
     }
 }

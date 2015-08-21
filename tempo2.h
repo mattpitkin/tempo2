@@ -132,7 +132,6 @@ extern char TEMPO2_ENVIRON[];
 /* TEMPO2 error messages */
 extern char TEMPO2_ERROR[];
 
-
 typedef int param_label;
 typedef int constraint_label;
 enum label {
@@ -156,7 +155,7 @@ enum label {
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
     // ** ADD NEW PARAMETERS ABOVE HERE **
-    // THIS LINE MUST BE THE LAST LINE IN THIS ENUM
+    // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST,param_ZERO,param_JUMP // don't change the order of these
 };
 
