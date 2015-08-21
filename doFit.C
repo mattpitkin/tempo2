@@ -469,7 +469,7 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
             for (j=0;j<nglobal;j++)
             {
                 psr[0].covar[i][j] = cvm[i][j];
-                //		  printf("COVAR STUFF %g\n",psr[0].covar[i][j]);
+                //printf("COVAR STUFF %d %d %g\n",i,j,psr[0].covar[i][j]);
             }
         }
 

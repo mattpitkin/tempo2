@@ -612,7 +612,7 @@ void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double 
         logmsg("fill constraints matrix");
         constraintsMatrix = malloc_blas(psr->nconstraints,nf);
         for (int ic=0; ic < psr->nconstraints; ic++){
-            CONSTRAINTfuncs(psr,nf,psr->constraints[ic],constraintsMatrix[ic]);
+            CONSTRAINTfuncs(psr,0,nf,psr->constraints[ic],constraintsMatrix[ic]);
         }
     }
 
@@ -646,7 +646,7 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
     for (ipsr=0; ipsr < npsr; ipsr++){
         totalFit+=nf[ipsr];
         totalObs+=n[ipsr];
-        totalConstraints+=psr->nconstraints;
+        totalConstraints+=psr[ipsr].nconstraints;
     }
     totalFit+=nglobal;
 
@@ -685,7 +685,7 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
             computeConstraintWeights(psr+ipsr);
             logmsg("fill constraints matrix");
             for (int ic=0; ic < psr[ipsr].nconstraints; ic++){
-                CONSTRAINTfuncs(psr+ipsr,nf[ipsr],ic,constraintsMatrix[ic+off_c]+off_f);
+                CONSTRAINTfuncs(psr,ipsr,nf[ipsr],psr->constraints[ic],constraintsMatrix[ic+off_c]+off_f);
             }
         }
 
