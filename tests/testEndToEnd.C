@@ -88,16 +88,10 @@ TEST(testEndToEnd,gracefulBadFit){
     psr->noWarnings=2;
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
+    TK_errorCount=0;
     doFitAll(psr,npsr,"NULL");
-    formBatsAll(psr,npsr);
-    formResiduals(psr,npsr,0);
-    doFitAll(psr,npsr,"NULL");
-
-    formBatsAll(psr,npsr);
-    formResiduals(psr,npsr,0);
-    for(int iobs = 0; iobs < psr->nobs; iobs++){
-        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),1e-10l) << "Fitting has caused error";
-    }
-
+    ASSERT_GT(TK_errorCount,1u);
+    TK_errorCount=0;
+    
 }
 
