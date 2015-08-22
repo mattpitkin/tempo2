@@ -339,7 +339,7 @@ double getZenithWetDelay(char *siteName, double mjd, int warnings)
         sprintf(msg,"Assume zero zenith wet delay (no data) for site %s  at MJD",
                 siteName);
         sprintf(msg2,"%.1f",mjd);
-        displayMsg(1,"TROP1",msg,msg2,warnings);
+        displayMsg(3,"TROP1",msg,msg2,warnings);
     }
 
     return zwd;
@@ -356,7 +356,7 @@ double getSurfaceAtmosphericPressure(char *siteName, double mjd, int warnings)
         sprintf(msg,"Assume standard atmospheric pressure (no data) for site %s at MJD",
                 siteName);
         sprintf(msg2,"%.1f",mjd);
-        displayMsg(1,"TROP2",msg,msg2,warnings);
+        displayMsg(3,"TROP2",msg,msg2,warnings);
         sap = 101.325;
     }
 

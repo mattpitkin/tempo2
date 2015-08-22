@@ -527,8 +527,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             if (fval<psr->param[param_f].aSize)
                 readValue(psr,str,fin,&(psr->param[param_f]),fval);
             else if (fval>=psr->param[param_f].aSize){
-                printf("WARNING!!! Currently only period derivatives up to order 12\n");
-                printf("WARNING!!! are available. All higher derivatives will be ignored!\n");
+                logerr("Currently only period derivatives up to order 12 are available. All higher derivatives will be ignored!");
             }
         }
     }

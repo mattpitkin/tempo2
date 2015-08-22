@@ -96,10 +96,11 @@ double ELL1Hmodel(pulsar *psr,int p,int ipos,int param){
         if( psr[p].param[param_stig].paramSet[0] == 1 ){
             // Conflict. Unsure whether to select mode 1 or modes 2/3, so will default
             // to the most stable one.
-            printf( "WARNING! You specified both H4 and STIG.\n" );
-            printf( "We will ignore STIG and perform the approx. H4 fit instead.\n" );
-            printf( "If you want to perform the exact fit for H3 and STIG, then " );
-            printf( "please remove H4 from your parameter file.\n");
+            logerr("You specified both H4 and STIG - Ignoring STIG");
+            logmsg( "WARNING! You specified both H4 and STIG." );
+            logmsg( "We will ignore STIG and perform the approx. H4 fit instead." );
+            logmsg( "If you want to perform the exact fit for H3 and STIG, then " );
+            logmsg( "please remove H4 from your parameter file.");
         }
         // Have H3, H4, but no NHARM
         mode = 2;

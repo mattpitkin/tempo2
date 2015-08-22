@@ -140,10 +140,6 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
     logmsg("OLD FITTER");
 
 
-    //  printf("WARNING: Switching weighting off for the fit\n");
-    //  printf("WARNING: THE .TIM FILE MUST BE SORTED - not checked for\n");
-
-
     //If TNRed or TNDM or ECORR parameters defined, call TempoNest maxlike function and return
     if((psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) || ((psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0) || (psr[0].nTNECORR != 0))){
 
@@ -246,7 +242,7 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
                 psr[p].param[param_dmmodel].linkTo[0] != param_dm){
             // if we are using DMMODEL, and we want to fit for DM then
             // DMMODEL must be linked to DM... otherwise badness will occur!
-            printf("WARNING: DM cannot be fit with DMMODEL\n         unless you set 'DMMODEL DM 1' in par file.\n");
+            logerr("DM cannot be fit with DMMODEL unless you set 'DMMODEL DM 1' in par file.");
             psr[p].param[param_dm].fitFlag[0]=0;
         }
         strcpy(psr[p].rajStrPre,psr[p].rajStrPost);
@@ -387,6 +383,12 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
         double *error=(double*)malloc(sizeof(double)*ntot);
 
         TKleastSquares_global_pulsar(xx,yy,n,val,error,nf,nglobal,cvm,&chisq,globalFITfuncs,psr,tol,ip,1,uinvs,npsr);
+        if (chisq < 0){
+            logerr("Error in fit! Aborting fit.");
+            // setting these to zero should abandon the rest of the routine!
+            npsr=0;
+            nglobal=0;
+        }
 
         // update parameters
 
@@ -494,6 +496,10 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
                 logtchk("complete doing the fit");
                 //	  svdfit(x,y,sig,psr[p].nFit,val,npol,u,v,w,&chisq,FITfuncs,&psr[p],tol,ip);
                 logdbg("Complete fit: chisq = %f",(double)chisq);
+                if (chisq < 0){
+                    logerr("Error in fit! Aborting fit.");
+                    break;
+                }
                 //	  printf("chisq = %g\n",chisq);
                 psr[p].fitChisq = chisq; 
                 psr[p].fitNfree = (psr[p].nFit-psr[p].nconstraints)-npol;

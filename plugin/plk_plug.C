@@ -3761,7 +3761,7 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,lon
    formResiduals(psr,npsr,1); // iteration);
    textOutput(psr,npsr,0,0,0,0,"");
 
-   printf("Leaving with %g %d\n",(double)origFinish,psr[0].param[param_finish].fitFlag[0]);
+   logdbg("Leaving with %g %d",(double)origFinish,psr[0].param[param_finish].fitFlag[0]);
 }
 
 

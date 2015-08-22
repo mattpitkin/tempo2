@@ -698,7 +698,7 @@ void TKboxcar(double *x,double *y,int n,double *ox,double *oy,int *on,int width)
     int nStore;
     *on = 0;
     if (width/2.0 == (int)width/2)
-        printf("WARNING in TKboxcar - should use odd number for the width\n");
+        logerr("Should use odd number for the width. Used %d",width);
 
     for (i=(width-1)/2;i<n-(width-1)/2;i++)
     {

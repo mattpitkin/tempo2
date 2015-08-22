@@ -731,7 +731,7 @@ void writeTim(const char *timname,pulsar *psr,const char *fileFormat)
             ld_fprintf(fout," %s %.8lf %.17Lf %.5lf %s ", name,psr->obsn[i].freq,
                     oldsat, interim_error,psr->obsn[i].telID);
             if(interim_error<longdouble(0.0)){
-                printf("ERROR - TOAerror < 0!!\n");
+                logerr("TOAerror < 0!!\n");
                 exit(1);
             }
 

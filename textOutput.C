@@ -121,7 +121,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             }
             if (closestI==-1)
             {
-                printf("WARNING: Cannot calculate TZRMJD\n");
+                logerr("Cannot calculate TZRMJD");
                 psr[p].param[param_tzrmjd].paramSet[0]=0;
             }
             else
@@ -173,8 +173,6 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         }
         else
             printf("Number of points in fit = %d\n",psr[p].nFit);
-        if (psr[p].rescaleErrChisq == 1 && psr[p].fitMode==1)
-            printf("** NOTE: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
         printf("Offset: %g %g offset_e*sqrt(n) = %g n = %d\n",psr[p].offset,psr[p].offset_e,psr[p].offset_e*sqrt(psr[p].nFit-psr[p].nconstraints),psr[p].nFit-psr[p].nconstraints);
         printf("\n\n");
         printf("PARAMETER       Pre-fit                   Post-fit                  Uncertainty   Difference   Fit\n");
@@ -274,7 +272,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         }      
         printf("---------------------------------------------------------------------------------------------------\n");
         if (psr[p].rescaleErrChisq == 1 && psr[p].fitMode==1)
-            printf("** WARNING: All parameter uncertainties multiplied by sqrt(red. chisq)\n");
+            logmsg("Notice: Parameter uncertainties multiplied by sqrt(red. chisq)\n");
 
         if (psr[p].nconstraints>0){
             printf("\nCONSTRAINTS:\n");
@@ -1026,9 +1024,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         if (psr[p].setUnits==0)
         {
             if (psr[p].units != SI_UNITS)
-                printf("**** UNITS was not set in the parameter file: using TDB (tempo1) **** \n");
+                logwarn("UNITS was not set in the parameter file: using TDB (tempo1)");
             else
-                printf("**** UNITS was not set in the parameter file: using TCB (tempo2) **** \n");
+                logwarn("UNITS was not set in the parameter file: using TCB (tempo2)");
         }
 
         // Write out covariance matrix for global parameters
@@ -1036,7 +1034,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         {
             FILE *fout = fopen("global_covar.cvm","w");
             if (!fout){
-                printf("Unable to open global_covar.cvm for writing\n");
+                logwarn("Unable to open global_covar.cvm for writing");
             }
             else
             {
@@ -1049,7 +1047,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         if (psr[0].fitParamI[ii] >=0 && psr[0].fitParamI[jj] >= 0)
                         {
                             if (psr[0].param[psr[0].fitParamI[ii]].fitFlag[0] == 2 && psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
-                            {			  
+                            {
                                 if (psr[0].covar[ii][ii] == 0 || psr[0].covar[jj][jj] == 0)
                                 {
                                     printf("Diagonal element of covariance matrix = 0\n");
@@ -1083,7 +1081,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             {		
                 FILE *fout = fopen("aplus_across.cvm","w");
                 if (!fout){
-                    printf("Unable to open aplus_across.cvm for writing\n");
+                    logwarn("Unable to open aplus_across.cvm for writing");
                 }
                 else
                 {
@@ -1467,6 +1465,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         printf("Global term = %g\n",globalParameter);
         printf("------------------------------------------------------------------------------------\n");
     }
+
+    const int errorCount = logerr_check();
+    if (errorCount){
+        logmsg("NOTICE! There were %d errors thrown!! Check the logs as the results may not be valid.",errorCount);
+    }
 }
 
 double calcRMS(pulsar *psr,int p)
@@ -1612,7 +1615,7 @@ double dglep(pulsar psr,int gn,double fph)
         niter++;
         if (niter>1000)
         {
-            printf("WARNING: Glitch epoch convergence failed\n");
+            logerr("Glitch epoch convergence failed");
             return 0;
         }
     }while (fabs(dph) > plim);

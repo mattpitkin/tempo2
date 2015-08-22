@@ -320,17 +320,17 @@ void copyParam(parameter p1,parameter *p2)
 
 /* Function to display warning and error messages */
 /* type = 1 for warning, = 2 for error            */
+/* type = 3 for minor */
 /* key = e.g. CLK1                                */
 
 void displayMsg(int type,const char *key,const char *searchStr,const char *variableStr,int noWarnings)
 {
-    static char msg[MAX_MSG][1000];
     static char keyRec[MAX_MSG][10];
     static int warningNum=0;
     static int warnedAboutMultiple=0;
     int i,got;
 
-    if (type==1)
+    if (type==1 || type==3)
     {
         if (noWarnings!=2)
         {
@@ -340,8 +340,7 @@ void displayMsg(int type,const char *key,const char *searchStr,const char *varia
                 got=0;
                 for (i=0;i<warningNum;i++)
                 {
-                    if (strcasecmp(keyRec[i],key)==0 &&
-                            strcasecmp(msg[i],searchStr)==0)
+                    if (strcasecmp(keyRec[i],key)==0)
                     {
                         got=1;
                         break;
@@ -350,35 +349,38 @@ void displayMsg(int type,const char *key,const char *searchStr,const char *varia
 
                 if (got==0)
                 {
-                    if (warningNum+1 > MAX_MSG)
+                    if (warningNum== MAX_MSG)
                     {
-                        printf("Too many warnings: bailing out\n");
-                        exit(1);
+                        logerr("Too many warnings!");
+                        return;
                     }
+                    if(warningNum > MAX_MSG)return;
                     strcpy(keyRec[warningNum],key);
-                    strcpy(msg[warningNum],searchStr);
                     warningNum++;
-
-                    printf("WARNING [%s]: %s %s\n",key,searchStr,variableStr);
+                    if(type==1)logwarn("[%s] %s %s",key,searchStr,variableStr);
+                    if(type==3)logmsg("[%s] %s %s",key,searchStr,variableStr);
                 }
                 else if (!warnedAboutMultiple)
                 {
-                    printf("WARNING: duplicated warnings have been suppressed.\n");
+                    logwarn("[DUP1] duplicated warnings have been suppressed.");
                     warnedAboutMultiple=1;
                 }
+            } else {
+                printf("[%s] * %s %s\n",key,searchStr,variableStr);
             }
-            else
-                printf("WARNING [%s]: %s %s\n",key,searchStr,variableStr);
         }
     }
     else
     {
+        logerr("[%s]: %s %s",key,searchStr,variableStr);
+        /*
         printf("\n\n");
         printf("-------------------------------------------------\n");
         printf("ERROR [%s]: %s %s\n",key,searchStr,variableStr);
         printf("-------------------------------------------------\n");
         printf("\n\n");
         exit(1);
+        */
     }
 }
 

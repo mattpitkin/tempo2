@@ -99,10 +99,15 @@ int accel_uinv(double* _m, int n){
  */
 double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam, double** Ocvm){
     int nhrs=1;
-    int nwork = nparam*1024;
+    int nwork = -1;
     int info=0;
     int i,j;
+    double iwork;
 
+    // workspace query - works out optimal size for work array
+    F77_dgels("T", &nparam, &ndata, &nhrs, A[0], &nparam, data, &ndata, &iwork, &nwork, &info);
+    nwork=(int)iwork;
+    logdbg("nwork = %d (%lf)",nwork,iwork);
     double* work = static_cast<double*>(malloc(sizeof(double)*nwork));
     logdbg("accel_lsq_qr ndata=%d nparam=%d",ndata,nparam);
 
@@ -113,7 +118,26 @@ double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int npa
     free(work);
     // if info is not zero then the fit failed.
     if(info!=0){
-        logerr("%d",info);
+        logerr("Error in lapack DEGLS. INFO=%d See full logs for explanation.",info);
+        logmsg("");
+        logmsg("From: http://www.netlib.org/lapack/explore-html/d8/dde/dgels_8f.html");
+        logmsg("INFO is INTEGER");
+        logmsg("  = 0:  successful exit");
+        logmsg("  < 0:  if INFO = -i, the i-th argument had an illegal value");
+        logmsg("  > 0:  if INFO =  i, the i-th diagonal element of the");
+        logmsg("        triangular factor of A is zero, so that A does not have");
+        logmsg("        full rank; the least squares solution could not be");
+        logmsg("        computed.");
+        logmsg("");
+        if(info > 0){
+            logerr("It appears that you are fitting for a 'bad' parameter - E.g A jump on a non-existant flag.");
+            logmsg(" TEMPO2 will NOT attempt to deal with this!");
+            logmsg("Cannot continue. Abort fit.");
+            return -1;
+        } else {
+            logmsg("Cannot continue. Abort fit.");
+            return -1;
+        }
     }
     assert(info==0);
 
@@ -151,8 +175,15 @@ double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int npa
         logdbg("Inverting...");
         F77_dtptri("U","N",&n,_t,&i);
         if(i!=0){
-            logerr("Error in Invert i=%d",i);
-            return i;
+            logerr("Error in lapack DTPTRI. INFO=%d",i);
+            logmsg("From: http://www.netlib.org/lapack/explore-html/d8/d05/dtptri_8f.html");
+            logmsg("INFO is INTEGER");
+            logmsg("  = 0:  successful exit");
+            logmsg("  < 0:  if INFO = -i, the i-th argument had an illegal value");
+            logmsg("  > 0:  if INFO = i, A(i,i) is exactly zero.  The triangular");
+            logmsg("  matrix is singular and its inverse can not be computed.");
+            logmsg("Cannot continue - abort fit");
+            return -1;
         }
 
         double **Rinv = malloc_uinv(n);
@@ -186,7 +217,7 @@ double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int npa
         if(debugFlag){
             for(i=0;i<n;i++){
                 for(j=0;j<n;j++){
-                    logmsg("COVAR %d %d %lg",i,j,Ocvm[i][j]);
+                    logdbg("COVAR %d %d %lg",i,j,Ocvm[i][j]);
                 }
             }
         }
