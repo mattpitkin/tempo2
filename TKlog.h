@@ -20,6 +20,7 @@ extern "C" {
     extern char TK_errorlog[TK_MAX_ERRORS][TK_MAX_ERROR_LEN];
     extern char TK_warnlog[TK_MAX_ERRORS][TK_MAX_ERROR_LEN];
     int logerr_check();
+    const char* _TKchklog(const char*);
 
 #ifdef __cplusplus
 }
@@ -32,18 +33,18 @@ extern "C" {
 #ifndef LOG_OUTFILE
 #define LOG_OUTFILE stdout
 #endif
-#define WARNCOLOR "\033[0;35m"
-#define BOLDCOLOR "\033[1m"
-#define ERRORCOLOR "\033[1;31m"
 #define RESETCOLOR "\033[0m"
+#define WARNCOLOR  RESETCOLOR "\033[0;35m"
+#define BOLDCOLOR  RESETCOLOR "\033[1m"
+#define ERRORCOLOR RESETCOLOR "\033[1;31m"
 #define WHERESTR  "[%s:%d] "
 #define WHEREARG  __FILE__, __LINE__
 #define ENDL "\n"
-#define WHEREERR ERRORCOLOR "***ERROR***\n" BOLDCOLOR "[%s:%d] " RESETCOLOR
+#define WHEREERR ERRORCOLOR "***ERROR***\n [%s:%d] " RESETCOLOR
 #define WHEREWARN BOLDCOLOR "[%s:%d] " WARNCOLOR "Warning: " RESETCOLOR
 #define ENDERR "\n***!!!!!***"
 #define WHERETCHK "[%s:%d] T=%.2f s: "
-#define _LOG(...) fprintf(LOG_OUTFILE,__VA_ARGS__)
+#define _LOG(_fmt,...) fprintf(LOG_OUTFILE,_TKchklog(_fmt),##__VA_ARGS__)
 #define logmsg(_fmt, ...) _LOG(WHERESTR _fmt ENDL, WHEREARG,##__VA_ARGS__)
 #define logdbg(_fmt, ...)  if(debugFlag)logmsg(_fmt,##__VA_ARGS__)
 #define logerr(_fmt, ...) do{TK_STORE_ERROR(_fmt,##__VA_ARGS__); _LOG(WHEREERR _fmt ENDERR ENDL,  WHEREARG,##__VA_ARGS__);}while(0)
