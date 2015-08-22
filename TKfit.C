@@ -258,22 +258,9 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
 
 
-        accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
+        chisq = accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
+        rescale_errors=false;
         free_blas(augmented_DM);
-
-        if (computeParam){
-            longdouble sum;
-            chisq = 0.0;
-            for (j=0;j<ndata;j++)
-            {
-                sum = 0.0;
-                for (k=0;k<nparams;k++)
-                {
-                    sum+=outP[k]*white_designMatrix[j][k];
-                }
-                chisq += pow((white_data[j]-sum),2);
-            }
-        }
 
         if (computeErrors){
             for (i=0;i<nparams;i++){e[i]=sqrt(cvm[i][i]);}

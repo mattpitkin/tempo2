@@ -89,7 +89,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
                 }
                 else
                 {
-                    logdbg("WARNING: setting vobs = 0, this can give a large error!");
+                    logerr("setting vobs = 0, this can give a large error!");
                     vobs[j] = 0.0;
                 }
             }
@@ -145,8 +145,8 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
             if (psr[p].param[param_dm].paramSet[0] == 1 && psr->param[param_dmmodel].linkTo[0] != param_dm)
             {
                 if(t & 0x000F){
-                    printf("WARNING: Using DMMODEL value for dispersion measure instead of the DM parameter\n");
-                    printf("         Please set 'DMMODEL DM' in the par file rather than specifying a value\n");
+                    logerr("Using DMMODEL value for dispersion measure instead of the DM parameter");
+                    logerr("Please set 'DMMODEL DM' in the par file rather than specifying a value");
                     t= t & 0xFFF0;
                 }
                 //	      psr[p].param[param_dmmodel].val[0]=psr[p].param[param_dm].val[0];
