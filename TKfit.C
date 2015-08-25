@@ -220,7 +220,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
 
 #ifdef ACCEL_LSQ
-    if(useT2accel){
+    if(useT2accel == 1){
 
         double augmented_white_data[ndata+nconstraints];
         double **augmented_DM = malloc_blas(ndata+nconstraints,nparams);
@@ -259,6 +259,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
 
         chisq = accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
+        //chisq = accel_lsq_svd(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
         rescale_errors=false;
         free_blas(augmented_DM);
 
@@ -433,6 +434,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
             for (i=0; i < nparams; i++){
                 for(j=0; j < nparams; j++){
                     Ocvm[i][j] = cvm[i][j]; // deal with the fact that the cvm matrix may not be allocated properly
+                    logdbg("CVM %d %d %lg",i,j,cvm[i][j]);
                 }
             }
         }

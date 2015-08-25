@@ -7,6 +7,7 @@ extern char useT2accel;
 #define ACCEL_LSQ
 int accel_uinv(double* _m, int n);
 double accel_lsq_qr(double** dm, double* data, double* oparm, int ndata, int nparam, double** Ocvm);
+double accel_lsq_svd(double** DM, double* data, double* oparam, int ndata, int nparam, double** Ocvm);
 #endif
 
 #ifdef HAVE_BLAS

@@ -1,8 +1,7 @@
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
-
 #ifndef __TKmatrix_h
 #define __TKmatrix_h
-
+#include "TKlongdouble.h"
 
 /*
  *    This file is part of TEMPO2. 
@@ -30,26 +29,110 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    void TKmultMatrix_sq( double **idcm, double **u,int ndata,int npol,double **uout);
-    void TKmultMatrixVec_sq( double **idcm, double *b,int ndata,double *bout);
-    void TKmultMatrix( double **idcm, double **u,int ndata,int ndata2,int npol,double **uout);
-    void TKmultMatrixVec( double **idcm, double *b,int ndata,int ndata2,double *bout);
+    // THE C INTERFACE
+    typedef double** TKmatrix_d;
+    typedef double* TKvector_d;
 
-    double** malloc_uinv(int n);
-    double **malloc_blas(int n,int m);
-    void free_blas(double** matrix);
-    void free_uinv(double** uinv);
-    int get_blas_rows(double** uinv);
-    int get_blas_cols(double** uinv);
-    float** malloc_2df(int rows,int cols);
-    void free_2df(float** uinv);
+    void TKmultMatrix_sq_d   (TKmatrix_d A, TKmatrix_d B, size_t rcA, size_t rowsB, TKmatrix_d O);
+    void TKmultMatrixVec_sq_d(TKmatrix_d A, TKvector_d b, size_t rcA, TKvector_d o);
+    void TKmultMatrix_d      (TKmatrix_d A, TKmatrix_d B, size_t rowsA, size_t colsA, size_t rowsB, TKmatrix_d O);
+    void TKmultMatrixVec_d   (TKmatrix_d A, TKvector_d b, size_t rowsA, size_t colsA, TKvector_d o);
+
+    TKmatrix_d malloc_matrix_sq_d(size_t rc);
+    TKmatrix_d malloc_matrix_d(size_t r, size_t c);
+    TKvector_d malloc_vector_d(size_t r);
+
+    void free_matrix_d(TKmatrix_d A);
+    void free_vector_d(TKvector_d A);
+
+    size_t getRows_TKmatrix_d(TKmatrix_d matrix);
+    size_t getCols_TKmatrix_d(TKmatrix_d matrix);
+    size_t getRows_TKvector_d(TKvector_d matrix);
+
+    typedef float** TKmatrix_f;
+    typedef float*  TKvector_f;
+
+    typedef longdouble** TKmatrix_L;
+    typedef longdouble*  TKvector_L;
+
+
 #ifdef __cplusplus
 }
-#endif
+// THE C++ INTERFACE!
+#include <valarray>
+#include <vector>
+#include <map>
+
+template<typename DataType=double>
+class TKmatrix {
+    public:
+        TKmatrix (size_t rows, size_t cols, bool rowmajor=true) : 
+            _cols(cols), _rows(rows), _rowmajor(rowmajor),
+            _slice(0,rowmajor ? _rows : _cols,rowmajor ? _cols : _rows),
+            _raw((DataType)0, rows*cols), _idx(rowmajor ? _rows : _cols,NULL){
+                TKmatrix_register(this);
+            }
+
+        ~TKmatrix() {
+            TKmatrix_deregister(this);
+        }
+
+        DataType** getIdx();
+
+        TKmatrix<DataType> *T(bool noswap=false);
+
+        inline const DataType* getRaw() const {
+            return &_raw[0];
+        }
+
+        inline DataType* getRaw() {
+            return &_raw[0];
+        }
+
+        inline void set(size_t row,size_t col,DataType d){
+            assert(row < _rows);
+            assert(col< _cols);
+            _raw[_rowmajor ? (row*_cols + col) : (col*_rows + row)] = d;
+        }
+
+        inline DataType get(size_t row,size_t col){
+            assert(row < _rows);
+            assert(col< _cols);
+            return _raw[_rowmajor ? (row*_cols + col) : (col*_rows + row)];
+        }
+
+    public:
+        const size_t _cols;
+        const size_t _rows;
+        const bool _rowmajor;
+        static std::map<DataType*,TKmatrix<DataType>* > _map;
+    private:
+        std::slice _slice;
+        std::valarray<DataType> _raw;
+        std::vector<DataType*> _idx;
+
+};
+
+template<typename DataType=double>
+class TKvector : public TKmatrix<DataType> {
+    public:
+        TKvector(size_t n) : TKmatrix<DataType>(n,1,false){
+    }
+};
 
 
-#ifdef __Tempo2_h
-void free_2dLL(longdouble** m);
-longdouble** malloc_2dLL(int rows,int cols);
+template <typename T>
+void TKmatrix_register(TKmatrix<T> *m);
+
+template <typename T>
+void TKmatrix_deregister(TKmatrix<T> *m);
+
+template <typename T>
+TKmatrix<T>* TKmatrix_getFromPtr(T* p);
+
+
+// end of C++ 
 #endif
+
+// end of TKmatrix.h
 #endif

@@ -4,6 +4,7 @@
 #include <cmath>
 #include "TKfit.h"
 #include "T2accel.h"
+#include "TKlog.h"
 #define FIT_EPSILON 1.01*DBL_EPSILON
 
 
@@ -12,6 +13,7 @@ TEST(testTKpoly, trivial){
     double x[]={-1.0,0.0,1.0};
     double y[]={-1.0,0.0,1.0};
     double p[m];
+    debugFlag=0;
     useT2accel=1;
     TKfindPoly_d(x,y,3,m,p);
     ASSERT_LT(fabs(p[0]),FIT_EPSILON);

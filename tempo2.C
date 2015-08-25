@@ -122,6 +122,8 @@ int main(int argc, char *argv[])
             tcheck=1;
         else if (strcasecmp(argv[i],"-noaccel")==0)
             useT2accel=0;
+        else if (strcasecmp(argv[i],"-svd")==0)
+            useT2accel=2;
         else if (strcasecmp(argv[i],"-oldfit")==0)
             NEWFIT=0;
         else if (strcasecmp(argv[i],"-newfit")==0)
