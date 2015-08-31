@@ -3,6 +3,8 @@
 #endif
 #include "TKlog.h"
 #include <unistd.h>
+#include <stdarg.h>
+#include <stdio.h>
 int debugFlag = 0;
 unsigned TK_errorCount = 0;
 unsigned TK_warnCount = 0;
@@ -43,17 +45,17 @@ int logerr_check(){
 }
 
 
-/**** NEVER CALL THIS FUNCTION
- * It is used by TKlog in a safe way, but is fundementally unsafe
- * if called from other places.
- ****/
-const char* _TKchklog(const char* str){
+void _TKchklog(FILE* out, const char* fmt, ...){
+    va_list args;
+    va_start (args, fmt);
+    char buffer[TK_MAX_ERROR_LEN];
+    vsnprintf(buffer,TK_MAX_ERROR_LEN,fmt,args);
+    va_end(args);
     // if we are printing to a TTY (i.e. terminal) then use colours
-    if(isatty(fileno(LOG_OUTFILE))) return str;
-    else {
+    if(!isatty(fileno(LOG_OUTFILE))) {
         // we are printing to a file, so strip colour codes.
-        static char buffer[TK_MAX_ERROR_LEN];
         char* ptr = buffer;
+        char* str = buffer;
         bool incode=false;
         for (int i=0; i < TK_MAX_ERROR_LEN; i++){
             *ptr = *str;
@@ -71,7 +73,9 @@ const char* _TKchklog(const char* str){
             ++str;
             ++ptr;
         }
-        buffer[TK_MAX_ERROR_LEN-1]='\0'; // ensure null terminated
-        return buffer;
     }
+    buffer[TK_MAX_ERROR_LEN-1]='\0'; // ensure null terminated
+
+    fputs(buffer,out);
+
 }

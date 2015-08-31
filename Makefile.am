@@ -130,9 +130,6 @@ complete-clean: plugins-clean unsupported-clean core-clean
 #	$(MAKE) -C tests check
 
 if HAVE_FLOAT128
-libtempo2_la_LIBADD+=-lquadmath
-libtempo2pred_la_LIBADD+=-lquadmath
-libt2toolkit_la_LIBADD+=-lquadmath
 TKlongdouble.h: TKlongdouble.float128.h
 	cp TKlongdouble.float128.h $@
 else
