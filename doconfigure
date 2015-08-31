@@ -6,9 +6,9 @@ if [[ "$mode" == "O" ]] ; then
 	# optimised
 	ADDFLAGS="-O3 -g0 -march=corei7 -pipe -fomit-frame-pointer"
 elif [[ "$mode" == "D" ]] ; then
-    ADDFLAGS="-O0 -g3 -Wall -Wfatal-errors -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable"
+    ADDFLAGS="-O0 -g3 -Wall -Wfatal-errors -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=deprecated-declarations -fdiagnostics-color=auto"
 else
-	ADDFLAGS="-O2 -g"
+	ADDFLAGS="-O2 -g  -fdiagnostics-color=auto"
 fi
 
 export CFLAGS="$ADDFLAGS $CFLAGS"

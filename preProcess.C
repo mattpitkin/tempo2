@@ -673,7 +673,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
         char tpar[MAX_STRLEN][MAX_FILELEN];
         char ttim[MAX_STRLEN][MAX_FILELEN];
 
-        sprintf(tpar[0],globalFname);
+        sprintf(tpar[0],"%s",globalFname);
         printf("Setting global parameters\n");
         readParfileGlobal(psr,npsr,tpar,ttim);
         printf("Complete setting global parameters\n");
