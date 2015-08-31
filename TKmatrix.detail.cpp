@@ -53,9 +53,18 @@ void _TKmatrix_function(free_vector) (_TKvector_type A){
 }
 
 
-size_t _TKmatrix_function(getRows_TKmatrix) (_TKmatrix_type matrix);
-size_t _TKmatrix_function(getCols_TKmatrix) (_TKmatrix_type matrix);
-size_t _TKmatrix_function(getRows_TKvector) (_TKvector_type matrix);
+size_t _TKmatrix_function(getRows_TKmatrix) (_TKmatrix_type matrix){
+    TK::matrix<TKmatrix_D> *m = TK::matrix<TKmatrix_D>::getFromPtr(*matrix);
+    return m->_rows;
+}
+size_t _TKmatrix_function(getCols_TKmatrix) (_TKmatrix_type matrix){
+    TK::matrix<TKmatrix_D> *m = TK::matrix<TKmatrix_D>::getFromPtr(*matrix);
+    return m->_cols;
+}
+size_t _TKmatrix_function(getRows_TKvector) (_TKvector_type matrix){
+    TK::matrix<TKmatrix_D> *m = TK::matrix<TKmatrix_D>::getFromPtr(matrix);
+    return m->_rows;
+}
 
 #undef _TKmatrix_type
 #undef _TKvector_type

@@ -1,6 +1,6 @@
 AM_DEFAULT_SOURCE_EXT=.C
 
-test_programs=testTKfit testTempo2 testEndToEnd
+test_programs=testTKmatrix testTKfit testTempo2 testEndToEnd
 LOG_DRIVER=$(srcdir)/custom-test-driver
 
 noinst_LTLIBRARIES=libgtest.la

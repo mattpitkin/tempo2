@@ -71,7 +71,7 @@ AS_IF([test "x$enable_float128" != "xno"], [
        AC_MSG_RESULT($have_float128)
 
        AS_IF([test "x$have_float128" != "xno"], [
-	       LDFLAGS="$CPPFLAGS -lquadmath"
+	       LIBS="$LIBS -lquadmath"
        ])
 
        ])
@@ -84,7 +84,7 @@ AM_CONDITIONAL(HAVE_FLOAT128,[test "$have_float128" = yes])
 rm -f TKlongdouble.h
 
 # look for third-party packages in various places (or not)
-SWIN_LOCAL
+#SWIN_LOCAL
 
 AC_MSG_CHECKING([for \$TEMPO2])
 if test -n "$TEMPO2" ; then
@@ -163,6 +163,70 @@ AC_MSG_CHECKING([for LAPACK])
 AC_MSG_RESULT($have_lapack)
 AM_CONDITIONAL(HAVE_LAPACK, [test x"$have_lapack" = xyes])
 
+
+AX_OPENMP
+
+AC_ARG_WITH([mlapack], AS_HELP_STRING([--with-mlapack=builtin], [use builtin multiprecision lapack]) 
+AS_HELP_STRING([--with-mlapack=dir], [look for mlapack in dir/lib and dir/include])~
+AS_HELP_STRING([--with-mlapack=no], [do not use mlapack (not recommended)])~
+    ,[],[with_mlapack=auto])
+
+
+AS_IF([test x"$with_mlapack" = "xno"], [have_mlapack=no], [
+       AS_IF([test "x$with_mlapack" = "xbuiltin"], [have_mlapack=builtin], [
+              #search for mlapack
+              SAVE_LIBS="$LIBS"
+              SAVE_LDFLAGS="$LDFLAGS"
+              SAVE_CPPFLAGS="$CPPFLAGS"
+              MPACK_LIBS="-lmblas_double -lmlapack_double"
+              MPACK_CPPFLAGS="$ax_openmp_flag"
+              MPACK_LDFLAGS="$ax_openmp_flag"
+
+              AS_IF([test -d "$with_mlapack"], [
+                     MPACK_CPPFLAGS="$MPACK_CPPFLAGS -I$with_mlapack/include -I$with_mlapack/include/mpack"
+                     MPACK_LDFLAGS="$MPACL_LDFLAGS -L$with_mlapack/lib"
+                     ], [ AS_IF([test -d "/usr/local/include/mpack"], [CPPFLAGS="$CPPFLAGS /usr/local/include/mpack"]) ])
+
+              AS_IF([test "x$have_float128" != "xno"], [MPACK_LIBS="$MPACK_LIBS -lmblas___float128 -lmlapack___float128"])
+
+
+              CPPFLAGS="$SAVE_CPPFLAGS $MPACK_CPPFLAGS"
+              LDFLAGS="$SAVE_LDFLAGS $MPACK_LDFLAGS"
+              LIBS="$MPACK_LIBS $SAVE_LIBS"
+              AC_MSG_CHECKING([for double-precision mlapack/mblas])
+              AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <mblas_double.h>]
+              [#include <mlapack_double.h>],
+              [Mxerbla_double("",0);]
+              [Rlamch_double("");]
+              )], [have_double_mpack=yes] [have_mlapack=yes], [have_double_mpack=no] [have_mlapack=builtin])
+              AC_MSG_RESULT($have_double_mpack)
+              AS_IF([test "x$have_float128" != "xno"], [
+                     AC_MSG_CHECKING([for __float128 mlapack/mblas])
+                     AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <mblas___float128.h>]
+                     [#include <mlapack___float128.h>],
+                     [Mxerbla___float128("",0);]
+                     [Rlamch___float128("");]
+                     )], [have_float128_mpack=yes] [have_mlapack=$have_double_mpack], [have_float128_mpack=no] [have_mlapack=builtin])
+                     AC_MSG_RESULT($have_float128_mpack)
+                     ])
+              MPACK_LIBS="$MPACK_LDFLAGS $MPACK_LIBS"
+              AS_IF([test x"$have_mlapack" != "xyes"],[MPACK_LIBS=""] [MPACK_CPPFLAGS=""] [MPACK_LDFLAGS=""])
+
+              LDFLAGS=$SAVE_LDFLAGS
+              LIBS=$SAVE_LIBS
+              CPPFLAGS=$SAVE_CPPFLAGS
+              ])
+       ])
+AC_SUBST(MPACK_CPPFLAGS)
+AC_SUBST(MPACK_LIBS)
+
+AC_MSG_CHECKING([if we are using multiprecision lapack/blas])
+AM_CONDITIONAL(BUILTIN_MPACK,[test x"$have_mlapack" = xbuiltin])
+AM_CONDITIONAL(HAVE_MPACK,[test x"$have_mlapack" = xyes])
+
+AC_MSG_RESULT($have_mlapack)
+
+
 # TempoNest addition:
 # Test for MultiNest and CUDA/CULA installation
 SWIN_LIB_MULTINEST
@@ -203,6 +267,7 @@ AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile
                  unsupported_plugins/toasim/Makefile
                  unsupported_plugins/ppta/Makefile
                  unsupported_plugins/glast/Makefile
+                 mpack_lite/Makefile
                  tests/Makefile
                  temponest/Makefile])
 
@@ -235,12 +300,29 @@ if test X$have_cfitsio != Xyes; then
 fi
 
 if test X$have_lapack = Xyes; then
-    AC_MSG_NOTICE(Using LAPACK library for Cholesky decomposition) 
+    AC_MSG_NOTICE(Using LAPACK library for single and double-precision linear algebra) 
 fi
 
 if test X$have_blas = Xyes; then
-    AC_MSG_NOTICE(Using BLAS library for matrix multiplication) 
+    AC_MSG_NOTICE(Using BLAS library for single and double-precision matrix multiplication) 
 fi
+
+if test X$have_mlapack = Xyes; then
+    if test X$have_lapack = Xyes; then
+        AC_MSG_NOTICE(Using extenal mlapack/mblas library for quad-precision linear algebra) 
+    else
+        AC_MSG_NOTICE(Using extenal mlapack/mblas library for double- and quad-precision linear algebra) 
+    fi
+fi
+
+if test X$have_mlapack = Xbuiltin; then
+    if test X$have_lapack = Xyes; then
+        AC_MSG_NOTICE(Using builtin mlapack/mblas library for quad-precision linear algebra) 
+    else
+        AC_MSG_NOTICE(Using builtin mlapack/mblas library for double- and quad-precision linear algebra) 
+    fi
+fi
+
 
 if test X$have_calceph = Xyes; then
     AC_MSG_NOTICE(Able to use calceph library for ephemeris reading) 

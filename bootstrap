@@ -15,6 +15,11 @@ chmod +x make_build_settings.sh
 ./make_build_settings.sh ./plugin_lists/cfitsio.plugins "@CFITSIO_LIBS@" "@CFITSIO_CFLAGS@" > ./build_settings/cfitsio.am
 cd ..
 
+cd mpack_lite
+./makemake.sh double > mpack_lite.double.inc
+./makemake.sh __float128 > mpack_lite.__float128.inc
+cd ..
+
 \rm -rf ./autoconf
 cp -r autoconf.boot autoconf
 autoreconf --install --force

@@ -1,7 +1,8 @@
 
 ACLOCAL_AMFLAGS = -I autoconf
 
-SUBDIRS=sofa . tests
+SUBDIRS=sofa mpack_lite . tests
+
 DIST_SUBDIRS=sofa plugin unsupported_plugins temponest tests
 
 bin_PROGRAMS=tempo2 getPeriod
@@ -24,9 +25,24 @@ libt2toolkit_la_SOURCES=T2toolkit.C T2toolkit.h TKfit.C TKfit.h TKmatrix.C TKmat
 libt2toolkit_la_CFLAGS=-fPIC
 libt2toolkit_la_LIBADD=
 
+libt2toolkit_la_CPPFLAGS=
+libtempo2_la_CPPFLAGS=
+
 libtempo2_la_LIBADD = sofa/libsofa.la
 libtempo2_la_CFLAGS = -fPIC 
 #libtempo2_la_LDFLAGS = -static
+
+if HAVE_MPACK
+libtempo2_la_LIBADD+=@MPACK_LIBS@
+libt2toolkit_la_LIBADD+=@MPACK_LIBS@
+libt2toolkit_la_CPPFLAGS+=@MPACK_CPPFLAGS@
+libtempo2_la_CPPFLAGS+=@MPACK_CPPFLAGS@
+endif
+
+if BUILTIN_MPACK
+libtempo2_la_LIBADD+=./mpack_lite/libmpack_lite.la
+libt2toolkit_la_LIBADD+=./mpack_lite/libmpack_lite.la
+endif
 
 if HAVE_LAPACK
 libtempo2_la_LIBADD+=@LIBS_LAPACK@
