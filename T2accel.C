@@ -109,16 +109,16 @@ double accel_lsq_svd(double** DM, double* data, double* oparam, int ndata, int n
     assert(ndata > nparam);
     assert(DM!=NULL);
     assert(data!=NULL);
-    assert(get_blas_rows(DM)==ndata);
-    assert(get_blas_cols(DM)==nparam);
+    assert(getRows_TKmatrix_d(DM)==(size_t)ndata);
+    assert(getCols_TKmatrix_d(DM)==(size_t)nparam);
     if(Ocvm!=NULL){
         logmsg("%p %p",DM[0],Ocvm[0]);
-        assert(get_blas_rows(Ocvm)==nparam);
-        assert(get_blas_cols(Ocvm)==nparam);
+        assert(getRows_TKmatrix_d(Ocvm)==(size_t)nparam);
+        assert(getCols_TKmatrix_d(Ocvm)==(size_t)nparam);
     }
 
     // transpose A = DM_T
-    double** A = malloc_blas(nparam,ndata);
+    double** A = malloc_matrix_d(nparam,ndata);
     for (i=0; i < nparam; ++i){
         for(j=0; j < ndata; ++j){
             A[i][j] = DM[j][i];
@@ -141,7 +141,7 @@ double accel_lsq_svd(double** DM, double* data, double* oparam, int ndata, int n
     }
 
 
-    double** V = malloc_uinv(nparam);
+    double** V = malloc_matrix_sq_d(nparam);
     nwork=(ndata+nparam);
     if(nwork < 6)nwork=6;
     double* work = (double*)calloc(nwork,sizeof(double));
@@ -172,9 +172,9 @@ double accel_lsq_svd(double** DM, double* data, double* oparam, int ndata, int n
     }
 
     // UPT is U transpose, ignoring rows with zero SVs.
-    double** UPT=malloc_blas(rankA,ndata);
-    double** VIS=malloc_blas(nparam,rankA);
-    double** VIST=malloc_blas(rankA,nparam);
+    double** UPT=malloc_matrix_d(rankA,ndata);
+    double** VIS=malloc_matrix_d(nparam,rankA);
+    double** VIST=malloc_matrix_d(rankA,nparam);
     for(j=0;j<rankA; j++){
         for(i=0; i < ndata;i++){
             UPT[j][i] = A[j][i];
@@ -209,14 +209,14 @@ double accel_lsq_svd(double** DM, double* data, double* oparam, int ndata, int n
        }*/
 
     if(oparam!=NULL){
-        double** M = malloc_blas(nparam,ndata);
+        double** M = malloc_matrix_d(nparam,ndata);
         accel_multMatrix(*VIS,*UPT,nparam,rankA,ndata,*M);
         accel_multMatrixVec(*M,data,nparam,ndata,oparam);
         for (i=0; i < nparam; i++){
             oparam[i]*=ColS[i];
             //logmsg("P[%d] = %lg",i,oparam[i]);
         }
-        free_blas(M);
+        free_matrix_d(M);
     }
     if(Ocvm != NULL){
         longdouble sum;
@@ -239,7 +239,7 @@ double accel_lsq_svd(double** DM, double* data, double* oparam, int ndata, int n
         }
 
 
-        double** OcvmT = malloc_uinv(nparam);
+        double** OcvmT = malloc_matrix_sq_d(nparam);
         accel_multMatrix(*VIS,*VIST,nparam,rankA,nparam,*OcvmT);
         for (i=0; i < nparam; i++){
             for (j=0; j < nparam; j++){
@@ -250,8 +250,8 @@ double accel_lsq_svd(double** DM, double* data, double* oparam, int ndata, int n
         }
     }
 
-    free_blas(A);
-    free_blas(V);
+    free_matrix_d(A);
+    free_matrix_d(V);
     return ndata-nparam;
 }
 
@@ -266,7 +266,7 @@ double accel_lsq_qr(double** DM, double* data, double* oparam, int ndata, int np
     double iwork;
 
     // transpose A = DM_T
-    double** A = malloc_blas(nparam,ndata);
+    double** A = malloc_matrix_d(nparam,ndata);
     for (i=0; i < nparam; ++i){
         for(j=0; j < ndata; ++j){
             A[i][j] = DM[j][i];
@@ -348,7 +348,7 @@ double accel_lsq_qr(double** DM, double* data, double* oparam, int ndata, int np
         // packed triangular matrix.
         double* _t=(double*)malloc(sizeof(double)*(n*(n+1))/2);
 
-        double **R = malloc_uinv(n);
+        double **R = malloc_matrix_sq_d(n);
         // This code taken from the LAPACK documentation
         // to pack a triangular matrix.
 
@@ -382,8 +382,8 @@ double accel_lsq_qr(double** DM, double* data, double* oparam, int ndata, int np
             return -1;
         }
 
-        double **Rinv = malloc_uinv(n);
-        double **RinvT= malloc_uinv(n);
+        double **Rinv = malloc_matrix_sq_d(n);
+        double **RinvT= malloc_matrix_sq_d(n);
 
         // Unpack the triangular matrix using reverse of above
         // We will put it in fortran, so continue to use [col][row] order
@@ -424,11 +424,11 @@ double accel_lsq_qr(double** DM, double* data, double* oparam, int ndata, int np
                 Ocvm[i][j]=cvm[i][j]*(ColS[i]*ColS[j]);// scale CVM
             }
         }
-        free_uinv(Rinv);
-        free_uinv(RinvT);
+        free_matrix_d(Rinv);
+        free_matrix_d(RinvT);
     }
 
-    free_uinv(A);
+    free_matrix_d(A);
 
     return chisq;
 }

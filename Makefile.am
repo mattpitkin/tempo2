@@ -11,7 +11,7 @@ BUILT_SOURCES=TKcholesky.h TKlongdouble.h
 
 
 # Source files used by plugins that are not part of libtempo2
-xtra_dist_sources=choleskyRoutines.C choleskyRoutines.h
+xtra_dist_sources=choleskyRoutines.C choleskyRoutines.h TKmatrix.detail.h TKmatrix.detail.cpp TKmatrix.cpp
 
 FITFUNCS=t2fit_stdFitFuncs.C t2fit_position.C t2fit_fitwaves.C t2fit_glitch.C t2fit_ifunc.C t2fit_dmmodel.C
 
@@ -69,6 +69,8 @@ getPeriod_LDADD = libtempo2pred.la
 
 # Specify to include the T2runtime in distributions
 EXTRA_DIST = T2runtime $(xtra_dist_sources)
+
+TKmatrix.C: TKmatrix.cpp TKmatrix.detail.cpp TKmatrix.detail.h TKmatrix.h
 
 # This clears out any CVS files that might get in our distribution
 dist-hook:
@@ -145,7 +147,6 @@ CLEANFILES=$(BUILT_SOURCES)
    complete complete-install complete-clean \
    temponest temponest-install \
    core core-install core-clean test
-
 
 install-data-hook:
 	@echo ""

@@ -2,16 +2,17 @@
 #include <src/gtest_main.cc>
 
 #include"TKmatrix.h"
+#include"TKlog.h"
 
 
 TEST(testTKmatrix_d, construct){
-    TKmatrix<double> M(1,2);
+    TK::matrix<double> M(1,2);
     ASSERT_EQ(M._rows,1);
     ASSERT_EQ(M._cols,2);
 }
 
 TEST(testTKmatrix_d, getset){
-    TKmatrix<double> M(2,2,true);
+    TK::matrix<double> M(2,2,true);
     M.set(0,0,1.0);
     M.set(0,1,-2.0);
     M.set(1,0,2.0);
@@ -22,7 +23,7 @@ TEST(testTKmatrix_d, getset){
 }
 
 TEST(testTKmatrix_d, transpose){
-    TKmatrix<double> M(3,3,true);
+    TK::matrix<double> M(3,3,true);
     M.set(0,0,1.0);
     M.set(0,1,-2.0);
     M.set(1,0,2.0);
@@ -34,82 +35,78 @@ TEST(testTKmatrix_d, transpose){
     M.set(2,0,4.0);
 
     {
-    TKmatrix<double> *MT = M.T(false);
+    TK::matrix<double> MT = M.T(false);
 
-    ASSERT_EQ(MT->get(0,0), 1.0);
-    ASSERT_EQ(MT->get(1,0),-2.0);
-    ASSERT_EQ(MT->get(0,1), 2.0);
-    ASSERT_EQ(MT->get(2,1),-3.0);
-    ASSERT_EQ(MT->get(1,2), 3.0);
-    ASSERT_EQ(MT->get(2,0),-4.0);
-    ASSERT_EQ(MT->get(0,2), 4.0);
+    ASSERT_EQ(MT.get(0,0), 1.0);
+    ASSERT_EQ(MT.get(1,0),-2.0);
+    ASSERT_EQ(MT.get(0,1), 2.0);
+    ASSERT_EQ(MT.get(2,1),-3.0);
+    ASSERT_EQ(MT.get(1,2), 3.0);
+    ASSERT_EQ(MT.get(2,0),-4.0);
+    ASSERT_EQ(MT.get(0,2), 4.0);
 
     // check that the raw data was transposed
     for(size_t j =0 ; j < 3; j++){
         for(size_t k =0 ; k < 3; k++){
             size_t i1 = j+3*k;
             size_t i2 = k+3*j;
-            EXPECT_EQ(MT->getRaw()[i1],M.getRaw()[i2]);
+            EXPECT_EQ(MT.getRaw()[i1],M.getRaw()[i2]);
         }
     }
-    delete MT;
     }
 
     {
-        TKmatrix<double> *MT = M.T(true);
+        TK::matrix<double> MT = M.T(true);
 
-        ASSERT_EQ(MT->get(0,0), 1.0);
-        ASSERT_EQ(MT->get(1,0),-2.0);
-        ASSERT_EQ(MT->get(0,1), 2.0);
-        ASSERT_EQ(MT->get(2,1),-3.0);
-        ASSERT_EQ(MT->get(1,2), 3.0);
-        ASSERT_EQ(MT->get(2,0),-4.0);
-        ASSERT_EQ(MT->get(0,2), 4.0);
+        ASSERT_EQ(MT.get(0,0), 1.0);
+        ASSERT_EQ(MT.get(1,0),-2.0);
+        ASSERT_EQ(MT.get(0,1), 2.0);
+        ASSERT_EQ(MT.get(2,1),-3.0);
+        ASSERT_EQ(MT.get(1,2), 3.0);
+        ASSERT_EQ(MT.get(2,0),-4.0);
+        ASSERT_EQ(MT.get(0,2), 4.0);
 
         for(size_t i =0 ; i < 9; i++){
-            EXPECT_EQ(MT->getRaw()[i],M.getRaw()[i]);
+            EXPECT_EQ(MT.getRaw()[i],M.getRaw()[i]);
         }
-        delete MT;
     }
 
 }
 
 TEST(testTKmatrix_d, transposeBig){
-    TKmatrix<double> M(1024,2048,true);
+    TK::matrix<double> M(1024,2048,true);
     for (int i=0;i<1024*2048;i++){
         M.getRaw()[i]=(double)i;
     }
-    TKmatrix<double> *MT = M.T(false);
-    ASSERT_EQ(MT->_rows,M._cols);
-    ASSERT_EQ(MT->_cols,M._rows);
+    TK::matrix<double> MT = M.T(false);
+    ASSERT_EQ(MT._rows,M._cols);
+    ASSERT_EQ(MT._cols,M._rows);
 
     for (int i=0;i<1024;i++){
         for (int j=0;j<2048;j++){
-            ASSERT_EQ(M.get(i,j),MT->get(j,i));
+            ASSERT_EQ(M.get(i,j),MT.get(j,i));
         }
     }
-    delete MT;
 }
 
 TEST(testTKmatrix_d, transposeBig2){
-    TKmatrix<double> M(1024,2048,true);
+    TK::matrix<double> M(1024,2048,true);
     for (int i=0;i<1024*2048;i++){
         M.getRaw()[i]=(double)i;
     }
-    TKmatrix<double> *MT = M.T(true);
-    ASSERT_EQ(MT->_rows,M._cols);
-    ASSERT_EQ(MT->_cols,M._rows);
+    TK::matrix<double> MT = M.T(true);
+    ASSERT_EQ(MT._rows,M._cols);
+    ASSERT_EQ(MT._cols,M._rows);
 
     for (int i=0;i<1024;i++){
         for (int j=0;j<2048;j++){
-            ASSERT_EQ(M.get(i,j),MT->get(j,i));
+            ASSERT_EQ(M.get(i,j),MT.get(j,i));
         }
     }
-    delete MT;
 }
 
 TEST(testTKmatrix_d, getIdx){
-    TKmatrix<double> M(2,2,true);
+    TK::matrix<double> M(2,2,true);
     M.set(0,0,1.0);
     M.set(0,1,-2.0);
     M.set(1,0,2.0);
@@ -121,12 +118,61 @@ TEST(testTKmatrix_d, getIdx){
 
 }
 
+TEST(testTKmatrix_d, opPlus){
+    TK::matrix<double> m1(16,32);
+    TK::matrix<double> m2(16,32);
+    TK::matrix<double> m2b(16,32,false);
+    for (int i=0;i<16*32;i++){
+        m1.getRaw()[i]=i;
+        m2.getRaw()[i]=16.5-i;
+        m2b.getRaw()[i]=16.5-i;
+    }
+    TK::matrix<double> m3 = m1+m2;
+    TK::matrix<double> m4 = m1+m2b;
+
+    for (int i=0;i<16;i++){
+        for (int j=0;j<32;j++){
+            ASSERT_EQ(m3.get(i,j), m1.get(i,j)+m2.get(i,j));
+            ASSERT_EQ(m4.get(i,j), m1.get(i,j)+m2b.get(i,j));
+        }
+    }
+}
+
+
+TEST(testTKmatrix_d, opMult){
+    TK::matrix<double> m1(2,3);
+    TK::matrix<double> m2(3,2);
+    TK::matrix<double> m2b(3,2,false);
+    for (int i=0;i<2;i++){
+        for (int j=0;j<3;j++){
+            double d = i*100.0+j;
+            m1.set(i,j,d);
+            m2.set(j,i,d*M_PI);
+            m2b.set(j,i,d*M_PI);
+        }
+    }
+    TK::matrix<double> m3 = m1*m2;
+    TK::matrix<double> m4 = m1*m2b;
+
+    for (int i=0;i<2;i++){
+        for (int j=0;j<2;j++){
+            double element=0;
+            for (int k=0; k < 3; k++){
+                element += m1.get(i,k)*m2.get(k,j);
+            }
+            ASSERT_EQ(element,m3.get(i,j));
+            ASSERT_EQ(element,m3.get(i,j));
+        }
+    }
+}
+
+
 TEST(testTKmatrix_d, toFromPtr){
-    TKmatrix<double> M(2,2,true);
+    TK::matrix<double> M(2,2,true);
     double* p = M.getRaw();
 
-    TKmatrix<double>* Mp = TKmatrix_getFromPtr(p);
-    ASSERT_EQ(&M,Mp);
+    TK::matrix<double>* Mp = TK::matrix<double>::getFromPtr(p);
+    ASSERT_EQ(Mp,&M);
 }
 
 TEST(testTKmatrix_d, mallocfree){
@@ -141,3 +187,84 @@ TEST(testTKvector_d, mallocfree){
 
 
 
+TEST(testTKvector_d, opMVmult){
+    TK::matrix<double> m1(2,3,true);
+    TK::matrix<double> m2(2,3,false);
+    TK::vector<double> v(3);
+    for (int i=0;i<2;i++){
+        for (int j=0;j<3;j++){
+            double d = i*100.0+j;
+            m1[i][j] = d;
+            m2[i][j] = d;
+        }
+    }
+
+    for (int j=0;j<3;j++){
+        v[j] = j+1;
+    }
+    TK::vector<double> u = m1*v;
+    TK::vector<double> u2 = m2*v;
+
+    for (int i=0;i<2;i++){
+            double element=0;
+            for (int k=0; k < 3; k++){
+                element += m1.get(i,k)*v[k];
+            }
+            ASSERT_EQ(element,u[i]);
+            ASSERT_EQ(element,u2[i]);
+    }
+}
+
+
+TEST(testTKvector_d, multMatrixVec){
+    TKmatrix_d m1 = malloc_matrix_d(2,3);
+    TKvector_d v  = malloc_vector_d(3);
+    for (int i=0;i<2;i++){
+        for (int j=0;j<3;j++){
+            double d = i*100.0+j;
+            m1[i][j] = d;
+        }
+    }
+
+    for (int j=0;j<3;j++){
+        v[j] = j+1;
+    }
+    TKvector_d u = malloc_vector_d(2);
+    TKmultMatrixVec_d(m1,v,u);
+
+    for (int i=0;i<2;i++){
+            double element=0;
+            for (int k=0; k < 3; k++){
+                element += m1[i][k]*v[k];
+            }
+            ASSERT_EQ(element,u[i]);
+    }
+}
+
+
+TEST(testTKdiagonal_d, alloc){
+    TK::diagonal<double> M(8);
+    ASSERT_EQ(0,M[0][0]);
+    M[2][2] = 1;
+    ASSERT_EQ(1,M[2][2]);
+}
+
+TEST(testTKdiagonal_d, opMult){
+    TK::diagonal<double> M1(8);
+    TK::diagonal<double> M2(8);
+    TK::matrix<double> M3(8,8);
+
+    for (int i=0;i<8;i++){
+        M1[i][i] = i;
+        M2[i][i] = 1.0/(double)(i+1);
+        M3[i][i] = M2[i][i];
+    }
+
+    TK::diagonal<double> O1 = M1*M2;
+    TK::matrix<double> O2 = M1*M3;
+
+    for (int i=0;i<8;i++){
+        ASSERT_EQ(M1[i][i]*M2[i][i], O1[i][i]);
+        ASSERT_EQ(M1[i][i]*M3[i][i], O2[i][i]);
+    }
+}

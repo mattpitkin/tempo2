@@ -152,7 +152,7 @@ void matrixDMConstraintWeights(pulsar *psr){
             }
         }
         // originally was sizeof(double*)*nobs.
-        double ** designMatrix=(double**)malloc_uinv(nobs);
+        double ** designMatrix=(double**)malloc_matrix_sq_d(nobs);
         double *e=(double*)malloc(sizeof(double)*nobs);
 
         nobs=0;
@@ -219,7 +219,7 @@ void matrixDMConstraintWeights(pulsar *psr){
             psr->dmoffsCM_weight[i]/=sum_wCM;
 
         // free everything .
-        free_uinv(designMatrix);
+        free_matrix_d(designMatrix);
         free(e);
     }
 }

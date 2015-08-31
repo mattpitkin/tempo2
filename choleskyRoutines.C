@@ -664,7 +664,7 @@ void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
         int dcmflag,int useBeta,double betaVal)
 {
     int i,j,ndays;
-    double** m=malloc_uinv(np);
+    double** m=malloc_matrix_sq_d(np);
 
     printf("choleskyRoutines: calculateCholesky\n");
     ndays=ceil((resx[np-1])-(resx[0])+1e-10);
@@ -680,7 +680,7 @@ void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
 
     cholesky_formUinv(uinv,m,np);
 
-    free_uinv(m);
+    free_matrix_d(m);
     printf("Complete calculateCholesky\n");
 }
 

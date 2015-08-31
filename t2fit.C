@@ -116,15 +116,15 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             // ToAs must be sorted for covariance function code
             sortToAs(psr+ipsr);
 
-            // malloc_uinv does a blas-compatible allocation of a 2-d array.
-            uinv = malloc_uinv(psr_ndata);
+            // malloc_matrix_sq_d does a blas-compatible allocation of a 2-d array.
+            uinv = malloc_matrix_sq_d(psr_ndata);
             psr[ipsr].fitMode=1; // Note: forcing this to 1 as the Cholesky fit is a weighted fit
             logmsg("Doing a FULL COVARIANCE MATRIX fit");
         } else {
             // Here the whitening matrix is just a diagonal
             // weighting matrix. Store diagonal matrix as 1xN
             // so that types match later.
-            uinv=malloc_blas(1,psr_ndata); 
+            uinv=malloc_matrix_d(1,psr_ndata); 
             if(psr[ipsr].fitMode == 0){
                 // if we are doing an unweighted fit then we should set the errors to 1.0
                 // to give uniform weighting.
@@ -160,8 +160,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          * M.p = d
          * It is ndata x nparams in size. We also allocate the whitened DM here.
          */
-        double** designMatrix = malloc_blas(psr_ndata,nParams);
-        double** white_designMatrix = malloc_blas(psr_ndata,nParams);
+        double** designMatrix = malloc_matrix_d(psr_ndata,nParams);
+        double** white_designMatrix = malloc_matrix_d(psr_ndata,nParams);
         for (unsigned int idata =0; idata < psr_ndata; ++idata){
             // t2Fit_buildDesignMatrix is a replacement for the old FITfuncs routine.
             // it fills one row of the design matrix.
@@ -182,7 +182,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          */
         double** constraintsMatrix =NULL;
         if(psr[ipsr].fitinfo.nConstraints > 0){
-            constraintsMatrix = malloc_blas(nConstraints,nParams);
+            constraintsMatrix = malloc_matrix_d(nConstraints,nParams);
             for (unsigned int iconstraint =0; iconstraint < nConstraints; ++iconstraint){
                 // similar to t2Fit_buildDesignMatrix, t2Fit_buildConstraintsMatrix
                 // creates one row of the constraints matrix.
@@ -198,8 +198,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          * we use TKmultMatrix as this is usually backed by LAPACK and so is fast :)
          */
         if(haveCovar){
-            TKmultMatrixVec(uinv,psr_y,psr_ndata,psr_ndata,psr_white_y);
-            TKmultMatrix_sq(uinv,designMatrix,psr_ndata,nParams,white_designMatrix);
+            TKmultMatrixVec_d(uinv,psr_y,psr_white_y);
+            TKmultMatrix_d(uinv,designMatrix,white_designMatrix);
         } else {
             for(unsigned i=0;i<psr_ndata;++i){
                 psr_white_y[i]=psr_y[i]*uinv[0][i];
@@ -267,9 +267,9 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             logdbg("Free fit memory");
             free(parameterEstimates);
             free(errorEstimates);
-            free_blas(designMatrix);
-            free_blas(white_designMatrix);
-            free_blas(uinv);
+            free_matrix_d(designMatrix);
+            free_matrix_d(white_designMatrix);
+            free_matrix_d(uinv);
             free(psr_x);
             free(psr_y);
             free(psr_white_y);

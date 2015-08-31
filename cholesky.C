@@ -33,8 +33,8 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
     double **m;
     int i,j;
 
-    int nrows=get_blas_rows(uinv);
-    int ncols=get_blas_cols(uinv);
+    int nrows=getRows_TKmatrix_d(uinv);
+    int ncols=getCols_TKmatrix_d(uinv);
 
     if (ncols!=np){
         logmsg("np=%d ncols=%d",ncols,np);

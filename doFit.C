@@ -313,14 +313,14 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
         if (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL")){
             // fit with a covariance function.
             logtchk("allocating memory for uinv ");
-            uinvs[p]=malloc_uinv(count);
+            uinvs[p]=malloc_matrix_sq_d(count);
             logtchk("complete allocating memory for uinv");
             psr[p].fitMode = 1; // Note: forcing this to 1 as the Cholesky fit is a weighted fit
             logmsg("Doing a FULL COVARIANCE MATRIX fit");
         } else {
             // fit without covariance function.
             logtchk("allocating memory for uinv");
-            uinvs[p]=malloc_blas(1,count); // store diagonal matrix as a 1xN
+            uinvs[p]=malloc_matrix_d(1,count); // store diagonal matrix as a 1xN
             logtchk("complete allocating memory for uinv");
             if(psr[p].fitMode == 0){
                 logdbg("Doing an UNWEIGHTED fit");
@@ -378,7 +378,7 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
         }
         ntot+=nglobal;
         logmsg("GLOBAL FIT MODE %d",ntot);
-        double** cvm=malloc_uinv(ntot);
+        double** cvm=malloc_matrix_sq_d(ntot);
         double *val=(double*)malloc(sizeof(double)*ntot);
         double *error=(double*)malloc(sizeof(double)*ntot);
 
@@ -476,7 +476,7 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
         }
 
         /* Free the arrays created inside this section */
-        free_uinv(cvm);
+        free_matrix_d(cvm);
         free(val);
         free(error);
     } else {
@@ -535,7 +535,7 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
         free(yy[p]);      
         free(xx[p]);
         free(ip[p]);
-        free_uinv(uinvs[p]);
+        free_matrix_d(uinvs[p]);
     }
     free(ip);
     free(xx);

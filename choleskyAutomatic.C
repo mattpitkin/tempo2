@@ -1,12 +1,12 @@
 /* Routines based around the TEMPO2 use of the Cholesky algorithm    */
 /* These have been put together by G. Hobbs, W. Coles and R. Shannon */
-
-#include "choleskyRoutines.h"
-#include "tempo2.h"
-#include "math.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
+#include <cmath>
+
+#include "tempo2.h"
+#include "choleskyRoutines.h"
 #include "TKfit.h"
 #include "TKspectrum.h"
 #include "T2toolkit.h"
@@ -45,7 +45,7 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
     double *covFunc;
     int dspan=ceil(resx[nres-1]-resx[0]);
 
-    uinv=malloc_uinv(nres);
+    uinv=malloc_matrix_sq_d(nres);
     covFunc = (double *)malloc(sizeof(double)*((int)(resx[nres-1]-resx[0])+5));
 
     int nHighFreqSpec;
@@ -531,7 +531,7 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
     free(smoothModel);
     free(highFreqRes);
 
-    free_uinv(uinv);
+    free_matrix_d(uinv);
 
     free(covFunc);
 
