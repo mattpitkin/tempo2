@@ -187,7 +187,7 @@ int ld_fprintf(FILE* __stream, const char *__format, ...) {
     va_start(args,__format);
     int ret = ld_vsprintf(buf,__format,args);
     va_end(args);
-    fprintf(__stream,buf);
+    fprintf(__stream,"%s",buf);
     return ret;
 }
 
@@ -198,7 +198,7 @@ int ld_printf(const char *__format, ...) {
     va_start(args,__format);
     int ret = ld_vsprintf(buf,__format,args);
     va_end(args);
-    printf(buf);
+    printf("%s",buf);
     return ret;
 }
 

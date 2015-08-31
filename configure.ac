@@ -55,6 +55,11 @@ fi
 # Math library is required for the tempo2 predictor library
 AC_CHECK_LIB(m, cos)
 
+AX_PTHREAD
+
+AC_SUBST(PTHREAD_LIBS)
+AC_SUBST(PTHREAD_CFLAGS)
+
 AC_ARG_ENABLE([float128], AS_HELP_STRING([--disable-float128], [Disable __float128 support]))
 
 AS_IF([test "x$enable_float128" != "xno"], [
@@ -64,6 +69,10 @@ AS_IF([test "x$enable_float128" != "xno"], [
        have_float128=no)
 
        AC_MSG_RESULT($have_float128)
+
+       AS_IF([test "x$have_float128" != "xno"], [
+	       LDFLAGS="$CPPFLAGS -lquadmath"
+       ])
 
        ])
 

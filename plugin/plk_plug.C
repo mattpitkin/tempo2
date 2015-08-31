@@ -2673,10 +2673,10 @@ int idPoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,float m
 	  printf(" \"%s\" %s ",psr[0].obsn[iclosest].flagID[i],psr[0].obsn[iclosest].flagVal[i]);
    printf("\n");
 
-	  printf(psr[0].obsn[iclosest].telID);
+	  printf("%s",psr[0].obsn[iclosest].telID);
    for (l=0;l<psr[0].obsn[iclosest].nclock_correction;l++){
 	  printf(" -> ");
-	  printf(psr[0].obsn[iclosest].correctionsTT[l].corrects_to);
+	  printf("%s",psr[0].obsn[iclosest].correctionsTT[l].corrects_to);
    }	
    printf("\n");
    printf("---------------------------------------------------\n");
@@ -4084,7 +4084,7 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
    else if (plot==6)   sprintf(str,"Day of year");
    else if (plot==7)   sprintf(str,"Frequency (MHz)");
    else if (plot==8)   sprintf(str,"TOA error (\\gms)");
-   else if (plot==9)   sprintf(str,userValStr);
+   else if (plot==9)   sprintf(str,"%s",userValStr);
    else if (plot==10)  sprintf(str,"Year");
    else if (plot==11)  sprintf(str,"Elevation (deg)");
    else if (plot==12)  sprintf(str,"MJD");
@@ -4093,7 +4093,7 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
    else if (plot==15)  sprintf(str,"Parallactic angle (deg)");
    else if (plot==16) sprintf(str,"Red Noise (sec)");
    else if (plot==17) sprintf(str,"DM Variations (cm^-3 pc)");
-  else if (plot==18) sprintf(str,flagStr);
+  else if (plot==18) sprintf(str,"%s",flagStr);
 }
 
 void averagePts(float *x,float *y,int n,int width,float *meanX,float *meanY,int *nMean)

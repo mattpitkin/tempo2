@@ -218,11 +218,11 @@ void doPlot(pulsar *psr,int npsr)
     else if (xfitFlag==5) sprintf(xstr,"Orbital phase");
     else if (xfitFlag==6) sprintf(xstr,"Year");
 
-    if (yfitFlag==1) sprintf(ystr,psr[0].obsn[0].correctionsTT[0].corrects_to);
-    else if (yfitFlag==2) sprintf(ystr,psr[0].obsn[0].correctionsTT[1].corrects_to);
-    else if (yfitFlag==3) sprintf(ystr,psr[0].obsn[0].correctionsTT[2].corrects_to);
-    else if (yfitFlag==4) sprintf(ystr,psr[0].obsn[0].correctionsTT[3].corrects_to);
-    else if (yfitFlag==5) sprintf(ystr,psr[0].obsn[0].correctionsTT[4].corrects_to);
+    if (yfitFlag==1) sprintf(ystr,"%s",psr[0].obsn[0].correctionsTT[0].corrects_to);
+    else if (yfitFlag==2) sprintf(ystr,"%s",psr[0].obsn[0].correctionsTT[1].corrects_to);
+    else if (yfitFlag==3) sprintf(ystr,"%s",psr[0].obsn[0].correctionsTT[2].corrects_to);
+    else if (yfitFlag==4) sprintf(ystr,"%s",psr[0].obsn[0].correctionsTT[3].corrects_to);
+    else if (yfitFlag==5) sprintf(ystr,"%s",psr[0].obsn[0].correctionsTT[4].corrects_to);
     else if (yfitFlag==6) sprintf(ystr,"    -> UT1 (s)");
     else if (yfitFlag==7) sprintf(ystr,"Shapiro delay due to Sun (s)");
     else if (yfitFlag==8) sprintf(ystr,"Dispersion delay SS (us)");
