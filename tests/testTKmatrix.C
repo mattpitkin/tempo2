@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <src/gtest_main.cc>
+#include <iostream>
+#include <iomanip>
 
 #include"TKmatrix.h"
 #include"TKsvd.h"
@@ -141,13 +143,19 @@ TEST(testTKmatrix_d, opPlus){
 
 
 TEST(testTKmatrix_d, opMult){
-    TK::matrix<double> m1(2,3);
+    TK::matrix<double> m1(5,3);
     TK::matrix<double> m2(3,2);
     TK::matrix<double> m2b(3,2,false);
-    for (int i=0;i<2;i++){
+
+    for (int i=0;i<5;i++){
         for (int j=0;j<3;j++){
             double d = i*100.0+j;
             m1.set(i,j,d);
+        }
+    }
+    for (int i=0;i<2;i++){
+        for (int j=0;j<3;j++){
+            double d = i*100.0+j;
             m2.set(j,i,d*M_PI);
             m2b.set(j,i,d*M_PI);
         }
@@ -155,7 +163,7 @@ TEST(testTKmatrix_d, opMult){
     TK::matrix<double> m3 = m1*m2;
     TK::matrix<double> m4 = m1*m2b;
 
-    for (int i=0;i<2;i++){
+    for (int i=0;i<5;i++){
         for (int j=0;j<2;j++){
             double element=0;
             for (int k=0; k < 3; k++){
@@ -319,16 +327,33 @@ TEST(testTKmatrix_ld, opMult){
 
 
 
-TEST(svd,svd_dbl){
+TEST(svd,trivial_d){
+    std::cout << std::scientific << std::setprecision(3);
     TK::matrix<double> m1(6,3);
     TK::matrix<double> m2(6,3,false);
-        for (int j=0;j<6;j++){
     for (int i=0;i<3;i++){
-            double d = i*double(100.0)+j;
-            m1.set(j,i,d*LD_PI);
-            m2.set(j,i,d*LD_PI);
+        for (int j=0;j<6;j++){
+            if(i==j){
+                m1[i][j] = i+1;
+                m2[i][j] = i+1;
+            }
         }
     }
-        TK::SVD<double> svd(m1);
-        ASSERT_EQ(svd.U._rows,m1._rows);
+    m1[0][1]=-1.5;
+    std::cout << "M" << std::endl;
+    std::cout << m1 << std::endl;
+    TK::SVD<double> svd(m1);
+    ASSERT_EQ(svd.U._rows,m1._rows);
+    std::cout << "U" << std::endl;
+    std::cout << svd.U << std::endl;
+    std::cout << "S" << std::endl;
+    std::cout << svd.S << std::endl;
+    std::cout << "V" << std::endl;
+    std::cout << svd.V << std::endl;
+    TK::matrix<double> o = svd.S*svd.V.T(true);
+    TK::matrix<double> o2 = svd.U*o;
+    std::cout << "S.V" << std::endl;
+    std::cout << o << std::endl;
+    std::cout << "U.S.V" << std::endl;
+    std::cout << o2 << std::endl;
 }

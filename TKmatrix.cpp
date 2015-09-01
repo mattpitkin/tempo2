@@ -68,10 +68,10 @@ TK::matrix<DataType> TK::matrix<DataType>::T(bool noswap) const{
     }
 }
 
+
 template class TK::matrix<float>;
 template class TK::matrix<double>;
 template class TK::matrix<longdouble>;
-
 
 
 // template specialisations to use BLAS multiply when avaliable.
@@ -192,10 +192,10 @@ TK::matrix<double> operator*(const TK::matrix<double> &lhs, const TK::matrix<dou
     int lda = lhs._rowmajor ? lhs._cols : lhs._rows;
     int ldb = rhs._rowmajor ? rhs._cols : rhs._rows;
 
-    TK::matrix<double> out(lhs._cols,rhs._rows,false); // col_major
-    int ldc = out._cols;
+    TK::matrix<double> out(lhs._rows,rhs._cols,false); // col_major
+    int ldc = out._rows;
 
-    logmsg("Rgemm");
+    logmsg("Rgemm [%d,%d] x [%d,%d] => [%d,%d]",lhs._rows,lhs._cols, rhs._rows, rhs._cols, out._rows,out._cols);
     Rgemm(lhs._rowmajor ? "T":"N", rhs._rowmajor ? "T":"N", // transpose A, B
             m,n,k,
             alpha, const_cast<double*>(lhs.getRaw()), lda,

@@ -1,3 +1,4 @@
+#include <ostream>
 
 // Template method definitions
 template<typename D, typename F>
@@ -35,23 +36,35 @@ TK::matrix<D> TK::fallbackMultiply(const TK::matrix<D> &lhs, const TK::matrix<F>
 
 namespace TK {
 // operator definitions
+template<typename charT, typename traits, typename D>
+std::basic_ostream<charT, traits> &
+operator<< (std::basic_ostream<charT, traits> &lhs, matrix<D> const &rhs){
+    for(size_t r = 0; r < rhs._rows; r++){
+        for(size_t c = 0; c < rhs._cols; c++){
+            lhs << rhs[r][c]<< " ";
+        }
+        lhs << std::endl;
+    }
+    return lhs;
+}
+
+
+
 
 
 template<typename D, typename F>
 TK::diagonal<D> operator*(const TK::diagonal<D> &lhs, const TK::diagonal<F> &rhs){
-    assert(lhs._cols == rhs._cols);
-    TK::diagonal<D> ret(lhs._cols);
+    assert(lhs._cols == rhs._rows);
+    TK::diagonal<D> ret(lhs._rows,rhs._cols);
     ret._raw = lhs._raw;
+    if (lhs._rows == rhs._cols){
     ret._raw *= rhs._raw;
-    return ret;
-}
-
-template<typename D, typename F>
-TK::matrix<D> operator*(const TK::matrix<D> &lhs, const TK::diagonal<F> &rhs){
-    assert(lhs._cols == rhs._cols);
-    TK::diagonal<D> ret(lhs._cols);
-    ret._raw = lhs._raw;
-    ret._raw *= rhs._raw;
+    } else {
+        const size_t smallest = ret._rows < ret._cols ? ret._rows : ret._cols;
+        for(size_t i=0; i < smallest; i++){
+            ret[i][i] = lhs[i][i]*rhs[i][i];
+        }
+    }
     return ret;
 }
 

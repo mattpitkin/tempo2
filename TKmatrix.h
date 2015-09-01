@@ -114,15 +114,25 @@ class TK::matrix{
 
     };
     private:
-    matrix (size_t rows) : 
-        _cols(rows), _rows(rows), _rowmajor(false),
-        _slice(0,rows,1),
-        _raw((DataType)0, rows), _idx(1,NULL){
+    matrix (size_t rows,size_t cols, size_t dim) : 
+        _cols(cols), _rows(rows), _rowmajor(false),
+        _slice(0,dim,1),
+        _raw((DataType)0, dim), _idx(1,NULL){
             TK::matrix_register(this);
             _triangular='D';
         }
 
     public:
+
+    matrix(const matrix<DataType> &m, bool rowmajor) : 
+        _cols(m._cols), _rows(m._rows),_rowmajor(rowmajor),
+        _slice(0,rowmajor ? m._rows : m._cols,rowmajor ? m._cols : m._rows),
+        _raw(rowmajor==m._rowmajor ? m._raw : m.T()._raw),
+        _idx(rowmajor ? _rows : _cols,NULL){
+            TK::matrix_register(this);
+            _triangular=m._triangular;
+        }
+
     matrix (size_t rows, size_t cols, bool rowmajor=true) : 
         _cols(cols), _rows(rows), _rowmajor(rowmajor),
         _slice(0,rowmajor ? _rows : _cols,rowmajor ? _cols : _rows),
@@ -307,8 +317,8 @@ template<typename DataType>
 class TK::diagonal : public TK::matrix<DataType> {
 
     public:
-        diagonal(size_t n) : TK::matrix<DataType>(n), czero(0) {
-        }
+        diagonal(size_t rows, size_t cols) : TK::matrix<DataType>(rows,cols,(rows > cols) ? cols : rows), czero(0), zero(0) { }
+        diagonal(size_t rows) : TK::matrix<DataType>(rows,rows,rows), czero(0), zero(0) { }
 
         DataType &getRef(size_t row, size_t col) {
             assert(row < this->_rows);
@@ -331,7 +341,7 @@ class TK::diagonal : public TK::matrix<DataType> {
         }
 
         TK::diagonal<DataType> inv() const{
-            TK::diagonal<DataType> ret(this->_rows);
+            TK::diagonal<DataType> ret(this->_cols, this->_rows);
             ret->_raw = 1.0 / this->_raw;
         }
 
