@@ -186,7 +186,7 @@ AS_IF([test x"$with_mlapack" = "xno"], [have_mlapack=no], [
 
               AS_IF([test -d "$with_mlapack"], [
                      MPACK_CPPFLAGS="$MPACK_CPPFLAGS -I$with_mlapack/include -I$with_mlapack/include/mpack"
-                     MPACK_LDFLAGS="$MPACL_LDFLAGS -L$with_mlapack/lib"
+                     MPACK_LDFLAGS="$MPACK_LDFLAGS -L$with_mlapack/lib"
                      ], [ AS_IF([test -d "/usr/local/include/mpack"], [CPPFLAGS="$CPPFLAGS /usr/local/include/mpack"]) ])
 
               AS_IF([test "x$have_float128" != "xno"], [MPACK_LIBS="$MPACK_LIBS -lmblas___float128 -lmlapack___float128"])

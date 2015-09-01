@@ -243,8 +243,10 @@ TK::matrix<DataType> &operator+=(const TK::matrix<F> &rhs);
         assert(rhs._rows == _rows);
         assert(rhs._cols == _cols);
         if(rhs._rowmajor == _rowmajor){
+            logmsg("is = D");
             this->_raw = rhs._raw;
         } else {
+            logmsg("is = T");
             this->_raw = rhs.T()._raw;
         }
     }
