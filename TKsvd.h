@@ -2,6 +2,8 @@
 
 #ifndef __TKsvd_h
 #define __TKsvd_h
+
+#include "TKmatrix.h"
 /*
  *    This file is part of TEMPO2. 
  * 
@@ -26,9 +28,42 @@
  *    timing model.
  */
 
+#ifdef __cplusplus
+namespace TK{
+// class definition
+template<typename D>
+class SVD {
+    public:
+        SVD(const TK::matrix<D> &in);
+        SVD(TK::matrix<D> &in);
+
+    private:
+       TK::matrix<D> in;
+    public:
+       TK::matrix<D> U;
+       TK::matrix<D> V;
+       TK::diagonal<D> S;
+};
+
+}
+
+
+
+
 void TKsingularValueDecomposition_lsq(longdouble **designMatrix,int n,int nf,longdouble **v,longdouble *w,longdouble **u);
 void TKbacksubstitution_svd(longdouble **V, longdouble *w,longdouble **U,longdouble *b,longdouble *x,int n,int nf);
 longdouble TKpythag(longdouble a,longdouble b);
 void TKbidiagonal(longdouble **a,longdouble *anorm,int ndata,int nfit,longdouble **v,longdouble *w,longdouble **u,longdouble *rv1);
 
+void TKsingularValueDecomposition_lsq(double **designMatrix,int n,int nf,double **v,double *w,double **u);
+void TKbacksubstitution_svd(double **V, double *w,double **U,double *b,double *x,int n,int nf);
+double TKpythag(double a,double b);
+void TKbidiagonal(double **a,double *anorm,int ndata,int nfit,double **v,double *w,double **u,double *rv1);
+
+void TKsingularValueDecomposition_lsq(float **designMatrix,int n,int nf,float **v,float *w,float **u);
+void TKbacksubstitution_svd(float **V, float *w,float **U,float *b,float *x,int n,int nf);
+float TKpythag(float a,float b);
+void TKbidiagonal(float **a,float *anorm,int ndata,int nfit,float **v,float *w,float **u,float *rv1);
+
+#endif
 #endif

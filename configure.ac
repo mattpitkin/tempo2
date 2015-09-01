@@ -151,21 +151,22 @@ AC_MSG_CHECKING([for BLAS])
 AC_MSG_RESULT($have_blas)
 AM_CONDITIONAL(HAVE_BLAS, [test x$have_blas = xyes])
 
-# Test for calceph 
-ACX_CALCEPH(have_calceph=yes, have_calceph=no)
-AC_MSG_CHECKING([for CALCEPH])
-AC_MSG_RESULT($have_calceph)
-AM_CONDITIONAL(HAVE_CALCEPH, [test x"$have_calceph" = xyes])
-
 # test for LAPACK acceleration
 ACX_LAPACK(have_lapack=yes, have_lapack=no)
 AC_MSG_CHECKING([for LAPACK])
 AC_MSG_RESULT($have_lapack)
 AM_CONDITIONAL(HAVE_LAPACK, [test x"$have_lapack" = xyes])
 
+# Test for calceph 
+ACX_CALCEPH(have_calceph=yes, have_calceph=no)
+AC_MSG_CHECKING([for CALCEPH])
+AC_MSG_RESULT($have_calceph)
+AM_CONDITIONAL(HAVE_CALCEPH, [test x"$have_calceph" = xyes])
+
 
 AX_OPENMP
 
+# test for multiprecision BLAS/LAPACK
 AC_ARG_WITH([mlapack], AS_HELP_STRING([--with-mlapack=builtin], [use builtin multiprecision lapack]) 
 AS_HELP_STRING([--with-mlapack=dir], [look for mlapack in dir/lib and dir/include])~
 AS_HELP_STRING([--with-mlapack=no], [do not use mlapack (not recommended)])~
@@ -173,6 +174,7 @@ AS_HELP_STRING([--with-mlapack=no], [do not use mlapack (not recommended)])~
 
 
 AS_IF([test x"$with_mlapack" = "xno"], [have_mlapack=no], [
+       AC_DEFINE([HAVE_MPACK],[1],[Have multiprecision blas/lapack])
        AS_IF([test "x$with_mlapack" = "xbuiltin"], [have_mlapack=builtin], [
               #search for mlapack
               SAVE_LIBS="$LIBS"

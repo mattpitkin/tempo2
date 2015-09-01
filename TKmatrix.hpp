@@ -3,6 +3,7 @@
 template<typename D, typename F>
 TK::vector<D> TK::fallbackMultiply(const TK::matrix<D> &lhs, const TK::vector<F> &rhs){
     assert(lhs._cols == rhs._rows);
+    logmsg("Fallback MV");
     TK::vector<D> ret(lhs._rows,false);
     size_t i,k;
     for (i=0;i<lhs._rows;i++){
@@ -17,6 +18,7 @@ TK::vector<D> TK::fallbackMultiply(const TK::matrix<D> &lhs, const TK::vector<F>
 template<typename D, typename F>
 TK::matrix<D> TK::fallbackMultiply(const TK::matrix<D> &lhs, const TK::matrix<F> &rhs){
     assert(lhs._cols == rhs._rows);
+    logmsg("Fallback MM");
     TK::matrix<D> ret(lhs._rows,rhs._cols,lhs._rowmajor);
     size_t i,j,k;
     for (k=0;k<lhs._cols;k++) {
@@ -33,6 +35,7 @@ TK::matrix<D> TK::fallbackMultiply(const TK::matrix<D> &lhs, const TK::matrix<F>
 
 namespace TK {
 // operator definitions
+
 
 template<typename D, typename F>
 TK::diagonal<D> operator*(const TK::diagonal<D> &lhs, const TK::diagonal<F> &rhs){
@@ -52,18 +55,36 @@ TK::matrix<D> operator*(const TK::matrix<D> &lhs, const TK::diagonal<F> &rhs){
     return ret;
 }
 
-
 template<typename D, typename F>
 TK::matrix<D> operator*(const TK::matrix<D> &lhs, const TK::matrix<F> &rhs){
+    logmsg("tmp mm*");
     return TK::fallbackMultiply(lhs,rhs);
 }
 template<typename D, typename F>
 TK::vector<D> operator*(const TK::matrix<D> &lhs, const TK::vector<F> &rhs){
+    logmsg("tmp mv*");
     return TK::fallbackMultiply(lhs,rhs);
 }
 
 
+// template specialisations
+// double M*V
+template<>
+TK::vector<double> operator*(const TK::matrix<double> &lhs, const TK::vector<double> &rhs);
 
+// double M*M
+template<>
+TK::matrix<double> operator*(const TK::matrix<double> &lhs, const TK::matrix<double> &rhs);
+
+// ld M*V
+template<>
+TK::vector<longdouble> operator*(const TK::matrix<longdouble> &lhs, const TK::vector<longdouble> &rhs);
+
+// ld M*M
+template<>
+TK::matrix<longdouble> operator*(const TK::matrix<longdouble> &lhs, const TK::matrix<longdouble> &rhs);
+
+// end of specialisations
 
 template<typename D, typename F>
 TK::matrix<D> operator+(const TK::matrix<D> &lhs, const TK::matrix<F> &rhs){

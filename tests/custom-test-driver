@@ -106,7 +106,7 @@ trap "st=143; $do_exit" 15
 # Test script is run here.
 "$@" --gtest_color=$color_tests 2>&1 | tee $log_file | grep "\[[- =]"
 estatus=${PIPESTATUS[0]}
-sed -e "s,\[[0-9;]*[a-zA-Z],,g" -i -- $log_file
+sed -e "s,\[[0-9;]*[a-zA-Z],,g" -i .old $log_file
 
 if test $enable_hard_errors = no && test $estatus -eq 99; then
   tweaked_estatus=1
@@ -119,6 +119,7 @@ case $tweaked_estatus:$expect_failure in
   0:*)   col=$grn res=PASS  recheck=no  gcopy=no;;
   77:*)  col=$blu res=SKIP  recheck=no  gcopy=yes;;
   99:*)  col=$mgn res=ERROR recheck=yes gcopy=yes;;
+  139:*) col=$mgn res=ERROR recheck=yes gcopy=yes;;
   *:yes) col=$lgn res=XFAIL recheck=no  gcopy=yes;;
   *:*)   col=$red res=FAIL  recheck=yes gcopy=yes;;
 esac
@@ -134,22 +135,35 @@ echo "${col}${res}${std}: $test_name"
 
 pass=`grep "       OK " $log_file | wc -l`
 fail=`grep "  FAILED  " $log_file | wc -l`
+total=`grep TEST $test_name.C | wc -l`
 if [[ $fail -gt 0 ]] ; then
     fail=$(($fail - 2))
 fi
 
 # Register the test result, and other relevant metadata.
 echo ":global-test-result: $res" > $trs_file
+echo ":test-result: $res" >> $trs_file
 for i in `seq 0 $pass` ; do
     if [[ $i -gt 0 ]] ; then
         echo ":test-result: PASS" >> $trs_file
+        total=$(($total-1))
     fi
 done
 for i in `seq 0 $fail` ; do
     if [[ $i -gt 0 ]] ; then
         echo ":test-result: FAIL" >> $trs_file
+        total=$(($total-1))
     fi
 done
+if [[ $total -gt 0 ]] ; then
+    echo "${col}SKIP${std}: $total tests in $test_name skipped due to error"
+fi
+for i in `seq 0 $total` ; do
+    if [[ $i -gt 0 ]] ; then
+        echo ":test-result: SKIP" >> $trs_file
+    fi
+done
+
 echo ":recheck: $recheck" >> $trs_file
 echo ":copy-in-global-log: $gcopy" >> $trs_file
 

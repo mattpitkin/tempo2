@@ -91,6 +91,8 @@ void matrix_deregister(TK::matrix<D> *m);
 }
 // ** End of function declarations
 
+
+
 // Class definitions.
 template<typename DataType>
 class TK::matrix{

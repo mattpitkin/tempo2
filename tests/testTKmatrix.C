@@ -2,6 +2,7 @@
 #include <src/gtest_main.cc>
 
 #include"TKmatrix.h"
+#include"TKsvd.h"
 #include"TKlog.h"
 
 
@@ -267,4 +268,67 @@ TEST(testTKdiagonal_d, opMult){
         ASSERT_EQ(M1[i][i]*M2[i][i], O1[i][i]);
         ASSERT_EQ(M1[i][i]*M3[i][i], O2[i][i]);
     }
+}
+
+
+TEST(testTKmatrix_ld, construct){
+    TK::matrix<longdouble> M(1,2);
+    ASSERT_EQ(M._rows,1);
+    ASSERT_EQ(M._cols,2);
+}
+
+TEST(testTKmatrix_ld, getset){
+    TK::matrix<longdouble> M(2,2,true);
+    M.set(0,0,1.0);
+    M.set(0,1,-2.0);
+    M.set(1,0,2.0);
+
+    ASSERT_EQ(M.get(0,0),longdouble(1.0));
+    ASSERT_EQ(M.get(0,1),longdouble(-2.0));
+    ASSERT_EQ(M.get(1,0),longdouble(2.0));
+}
+
+
+TEST(testTKmatrix_ld, opMult){
+    debugFlag=1;
+    TK::matrix<longdouble> m1(2,3);
+    TK::matrix<longdouble> m2(3,2);
+    TK::matrix<longdouble> m2b(3,2,false);
+    for (int i=0;i<2;i++){
+        for (int j=0;j<3;j++){
+            longdouble d = i*longdouble(100.0)+j;
+            m1.set(i,j,d);
+            m2.set(j,i,d*LD_PI);
+            m2b.set(j,i,d*LD_PI);
+        }
+    }
+    TK::matrix<longdouble> m3 = m1*m2;
+    TK::matrix<longdouble> m4 = m1*m2b;
+
+    for (int i=0;i<2;i++){
+        for (int j=0;j<2;j++){
+            longdouble element=0;
+            for (int k=0; k < 3; k++){
+                element += m1.get(i,k)*m2.get(k,j);
+            }
+            ASSERT_EQ(element,m3.get(i,j));
+            ASSERT_EQ(element,m3.get(i,j));
+        }
+    }
+}
+
+
+
+TEST(svd,svd_dbl){
+    TK::matrix<double> m1(6,3);
+    TK::matrix<double> m2(6,3,false);
+        for (int j=0;j<6;j++){
+    for (int i=0;i<3;i++){
+            double d = i*double(100.0)+j;
+            m1.set(j,i,d*LD_PI);
+            m2.set(j,i,d*LD_PI);
+        }
+    }
+        TK::SVD<double> svd(m1);
+        ASSERT_EQ(svd.U._rows,m1._rows);
 }

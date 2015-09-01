@@ -88,3 +88,17 @@ void init_genrand(unsigned long s);
 unsigned long genrand_int32(void);
 double genrand_real1(void);
 
+
+
+#include <cmath>
+
+#ifdef __cplusplus
+template<typename D>
+D TKsign(D a, D b){
+    if (b >= 0)
+        return fabs(a);
+    else
+        return -fabs(a);
+}
+
+#endif

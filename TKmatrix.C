@@ -1,12 +1,16 @@
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
 #include <map>
+#include "TKlongdouble.h"
 #include "TKmatrix.h"
 #include "TKlog.h"
 #include "T2accel.h"
 
-// The "real" C++ code
 #include "TKmatrix.cpp"
 
 /// C functions

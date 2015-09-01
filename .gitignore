@@ -15,6 +15,7 @@ Makefile.in
 Makefile
 libtool
 *.Po
+*.Tpo
 .libs
 plugin/.deps
 config.h
@@ -38,3 +39,7 @@ tempo2-20*.tar.gz
 testTKmatrix
 aclocal.m4
 config.h.in~
+*.old
+mpack_lite/mpack*.inc
+tt
+.dirstamp
