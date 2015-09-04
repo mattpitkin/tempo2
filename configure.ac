@@ -60,7 +60,7 @@ AX_PTHREAD
 AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(PTHREAD_CFLAGS)
 
-AC_ARG_ENABLE([float128], AS_HELP_STRING([--disable-float128], [Disable __float128 support]))
+AC_ARG_ENABLE([float128], AS_HELP_STRING([--enable-float128], [Enable __float128 support]),[],[enable_float128=no])
 
 AS_IF([test "x$enable_float128" != "xno"], [
        AC_MSG_CHECKING(if compiler knows __float128)

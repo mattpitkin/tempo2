@@ -220,7 +220,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
 
 #ifdef ACCEL_LSQ
-    if(useT2accel){
+    if(useT2accel==2){
 
         double augmented_white_data[ndata+nconstraints];
         double **augmented_DM = malloc_blas(ndata+nconstraints,nparams);
