@@ -55,7 +55,7 @@ fi
 # Math library is required for the tempo2 predictor library
 AC_CHECK_LIB(m, cos)
 
-AX_PTHREAD
+ACX_PTHREAD
 
 AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(PTHREAD_CFLAGS)
