@@ -451,7 +451,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         longdouble Weight[ndata];//reweights
         double median = 0.0;
         double newval[ndata];
-        longdouble resid_new[ndata];
+        double resid_new[ndata];
 
         //Calculating the residual
         for (j=0;j<ndata;j++)
@@ -548,7 +548,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                             }   
                         }
                     }
-                    ld_fprintf(rp, "%d r=%Lg   nr=%lg   eb=%lg  W=%lg\n", j+1, resid[j], resid_new[j], white_data[j]/data[j], (double)Weight[j]); 
+                    fprintf(rp, "%d r=%lg   nr=%lg   eb=%lg  W=%lg\n", j+1, resid[j], resid_new[j], white_data[j]/data[j], (double)Weight[j]); 
 
                 }
                 break;
