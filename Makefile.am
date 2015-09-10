@@ -2,7 +2,7 @@
 ACLOCAL_AMFLAGS = -I autoconf
 
 SUBDIRS=sofa . tests
-DIST_SUBDIRS=sofa plugin unsupported_plugins temponest tests
+DIST_SUBDIRS=sofa plugin unsupported_plugins tests
 
 bin_PROGRAMS=tempo2 getPeriod
 lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
@@ -77,9 +77,6 @@ dist-hook:
 	rm -rf $(distdir)/unsupported_plugins/built_plugins/*
 	rm -rf `find $(distdir)/unsupported_plugins/ -name CVS`
 	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
-	rm -rf $(distdir)/temponest/built_plugins/*
-	rm -rf `find $(distdir)/temponest/ -name CVS`
-	rm -rf `find $(distdir)/temponest/ -name '*.o'`
 
 
 
@@ -108,7 +105,7 @@ temponest: all
 	$(MAKE) -C temponest
 
 temponest-install: temponest
-	$(MAKE) -C temponest temponest-install
+	$(MAKE) -C temponest install
 
 temponest-clean:
 	$(MAKE) -C temponest clean

@@ -2116,7 +2116,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 					fx2[0] = (float)(lx2 - centreEpoch);
 					fx[1] = fx[0];
 					fx2[1] = fx2[0];
-					ld_printf("Loaded %.15lf %.15lf,%g %g %.15lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
+					ld_printf("Loaded %.15lf %.15lf,%g %g %.15Lf\n",lx1,lx2,fx[0],fx2[0],centreEpoch);
 					fy[0] = ploty1; fy[1] = ploty2;
 					cpgsci(2); cpgline(2,fx,fy);
 					cpgsls(4); cpgline(2,fx2,fy); cpgsls(1); cpgsci(1);

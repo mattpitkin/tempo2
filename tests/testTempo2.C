@@ -26,10 +26,10 @@ TEST(testLongDouble, printAndParse){
     char sb[1024];
     ld_sprintf(sb,"%.1Lf",ld);
     ASSERT_STREQ(sb,"123.0");
-    ld = longdouble(50000.12345678912345678);
-    ld_sprintf(sb,"%.17Lf",ld);
+    ld = longdouble(50000.12345678912345);
+    ld_sprintf(sb,"%.14Lf",ld);
 
-    ASSERT_STREQ("50000.12345678912345678",sb);
+    ASSERT_STREQ("50000.12345678912345",sb);
 
     longdouble ld2 = parse_longdouble(sb);
     ASSERT_EQ(ld,ld2);

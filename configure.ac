@@ -41,6 +41,7 @@ if test X$user_set_cxxflags != Xyes; then
 fi
 
 
+
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
@@ -54,8 +55,10 @@ fi
 # (standard C math library).
 # Math library is required for the tempo2 predictor library
 AC_CHECK_LIB(m, cos)
-
+save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wno-error"
 ACX_PTHREAD
+CFLAGS="$save_CFLAGS"
 
 AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(PTHREAD_CFLAGS)
@@ -163,11 +166,6 @@ AC_MSG_CHECKING([for LAPACK])
 AC_MSG_RESULT($have_lapack)
 AM_CONDITIONAL(HAVE_LAPACK, [test x"$have_lapack" = xyes])
 
-# TempoNest addition:
-# Test for MultiNest and CUDA/CULA installation
-SWIN_LIB_MULTINEST
-SWIN_LIB_CULA
-
 
 AC_MSG_CHECKING([for LOGIN_ARCH variable])
 if test -n "$LOGIN_ARCH" ; then
@@ -204,9 +202,10 @@ AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile
                  unsupported_plugins/ppta/Makefile
                  unsupported_plugins/glast/Makefile
                  tests/Makefile
-                 temponest/Makefile])
+                 ])
 
 AC_OUTPUT
+
 
 AC_MSG_NOTICE(Fortran compiler is $F77 $FFLAGS)
 AC_MSG_NOTICE(C compiler is $CC $CFLAGS)
@@ -266,19 +265,7 @@ if test $can_build_shared == no ; then
 else
     echo ""
     echo "NOTICE: plugins can be built with 'make plugins && make plugins-install'"
-    if test X$have_multinest = Xyes; then
-        echo "        temponest can be built with 'make temponest && make temponest-install'"
-
-        echo ""
-        echo "Debugging TempoNest configure, library summary:"
-        echo " * MULTINEST:    $MULTINEST_LIBS   $MULTINEST_CFLAGS"
-        echo " * CULA:         $CULA_LIBS        $CULA_CFLAGS"
-        echo " * GSL:          $GSL_LIBS         $GSL_CFLAGS"
-        echo " * BLAS:         $BLAS_LIBS        $BLAS_CFLAGS"
-        echo " * CALCEPH:      $CALCEPH_LIBS     $CALCEPH_CFLAGS"
-        echo " * LAPACK:       $LIBS_LAPACK"
-    fi
-    echo ""
+    echo "temponest is now installed separately. Try ./update --temponest"
 fi
 
 echo ""
