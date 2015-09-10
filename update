@@ -22,7 +22,8 @@ while [[ $# > 0 ]] ; do
     esac
 done
 
-if [[ -e TempoNest/update ]] ; then
+if [[ -e TempoNest ]] ; then
     echo "update temponest"
-    ./TempoNest/update
+    cd TempoNest
+    git pull origin
 fi
