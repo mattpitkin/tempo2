@@ -32,10 +32,10 @@ AC_DEFUN([SWIN_LIB_QDINSTALL],
   QDINSTALL_CFLAGS=""
   QDINSTALL_LIBS=""
 
-  QDINSTALL_LIB=""
+  QDINSTALL_LIB="-lqd"
 
   if test x"$QDINSTALL" != x; then
-    QDINSTALL_LIBS="-L$QDINSTALL/lib -lqd"
+    QDINSTALL_LIBS="-L$QDINSTALL/lib"
   fi
 
   if test x"$QDINSTALL" != x; then
@@ -56,7 +56,7 @@ AC_DEFUN([SWIN_LIB_QDINSTALL],
   LIBS="$ac_save_LIBS $QDINSTALL_LIBS"
   CXXFLAGS="$ac_save_CXXFLAGS $QDINSTALL_CFLAGS"
 
-  AC_TRY_LINK([#include "qd/qd_real.h"],[qd_real rand();],
+  AC_TRY_LINK([#include "qd/qd_real.h"],[qd_real a; fpu_fix_start(0)],
               have_qdinstall=yes, have_qdinstall=no)
 
 
