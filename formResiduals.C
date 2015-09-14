@@ -1881,24 +1881,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
         if(psr[p].TNsubtractRed==1){
             for (i=0;i<psr[p].nobs;i++){
-                std::string ProfileName =  psr[p].obsn[i].fname;
-                //if(psr[p].obsn[i].freq > 0 && psr[p].obsn[i].freq < 1000){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq,(double)psr[p].obsn[i].bat,  psr[p].obsn[i].TNRedSignal, psr[p].obsn[i].TNRedErr, (double) (psr[p].obsn[i].residual - psr[p].obsn[i].TNDMSignal), (double)psr[p].obsn[i].toaErr*pow(10.0, -6));}
-                //printf("%s %g %g %g %g\n", ProfileName.c_str(), psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  (double)psr[p].obsn[i].residual, psr[p].obsn[i].toaErr*pow(10.0, -6));
                 psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
             }
         }
         if(psr[p].TNsubtractDM==1){
             for (i=0;i<psr[p].nobs;i++){
                 double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
-                //		if(psr[p].obsn[i].freq > 2000 && psr[p].obsn[i].freq < 10000){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
-                //		if(psr[p].obsn[i].freq > 0 && psr[p].obsn[i].freq < 750){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNGroupSignal), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNGroupSignal)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
-                //		if(psr[p].obsn[i].freq > 0 && psr[p].obsn[i].freq < 10000){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNRedSignal-newmean), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNRedSignal-newmean)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
                 psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
-                //		if(psr[p].obsn[i].freq > 750 && psr[p].obsn[i].freq < 1000){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
-                //if(psr[p].obsn[i].freq > 0 && psr[p].obsn[i].freq < 750){printf("%g %g %g %g %g %g\n", psr[p].obsn[i].freq, (double)psr[p].obsn[i].bat,  ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNGroupSignal), psr[p].obsn[i].toaErr*pow(10.0, -6), ((double)psr[p].obsn[i].residual-psr[p].obsn[i].TNGroupSignal)*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
-                if(psr[p].obsn[i].freq < 2500 && psr[p].obsn[i].freq  > 2000){printf("%g %g %g %g %g %g \n", psr[p].obsn[i].freq,(double)psr[p].obsn[i].bat,  (double)psr[p].obsn[i].residual, psr[p].obsn[i].toaErr*pow(10.0, -6), (double)psr[p].obsn[i].residual*dmkap, psr[p].obsn[i].toaErr*pow(10.0, -6)*dmkap);}
-
-                //		printf("%s %g %g %g %g %g %g \n", psr[p].obsn[i].fname, psr[p].obsn[i].freq,(double)psr[p].obsn[i].sat,  psr[p].obsn[i].TNDMSignal, psr[p].obsn[i].TNDMErr/dmkap, psr[p].obsn[i].TNDMSignal*dmkap, psr[p].obsn[i].TNDMErr);
             }
         }
         if(psr[p].AverageResiduals == 1){

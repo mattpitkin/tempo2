@@ -62,6 +62,14 @@ libtempo2pred_la_include_HEADERS = tempo2pred.h tempo2pred_int.h
 
 tempo2_SOURCES = $(headers) tempo2.C 
 tempo2_LDADD = libtempo2.la sofa/libsofa.la @FLIBS@ $(LIBADD_DLOPEN)
+tempo2_CPPFLAGS=
+
+if HAVE_QDINSTALL
+tempo2_LDADD+=@QDINSTALL_LIBS@
+tempo2_CPPFLAGS+=@QDINSTALL_CFLAGS@
+endif
+
+
 
 getPeriod_SOURCES= getPeriod.C
 getPeriod_LDADD = libtempo2pred.la

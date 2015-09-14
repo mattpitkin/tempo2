@@ -3270,51 +3270,48 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
     }
 
 
-    int useOrthogonal=0;	
-
-    /*
+    int useOrthogonal=pulse->useTNOrth;	
 
 
-       double* S = new double[numtofit];
-       double** U = new double*[pulse->nobs];
-       for(int k=0; k < pulse->nobs; k++){
-       U[k] = new double[pulse->nobs];
-       }
-       double** VT = new double*[numtofit]; 
-       for (int k=0; k<numtofit; k++) VT[k] = new double[numtofit];
+	double *S;
+	double **U;
+	double **VT;
+	double **V;
 
-       dgesvd(TNDM,pulse->nobs, numtofit, S, U, VT);
+	if(useOrthogonal==1){
 
 
-       double **V=new double*[numtofit];
+	   S = new double[numtofit];
+	   U = new double*[pulse->nobs];
+	   for(int k=0; k < pulse->nobs; k++){
+	   	U[k] = new double[pulse->nobs];
+	   }
+	   VT = new double*[numtofit]; 
+	   for (int k=0; k<numtofit; k++) VT[k] = new double[numtofit];
+
+	   dgesvd(TNDM,pulse->nobs, numtofit, S, U, VT);
 
 
-       for(int i=0;i<numtofit;i++){
-       V[i]=new double[numtofit];
-    //	printf("DVD %i %g \n", i, S[i]);
-    if(S[i] < 5*pow(10.0,-8)){
-    useOrthogonal=1;
-    printf("SVD Element %i below 5E-8: %g \n", i, S[i]);
-    printf("Design matrix numerically unstable, using orthogonal representation\n");
-    }
-    }
+	   V=new double*[numtofit];
 
 
-    for(int j=0;j < numtofit;j++){
-    for(int k=0;k < numtofit;k++){
-    V[j][k]=VT[k][j];
-    }
-    }
+	   for(int i=0;i<numtofit;i++){
+		   V[i]=new double[numtofit];
+	   }
 
+		for(int j=0;j < numtofit;j++){
+			for(int k=0;k < numtofit;k++){
+				V[j][k]=VT[k][j];
+			}
+		}
 
-    if(useOrthogonal==1){
-    for(int j=0;j<pulse->nobs;j++){
-    for(int k=0;k < numtofit;k++){
-    TNDM[j][k]=U[j][k];
-    }
-    }
-    }
-    */
+		for(int j=0;j<pulse->nobs;j++){
+			for(int k=0;k < numtofit;k++){
+				TNDM[j][k]=U[j][k];	
+			}	
+		}
+	}
+
     //////////////////////////////////////////////////////////////////////////////////////////  
     ///////////////////////Noise Hyperparameters//////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -4168,40 +4165,51 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
     longdouble *Errorvec=new longdouble[totalsize];
 
     for(int i =0; i < totalsize; i++){
-        //		printf("GNG %i %g \n", i, GNG[i][i]);
         Errorvec[i]=pow(GNG[i][i], 0.5);
     }
 
 
-    /*	for(int i =0; i < numtofit; i++){
-        if(S[i] >= 0){
-        Scoeff[i]=maxcoeff[i]/S[i];
-        Serr[i]=Errorvec[i]/S[i];
-        }
-        else{
-        Scoeff[i]=0;
-        Serr[i]=0;
-        }
-        }
-        */
+	double *Scoeff;
+	long double *Serr;
+
+	if(useOrthogonal == 1){
+
+		Scoeff=new double[numtofit];
+		Serr=new long double[numtofit];
+		for(int i =0; i < numtofit; i++){
+			if(S[i] >= 0){
+				Scoeff[i]=maxcoeff[i]/S[i];
+				Serr[i]=Errorvec[i]/S[i];
+			}
+			else{
+				Scoeff[i]=0;
+				Serr[i]=0;
+			}
+		}
+	}
+
     double *TempoCoeff = new double[numtofit];
     double *TempoErr =  new double[numtofit];
-    //	dgemv(V,Scoeff,TempoCoeff,numtofit,numtofit, 'N');
 
-    for(int i=0;i<numtofit; i++){
 
-        //		longdouble errsum=0;
-        //          	for(int j=0;j<numtofit; j++){
-        //			errsum += pow(V[i][j]*Serr[j],2);
-        //               }
-        //          	TempoErr[i]=pow(errsum,0.5);///TNDMScale[i];
-        //		TempoCoeff[i]=TempoCoeff[i];///TNDMScale[i];
+	if(useOrthogonal==1){
+		dgemv(V,Scoeff,TempoCoeff,numtofit,numtofit, 'N');
+	}
 
-        if(useOrthogonal==0){
-            TempoCoeff[i]=maxcoeff[i]/TNDMScale[i];
-            TempoErr[i]=((double)Errorvec[i])/TNDMScale[i];
-        }
-    }
+	for(int i=0;i<numtofit; i++){
+		if(useOrthogonal==1){
+				long double errsum=0;
+		          	for(int j=0;j<numtofit; j++){
+					errsum += pow(V[i][j]*Serr[j],2);
+		               }
+				TempoCoeff[i]=TempoCoeff[i]/TNDMScale[i];
+		          	TempoErr[i]=pow(errsum,0.5)/TNDMScale[i];
+		}
+		if(useOrthogonal==0){
+			TempoCoeff[i]=maxcoeff[i]/TNDMScale[i];
+			TempoErr[i]=((double)Errorvec[i])/TNDMScale[i];
+		}
+	}
     updateParameters(pulse,0,TempoCoeff,TempoErr);
 
 
@@ -4390,22 +4398,24 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
     pulse->nParam = numtofit;
 
 
-    /*	for (int j = 0; j < pulse->nobs; j++){
-        delete[]U[j];
-        }
-        delete[]U;
+	if(useOrthogonal == 1){
+		for (int j = 0; j < pulse->nobs; j++){
+			delete[]U[j];
+		}
+		delete[]U;
 
-        delete[]S;
-        delete[]Scoeff;	
-        delete[]Serr;	
+		delete[]S;
+		delete[]Scoeff;	
+		delete[]Serr;	
 
-        for (int j = 0; j < numtofit; j++){
-        delete[]VT[j];
-        delete[]V[j];
-        }
+		for (int j = 0; j < numtofit; j++){
+			delete[]VT[j];
+			delete[]V[j];
+		}
 
-        delete[]V; 
-        delete[]VT;*/
+		delete[]V; 
+		delete[]VT;
+	}
     delete[] TempoErr;
     delete[] TempoCoeff;
     delete[] DMVec;
