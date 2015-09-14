@@ -129,7 +129,6 @@ SWIN_LIB_PGPLOT
 SWIN_LIB_FFTW
 SWIN_LIB_CFITSIO
 
-
 # No longer need openmp.
 #AX_OPENMP([have_openmp=yes],[have_openmp=no])
 #if test X$have_openmp == Xyes; then
@@ -165,6 +164,7 @@ AM_CONDITIONAL(HAVE_LAPACK, [test x"$have_lapack" = xyes])
 
 # TempoNest addition:
 # Test for MultiNest and CUDA/CULA installation
+SWIN_LIB_QDINSTALL
 SWIN_LIB_MULTINEST
 SWIN_LIB_CULA
 
@@ -247,6 +247,12 @@ if test X$have_calceph = Xyes; then
 else
     AC_MSG_NOTICE(Calceph library was not found) 
 fi
+
+if test X$have_qdinstall = Xyes; then
+    AC_MSG_NOTICE(Using QD library)
+else            
+    AC_MSG_NOTICE(QD library not found, will not compile high precision part of TempoNest)
+fi   
 
 # TempoNest addition:
 if test X$have_multinest != Xyes; then

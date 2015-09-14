@@ -50,6 +50,12 @@
 #include "tempo2pred_int.h"
 #include "T2accel.h"
 #include <dlfcn.h>
+
+#ifdef HAVE_QDINSTALL
+#include <qd/dd_real.h>
+#include <qd/fpu.h>
+#endif
+
 // #include "T2toolkit.h"
 
 void ephemeris_routines(pulsar *psr,int npsr);
@@ -83,6 +89,15 @@ int main(int argc, char *argv[])
     char **commandLine;
     clock_t startClock,endClock;
     const char *CVS_verNum = "$Id$";
+    int writeTMatrix=0;
+    static unsigned int oldcw;
+
+#ifdef HAVE_QDINSTALL
+
+    fpu_fix_start(&oldcw);
+    fpu_fix_end(&oldcw);
+
+#endif
 
     polyco_file[0] = '\0';
 
@@ -134,7 +149,8 @@ int main(int argc, char *argv[])
             writeTimFile=1;
         else if (strcasecmp(argv[i],"-veryfast")==0)
             veryFast=1;
-
+	else if (strcasecmp(argv[i],"-writeTMatrix")==0)
+		writeTMatrix=1;
         strcpy(commandLine[i],argv[i]);
     }
     if (displayCVSversion == 1) CVSdisplayVersion("tempo2.C","main()",CVS_verNum);
@@ -345,6 +361,10 @@ int main(int argc, char *argv[])
             }
             logdbg("--ENTER GRAPHICAL PLUGIN--");
             logtchk("Start graphical plugin");
+
+#ifdef HAVE_QDINSTALL
+	    fpu_fix_end(&oldcw);
+#endif
             entry(argc,commandLine,psr,&npsr);
             logtchk("End graphical plugin");
             return 0;
