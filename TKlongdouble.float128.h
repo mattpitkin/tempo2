@@ -1,3 +1,5 @@
+#ifndef TKlongdouble_h
+#define TKlongdouble_h
 #define USE_BUILTIN_LONGDOUBLE
 #define LONGDOUBLE_IS_FLOAT128
 
@@ -41,4 +43,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

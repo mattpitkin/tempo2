@@ -22,7 +22,7 @@ TEST(testEndToEnd,checkIdeal){
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
     for(int iobs = 0; iobs < psr->nobs; iobs++){
-        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),1e-10l) << DATDIR "/test3.par test3.tim do not give idealised ToAs";
+        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),TEST_DELTA) << DATDIR "/test3.par test3.tim do not give idealised ToAs";
     }
 
     doFitAll(psr,npsr,"NULL");
@@ -30,7 +30,7 @@ TEST(testEndToEnd,checkIdeal){
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
     for(int iobs = 0; iobs < psr->nobs; iobs++){
-        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),1e-10l) << "Fitting has caused error";
+        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),TEST_DELTA) << "Fitting has caused error in ideal";
     }
 
 }
@@ -64,7 +64,7 @@ TEST(testEndToEnd,checkFit){
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
     for(int iobs = 0; iobs < psr->nobs; iobs++){
-        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),1e-10l) << "Fitting has caused error";
+        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),TEST_DELTA) << "Fitting has caused error";
     }
 
 }
@@ -91,6 +91,7 @@ TEST(testEndToEnd,gracefulBadFit){
     TK_errorCount=0;
     doFitAll(psr,npsr,"NULL");
 //    ASSERT_GT(TK_errorCount,1u);
+    ASSERT_EQ(1,1);
     TK_errorCount=0;
     
 }

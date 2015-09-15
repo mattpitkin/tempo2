@@ -39,7 +39,9 @@ tempo2-20*.tar.gz
 testTKmatrix
 aclocal.m4
 config.h.in~
-*.old
 mpack_lite/mpack*.inc
 tt
 .dirstamp
+TempoNest
+*.old
+.deps

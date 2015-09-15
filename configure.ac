@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2015.08.1],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/mkeith/tempo2])
+AC_INIT([Tempo2],[2015.09.0],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/mkeith/tempo2])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -41,6 +41,7 @@ if test X$user_set_cxxflags != Xyes; then
 fi
 
 
+
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 
@@ -54,13 +55,15 @@ fi
 # (standard C math library).
 # Math library is required for the tempo2 predictor library
 AC_CHECK_LIB(m, cos)
-
-AX_PTHREAD
+save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -Wno-error"
+ACX_PTHREAD
+CFLAGS="$save_CFLAGS"
 
 AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(PTHREAD_CFLAGS)
 
-AC_ARG_ENABLE([float128], AS_HELP_STRING([--disable-float128], [Disable __float128 support]))
+AC_ARG_ENABLE([float128], AS_HELP_STRING([--enable-float128], [Enable __float128 support]),[],[enable_float128=no])
 
 AS_IF([test "x$enable_float128" != "xno"], [
        AC_MSG_CHECKING(if compiler knows __float128)
@@ -128,7 +131,6 @@ LT_LIB_DLLOAD
 SWIN_LIB_PGPLOT
 SWIN_LIB_FFTW
 SWIN_LIB_CFITSIO
-
 
 # No longer need openmp.
 #AX_OPENMP([have_openmp=yes],[have_openmp=no])
@@ -229,11 +231,7 @@ AM_CONDITIONAL(HAVE_MPACK,[test x"$have_mlapack" = xyes])
 AC_MSG_RESULT($have_mlapack)
 
 
-# TempoNest addition:
-# Test for MultiNest and CUDA/CULA installation
-SWIN_LIB_MULTINEST
-SWIN_LIB_CULA
-
+SWIN_LIB_QDINSTALL
 
 AC_MSG_CHECKING([for LOGIN_ARCH variable])
 if test -n "$LOGIN_ARCH" ; then
@@ -271,9 +269,10 @@ AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile
                  unsupported_plugins/glast/Makefile
                  mpack_lite/Makefile
                  tests/Makefile
-                 temponest/Makefile])
+                 ])
 
 AC_OUTPUT
+
 
 AC_MSG_NOTICE(Fortran compiler is $F77 $FFLAGS)
 AC_MSG_NOTICE(C compiler is $CC $CFLAGS)
@@ -332,6 +331,12 @@ else
     AC_MSG_NOTICE(Calceph library was not found) 
 fi
 
+if test X$have_qdinstall = Xyes; then
+    AC_MSG_NOTICE(Using QD library)
+else            
+    AC_MSG_NOTICE([QD library not found, will not compile high precision part of TempoNest])
+fi   
+
 # TempoNest addition:
 if test X$have_multinest != Xyes; then
     AC_MSG_NOTICE(MultiNest was not found - TempoNest can not be built) 
@@ -350,19 +355,7 @@ if test $can_build_shared == no ; then
 else
     echo ""
     echo "NOTICE: plugins can be built with 'make plugins && make plugins-install'"
-    if test X$have_multinest = Xyes; then
-        echo "        temponest can be built with 'make temponest && make temponest-install'"
-
-        echo ""
-        echo "Debugging TempoNest configure, library summary:"
-        echo " * MULTINEST:    $MULTINEST_LIBS   $MULTINEST_CFLAGS"
-        echo " * CULA:         $CULA_LIBS        $CULA_CFLAGS"
-        echo " * GSL:          $GSL_LIBS         $GSL_CFLAGS"
-        echo " * BLAS:         $BLAS_LIBS        $BLAS_CFLAGS"
-        echo " * CALCEPH:      $CALCEPH_LIBS     $CALCEPH_CFLAGS"
-        echo " * LAPACK:       $LIBS_LAPACK"
-    fi
-    echo ""
+    echo "temponest is now installed separately. Try ./update --temponest"
 fi
 
 echo ""

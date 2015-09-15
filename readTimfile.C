@@ -224,6 +224,25 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
                             strcpy(psr->obsn[nObs].fname,tt);
                         }
                     }
+
+		  char sat_day_str[5];
+		  char sat_sec_str[1024];
+
+		  sat_sec_str[0] = '0';
+		  //sat_sec_str[1] = '.';
+		  int sindexcounter=0;
+		  for(int sindex = 0; sindex < 1024; sindex++){
+			if(sindex < 5){
+				sat_day_str[sindex] = sat_str[sindex];
+			}
+			if(sindex>=5){
+				sat_sec_str[sindex-4] = sat_str[sindex];
+			}
+		  }
+
+		  psr->obsn[nObs].sat_day = parse_longdouble(sat_day_str);
+		  psr->obsn[nObs].sat_sec = parse_longdouble(sat_sec_str);
+
                     psr->obsn[nObs].sat = parse_longdouble(sat_str);
                     psr->obsn[nObs].phaseOffset = 0.0;
                     /* Read the rest of the line */		  
