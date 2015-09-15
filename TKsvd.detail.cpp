@@ -16,7 +16,7 @@ void TKsingularValueDecomposition_lsq(TKmatrix_D **designMatrix,int n,int nf,TKm
     TKmatrix_D c,s,f,g,h,y,z,x;
     TKmatrix_D rv1[nf];
     /* For A = U.W.V^T - obtain U, W and V */  
-    logmsg("SVD: %d %d",n,nf);
+    logdbg("SVD: %d %d",n,nf);
 
     /* Step 1: Reduce the matrix to a bidiagonal matrix */
     TKbidiagonal(designMatrix,&an,n,nf,v,w,u,rv1);

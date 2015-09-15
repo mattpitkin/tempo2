@@ -4,13 +4,13 @@ std::map<DataType*,TK::matrix<DataType>* > TK::matrix<DataType>::_map;
 
 template <typename T>
 void TK::matrix_register(TK::matrix<T> *m){
-    //logmsg("register %lp",m->getRaw());
+    //logdbg("register %lp",m->getRaw());
     m->_map[m->getRaw()] = m;
 }
 
 template <typename T>
 void TK::matrix_deregister(TK::matrix<T> *m){
-    //logmsg("deregister %lp",m->getRaw());
+    //logdbg("deregister %lp",m->getRaw());
     m->_map.erase(m->getRaw());
 }
 
@@ -104,7 +104,7 @@ TK::vector<double> operator*(const TK::matrix<double> &lhs, const TK::vector<dou
     TK::vector<double> out(lhs._rows);
     int ldc = 1;
 
-    logmsg("dgemv");
+    logdbg("dgemv");
 
     F77_dgemv(lhs._rowmajor ? "T":"N", // transpose A, B
             &m,&n,
@@ -119,20 +119,20 @@ TK::vector<double> operator*(const TK::matrix<double> &lhs, const TK::vector<dou
 template<>
 TK::matrix<double> operator*(const TK::matrix<double> &lhs, const TK::matrix<double> &rhs){
     if(lhs.triangular()=='D' || rhs.triangular()=='D'){
-        logmsg("fall");
+        logdbg("fall");
         return TK::fallbackMultiply(lhs,rhs);
     }
-    logmsg("BLAS");
+    logdbg("BLAS");
     double alpha = 1;
     double beta = 0;
     int m = lhs._rows;
     int n = rhs._cols;
     int k = lhs._cols;
-    int lda = lhs._rowmajor ? lhs._cols : lhs._rows;
-    int ldb = rhs._rowmajor ? rhs._cols : rhs._rows;
+    int lda = lhs._rowmajor ? k : m;
+    int ldb = rhs._rowmajor ? n : k;
+    int ldc = m;
 
-    TK::matrix<double> out(lhs._cols,rhs._rows,false); // col_major
-    int ldc = out._cols;
+    TK::matrix<double> out(m,n,false); // col_major
 
     logdbg("dgemm");
     F77_dgemm(lhs._rowmajor ? "T":"N", rhs._rowmajor ? "T":"N", // transpose A, B
@@ -181,7 +181,7 @@ TK::vector<double> operator*(const TK::matrix<double> &lhs, const TK::vector<dou
 template<>
 TK::matrix<double> operator*(const TK::matrix<double> &lhs, const TK::matrix<double> &rhs){
     if(lhs.triangular()=='D' || rhs.triangular()=='D'){
-        logmsg("fall");
+        logdbg("fall");
         return TK::fallbackMultiply(lhs,rhs);
     }
     double alpha = 1;
@@ -189,13 +189,13 @@ TK::matrix<double> operator*(const TK::matrix<double> &lhs, const TK::matrix<dou
     int m = lhs._rows;
     int n = rhs._cols;
     int k = lhs._cols;
-    int lda = lhs._rowmajor ? lhs._cols : lhs._rows;
-    int ldb = rhs._rowmajor ? rhs._cols : rhs._rows;
+    int lda = lhs._rowmajor ? k : m;
+    int ldb = rhs._rowmajor ? n : k;
+    int ldc = m;
 
-    TK::matrix<double> out(lhs._rows,rhs._cols,false); // col_major
-    int ldc = out._rows;
+    TK::matrix<double> out(lhs._cols,rhs._rows,false); // col_major
 
-    logmsg("Rgemm [%d,%d] x [%d,%d] => [%d,%d]",lhs._rows,lhs._cols, rhs._rows, rhs._cols, out._rows,out._cols);
+    logdbg("Rgemm [%d,%d] x [%d,%d] => [%d,%d]",lhs._rows,lhs._cols, rhs._rows, rhs._cols, out._rows,out._cols);
     Rgemm(lhs._rowmajor ? "T":"N", rhs._rowmajor ? "T":"N", // transpose A, B
             m,n,k,
             alpha, const_cast<double*>(lhs.getRaw()), lda,
@@ -216,7 +216,7 @@ namespace TK {
 template<>
 TK::matrix<longdouble> operator*(const TK::matrix<longdouble> &lhs, const TK::matrix<longdouble> &rhs){
     if(lhs.triangular()=='D' || rhs.triangular()=='D'){
-        logmsg("fall");
+        logdbg("fall");
         return TK::fallbackMultiply(lhs,rhs);
     }
     longdouble alpha = 1;
@@ -230,7 +230,7 @@ TK::matrix<longdouble> operator*(const TK::matrix<longdouble> &lhs, const TK::ma
     TK::matrix<longdouble> out(lhs._cols,rhs._rows,false); // col_major
     int ldc = out._cols;
 
-    logmsg("Rgemm");
+    logdbg("Rgemm");
     Rgemm(lhs._rowmajor ? "T":"N", rhs._rowmajor ? "T":"N", // transpose A, B
             m,n,k,
             alpha, const_cast<longdouble*>(lhs.getRaw()), lda,
@@ -253,7 +253,7 @@ TK::vector<longdouble> operator*(const TK::matrix<longdouble> &lhs, const TK::ve
     TK::vector<longdouble> out(lhs._rows);
     int ldc = 1;
 
-    logmsg("Rgemv");
+    logdbg("Rgemv");
 
     Rgemv(lhs._rowmajor ? "T":"N", // transpose A, B
             m,n,

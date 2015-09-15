@@ -9,7 +9,8 @@
 typedef __float128 longdouble;
 #define LONGDOUBLE_ONE 1.0Q
 
-#define longdouble(a) a##Q
+#define _LDEX(a,b) a##b
+#define longdouble(a) _LDEX(a,Q)
 #define FMT_LD "Q"
 
 #define LD_PI M_PIq

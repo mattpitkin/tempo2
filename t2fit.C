@@ -668,7 +668,7 @@ void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double 
         logmsg("Get constraint weghts");
         computeConstraintWeights(psr);
         logmsg("fill constraints matrix");
-        constraintsMatrix = malloc_blas(psr->nconstraints,nf);
+        constraintsMatrix = malloc_matrix_d(psr->nconstraints,nf);
         for (int ic=0; ic < psr->nconstraints; ic++){
             CONSTRAINTfuncs(psr,0,nf,psr->constraints[ic],constraintsMatrix[ic]);
         }
@@ -677,9 +677,9 @@ void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double 
     *chisq = TKrobustConstrainedLeastSquares(b,white_b,designMatrix,white_designMatrix,constraintsMatrix,
             n,nf,psr->nconstraints,tol,rescale_errors,
             outP,e,cvm,psr->robust);
-    free_blas(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
-    free_blas(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
-    if(psr->nconstraints > 0) free_blas(constraintsMatrix);
+    free_matrix_d(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
+    free_matrix_d(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
+    if(psr->nconstraints > 0) free_matrix_d(constraintsMatrix);
     free(b);
     free(white_b);
 
@@ -708,9 +708,9 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
     }
     totalFit+=nglobal;
 
-    white_designMatrix=malloc_blas(totalObs,totalFit);
-    designMatrix=malloc_blas(totalObs,totalFit);
-    constraintsMatrix=malloc_blas(totalConstraints,totalFit);
+    white_designMatrix=malloc_matrix_d(totalObs,totalFit);
+    designMatrix=malloc_matrix_d(totalObs,totalFit);
+    constraintsMatrix=malloc_matrix_d(totalConstraints,totalFit);
     b=(double*)calloc(totalObs,sizeof(double));
     white_b=(double*)calloc(totalObs,sizeof(double));
 
@@ -755,8 +755,8 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
         off_c += psr[ipsr].nconstraints;
 
         // free temp matricies.
-        free_blas(psr_DM);
-        free_blas(psr_wDM);
+        free_matrix_d(psr_DM);
+        free_matrix_d(psr_wDM);
         free(psr_b);
         free(psr_wb);
     }
@@ -769,9 +769,9 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
             totalObs,totalFit,totalConstraints,tol,rescale_errors,
             outP,e,cvm,psr[0].robust);
 
-    free_blas(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
-    free_blas(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
-    free_blas(constraintsMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
+    free_matrix_d(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
+    free_matrix_d(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
+    free_matrix_d(constraintsMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
     free(b);
     free(white_b);
 
@@ -786,8 +786,8 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
     double basisFunc[nf];
     double *b,*white_b;
     int    i,j;
-    int nrows=get_blas_rows(uinv);
-    int ncols=get_blas_cols(uinv);
+    int nrows=getRows_TKmatrix_d(uinv);
+    int ncols=getCols_TKmatrix_d(uinv);
     if (ncols!=n){
         logmsg("n=%d ncols=%d",n,ncols);
         logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=ncols");
@@ -802,8 +802,8 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
 
 
     // double arrays
-    white_designMatrix=malloc_blas(n,nf);
-    designMatrix=malloc_blas(n,nf);
+    white_designMatrix=malloc_matrix_d(n,nf);
+    designMatrix=malloc_matrix_d(n,nf);
     b=(double*)malloc(sizeof(double)*n);
     white_b=(double*)malloc(sizeof(double)*n);
 
@@ -830,8 +830,8 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
             }
         }
     } else {
-        TKmultMatrix_sq(uinv,designMatrix,n,nf,white_designMatrix);  
-        TKmultMatrixVec_sq(uinv,b,n,white_b);
+        TKmultMatrix_d(uinv,designMatrix,white_designMatrix);
+        TKmultMatrixVec_d(uinv,b,white_b);
     }
 
     *OUT_designMatrix=designMatrix;
@@ -852,7 +852,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
 {
     logmsg("Warning: Deprecated method TKleastSquares_svd_psr() -> TKleastSquares_single_pulsar()");
     int i;
-    double ** uinv=malloc_blas(1,n);
+    double ** uinv=malloc_matrix_d(1,n);
     if (weight==1){
         for (i=0; i<n;i++){
             uinv[0][i]=1.0/sig[i];
@@ -863,7 +863,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
         }
     }
     TKleastSquares_single_pulsar(x,y,n,p,e,nf,cvm,chisq,fitFuncs,psr,tol,ip,(weight==0 || (weight==1 && psr->rescaleErrChisq==1)),uinv);
-    free_blas(uinv);
+    free_matrix_d(uinv);
 }
 
 

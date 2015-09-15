@@ -2,10 +2,12 @@
 #include <src/gtest_main.cc>
 #include <iostream>
 #include <iomanip>
+#include <cfloat>
 
 #include"TKmatrix.h"
 #include"TKsvd.h"
 #include"TKlog.h"
+
 
 
 TEST(testTKmatrix_d, construct){
@@ -38,24 +40,24 @@ TEST(testTKmatrix_d, transpose){
     M.set(2,0,4.0);
 
     {
-    TK::matrix<double> MT = M.T(false);
+        TK::matrix<double> MT = M.T(false);
 
-    ASSERT_EQ(MT.get(0,0), 1.0);
-    ASSERT_EQ(MT.get(1,0),-2.0);
-    ASSERT_EQ(MT.get(0,1), 2.0);
-    ASSERT_EQ(MT.get(2,1),-3.0);
-    ASSERT_EQ(MT.get(1,2), 3.0);
-    ASSERT_EQ(MT.get(2,0),-4.0);
-    ASSERT_EQ(MT.get(0,2), 4.0);
+        ASSERT_EQ(MT.get(0,0), 1.0);
+        ASSERT_EQ(MT.get(1,0),-2.0);
+        ASSERT_EQ(MT.get(0,1), 2.0);
+        ASSERT_EQ(MT.get(2,1),-3.0);
+        ASSERT_EQ(MT.get(1,2), 3.0);
+        ASSERT_EQ(MT.get(2,0),-4.0);
+        ASSERT_EQ(MT.get(0,2), 4.0);
 
-    // check that the raw data was transposed
-    for(size_t j =0 ; j < 3; j++){
-        for(size_t k =0 ; k < 3; k++){
-            size_t i1 = j+3*k;
-            size_t i2 = k+3*j;
-            EXPECT_EQ(MT.getRaw()[i1],M.getRaw()[i2]);
+        // check that the raw data was transposed
+        for(size_t j =0 ; j < 3; j++){
+            for(size_t k =0 ; k < 3; k++){
+                size_t i1 = j+3*k;
+                size_t i2 = k+3*j;
+                EXPECT_EQ(MT.getRaw()[i1],M.getRaw()[i2]);
+            }
         }
-    }
     }
 
     {
@@ -215,12 +217,12 @@ TEST(testTKvector_d, opMVmult){
     TK::vector<double> u2 = m2*v;
 
     for (int i=0;i<2;i++){
-            double element=0;
-            for (int k=0; k < 3; k++){
-                element += m1.get(i,k)*v[k];
-            }
-            ASSERT_EQ(element,u[i]);
-            ASSERT_EQ(element,u2[i]);
+        double element=0;
+        for (int k=0; k < 3; k++){
+            element += m1.get(i,k)*v[k];
+        }
+        ASSERT_EQ(element,u[i]);
+        ASSERT_EQ(element,u2[i]);
     }
 }
 
@@ -242,11 +244,11 @@ TEST(testTKvector_d, multMatrixVec){
     TKmultMatrixVec_d(m1,v,u);
 
     for (int i=0;i<2;i++){
-            double element=0;
-            for (int k=0; k < 3; k++){
-                element += m1[i][k]*v[k];
-            }
-            ASSERT_EQ(element,u[i]);
+        double element=0;
+        for (int k=0; k < 3; k++){
+            element += m1[i][k]*v[k];
+        }
+        ASSERT_EQ(element,u[i]);
     }
 }
 
@@ -331,29 +333,41 @@ TEST(svd,trivial_d){
     std::cout << std::scientific << std::setprecision(3);
     TK::matrix<double> m1(6,3);
     TK::matrix<double> m2(6,3,false);
-    for (int i=0;i<3;i++){
-        for (int j=0;j<6;j++){
+    for (int i=0;i<6;i++){
+        for (int j=0;j<3;j++){
             if(i==j){
                 m1[i][j] = i+1;
                 m2[i][j] = i+1;
             }
         }
     }
-    m1[0][1]=-1.5;
-    std::cout << "M" << std::endl;
-    std::cout << m1 << std::endl;
-    TK::SVD<double> svd(m1);
-    ASSERT_EQ(svd.U._rows,m1._rows);
-    std::cout << "U" << std::endl;
-    std::cout << svd.U << std::endl;
-    std::cout << "S" << std::endl;
-    std::cout << svd.S << std::endl;
-    std::cout << "V" << std::endl;
-    std::cout << svd.V << std::endl;
-    TK::matrix<double> o = svd.S*svd.V.T(true);
-    TK::matrix<double> o2 = svd.U*o;
-    std::cout << "S.V" << std::endl;
-    std::cout << o << std::endl;
-    std::cout << "U.S.V" << std::endl;
-    std::cout << o2 << std::endl;
+    m1[0][1]=-0.4;
+    m1[3][1]=4.2;
+    m2[0][1]=-0.4;
+    m2[3][1]=4.2;
+    {
+        TK::SVD<double> svd(m1);
+        ASSERT_EQ(svd.U._rows,m1._rows);
+        TK::matrix<double> o = svd.U*(svd.S*svd.V.T(true));
+        for (int i=0;i<6;i++){
+            for (int j=0;j<3;j++){
+                EXPECT_NEAR(m1[i][j],o[i][j],5*svd.S[0][0]*DBL_EPSILON) << "Error in rowmajor SVD";
+            }
+        }
+    }
+
+    {
+        TK::SVD<double> svd(m2);
+        std::cout << svd.S << std::endl;
+        ASSERT_EQ(svd.U._rows,m2._rows);
+        TK::matrix<double> o = svd.U*(svd.S*svd.V.T(true));
+        for (int i=0;i<6;i++){
+            for (int j=0;j<3;j++){
+                EXPECT_NEAR(m2[i][j],o[i][j],5*svd.S[0][0]*DBL_EPSILON) << "Error in colmajor SVD";
+            }
+        }
+    }
+
+
+
 }

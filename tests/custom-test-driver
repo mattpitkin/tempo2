@@ -135,7 +135,7 @@ echo "${col}${res}${std}: $test_name"
 
 pass=`grep "       OK " $log_file | wc -l`
 fail=`grep "  FAILED  " $log_file | wc -l`
-total=`grep TEST $test_name.C | wc -l`
+total=`grep -e '^TEST' $test_name.C | wc -l`
 if [[ $fail -gt 0 ]] ; then
     fail=$(($fail - 2))
 fi

@@ -5,6 +5,8 @@
 #define DATDIR .
 #endif
 
+#define NANOSEC 1e-9
+
 #ifdef LONGDOUBLE_IS_FLOAT128
 #include <quadmath.h>
 #endif
@@ -58,8 +60,8 @@ TEST(testFormResiduals, basicBATs){
     psr->noWarnings=2;
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
-    ASSERT_LT(static_cast<double>(fabsl(psr[0].obsn[1].residual)),1e-9l);
-    ASSERT_LT(static_cast<double>(fabsl(psr[0].obsn[2].residual-longdouble(0.4))),1e-9l);
+    ASSERT_LT(static_cast<double>(fabsl(psr[0].obsn[1].residual)),NANOSEC);
+    ASSERT_LT(static_cast<double>(fabsl(psr[0].obsn[2].residual-longdouble(0.4))),NANOSEC);
 }
 
 
@@ -93,7 +95,7 @@ TEST(testFormResiduals, subtractBATs){
     formResiduals(psr,npsr,0);
 
     for(int iobs = 0; iobs < psr->nobs; iobs++){
-        EXPECT_LT(static_cast<double>(fabsl(psr[0].obsn[iobs].residual)),TEST_DELTA) << "Precision lost in formResiduals (s)";
+        EXPECT_LT(static_cast<double>(fabsl(psr[0].obsn[iobs].residual)),NANOSEC) << "Precision lost in formResiduals (s)";
     }
 
     for(int iobs = 1; iobs < psr->nobs; iobs++){
@@ -104,7 +106,7 @@ TEST(testFormResiduals, subtractBATs){
     formResiduals(psr,npsr,0);
 
     for(int iobs = 1; iobs < psr->nobs; iobs++){
-        EXPECT_LT(static_cast<double>(fabsl(psr[0].obsn[iobs].residual-longdouble(4.0e-9))),TEST_DELTA) << "Precision lost in formResiduals (s)";
+        EXPECT_NEAR(longdouble(4.0e-9),fabsl(psr[0].obsn[iobs].residual),longdouble(NANOSEC)) << "Precision lost in formResiduals (s)";
     }
 }
 
@@ -142,7 +144,7 @@ TEST(testFormResiduals, subtractSATs){
     formResiduals(psr,npsr,0);
 
     for(int iobs = 0; iobs < psr->nobs; iobs++){
-        EXPECT_LT(static_cast<double>(fabsl(psr[0].obsn[iobs].residual)),TEST_DELTA) << "Precision lost in formBats or formResiduals";
+        EXPECT_LT(static_cast<double>(fabsl(psr[0].obsn[iobs].residual)),NANOSEC) << "Precision lost in formBats or formResiduals";
     }
 }
 
@@ -169,7 +171,7 @@ TEST(testFormBats, offsetSATs){
     formBatsAll(psr,npsr);
 
     for(int iobs = 0; iobs < psr->nobs; iobs++){
-        EXPECT_LT(static_cast<double>(fabsl(psr->obsn[iobs].bat - psr->obsn[iobs].prefitResidual - longdouble(4e-9)/SECDAYl)),TEST_DELTA) << "Precision lost in formBats";
+        EXPECT_LT(static_cast<double>(fabsl(psr->obsn[iobs].bat - psr->obsn[iobs].prefitResidual - longdouble(4e-9)/SECDAYl)),NANOSEC) << "Precision lost in formBats";
     }
 
 }

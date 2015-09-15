@@ -451,12 +451,12 @@ void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *
     // Here the whitening matrix is just a diagonal
     //             // weighting matrix. Store diagonal matrix as 1xN
     //                         // so that types match later.
-    double** uinv=malloc_blas(1,n);
-        for(int k=0; k < n; k++){
-            uinv[0][k] = 1.0 / sig[k];
-        }
+    TK::diagonal<double> uinv(n);
+    for(int k=0; k < n; k++){
+        uinv[k][k] = 1.0 / sig[k];
+    }
 
-    calcSpectraErr(uinv,x,y,n,outX,outY,outE,*outN);
+    calcSpectraErr(uinv.getIdx(),x,y,n,outX,outY,outE,*outN);
 
 }
 
@@ -1685,8 +1685,8 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
     double param[2],error[2];
 
     logdbg("Entering calcSpectra\n");
-    double** designMatrix = malloc_blas(nres,3);
-    double** whiteDesignMatrix = malloc_blas(nres,3);
+    double** designMatrix = malloc_matrix_d(nres,3);
+    double** whiteDesignMatrix = malloc_matrix_d(nres,3);
     double* white_data = static_cast<double*>(malloc(sizeof(double)*nres));
     // Should fit independently to all frequencies
     for (int k=0;k<nfit;k++)
@@ -1700,8 +1700,8 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
             designMatrix[idat][1] = sin(omega*resx[idat]);
             designMatrix[idat][0] = cos(omega*resx[idat]);
         }
-        TKmultMatrix_sq(uinv,designMatrix,nres,2,whiteDesignMatrix);
-        TKmultMatrixVec(uinv,resy,nres,nres,white_data);
+        TKmultMatrix_d(uinv,designMatrix,whiteDesignMatrix);
+        TKmultMatrixVec_d(uinv,resy,white_data);
 
         //TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,2,cvm,&chisq,fitCosSineFunc,0,psr,1.0e-40,ip,uinv);
 
@@ -1719,8 +1719,8 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
     if(verbose_calc_spectra){
         printf("\b\b\b\b\b\b\b\b100.0%%\n");
     }
-    free_blas(whiteDesignMatrix);
-    free_blas(designMatrix);
+    free_matrix_d(whiteDesignMatrix);
+    free_matrix_d(designMatrix);
     free(white_data);
     logdbg("Leaving calcSpectra\n");
     return nfit;
