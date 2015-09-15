@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <src/gtest_main.cc>
+#include "gtest_extensions.h"
 #include "tempo2.h"
 #ifndef DATDIR
 #define DATDIR .
 #endif
-
 #define NANOSEC 1e-9
 
 #ifdef LONGDOUBLE_IS_FLOAT128
@@ -15,6 +15,16 @@ TEST(testTempo2h, maxpsrset){
 }
 
 TEST(testLongDouble, precision){
+#ifdef LONGDOUBLE_IS_FLOAT128
+    NOTE("Tempo2 longdoubles are 128-bit IEEE 754 binary128 implemented as __float128 in GCC\n");
+    NOTE("longdouble has %d bits in mantisa, and exponent between %d and %d\n",FLT128_MANT_DIG,FLT128_MIN_EXP,FLT128_MAX_EXP);
+#endif
+
+#ifdef LONGDOUBLE_IS_LD
+    NOTE("Tempo2 longdoubles are GCC long double, probably 80-bit x86 Extended Precision\n");
+    NOTE("longdouble has %d bits in mantisa, and exponent between %d and %d\n",LDBL_MANT_DIG,LDBL_MIN_EXP,LDBL_MAX_EXP);
+#endif
+
     EXPECT_EQ(sizeof(longdouble),16);
 #ifdef LONGDOUBLE_IS_FLOAT128
     EXPECT_GT(FLT128_DIG,32);

@@ -10,22 +10,15 @@
 // Note: you sometimes need a compile line e.g. -I/opt/SUNWspro/WS6U2/include/cc
 #endif
 
-#define longdouble(a) a##L
+
+#define _LDEX(a,b) a##b
+#define longdouble(a) _LDEX(a,L)
+
 #define LD_PI M_PI
 
-#ifdef USE_BUILTIN_LONGDOUBLE
-#define LONGDOUBLE_IS_IEEE754
+#define LONGDOUBLE_IS_LD
 typedef long double longdouble;
 #define LONGDOUBLE_ONE 1.0L
-/* OSes/architectures lacking built-in double; use "qd" library */
-#else
-#define LONGDOUBLE_IS_DDREAL
-#include "dd.h"
-typedef dd_real longdouble;
-#define LONGDOUBLE_ONE "1.0"
-dd_real pow(const dd_real &a, const dd_real &b);
-//operator float(const dd_real &a);
-#endif
 
 /* function to get longdouble as string (%g style). This returns
    std::string, from which you can get a normal C char * like this:

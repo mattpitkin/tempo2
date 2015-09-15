@@ -3,6 +3,7 @@ set -e
 set -u
 
 # Make plugin lists
+echo "Makeing plugin build files"
 cd plugin
 mkdir -p ./build_settings
 
@@ -16,12 +17,15 @@ chmod +x make_build_settings.sh
 cd ..
 
 cd mpack_lite
-./makemake.sh double > mpack_lite.double.inc
-./makemake.sh __float128 > mpack_lite.__float128.inc
+echo "Making mpack build files"
+./makemake.sh 
 cd ..
 
+
+echo "running autotools"
 \rm -rf ./autoconf
 cp -r autoconf.boot autoconf
+echo autoreconf --install --force
 autoreconf --install --force
 
 echo "Ready to build with:"

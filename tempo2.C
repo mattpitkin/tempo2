@@ -276,8 +276,8 @@ int main(int argc, char *argv[])
 
     if (noWarnings<1)
     {
-#ifdef LONGDOUBLE_IS_IEEE754
-        printf("Warning: longdouble is an IEEE754 80-bit float.\n");
+#ifdef LONGDOUBLE_IS_LD
+        printf("Warning: longdouble is an x86 80-bit float.\n");
         printf(" --- the size of a double is %u bytes\n",(unsigned)sizeof(double));
 #endif
     }

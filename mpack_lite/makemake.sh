@@ -4,7 +4,9 @@ flt=$1
 dir=`dirname $0`
 cd $dir
 if test -z "$flt" ; then
-    exit 1
+    ./makemake.sh double > mpack_lite.double.inc
+    ./makemake.sh __float128 > mpack_lite.__float128.inc
+    exit 0
 fi
 while read alg ; do
 for pack in mblas mlapack ; do

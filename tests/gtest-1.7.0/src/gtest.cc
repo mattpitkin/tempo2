@@ -2551,7 +2551,8 @@ enum GTestColor {
   COLOR_DEFAULT,
   COLOR_RED,
   COLOR_GREEN,
-  COLOR_YELLOW
+  COLOR_YELLOW,
+  COLOR_CYAN
 };
 
 #if GTEST_OS_WINDOWS && !GTEST_OS_WINDOWS_MOBILE
@@ -2575,6 +2576,7 @@ const char* GetAnsiColorCode(GTestColor color) {
     case COLOR_RED:     return "1";
     case COLOR_GREEN:   return "2";
     case COLOR_YELLOW:  return "3";
+    case COLOR_CYAN:    return "6";
     default:            return NULL;
   };
 }

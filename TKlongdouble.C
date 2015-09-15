@@ -44,7 +44,7 @@ std::string print_longdouble(const longdouble &ld)
     quadmath_snprintf(buf,1024, "%Qg", ld);
 #endif
 
-#ifdef LONGDOUBLE_IS_IEEE754
+#ifdef LONGDOUBLE_IS_LD
     ld_sprintf(buf, "%Lg", ld);
 #endif
 
@@ -62,7 +62,7 @@ longdouble parse_longdouble(const char *str)
     ld = strtoflt128(str,NULL);
 #endif
 
-#ifdef LONGDOUBLE_IS_IEEE754
+#ifdef LONGDOUBLE_IS_LD
     sscanf(str, "%Lf", &ld);
 #endif
 
