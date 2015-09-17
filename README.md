@@ -82,14 +82,14 @@ The easiest way to compile your own plugins is:
 
 where:
 
- - {$PLG_NAME} is the name of your plugin
- - {$SRCLIST} is your plugin's source code.
- - {$LOGIN_ARCH} is the result of `uname` (usualy Linux).
- - {$CFLAGS} are the compiler flags your plugin needs... remeber to add a -I option to point to the location of tempo2.h
- - {$LDFLAGS} are any linking options you need, e.g. pgplot, etc.
- - {$TEMPO2} is the tempo2 runtime dir
+ - `{$PLG_NAME}` is the name of your plugin
+ - `{$SRCLIST}` is your plugin's source code.
+ - `{$LOGIN_ARCH}` is the result of `` `uname` `` (usualy Linux).
+ - `{$CFLAGS}` are the compiler flags your plugin needs... remeber to add a -I option to point to the location of tempo2.h
+ - `{$LDFLAGS}` are any linking options you need, e.g. pgplot, etc.
+ - `{$TEMPO2}` is the tempo2 runtime dir
 
-For example, to compile a basic plugin called 'foo' on linux, you might do
+For example, to compile a basic plugin called '`foo`' on linux, you might do
 
     g++ -I/usr/src/tempo2 -fPIC -shared -o $TEMPO2/plugins/foo_{$LOGIN_ARCH}_plug.t2 foo_plug.C
 
@@ -129,8 +129,8 @@ http://www.pulsarastronomy.net/wiki/Software/PSRSoft
 If you have pgplot installed, but it is not detected by the configure script, check:
 
  - You have got at least libpgplot.a and libcpgplot.a in your LDFLAGS
- - Check you have $PGPLOT_DIR pointing to the folder with grfont.dat and rgb.txt
- - Check that you have $F77 set to the same compiler that compiled PGPLOT
+ - Check you have `$PGPLOT_DIR` pointing to the folder with grfont.dat and rgb.txt
+ - Check that you have `$F77` set to the same compiler that compiled PGPLOT
     (e.g. setenv F77 gfortran, if you used gfortran for PGPLOT)
 
 
