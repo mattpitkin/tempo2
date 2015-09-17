@@ -66,10 +66,7 @@ AC_DEFUN([SWIN_LIB_QDINSTALL],
     AC_DEFINE([HAVE_QDINSTALL], [1], [Define to 1 if you have the QDINSTALL library])
     [$1]
   else
-    AC_MSG_WARN([Will compile without QDINSTALL code])
-    if test x"$QDINSTALL" = x; then
-      AC_MSG_WARN([Please set the QDINSTALL environment variable])
-    fi
+    AC_MSG_NOTICE([Will compile without QD code. Might cause problems if you use tempo2nest])
     QDINSTALL_CFLAGS=""
     QDINSTALL_LIBS=""
     [$2]

@@ -76,7 +76,7 @@ getPeriod_LDADD = libtempo2pred.la
 
 
 # Specify to include the T2runtime in distributions
-EXTRA_DIST = T2runtime $(xtra_dist_sources)
+EXTRA_DIST = T2runtime $(xtra_dist_sources) documentation
 
 # This clears out any CVS files that might get in our distribution
 dist-hook:
@@ -140,13 +140,23 @@ TKlongdouble.h: TKlongdouble.ld.h
 	cp TKlongdouble.ld.h $@
 endif
 
+if HAVE_DOXYGEN
+doc: $(libtempo2_la_SOURCES)
+	doxygen
+else
+doc:
+	echo "Sorry, you need doxygen to build the documentation"
+endif
+
+
+
 CLEANFILES=$(BUILT_SOURCES)
 
 .PHONY: plugins-install plugins plugins-clean \
    unsupported unsupported-install unsupported-clean \
    complete complete-install complete-clean \
    temponest temponest-install \
-   core core-install core-clean test
+   core core-install core-clean test doc
 
 
 install-data-hook:
