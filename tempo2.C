@@ -28,14 +28,7 @@
  */
 
 
-/*!
- * @mainpage
- *
- * + @ref userguide
- * + @ref devguide
- * + @ref dirs
- *
- */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

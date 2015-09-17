@@ -976,3 +976,12 @@ extern "C" {
 #define HAVE_GWSIM_H
 
 #endif /* __Tempo2_h */
+
+/*!
+ * @mainpage
+ *
+ * + @ref userguide
+ * + @ref devguide
+ * + @ref dirs
+ *
+ */
