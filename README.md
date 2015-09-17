@@ -30,23 +30,27 @@ http://www.pulsarastronomy.net/wiki/Software/PSRSoft
 2. Quick Guide
 ---------------
 Bootstrap the build system:
- $ ./bootstrap
+
+    ./bootstrap
 
 setup the tempo2 runtime dir
- $ cp -r T2runtime /usr/share/tempo2/
- $ setenv TEMPO2 /usr/share/tempo2/
+
+    cp -r T2runtime /usr/share/tempo2/
+    export TEMPO2=/usr/share/tempo2/
 
 Configure:
 
- $ ./configure [[--prefix=/your/install/path]]
+    ./configure [[--prefix=/your/install/path]]
 
 use --prefix to set the path you want to install the binaries and libraries
 
 Make and install...
- $ make && make install
+
+    make && make install
 
 You will probably want to build the default plugins (plk, etc). Do this with:
- $ make plugins && make plugins-install
+
+    make plugins && make plugins-install
 
 
 And you're done.
@@ -54,6 +58,7 @@ And you're done.
 3. Requirements
 ---------------
 Tempo2 requires the following:
+
  - A fortran 77 compiler (tested with gfortran).
  - A C compiler (tested with gcc).
 
@@ -73,9 +78,10 @@ plugins. This is controled by the contents of the files in
 ----------------------------
 The easiest way to compile your own plugins is:
 
- $ g++ {$CFLAGS} {$LDFLAGS} -fPIC -shared -o {$TEMPO2}/plugins/{$PLG_NAME}_{$LOGIN_ARCH}_plug.t2 {$SRCLIST}
+    $ g++ {$CFLAGS} {$LDFLAGS} -fPIC -shared -o {$TEMPO2}/plugins/{$PLG_NAME}_{$LOGIN_ARCH}_plug.t2 {$SRCLIST}
 
 where:
+
  - {$PLG_NAME} is the name of your plugin
  - {$SRCLIST} is your plugin's source code.
  - {$LOGIN_ARCH} is the result of `uname` (usualy Linux).
@@ -132,7 +138,8 @@ Check that you are using the same build of gcc and gfortran (or whatever compile
 
 Note that on MacOSX there is often an issue where the default compiler is incompatible with gfortran.
 The gfortran compatible version is often called gcc-4 and gxx-4 or similar. Use this with:
-export CC=gcc-4
-export CXX=g++-4
+
+    export CC=gcc-4
+    export CXX=g++-4
 
 and reconfigure.
