@@ -78,6 +78,7 @@ getPeriod_LDADD = libtempo2pred.la
 # Specify to include the T2runtime in distributions
 EXTRA_DIST = T2runtime $(xtra_dist_sources) documentation
 
+
 # This clears out any CVS files that might get in our distribution
 dist-hook:
 	rm -rf `find $(distdir)/T2runtime -name CVS`
@@ -85,6 +86,7 @@ dist-hook:
 	rm -rf $(distdir)/unsupported_plugins/built_plugins/*
 	rm -rf `find $(distdir)/unsupported_plugins/ -name CVS`
 	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
+	rm -rf $(distdir)/documentation/doxygen
 
 
 
@@ -143,6 +145,9 @@ endif
 if HAVE_DOXYGEN
 doc: $(libtempo2_la_SOURCES)
 	doxygen
+	make -C documentation/doxygen/latex
+	cp documentation/doxygen/latex/refman.pdf documentation/tempo2_documentation.pdf
+	
 else
 doc:
 	echo "Sorry, you need doxygen to build the documentation"
@@ -150,7 +155,7 @@ endif
 
 
 
-CLEANFILES=$(BUILT_SOURCES)
+CLEANFILES=$(BUILT_SOURCES) documentation/doxygen
 
 .PHONY: plugins-install plugins plugins-clean \
    unsupported unsupported-install unsupported-clean \

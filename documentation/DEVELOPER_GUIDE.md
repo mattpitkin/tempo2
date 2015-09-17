@@ -49,6 +49,9 @@ Step 3: Build, test, run your code.
 
 Step 4: If the new features seem good, promote them to the "master" branch.
 
+    # if the first time
+    git push --set-upstream origin docs
+    # otherwise
     git push origin
 
 and go to https://bitbucket.org/mkeith/tempo2/pull-requests/new to make a new pull request. The code will be reviewed by the core developers to check that the changes do not break any important features. If the modification is accepted (almost always) then it will be merged.
@@ -121,11 +124,16 @@ void myFunction(int anInt, const char *str, double **matrix) {
 }
 ~~~~
 
+\note Core tempo2 code should be copyright George Hobbs and Russell Edwards until we decide to change this.
+
 Headers should declare the functions and have documentation! Please avoid globals as much as possible, but sometimes they are required. Use any doxygen markup required to document the interface, ESPECIALLY if it is to be called from outside tempo2.
 
-~~~~{.cpp}
-#ifndef myHeader_h // use defines to prevent double declaration
+\code{.cpp}
+// use defines to prevent double declaration
+#ifndef myHeader_h 
 #define myHeader_h
+\endcode
+\verbatim
 /*!
  *  @brief A brief description of the function
  *  @param anInt[in]   description of this parameter
@@ -134,12 +142,13 @@ Headers should declare the functions and have documentation! Please avoid global
  *
  *  More description if required
  */
+\endverbatim
+\code{.cpp}
 void myFunction(int anInt, const char* str, double** matrix);
 #endif
-~~~~
+\endcode
 
 
-\note Core tempo2 code should be copyright George Hobbs and Russell Edwards until we decide to change this.
 
 
 
