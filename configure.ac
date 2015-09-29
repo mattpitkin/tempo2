@@ -193,6 +193,14 @@ T2ARCH=$t2arch
 AC_SUBST(T2ARCH)
 
 
+
+#doxygen
+AC_CHECK_PROG(have_doxygen,[doxygen], [yes],[no])
+AM_CONDITIONAL(HAVE_DOXYGEN, [test x"$have_doxygen" = xyes])
+
+
+
+
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 AC_CONFIG_HEADERS([config.h])
