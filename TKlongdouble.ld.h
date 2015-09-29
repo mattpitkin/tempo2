@@ -1,3 +1,5 @@
+#ifndef TKlongdouble_h
+#define TKlongdouble_h
 #define USE_BUILTIN_LONGDOUBLE
 
 #include <math.h>
@@ -51,3 +53,5 @@ extern "C" {
 #define ld_printf printf
 #define ld_fprintf fprintf
 #define ld_sprintf sprintf
+
+#endif

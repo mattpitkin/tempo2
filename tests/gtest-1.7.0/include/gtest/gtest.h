@@ -1444,11 +1444,15 @@ AssertionResult CmpHelperEQ(const char* expected_expression,
 # pragma warning(disable:4389)  // Temporarily disables warning on
                                 // signed/unsigned mismatch.
 #endif
+#if __GNUC__ > 4 || (__GNUC__ == 4 &&  __GNUC_MINOR > 7)
 #pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
   if (expected == actual) {
     return AssertionSuccess();
   }
+#if __GNUC__ > 4 || (__GNUC__ == 4 &&  __GNUC_MINOR > 7)
 #pragma GCC diagnostic pop
+#endif
 
 #ifdef _MSC_VER
 # pragma warning(pop)          // Restores the warning state.

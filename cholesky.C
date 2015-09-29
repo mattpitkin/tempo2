@@ -3,9 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
-#include "tempo2.h"
-#include "TKfit.h"
-#include "TKspectrum.h"
+#include "TKlongdouble.h"
+#include "TKmatrix.h"
 #include "choleskyRoutines.h"
 #include "T2accel.h"
 #include "cholesky.h"

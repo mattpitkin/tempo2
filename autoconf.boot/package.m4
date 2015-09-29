@@ -105,9 +105,11 @@ AC_DEFUN([SWIN_PACKAGE_TRY_COMPILE],
   cf_include_path_list="$with_[$1]_include_dir $swin_[$1]_found [$4] ."
 
   ac_save_CFLAGS="$CFLAGS"
+  ac_save_CXXFLAGS="$CXXFLAGS"
 
   for cf_dir in $cf_include_path_list; do
     CFLAGS="-I$cf_dir $ac_save_CFLAGS"
+    CXXFLAGS="-I$cf_dir $ac_save_CXXFLAGS"
     AC_TRY_COMPILE([$2], [$3], have_[$1]=yes, have_[$1]=no)
     if test $have_[$1] = yes; then
       if test x"$cf_dir" != x.; then
@@ -119,6 +121,7 @@ AC_DEFUN([SWIN_PACKAGE_TRY_COMPILE],
   done
 
   CFLAGS="$ac_save_CFLAGS"
+  CXXFLAGS="$ac_save_CXXFLAGS"
 ])
 
 dnl @synopsis SWIN_PACKAGE_TRY_LINK(name,includes,function body,ldflags)

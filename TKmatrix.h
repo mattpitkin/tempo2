@@ -48,7 +48,7 @@ extern "C" {
 #endif
 
 
-#ifdef __Tempo2_h
+#ifdef TKlongdouble_h
 void free_2dLL(longdouble** m);
 longdouble** malloc_2dLL(int rows,int cols);
 #endif

@@ -38,3 +38,5 @@ tempo2-20*.tar.gz
 aclocal.m4
 config.h.in~
 TempoNest
+*.old
+.deps

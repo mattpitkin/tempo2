@@ -2,8 +2,6 @@
 
 #ifndef __TKspectrum_h
 #define __TKspectrum_h
-#include "tempo2.h"
-#include "TKfit.h"
 /*
  *    This file is part of TEMPO2. 
  * 
@@ -33,7 +31,6 @@
  * and W. Coles
  */
 
-extern double GLOBAL_OMEGA;
 extern bool verbose_calc_spectra;
 /* Global variables used in the fortran code for sigmaz*/
 
@@ -251,13 +248,8 @@ void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, doubl
 
 int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit);
 
-// Spectral analysis using covariance matrix
-// note: uinv array must start from 0, not 1
-// NEW FEATURE:
-// set nfit < 0 to automatically set it to nres/2-1
-int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar *psr);
-int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char useCM,pulsar* psr);
 
+#ifdef __Tempo2_h
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored
@@ -268,4 +260,15 @@ void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int 
 // The psr and ival parameters are ignored
 void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 
+// Spectral analysis using covariance matrix
+// note: uinv array must start from 0, not 1
+// NEW FEATURE:
+// set nfit < 0 to automatically set it to nres/2-1
+int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar *psr);
+int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char useCM,pulsar* psr);
+
+
+
+extern double GLOBAL_OMEGA;
+#endif
 #endif

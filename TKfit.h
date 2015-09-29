@@ -29,6 +29,7 @@
  */
 
 #include "TKmatrix.h"
+#include "TKlongdouble.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,11 +68,11 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+longdouble TKfindMax_Ld(longdouble *x,int n);
 #endif
 
 #ifdef __Tempo2_h
 
-longdouble TKfindMax_Ld(longdouble *x,int n);
 void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int, int),pulsar *psr,double tol, int *ip,char rescale_errors, double **uinv);
 
 void TKleastSquares_global_pulsar(double **x,double **y,int *n,
