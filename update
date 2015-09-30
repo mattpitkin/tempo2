@@ -14,4 +14,6 @@ fi
 
 echo "Running update ..."
 git pull origin
-git checkout ./update
+git reset origin/HEAD
+git checkout ./update README.md
+
