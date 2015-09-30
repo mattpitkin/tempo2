@@ -15,7 +15,7 @@ Git INSTALLATION README
 1. What this package is
 ------------------------
 You (or someone else) have checked out tempo2 from the Git
-(https://bitbucket.org/mkeith/tempo2)
+(https://bitbucket.org/psrsoft/tempo2)
 
 This is the best way to get the latest/cutting edge version, and develop your
 own additions to the tempo2 code or via plugins.
