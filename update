@@ -1,29 +1,17 @@
 #!/bin/bash
 
-cd `dirname $0`
+echo "Updating repository URL"
+git remote show origin | grep -q https
+ex=$?
+if [[ $ex -eq 0 ]] ; then
+    echo "   == Anonymous checkout"
+    git remote set-url origin https://bitbucket.org/psrsoft/tempo2.git
+else
+    echo "   == Developer checkout"
+    git remote set-url origin git@bitbucket.org:psrsoft/tempo2.git
+fi
+
 
 echo "Running update ..."
 git pull origin
-
-while [[ $# > 0 ]] ; do
-    key="$1"
-
-    case $key in
-        --temponest)
-            if [[ ! -e TempoNest ]] ; then
-                git clone https://github.com/LindleyLentati/TempoNest.git
-            fi
-            shift
-            ;;
-        *)
-            # unknown option
-            shift
-            ;;
-    esac
-done
-
-if [[ -e TempoNest ]] ; then
-    echo "update temponest"
-    cd TempoNest
-    git pull origin
-fi
+git checkout ./update
