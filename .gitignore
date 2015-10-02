@@ -40,3 +40,4 @@ config.h.in~
 TempoNest
 *.old
 .deps
+documentation/doxygen
