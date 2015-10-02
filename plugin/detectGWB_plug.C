@@ -31,6 +31,8 @@
 #include "tempo2.h"
 #include "T2toolkit.h"
 #include "TKspectrum.h"
+#include "TKmatrix.h"
+#include "TKfit.h"
 
 using namespace std;
 

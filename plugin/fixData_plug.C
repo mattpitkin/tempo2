@@ -33,10 +33,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <cpgplot.h>
+#include "tempo2.h"
 #include "T2toolkit.h"
 #include "TKspectrum.h"
 #include "TKfit.h"
-#include "tempo2.h"
 #include "GWsim.h"
 
 using namespace std;
