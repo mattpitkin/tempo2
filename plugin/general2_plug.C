@@ -136,7 +136,7 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
 
 void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,char *dformat,int *rad,FILE *fout)
 {
-  unsigned i,j;
+  int i,j;
   char var[500],type[100];
   int varN,lv,le,parameter=0,end=1;
   char cval[500],cerr[500],msg[500];
