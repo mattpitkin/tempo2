@@ -171,6 +171,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 		fprintf(fout,"%s",disp);
 		pos+=strlen(disp);
 	      } 
+	    // WARNING: if i==0, this tries to access line[-1]. This is a BUG!
 	    else if (line[i]=='{' && line[i-1]!='\\') /* Have command */
 	      {
 		for (j=i+1;j<strlen(line);j++)
