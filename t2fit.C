@@ -55,11 +55,12 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
      */
     FitInfo global_fitinfo;
     t2Fit_fillGlobalFitInfo(psr,npsr,global_fitinfo);
+    logdbg("Nglobal parameters = %d",global_fitinfo.nParams);
 
     // If we had any global parameters (or constraints) then we need to do a global fit
     // otherwise we can do a fit for each pulsar individually, which is quicker
     // and saves memory.
-    bool doGlobalFit = global_fitinfo.nParams | global_fitinfo.nConstraints;
+    bool doGlobalFit = (global_fitinfo.nParams > 0) || (global_fitinfo.nConstraints > 0);
 
     unsigned long long totalGlobalData=0; // the number of data points across all pulsars
     unsigned int gParams=global_fitinfo.nParams; // the number of global fit parameters
@@ -433,8 +434,11 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
     bool sifunc;
     unsigned N;
     for (param_label fit_param=0; fit_param < param_LAST; ++fit_param){
+        if (fit_param == param_ifunc){
+            logmsg("if: %d %d %d",psr->param[fit_param].paramSet[0],psr->param[fit_param].fitFlag[0],psr->param[fit_param].aSize);
+        }
         for(int k=0; k < psr->param[fit_param].aSize;k++){
-            if (psr->param[fit_param].paramSet[k]==1 && psr->param[fit_param].fitFlag[k]==globalflag) {
+            if (psr->param[fit_param].paramSet[k]>0 && psr->param[fit_param].fitFlag[k]==globalflag) {
                 OUT.paramIndex[OUT.nParams]=fit_param;
                 OUT.paramCounters[OUT.nParams]=k;
                 switch(fit_param){
@@ -595,12 +599,15 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
                         N=0;
                         sifunc=psr->param[fit_param].val[0]==2; // use sinusoids?
                         if(fit_param==param_ifunc){
-                            N=psr->clkOffsN;
+                            N=psr->ifuncN;
                             sifunc=!sifunc;
                         }
                         if(fit_param==param_clk_offs)N=psr->clkOffsN;
                         if(fit_param==param_quad_ifunc_p)N=psr->quad_ifuncN_p;
                         if(fit_param==param_quad_ifunc_c)N=psr->quad_ifuncN_c;
+                        if(sifunc){
+                            logdbg("Sinusoidal ifuncs");
+                        }
                         for (unsigned i = 0; i < N; ++i){
                             if(sifunc) OUT.paramDerivs[OUT.nParams] = t2FitFunc_sifunc;
                             else OUT.paramDerivs[OUT.nParams] = t2FitFunc_ifunc;
