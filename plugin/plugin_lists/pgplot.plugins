@@ -8,14 +8,7 @@ dm_plug.C
 glitch_plug.C
 spectrum_plug.C
 simulDM_plug.C
-fixData_plug.C
 clock_plug.C
-GWbkgrd_plug.C
-GWanisobkgrd_plug.C
-GWbkgrdfromfile_plug.C
-GWdipolebkgrd_plug.C
-GWgeneralanisobkgrd_plug.C
-GWgeneralbkgrd_plug.C
 spectralModel_plug.C
 findCW_plug.C
 planet_plug.C

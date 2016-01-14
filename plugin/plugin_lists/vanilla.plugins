@@ -11,11 +11,9 @@ ppta_splug.C
 simRedNoise_plug.C
 dmmodel_fitFunc_plug.C
 bary_plug.C
-detectGWB_plug.C
 autoSpectralFit_plug.C
 cholSpectra_plug.C
 analyticChol_plug.C
-detectGWBnew_plug.C
 autoDM_plug.C
 add_pulseNumber_plug.C
 angle_plug.C

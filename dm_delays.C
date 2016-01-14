@@ -113,7 +113,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 
         psr[p].obsn[i].freqSSB = freqf; /* Record observing frequency in barycentric frame */
         //      logdbg("set freqSSB");      
-        dt = psr[p].obsn[i].bat - psr[p].param[param_dmepoch].val[0];
+        dt = psr[p].obsn[i].sat - psr[p].param[param_dmepoch].val[0];
         yrs = dt/365.25;
         dmDot=0.0;
 
