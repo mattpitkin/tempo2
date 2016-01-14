@@ -43,7 +43,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
     double dmDot;
     longdouble dt;
     int j,k;
-    const char *CVS_verNum = "$Id$";
+    const char *CVS_verNum = "$Id: c86c0df1151be86a64fdd3cfd5ed3c7ce398c900 $";
     if (displayCVSversion == 1) CVSdisplayVersion("dm_delays.C","dm_delays()",CVS_verNum);
     logdbg("dm_delays with pulsar %d; number of obs = %d",p,psr[p].nobs);
 
@@ -113,7 +113,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 
         psr[p].obsn[i].freqSSB = freqf; /* Record observing frequency in barycentric frame */
         //      logdbg("set freqSSB");      
-        dt = psr[p].obsn[i].bat - psr[p].param[param_dmepoch].val[0];
+        dt = psr[p].obsn[i].sat - psr[p].param[param_dmepoch].val[0];
         yrs = dt/365.25;
         dmDot=0.0;
 

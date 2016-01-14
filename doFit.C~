@@ -3765,11 +3765,30 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 
 	if(debug == 1){printf("\n Filled ECORR. \n");}
 
+
+    /*for (int i;i<totCoeff;i++){
+      printf("powercoeff %d: %g\n",i,powercoeff[i]);
+      }*/
+
+	// get Phi matrix
+
+//	if(debug == 1){printf("\n Allocating PPFM %i  \n", totCoeff);}
+
+//	double **PPFM=new double*[totCoeff];
 	for(int i=0;i<totCoeff;i++){
 		powercoeff[numtofit+i] = 1.0/powercoeff[numtofit+i];
-
+//		if(debug == 1){printf("\n Allocating PPFM %i  \n", i);}
+//		PPFM[i]=new double[totCoeff];
+//		for(int j=0;j<totCoeff;j++){
+//			PPFM[i][j]=0;
+//		}
 	}
+//	if(debug == 1){printf("\n Allocated PPFM %i  \n", totCoeff);}
 
+//	for(int c1=0; c1<totCoeff; c1++){
+//		printf("PPFM %i %g \n", c1, powercoeff[c1]);
+//		PPFM[c1][c1]=1.0/powercoeff[c1];
+//	}
 
 	if(debug == 1){printf("\n Filled PPFM. \n");}
 

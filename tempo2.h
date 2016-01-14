@@ -376,6 +376,9 @@ typedef struct observation {
     int  obsNjump;                  /* Number of jumps for this observation */
     double efac;                    /* Error multiplication factor                                */
     double equad;                   /* Value to add in quadrature                                 */
+
+    double snr;
+    double tobs;
 } observation;
 
 struct fit_info;
