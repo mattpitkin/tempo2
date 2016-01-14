@@ -32,10 +32,10 @@ AC_DEFUN([SWIN_LIB_QDINSTALL],
   QDINSTALL_CFLAGS=""
   QDINSTALL_LIBS=""
 
-  QDINSTALL_LIB=""
+  QDINSTALL_LIB="-lqd"
 
   if test x"$QDINSTALL" != x; then
-    QDINSTALL_LIBS="-L$QDINSTALL/lib -lqd"
+    QDINSTALL_LIBS="-L$QDINSTALL/lib"
   fi
 
   if test x"$QDINSTALL" != x; then
@@ -44,19 +44,16 @@ AC_DEFUN([SWIN_LIB_QDINSTALL],
 
   QDINSTALL_LIBS="$QDINSTALL_LIBS $QDINSTALL_LIB"
 
-  ac_save_CFLAGS="$CFLAGS"
-  ac_save_LIBS="$LIBS"
-  LIBS="$ac_save_LIBS $QDINSTALL_LIBS"
-  CFLAGS="$ac_save_CFLAGS $QDINSTALL_CFLAGS"
-
   AC_LANG_PUSH(C++)
-  # test compilation of simple program
+  ac_save_CFLAGS="$CFLAGS"
   ac_save_CXXFLAGS="$CXXFLAGS"
   ac_save_LIBS="$LIBS"
   LIBS="$ac_save_LIBS $QDINSTALL_LIBS"
+  CFLAGS="$ac_save_CFLAGS $QDINSTALL_CFLAGS"
   CXXFLAGS="$ac_save_CXXFLAGS $QDINSTALL_CFLAGS"
 
-  AC_TRY_LINK([#include "qd/qd_real.h"],[qd_real rand();],
+  # test compilation of simple program
+  AC_TRY_LINK([#include "qd/qd_real.h"],[qd_real a; fpu_fix_start(0)],
               have_qdinstall=yes, have_qdinstall=no)
 
 
@@ -69,10 +66,7 @@ AC_DEFUN([SWIN_LIB_QDINSTALL],
     AC_DEFINE([HAVE_QDINSTALL], [1], [Define to 1 if you have the QDINSTALL library])
     [$1]
   else
-    AC_MSG_WARN([Will compile without QDINSTALL code])
-    if test x"$QDINSTALL" = x; then
-      AC_MSG_WARN([Please set the QDINSTALL environment variable])
-    fi
+    AC_MSG_NOTICE([Will compile without QD code. Might cause problems if you use tempo2nest])
     QDINSTALL_CFLAGS=""
     QDINSTALL_LIBS=""
     [$2]

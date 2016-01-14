@@ -445,12 +445,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (flo==0)
     {
       flo=0.01/tspan;
-      ld_printf("flo = %.5Lg, tspan = %.5Lg\n",flo,tspan);
+      ld_printf("flo = %.5lg, tspan = %.5Lg\n",flo,tspan);
     }
   if (fhi==0)
     {
       fhi = 1.0/(longdouble)SECDAY;
-      ld_printf("fhi = %.5Lg\n",fhi);
+      ld_printf("fhi = %.5lg\n",fhi);
     }
 
   timeOffset = psr[0].param[param_pepoch].val[0];

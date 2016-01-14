@@ -37,7 +37,6 @@
 #include "TKfit.h"
 #include "TKspectrum.h"
 
-double GLOBAL_OMEGA = 0;
 /* Global variables used in the fortran code for sigmaz*/
 int npt,nusewt,nxunits,ntunits,nformat,nwriteres,nbintype;
 int npt1last,npt2last,ncubic,ncubics,ntau,linfile,indx[90000],ndim;
@@ -47,7 +46,6 @@ double prtl[5],utmean,secyear,taulog,addvar,tauyear,tauensure,tdiffmin;
 double utfirst,utlast;
 
 
-double globalOmega;
 bool verbose_calc_spectra=false;
 
 /* ************************************************************** *
@@ -447,50 +445,19 @@ void TKfirstDifference(double *x,double *y,int n)
 
 void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN)
 {
-    double omega0,chisq;
-    int i,j;
-    double **cvm,p[2],e[2];
-    double recC[MAX_OBSN],recS[MAX_OBSN];
-    double outE[MAX_OBSN];
-    double pred;
-
-    cvm = (double **)malloc(sizeof(double *)*2);
-    for (i=0;i<2;i++) cvm[i] = (double *)malloc(sizeof(double)*2);
-
-    omega0 = 2.0*M_PI/(TKrange_d(x,n)*(double)n/(double)(n-1));
     *outN = n/2;
 
-    for (j=0;j<*outN;j++)
-    {
-        GLOBAL_OMEGA = omega0*(j+1);
-        TKleastSquares_svd(x,y,sig,n,p,e,2,cvm,&chisq,sineFunc,1);
-        outX[j] = GLOBAL_OMEGA/2.0/M_PI;
-        outY[j] = p[0]*p[0]+p[1]*p[1];
-        outE[j] = sqrt(4*p[0]*p[0]*e[0]*e[0]+4*p[1]*p[1]*e[1]*e[1]);
-        recC[j] = p[0];
-        recS[j] = p[1];
-    }
-    /*  for (i=0;i<n;i++)
-        {
-        printf("data: %g %g %g\n",x[i],y[i],sig[i]);
-        } */
-
-    /*  for (i=0;i<1000;i++)
-        {
-        pred=0.0;    
-        for (j=0;j<*outN;j++)
-        {
-        GLOBAL_OMEGA = omega0*(j+1);
-        pred += (recC[j]*cos(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0])+recS[j]*sin(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0]));
+    double outE[MAX_OBSN]; // why??
+    // Here the whitening matrix is just a diagonal
+    //             // weighting matrix. Store diagonal matrix as 1xN
+    //                         // so that types match later.
+    double** uinv=malloc_blas(1,n);
+        for(int k=0; k < n; k++){
+            uinv[0][k] = 1.0 / sig[k];
         }
-        printf("series: %g %g\n",(x[n-1]-x[0])/1000.0*i+x[0],pred);
-        } */
-}
 
-void sineFunc(double x,double *v,int ma)
-{
-    v[0] = sin(GLOBAL_OMEGA*x);
-    v[1] = cos(GLOBAL_OMEGA*x);
+    calcSpectraErr(uinv,x,y,n,outX,outY,outE,*outN);
+
 }
 
 //GEORGE'S ALGORITHM!!!! I think mine is better.     Calculates a weighted Lomb-Scargle periodogram
@@ -542,17 +509,6 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
         outX[j] = omega/2.0/M_PI;
         outY[j] = a*a+b*b;
     }
-
-    //for (i=0;i<1000;i++)
-    //{
-    //  pred=0.0;
-    //  for (j=0;j<*outN;j++)
-    //{
-    //  GLOBAL_OMEGA = omega0*(j+1);
-    //  pred += (recB[j]*cos(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0])+recA[j]*sin(GLOBAL_OMEGA*(x[n-1]-x[0])/1000.0*i+x[0]));
-    //}
-    //printf("series2: %g %g\n",(x[n-1]-x[0])/1000.0*i+x[0],pred);
-    //}
 }
 
 
@@ -1712,228 +1668,65 @@ void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, doubl
     TKspline_interpolate(inN, inX, inY, yd, tempX, interpY, nTemp);
 } //interpolateSplineSmoothFixedXPts
 
-// Spectral analysis using covariance matrix
-// note: uinv array must start from 0, not 1
-// NEW FEATURE:
-// set nfit < 0 to automatically set it to nres/2-1
+
+/***
+ * Update 2015-09-15 M. J. Keith
+ *
+ * Removed need for global variable and "fake" pulsar.
+ *
+ */
 int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit)
 {
-    int i,j,k;
-    //  int nfit=nres/2-1;
-    int nSpec;
 
     if (nfit < 0)
         nfit=nres/2-1;
 
-    double v[nfit];
-    double sig[nres];
-    double **newUinv;
-    double **cvm;
     double chisq;
-    pulsar *psr;
-    int ip[nres];
-    double param[nfit],error[nfit];
+    double param[2],error[2];
 
-    psr = (pulsar *)malloc(sizeof(pulsar));
-    initialiseOne(psr,0,1);
-
-    cvm = (double **)malloc(sizeof(double *)*nfit);
-    for (i=0;i<nfit;i++)
-        cvm[i] = (double *)malloc(sizeof(double)*nfit);
-
-    printf("Entering calcSpectra\n");
-
+    logdbg("Entering calcSpectra\n");
+    double** designMatrix = malloc_blas(nres,3);
+    double** whiteDesignMatrix = malloc_blas(nres,3);
+    double* white_data = static_cast<double*>(malloc(sizeof(double)*nres));
     // Should fit independently to all frequencies
-    for (i=0;i<nres;i++)
-    {
-        sig[i] = 1.0; // The errors are built into the uinv matrix
-        ip[i] = 0;
-    }
-    for (k=0;k<nfit;k++)
+    for (int k=0;k<nfit;k++)
     {
         if(verbose_calc_spectra){
             printf("%5.1f%%   \r",(double)k/(double)nfit*100.0);
             fflush(stdout);
         }
-        GLOBAL_OMEGA = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
-        //      TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,3,cvm,&chisq,fitMeanSineFunc,0,psr,1.0e-40,ip,uinv);
-        //      v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[1],2)+pow(param[2],2))/pow(365.25*86400.0,2); 
-        //      specX[k] = GLOBAL_OMEGA/2.0/M_PI;
-        //      specY[k] = v[k];
-        //      if(specE!=NULL){
-        //	      specE[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(error[1],2)+pow(error[2],2))/pow(365.25*86400.0,2);
-        //      }
-        TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,2,cvm,&chisq,fitCosSineFunc,0,psr,1.0e-40,ip,uinv);
+        double omega = 2.0*M_PI/((resx[nres-1]-resx[0])*(double)nres/(double)(nres-1))*(k+1);
+        for (int idat=0; idat < nres; idat++){
+            designMatrix[idat][1] = sin(omega*resx[idat]);
+            designMatrix[idat][0] = cos(omega*resx[idat]);
+        }
+        TKmultMatrix_sq(uinv,designMatrix,nres,2,whiteDesignMatrix);
+        TKmultMatrixVec(uinv,resy,nres,nres,white_data);
+
+        //TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,2,cvm,&chisq,fitCosSineFunc,0,psr,1.0e-40,ip,uinv);
+
+        chisq = TKleastSquares(data,white_data, designMatrix, whiteDesignMatrix, nres,2,1e-40,1,param,error, NULL);
 
 
-
-        v[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[0],2)+pow(param[1],2))/pow(365.25*86400.0,2); 
-        specX[k] = GLOBAL_OMEGA/2.0/M_PI;
-        specY[k] = v[k];
+        specX[k] = omega/2.0/M_PI;
+        specY[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[0],2)+pow(param[1],2))/pow(365.25*86400.0,2); 
         if(specE!=NULL){
             specE[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(error[0],2)+pow(error[1],2))/pow(365.25*86400.0,2);
         }
 
     }
 
-    for (i=0;i<nfit;i++)
-        free(cvm[i]);
-    free(cvm);
     if(verbose_calc_spectra){
         printf("\b\b\b\b\b\b\b\b100.0%%\n");
     }
-    free(psr);
-    printf("Leaving calcSpectra\n");
+    free_blas(whiteDesignMatrix);
+    free_blas(designMatrix);
+    free(white_data);
+    logdbg("Leaving calcSpectra\n");
     return nfit;
 }
 
 
 int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit) {
     return calcSpectraErr(uinv,resx,resy,nres,specX,specY,NULL,nfit);
-}
-
-// Spectral analysis using covariance matrix
-// note: uinv array must start from 0, not 1
-// NEW FEATURE:
-// set nfit < 0 to automatically set it to nres/2-1
-int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar* psr) {
-
-    //  pulsar *psr=NULL;
-    return calcSpectra_ri_T(uinv,resx,resy,nres,specX,specY_R,specY_I,nfit,(resx[nres-1]-resx[0]),'N',psr);
-}
-
-int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr) {
-    int i,j,k;
-    int nSpec;
-
-    if (nfit < 0)
-        nfit=nres/2-1;
-
-    double v[nfit];
-    double chisq;
-    int ip[nres];
-    double param[3];
-
-    // to allow for computing the spectrum of IFUNC/CM etc we need different fit functions.
-    void (*FIT_FUNC)(double, double [], int,pulsar *,int,int); // the fit function we will use
-    FIT_FUNC=fitMeanSineFunc; // this is the standard periodogram/
-    if(fitfuncMode=='I'){
-        if (psr==NULL){
-            logerr("ERROR: cannot use IFUNC spectral estimation without a real pulsar\nCheck call to calcSpectra_ri_T()");
-            return -1;
-        }
-        FIT_FUNC=fitMeanSineFunc_IFUNC; // this accounts for smoothing of the CM/IFUNC
-    }
-    double binfactor = (double)nres/(double)(nres-1);
-    if(fitfuncMode=='T'){
-        binfactor=1.0;
-    }
-
-    // Should fit independently to all frequencies
-    for (i=0;i<nres;i++)
-    {
-        ip[i] = i;
-    }
-    logmsg("Computing %d spectral channels",nfit);
-    for (k=0;k<nfit;k++)
-    {
-        GLOBAL_OMEGA = 2.0*M_PI/(T*binfactor)*(k+1);
-        printf("In here k = %d\n",k);
-        TKleastSquares_single_pulsar(resx,resy,nres,param,NULL,3,NULL,&chisq,FIT_FUNC,psr,1.0e-40,ip,1,uinv);
-        printf("Out here k = %d\n",k);
-        v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
-        specX[k] = GLOBAL_OMEGA/2.0/M_PI;
-        specY_R[k] = sqrt(v[k])*param[1];
-        specY_I[k] = sqrt(v[k])*param[2];
-    }
-    return nfit;
-}
-
-// Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
-// The psr and ival parameters are ignored
-void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
-{
-    int i;
-    v[0] = 1; // Fit for mean
-    v[1] = cos(GLOBAL_OMEGA*x);
-    v[2] = sin(GLOBAL_OMEGA*x);
-
-}
-
-/*
- * This only works for residuals faked from an IFUNC.
- * Note that ival must be in order.
- */
-void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
-{
-    double m,c; // for the straight line.
-    double x0,x1;
-    double i0,i1;
-    double w = GLOBAL_OMEGA;
-    double A=0;
-
-    //   logmsg("%lf %lf %d %d",x,w,ival,psr->nobs);
-    v[0] = 0; // Fit for mean
-    v[1]=0; // will be cos
-    v[2]=0; // will be sin
-
-    x0 = x;
-    if (ival< psr->nobs-1){
-        x1 = x0 + (psr->obsn[ival+1].sat-psr->obsn[ival].sat); // this is the next x-val, under the assumptions.
-        m=-1/pow(x0-x1,2);
-        c=x1/pow(x0-x1,2);
-
-        //logmsg("R) x0=%lf x1=%lf m=%lg c=%lg",x0,x1,m,c);
-        i0=m*x0*x0/2.0 + c*x0;
-        i1=m*x1*x1/2.0 + c*x1;
-        v[0]+=i1-i0;
-
-        // integrate the right side of the triangle.
-        i0=(m*cos(w*x0) - w*(c+m*x0)*sin(w*x0))/w/w; // integral of (m*x+c).cos(w*x)
-        i1=(m*cos(w*x1) - w*(c+m*x1)*sin(w*x1))/w/w; // integral of (m*x+c).sin(w*x)
-        v[1]+=i1-i0;
-
-        i0=(m*sin(w*x0) - w*(c+m*x0)*cos(w*x0))/w/w;
-        i1=(m*sin(w*x1) - w*(c+m*x1)*cos(w*x1))/w/w;
-        v[2]+=i1-i0;
-        A+=0.5; // area
-    }
-    if (ival > 0){
-        x1 = x0 + (psr->obsn[ival-1].sat-psr->obsn[ival].sat); // this is the next x-val, under the assumptions.
-        m=1/pow(x0-x1,2);
-        c=-x1/pow(x0-x1,2);
-
-        //	  logmsg("L) x0=%lf x1=%lf m=%lg c=%lg",x0,x1,m,c);
-        i0=m*x0*x0/2.0 + c*x0;
-        i1=m*x1*x1/2.0 + c*x1;
-        v[0]+=i0-i1;
-
-        // integrate the right side of the triangle.
-        i0=(m*cos(w*x0) - w*(c+m*x0)*sin(w*x0))/w/w;
-        i1=(m*cos(w*x1) - w*(c+m*x1)*sin(w*x1))/w/w;
-        v[1]+=i0-i1;
-
-        i0=(m*sin(w*x0) - w*(c+m*x0)*cos(w*x0))/w/w;
-        i1=(m*sin(w*x1) - w*(c+m*x1)*cos(w*x1))/w/w;
-        v[2]+=i0-i1;
-        A+=0.5; // area
-    }
-    v[0]/=A; // normalise to 1 in case we only had half the triangle.
-    v[1]/=A; // normalise to 1 in case we only had half the triangle.
-    v[2]/=A;
-
-    //  double old[3];
-    //  fitMeanSineFunc(x, old,nfit,psr,ival);
-    //   logmsg("%lg %lg --  %lg %lg -- %lg %lg\n",v[0],old[0],v[1],old[1],v[2],old[2]);
-}
-
-
-// Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
-// The psr and ival parameters are ignored
-void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
-{
-    int i;
-    v[0] = cos(GLOBAL_OMEGA*x);
-    v[1] = sin(GLOBAL_OMEGA*x);
-
 }

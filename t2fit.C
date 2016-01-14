@@ -646,3 +646,231 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
     }
 }
 
+
+
+
+
+
+
+
+
+//###### LEGACY ROUTINES
+
+// routine for pulsar fitting.
+void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int, int),pulsar *psr,double tol, int *ip,char rescale_errors, double **uinv) {
+
+    double **designMatrix, **white_designMatrix, **constraintsMatrix;
+    double *b,*white_b;
+    constraintsMatrix=NULL;
+
+    TKfit_getPulsarDesignMatrix(x,y,n,nf,fitFuncs,psr,ip,uinv,0,&designMatrix,&white_designMatrix,&b,&white_b);
+    if(psr->nconstraints > 0){
+        logmsg("Get constraint weghts");
+        computeConstraintWeights(psr);
+        logmsg("fill constraints matrix");
+        constraintsMatrix = malloc_blas(psr->nconstraints,nf);
+        for (int ic=0; ic < psr->nconstraints; ic++){
+            CONSTRAINTfuncs(psr,0,nf,psr->constraints[ic],constraintsMatrix[ic]);
+        }
+    }
+
+    *chisq = TKrobustConstrainedLeastSquares(b,white_b,designMatrix,white_designMatrix,constraintsMatrix,
+            n,nf,psr->nconstraints,tol,rescale_errors,
+            outP,e,cvm,psr->robust);
+    free_blas(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
+    free_blas(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
+    if(psr->nconstraints > 0) free_blas(constraintsMatrix);
+    free(b);
+    free(white_b);
+
+}
+
+void TKleastSquares_global_pulsar(double **x,double **y,int *n,
+        double *outP,double *e,int* nf, int nglobal,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int,int),pulsar *psr,double tol, int **ip,char rescale_errors, double ***uinv, int npsr) {
+
+    double **designMatrix, **white_designMatrix;
+    double **constraintsMatrix;
+    double **psr_DM, **psr_wDM;
+    double *b,*white_b, *psr_b,*psr_wb;
+    int ipsr;
+    int totalFit=0;
+    int totalObs=0;
+    int totalConstraints=0;
+    int i,j;
+    int off_r=0;
+    int off_f=0;
+    int off_c=0;
+
+    for (ipsr=0; ipsr < npsr; ipsr++){
+        totalFit+=nf[ipsr];
+        totalObs+=n[ipsr];
+        totalConstraints+=psr[ipsr].nconstraints;
+    }
+    totalFit+=nglobal;
+
+    white_designMatrix=malloc_blas(totalObs,totalFit);
+    designMatrix=malloc_blas(totalObs,totalFit);
+    constraintsMatrix=malloc_blas(totalConstraints,totalFit);
+    b=(double*)calloc(totalObs,sizeof(double));
+    white_b=(double*)calloc(totalObs,sizeof(double));
+
+    for (ipsr=0; ipsr < npsr; ipsr++){
+        logdbg("Getting design matrix / whitened residuals for psr %d    off_r=%d off_f=%d nglobal=%d",ipsr,off_r,off_f,nglobal);
+        TKfit_getPulsarDesignMatrix(x[ipsr],y[ipsr],n[ipsr],nf[ipsr]+nglobal,fitFuncs,psr,ip[ipsr],uinv[ipsr],ipsr,&psr_DM,&psr_wDM,&psr_b,&psr_wb);
+
+        // the global fit parameters
+        for(i=0; i < n[ipsr]; i++){
+            for(j=0; j < nglobal; j++){
+                designMatrix[i+off_r][j] = psr_DM[i][j];
+                white_designMatrix[i+off_r][j] = psr_wDM[i][j];
+            }
+        }
+        // the regular fit parameters
+        for(i=0; i < n[ipsr]; i++){
+            for(j=0; j < nf[ipsr]; j++){
+                designMatrix[i+off_r][j+off_f+nglobal] = psr_DM[i][j+nglobal];
+                white_designMatrix[i+off_r][j+off_f+nglobal] = psr_wDM[i][j+nglobal];
+            }
+        }
+        // the residuals
+        for(i=0; i < n[ipsr]; i++){
+            b[i+off_r] = psr_b[i];
+            white_b[i+off_r] = psr_wb[i];
+        }
+
+        if(psr[ipsr].nconstraints > 0){
+            logmsg("Get constraint weghts");
+            computeConstraintWeights(psr+ipsr);
+            logmsg("fill constraints matrix");
+            for (int ic=0; ic < psr[ipsr].nconstraints; ic++){
+                CONSTRAINTfuncs(psr,ipsr,nf[ipsr],psr->constraints[ic],constraintsMatrix[ic+off_c]+off_f);
+            }
+        }
+
+
+
+        // increment the offset.
+        off_r += n[ipsr];
+        off_f += nf[ipsr];
+        off_c += psr[ipsr].nconstraints;
+
+        // free temp matricies.
+        free_blas(psr_DM);
+        free_blas(psr_wDM);
+        free(psr_b);
+        free(psr_wb);
+    }
+
+
+    // go ahead and do the fit!
+
+    *chisq = TKrobustConstrainedLeastSquares(b,white_b,designMatrix,white_designMatrix,
+            constraintsMatrix,
+            totalObs,totalFit,totalConstraints,tol,rescale_errors,
+            outP,e,cvm,psr[0].robust);
+
+    free_blas(designMatrix); // free-TKleastSquares_svd_psr_dcm-designMatrix**
+    free_blas(white_designMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
+    free_blas(constraintsMatrix);  // free-TKleastSquares_svd_psr_dcm-white_designMatrix**
+    free(b);
+    free(white_b);
+
+}
+
+
+
+void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFuncs)(double, double [], int,pulsar *,int,int), pulsar *psr, int* ip, double **uinv,int ipsr,double ***OUT_designMatrix,double ***OUT_white_designMatrix,double** OUT_b, double** OUT_wb){
+
+    //double precision arrays for matrix algebra.
+    double **designMatrix, **white_designMatrix;
+    double basisFunc[nf];
+    double *b,*white_b;
+    int    i,j;
+    int nrows=get_blas_rows(uinv);
+    int ncols=get_blas_cols(uinv);
+    if (ncols!=n){
+        logmsg("n=%d ncols=%d",n,ncols);
+        logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=ncols");
+        exit(1);
+    }
+
+    if (nrows!=n && nrows != 1){
+        logmsg("n=%d nrows=%d",n,nrows);
+        logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=nrows");
+        exit(1);
+    }
+
+
+    // double arrays
+    white_designMatrix=malloc_blas(n,nf);
+    designMatrix=malloc_blas(n,nf);
+    b=(double*)malloc(sizeof(double)*n);
+    white_b=(double*)malloc(sizeof(double)*n);
+
+    /* This routine has been developed from Section 15 in Numerical Recipes */
+
+    /* Determine the design matrix - eq 15.4.4 
+     * and the vector 'b' - eq 15.4.5 
+     */
+    for (i=0;i<n;i++)
+    {
+        // fitFuncs is not threadsafe!
+        fitFuncs(x[i],basisFunc,nf,psr,ip[i],ipsr);
+        for (j=0;j<nf;j++) designMatrix[i][j] = basisFunc[j];
+        b[i] = y[i];
+    }
+    // Take into account the data covariance matrix
+
+    if(nrows==1){
+        // we have only diagonal elements
+        for (i=0;i<n;i++){
+            white_b[i]=b[i]*uinv[0][i];
+            for (j=0;j<nf;j++){
+                white_designMatrix[i][j] = designMatrix[i][j]*uinv[0][i];
+            }
+        }
+    } else {
+        TKmultMatrix_sq(uinv,designMatrix,n,nf,white_designMatrix);  
+        TKmultMatrixVec_sq(uinv,b,n,white_b);
+    }
+
+    *OUT_designMatrix=designMatrix;
+    *OUT_white_designMatrix=white_designMatrix;
+    *OUT_b=b;
+    *OUT_wb=white_b;
+}
+
+
+// legacy method.
+void TKleastSquares_svd_psr_dcm(double *x,double *y,double *sig,int n,double *outP,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar * , int,int),int weight,pulsar *psr,double tol, int *ip,double **uinv) {
+    logmsg("Warning: Deprecated method TKleastSquares_svd_psr_dcm() -> TKleastSquares_single_pulsar()");
+    TKleastSquares_single_pulsar(x,y,n,outP,e,nf,cvm,chisq,fitFuncs,psr,tol,ip,(weight==0 || (weight==1 && psr->rescaleErrChisq==1)),uinv);
+}
+
+// same as above but without a uinv matrix.
+void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,pulsar *,int,int),int weight,pulsar *psr,double tol, int *ip)
+{
+    logmsg("Warning: Deprecated method TKleastSquares_svd_psr() -> TKleastSquares_single_pulsar()");
+    int i;
+    double ** uinv=malloc_blas(1,n);
+    if (weight==1){
+        for (i=0; i<n;i++){
+            uinv[0][i]=1.0/sig[i];
+        }
+    } else{
+        for (i=0; i<n;i++){
+            uinv[0][i]=1.0;
+        }
+    }
+    TKleastSquares_single_pulsar(x,y,n,p,e,nf,cvm,chisq,fitFuncs,psr,tol,ip,(weight==0 || (weight==1 && psr->rescaleErrChisq==1)),uinv);
+    free_blas(uinv);
+}
+
+
+void TKleastSquares_svd_passN(double *x,double *y,double *sig2,int n,double *p,double *e,int nf,double **cvm, double *chisq, void (*fitFuncs)(double, double [], int,int),int weight)
+{
+    logerr("This method no longer implemented.");
+    exit(-1);
+}
+
+// END OF LEGACY ROUTINES

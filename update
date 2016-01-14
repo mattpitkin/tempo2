@@ -1,6 +1,19 @@
-#! /bin/csh -f
+#!/bin/bash
 
-echo "Running CVS update ..."
+echo "Updating repository URL"
+git remote show origin | grep -q https
+ex=$?
+if [[ $ex -eq 0 ]] ; then
+    echo "   == Anonymous checkout"
+    git remote set-url origin https://bitbucket.org/psrsoft/tempo2.git
+else
+    echo "   == Developer checkout"
+    git remote set-url origin git@bitbucket.org:psrsoft/tempo2.git
+fi
 
-cvs -z3 update -APd |& tee update.log | grep -v '^?'
+
+echo "Running update ..."
+git pull origin
+git reset origin/HEAD
+git checkout ./update README.md
 

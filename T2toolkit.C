@@ -29,18 +29,6 @@
  */
 
 
-/* Set of routines that are commonly used in tempo2 and/or its plugins.
- * These routines are mainly stand-alone functions and exist for 
- * float and double precision variables
- *
- * G. Hobbs: v2, 31 Dec 2008.  Complete rewrite of the routines
- *
- * NOTES: Related toolkits include:
- *  TKspectrum.h: contains routines for spectral estimation
- *  TKfit.h:      contains routines for fitting
- */
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

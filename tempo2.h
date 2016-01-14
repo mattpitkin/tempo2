@@ -24,119 +24,143 @@
  *    timing model.
  */
 
+/*!
+ * \defgroup libtempo2 libtempo2 External API
+ */
+
+/*!
+ * \file
+ * @brief contains the main interface to libtempo2.
+ *
+ * \note some parts of this to be moved to an internal interface
+ *
+ *
+ * \ingroup libtempo2
+ */
+
 #ifndef __Tempo2_h
-#include "TKlongdouble.h"
+#define __Tempo2_h
+
+// std includes
 #include <stdio.h>
 #include <time.h>
-#define __Tempo2_h
+// TK includes
+#include "TKlongdouble.h"
+#include "TKlog.h"
+
+
 #define TEMPO2_h_HASH "$Id$"
 #define TEMPO2_h_VER "2015.09.0"
 #define TEMPO2_h_MAJOR_VER 2015.09
 #define TEMPO2_h_MINOR_VER 0
-#define TSUN longdouble(4.925490947e-6) // Solar constant for mass calculations.
-#define MAX_FREQ_DERIVATIVES 13    /* F0 -> Fn   where n=10                            */
-#define MAX_DM_DERIVATIVES   10    /* DM0 -> DMn where n=10                            */
-#define MAX_PSR_VAL          40    /* Maximum number of pulsars                        */             
-#define MAX_COMPANIONS       4     /* Maximum number of binary companions              */
-#define NE_SW_DEFAULT        4     /* Default value for electron density (cm-3) at 1AU due to solar wind */
-#define ECLIPTIC_OBLIQUITY_VAL 84381.4059 /* mean obliquity of ecliptic in arcsec        */
-#define MAX_COEFF            5000  /* Maximum number of coefficients in polyco         */
-#define MAX_CLKCORR          5000  /* Maximum number of lines in time.dat file         */
-#define MAX_LEAPSEC          100   /* Maximum number of line in the leap second file   */
-#define MAX_STRLEN           1000  /* Maximum length for strings                       */
-#define MAX_FILELEN          500   /* Maximum filename length                          */
-#define MAX_STOREPRECISION   50    /* How many routines in TEMPO2 store precision information */
-#define MAX_OBSN_VAL         20000 /* Maximum number of TOAs                           */ 
-#define MAX_SITE             100   /* Maximum number of observatory sites              */
-#define MAX_PARAMS           2000   /* Maximum number of parameters                     */
-#define MAX_JUMPS            2000  /* Maximum number of phase jumps                    */
-#define MAX_WHITE            100   /* Maximum number of parameters for whitening       */
-#define MAX_IFUNC            1000   /* Maximum number of parameters for interpolation function  */
-#define MAX_TEL_CLK_OFFS     500   /* Maximum number of parameters for telescope clock offset */
-#define MAX_TEL_DX           500   /* Maximum number of parameters for interpolation function  */
-#define MAX_TEL_DY           500   /* Maximum number of parameters for interpolation function  */
-#define MAX_TEL_DZ           500   /* Maximum number of parameters for interpolation function  */
-#define MAX_FIT              10000  /* Maximum number of parameters to fit for */
-#define MAX_T2EFAC           100    /* Maximum number of T2EFACs allowed                */
-#define MAX_T2EQUAD          100    /* Maximum number of T2EQUADs allowed               */
-#define MAX_TNEF           50    /* Maximum number of TNEFACs allowed                */
-#define MAX_TNEQ          50    /* Maximum number of TNEQUADs allowed               */
-#define MAX_TNGN	50 /* maximum number of TNGroupNoise parameters allowed*/
+#define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
+#define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
+#define MAX_DM_DERIVATIVES   10    /*!< DM0 -> DMn where n=10                            */
+#define MAX_PSR_VAL          40    /*!< Maximum number of pulsars                        */             
+#define MAX_COMPANIONS       4     /*!< Maximum number of binary companions              */
+#define NE_SW_DEFAULT        4     /*!< Default value for electron density (cm-3) at 1AU due to solar wind */
+#define ECLIPTIC_OBLIQUITY_VAL 84381.4059 /*!< mean obliquity of ecliptic in arcsec        */
+#define MAX_COEFF            5000  /*!< Maximum number of coefficients in polyco         */
+#define MAX_CLKCORR          5000  /*!< Maximum number of lines in time.dat file         */
+#define MAX_LEAPSEC          100   /*!< Maximum number of line in the leap second file   */
+#define MAX_STRLEN           1000  /*!< Maximum length for strings                       */
+#define MAX_FILELEN          500   /*!< Maximum filename length                          */
+#define MAX_STOREPRECISION   50    /*!< How many routines in TEMPO2 store precision information */
+#define MAX_OBSN_VAL         20000 /*!< Maximum number of TOAs                           */ 
+#define MAX_SITE             100   /*!< Maximum number of observatory sites              */
+#define MAX_PARAMS           2000   /*!< Maximum number of parameters                     */
+#define MAX_JUMPS            2000  /*!< Maximum number of phase jumps                    */
+#define MAX_WHITE            100   /*!< Maximum number of parameters for whitening       */
+#define MAX_IFUNC            1000   /*!< Maximum number of parameters for interpolation function  */
+#define MAX_TEL_CLK_OFFS     500   /*!< Maximum number of parameters for telescope clock offset */
+#define MAX_TEL_DX           500   /*!< Maximum number of parameters for interpolation function  */
+#define MAX_TEL_DY           500   /*!< Maximum number of parameters for interpolation function  */
+#define MAX_TEL_DZ           500   /*!< Maximum number of parameters for interpolation function  */
+#define MAX_FIT              10000  /*!< Maximum number of parameters to fit for */
+#define MAX_T2EFAC           100    /*!< Maximum number of T2EFACs allowed                */
+#define MAX_T2EQUAD          100    /*!< Maximum number of T2EQUADs allowed               */
+#define MAX_TNEF           50    /*!< Maximum number of TNEFACs allowed                */
+#define MAX_TNEQ          50    /*!< Maximum number of TNEQUADs allowed               */
+#define MAX_TNGN	50 /*!< maximum number of TNGroupNoise parameters allowed*/
 #define MAX_TNBN        50 /*maximum number of TNBandNoise parameters allowd*/
-#define MAX_TNECORR       50    /* Maximum number of TNECORRss allowed               */
+#define MAX_TNECORR       50    /*!< Maximum number of TNECORRss allowed               */
 #define MAX_TNDMEv		   10    /*Maximum number of TNDMEvents allowed */
-#define MAX_TNSQ          50    /* Maximum number of TNEQUADs allowed               */
-#define MAX_BPJ_JUMPS        5     /* Maximum number of jumps in binary params - for BPJ model */
-#define MAX_TOFFSET          10    /* Number of time jumps allowed in .par file        */
-#define MAX_QUAD             150   /* Maximum number of frequency channels in quadrupolar function */
-#define MAX_DMX             512    /* Max number of DM steps allowed */
-#define MAX_FLAGS            20    /* Maximum number of flags in .tim file/observation */
-#define MAX_FLAG_LEN         32    /* Maximum number of characters in each flag */
-#define MAX_CLK_CORR         30    /* Maximum number of steps in the correction to TT  */ 
-#define SECDAY               86400.0       /* Number of seconds in 1 day                 */
-#define SECDAYl              longdouble(86400.0)       /* Number of seconds in 1 day                 */
-#define SPEED_LIGHT          299792458.0 /* Speed of light (m/s)                       */
-#define SOLAR_MASS  1.98892e30           /* Mass of Sun (kg)                           */
-#define SOLAR_RADIUS 6.96e8              /* Radius of the Sun (in meters)              */
-#define BIG_G       6.673e-11            /* Gravitational constant                     */
-#define GM          1.3271243999e20      /* Gravitational constant * mass sun          */
-#define GM_C3       4.925490947e-6       /* GM_odot/c^3 (in seconds)                   */
-#define GMJ_C3      4.70255e-9           /* GM_jupiter/c^3 (in seconds)                */
-#define GMS_C3      1.40797e-9           /* GM_saturn/c^3 (in seconds)                 */
-#define GMV_C3      1.2061e-11           /* GM_venus/c^3 (in seconds)                  */
-#define GMU_C3      2.14539e-10          /* GM_uranus/c^3 (in seconds)                 */
-#define GMN_C3      2.54488e-10          /* GM_neptune/c^3 (in seconds)                */
-#define OBLQ        23.4458333333333333  /* Obliquity of the ecliptic                  */
-#define AULTSC      499.00478364         /* Number of light seconds in 1 AU            */
-#define AU_DIST     1.49598e11           /* 1 AU in m                                  */
+#define MAX_TNSQ          50    /*!< Maximum number of TNEQUADs allowed               */
+#define MAX_BPJ_JUMPS        5     /*!< Maximum number of jumps in binary params - for BPJ model */
+#define MAX_TOFFSET          10    /*!< Number of time jumps allowed in .par file        */
+#define MAX_QUAD             150   /*!< Maximum number of frequency channels in quadrupolar function */
+#define MAX_DMX             512    /*!< Max number of DM steps allowed */
+#define MAX_FLAGS            20    /*!< Maximum number of flags in .tim file/observation */
+#define MAX_FLAG_LEN         32    /*!< Maximum number of characters in each flag */
+#define MAX_CLK_CORR         30    /*!< Maximum number of steps in the correction to TT  */ 
+#define SECDAY               86400.0       /*!< Number of seconds in 1 day                 */
+#define SECDAYl              longdouble(86400.0)       /*!< Number of seconds in 1 day                 */
+#define SPEED_LIGHT          299792458.0 /*!< Speed of light (m/s)                       */
+#define SOLAR_MASS  1.98892e30           /*!< Mass of Sun (kg)                           */
+#define SOLAR_RADIUS 6.96e8              /*!< Radius of the Sun (in meters)              */
+#define BIG_G       6.673e-11            /*!< Gravitational constant                     */
+#define GM          1.3271243999e20      /*!< Gravitational constant * mass sun          */
+#define GM_C3       4.925490947e-6       /*!< GM_odot/c^3 (in seconds)                   */
+#define GMJ_C3      4.70255e-9           /*!< GM_jupiter/c^3 (in seconds)                */
+#define GMS_C3      1.40797e-9           /*!< GM_saturn/c^3 (in seconds)                 */
+#define GMV_C3      1.2061e-11           /*!< GM_venus/c^3 (in seconds)                  */
+#define GMU_C3      2.14539e-10          /*!< GM_uranus/c^3 (in seconds)                 */
+#define GMN_C3      2.54488e-10          /*!< GM_neptune/c^3 (in seconds)                */
+#define OBLQ        23.4458333333333333  /*!< Obliquity of the ecliptic                  */
+#define AULTSC      499.00478364         /*!< Number of light seconds in 1 AU            */
+#define AU_DIST     1.49598e11           /*!< 1 AU in m                                  */
 #define DM_CONST    2.41e-4
-#define DM_CONST_SI 7.436e6              /* Dispersion constant in SI units            */
-#define PCM         3.08568025e16        /* one parsec in meters                       */
-#define MASYR2RADS  1.53628185e-16       /* Converts from mas/yr to rad/s              */
-#define MAX_MSG     50                   /* Maximum number of different warnings       */
+#define DM_CONST_SI 7.436e6              /*!< Dispersion constant in SI units            */
+#define PCM         3.08568025e16        /*!< one parsec in meters                       */
+#define MASYR2RADS  1.53628185e-16       /*!< Converts from mas/yr to rad/s              */
+#define MAX_MSG     50                   /*!< Maximum number of different warnings       */
 
-/* Path for the file containing dates when leap seconds should be added */
+/*! Path for the file containing dates when leap seconds should be added */
 #define LEAPSECOND_FILE "/clock/leap.sec"
 
-/* Path for the file containing TAI-UT1 */
+/*! Path for the file containing TAI-UT1 */
 #define UT1_FILE "/clock/ut1.dat" 
 
-/* Path for file containing IERS EOP C04 series */
-//#define EOPC04_FILE "earth/eopc04_IAU2000.62-now"
-// This is now defined in tempo2.C
-
-/* Path for file containing TDB-TDT ephemeris */
+/*! Path for file containing TDB-TDT ephemeris */
 #define TDBTDT_FILE "/ephemeris/TDB.1950.2050"
 #define IFTEPH_FILE "/ephemeris/TIMEEPH_short.te405"
 
-/* Path for file containing Observatory data (obsys.dat) */
+/*! Path for file containing Observatory data (obsys.dat) */
 #define OBSSYS_FILE "/observatory/newobsys.dat"
 
 /* TEMPO emulation modes */
-#define SI_UNITS 1  /* New tempo2 mode */
-#define TDB_UNITS 2 /* original tempo mode */
+#define SI_UNITS 1  /*!< New tempo2 mode */
+#define TDB_UNITS 2 /*!< original tempo mode */
 
-#define IF99_TIMEEPH 1  /* Irwin & Fukushima time ephemeris */
-#define FB90_TIMEEPH 2  /* Fairhead & Bretagnon time ephemeris */
+#define IF99_TIMEEPH 1  /*!< Irwin & Fukushima time ephemeris */
+#define FB90_TIMEEPH 2  /*!< Fairhead & Bretagnon time ephemeris */
 
 #define T2C_IAU2000B 1
 #define T2C_TEMPO   2
 
-#include "TKlog.h"
 
 
-/* Type for doing extra precision computations: longdouble */
-
-/* OSes/architectures that have built-in longdouble */
-//#if defined sun || defined linux || (defined __APPLE__ && defined __GNUC__ && __GNUC__ >= 4)
-/* TEMPO2 environment variable */
+/*! TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
 
-/* TEMPO2 error messages */
+/*! TEMPO2 error messages */
 extern char TEMPO2_ERROR[];
 
+/*! for 'strong typing' - type for enum label */
 typedef int param_label;
+/*! for 'strong typing' - type for enum constraint */
 typedef int constraint_label;
+
+
+/*!
+ * @brief enumeration for the various parameters that appear in a .par file
+ *
+ * The last parameter is param_LAST, but there are enumerations after this
+ * for spectial fits. It is important not to change the order of the elements
+ *
+ * @note when adding a new parameter, initialise it in intialise.c
+ * after param_LAST.
+ */
 enum label {
     param_raj,param_decj,param_f,param_pepoch,param_posepoch,
     param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
@@ -159,13 +183,15 @@ enum label {
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
-    param_LAST,param_ZERO,param_JUMP // don't change the order of these
+    param_LAST, /*!< Marker for the last param to be used in for loops  */
+    param_ZERO, /*!< virtual parameter for DC offset*/
+    param_JUMP  /*!< virtual parameter for jumps */
 };
 
 
 
-/*
- * These represent the possible constraints to the fit that have been implemented.
+/*!
+ * @brief These represent the possible constraints to the fit that have been implemented.
  */
 enum constraint {
     constraint_dmmodel_mean,
@@ -217,38 +243,60 @@ enum constraint {
     constraint_qifunc_c_year_xcos,
     constraint_qifunc_c_year_sin2,
     constraint_qifunc_c_year_cos2,
+    constraint_LAST /*!< marker for the last constraint */
 };
 
 
 
+extern char NEWFIT; /*!< global boolean used to enable new fit. @warning this will be removed in future. */
 
-extern char NEWFIT;
 
-
-extern int MAX_PSR;
-extern int MAX_OBSN;
+extern int MAX_PSR; /*!< size of the array of @ref pulsar "pulsars" used in tempo2 */
+extern int MAX_OBSN; /*!< size of the arrays of @ref observation "observations" inside each @ref pulsar*/
 extern double ECLIPTIC_OBLIQUITY;
 
-extern int forceGlobalFit;   /* Global = 1 if we are forcing a global fit */
-extern int veryFast;    /* Global to run the code fast */
+extern int forceGlobalFit;   /*!< Global = 1 if we are forcing a global fit */
+extern int veryFast;    /*!< Global to run the code fast */
 extern char tempo2MachineType[MAX_FILELEN];
-extern int displayCVSversion; /* Display CVS version */
+extern int displayCVSversion; /*!< Display CVS version */
 
 extern char dcmFile[MAX_FILELEN];
 extern char covarFuncFile[MAX_FILELEN];
-extern char tempo2_plug_path[32][MAX_STRLEN];
+
+extern char tempo2_plug_path[32][MAX_STRLEN]; /*!< paths to search for plugins */
 extern int tempo2_plug_path_len;
 
 
 struct pulsar; // forward declaration
-// double paramDerivFunc(pulsar* psr, int ipsr, double x, int obsnid, param_label label, int subparamid)
+
+/*!
+ * @brief a function used to get the derivative of a parameter w.r.t. data.
+ *
+ * Used to build the derivative matrix for the least squares solvers.
+ *
+ */
 typedef double (*paramDerivFunc)(struct pulsar*, int,double,int,param_label,int);
-// double constraintDerivFunc(pulsar* psr, int ipsr, constraint_label label, param_label plab, int csubid, int subparamid)
+
+/*!
+ * @brief a function used to get the derivative of a parameter w.r.t. constraint.
+ *
+ * Used to build the derivative matrix for the least squares solvers.
+ *
+ */
 typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param_label,int,int);
 
-// void updateParameterFunction(pulsar* psr, int ipsr, param_label param, int subparamid, double param, double err);
+/*!
+ * @brief a function used to update the parameters after a fit.
+ */
 typedef void (*paramUpdateFunc)(struct pulsar*, int,param_label,int,double,double);
 
+/*!
+ * @brief contains details of the fit
+ *
+ * Holds references to the fit functions, as well as references linking the index in the
+ * derivative matrix to the actual parameter fit for.
+ *
+ */
 typedef struct FitInfo {
     unsigned nParams;
     unsigned nConstraints;
@@ -268,108 +316,115 @@ typedef struct storePrecision {
     char comment[MAX_STRLEN];
 } storePrecision;
 
-/* If this structure is modified - must update copyParam in tempo2Util.C */
+/*!
+ * @brief Holds the values for a parameter.
+ *
+ * May include multiple values, for e.g. F0, F1, F2,...
+ *
+ * @note If this structure is modified - must update copyParam in tempo2Util.C
+ */
 typedef struct parameter {
-    char **label;              /* Label about this parameter                         */
-    char **shortlabel;         /* Label about this parameter without units           */
-    longdouble *val;           /* Value of parameter                                 */
-    longdouble *err;           /* Uncertainty on parameter value                     */
-    int  *fitFlag;             /* = 1 if fitting required, = 2 for global fit        */
-    int  *paramSet;            /* = 1 if parameter has been set                      */
-    longdouble *prefit;        /* Pre-fit value of the parameter                     */
-    longdouble *prefitErr;     /* Pre-fit value of the uncertainty                   */
-    int aSize;                 /* Number of elements in the array for this parameter */
+    char **label;              /*!< Label about this parameter                         */
+    char **shortlabel;         /*!< Label about this parameter without units           */
+    longdouble *val;           /*!< Value of parameter                                 */
+    longdouble *err;           /*!< Uncertainty on parameter value                     */
+    int  *fitFlag;             /*!< = 1 if fitting required, = 2 for global fit        */
+    int  *paramSet;            /*!< = 1 if parameter has been set                      */
+    longdouble *prefit;        /*!< Pre-fit value of the parameter                     */
+    longdouble *prefitErr;     /*!< Pre-fit value of the uncertainty                   */
+    int aSize;                 /*!< Number of elements in the array for this parameter */
     int linkFrom[5];
     int linkTo[5];
     int nLinkTo;
     int nLinkFrom;
 } parameter;
 
-/* struct clock_correction : struct observation contains an array
-   of these, which getClockCorrections() fills in */
+/*! @ref observation contains an array of these, which getClockCorrections() fills in */
 typedef struct 
 {
     double correction;
     char corrects_to[32];
 } clock_correction;
 
+
+/*!
+ * @brief A struct containing the details of a single obesrvation
+ */
 typedef struct observation {
-    longdouble sat;                 /* Site arrival time                                          */
+    longdouble sat;                 /*!< Site arrival time                                          */
     longdouble origsat;
     longdouble sat_day;
     longdouble sat_sec;
-    longdouble bat;                 /* Infinite frequency barycentric arrival time                */
+    longdouble bat;                 /*!< Infinite frequency barycentric arrival time                */
     longdouble batCorr;
-    longdouble bbat;                /* Arrival time at binary barycentre                          */
-    longdouble pet;                 /* Pulsar emission time                                       */
-    int clockCorr;                  /* = 1 for clock corrections to be applied, = 0 for BAT       */
-    int delayCorr;                  /* = 1 for time delay corrections to be applied, = 0 for BAT  */
-    int deleted;                    /* = 1 if observation has been deleted                        */
-    /* = -1 if not included in fit                                */
-    longdouble prefitResidual;      /* Pre-fit residual                                           */
-    longdouble residual;            /* residual                                                   */
+    longdouble bbat;                /*!< Arrival time at binary barycentre                          */
+    longdouble pet;                 /*!< Pulsar emission time                                       */
+    int clockCorr;                  /*!< = 1 for clock corrections to be applied, = 0 for BAT       */
+    int delayCorr;                  /*!< = 1 for time delay corrections to be applied, = 0 for BAT  */
+    int deleted;                    /*!< = 1 if observation has been deleted, = -1 if not included in fit*/
+    longdouble prefitResidual;      /*!< Pre-fit residual                                           */
+    longdouble residual;            /*!< residual                                                   */
     double      addedNoise;
-    double      TNRedSignal;	  /* Model red noise signal from temponest fit */
-    double      TNRedErr;		  /* Error on Model red noise signal from temponest fit */
-    double      TNDMSignal;         /* Model DM signal from temponest fit */
-    double      TNDMErr;            /* Error on Model DM signal from temponest fit */
-    double      TNGroupSignal;      /* Model Group Noise signal from temponest fit */
-    double      TNGroupErr;         /* Error on Model Group Noise signal from temponest fit */
-    double      freq;               /* Frequency of observation (in MHz)                          */
-    double      freqSSB;            /* Frequency of observation in barycentric frame (in Hz)      */
-    double      toaErr;             /* Error on TOA (in us)                                       */
-    double      toaDMErr;           /* Error on TOA due to DM (in us)                             */
-    double      origErr;            /* Original error on TOA after reading tim file (in us)       */
-    double      phaseOffset;        /* Phase offset                                               */
+    double      TNRedSignal;	  /*!< Model red noise signal from temponest fit */
+    double      TNRedErr;		  /*!< Error on Model red noise signal from temponest fit */
+    double      TNDMSignal;         /*!< Model DM signal from temponest fit */
+    double      TNDMErr;            /*!< Error on Model DM signal from temponest fit */
+    double      TNGroupSignal;      /*!< Model Group Noise signal from temponest fit */
+    double      TNGroupErr;         /*!< Error on Model Group Noise signal from temponest fit */
+    double      freq;               /*!< Frequency of observation (in MHz)                          */
+    double      freqSSB;            /*!< Frequency of observation in barycentric frame (in Hz)      */
+    double      toaErr;             /*!< Error on TOA (in us)                                       */
+    double      toaDMErr;           /*!< Error on TOA due to DM (in us)                             */
+    double      origErr;            /*!< Original error on TOA after reading tim file (in us)       */
+    double      phaseOffset;        /*!< Phase offset                                               */
 
     double averagebat;
     double averageres;
     double averageerr;
-    char        fname[MAX_FILELEN]; /* Name of data file giving TOA                               */
-    char        telID[100];         /* Telescope ID                                               */
-    clock_correction correctionsTT[MAX_CLK_CORR]; /* chain of corrections from site TOA to chosen realisation of TT */
+    char        fname[MAX_FILELEN]; /*!< Name of data file giving TOA                               */
+    char        telID[100];         /*!< Telescope ID                                               */
+    clock_correction correctionsTT[MAX_CLK_CORR]; /*!< chain of corrections from site TOA to chosen realisation of TT */
     int nclock_correction;
 
-    longdouble correctionTT_TB;     /* Correction to TDB/TCB           */
-    double einsteinRate;            /* Derivative of correctionTT_TB   */
-    longdouble correctionTT_Teph;   /* Correction to Teph              */
-    longdouble correctionUT1;       /* Correction from site TOA to UT1 */
-    /*  longdouble a1utcf; */
+    longdouble correctionTT_TB;     /*!< Correction to TDB/TCB           */
+    double einsteinRate;            /*!< Derivative of correctionTT_TB   */
+    longdouble correctionTT_Teph;   /*!< Correction to Teph              */
+    longdouble correctionUT1;       /*!< Correction from site TOA to UT1 */
 
-    double sun_ssb[6];              /* Ephemeris values for Sun w.r.t SSB (sec)             (RCS) */
-    double sun_earth[6];            /* Ephemeris values for Sun w.r.t Earth (sec)                 */
-    double planet_ssb[9][6];        /* Ephemeris values for all planets w.r.t. SSB (sec)   */
-    double jupiter_earth[6];        /* Ephemeris values for Jupiter w.r.t. Earth centre (sec)     */
-    double saturn_earth[6];         /* Ephemeris values for Saturn w.r.t. Earth centre (sec)      */
-    double venus_earth[6];          /* Ephemeris values for Venus w.r.t. Earth centre (sec)      */
-    double uranus_earth[6];         /* Ephemeris values for Uranus w.r.t. Earth centre (sec)      */
-    double neptune_earth[6];        /* Ephemeris values for Neptune w.r.t. Earth centre (sec)     */
-    double earthMoonBary_ssb[6];    /* Ephem values for Earth-Moon barycentre wrt SSB (sec) (RCB) */
-    double earthMoonBary_earth[6];  /* Position of Earth-Moon barycentre with respect to Earth (sec) (RBE) */
-    double earth_ssb[6];            /* Centre of Earth w.r.t. SSB                                 */
-    double observatory_earth[6];    /* Observatory site with respect to Earth centre (sec)  (REA) */  
-    double psrPos[3];               /* Unit vector giving position of the pulsar at observation time from Earth */
-    double zenith[3];               /* Zenith vector, in BC frame. Length=geodetic height */
+    double sun_ssb[6];              /*!< Ephemeris values for Sun w.r.t SSB (sec)             (RCS) */
+    double sun_earth[6];            /*!< Ephemeris values for Sun w.r.t Earth (sec)                 */
+    double planet_ssb[9][6];        /*!< Ephemeris values for all planets w.r.t. SSB (sec)   */
+    double jupiter_earth[6];        /*!< Ephemeris values for Jupiter w.r.t. Earth centre (sec)     */
+    double saturn_earth[6];         /*!< Ephemeris values for Saturn w.r.t. Earth centre (sec)      */
+    double venus_earth[6];          /*!< Ephemeris values for Venus w.r.t. Earth centre (sec)      */
+    double uranus_earth[6];         /*!< Ephemeris values for Uranus w.r.t. Earth centre (sec)      */
+    double neptune_earth[6];        /*!< Ephemeris values for Neptune w.r.t. Earth centre (sec)     */
+    double earthMoonBary_ssb[6];    /*!< Ephem values for Earth-Moon barycentre wrt SSB (sec) (RCB) */
+    double earthMoonBary_earth[6];  /*!< Position of Earth-Moon barycentre with respect to Earth (sec) (RBE) */
+    double earth_ssb[6];            /*!< Centre of Earth w.r.t. SSB                                 */
+    double observatory_earth[6];    /*!< Observatory site with respect to Earth centre (sec)  (REA) */  
+    double psrPos[3];               /*!< Unit vector giving position of the pulsar at observation time from Earth */
+    double zenith[3];               /*!< Zenith vector, in BC frame. Length=geodetic height */
     double nutations[6];
-    double siteVel[3];              /* Observatory velocity w.r.t. geocentre                      */
+    double siteVel[3];              /*!< Observatory velocity w.r.t. geocentre                      */
 
-    longdouble shklovskii;         /* Shklovskii delay term                                      */
-    double shapiroDelaySun;         /* Shapiro Delay due to the Sun                               */
-    double shapiroDelayJupiter;     /* Shapiro Delay due to Jupiter                               */
-    double shapiroDelaySaturn;      /* Shapiro Delay due to Saturn                                */
-    double shapiroDelayVenus;       /* Shapiro Delay due to Venus                                 */
-    double shapiroDelayUranus;      /* Shapiro Delay due to Uranus                                */
-    double shapiroDelayNeptune;     /* Shapiro Delay due to Neptune                               */
-    double troposphericDelay;       /* Delay due to neutral refraction in atmosphere              */
-    double tdis1;                   /* Interstellar dispersion measure delay                      */
-    double tdis2;                   /* Dispersion measure delay due to solar system               */
-    longdouble roemer;              /* Roemer delay                                               */
-    longdouble torb;                /* Combined binary delays */
-    longdouble nphase;              /* allows the pulse number to be determined                   */
+    longdouble shklovskii;         /*!< Shklovskii delay term                                      */
+    double shapiroDelaySun;         /*!< Shapiro Delay due to the Sun                               */
+    double shapiroDelayJupiter;     /*!< Shapiro Delay due to Jupiter                               */
+    double shapiroDelaySaturn;      /*!< Shapiro Delay due to Saturn                                */
+    double shapiroDelayVenus;       /*!< Shapiro Delay due to Venus                                 */
+    double shapiroDelayUranus;      /*!< Shapiro Delay due to Uranus                                */
+    double shapiroDelayNeptune;     /*!< Shapiro Delay due to Neptune                               */
+    double troposphericDelay;       /*!< Delay due to neutral refraction in atmosphere              */
+    double tdis1;                   /*!< Interstellar dispersion measure delay                      */
+    double tdis2;                   /*!< Dispersion measure delay due to solar system               */
+    longdouble roemer;              /*!< Roemer delay                                               */
+    longdouble torb;                /*!< Combined binary delays */
+    longdouble nphase;              /*!< allows the pulse number to be determined                   */
     longdouble phase;               
-    long long pulseN;                    /* Pulse number */
+    long long pulseN;                    /*!< Pulse number */
 
-    char flagID[MAX_FLAGS][MAX_FLAG_LEN];     /* Flags in .tim file                                         */
+    char flagID[MAX_FLAGS][MAX_FLAG_LEN];     /*!< Flags in .tim file                                         */
     char flagVal[MAX_FLAGS][MAX_FLAG_LEN];
     int  nFlags;                   
     int  jump[MAX_FLAGS];           /* Jump region */
@@ -381,18 +436,22 @@ typedef struct observation {
     double tobs;
 } observation;
 
-struct fit_info;
+
+/*!
+ * @brief contains the details for a single pulsar.
+ *
+ * Includes an array of @ref observation "observations" and @ref parameter "parameters"
+ *
+ *
+ */
 typedef struct pulsar {
     char  name[100];
-    /*                                                                 */
-    /* Note: when adding a new parameter, initialise it in intialise.c */
-    /*                                                                 */
     char eopc04_file[MAX_FILELEN];
-    int  fixedFormat;              /* = 0 for separate .par and .tim files, > 0 indicates number of lines to skip */
+    int  fixedFormat;              /*!< = 0 for separate .par and .tim files, > 0 indicates number of lines to skip */
     parameter param[MAX_PARAMS];
-    char rajStrPre[100],decjStrPre[100];   /* String containing RAJ and DECJ  (prefit)              */
-    char rajStrPost[100],decjStrPost[100]; /* String containing RAJ and DECJ  (postfit)           */
-    char binaryModel[100];                 /* Binary model e.g. BT/ELL1/BT2P etc.                        */
+    char rajStrPre[100],decjStrPre[100];   /*!< String containing RAJ and DECJ  (prefit)              */
+    char rajStrPost[100],decjStrPost[100]; /*!< String containing RAJ and DECJ  (postfit)           */
+    char binaryModel[100];                 /*!< Binary model e.g. BT/ELL1/BT2P etc.                        */
 
 
     double **ToAextraCovar;
@@ -461,84 +520,84 @@ typedef struct pulsar {
 
 
     // General pulsar information
-    double posPulsar[3];            /* 3-vector pointing at pulsar                                */
-    double velPulsar[3];            /* 3-vector giving pulsar's velocity                          */  
-    longdouble phaseJump[MAX_JUMPS];    /* Time of phase jump                                         */
-    int    phaseJumpDir[MAX_JUMPS]; /* Size and direction of phase jump                           */
-    int    phaseJumpID[MAX_JUMPS];  /* ID of closest point to the phase jump */
-    int    nPhaseJump;              /* Number of phase jumps                                      */
-    double dmOffset;                /* Value to add to DM flags */
-    double ne_sw;                   /* Electron density at 1AU due to the solar wind              */
-    int    nCompanion;              /* Number of binary companions                                */
-    int    eclCoord;                /* = 1 for ecliptic coords otherwise celestial coords         */
+    double posPulsar[3];            /*!< 3-vector pointing at pulsar                                */
+    double velPulsar[3];            /*!< 3-vector giving pulsar's velocity                          */  
+    longdouble phaseJump[MAX_JUMPS];    /*!< Time of phase jump                                         */
+    int    phaseJumpDir[MAX_JUMPS]; /*!< Size and direction of phase jump                           */
+    int    phaseJumpID[MAX_JUMPS];  /*!< ID of closest point to the phase jump */
+    int    nPhaseJump;              /*!< Number of phase jumps                                      */
+    double dmOffset;                /*!< Value to add to DM flags */
+    double ne_sw;                   /*!< Electron density at 1AU due to the solar wind              */
+    int    nCompanion;              /*!< Number of binary companions                                */
+    int    eclCoord;                /*!< = 1 for ecliptic coords otherwise celestial coords         */
 
-    int    nJumps;                  /* Number of jumps                                            */
+    int    nJumps;                  /*!< Number of jumps                                            */
     char fjumpID[16];
-    double jumpVal[MAX_JUMPS];      /* Value of jump                                              */
-    int    fitJump[MAX_JUMPS];      /* = 1 if fit for jump                                        */
-    double jumpValErr[MAX_JUMPS];   /* Error on jump                                              */
-    char   jumpStr[MAX_JUMPS][MAX_STRLEN]; /* String describing jump                              */
-    char   filterStr[MAX_STRLEN];   /* String describing filters */
-    char   passStr[MAX_STRLEN];   /* String describing filters */
-    double tOffset[MAX_TOFFSET];    /* Offsets in TOAs in seconds                                 */ 
-    double tOffset_f1[MAX_TOFFSET],tOffset_f2[MAX_TOFFSET];  /* Range for offset to be applied    */
+    double jumpVal[MAX_JUMPS];      /*!< Value of jump                                              */
+    int    fitJump[MAX_JUMPS];      /*!< = 1 if fit for jump                                        */
+    double jumpValErr[MAX_JUMPS];   /*!< Error on jump                                              */
+    char   jumpStr[MAX_JUMPS][MAX_STRLEN]; /*!< String describing jump                              */
+    char   filterStr[MAX_STRLEN];   /*!< String describing filters */
+    char   passStr[MAX_STRLEN];   /*!< String describing filters */
+    double tOffset[MAX_TOFFSET];    /*!< Offsets in TOAs in seconds                                 */ 
+    double tOffset_f1[MAX_TOFFSET],tOffset_f2[MAX_TOFFSET];  /*!< Range for offset to be applied    */
     double tOffset_t1[MAX_TOFFSET],tOffset_t2[MAX_TOFFSET];
     char   tOffsetSite[MAX_TOFFSET][100],tOffsetFlags[MAX_TOFFSET][1000];
     int    nToffset;
-    int    ndmx;                    /* Number of DM steps */
-    double fitChisq;                /* Chisq value from the fit */
-    int    fitNfree;                /* Number of degrees of freedom in fit */
-    int    globalNfit;              /* Total number of parameters in the fit */
-    int    globalNoConstrain;       /* Total number of points without constraints */
-    int    nFit;                    /* Number of points in the fit */
-    int    nParam;                  /* Number of parameters in the fit */
-    int    nGlobal;                 /* Number of global parameters in the fit */
+    int    ndmx;                    /*!< Number of DM steps */
+    double fitChisq;                /*!< Chisq value from the fit */
+    int    fitNfree;                /*!< Number of degrees of freedom in fit */
+    int    globalNfit;              /*!< Total number of parameters in the fit */
+    int    globalNoConstrain;       /*!< Total number of points without constraints */
+    int    nFit;                    /*!< Number of points in the fit */
+    int    nParam;                  /*!< Number of parameters in the fit */
+    int    nGlobal;                 /*!< Number of global parameters in the fit */
     int fitParamGlobalI[MAX_FIT];   // number of global parameters in fit
     int fitParamGlobalK[MAX_FIT];    // number of global parameters in fit
     int    fitParamI[MAX_FIT];
     int    fitParamK[MAX_FIT];
-    int    fitMode;                 /* = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
+    int    fitMode;                 /*!< = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
     char    robust;
-    int    rescaleErrChisq;         /* = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
-    double offset;                  /* Offset, always fitted for */
-    double offset_e;                /* Error in the offset */
+    int    rescaleErrChisq;         /*!< = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
+    double offset;                  /*!< Offset, always fitted for */
+    double offset_e;                /*!< Error in the offset */
     double **covar; //[MAX_PARAMS][MAX_PARAMS];
 
-    int    calcShapiro;              /* = 1 Calculate Solar system Shapiro delay (otherwise -1)*/
-    int    planetShapiro;            /* = 1 if included otherwise 0 */
-    int    jboFormat;                /* = 1 => JBO arrival time format and file structure (not byte swapping) = 2 => JBO format with byte swapping */
+    int    calcShapiro;              /*!< = 1 Calculate Solar system Shapiro delay (otherwise -1)*/
+    int    planetShapiro;            /*!< = 1 if included otherwise 0 */
+    int    jboFormat;                /*!< = 1 => JBO arrival time format and file structure (not byte swapping) = 2 => JBO format with byte swapping */
 
-    observation *obsn; /* [MAX_OBSN_VAL]; */
-    int nobs;                       /* Number of observations in .tim file                        */
-    int units;  /* TDB or SI units (tempo emulation mode uses TDB) 
+    observation *obsn; /*!< [MAX_OBSN_VAL]; */
+    int nobs;                       /*!< Number of observations in .tim file                        */
+    int units;  /*!< TDB or SI units (tempo emulation mode uses TDB) 
                    see #define definition above for possible units            */
     int setUnits;
-    int tempo1; /* = 1 if tempo1 is emulated */
-    int dilateFreq;  /* whether or not to apply SS time dilation to RFs */
-    int timeEphemeris;              /* Which code to use for Einstein delay */
-    int t2cMethod;  /* How to transform from terrestrial to celestial coords */
-    int correctTroposphere;     /* whether or not do correct for tropospheric delay */
-    int noWarnings;                 /* = 1, do not display warning messages                       */
-    char sorted; /* ToAs sorted */
-    /* Path for the file containing the corrections between observatory clocks and UTC(NIST)      */
-    /* - set in readParfile.C                                                                     */
-    /*   char OBSERVATORY_CLOCK_2_UTC_NIST[MAX_FILELEN];  */
-    char clock[16]; /* Clock standard to use as "UTC" */
-    char clockFromOverride[64];    /* Clock code to assume TOAs are measured against (e.g. UTC to turn off clock corrections, or TDB/TCG to turn off those + Einstein delay */
+    int tempo1; /*!< = 1 if tempo1 is emulated */
+    int dilateFreq;  /*!< whether or not to apply SS time dilation to RFs */
+    int timeEphemeris;              /*!< Which code to use for Einstein delay */
+    int t2cMethod;  /*!< How to transform from terrestrial to celestial coords */
+    int correctTroposphere;     /*!< whether or not do correct for tropospheric delay */
+    int noWarnings;                 /*!< = 1, do not display warning messages                       */
+    char sorted; /*!< ToAs sorted */
+    /*!< Path for the file containing the corrections between observatory clocks and UTC(NIST)      */
+    /*!< - set in readParfile.C                                                                     */
+    /*!<   char OBSERVATORY_CLOCK_2_UTC_NIST[MAX_FILELEN];  */
+    char clock[16]; /*!< Clock standard to use as "UTC" */
+    char clockFromOverride[64];    /*!< Clock code to assume TOAs are measured against (e.g. UTC to turn off clock corrections, or TDB/TCG to turn off those + Einstein delay */
     char JPL_EPHEMERIS[MAX_FILELEN];
     char ephemeris[MAX_FILELEN];
     int  useCalceph;
     storePrecision storePrec[MAX_STOREPRECISION];
     int  nStorePrecision;
-    int  bootStrap;           /* > 0 if calculating errors using bootstrap Monte-Carlo method */
-    char tzrsite[100];        /* Site-code for polyco                                         */
+    int  bootStrap;           /*!< > 0 if calculating errors using bootstrap Monte-Carlo method */
+    char tzrsite[100];        /*!< Site-code for polyco                                         */
     double rmsPre,rmsPost;
-    char deleteFileName[100]; /* File name containing deleted points                          */
-    int  nits;                /* Number of iterations for the fit                             */
-    int  ipm;                 /* = 1 if use interplanetary medium DM correction, = 0 otherwise*/
-    int  swm;                 /* = 0 for basic tempo2 solar wind model, = 1 for XPY Solar wind model */
+    char deleteFileName[100]; /*!< File name containing deleted points                          */
+    int  nits;                /*!< Number of iterations for the fit                             */
+    int  ipm;                 /*!< = 1 if use interplanetary medium DM correction, = 0 otherwise*/
+    int  swm;                 /*!< = 0 for basic tempo2 solar wind model, = 1 for XPY Solar wind model */
 
-    /* For whitening */
+    /*!< For whitening */
     double wave_sine[MAX_WHITE], wave_sine_err[MAX_WHITE];
     double wave_cos[MAX_WHITE],  wave_cos_err[MAX_WHITE];
     double wave_sine_dm[MAX_WHITE], wave_sine_dm_err[MAX_WHITE];
@@ -691,12 +750,12 @@ typedef struct pulsar {
     int simflag;
 
 
-    /* Which fit function are we using */
+    /*!< Which fit function are we using */
     char fitFunc[MAX_FILELEN];
 
 
-    int nconstraints;                       /* Number of fit constraints specified                      */
-    enum constraint constraints[MAX_PARAMS];/* Which constraints are specified */
+    int nconstraints;                       /*!< Number of fit constraints specified                      */
+    enum constraint constraints[MAX_PARAMS];/*!< Which constraints are specified */
     char auto_constraints;
 
     FitInfo fitinfo;
@@ -920,3 +979,12 @@ extern "C" {
 #define HAVE_GWSIM_H
 
 #endif /* __Tempo2_h */
+
+/*!
+ * @mainpage
+ *
+ * + @ref userguide
+ * + @ref devguide
+ * + @ref dirs
+ *
+ */
