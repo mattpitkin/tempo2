@@ -74,7 +74,7 @@ AS_IF([test "x$enable_float128" != "xno"], [
        AC_MSG_RESULT($have_float128)
 
        AS_IF([test "x$have_float128" != "xno"], [
-	       LDFLAGS="$CPPFLAGS -lquadmath"
+              AC_CHECK_LIB(quadmath, cosq,[LDFLAGS="$CPPFLAGS -lquadmath"],have_float128=no)
        ])
 
        ])
