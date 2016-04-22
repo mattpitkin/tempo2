@@ -935,7 +935,7 @@ double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int ipa
 void CONSTRAINTfuncs(pulsar *psr,int ipsr, int nparams,int iconstraint, double* OUT){
     psr+=ipsr; // hacky
     int i,j,k,jmax;
-    int pcount=0;
+    int pcount=1;
     int FITFLAG=1;
     if(ipsr==0)FITFLAG=2; // for psr0 do global constraints
     while(FITFLAG > 0){
