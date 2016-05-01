@@ -174,7 +174,7 @@ enum label {
     param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
     param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
     param_wave_dm, param_waveepoch_dm,
-    param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,param_clk_offs,
+    param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet, param_dphaseplanet, param_waveepoch,param_ifunc,param_clk_offs,
     param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_cgw,param_quad_om,
     param_h3,param_h4,param_nharm,param_stig,
     param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
@@ -394,7 +394,9 @@ typedef struct observation {
     double sun_ssb[6];              /*!< Ephemeris values for Sun w.r.t SSB (sec)             (RCS) */
     double sun_earth[6];            /*!< Ephemeris values for Sun w.r.t Earth (sec)                 */
     double planet_ssb[9][6];        /*!< Ephemeris values for all planets w.r.t. SSB (sec)   */
-    double jupiter_earth[6];        /*!< Ephemeris values for Jupiter w.r.t. Earth centre (sec)     */
+  double planet_ssb_tmr[9][6];
+  double planet_ssb_derv[9][6];
+  double jupiter_earth[6];        /*!< Ephemeris values for Jupiter w.r.t. Earth centre (sec)     */
     double saturn_earth[6];         /*!< Ephemeris values for Saturn w.r.t. Earth centre (sec)      */
     double venus_earth[6];          /*!< Ephemeris values for Venus w.r.t. Earth centre (sec)      */
     double uranus_earth[6];         /*!< Ephemeris values for Uranus w.r.t. Earth centre (sec)      */
