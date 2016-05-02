@@ -404,12 +404,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   if (debugFlag==1) printf("plk: calling callFit %d\n",psr[0].nobs);
   callFit(psr,*npsr);             /* Do all the fitting routines */
 
-	for(int i = 0; i < psr->nobs; i++){
+  for(int i = 0; i < psr->nobs; i++){
 		psr->obsn[i].averagebat = (double)psr->obsn[i].bat;
 		psr->obsn[i].averageres = (double)psr->obsn[i].residual;
 		psr->obsn[i].averageerr = (double)psr->obsn[i].toaErr*pow(10.0, -6);
 	}
 
+  for(int i = 0; i < psr->nobs; i++){
+		psr->obsn[i].averagedmbat = (double)psr->obsn[i].bat;
+		psr->obsn[i].averagedmres = (double)psr->obsn[i].residual;
+		psr->obsn[i].averagedmerr = (double)psr->obsn[i].toaErr*pow(10.0, -6);
+	}
 
 
   if (newpar==1)
@@ -780,6 +785,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    else 
 		    errBar[count] = psr[0].obsn[i].toaDMErr;
 	    if(yplot==2 && psr[0].AverageResiduals == 1){errBar[count] = psr[0].obsn[i].averageerr/1e-6;}
+	    if(yplot==2 && psr[0].AverageDMResiduals == 1){errBar[count] = psr[0].obsn[i].averagedmerr/1e-6;}
 	    if(yplot==16){errBar[count] = (float) psr[0].obsn[i].TNRedErr/1e-6;}
 	    if(yplot==17){errBar[count] = (float) psr[0].obsn[i].TNDMErr/1e-6;}
 	    if (bad==0) count++;	    
@@ -1291,6 +1297,22 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                         }
 
 		}	
+		else if(key == 'T'){
+			if(psr[0].AverageDMResiduals==0){
+
+				 printf("Average (DM scaled) on flag and epoch width "); scanf("%s %f",psr[0].AverageFlag,&psr[0].AverageEpochWidth);
+
+				printf("averaging TOAs on next fit\n");
+				psr[0].AverageDMResiduals=1;
+			}
+			else if(psr[0].AverageDMResiduals==1){
+				printf("un-averaging TOAs on next fit\n");
+                                psr[0].AverageDMResiduals=0;
+                        }
+
+		}	
+
+
 
 	   else if (key==3) /* Change central point */
 		  centre*=-1;
@@ -3816,7 +3838,9 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
    {
 	  if (plotPhase==-1){
 		 x[count] = (float)(double)psr[0].obsn[iobs].residual/unitFlag;
-		if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averageres);}
+		 if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averageres);}
+		 else if (psr[0].AverageDMResiduals ==1){x[count] = (float)(psr[0].obsn[iobs].averagedmres);}
+		 
 	  }
 	  else
 		 x[count] = (float)(double)psr[0].obsn[iobs].residual/unitFlag*psr[0].param[param_f].val[0];
@@ -3824,6 +3848,7 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
    else if (plot==3){       /* Get barycentric arrival time */
 	  x[count] = (float)(double)(psr[0].obsn[iobs].bat-centreEpoch);
 	  if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averagebat-centreEpoch);}
+	  else if(psr[0].AverageDMResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averagedmbat-centreEpoch); }
    }
    else if (plot==4)       /* Orbital phase */
    {
@@ -4046,13 +4071,13 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
              printf("ERROR: Cannot get value for observation %s -- setting to -1\n",psr[0].obsn[iobs].fname);
              x[count] = -1;
            }
-
+       
        }
    if (log==1 && x[count]>0)
 	  x[count] = log10(x[count]);
    else if (log==1 && x[count]<0)
 	  return 1;
-
+   
    return 0;
 }
 
