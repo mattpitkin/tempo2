@@ -3832,72 +3832,6 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 	if(debug == 1){printf("\n Got White. \n");}
 
 
-        //////////////////////////////////////////////////////////////////////////////////////////  
-        //////////////////////Output Files?///////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////
-
-
-	if(pulse->outputTMatrix == 1){
-
-
-		FILE *ResFile;
-		std::string name = pulse->name;
-		std::string ResFileName = name+"-Res.dat";
-		ResFile = fopen(ResFileName.c_str(), "w+");
-
-		for(int o = 0; o < pulse->nobs; o++){
-			int sysflag = 0;
-			int ecorrflag = 0;
-			for (int j=0;j<pulse->obsn[o].nFlags;j++){
-				for (int k=0;k<pulse->nTNECORR;k++){
-					if (strcmp(pulse->obsn[o].flagID[j], pulse->TNECORRFlagID[k])==0){
-						if (strcmp(pulse->obsn[o].flagVal[j],pulse->TNECORRFlagVal[k])==0){
-							ecorrflag = k+1;
-						}
-					}
-				}
-			}
-
-              		for (int j=0;j<pulse->obsn[o].nFlags;j++){
-                   		for (int k=0;k<pulse->nTNEF;k++){
-					if (strcmp(pulse->obsn[o].flagID[j],pulse->TNEFFlagID[k])==0){
-                        			if (strcmp(pulse->obsn[o].flagVal[j],pulse->TNEFFlagVal[k])==0){
-							sysflag = k+1;
-						}
-					}
-
-				}
-			}
-			fprintf(ResFile, "%22.20e %22.20e %22.20e %22.20e %i %i \n", (double)pulse->obsn[o].bat, (double)pulse->obsn[o].residual, (double)pulse->obsn[o].toaErr*pow(10.0, -6), (double)pulse->obsn[o].freq*pow(10.0, 6), sysflag, ecorrflag);
-
-		}
-
-		fclose(ResFile);
-
-		FILE *TMatrixFile;
-		std::string TMatrixFileName = name+"-TMatrix.dat";
-		TMatrixFile = fopen(TMatrixFileName.c_str(), "w+");
-
-		fprintf(TMatrixFile, "%i %i %i %i %i %i %i\n", pulse->nobs, totalsize, numtofit, 2*pulse->TNRedC, 2*pulse->TNDMC,pulse->nTNEF,  pulse->nTNECORR);
-		fprintf(TMatrixFile, "%g %g \n", (double)pulse->param[param_raj].val[0], (double)pulse->param[param_decj].val[0]);
-
-		  /* Write TMatrix for each observation */
-		  for(int i=0; i<pulse->nobs; i++) {
-		    for(int j=0; j<totalsize; j++) {
-		      fprintf(TMatrixFile, "%22.20e \n", TotalMatrix[i + j*pulse->nobs]);
-		      if(j!=totalsize-1) {
-//			fprintf(TMatrixFile, " ");
-		      } /* if j */
-		    } /* for j */
-//		    fprintf(TMatrixFile, "\n");
-		  } /* for i */
-
-		  fclose(TMatrixFile);
-
-
-
-
-	}
     //////////////////////////////////////////////////////////////////////////////////////////  
     //////////////////////Do Algebra//////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -4099,7 +4033,7 @@ void getTempoNestMaxLike(pulsar *pulse, int npsr){
 		    pDotErr+=pow((double)(argerr*arg),2);
 		}
 
-		pDotErr=0;	
+
 		chisq+=(Resvec[i]-dsum)*(Resvec[i]-dsum)/(Noise[i]);
 		pulse->obsn[i].TNRedSignal=redsum;
 		pulse->obsn[i].TNRedErr=pow(rederr+pDotErr,0.5);

@@ -79,8 +79,8 @@
 #define MAX_FIT              10000  /*!< Maximum number of parameters to fit for */
 #define MAX_T2EFAC           100    /*!< Maximum number of T2EFACs allowed                */
 #define MAX_T2EQUAD          100    /*!< Maximum number of T2EQUADs allowed               */
-#define MAX_TNEF           50    /*!< Maximum number of TNEFACs allowed                */
-#define MAX_TNEQ          50    /*!< Maximum number of TNEQUADs allowed               */
+#define MAX_TNEF           250    /*!< Maximum number of TNEFACs allowed                */
+#define MAX_TNEQ          250    /*!< Maximum number of TNEQUADs allowed               */
 #define MAX_TNGN	50 /*!< maximum number of TNGroupNoise parameters allowed*/
 #define MAX_TNBN        50 /*maximum number of TNBandNoise parameters allowd*/
 #define MAX_TNECORR       50    /*!< Maximum number of TNECORRss allowed               */
@@ -90,7 +90,7 @@
 #define MAX_TOFFSET          10    /*!< Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /*!< Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX             512    /*!< Max number of DM steps allowed */
-#define MAX_FLAGS            20    /*!< Maximum number of flags in .tim file/observation */
+#define MAX_FLAGS            50    /*!< Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /*!< Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /*!< Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /*!< Number of seconds in 1 day                 */
@@ -434,6 +434,9 @@ typedef struct observation {
 
     double snr;
     double tobs;
+    double pnoise;
+    double bline;
+    double chisq;
 } observation;
 
 
@@ -679,7 +682,7 @@ typedef struct pulsar {
     char   TNECORRFlagID[MAX_TNECORR][MAX_FLAG_LEN],TNECORRFlagVal[MAX_TNECORR][MAX_FLAG_LEN];
     double TNECORRVal[MAX_TNECORR];
 
-
+	int brace;
     //Stochastic Parameters
     double TNRedAmp;
     double TNRedGam;
@@ -845,6 +848,7 @@ extern "C" {
     void tai2ut1(pulsar *psr,int npsr);
     void vectorPulsar(pulsar *psr,int npsr);
     void readEphemeris(pulsar *psr,int npsr,int addEphemNoise);
+    void readShortEphemeris(pulsar *psr,int npsr,int addEphemNoise);
     void readOneEphemeris(pulsar *psr,int npsr,int addEphemNoise, int obsNumber);
     void readEphemeris_calceph(pulsar *psr,int npsr);
     void get_obsCoord(pulsar *psr,int npsr);

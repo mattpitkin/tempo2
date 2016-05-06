@@ -527,6 +527,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                         }
                     }
 
+			err *= psr[p].TNGlobalEF;
+
                     //Check equad
                     for (k=0;k<psr[p].nTNEQ;k++)
                     {
@@ -538,6 +540,8 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                             }
                         }
                     }
+
+			err = sqrt(err*err + pow(10.0,psr[p].TNGlobalEQ+6)*pow(10.0,psr[p].TNGlobalEQ+6));
                     //Check Squad
                     for (k=0;k<psr[p].nTNSQ;k++)
                     {

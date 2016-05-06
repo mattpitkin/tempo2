@@ -205,7 +205,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
     double prev_a_p;
     int coalesceFlag_p = 0;
 
-    const char *CVS_verNum = "$Id$";
+    const char *CVS_verNum = "$Id: 71eca5076a7bd0b213428f5f022e994fd593b26c $";
 
 	int dotime =0;
 	struct timeval tval_before, tval_after, tval_resultone, tval_resulttwo;
@@ -1944,7 +1944,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
         if(psr[p].TNsubtractRed==1){
             for (i=0;i<psr[p].nobs;i++){
-		//printf("TNRed: %g %g %g %g \n", (double)psr[p].obsn[i].bat, psr[p].obsn[i].TNRedSignal, psr[p].obsn[i].TNRedSignal+psr[p].obsn[i].TNRedErr, psr[p].obsn[i].TNRedSignal-psr[p].obsn[i].TNRedErr);
+		printf("TNRed: %g %g %g %g \n", (double)psr[p].obsn[i].bat, psr[p].obsn[i].TNRedSignal, psr[p].obsn[i].TNRedSignal+psr[p].obsn[i].TNRedErr, psr[p].obsn[i].TNRedSignal-psr[p].obsn[i].TNRedErr);
                 psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
             }
         }
@@ -1952,7 +1952,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             for (i=0;i<psr[p].nobs;i++){
                 double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
                 psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
-
+/*
 		double freq=(double)psr[p].obsn[i].freqSSB;
                 longdouble yrs = (psr[p].obsn[i].sat - psr[p].param[param_dmepoch].val[0])/365.25;
                 longdouble arg = 1.0;
@@ -1967,7 +1967,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 		printf("TNDM: %g %g %g \n", (double)psr[p].obsn[i].bat, psr[p].obsn[i].TNDMSignal*dmkap+dmDot, psr[p].obsn[i].TNDMErr);
 
-
+*.
             }
         }
         if(psr[p].AverageResiduals == 1){

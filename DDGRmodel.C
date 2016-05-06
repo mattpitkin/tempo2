@@ -158,10 +158,12 @@ double DDGRmodel(pulsar *psr,int p,int ipos,int param)
     cume=cu-ecc;
     sqr1me2=sqrt(1-pow(ecc,2));
     brace=onemecu-si*(sw*cume+sqr1me2*cw*su);
-    if (brace<=0)
+    if(ipos == 0){psr[p].brace = 0;}
+	if (brace<=0)
     {
-        printf("ERROR: In DDGR model, brace < 0\n");
-        exit(1);
+    //`    printf("ERROR: In DDGR model, brace < 0\n");
+	psr[p].brace = -1;	
+        //exit(1);
     }
     dlogbr=log(brace);
     ds=-2*m2*dlogbr;

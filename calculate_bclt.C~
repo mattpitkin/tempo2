@@ -39,7 +39,7 @@ void calculate_bclt(pulsar *psr,int npsr)
 {
 
 
-    const char *CVS_verNum = "$Id$";
+    const char *CVS_verNum = "$Id: 05b7cf9b191e10e23e219f2c2538b15fc5636fa2 $";
 
     if (displayCVSversion == 1) CVSdisplayVersion("calculate_bclt.C","calculate_bclt()",CVS_verNum);
 
@@ -60,10 +60,10 @@ void calculate_bclt(pulsar *psr,int npsr)
 	for (int i=0;i<psr[p].nobs;i++){
 
 
-		/*int id;
+		int id;
 
 		id = omp_get_thread_num ( );
-		printf("This is process %i  handling obs  %i \n", id, i);*/
+		printf("This is process %i  handling obs  %i \n", id, i);
 
 
 		double rca[3];

@@ -378,6 +378,7 @@ int main(int argc, char *argv[])
         writeTim("out.tim",psr,"tempo2");
     }
 
+    if(writeTMatrix == 1)psr[0].outputTMatrix=1;
 
     if (flagPolyco> 0)  /* Running tempo2 in polyco mode? */
     {

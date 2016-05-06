@@ -185,14 +185,15 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nTNEF  = 0; // Number of TNEFACs
     psr->nTNEQ = 0; // Number of TNEQUADs
     psr->nTNECORR = 0; // Number of TNECORRs
-    psr->TNGlobalEF=0;
-    psr->TNGlobalEQ=0;
+    psr->TNGlobalEF=1;
+    psr->TNGlobalEQ=-1000;
     psr->nTNSQ = 0; // Number of TNEQUADs
     psr->TNRedAmp = 0;
     psr->TNRedGam = 0;
     psr->TNRedC = 0;
     psr->TNRedFLow=0;
     psr->TNRedCorner=0.01;
+	psr->brace = 0;
     psr->TNDMAmp = 0;
     psr->TNDMGam = 0;
     psr->TNDMC = 0;
