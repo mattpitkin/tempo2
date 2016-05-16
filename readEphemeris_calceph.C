@@ -95,15 +95,177 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
             // Calculate the Sun to SSB vector
             calceph_compute_unit(eph,jd0,jd1,11,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].sun_ssb);
             convertUnits(psr[p].obsn[i].sun_ssb,psr[p].units);
+
+
+
+
+	    int iplanet;
+	    
+	    for (iplanet=0; iplanet < 9; iplanet++)
+	      {
+		if ((psr[p].param[param_dphaseplanet].paramSet[iplanet] == 1) || (psr[p].param[param_dmassplanet].paramSet[iplanet] == 1))
+		  {
+		    //err_code = jpl_pleph(ephem, jd, iplanet+1, 12, 
+		    //		       psr[p].obsn[i].planet_ssb[iplanet], 1);
+		  // Convert to sec and lt-s/s from AU and AU/day
+		
+		    calceph_compute_unit(eph,jd0,jd1,iplanet+1,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].planet_ssb[iplanet]);
+		    
+		    convertUnits(psr[p].obsn[i].planet_ssb[iplanet],psr[p].units);
+		      
+	
+		}
+	    }
+	
+	  
+	  for (iplanet=0; iplanet < 9; iplanet++)
+	    {
+	      if ((psr[p].param[param_dphaseplanet].paramSet[iplanet] == 1)  || (psr[p].param[param_dmassplanet].paramSet[iplanet] == 1))
+		{
+		  // err_code = jpl_pleph(ephem, jd+1e-6, iplanet+1, 12, 
+		  //		       psr[p].obsn[i].planet_ssb_tmr[iplanet], 1);
+		
+		  calceph_compute_unit(eph,jd0+1,jd1+1,iplanet+1,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].planet_ssb_tmr[iplanet]);
+		    
+		 
+		  convertUnits(psr[p].obsn[i].planet_ssb_tmr[iplanet],psr[p].units);
+    
+		  
+		  
+		}
+	    }
+	  
+
+	  
+	  //  fprintf(planetfile, "%.5Le ", psr[p].obsn[i].sat);
+	
+
+	  for(iplanet=0;iplanet<9;iplanet++)
+	    {
+	      psr[p].obsn[i].planet_ssb_derv[iplanet][0]=   psr[p].obsn[i].planet_ssb_tmr[iplanet][0]- psr[p].obsn[i].planet_ssb[iplanet][0];
+	      psr[p].obsn[i].planet_ssb_derv[iplanet][1]=  psr[p].obsn[i].planet_ssb_tmr[iplanet][1]- psr[p].obsn[i].planet_ssb[iplanet][1];
+	      psr[p].obsn[i].planet_ssb_derv[iplanet][2]=   psr[p].obsn[i].planet_ssb_tmr[iplanet][2]- psr[p].obsn[i].planet_ssb[iplanet][2];
+	      psr[p].obsn[i].planet_ssb_derv[iplanet][3]=   psr[p].obsn[i].planet_ssb_tmr[iplanet][3]- psr[p].obsn[i].planet_ssb[iplanet][3];
+	      psr[p].obsn[i].planet_ssb_derv[iplanet][4]=   psr[p].obsn[i].planet_ssb_tmr[iplanet][4]- psr[p].obsn[i].planet_ssb[iplanet][4];
+	      psr[p].obsn[i].planet_ssb_derv[iplanet][5]=   psr[p].obsn[i].planet_ssb_tmr[iplanet][5]- psr[p].obsn[i].planet_ssb[iplanet][5]; 
+	      //fprintf(planetfile, "%.5e %.5e %.5e ",psr[p].obsn[i].planet_ssb_tmr[iplanet][1], psr[p].obsn[i].planet_ssb[iplanet][1], psr[p].obsn[i].planet_ssb_derv[iplanet][1] );
+	    }
+	  //fprintf(planetfile, "\n");
+	  
+	  
+
+
+
+
+
+
+	    // calculate Jupiter to Earth vector
+	    calceph_compute_unit(eph,jd0,jd1,5,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].jupiter_earth);
+	    convertUnits(psr[p].obsn[i].jupiter_earth,psr[p].units);
+
+	    // calculate Saturn to Earth vector
+	    calceph_compute_unit(eph,jd0,jd1,6,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].saturn_earth);
+	    convertUnits(psr[p].obsn[i].saturn_earth,psr[p].units);
+	    
+	    // calculate Uranus to Earth vector
+	    calceph_compute_unit(eph,jd0,jd1,7,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].uranus_earth);
+	    convertUnits(psr[p].obsn[i].uranus_earth,psr[p].units);
+
+	    // Neptune-Earth
+	    calceph_compute_unit(eph,jd0,jd1,8,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].neptune_earth);
+	    convertUnits(psr[p].obsn[i].neptune_earth,psr[p].units);
+
+	    // Venus-earth
+	    calceph_compute_unit(eph,jd0,jd1,2,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].venus_earth);
+	    convertUnits(psr[p].obsn[i].venus_earth,psr[p].units);
+	    
+	    // Earth-moon bary to SSB
+	    calceph_compute_unit(eph,jd0,jd1,13,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earthMoonBary_ssb);
+	    convertUnits(psr[p].obsn[i].earthMoonBary_ssb,psr[p].units);
+
+	    //Earth-moon bary to earth
+	    calceph_compute_unit(eph,jd0,jd1,13,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earthMoonBary_earth);
+	    convertUnits(psr[p].obsn[i].earthMoonBary_earth,psr[p].units);
+
+	    
+	    for (iplanet=0; iplanet < 9; iplanet++)
+	      {
+		if (psr[p].param[param_dmassplanet].paramSet[iplanet])
+		  {
+		    //	      	      printf("NEW PLANET DMASS: %g %g %g\n",(double)psr[p].param[param_dmassplanet].val[4],
+		    //	      		     (double)psr[p].obsn[i].earth_ssb[0],(double)(psr[p].param[param_dmassplanet].val[4] *
+		    //	      								  psr[p].obsn[i].planet_ssb[iplanet][0]));
+		    for (int icomp=0; icomp < 6; icomp++)
+		      psr[p].obsn[i].earth_ssb[icomp] -= 
+			psr[p].param[param_dmassplanet].val[iplanet] *
+			psr[p].obsn[i].planet_ssb[iplanet][icomp];
+		  }
+	      }
+	    
         }	
         calceph_close(eph);
     }
+}
+
+
+void tt2tb_calceph(pulsar *psr, int npsr)
+{
+  t_calcephbin *eph;
+  int i,p;
+  long double jd;
+  double jd0,jd1;
+  double ttcorr[6];
+
+  for (p=0;p<npsr;p++)
+    {
+      eph = calceph_open(psr[p].ephemeris);
+      if (eph) {
+	printf("Successfully opened ephemeris >%s<\n",psr[p].ephemeris);
+      } else {
+	printf("Error: unable to open ephemeris >%s< for pulsar >%s<\n",psr[p].ephemeris,psr[p].name);
+	exit(1);
+      }
+      // Now read the ephemeris for each observation
+      for (i=0;i<psr[p].nobs;i++)
+	{
+	  jd = psr[p].obsn[i].sat + getCorrectionTT(psr[p].obsn+i)/SECDAY + 
+	    psr[p].obsn[i].correctionTT_Teph/SECDAY+2400000.5; 
+	  jd0 = (double)((int)jd);
+	  jd1 = (double)(jd-(int)jd);
+
+	  // Calculate the Earth to SSB vector
+	  //calceph_compute_unit(eph,jd0,jd1,3,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earth_ssb);
+	  calceph_compute(eph,jd0,jd1,16,0,ttcorr);
+
+
+	  
+	  psr[p].obsn[i].correctionTT_calcEph=-ttcorr[0]; 
+
+	  //fprintf(stderr, "%.8e\n", ttcorr[0]);
+
+	  //  convertUnits(psr[p].obsn[i].earth_ssb,psr[p].units);
+
+	  // Calculate the Sun to SSB vector
+	  //calceph_compute_unit(eph,jd0,jd1,11,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].sun_ssb);
+	  // convertUnits(psr[p].obsn[i].sun_ssb,psr[p].units);
+	}	
+      calceph_close(eph);
+      
+      
+    }
+  //exit(0);
+  return;
 }
 #else
 void readEphemeris_calceph(pulsar *psr,int npsr)
 {
     printf("ERROR: unable to use calceph library routines as library not installed\n");
     exit(1);
+}
+void tt2tb_calceph(pulsar *psr, int npsr)
+{
+  printf("ERROR: unable to use calceph library routines as library not installed\n");
+  exit(1);
 }
 #endif
 

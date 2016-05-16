@@ -95,6 +95,14 @@ void tt2tb(pulsar *psr,int npsr)
                 {
                     deltaT = FB_deltaT(mjd_tt) - IFTE_TEPH0; /* FB code returns Teph-TDB not TT-TDB */
                 }
+
+		if(psr[p].useCalceph ==1)
+		  {
+		    fprintf(stderr, "here?\n");
+		    fprintf(stderr, "%.3Le\n",  psr[0].obsn[i].correctionTT_calcEph);
+		    deltaT = psr[0].obsn[i].correctionTT_calcEph;
+		  }
+
                 /* Get term involving observatory position (if known) */
 
                 /*	for (k=0;k<3;k++)

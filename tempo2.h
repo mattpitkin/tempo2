@@ -90,7 +90,7 @@
 #define MAX_TOFFSET          10    /*!< Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /*!< Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX             512    /*!< Max number of DM steps allowed */
-#define MAX_FLAGS            20    /*!< Maximum number of flags in .tim file/observation */
+#define MAX_FLAGS            40    /*!< Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /*!< Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /*!< Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /*!< Number of seconds in 1 day                 */
@@ -394,7 +394,8 @@ typedef struct observation {
 
     longdouble correctionTT_TB;     /*!< Correction to TDB/TCB           */
     double einsteinRate;            /*!< Derivative of correctionTT_TB   */
-    longdouble correctionTT_Teph;   /*!< Correction to Teph              */
+  longdouble correctionTT_calcEph;
+  longdouble correctionTT_Teph;   /*!< Correction to Teph              */
     longdouble correctionUT1;       /*!< Correction from site TOA to UT1 */
 
     double sun_ssb[6];              /*!< Ephemeris values for Sun w.r.t SSB (sec)             (RCS) */
@@ -805,12 +806,12 @@ extern "C" {
     void updateBatsAll(pulsar *psr,int npsr);
     void formResiduals(pulsar *psr,int npsr,int removeMean);
     int  bootstrap(pulsar *psr,int p,int npsr);
-    void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile) DEPRECATED;
-    void doFit(pulsar *psr,int npsr,int writeModel) DEPRECATED;
-    void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) DEPRECATED;
-    void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) DEPRECATED; 
+    void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile) ;
+    void doFit(pulsar *psr,int npsr,int writeModel) ;
+    void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) ;
+    void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) ; 
     void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
-    double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k) DEPRECATED;
+    double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k) ;
     void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname);
     void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
     void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
@@ -847,7 +848,8 @@ extern "C" {
     void toa2utc(pulsar *psr,int npsr);
     void utc2tai(pulsar *psr,int npsr);
     void tt2tb(pulsar *psr,int npsr);
-    void tai2tt(pulsar *psr,int npsr);
+  void tt2tb_calceph(pulsar *psr,int npsr);  
+  void tai2tt(pulsar *psr,int npsr);
     void tai2ut1(pulsar *psr,int npsr);
     void vectorPulsar(pulsar *psr,int npsr);
     void readEphemeris(pulsar *psr,int npsr,int addEphemNoise);

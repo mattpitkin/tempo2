@@ -1107,7 +1107,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         resp = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resp); 
 
                     psr[p].quad_ifunc_geom_p = resp;
-                    //		   printf("Resp2 = %s %g %g\n",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
+                    		   printf("Resp2 = %s %g %g\n",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
                     // NOTE: These are for the cross terms. 
                     lambda   = psr[p].gwm_raj;
                     beta     = psr[p].gwm_decj;
@@ -1132,9 +1132,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     if ((1-cosTheta)==0.0)
                         resc = 0.0;  // Check if this is sensible
                     else
-                        resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
+		      resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
                     psr[p].quad_ifunc_geom_c = resc;
-                    //		   printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
+		    // printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
                     dt = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*longdouble(86400.0);
                     //		   scale = -0.5*cos2Phi*(1-cosTheta);
                     phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[0]*psr[p].quad_ifunc_geom_p); 				
@@ -1711,7 +1711,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 else
                     resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
                 psr[p].gwb_geom_c = resc;
-                //		   printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
+		//printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
 
                 // exp(-(t-T0)**2/2./w**2)
 

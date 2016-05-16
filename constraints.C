@@ -814,7 +814,7 @@ double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
 double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
     const int i = iparam;
     int order=0;
-    double EFACTOR=1e20;
+    double EFACTOR=1e12;
     logdbg("%d: %s ipar=%d (%s) ck=%d pk=%d psr=%s",iconstraint,get_constraint_name(iconstraint).c_str(),iparam,psr[ipsr].param[iparam].shortlabel[0],constraintk,k,psr[ipsr].name);
     switch(iconstraint){
         case constraint_dmmodel_mean:
