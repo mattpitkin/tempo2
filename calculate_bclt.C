@@ -49,7 +49,7 @@ void calculate_bclt(pulsar *psr,int npsr)
     logdbg("In calculate_bclt with number of psr = %d, nobs (psr[0]) = %d",npsr,psr[0].nobs);
 
     /* Conversion of mas to radians for parallax */
-    double pxConv = 1.74532925199432958E-2/3600.0e3;
+    const double pxConv = 1.74532925199432958E-2/3600.0e3;
 
     for(int p=0;p<npsr;p++)
     {
