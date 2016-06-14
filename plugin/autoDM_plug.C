@@ -84,9 +84,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
    formResiduals(psr,*npsr,1);    /* Form the residuals                 */
 
+   sortToAs(psr);
 
 
-   logmsg("TEST %d",*npsr);
+   logmsg("TEST npsr=%d",*npsr);
    for (p=0; p < *npsr; p++){
 	  longdouble c=0;
 	  for(i=0; i < psr[p].nobs; i++){
