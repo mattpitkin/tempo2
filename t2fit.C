@@ -289,10 +289,6 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         }
     }
     if (doGlobalFit){
-        // @TODO: write this bit!
-        // add the global fit parameters
-        // form the final design matrix
-        // do the global fit
 
         const unsigned int nobs = totalGlobalData;
         double** designMatrix = malloc_blas(nobs,totalGlobalParams);
@@ -307,8 +303,17 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         unsigned int off_r = 0;
         unsigned int off_c = gConstraints;
 
+        logdbg("Building matricies for global fit... npsr=%u",npsr);
+        logdbg("nobs=%u, totalGlobalParams=%u, totalGlobalConstraints=%u",nobs,totalGlobalParams,totalGlobalConstraints);
+        logwarn("This mode is not supported yet!!!");
+
+
         for (unsigned int ipsr = 0; ipsr < npsr ; ++ipsr){
             unsigned int nLocal = psr[ipsr].fitinfo.nParams-gParams;
+            logdbg("ipsr=%u, off_r = %u, off_c=%u, off_f=%u, nlocal=%u",
+                    ipsr,off_r,off_c,off_f,nLocal);
+
+
             // the fit parameters
             for(unsigned int i=0; i < gNdata[ipsr]; i++){
                 for(unsigned int j=0; j < nLocal; j++){
@@ -318,7 +323,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
                 // the global params (they go first)
                 for(unsigned int g= 0; g < gParams; g++){
-                    unsigned int j = psr[ipsr].fitinfo.nParams+g;
+                    unsigned int j = g+nLocal;
                     designMatrix[i+off_r][g] = gDM[ipsr][i][j];
                     white_designMatrix[i+off_r][g] = gWDM[ipsr][i][j];
                 }
@@ -336,7 +341,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
                 // the global params (they go first)
                 for(unsigned int g= 0; g < gParams; g++){
-                    unsigned int j = psr[ipsr].fitinfo.nParams+g;
+                    unsigned int j = g+nLocal;
                     constraintsMatrix[i+off_c][g] = gCM[ipsr][i][j];
                 }
 
