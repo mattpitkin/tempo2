@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2015.09.0],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/mkeith/tempo2])
+AC_INIT([Tempo2],[2016.05.0],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/psrsoft/tempo2])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -74,7 +74,7 @@ AS_IF([test "x$enable_float128" != "xno"], [
        AC_MSG_RESULT($have_float128)
 
        AS_IF([test "x$have_float128" != "xno"], [
-	       LDFLAGS="$CPPFLAGS -lquadmath"
+              AC_CHECK_LIB(quadmath, cosq,[LDFLAGS="$CPPFLAGS -lquadmath"],have_float128=no)
        ])
 
        ])

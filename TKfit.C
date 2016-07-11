@@ -223,10 +223,14 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
     if(useT2accel==2){
 
         double augmented_white_data[ndata+nconstraints];
-        double **augmented_DM = malloc_blas(ndata+nconstraints,nparams);
-        // Now go to longdouble precision and augment the DM and data vector
+        double **augmented_DM=NULL;
+        if (computeParam){
+            augmented_DM  = malloc_blas(ndata+nconstraints,nparams);
+            for (i=0;i<ndata;i++){
+                augmented_white_data[i] = white_data[i];
+            }
+        }
         for (i=0;i<ndata;i++){
-            augmented_white_data[i] = white_data[i];
             for (j=0;j<nparams;j++) augmented_DM[i][j] = white_designMatrix[i][j];
         }
 
@@ -286,7 +290,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
         // Now go to longdouble precision and augment the DM and data vector
         for (i=0;i<ndata;i++){
-            augmented_white_data[i] = white_data[i];
+            if(computeParam) augmented_white_data[i] = white_data[i];
             for (j=0;j<nparams;j++) augmented_DM[i][j] = white_designMatrix[i][j];
         }
 

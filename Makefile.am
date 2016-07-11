@@ -136,10 +136,10 @@ complete-clean: plugins-clean unsupported-clean core-clean
 
 if HAVE_FLOAT128
 TKlongdouble.h: TKlongdouble.float128.h
-	cp TKlongdouble.float128.h $@
+	cp $(srcdir)/TKlongdouble.float128.h $@
 else
 TKlongdouble.h: TKlongdouble.ld.h
-	cp TKlongdouble.ld.h $@
+	cp $(srcdir)/TKlongdouble.ld.h $@
 endif
 
 if HAVE_DOXYGEN
