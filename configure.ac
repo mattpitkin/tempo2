@@ -132,12 +132,13 @@ SWIN_LIB_PGPLOT
 SWIN_LIB_FFTW
 SWIN_LIB_CFITSIO
 
-# No longer need openmp.
-#AX_OPENMP([have_openmp=yes],[have_openmp=no])
-#if test X$have_openmp == Xyes; then
-#	CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
-#	CXXFLAGS="$CXXFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
-#fi
+# Check for openmp (optional package)
+AX_OPENMP([have_openmp=yes],[have_openmp=no])
+if test X$have_openmp == Xyes; then
+    CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
+    CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS -DHAVE_OPENMP"
+    LDFLAGS="$LDFLAGS $OPENMP_CXXFLAGS"
+fi
 
 
 
@@ -249,29 +250,16 @@ if test X$have_blas = Xyes; then
     AC_MSG_NOTICE(Using BLAS library for matrix multiplication) 
 fi
 
+if test X$have_openmp == Xyes; then
+    AC_MSG_NOTICE(Using OpenMP for multithreading) 
+fi
+
 if test X$have_calceph = Xyes; then
     AC_MSG_NOTICE(Able to use calceph library for ephemeris reading) 
 else
     AC_MSG_NOTICE(Calceph library was not found) 
 fi
 
-if test X$have_qdinstall = Xyes; then
-    AC_MSG_NOTICE(Using QD library)
-else            
-    AC_MSG_NOTICE([QD library not found, will not compile high precision part of TempoNest])
-fi   
-
-# TempoNest addition:
-if test X$have_multinest != Xyes; then
-    AC_MSG_NOTICE(MultiNest was not found - TempoNest can not be built) 
-
-else
-    if test X$have_cula = Xyes; then
-        AC_MSG_NOTICE(TempoNest will be built with CUDA/CULA GPU support) 
-    else
-        AC_MSG_NOTICE(TempoNest will be built without GPU support) 
-    fi
-fi
 if test $can_build_shared == no ; then
     echo ""
     AC_WARN("Libtool cannot build shared libraries - no plugins can be built!") 
