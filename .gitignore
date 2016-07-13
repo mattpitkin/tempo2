@@ -41,3 +41,4 @@ TempoNest
 *.old
 .deps
 documentation/doxygen
+*.log--

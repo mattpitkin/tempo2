@@ -643,13 +643,30 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
                         ++OUT.nParams;
                         break;
                     case param_fddc:
-                    case param_fddi:
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fd;
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fd;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+                        ++OUT.nParams;
+                        break;
                     case param_fd:
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fd;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+                        ++OUT.nParams;
+                        break;
                     case param_dm_sin1yr:
                     case param_dm_cos1yr:
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmsinusoids;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+                        ++OUT.nParams;
+                        break;
+                    case param_fddi:
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_notImplemented;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_notImplemented;
+                        ++OUT.nParams;
+                        break;
                     case param_dmx:
-                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_miscDm;
-                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_miscDm;
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmx;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
                         ++OUT.nParams;
                         break;
                     case param_dmassplanet:
