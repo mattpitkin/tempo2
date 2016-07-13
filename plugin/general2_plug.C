@@ -155,7 +155,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
         {
             if (first==0) first = varN; /* Record first residual */
 
-            for (i=0;i<strlen(line);i++)
+            for (i=0;i<(int)strlen(line);i++) // cast to signed since for some reason i and j are signed MJK2016
             {	  
                 if (line[i]=='\\' && (line[i+1]=='{' || line[i+1]=='}'))
                 { /* Do nothing */ }
@@ -174,7 +174,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                 // WARNING: if i==0, this tries to access line[-1]. This is a BUG!
                 else if (line[i]=='{' && line[i-1]!='\\') /* Have command */
                 {
-                    for (j=i+1;j<strlen(line);j++)
+                    for (j=i+1;j<(int)strlen(line);j++) // cast to signed since for some reason i and j are signed MJK2016
                     {
                         if (line[j]=='}')
                             break;
