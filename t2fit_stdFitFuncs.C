@@ -1,5 +1,6 @@
 #include "t2fit_stdFitFuncs.h"
 #include <cmath>
+#include <cstdlib>
 #include <assert.h>
 #include <cstring>
 
