@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <enum_str.h>
 
 
 
@@ -188,6 +189,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          */
         double** constraintsMatrix =NULL;
         if(psr[ipsr].fitinfo.nConstraints > 0){
+
+            computeConstraintWeights(psr+ipsr);
             constraintsMatrix = malloc_blas(nConstraints,nParams);
             for (unsigned int iconstraint =0; iconstraint < nConstraints; ++iconstraint){
                 // similar to t2Fit_buildDesignMatrix, t2Fit_buildConstraintsMatrix
@@ -282,7 +285,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             free(errorEstimates);
             free_blas(designMatrix);
             free_blas(white_designMatrix);
-            free_blas(constraintsMatrix);
+            if (constraintsMatrix) free_blas(constraintsMatrix);
             free(psr_x);
             free(psr_y);
             free(psr_white_y);
@@ -313,19 +316,25 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             logdbg("ipsr=%u, off_r = %u, off_c=%u, off_f=%u, nlocal=%u",
                     ipsr,off_r,off_c,off_f,nLocal);
 
-
             // the fit parameters
             for(unsigned int i=0; i < gNdata[ipsr]; i++){
-                for(unsigned int j=0; j < nLocal; j++){
-                    designMatrix[i+off_r][j+off_f] = gDM[ipsr][i][j];
-                    white_designMatrix[i+off_r][j+off_f] = gWDM[ipsr][i][j];
-                }
 
                 // the global params (they go first)
                 for(unsigned int g= 0; g < gParams; g++){
                     unsigned int j = g+nLocal;
+                    if(ipsr==0 && i==0 && writeResiduals){
+                        logmsg("Row %d = %s %s(%d)",g,"global",label_str[global_fitinfo.paramIndex[g]],global_fitinfo.paramCounters[g]);
+                    }
                     designMatrix[i+off_r][g] = gDM[ipsr][i][j];
                     white_designMatrix[i+off_r][g] = gWDM[ipsr][i][j];
+                }
+
+                for(unsigned int j=0; j < nLocal; j++){
+                    if(i==0 && writeResiduals){
+                        logmsg("Row %d = %s %s(%d)",j+off_f,psr[ipsr].name,label_str[psr[ipsr].fitinfo.paramIndex[j]],psr[ipsr].fitinfo.paramCounters[j]);
+                    }
+                    designMatrix[i+off_r][j+off_f] = gDM[ipsr][i][j];
+                    white_designMatrix[i+off_r][j+off_f] = gWDM[ipsr][i][j];
                 }
             }
             // the data
@@ -354,7 +363,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             free(gY[ipsr]);
             free(gW[ipsr]);
             free_blas(gDM[ipsr]);
-            free_blas(gCM[ipsr]);
+            if (gCM[ipsr]) free_blas(gCM[ipsr]);
             free_blas(gWDM[ipsr]);
         }
 
@@ -369,29 +378,53 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
                 psr[0].robust);
         // for now the CVM ends up in psr[0].covar.
 
+        int off_p = gParams;
         for (unsigned int ipsr = 0; ipsr < npsr ; ++ipsr){
             // update the pulsar struct as appropriate
             psr[ipsr].fitChisq = chisq;
             psr[ipsr].fitNfree = nobs + totalGlobalConstraints - totalGlobalParams;
 
+            
+
+            double* psr_parameterEstimates = (double*)malloc(sizeof(double)*psr[ipsr].fitinfo.nParams);
+            double* psr_errorEstimates = (double*)malloc(sizeof(double)*psr[ipsr].fitinfo.nParams);
+            const unsigned np = psr[ipsr].fitinfo.nParams-gParams;
+
+            /* extract the fit output for the individual pulsars. 
+             * I.e. detangle the global fit
+             * Notice: Globals go at the end of the individual pulsar arrays.
+             */
+            for (unsigned i = 0; i < np; ++i){
+                psr_parameterEstimates[i] = parameterEstimates[off_p];
+                psr_errorEstimates[i] = errorEstimates[off_p];
+                ++off_p;
+            }
+
+            for (unsigned i = 0; i < gParams; ++i){
+                psr_parameterEstimates[i+np] = parameterEstimates[i];
+                psr_errorEstimates[i] = errorEstimates[off_p];
+            }
+
             logdbg("Updating the parameters");
             logtchk("updating the parameter values");
-
-            if (ipsr > 0){
-                // only the first pulsar should update the global parameters.
-                // the rest are copies so we can just ignore them.
-                psr[ipsr].fitinfo.nParams -= gParams;
-                psr[ipsr].fitinfo.nConstraints -= gConstraints;
-            }
 
             /*
              * This routine calls the appropriate update functions to apply the result of the fit
              * to the origianal (non-linearised) pulsar parameters.
              */
-            t2Fit_updateParameters(psr,ipsr,parameterEstimates,errorEstimates);
+            t2Fit_updateParameters(psr,ipsr,psr_parameterEstimates,psr_errorEstimates);
             logtchk("complete updating the parameter values");
             logdbg("Completed updating the parameters");
+            free(psr_parameterEstimates);
+            free(psr_errorEstimates);
         }
+        free(parameterEstimates);
+        free(errorEstimates);
+        free(white_y);
+        free(y);
+        free_blas(designMatrix);
+        free_blas(white_designMatrix);
+        free_blas(constraintsMatrix);
 
 
     }
@@ -501,12 +534,14 @@ void t2Fit_updateParameters(pulsar *psr,int ipsr,double *val,double *error){
 }
 
 void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag);
+
 void t2Fit_fillGlobalFitInfo(pulsar* psr, unsigned int npsr,FitInfo &OUT){
     OUT.nParams=0;
     OUT.nConstraints=0;
     for (int i=1;i<=psr->nJumps;i++) {
         if (psr->fitJump[i]==2)
         {
+            logdbg("Global Jump");
             OUT.paramIndex[OUT.nParams]=param_JUMP;
             OUT.paramCounters[OUT.nParams]=i;
             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_jump;
@@ -554,7 +589,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals){
     t2Fit_fillFitInfo_INNER(psr,OUT,1);
 
     // copy over global parameters.
-    for (size_t i=1;i<globals.nParams;i++) {
+    for (size_t i=0;i<globals.nParams;i++) {
         OUT.paramIndex[OUT.nParams]=globals.paramIndex[i];
         OUT.paramCounters[OUT.nParams]=globals.paramCounters[i];
         OUT.paramDerivs[OUT.nParams]     =globals.paramDerivs[i];
@@ -648,8 +683,7 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
                         ++OUT.nParams;
                         break;
                     case param_fddc:
-                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fd;
-                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fd;
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fddc;
                         OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
                         ++OUT.nParams;
                         break;
@@ -757,7 +791,7 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
                         if(fit_param==param_quad_ifunc_p)N=psr->quad_ifuncN_p;
                         if(fit_param==param_quad_ifunc_c)N=psr->quad_ifuncN_c;
                         if(sifunc){
-                            logdbg("Sinusoidal ifuncs");
+                            logwarn("Sinusoidal ifuncs");
                         }
                         for (unsigned i = 0; i < N; ++i){
                             if(sifunc) OUT.paramDerivs[OUT.nParams] = t2FitFunc_sifunc;
@@ -823,7 +857,7 @@ void TKleastSquares_single_pulsar(double *x,double *y,int n,double *outP,double 
 
     TKfit_getPulsarDesignMatrix(x,y,n,nf,fitFuncs,psr,ip,uinv,0,&designMatrix,&white_designMatrix,&b,&white_b);
     if(psr->nconstraints > 0){
-        logmsg("Get constraint weghts");
+        logmsg("Get constraint weights");
         computeConstraintWeights(psr);
         logmsg("fill constraints matrix");
         constraintsMatrix = malloc_blas(psr->nconstraints,nf);
@@ -897,7 +931,7 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
         }
 
         if(psr[ipsr].nconstraints > 0){
-            logmsg("Get constraint weghts");
+            logmsg("Get constraint weights");
             computeConstraintWeights(psr+ipsr);
             logmsg("fill constraints matrix");
             for (int ic=0; ic < psr[ipsr].nconstraints; ic++){

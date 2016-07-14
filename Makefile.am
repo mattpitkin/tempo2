@@ -7,7 +7,7 @@ DIST_SUBDIRS=sofa plugin unsupported_plugins tests
 bin_PROGRAMS=tempo2 getPeriod
 lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
 
-BUILT_SOURCES=TKcholesky.h TKlongdouble.h
+BUILT_SOURCES=TKcholesky.h TKlongdouble.h enum_str.h enum_str.C
 
 
 # Source files used by plugins that are not part of libtempo2
@@ -153,6 +153,10 @@ doc:
 	echo "Sorry, you need doxygen to build the documentation"
 endif
 
+enum_str.h: enum_str.C
+
+enum_str.C: extract_enums.sh tempo2.h
+	./extract_enums.sh < tempo2.h
 
 
 CLEANFILES=$(BUILT_SOURCES) documentation/doxygen

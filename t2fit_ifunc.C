@@ -5,6 +5,7 @@
 
 double ifunc(const double* mjd, const double t,const int N, const int k){
     double yoffs[MAX_IFUNC];
+    assert(k<N);
 
     for (int ioff =0;ioff<N;ioff++){
         if (ioff==k){
@@ -58,23 +59,27 @@ double t2FitFunc_sifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
 }
 
 double t2FitFunc_ifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    double ret=0;
     switch(label){
         case param_ifunc:
-            return ifunc(psr[ipsr].ifuncT,static_cast<double>(psr[ipsr].obsn[ipos].bat),psr[ipsr].ifuncN,k);
+            ret = ifunc(psr[ipsr].ifuncT,static_cast<double>(psr[ipsr].obsn[ipos].sat),psr[ipsr].ifuncN,k);
+            break;
         case param_clk_offs:
         case param_quad_ifunc_p:
         case param_quad_ifunc_c:
         default:
             assert(0);
-            return 0;
+            break;
     }
+    return ret;
 }
 void t2UpdateFunc_ifunc(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
 
     switch(label){
         case param_ifunc:
-            psr[ipsr].ifuncV[k] += val;
-            psr[ipsr].ifuncE[k] = err;
+            psr[ipsr].ifuncV[k] -= val;
+            psr[ipsr].ifuncE[k]  = err;
+            break;
         case param_clk_offs:
         case param_quad_ifunc_p:
         case param_quad_ifunc_c:
