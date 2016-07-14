@@ -141,7 +141,7 @@ void doFitOLD(pulsar *psr,int npsr, const char *covarFuncFile) {
 
 
     //If TNRed or TNDM or ECORR parameters defined, call TempoNest maxlike function and return
-    if(false) {// && (psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) || ((psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0) || (psr[0].nTNECORR != 0))){
+    if((psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) || ((psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0) || (psr[0].nTNECORR != 0))){
 
 
 #ifdef HAVE_LAPACK
