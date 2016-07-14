@@ -4,7 +4,6 @@ Git INSTALLATION README
 =======================
 
 0. Contents
------------
 	1. What this package is    
 	2. Quick Guide    
 	3. Requirements    
