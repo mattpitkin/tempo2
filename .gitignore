@@ -40,3 +40,7 @@ config.h.in~
 TempoNest
 *.old
 .deps
+documentation/doxygen
+*.log--
+enum_str.C
+enum_str.h
