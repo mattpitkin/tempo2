@@ -1,5 +1,6 @@
 #include "t2fit_stdFitFuncs.h"
 #include <cmath>
+#include <cstdlib>
 #include <assert.h>
 #include <cstring>
 
@@ -180,7 +181,10 @@ void t2UpdateFunc_binaryModels(pulsar *psr, int ipsr ,param_label label,int k, d
 }
 
 
-double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
+double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    assert(label==param_dmassplanet);
+    return dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
+}
 void t2UpdateFunc_planet(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
@@ -217,8 +221,6 @@ double t2FitFunc_telPos(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
 void t2UpdateFunc_telPos(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 
-double t2FitFunc_miscDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_miscDm(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_jump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     for (int l=0;l<psr[ipsr].obsn[ipos].obsNjump;l++){
@@ -231,3 +233,12 @@ void t2UpdateFunc_jump(pulsar *psr, int ipsr ,param_label label,int k, double va
     psr[ipsr].jumpValErr[k] = err;
 }
 
+
+double t2FitFunc_notImplemented(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    logerr("Parameter not implemented");
+    exit(1);
+}
+void t2UpdateFunc_notImplemented(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
+    logerr("Parameter not implemented");
+    exit(1);
+}
