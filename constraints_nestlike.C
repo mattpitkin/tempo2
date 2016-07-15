@@ -1,6 +1,7 @@
 #include <cmath>
 #include "constraints_nestlike.h"
 #include <assert.h>
+#include <string.h>
 #define f1yr (1.0/3.16e7)
 
 double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
@@ -31,4 +32,31 @@ double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam
         return 1.0/sqrt(rho);
     } else return 0;
 
+}
+
+double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+    assert (iconstraint == constraint_jitter);
+
+    if (iparam == param_jitter && constraintk == k) {
+        double ecorrval=0;
+        const int iobs = k;
+        for (int iecorr=0; iecorr < psr[ipsr].nTNECORR; iecorr++){
+            for (int iflag=0;iflag < psr[ipsr].obsn[iobs].nFlags; iflag++){
+                if (
+                        (strcmp(psr[ipsr].obsn[iobs].flagID[iflag],
+                                psr[ipsr].TNECORRFlagID[iecorr])==0)
+                        && (strcmp(psr[ipsr].obsn[iobs].flagVal[iflag],
+                                psr[ipsr].TNECORRFlagVal[iecorr])==0)
+
+                   ) {
+                    ecorrval = psr[ipsr].TNECORRVal[iecorr];
+                    break;
+                }
+                if (ecorrval > 0)break;
+            }
+        }
+        return 1e6/ecorrval;
+    } else {
+        return 0;
+    }
 }

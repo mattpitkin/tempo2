@@ -107,13 +107,14 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         assert(psr_ndata > 0u);
         psr[ipsr].nFit = psr_ndata; // pulsar.nFit is the number of data points used in the fit.
 
+
         /**
          * Now we work out which parameters are being fit for, how many parameters,
          * and determine the gradient functions for the design matrix and the update functions
          * which update the pulsar struct.
          */
-        t2Fit_fillFitInfo(psr+ipsr,psr[ipsr].fitinfo,global_fitinfo);
-
+        t2Fit_fillFitInfo(psr+ipsr,psr[ipsr].fitinfo,global_fitinfo,
+                psr_x,psr_toaidx, psr_ndata);
 
         /**
          * The whitening matrix behaves diferently if we have a covariance matrix.
@@ -404,7 +405,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
             for (unsigned i = 0; i < gParams; ++i){
                 psr_parameterEstimates[i+np] = parameterEstimates[i];
-                psr_errorEstimates[i] = errorEstimates[off_p];
+                psr_errorEstimates[i+np] = errorEstimates[i];
             }
 
             logdbg("Updating the parameters");
@@ -556,7 +557,7 @@ void t2Fit_fillGlobalFitInfo(pulsar* psr, unsigned int npsr,FitInfo &OUT){
     t2Fit_fillFitInfo_INNER(psr,OUT,2);
 }
 
-void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals){
+void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const double* psr_x, const int* psr_toaidx, const int psr_ndata){
 
     OUT.nParams=1;
     OUT.nConstraints=0;
@@ -581,8 +582,10 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals){
         }
     }
 
+
     /*
      * These are the temponest derived constraints
+     * Probably want to extract this as a method
      */
     {
         if (psr->TNRedAmp && psr->TNRedGam) {
@@ -605,6 +608,69 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals){
                 OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red;
                 ++OUT.nConstraints;
             }
+        }
+        // ECORR parameters
+        // Fits for a constrained jump for each "epoch" (i.e. observation)
+        int nepochs=0;
+        if (psr->nTNECORR > 0) {
+            const double dt = 10.0/SECDAY;
+            double xmin=0;
+            double xmax=0;
+            // flag observations that have been matched to an epoch already.
+            bool flag[psr_ndata];
+            for (int idata = 0; idata < psr_ndata; ++idata){
+                flag[idata]= false;
+            }
+
+            for (int idata = 0; idata < psr_ndata; ++idata){
+                int iobs = psr_toaidx[idata];
+                // if this observation was in a previous epoch, then skip it.
+                if(flag[idata])continue;
+                // Here we check over all flags and ecorr params to see if it matches.
+                for (int iecorr=0; iecorr < psr->nTNECORR; iecorr++){
+                    for (int iflag=0;iflag < psr->obsn[iobs].nFlags; iflag++){
+                        if (
+                                (strcmp(psr->obsn[iobs].flagID[iflag],
+                                        psr->TNECORRFlagID[iecorr])==0)
+                                && (strcmp(psr->obsn[iobs].flagVal[iflag],
+                                        psr->TNECORRFlagVal[iecorr])==0)
+
+                           ) {
+                            xmin=psr_x[idata] - dt;
+                            xmax=psr_x[idata] + dt;
+                            // don't need to search any more on this epoch.
+                            flag[idata]=true;
+
+                            OUT.constraintIndex[OUT.nConstraints]=constraint_jitter;
+                            // we use the constraint counter to specify specific toa that represents this epoch
+                            OUT.constraintCounters[OUT.nConstraints]=iobs;
+                            OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_jitter;
+                            ++OUT.nConstraints;
+
+                            OUT.paramIndex[OUT.nParams]=param_jitter;
+                            // we use the constraint counter to specify specific toa that represents this epoch
+                            OUT.paramCounters[OUT.nParams]=iobs;
+                            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_jitter;
+                            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_jitter;
+                            ++OUT.nParams;
+
+                            ++nepochs;
+                            break;
+                        }
+                        if(flag[idata])break;
+                    }
+                    if(flag[idata])break;
+                }
+                if (flag[idata]){
+                    for (int idata2 = idata; idata2 < psr_ndata; ++idata2){
+                        if(flag[idata2])continue;
+                        if(psr_x[idata2] > xmin && psr_x[idata2] < xmax){
+                            flag[idata2]=true;
+                        }
+                    }
+                }
+            }
+            logmsg("Generated %d TNepochs from %d TNECORRs",nepochs,psr->nTNECORR);
         }
     }
 
