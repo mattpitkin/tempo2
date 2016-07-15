@@ -1,6 +1,8 @@
 #include "t2fit.h"
 #include "t2fit_stdFitFuncs.h"
+#include "t2fit_nestlike.h"
 #include "constraints.h"
+#include "constraints_nestlike.h"
 #include <TKfit.h>
 #include <stdlib.h>
 #include <string.h>
@@ -564,7 +566,10 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals){
     OUT.updateFunctions[0]=t2UpdateFunc_zero;
     OUT.paramIndex[0]=param_ZERO;
 
-    for (int i=0;i<psr->nconstraints;i++) {
+    /*
+     * these are the "classical" tempo2 constraints.
+     */
+    for (int i=0;i<psr->nconstraints;++i) {
         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
         OUT.constraintCounters[OUT.nConstraints]=0;
         switch(psr->constraints[i]){
@@ -575,6 +580,34 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals){
                 break;
         }
     }
+
+    /*
+     * These are the temponest derived constraints
+     */
+    {
+        if (psr->TNRedAmp && psr->TNRedGam) {
+            for (int i=0;i<psr->TNRedC;++i) {
+                /**
+                 * Temporary fix here!
+                 * Enable the TN parameters.
+                 */
+                psr->param[param_red_sin].fitFlag[i]=1;
+                psr->param[param_red_cos].fitFlag[i]=1;
+
+                // End of temporary fix.
+
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_sin;
+                OUT.constraintCounters[OUT.nConstraints]=i;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red;
+                ++OUT.nConstraints;
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_cos;
+                OUT.constraintCounters[OUT.nConstraints]=i;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red;
+                ++OUT.nConstraints;
+            }
+        }
+    }
+
 
     for (int i=1;i<=psr->nJumps;i++) {
         if (psr->fitJump[i]==1)
@@ -596,6 +629,18 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals){
         OUT.updateFunctions[OUT.nParams] =globals.updateFunctions[i];
         ++OUT.nParams;
     }
+
+    if (psr->TNRedAmp && psr->TNRedGam) {
+        for (int i=0;i<psr->TNRedC;++i) {
+            /**
+             * Temporary fix here!
+             * Disable the TN parameters.
+             */
+            psr->param[param_red_sin].fitFlag[i]=0;
+            psr->param[param_red_cos].fitFlag[i]=0;
+        }
+    }
+
 
 }
 
@@ -829,6 +874,17 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
                         }
                         break;
 
+                    case param_red_sin:
+                    case param_red_cos:
+                        for (int i=0; i < psr->TNRedC ; ++i){
+                            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red;
+                            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red;
+                            OUT.paramCounters[OUT.nParams]=i;
+                            OUT.paramIndex[OUT.nParams]=fit_param;
+                            ++OUT.nParams;
+                        }
+
+                        break;
                     default:
                         logerr("ERROR: No methods for fitting parameter %d",fit_param);
                         break;
