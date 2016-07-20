@@ -44,5 +44,5 @@ double t2FitFunc_nestlike_jitter(pulsar *psr, int ipsr ,double x ,int ipos ,para
 }
 
 void t2UpdateFunc_nestlike_jitter(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
-    logmsg("%d %s %f %lg %lg",ipsr,label_str[label],psr[ipsr].obsn[k].bat,val,err);
+    logmsg("%d %s %.2f %lg %lg",ipsr,label_str[label],(double)psr[ipsr].obsn[k].bat,val,err);
 }
