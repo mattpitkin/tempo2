@@ -218,7 +218,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             }
         }
 
-        free_blas(uinv);
+        free_matrix_d(uinv);
         free(psr_e);
         free(psr_toaidx);
 
@@ -295,10 +295,10 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     if (doGlobalFit){
 
         const unsigned int nobs = totalGlobalData;
-        double** designMatrix = malloc_blas(nobs,totalGlobalParams);
-        double** white_designMatrix = malloc_blas(nobs,totalGlobalParams);
+        double** designMatrix = malloc_matrix_d(nobs,totalGlobalParams);
+        double** white_designMatrix = malloc_matrix_d(nobs,totalGlobalParams);
 
-        double** constraintsMatrix = malloc_blas(totalGlobalConstraints,totalGlobalParams);
+        double** constraintsMatrix = malloc_matrix_d(totalGlobalConstraints,totalGlobalParams);
 
         double *y   = (double*)malloc(sizeof(double)*nobs);
         double *white_y   = (double*)malloc(sizeof(double)*nobs);
@@ -363,9 +363,9 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
             free(gY[ipsr]);
             free(gW[ipsr]);
-            free_blas(gDM[ipsr]);
-            if (gCM[ipsr]) free_blas(gCM[ipsr]);
-            free_blas(gWDM[ipsr]);
+            free_matrix_d(gDM[ipsr]);
+            if (gCM[ipsr]) free_matrix_d(gCM[ipsr]);
+            free_matrix_d(gWDM[ipsr]);
         }
 
         double chisq; // the post-fit chi-squared
@@ -423,9 +423,9 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         free(errorEstimates);
         free(white_y);
         free(y);
-        free_blas(designMatrix);
-        free_blas(white_designMatrix);
-        free_blas(constraintsMatrix);
+        free_matrix_d(designMatrix);
+        free_matrix_d(white_designMatrix);
+        free_matrix_d(constraintsMatrix);
 
 
     }

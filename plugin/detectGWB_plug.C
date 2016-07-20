@@ -74,7 +74,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   
   double angle[4096];
   double a2zeta[4096],a2zeta_im[4096],a2zeta_e[4096];
-  longdouble sum1,sum2,sum3,sum4,weight1;
+  longdouble sum1,sum2,sum3,sum4;
   double cx,zeta;
   int    npair=0;
   char fname[4096];
@@ -420,7 +420,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		  if (nSpecNdof > 0)
 		    {
 		      sum1=sum2=sum3=sum4=longdouble(0.0);
-		      weight1 = -alpha_res;
+		      const double weight1 = -alpha_res;
 		      sprintf(tstr,"%s-%s.weightDGW",psr[p1].name,psr[p2].name);
 		      if(write_debug_files)fout2 = fopen(tstr,"w");
 		      
