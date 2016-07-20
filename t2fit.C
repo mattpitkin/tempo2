@@ -594,8 +594,11 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                  * Temporary fix here!
                  * Enable the TN parameters.
                  */
-                psr->param[param_red_sin].fitFlag[i]=1;
-                psr->param[param_red_cos].fitFlag[i]=1;
+                psr->param[param_red_sin].fitFlag[0]=1;
+                psr->param[param_red_cos].fitFlag[0]=1;
+
+                psr->param[param_red_sin].paramSet[0]=1;
+                psr->param[param_red_cos].paramSet[0]=1;
 
                 // End of temporary fix.
 
@@ -613,6 +616,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         // Fits for a constrained jump for each "epoch" (i.e. observation)
         int nepochs=0;
         if (psr->nTNECORR > 0) {
+
             const double dt = 10.0/SECDAY;
             double xmin=0;
             double xmax=0;
@@ -697,14 +701,14 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
     }
 
     if (psr->TNRedAmp && psr->TNRedGam) {
-        for (int i=0;i<psr->TNRedC;++i) {
-            /**
-             * Temporary fix here!
-             * Disable the TN parameters.
-             */
-            psr->param[param_red_sin].fitFlag[i]=0;
-            psr->param[param_red_cos].fitFlag[i]=0;
-        }
+        /**
+         * Temporary fix here!
+         * Disable the TN parameters.
+         */
+        psr->param[param_red_sin].fitFlag[0]=0;
+        psr->param[param_red_cos].fitFlag[0]=0;
+        psr->param[param_red_sin].paramSet[0]=0;
+        psr->param[param_red_cos].paramSet[0]=0;
     }
 
 
