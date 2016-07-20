@@ -715,11 +715,9 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
     bool sifunc;
     unsigned N;
     for (param_label fit_param=0; fit_param < param_LAST; ++fit_param){
-        if (fit_param == param_ifunc){
-            logmsg("if: %d %d %d",psr->param[fit_param].paramSet[0],psr->param[fit_param].fitFlag[0],psr->param[fit_param].aSize);
-        }
         for(int k=0; k < psr->param[fit_param].aSize;k++){
             if (psr->param[fit_param].paramSet[k]>0 && psr->param[fit_param].fitFlag[k]==globalflag) {
+                logdbg("%s(%d) %d %d", label_str[fit_param], k, psr->param[fit_param].paramSet[k],psr->param[fit_param].fitFlag[k]);
                 OUT.paramIndex[OUT.nParams]=fit_param;
                 OUT.paramCounters[OUT.nParams]=k;
                 switch(fit_param){
@@ -953,7 +951,7 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
 
                         break;
                     default:
-                        logerr("ERROR: No methods for fitting parameter %d",fit_param);
+                        logerr("ERROR: No methods for fitting parameter %d = %s",fit_param,label_str[fit_param]);
                         break;
                 }
             }
