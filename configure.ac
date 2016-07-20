@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2015.09.0],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/mkeith/tempo2])
+AC_INIT([Tempo2],[2016.05.0],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/psrsoft/tempo2])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -74,7 +74,7 @@ AS_IF([test "x$enable_float128" != "xno"], [
        AC_MSG_RESULT($have_float128)
 
        AS_IF([test "x$have_float128" != "xno"], [
-	       LIBS="$LIBS -lquadmath"
+              AC_CHECK_LIB(quadmath, cosq,[LDFLAGS="$CPPFLAGS -lquadmath"],have_float128=no)
        ])
 
        ])
@@ -132,12 +132,13 @@ SWIN_LIB_PGPLOT
 SWIN_LIB_FFTW
 SWIN_LIB_CFITSIO
 
-# No longer need openmp.
-#AX_OPENMP([have_openmp=yes],[have_openmp=no])
-#if test X$have_openmp == Xyes; then
-#	CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
-#	CXXFLAGS="$CXXFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
-#fi
+# Check for openmp (optional package)
+AX_OPENMP([have_openmp=yes],[have_openmp=no])
+if test X$have_openmp == Xyes; then
+    CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
+    CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS -DHAVE_OPENMP"
+    LDFLAGS="$LDFLAGS $OPENMP_CXXFLAGS"
+fi
 
 
 
@@ -259,6 +260,14 @@ T2ARCH=$t2arch
 AC_SUBST(T2ARCH)
 
 
+
+#doxygen
+AC_CHECK_PROG(have_doxygen,[doxygen], [yes],[no])
+AM_CONDITIONAL(HAVE_DOXYGEN, [test x"$have_doxygen" = xyes])
+
+
+
+
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 
 AC_CONFIG_HEADERS([config.h])
@@ -324,6 +333,9 @@ if test X$have_mlapack = Xbuiltin; then
     fi
 fi
 
+if test X$have_openmp == Xyes; then
+    AC_MSG_NOTICE(Using OpenMP for multithreading) 
+fi
 
 if test X$have_calceph = Xyes; then
     AC_MSG_NOTICE(Able to use calceph library for ephemeris reading) 
@@ -331,23 +343,6 @@ else
     AC_MSG_NOTICE(Calceph library was not found) 
 fi
 
-if test X$have_qdinstall = Xyes; then
-    AC_MSG_NOTICE(Using QD library)
-else            
-    AC_MSG_NOTICE([QD library not found, will not compile high precision part of TempoNest])
-fi   
-
-# TempoNest addition:
-if test X$have_multinest != Xyes; then
-    AC_MSG_NOTICE(MultiNest was not found - TempoNest can not be built) 
-
-else
-    if test X$have_cula = Xyes; then
-        AC_MSG_NOTICE(TempoNest will be built with CUDA/CULA GPU support) 
-    else
-        AC_MSG_NOTICE(TempoNest will be built without GPU support) 
-    fi
-fi
 if test $can_build_shared == no ; then
     echo ""
     AC_WARN("Libtool cannot build shared libraries - no plugins can be built!") 

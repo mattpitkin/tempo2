@@ -27,18 +27,8 @@
  *    timing model.
  */
 
-/* TEMPO2.C                                         */
-/* --------                                         */
-/*                                                  */
-/* TEMPO2.C is a clone of TEMPO, but is written     */
-/* in C/C++ and contains full descriptions of the   */
-/* precision available from each routine.           */
-/* Each variable is documented and can be           */
-/* tabulated.                                       */
-/*                                                  */
-/* V1.0 G. Hobbs, R. Edwards                        */
 
-//#include <iostream.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

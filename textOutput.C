@@ -1058,6 +1058,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                             }
                         }
                     }
+                    fprintf(fout,"\n");
                 }
                 for (jj=0;jj<psr[0].globalNfit;jj++)
                 {

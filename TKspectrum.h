@@ -34,7 +34,6 @@
 extern bool verbose_calc_spectra;
 /* Global variables used in the fortran code for sigmaz*/
 
-void readin(pulsar psr);
 void getprtj(int n);
 void indexx8(int n,double *arrin,int *indx);
 void getweights(int n, double *wt);
@@ -57,8 +56,6 @@ int TK_fft(short int dir,long n,double *x,double *y);
 void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
-void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
-void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
 
 int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit);
 
@@ -230,14 +227,11 @@ int TK_fft(short int dir,long n,double *x,double *y);
 //void calcSigmaz(pulsar *psr,int npsr,int time,int psrfile,double mintau,
 //		int nSel,int *selPsr,int weights,int style,int average,
 //		float *avX,float *avY,int *nav)
-void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
-        double *ret_e2,int *ret_nval,double mintau);
 
 
 
 /* WHAT AM I RETURNING IN AND OUT OF THIS FUNCTION? */
 void fit4(int *nfit,double *p4,double *cov4,int ndostats,double *chidf,double *avewt);
-void readin(pulsar psr);
 
 // Check conversion from Fortran carefully
 void indexx8(int n,double *arrin,int *indx);
@@ -250,6 +244,9 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
 
 
 #ifdef __Tempo2_h
+void readin(pulsar psr);
+void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
+void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
 
 // Fit for mean and sine and cosine terms at a specified frequency (G_OMEGA)
 // The psr and ival parameters are ignored
@@ -268,6 +265,8 @@ int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *spec
 int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char useCM,pulsar* psr);
 
 
+void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
+        double *ret_e2,int *ret_nval,double mintau);
 
 extern double GLOBAL_OMEGA;
 #endif

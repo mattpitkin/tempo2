@@ -18,6 +18,11 @@ export CXXFLAGS="$ADDFLAGS $CXXFLAGS"
 echo "CFLAGS   = '$CFLAGS'"
 echo "CXXFLAGS = '$CXXFLAGS'"
 echo "LDFLAGS  = '$LDFLAGS'"
+echo "PREFIX = '$PREFIX'"
 
+<<<<<<< HEAD
 echo ./configure --prefix=/usr/pulsar $2 $3 $4 $5 $6
 ./configure --prefix=/usr/pulsar $2 $3 $4 $5 $6
+=======
+./configure --prefix=$PREFIX $2 $3 $4 $5 $6
+>>>>>>> master

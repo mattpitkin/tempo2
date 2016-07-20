@@ -108,7 +108,25 @@ double ELL1model(pulsar *psr,int p,int ipos,int param)
 
     ct = psr[p].obsn[ipos].bbat;      
     tt0 = (ct-t0asc)*SECDAY;
-    orbits = tt0/pb-0.5*(pbdot+xpbdot)*pow(tt0/pb,2);
+    // --- Changes to handle higher orbital-frequency derivatives (FB1, FB2, ...) ---                                               
+    // 04/2015, H. J. Pletsch                                                                                                       
+    orbits = tt0/pb;
+    if (psr[p].param[param_fb].paramSet[1]==1) {
+        int j;
+        double fac = 1.0;
+        for (j=1;j<psr[p].param[param_fb].aSize;j++) {
+          double fbx;
+          fac = fac/((double)(j+1));
+          if (psr[p].param[param_fb].paramSet[j]==1) {
+            fbx = psr[p].param[param_fb].val[j];
+            orbits += fac * fbx * pow(tt0,j+1);
+          }
+        }
+      } else {
+        orbits -= 0.5*(pbdot+xpbdot)*pow(tt0/pb,2);
+      }
+      // --- End of changes to handle higher orbital-frequency derivatives ---                                                        
+
     norbits = (int)orbits;
     if (orbits<0.0) norbits = norbits-1;
     phase = 2.0*M_PI*(orbits-norbits);

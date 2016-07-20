@@ -1,5 +1,7 @@
 #include "t2fit_stdFitFuncs.h"
+#include <enum_str.h>
 #include <cmath>
+#include <cstdlib>
 #include <assert.h>
 #include <cstring>
 
@@ -120,32 +122,34 @@ void t2UpdateFunc_stdFreq(pulsar *psr, int ipsr ,param_label label,int k, double
 double t2FitFunc_binaryModels(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     double afunc;
     psr+=ipsr; // cheap way to get pointer to current pulsar.
-    if (strcmp(psr[ipsr].binaryModel,"BT")==0) /* Must be below other parameters */
+    if (strcmp(psr->binaryModel,"BT")==0) /* Must be below other parameters */
         afunc = BTmodel(psr,0,ipos,label);
-    else if (strcmp(psr[ipsr].binaryModel,"BTJ")==0)
+    else if (strcmp(psr->binaryModel,"BTJ")==0)
         afunc = BTJmodel(psr,0,ipos,label,k);
-    else if (strcmp(psr[ipsr].binaryModel,"BTX")==0)
+    else if (strcmp(psr->binaryModel,"BTX")==0)
         afunc = BTXmodel(psr,0,ipos,label,k);
-    else if (strcmp(psr[ipsr].binaryModel,"ELL1")==0)
+    else if (strcmp(psr->binaryModel,"ELL1")==0)
         afunc = ELL1model(psr,0,ipos,label);
-    else if (strcmp(psr[ipsr].binaryModel,"DD")==0)
+    else if (strcmp(psr->binaryModel,"DD")==0)
         afunc = DDmodel(psr,0,ipos,label);
-    else if (strcmp(psr[ipsr].binaryModel,"DDK")==0)
+    else if (strcmp(psr->binaryModel,"DDK")==0)
         afunc = DDKmodel(psr,0,ipos,label);
-    else if (strcmp(psr[ipsr].binaryModel,"DDS")==0)
+    else if (strcmp(psr->binaryModel,"DDS")==0)
         afunc = DDSmodel(psr,0,ipos,label);
-    else if (strcmp(psr[ipsr].binaryModel,"DDGR")==0)
+    else if (strcmp(psr->binaryModel,"DDGR")==0)
         afunc = DDGRmodel(psr,0,ipos,label);
-    else if (strcmp(psr[ipsr].binaryModel,"MSS")==0)
+    else if (strcmp(psr->binaryModel,"MSS")==0)
         afunc = MSSmodel(psr,0,ipos,label);
-    else if (strcmp(psr[ipsr].binaryModel,"T2")==0)
+    else if (strcmp(psr->binaryModel,"T2")==0)
         afunc = T2model(psr,0,ipos,label,k);
-    else if (strcmp(psr[ipsr].binaryModel,"T2-PTA")==0)
+    else if (strcmp(psr->binaryModel,"T2-PTA")==0)
         afunc = T2_PTAmodel(psr,0,ipos,label,k);
-    else if (strcmp(psr[ipsr].binaryModel,"DDH")==0)
+    else if (strcmp(psr->binaryModel,"DDH")==0)
         afunc = DDHmodel(psr,0,ipos,label);
-    else if (strcmp(psr[ipsr].binaryModel,"ELL1H")==0)
+    else if (strcmp(psr->binaryModel,"ELL1H")==0)
         afunc = ELL1Hmodel(psr,0,ipos,label);
+
+    logdbg("%s(%d) %s %d %s(%d) %g",psr->name,ipsr,psr->binaryModel,ipos,label_str[label],k,afunc);
     return afunc;
 
 
@@ -180,7 +184,10 @@ void t2UpdateFunc_binaryModels(pulsar *psr, int ipsr ,param_label label,int k, d
 }
 
 
-double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
+double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    assert(label==param_dmassplanet);
+    return dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
+}
 void t2UpdateFunc_planet(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
@@ -217,8 +224,6 @@ double t2FitFunc_telPos(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
 void t2UpdateFunc_telPos(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 
-double t2FitFunc_miscDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_miscDm(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_jump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     for (int l=0;l<psr[ipsr].obsn[ipos].obsNjump;l++){
@@ -231,3 +236,12 @@ void t2UpdateFunc_jump(pulsar *psr, int ipsr ,param_label label,int k, double va
     psr[ipsr].jumpValErr[k] = err;
 }
 
+
+double t2FitFunc_notImplemented(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    logerr("Parameter not implemented");
+    exit(1);
+}
+void t2UpdateFunc_notImplemented(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
+    logerr("Parameter not implemented");
+    exit(1);
+}

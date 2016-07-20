@@ -12,13 +12,13 @@ libtempo2_la_LDFLAGS=-version-info 1:0:0
 libt2toolkit_la_LDFLAGS=-version-info 1:0:0
 libtempo2pred_la_LDFLAGS=-version-info 1:0:0
 
-BUILT_SOURCES=TKcholesky.h TKlongdouble.h
+BUILT_SOURCES=TKcholesky.h TKlongdouble.h enum_str.h enum_str.C
 
 
 # Source files used by plugins that are not part of libtempo2
 xtra_dist_sources=choleskyRoutines.C choleskyRoutines.h TKmatrix.detail.h TKmatrix.detail.cpp TKmatrix.cpp TKsvd.cpp
 
-FITFUNCS=t2fit_stdFitFuncs.C t2fit_position.C t2fit_fitwaves.C t2fit_glitch.C t2fit_ifunc.C t2fit_dmmodel.C
+FITFUNCS=t2fit_stdFitFuncs.C t2fit_position.C t2fit_fitwaves.C t2fit_glitch.C t2fit_ifunc.C t2fit_dmmodel.C t2fit_dmother.C
 
 #It'd be better to sort out which headers are neaded by which target, but I'm to busy to do that right now.
 headers=GWsim.h T2toolkit.h TKfit.h TKspectrum.h dynarr.h ifteph.h jpl_int.h jpleph.h read_fortran.h read_fortran2.h tabulatedfunction.h tempo2.h tempo2Util.h tempo2pred.h tempo2pred_int.h constraints.h choleskyRoutines.h T2accel.h TKmatrix.h TKsvd.h cholesky.h TKlog.h t2fit.h $(FITFUNCS:.C=.h) $(BUILT_SOURCES) TKlongdouble.float128.h TKlongdouble.ld.h
@@ -99,7 +99,8 @@ getPeriod_LDADD = libtempo2pred.la
 
 
 # Specify to include the T2runtime in distributions
-EXTRA_DIST = T2runtime $(xtra_dist_sources)
+EXTRA_DIST = T2runtime $(xtra_dist_sources) documentation
+
 
 TKmatrix.lo: TKmatrix.C TKmatrix.cpp TKmatrix.detail.cpp TKmatrix.detail.h TKmatrix.h
 
@@ -110,6 +111,7 @@ dist-hook:
 	rm -rf $(distdir)/unsupported_plugins/built_plugins/*
 	rm -rf `find $(distdir)/unsupported_plugins/ -name CVS`
 	rm -rf `find $(distdir)/unsupported_plugins/ -name '*.o'`
+	rm -rf $(distdir)/documentation/doxygen
 
 
 
@@ -159,19 +161,36 @@ complete-clean: plugins-clean unsupported-clean core-clean
 
 if HAVE_FLOAT128
 TKlongdouble.h: TKlongdouble.float128.h
-	cp TKlongdouble.float128.h $@
+	cp $(srcdir)/TKlongdouble.float128.h $@
 else
 TKlongdouble.h: TKlongdouble.ld.h
-	cp TKlongdouble.ld.h $@
+	cp $(srcdir)/TKlongdouble.ld.h $@
 endif
 
-CLEANFILES=$(BUILT_SOURCES)
+if HAVE_DOXYGEN
+doc: $(libtempo2_la_SOURCES)
+	doxygen
+	make -C documentation/doxygen/latex
+	cp documentation/doxygen/latex/refman.pdf documentation/tempo2_documentation.pdf
+	
+else
+doc:
+	echo "Sorry, you need doxygen to build the documentation"
+endif
+
+enum_str.h: enum_str.C
+
+enum_str.C: extract_enums.sh tempo2.h
+	./extract_enums.sh < tempo2.h
+
+
+CLEANFILES=$(BUILT_SOURCES) documentation/doxygen
 
 .PHONY: plugins-install plugins plugins-clean \
    unsupported unsupported-install unsupported-clean \
    complete complete-install complete-clean \
    temponest temponest-install \
-   core core-install core-clean test
+   core core-install core-clean test doc
 
 install-data-hook:
 	@echo ""
