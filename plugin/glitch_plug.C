@@ -240,8 +240,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char timeList[MAX_STRLEN];
   double *mjd1,*mjd2;
   double centreMJD;
-  char parFileName[MAX_TIMES][MAX_STRLEN];
-  char timFileName[MAX_TIMES][MAX_STRLEN];
+  char **parFileName;
+  char **timFileName;
+  //  char parFileName[MAX_TIMES][MAX_STRLEN];
+  //  char timFileName[MAX_TIMES][MAX_STRLEN];
   double *epoch;
   double *f0;
   double *f0e;
@@ -279,6 +281,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   longdouble storeOrigF0,storeOrigF1,storeOrigF2;
   int removeExpected=0;
 
+  printf("Default allocation: %d %d %d %d\n",MAX_TIMES,MAX_STRLEN,MAX_OBSN,MAX_PSR);
+
   // Allocate memory
   printf("Allocating memory\n");
   if (!(mjd1 = (double *)malloc(sizeof(double)*MAX_TIMES)))
@@ -295,6 +299,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {printf("Sorry: out of memory\n"); exit(1);}
   if (!(f1e = (double *)malloc(sizeof(double)*MAX_TIMES)))
     {printf("Sorry: out of memory\n"); exit(1);}
+
+  parFileName = (char **)malloc(sizeof(char *)*MAX_TIMES);
+  timFileName = (char **)malloc(sizeof(char *)*MAX_TIMES);
+  for (i=0;i<MAX_TIMES;i++)
+    {
+      parFileName[i] = (char *)malloc(sizeof(char)*MAX_STRLEN);
+      timFileName[i] = (char *)malloc(sizeof(char)*MAX_STRLEN);
+    }
+
+  //  char timFileName[MAX_TIMES][MAX_STRLEN];
+
 
 
   for (i=0;i<100;i++)
@@ -372,9 +387,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
   if (loadResults==0)
     {
+      printf("Getting initial models\n");
       readParfile(psr,parFile,timFile,1); /* Load the parameters       */
       readTimfile(psr,timFile,1); /* Load the arrival times    */
-      storeEpoch = psr[0].param[param_pepoch].val[0];
+
+      storeEpoch  = psr[0].param[param_pepoch].val[0];
       storeOrigF0 = psr[0].param[param_f].val[0];
       storeOrigF1 = psr[0].param[param_f].val[1];
       storeOrigF2 = psr[0].param[param_f].val[2];
@@ -384,12 +401,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       while (!feof(fin))
 	{
 	  nread = fscanf(fin,"%lf %lf %s %s",&mjd1[nStride],&mjd2[nStride],parFileName[nStride],tname);
+	  printf("nread = %d\n",nread);
 	  if (nread==3 || nread==4)
 	    {
 	      if (nread==4)
-		strcpy(timFileName[nStride],tname);
+		{
+		  printf("Copying %s to %d\n",tname,nStride);
+		  strcpy(timFileName[nStride],tname);
+		}
 	      else
-		strcpy(timFileName[nStride],timFile[0]);
+		{
+		  printf("In here with nread = %d\n",nread);
+		  strcpy(timFileName[nStride],timFile[0]);
+		}	      
 	      nStride++;
 	      if (nStride > MAX_TIMES)
 		{
@@ -398,8 +422,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		}
 	    }
 	}
-      fclose(fin);
-      printf("Have read %d strides\n",nStride);
+      fclose(fin); 
+      printf("\nHave read %d strides\n",nStride);
+
       if (nStride == 0)
 	{
 	  printf("ERROR: require at least one stride - use -t option\n");
@@ -417,6 +442,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	}
       for (i=0;i<nStride;i++)
 	{
+	  printf("Stride %d\n",i);
 	  centreMJD = (mjd1[i]+mjd2[i])/2.0;
 	  printf("Analysing %g %g %g\n",(double)mjd1[i],(double)mjd2[i],(double)centreMJD);
 	  
@@ -424,7 +450,30 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  strcpy(timFile[0],timFileName[i]);
 	  
 	  psr[0].nJumps=0;
-	  psr[0].nobs=0;
+	  psr[0].fitMode=0;
+	  psr[0].eclCoord=0;
+	  psr[0].nits=1;
+	  psr[0].clockFromOverride[0] = '\0';
+	  psr[0].nCompanion = 0;
+	  psr[0].bootStrap = 0;
+	  psr[0].units = SI_UNITS;
+	  psr[0].ne_sw  = NE_SW_DEFAULT; 
+	  psr[0].nWhite = 0;  // No whitening by default 
+	  psr[0].timeEphemeris = IF99_TIMEEPH;
+	  psr[0].dilateFreq = 1;
+	  psr[0].planetShapiro = 1;
+	  psr[0].correctTroposphere = 1;
+	  psr[0].t2cMethod = T2C_IAU2000B;
+	  psr[0].fixedFormat=0;
+	  psr[0].nStorePrecision=0;
+	  strcpy(psr[0].deleteFileName,"NONE");
+	  strcpy(psr[0].tzrsite,"NULL");
+	  psr[0].calcShapiro=1;
+	  psr[0].ipm = 1;
+	  psr[0].swm = 0;
+	  psr[0].nPhaseJump=0;
+	  psr[0].nobs = 0;
+	  
 	  for(j=0;j<MAX_PARAMS;j++){
 	    psr[0].param[j].nLinkTo = 0;
 	    psr[0].param[j].nLinkFrom = 0;
@@ -435,18 +484,23 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		psr[0].param[j].prefit[k] = 0.0;
 		psr[0].param[j].val[k] = 0.0;
 	      }
-	  }
+	  } 
 	  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
 	  readTimfile(psr,timFile,1); /* Load the arrival times    */
 	  printf("ntoas = %d\n",psr[0].nobs);
 	  // Update the epoch in the par file for centreMJD
 	  strcpy(argv[argn],"-epoch");
 	  sprintf(argv[argn+1],"%.5f",(double)centreMJD);
+	  for (j=0;j<argc;j++)
+	    {
+	      printf("Arguments: %s\n",argv[j]);
+	    }
+	
 	  preProcess(psr,1,argc,argv);      
 	  
 	  storeExpectedF0 = storeOrigF0 + storeOrigF1*(centreMJD-storeEpoch)*longdouble(86400.0) + 0.5*storeOrigF2*pow((centreMJD-storeEpoch)*longdouble(86400.0),2);
 	  storeExpectedF1 = storeOrigF1 + storeOrigF2*(centreMJD-storeEpoch)*longdouble(86400.0);
-	  
+	  printf("Store Expected = %g %g\n",(double)storeExpectedF0,(double)storeExpectedF1);
 	  // Turn off all fitting
 	  for (j=0;j<MAX_PARAMS;j++)
 	    {
@@ -454,6 +508,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		psr[0].param[j].fitFlag[k] = 0;
 	    }
 	  
+
 	  // Update the start and finish flags
 	  psr[0].param[param_start].val[0] = mjd1[i];
 	  psr[0].param[param_start].fitFlag[0] = 1;
@@ -462,7 +517,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  psr[0].param[param_finish].val[0] = mjd2[i];
 	  psr[0].param[param_finish].fitFlag[0] = 1;
 	  psr[0].param[param_finish].paramSet[0] = 1;
-	  
+	  printf("Start and end flags are %g %g\n",(double)mjd1[i],(double)mjd2[i]);
 	  // Turn on required fitting
 	  psr[0].param[param_f].fitFlag[0] = 1;
 	  if (fitf1==1)
@@ -471,11 +526,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  // Do the fitting
 	  for (j=0;j<2;j++)                   /* Do two iterations for pre- and post-fit residuals*/
 	    {
+	      printf("Forming bats %d\n",j);
 	      formBatsAll(psr,1);         /* Form the barycentric arrival times */
+	      printf("Forming residuals\n");
 	      formResiduals(psr,1,1);    /* Form the residuals                 */
 	      if (j==0) doFit(psr,1,0);   /* Do the fitting     */
 	      else textOutput(psr,1,globalParameter,0,0,0,(char *)"");  /* Display the output */
 	    }
+	  printf("Complete the fit\n");
 	  if ((psr[0].nFit>1 && fitf1==0) || (fitf1==1 && psr[0].nFit>2))
 	    {
 	      epoch[n] = (double)centreMJD;
@@ -634,6 +692,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   // De-allocate memory
   free(mjd1); free(mjd2); free(epoch); free(f0); free(f0e); free(f1); free(f1e);
 
+  for (i=0;i<MAX_TIMES;i++)
+    {
+      free(parFileName[i]);
+      free(timFileName[i]);
+    }
+  free(parFileName);
+  free(timFileName);
+
 
   return 0;
 }
@@ -649,8 +715,9 @@ void doPlot(double *epoch,double *f0,double *f0e,double *f1,double *f1e,int fitf
   int last;
   double minx=-1,maxx=-1;
 
-  minx = epoch[0];
-  maxx = epoch[n-1];
+  // George update
+  //  minx = epoch[0];
+  //  maxx = epoch[n-1];
 
 
   for (i=0;i<n;i++)
