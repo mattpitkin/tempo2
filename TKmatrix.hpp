@@ -1,4 +1,20 @@
 #include <ostream>
+template<typename DataType>
+std::map<DataType*,TK::matrix<DataType>* > TK::matrix<DataType>::_map;
+
+template <typename T>
+void TK::matrix_register(TK::matrix<T> *m){
+    //logdbg("register %lp",m->getRaw());
+    m->_map[m->getRaw()] = m;
+}
+
+template <typename T>
+void TK::matrix_deregister(TK::matrix<T> *m){
+    //logdbg("deregister %lp",m->getRaw());
+    m->_map.erase(m->getRaw());
+}
+
+
 
 // Template method definitions
 template<typename D, typename F>

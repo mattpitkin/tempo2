@@ -1,19 +1,4 @@
 
-template<typename DataType>
-std::map<DataType*,TK::matrix<DataType>* > TK::matrix<DataType>::_map;
-
-template <typename T>
-void TK::matrix_register(TK::matrix<T> *m){
-    //logdbg("register %lp",m->getRaw());
-    m->_map[m->getRaw()] = m;
-}
-
-template <typename T>
-void TK::matrix_deregister(TK::matrix<T> *m){
-    //logdbg("deregister %lp",m->getRaw());
-    m->_map.erase(m->getRaw());
-}
-
 template<typename D>
 TK::matrix<D> *TK::matrix<D>::getFromPtr(D* p){
     TK::matrix<D> *ret = TK::matrix<D>::_map[p];
