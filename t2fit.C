@@ -288,7 +288,6 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             free(errorEstimates);
             free_matrix_d(designMatrix);
             free_matrix_d(white_designMatrix);
-            free_matrix_d(uinv);
             if (constraintsMatrix) free_matrix_d(constraintsMatrix);
             free(psr_x);
             free(psr_y);
