@@ -125,7 +125,7 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 		  // err_code = jpl_pleph(ephem, jd+1e-6, iplanet+1, 12, 
 		  //		       psr[p].obsn[i].planet_ssb_tmr[iplanet], 1);
 		
-		  calceph_compute_unit(eph,jd0+1,jd1+1,iplanet+1,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].planet_ssb_tmr[iplanet]);
+		  calceph_compute_unit(eph,jd0+1,jd1,iplanet+1,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].planet_ssb_tmr[iplanet]);
 		    
 		 
 		  convertUnits(psr[p].obsn[i].planet_ssb_tmr[iplanet],psr[p].units);

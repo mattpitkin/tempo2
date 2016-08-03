@@ -271,17 +271,21 @@ void averageResiduals(pulsar *psr, int npsr){
                     }
                 }
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
-                psr[0].obsn[o].averagebat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
+         
+			
+		psr[0].obsn[o].averagebat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
                 psr[0].obsn[o].averageres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
                 psr[0].obsn[o].averageerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
-            }
+	    }
         }
     }
 
+    FILE *avgfile;
+    avgfile=fopen("avg.dat", "w");
     for(int o=0;o<psr[0].nobs;o++){
-        //		printf("Average: %g %g %g \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
+			fprintf(avgfile,  "%.5f %.3e %3e \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
     }
-
+    fclose(avgfile);
 
 
     for(int i = 0; i < systemcount; i++){
