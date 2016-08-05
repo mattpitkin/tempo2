@@ -36,7 +36,7 @@
 #include "tempo2.h"
 #include "ifteph.h"
 
-void convertUnits(double *val,int units);
+void convertUnits(double *val,int units,int eclCoord);
 
 #ifdef HAVE_CALCEPH
 #include <calceph.h>
@@ -90,11 +90,11 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 
             // Calculate the Earth to SSB vector
             calceph_compute_unit(eph,jd0,jd1,3,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earth_ssb);
-            convertUnits(psr[p].obsn[i].earth_ssb,psr[p].units);
+            convertUnits(psr[p].obsn[i].earth_ssb,psr[p].units, psr[p].eclCoord);
 
             // Calculate the Sun to SSB vector
             calceph_compute_unit(eph,jd0,jd1,11,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].sun_ssb);
-            convertUnits(psr[p].obsn[i].sun_ssb,psr[p].units);
+            convertUnits(psr[p].obsn[i].sun_ssb,psr[p].units,psr[p].eclCoord);
 
 
 
@@ -111,7 +111,7 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 		
 		    calceph_compute_unit(eph,jd0,jd1,iplanet+1,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].planet_ssb[iplanet]);
 		    
-		    convertUnits(psr[p].obsn[i].planet_ssb[iplanet],psr[p].units);
+		    convertUnits(psr[p].obsn[i].planet_ssb[iplanet],psr[p].units,psr[p].eclCoord);
 		      
 	
 		}
@@ -128,7 +128,7 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 		  calceph_compute_unit(eph,jd0+1,jd1,iplanet+1,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].planet_ssb_tmr[iplanet]);
 		    
 		 
-		  convertUnits(psr[p].obsn[i].planet_ssb_tmr[iplanet],psr[p].units);
+		  convertUnits(psr[p].obsn[i].planet_ssb_tmr[iplanet],psr[p].units,psr[p].eclCoord);
     
 		  
 		  
@@ -161,31 +161,31 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 
 	    // calculate Jupiter to Earth vector
 	    calceph_compute_unit(eph,jd0,jd1,5,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].jupiter_earth);
-	    convertUnits(psr[p].obsn[i].jupiter_earth,psr[p].units);
+	    convertUnits(psr[p].obsn[i].jupiter_earth,psr[p].units,psr[p].eclCoord);
 
 	    // calculate Saturn to Earth vector
 	    calceph_compute_unit(eph,jd0,jd1,6,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].saturn_earth);
-	    convertUnits(psr[p].obsn[i].saturn_earth,psr[p].units);
+	    convertUnits(psr[p].obsn[i].saturn_earth,psr[p].units,psr[p].eclCoord);
 	    
 	    // calculate Uranus to Earth vector
 	    calceph_compute_unit(eph,jd0,jd1,7,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].uranus_earth);
-	    convertUnits(psr[p].obsn[i].uranus_earth,psr[p].units);
+	    convertUnits(psr[p].obsn[i].uranus_earth,psr[p].units,psr[p].eclCoord);
 
 	    // Neptune-Earth
 	    calceph_compute_unit(eph,jd0,jd1,8,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].neptune_earth);
-	    convertUnits(psr[p].obsn[i].neptune_earth,psr[p].units);
+	    convertUnits(psr[p].obsn[i].neptune_earth,psr[p].units,psr[p].eclCoord);
 
 	    // Venus-earth
 	    calceph_compute_unit(eph,jd0,jd1,2,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].venus_earth);
-	    convertUnits(psr[p].obsn[i].venus_earth,psr[p].units);
+	    convertUnits(psr[p].obsn[i].venus_earth,psr[p].units,psr[p].eclCoord);
 	    
 	    // Earth-moon bary to SSB
 	    calceph_compute_unit(eph,jd0,jd1,13,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earthMoonBary_ssb);
-	    convertUnits(psr[p].obsn[i].earthMoonBary_ssb,psr[p].units);
+	    convertUnits(psr[p].obsn[i].earthMoonBary_ssb,psr[p].units,psr[p].eclCoord);
 
 	    //Earth-moon bary to earth
 	    calceph_compute_unit(eph,jd0,jd1,13,3,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earthMoonBary_earth);
-	    convertUnits(psr[p].obsn[i].earthMoonBary_earth,psr[p].units);
+	    convertUnits(psr[p].obsn[i].earthMoonBary_earth,psr[p].units,psr[p].eclCoord);
 
 	    
 	    for (iplanet=0; iplanet < 9; iplanet++)
@@ -269,7 +269,7 @@ void tt2tb_calceph(pulsar *psr, int npsr)
 }
 #endif
 
-void convertUnits(double *val,int units)
+void convertUnits(double *val,int units,int eclCoord)
 {
     double scale=1;
     if (units == SI_UNITS)
@@ -280,4 +280,5 @@ void convertUnits(double *val,int units)
     val[3] = val[3]*1000.0*scale/SPEED_LIGHT;
     val[4] = val[4]*1000.0*scale/SPEED_LIGHT;
     val[5] = val[5]*1000.0*scale/SPEED_LIGHT;
+	if (eclCoord==1) equ2ecl(val);
 }
