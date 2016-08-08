@@ -7,13 +7,13 @@ DIST_SUBDIRS=sofa plugin unsupported_plugins tests
 bin_PROGRAMS=tempo2 getPeriod
 lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
 
-BUILT_SOURCES=TKcholesky.h TKlongdouble.h
+BUILT_SOURCES=TKcholesky.h TKlongdouble.h enum_str.h enum_str.C
 
 
 # Source files used by plugins that are not part of libtempo2
 xtra_dist_sources=choleskyRoutines.C choleskyRoutines.h
 
-FITFUNCS=t2fit_stdFitFuncs.C t2fit_position.C t2fit_fitwaves.C t2fit_glitch.C t2fit_ifunc.C t2fit_dmmodel.C
+FITFUNCS=t2fit_stdFitFuncs.C t2fit_position.C t2fit_fitwaves.C t2fit_glitch.C t2fit_ifunc.C t2fit_dmmodel.C t2fit_dmother.C
 
 #It'd be better to sort out which headers are neaded by which target, but I'm to busy to do that right now.
 headers=GWsim.h T2toolkit.h TKfit.h TKspectrum.h dynarr.h ifteph.h jpl_int.h jpleph.h read_fortran.h read_fortran2.h tabulatedfunction.h tempo2.h tempo2Util.h tempo2pred.h tempo2pred_int.h constraints.h choleskyRoutines.h T2accel.h TKmatrix.h TKsvd.h cholesky.h TKlog.h t2fit.h $(FITFUNCS:.C=.h) $(BUILT_SOURCES) TKlongdouble.float128.h TKlongdouble.ld.h
@@ -153,6 +153,10 @@ doc:
 	echo "Sorry, you need doxygen to build the documentation"
 endif
 
+enum_str.h: enum_str.C
+
+enum_str.C: extract_enums.sh tempo2.h
+	./extract_enums.sh < tempo2.h
 
 
 CLEANFILES=$(BUILT_SOURCES) documentation/doxygen

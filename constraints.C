@@ -959,6 +959,9 @@ void CONSTRAINTfuncs(pulsar *psr,int ipsr, int nparams,int iconstraint, double* 
                         if (i==param_quad_ifunc_c)
                             jmax = psr->quad_ifuncN_c;
 
+                        if (i==param_ifunc)
+                            jmax = psr->ifuncN;
+
                         // we are fitting for this param
                         for (j=0; j < jmax; j++){
                             OUT[pcount] += getConstraintDeriv(psr,iconstraint,i,k+j);
