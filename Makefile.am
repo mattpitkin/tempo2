@@ -156,7 +156,7 @@ endif
 enum_str.h: enum_str.C
 
 enum_str.C: extract_enums.sh tempo2.h
-	./extract_enums.sh < tempo2.h
+	$(srcdir)/extract_enums.sh < $(srcdir)/tempo2.h
 
 
 CLEANFILES=$(BUILT_SOURCES) documentation/doxygen
