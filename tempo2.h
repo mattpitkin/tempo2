@@ -806,12 +806,12 @@ extern "C" {
     void updateBatsAll(pulsar *psr,int npsr);
     void formResiduals(pulsar *psr,int npsr,int removeMean);
     int  bootstrap(pulsar *psr,int p,int npsr);
-    void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile) ;
-    void doFit(pulsar *psr,int npsr,int writeModel) ;
-    void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) ;
-    void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) ; 
+    void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile) DEPRECATED;
+    void doFit(pulsar *psr,int npsr,int writeModel) DEPRECATED;
+    void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) DEPRECATED;
+    void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) DEPRECATED; 
     void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
-    double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k) ;
+    double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k) DEPRECATED;
     void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname);
     void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
     void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);

@@ -109,7 +109,7 @@ void averageDMResiduals(pulsar *psr, int npsr){
                     }
                 }
 
-		double freq=psr[0].obsn[o].freq/1400.;
+                double freq=psr[0].obsn[o].freq/1400.;
 
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
                 double adjustedErr = pow(psr[0].obsn[o].toaErr*pow(10.0, -6), 2)*pow(freq,4.);
@@ -271,19 +271,19 @@ void averageResiduals(pulsar *psr, int npsr){
                     }
                 }
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
-         
-			
-		psr[0].obsn[o].averagebat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
+
+
+                psr[0].obsn[o].averagebat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
                 psr[0].obsn[o].averageres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
                 psr[0].obsn[o].averageerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
-	    }
+            }
         }
     }
 
     FILE *avgfile;
     avgfile=fopen("avg.dat", "w");
     for(int o=0;o<psr[0].nobs;o++){
-			fprintf(avgfile,  "%.5f %.3e %3e \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
+        fprintf(avgfile,  "%.5f %.3e %3e \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
     }
     fclose(avgfile);
 
@@ -1111,7 +1111,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         resp = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resp); 
 
                     psr[p].quad_ifunc_geom_p = resp;
-                    		   printf("Resp2 = %s %g %g\n",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
+                    logdbg("Resp2 = %s %g %g",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
                     // NOTE: These are for the cross terms. 
                     lambda   = psr[p].gwm_raj;
                     beta     = psr[p].gwm_decj;
@@ -1136,9 +1136,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     if ((1-cosTheta)==0.0)
                         resc = 0.0;  // Check if this is sensible
                     else
-		      resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
+                        resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
                     psr[p].quad_ifunc_geom_c = resc;
-		    // printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
+                    // printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
                     dt = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*longdouble(86400.0);
                     //		   scale = -0.5*cos2Phi*(1-cosTheta);
                     phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[0]*psr[p].quad_ifunc_geom_p); 				
@@ -1715,7 +1715,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 else
                     resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
                 psr[p].gwb_geom_c = resc;
-		//printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
+                //printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
 
                 // exp(-(t-T0)**2/2./w**2)
 
@@ -2029,11 +2029,11 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         if(psr[p].AverageResiduals == 1){
             averageResiduals(psr, 1);
         }
-	
-	if(psr[p].AverageDMResiduals == 1){
-	  averageDMResiduals(psr,1);
-	  
-	}
+
+        if(psr[p].AverageDMResiduals == 1){
+            averageDMResiduals(psr,1);
+
+        }
 
     }
 
