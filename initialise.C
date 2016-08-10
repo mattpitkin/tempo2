@@ -113,7 +113,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     }  /* This memory gets deallocated by destroyOne */
 
 
-    strcpy(psr->eopc04_file,"/earth/eopc04_08_IAU2000.62-now");
+    strcpy(psr->eopc04_file,"/earth/eopc04_IAU2000.62-now");
     strcpy(psr->filterStr,"");
     strcpy(psr->passStr,"");
     strcpy(psr->fitFunc,"default");
