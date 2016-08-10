@@ -331,7 +331,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         char temp[1024];
         fscanf(fin,"%s",temp);
-        sprintf(psr->ephemeris,"%s/ephemeris/%s",getenv("TEMPO2"),temp);
+        sprintf(psr->ephemeris,"%s",temp);
         psr->useCalceph = 1;
     }
     else if (strcasecmp(str,"TOFFSET")==0) /* Time offset */

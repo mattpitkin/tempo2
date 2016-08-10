@@ -90,7 +90,7 @@
 #define MAX_TOFFSET          10    /*!< Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /*!< Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX             512    /*!< Max number of DM steps allowed */
-#define MAX_FLAGS            20    /*!< Maximum number of flags in .tim file/observation */
+#define MAX_FLAGS            40    /*!< Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /*!< Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /*!< Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /*!< Number of seconds in 1 day                 */
@@ -174,7 +174,7 @@ enum label {
     param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
     param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
     param_wave_dm, param_waveepoch_dm,
-    param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,param_clk_offs,
+    param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet, param_dphaseplanet, param_waveepoch,param_ifunc,param_clk_offs,
     param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_cgw,param_quad_om,
     param_h3,param_h4,param_nharm,param_stig,
     param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
@@ -381,20 +381,29 @@ typedef struct observation {
     double averagebat;
     double averageres;
     double averageerr;
-    char        fname[MAX_FILELEN]; /*!< Name of data file giving TOA                               */
+  
+  double averagedmbat;
+  double averagedmres;
+  double averagedmerr;
+
+  
+  char        fname[MAX_FILELEN]; /*!< Name of data file giving TOA                               */
     char        telID[100];         /*!< Telescope ID                                               */
     clock_correction correctionsTT[MAX_CLK_CORR]; /*!< chain of corrections from site TOA to chosen realisation of TT */
     int nclock_correction;
 
     longdouble correctionTT_TB;     /*!< Correction to TDB/TCB           */
     double einsteinRate;            /*!< Derivative of correctionTT_TB   */
-    longdouble correctionTT_Teph;   /*!< Correction to Teph              */
+  longdouble correctionTT_calcEph;
+  longdouble correctionTT_Teph;   /*!< Correction to Teph              */
     longdouble correctionUT1;       /*!< Correction from site TOA to UT1 */
 
     double sun_ssb[6];              /*!< Ephemeris values for Sun w.r.t SSB (sec)             (RCS) */
     double sun_earth[6];            /*!< Ephemeris values for Sun w.r.t Earth (sec)                 */
     double planet_ssb[9][6];        /*!< Ephemeris values for all planets w.r.t. SSB (sec)   */
-    double jupiter_earth[6];        /*!< Ephemeris values for Jupiter w.r.t. Earth centre (sec)     */
+  double planet_ssb_tmr[9][6];
+  double planet_ssb_derv[9][6];
+  double jupiter_earth[6];        /*!< Ephemeris values for Jupiter w.r.t. Earth centre (sec)     */
     double saturn_earth[6];         /*!< Ephemeris values for Saturn w.r.t. Earth centre (sec)      */
     double venus_earth[6];          /*!< Ephemeris values for Venus w.r.t. Earth centre (sec)      */
     double uranus_earth[6];         /*!< Ephemeris values for Uranus w.r.t. Earth centre (sec)      */
@@ -691,6 +700,7 @@ typedef struct pulsar {
     int TNsubtractDM;
     int TNsubtractRed;
     int AverageResiduals; 
+    int AverageDMResiduals;
     char AverageFlag[MAX_FLAG_LEN];
     float AverageEpochWidth; 
 
@@ -838,7 +848,8 @@ extern "C" {
     void toa2utc(pulsar *psr,int npsr);
     void utc2tai(pulsar *psr,int npsr);
     void tt2tb(pulsar *psr,int npsr);
-    void tai2tt(pulsar *psr,int npsr);
+  void tt2tb_calceph(pulsar *psr,int npsr);  
+  void tai2tt(pulsar *psr,int npsr);
     void tai2ut1(pulsar *psr,int npsr);
     void vectorPulsar(pulsar *psr,int npsr);
     void readEphemeris(pulsar *psr,int npsr,int addEphemNoise);

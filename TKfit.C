@@ -216,6 +216,21 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
             }
             fclose(wFile);
         }
+        wFile=fopen("constraints.matrix","w");
+        if (!wFile){
+            printf("Unable to write out constraints matrix: cannot open file constraints.matrix\n");
+        }
+        else
+        {
+            for (i=0;i<nconstraints;i++) {
+                for (j=0;j<nparams;j++){
+                    fprintf(wFile,"%d %d %lg\n",i,j,constraintsMatrix[i][j]);
+                }
+                fprintf(wFile,"\n");
+            }
+            fclose(wFile);
+        }
+
     }
 
 
@@ -413,7 +428,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
     if (writeResiduals){
         double sum,sum_w;
-        FILE* wFile=fopen("postfit.txt","w");
+        FILE* wFile=fopen("postfit.res","w");
         if (!wFile){
             printf("Unable to open file postfit.res for writing\n");
         }

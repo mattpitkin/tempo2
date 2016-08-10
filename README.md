@@ -3,7 +3,7 @@
 Git INSTALLATION README
 =======================
 
-0. Contents    
+0. Contents
 	1. What this package is    
 	2. Quick Guide    
 	3. Requirements    
@@ -11,6 +11,8 @@ Git INSTALLATION README
 	5. Plugins    
 	6. Changes from old makefile    
 	7. Installation troubleshooting    
+	8. Bugs and feature requests
+
 
 1. What this package is
 ------------------------
@@ -147,3 +149,10 @@ The gfortran compatible version is often called gcc-4 and gxx-4 or similar. Use 
     export CXX=g++-4
 
 and reconfigure.
+
+
+8. Bugs and feature requests
+-----------------------------
+Please submit bug reports here: https://bitbucket.org/psrsoft/tempo2/issues/new
+
+Note that it is very helpful if you can upload a small example demonstrating the bug!
