@@ -38,6 +38,138 @@
 /* Form the timing residuals from the timing model and the barycentric arrival times */
 void residualTracking(pulsar *psr);
 
+
+
+
+void averageDMResiduals(pulsar *psr, int npsr){
+
+    int systemcount = 0;
+    std::vector<std::string>systemnames;
+
+    double mintime=100000.0;
+    double maxtime=0.0;
+    float timestep = psr[0].AverageEpochWidth;
+    char* flagName = psr[0].AverageFlag;
+    fprintf(stderr, "width %.3e flag %s\n", timestep, flagName);
+
+    for(int o=0;o<psr[0].nobs;o++){
+        int found=0;
+        if((double)psr[0].obsn[o].bat > maxtime){maxtime=(double)psr[0].obsn[o].bat;}
+        if((double)psr[0].obsn[o].bat < mintime){mintime=(double)psr[0].obsn[o].bat;}
+        for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+            if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+
+                fprintf(stderr, "found flag\n");                
+                if(std::find(systemnames.begin(), systemnames.end(), psr[0].obsn[o].flagVal[f]) != systemnames.end()) {
+                } else {
+
+                    systemnames.push_back(psr[0].obsn[o].flagVal[f]);
+                    systemcount++;
+                }
+                found=1;
+            }
+        }
+
+        if(found==0){
+            printf("Observation %i is missing the -f flag, please check before continuing\n",o);return;
+        }
+    }
+
+    mintime=floor(mintime);
+    maxtime=ceil(maxtime);
+
+
+    int numbins=ceil((maxtime-mintime)/timestep);
+    double **AverageRes = new double*[systemcount];
+    double **AverageWeight = new double*[systemcount];
+    double **AverageBat = new double*[systemcount];
+    for(int i = 0; i < systemcount; i++){
+        AverageRes[i] = new double[numbins];
+        AverageWeight[i] = new double[numbins];
+        AverageBat[i] = new double[numbins];
+        for(int j = 0; j < numbins; j++){
+            AverageRes[i][j] = 0;
+            AverageWeight[i][j] = 0;
+            AverageBat[i][j] = 0;
+        }
+    }
+
+
+
+
+    for(int o=0;o<psr[0].nobs;o++){
+
+        for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+            if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+
+                int flagindex=-1;
+                for(int s = 0; s < static_cast<int>(systemnames.size()); s++){
+                    if(strcasecmp(psr[0].obsn[o].flagVal[f],systemnames[s].c_str())==0){
+                        flagindex = s;
+                    }
+                }
+
+                double freq=psr[0].obsn[o].freq/1400.;
+
+                int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+                double adjustedErr = pow(psr[0].obsn[o].toaErr*pow(10.0, -6), 2)*pow(freq,4.);
+                AverageWeight[flagindex][bin] += 1.0/adjustedErr;
+                AverageRes[flagindex][bin] += (double)psr[0].obsn[o].residual*freq*freq/adjustedErr;
+                AverageBat[flagindex][bin] += (double)psr[0].obsn[o].bat/adjustedErr;
+            }
+        }
+    }
+
+    for(int o=0;o<psr[0].nobs;o++){
+
+
+        //Is there an ECORR??
+        double EcorrVal=0;
+        for (int j=0;j<psr->obsn[o].nFlags;j++){
+            for (int k=0;k<psr->nTNECORR;k++){
+                if (strcmp(psr->obsn[o].flagID[j], psr->TNECORRFlagID[k])==0){
+                    if (strcmp(psr->obsn[o].flagVal[j],psr->TNECORRFlagVal[k])==0){
+                        EcorrVal=psr->TNECORRVal[k]*pow(10.0, -6);
+                        //printf("Ecorr: %i %g \n", o, EcorrVal);
+                    }
+                }
+            }
+        }
+        for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+            if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+                int flagindex=-1;
+                for(int s = 0; s < static_cast<int>(systemnames.size()); s++){
+                    if(strcasecmp(psr[0].obsn[o].flagVal[f],systemnames[s].c_str())==0){
+                        flagindex = s;
+                    }
+                }
+                int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+                psr[0].obsn[o].averagedmbat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
+                psr[0].obsn[o].averagedmres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
+                psr[0].obsn[o].averagedmerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
+            }
+        }
+    }
+
+    for(int o=0;o<psr[0].nobs;o++){
+        //		printf("Average: %g %g %g \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
+    }
+
+
+
+    for(int i = 0; i < systemcount; i++){
+        delete[] AverageRes[i];
+        delete[] AverageWeight[i];
+        delete[] AverageBat[i];
+    }
+    delete[] AverageRes;
+    delete[] AverageWeight;
+    delete[] AverageBat;
+
+
+}
+
+
 void averageResiduals(pulsar *psr, int npsr){
 
     int systemcount = 0;
@@ -139,6 +271,8 @@ void averageResiduals(pulsar *psr, int npsr){
                     }
                 }
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+
+
                 psr[0].obsn[o].averagebat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
                 psr[0].obsn[o].averageres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
                 psr[0].obsn[o].averageerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
@@ -146,10 +280,12 @@ void averageResiduals(pulsar *psr, int npsr){
         }
     }
 
+    FILE *avgfile;
+    avgfile=fopen("avg.dat", "w");
     for(int o=0;o<psr[0].nobs;o++){
-        //		printf("Average: %g %g %g \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
+        fprintf(avgfile,  "%.5f %.3e %3e \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
     }
-
+    fclose(avgfile);
 
 
     for(int i = 0; i < systemcount; i++){
@@ -975,7 +1111,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         resp = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resp); 
 
                     psr[p].quad_ifunc_geom_p = resp;
-                    //		   printf("Resp2 = %s %g %g\n",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
+                    logdbg("Resp2 = %s %g %g",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
                     // NOTE: These are for the cross terms. 
                     lambda   = psr[p].gwm_raj;
                     beta     = psr[p].gwm_decj;
@@ -1002,7 +1138,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     else
                         resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
                     psr[p].quad_ifunc_geom_c = resc;
-                    //		   printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
+                    // printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
                     dt = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*longdouble(86400.0);
                     //		   scale = -0.5*cos2Phi*(1-cosTheta);
                     phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[0]*psr[p].quad_ifunc_geom_p); 				
@@ -1579,7 +1715,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 else
                     resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
                 psr[p].gwb_geom_c = resc;
-                //		   printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
+                //printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
 
                 // exp(-(t-T0)**2/2./w**2)
 
@@ -1894,9 +2030,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             averageResiduals(psr, 1);
         }
 
+        if(psr[p].AverageDMResiduals == 1){
+            averageDMResiduals(psr,1);
 
-
-
+        }
 
     }
 

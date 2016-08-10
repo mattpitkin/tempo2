@@ -433,7 +433,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     i1 = i;
             }
             printf("\n");
-            printf("GWM covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
+            //printf("GWM covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
         }
         if (psr[p].param[param_gwb_amp].paramSet[0]==1 &&	
                 psr[p].param[param_gwb_amp].paramSet[1]==1 &&
@@ -449,7 +449,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     i1 = i;
             }
             printf("\n");
-            printf("GW BURST A1: %g A2: %g A1_A1 = %g A2_A2 = %g A1_A2 = %g \n" , (double) psr[0].param[param_gwb_amp].val[0], (double) psr[0].param[param_gwb_amp].val[1], (double) psr[0].covar[i0][i0], (double) psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
+            //printf("GW BURST A1: %g A2: %g A1_A1 = %g A2_A2 = %g A1_A2 = %g \n" , (double) psr[0].param[param_gwb_amp].val[0], (double) psr[0].param[param_gwb_amp].val[1], (double) psr[0].covar[i0][i0], (double) psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
         }
 
 
@@ -1297,7 +1297,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 else
                     fprintf(fout2, "%-21.21s%s\n", "CORRECT_TROPOSPHERE", "Y");
 
-                fprintf(fout2,"%-15.15s%s\n","EPHEM",psr[p].ephemeris);
+		if (psr[p].useCalceph == 0)
+		  {
+		    fprintf(fout2,"%-15.15s%s\n","EPHEM",psr[p].ephemeris);
+		  }
+		else
+		  {
+		    fprintf(fout2,"%-15.15s%s\n","EPH_FILE",psr[p].ephemeris);
+		  }
+
                 fprintf(fout2,"%-15.15s%s\n","NITS","1");
                 fprintf(fout2,"%-15.15s%d\n","NTOA",psr[p].nFit);
                 fprintf(fout2,"%-15.15s%.4f %d\n","CHI2R",chisqr/(double)psr[p].fitNfree,psr[p].fitNfree);

@@ -46,6 +46,8 @@ extern "C" long iau_sxp_(double *, double *, double *);
 extern "C" long iau_pxp_(double *, double *, double *);
 extern "C" long iau_c2t00b_(double *, double *, double *, double *, 
         double *, double *, double *);
+extern "C" long iau_c2t00a_(double *, double *, double *, double *, 
+        double *, double *, double *);
 extern "C" long iau_trxpv_(double *, double *, double *);
 extern "C" long iau_trxp_(double *, double *, double *);
 

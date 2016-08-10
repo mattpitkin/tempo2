@@ -82,7 +82,19 @@ void clock_corrections(pulsar *psr,int npsr)
     tai2ut1(psr,npsr);        /* 3. TAI -> UT1                    */
     //   tai2tt(psr,npsr);      /* 4. TAI -> TT                     */
     logdbg("Calling tt2tb");
-    tt2tb(psr,npsr);          /* 5. Rough estimate of TT-TB (+-2.2 microsec) */
+    //tt2tb(psr,npsr);          /* 5. Rough estimate of TT-TB (+-2.2 microsec) */
+  if(psr[0].useCalceph ==0)
+    {
+      
+      tt2tb(psr,npsr);         
+    }
+  else
+    {
+      tt2tb_calceph(psr,npsr);
+      tt2tb(psr,npsr);
+    }
+    
+
     logdbg("Done clock corrections");
 }
 
@@ -95,13 +107,21 @@ void ephemeris_routines(pulsar *psr,int npsr)
     vectorPulsar(psr,npsr);   /* 1. Form a vector pointing at the pulsar */
     logtchk("call readEphemeris()");
     if (psr[0].useCalceph == 0)
-        readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+      readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
     else
-        readEphemeris_calceph(psr,npsr);
+      readEphemeris_calceph(psr,npsr);
     logtchk("call get_obsCoord()");
     get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
     logtchk("call tt2tb()");
-    tt2tb(psr,npsr);          /* Observatory/time-dependent part of TT-TB */
+    if  (psr[0].useCalceph == 0)
+      {
+      tt2tb(psr,npsr);          /* Observatory/time-dependent part of TT-TB */
+      }
+    else
+      {
+	tt2tb(psr,npsr); 
+	tt2tb_calceph(psr,npsr);
+      }
     logtchk("call readEphemeris()");
     if (psr[0].useCalceph == 0)
         readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
