@@ -76,7 +76,7 @@ getPeriod_LDADD = libtempo2pred.la
 
 
 # Specify to include the T2runtime in distributions
-EXTRA_DIST = T2runtime $(xtra_dist_sources) documentation
+EXTRA_DIST = T2runtime $(xtra_dist_sources) documentation extract_enums.sh
 
 
 # This clears out any CVS files that might get in our distribution
