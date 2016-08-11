@@ -38,3 +38,8 @@
 void doFitAll(pulsar *psr,int npsr, const char *covarFuncFile) {
         t2Fit(psr,npsr,covarFuncFile);
 }
+
+double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k){
+    return t2Fit_getParamDeriv(psr,ipos,x,i,k);
+}
+

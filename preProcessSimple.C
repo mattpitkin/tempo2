@@ -266,7 +266,7 @@ void preProcessSimple2 (pulsar *psr,
             double val1, val2;
 
             /* Must parse jump string to determine whether this observation should jump or not */	      
-// UNUSED VARIABLE //             int nread = sscanf(psr->jumpStr[k],"%s %s %s",str1,str2,str3);
+            sscanf(psr->jumpStr[k],"%s %s %s",str1,str2,str3);
             if (strcasecmp(str1,"MJD")==0 || strcasecmp(str1,"FREQ")==0)
             {
                 sscanf(str2,"%lf",&val1);

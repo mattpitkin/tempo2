@@ -121,12 +121,165 @@ std::string get_constraint_name(enum constraint c){
 
 
 
+void matrixDMConstraintWeights(pulsar *psr){
+    int i,k;
+    int nobs=0;
+    int nfit=psr->dmoffsDMnum+psr->dmoffsCMnum;
+    int nDM=psr->dmoffsDMnum;
+
+    double x;
+
+
+    if (psr->param[param_dmmodel].fitFlag[0]==1)
+    {
+        logdbg("Getting DM constraints for %s",psr->name);
+        // find out how many obs we have.
+        for(i=0; i < psr->nobs; i++){
+            if (psr->obsn[i].deleted==0)
+            {
+                char okay=1;
+                /* Check for START and FINISH flags */
+                if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+                        (psr->param[param_start].val[0] > psr->obsn[i].sat))
+                    okay=0;
+                if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+                        psr->param[param_finish].val[0] < psr->obsn[i].sat)
+                    okay=0;
+                if (okay==1)
+                {
+                    nobs++;
+                }
+            }
+        }
+        // originally was sizeof(double*)*nobs.
+        double ** designMatrix=(double**)malloc_uinv(nobs);
+        double *e=(double*)malloc(sizeof(double)*nobs);
+
+        nobs=0;
+        //		printf("c0: %d %s\n",psr->nobs,psr->name);
+        for(i=0; i < psr->nobs; i++){
+            // Check for "ok" and start/finish coppied from dofit.
+            // Needs to be the same so that the weighting is the same as the fit,
+            // but in practice probably doesn't matter.
+            //		  printf("c1 checking: %d %d %s\n",psr->obsn[i].deleted,psr->nobs,psr->name);
+            if (psr->obsn[i].deleted==0)
+            {
+                char okay=1;
+
+                /* Check for START and FINISH flags */
+                if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+                        (psr->param[param_start].val[0] > psr->obsn[i].sat))
+                    okay=0;
+                if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+                        psr->param[param_finish].val[0] < psr->obsn[i].sat)
+                    okay=0;
+
+                //		  printf("c2 checking: %d\n",okay);
+                if (okay==1)
+                {
+                    x   = (double)(psr->obsn[i].bbat-psr->param[param_pepoch].val[0]);
+                    double sig=psr->obsn[i].toaErr*1e-6;
+                    double dmf = 1.0/(DM_CONST*powl(psr->obsn[i].freqSSB/1.0e6,2));
+                    for (k=0; k < nfit;k++){
+
+                        if(k<nDM)
+                            designMatrix[nobs][k]=dmf*getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
+                        else
+                            designMatrix[nobs][k]=getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
+                    }
+                    nobs++;
+
+                }
+            }
+        } 
+        printf("Calling TKleastSquares %d %d\n",nobs,nfit); fflush(stdout);
+        TKleastSquares(NULL,NULL,designMatrix,designMatrix,nobs,nfit,1e-20,0,NULL,e,NULL);
+        printf("Returning from calling TKleastSquares\n"); fflush(stdout);
+        double sum_wDM=0;
+        double sum_wCM=0;
+        for (i=0;i<nfit;i++)
+        {
+// UNUSED VARIABLE //             double sum=0.0;
+            if(i < nDM){
+                psr->dmoffsDM_weight[i]=1.0/e[i]/e[i];
+                printf("constraints.C here: %d %g\n",i,e[i]);
+                sum_wDM+=psr->dmoffsDM_weight[i];
+            } else {
+                psr->dmoffsCM_weight[i-nDM]=1.0/e[i]/e[i];
+                sum_wCM+=psr->dmoffsCM_weight[i-nDM];
+            }
+
+
+
+        }
+        //normalise the weights
+        for (i=0;i<psr->dmoffsDMnum;i++)
+            psr->dmoffsDM_weight[i]/=sum_wDM;
+        for (i=0;i<psr->dmoffsCMnum;i++)
+            psr->dmoffsCM_weight[i]/=sum_wCM;
+
+        // free everything .
+        free_uinv(designMatrix);
+        free(e);
+    }
+}
+
+
 /*
  * Derive the weighting functions for the constraints, based upon the ToA errors.
  *
  */
 void computeConstraintWeights(pulsar *psr){
-logwarn("Constraint weights currently disabled");
+    // printf("GH: in computeConstraintWeights with %s\n",psr->name);
+    for (int k=0; k < psr->ifuncN; k++){
+        psr->ifunc_weights[k]=1.0/(double)psr->ifuncN;
+    }   
+    for (int k=0; k < psr->dmoffsDMnum; k++)
+        psr->dmoffsDM_weight[k]=1.0/(double)psr->dmoffsDMnum;
+
+    for (int k=0; k < psr->dmoffsCMnum; k++)
+        psr->dmoffsCM_weight[k]=1.0/(double)psr->dmoffsCMnum;
+
+#ifdef CONSTRAINT_WEIGHTS
+    if(psr->dmoffsDMnum>0 || psr->dmoffsCMnum>0) {
+        matrixDMConstraintWeights(psr);
+    }
+    /*
+     * Derive weights for ifuncs
+     */
+    if(psr->ifuncN>0) {
+        //  printf("GH: in computeConstraintWeights part 2 with %s\n",psr->name);
+        for (int i=0; i < psr->nobs; i++){
+            if (psr->obsn[i].deleted==0){
+                // compute the weight that this ToA applies to each IFUNC
+                for (int k=0;k<psr->ifuncN-1;k++)
+                {
+                    if ((double)psr->obsn[i].sat >= psr->ifuncT[k] &&
+                            (double)psr->obsn[i].sat < psr->ifuncT[k+1])
+                    {
+                        double w=1.0/pow(psr->obsn[i].toaErr,2);
+                        double dt=(psr->ifuncT[k+1]-psr->ifuncT[k]);
+                        double t=(double)psr->obsn[i].sat-psr->ifuncT[k];
+                        psr->ifunc_weights[k+1]+=w*t/dt;
+                        psr->ifunc_weights[k]+=w*(1.0-t/dt);
+                        break;
+                    }
+                }
+
+            }
+        }
+        // Normalise the weights
+        double sum=0;
+        for (int k=0; k < psr->ifuncN; k++){
+            sum+=psr->ifunc_weights[k];
+        }
+        for (int k=0; k < psr->ifuncN; k++){
+            psr->ifunc_weights[k]/=sum;
+            //  printf("GH: in computeConstraintWeights with %s setting %g\n",psr->name,psr->ifunc_weights[k]);
+        }
+    }
+#endif
+    return;
 }
 
 double consFunc_dmmodel_mean(pulsar *psr_array,int ipsr,int i,int k,int order){
@@ -488,10 +641,6 @@ void autoConstraints(pulsar* psr_array, int ipsr,int npsr){
 }
 
 
-void        matrixDMConstraintWeights(pulsar* psr){
-    logwarn("matrixDMConstraintWeights not implemented");
-}
-
 
 void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double end, bool fixCMgrid){
     int i,j;
@@ -524,6 +673,7 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
 
     ok=fixCMgrid; // only do the CM if we are not fixing the grid
     while (!ok){
+        matrixDMConstraintWeights(psr);
         ok=true;
         double threshold = 0.05/(double)psr->dmoffsCMnum;
         j=0;
