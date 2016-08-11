@@ -105,7 +105,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-      if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
+      if (i==0) doFitAll(psr,*npsr,0);   /* Do the fitting     */
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
 
@@ -182,7 +182,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  formBatsAll(psr,1);         /* Form the barycentric arrival times */
 	  formResiduals(psr,1,1);    /* Form the residuals                 */
-	  if (j==0) doFit(psr,1,0);   /* Do the fitting     */
+	  if (j==0) doFitAll(psr,1,0);   /* Do the fitting     */
 	  else textOutput(psr,1,globalParameter,0,0,0,"");  /* Display the output */
 	}
       printf("Done the fitting: nfit = %d\n",psr[0].nFit);
@@ -216,7 +216,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-      if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
+      if (i==0) doFitAll(psr,*npsr,0);   /* Do the fitting     */
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
   printf("About to plot\n");
