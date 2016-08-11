@@ -129,7 +129,7 @@ IFTswapDoubles(double *dbl, int N)
 IFTE_init(const char *fname)
 {
     FILE *f;
-    static int time=0;
+// UNUSED VARIABLE //     static int time=0;
     char buf[1024];
     int ncon;
     double double_in;
@@ -137,7 +137,7 @@ IFTE_init(const char *fname)
     //  if (time==1 && ifte.f != NULL)
     //    fclose(ifte.f);  
 
-    time=1;
+    //time=1;
     f = fopen(fname, "r");
     if (!f)
     {

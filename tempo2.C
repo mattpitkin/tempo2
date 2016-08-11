@@ -39,6 +39,7 @@
 #include "tempo2pred.h"
 #include "tempo2pred_int.h"
 #include "T2accel.h"
+#include "t2fit.h"
 #include <dlfcn.h>
 
 #ifdef HAVE_QDINSTALL
@@ -79,8 +80,6 @@ int main(int argc, char *argv[])
     char **commandLine;
     clock_t startClock,endClock;
     const char *CVS_verNum = "$Id$";
-    int writeTMatrix=0;
-    static unsigned int oldcw;
 
 #ifdef HAVE_QDINSTALL
 
@@ -139,8 +138,6 @@ int main(int argc, char *argv[])
             writeTimFile=1;
         else if (strcasecmp(argv[i],"-veryfast")==0)
             veryFast=1;
-	else if (strcasecmp(argv[i],"-writeTMatrix")==0)
-		writeTMatrix=1;
         strcpy(commandLine[i],argv[i]);
     }
     if (displayCVSversion == 1) CVSdisplayVersion("tempo2.C","main()",CVS_verNum);
@@ -353,7 +350,7 @@ int main(int argc, char *argv[])
             logtchk("Start graphical plugin");
 
 #ifdef HAVE_QDINSTALL
-	    fpu_fix_end(&oldcw);
+            fpu_fix_end(&oldcw);
 #endif
             entry(argc,commandLine,psr,&npsr);
             logtchk("End graphical plugin");
@@ -564,8 +561,8 @@ int main(int argc, char *argv[])
             {
                 logdbg("calling doFit");
 
-                logtchk("calling doFitAll");
-                doFitAll(psr,npsr,covarFuncFile);
+                logtchk("calling t2Fit");
+                t2Fit(psr,npsr,covarFuncFile);
                 logmsg("Complete fit");
                 /* doFitGlobal(psr,npsr,&globalParameter,nGlobal,writeModel);*/ /* Fit to the residuals to obtain updated parameters  */
                 logdbg("completed doFit");

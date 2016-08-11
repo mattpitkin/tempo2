@@ -26,9 +26,9 @@
  * ip		(int)			Mapping from fit point to observation number in pulsar struct.
  */
 void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
-    FILE* modelDescriptionFile;
+// UNUSED VARIABLE //     FILE* modelDescriptionFile;
     char modelFileName[1024];
-    char tmp[1024];
+// UNUSED VARIABLE //     char tmp[1024];
     double **m;
     int i,j;
 
@@ -142,7 +142,7 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
 
 
 void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr,char *_psrJ,double _mjd_start,double _mjd_end,int recursion){
-    int flag;
+// UNUSED VARIABLE //     int flag;
     char val[LINE_LENGTH];
     char dmy[LINE_LENGTH];
     char key[LINE_LENGTH];
@@ -292,8 +292,8 @@ void cholesky_readFromCovarianceFunction(double **m, const char* fname,double *r
 }
 
 void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *resx,double *resy,double *rese,int np, int nc){
-    double escaleFactor = 1.0;
-    int i,j,k;
+// UNUSED VARIABLE //     double escaleFactor = 1.0;
+    int i,j;
     int ix,iy;
     double t0,cint,t;
     int t1,t2;
@@ -483,7 +483,7 @@ void cholesky_readT2Model2(double **m, FILE* file,double *resx,double *resy,doub
 }
 
 void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *rese,int np, int nc){
-    char dmy[LINE_LENGTH];
+// UNUSED VARIABLE //     char dmy[LINE_LENGTH];
     int i,j;
     FILE *fin;
     double dummy;
@@ -549,7 +549,7 @@ void cholesky_readT2CholModel(double **m, const char* fname,double *resx,double 
 
 
 void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr,double mjd_start,double mjd_end){
-    int *goodvals;
+// UNUSED VARIABLE //     int *goodvals;
     int i,j;
 
     int istart=0;
@@ -616,8 +616,8 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
 // b in days
 //
 void cholesky_dmModelCovarParam(double **m, double alpha, double a, double b,double *resx,double *resy,double *rese,int np, int nc){
-    double secperyear=365.25*86400.0;
-    double tobs=ceil((resx[np-1])-(resx[0]))/365.25;
+// UNUSED VARIABLE //     double secperyear=365.25*86400.0;
+// UNUSED VARIABLE //     double tobs=ceil((resx[np-1])-(resx[0]))/365.25;
     double *covarFunc;
     double x;
     int i;

@@ -70,8 +70,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     unsigned long long totalGlobalParams=gParams;
     unsigned long long totalGlobalConstraints=gConstraints;
 
-    double** gUinvs[MAX_PSR]; // whitening matrix for each pulsar
-    double* gX[MAX_PSR]; // "x" values for each pulsar
+//    double* gX[MAX_PSR]; // "x" values for each pulsar
     double* gY[MAX_PSR]; // "y" values for each pulsar
     double* gW[MAX_PSR]; // whitened "y" values for each pulsar
     double** gDM[MAX_PSR]; // design matrix for each pulsar
@@ -229,7 +228,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          */
         if (doGlobalFit){
             // we are going to do a global fit, so need to store the values for later
-            gX[ipsr] = psr_x;
+            //gX[ipsr] = psr_x;
             gY[ipsr] = psr_y;
             gW[ipsr] = psr_white_y;
             gDM[ipsr] = designMatrix;

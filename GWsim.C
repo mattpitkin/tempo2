@@ -229,9 +229,9 @@ longdouble calculateResidualGW(longdouble *kp,gwSrc *gw,longdouble time,longdoub
     longdouble earthVal1;
     longdouble tempVal[3];
     longdouble tempVal_im[3];
-    longdouble geo;
+// UNUSED VARIABLE //     longdouble geo;
     longdouble residual;
-    longdouble deg2rad = M_PI/longdouble(180.0);
+// UNUSED VARIABLE //     longdouble deg2rad = M_PI/longdouble(180.0);
     //  longdouble VC = longdouble(299792456.200);
     longdouble VC = longdouble(299792458.0); /* Speed of light (m/s)                       */
     int i,k;
@@ -261,7 +261,7 @@ longdouble calculateResidualGW(longdouble *kp,gwSrc *gw,longdouble time,longdoub
     }
     else psrVal1 = longdouble(0.0);
 
-    geo      = psrVal1;
+    //geo      = psrVal1;
     //  printf("psrVal = %g %g\n",(double)psrVal1,(double)psrVal1_im);
     earthVal1 = psrVal1*sinl(gw->phase_g+time*gw->omega_g)+ 
         psrVal1_im*cosl(gw->phase_g+time*gw->omega_g); // sin -> cos
@@ -298,8 +298,8 @@ void setupPulsar_GWsim(longdouble ra_p,longdouble dec_p,longdouble *kp)
 extern "C"
 #endif
 int GWbackground_read(gwSrc *gw, FILE *file, int ireal){
-    char key[13];
-    int nreal;
+// UNUSED VARIABLE //     char key[13];
+// UNUSED VARIABLE //     int nreal;
     int ngw,id,igw,i;
     const unsigned int gwsize = 9*sizeof(longdouble);
 
@@ -362,7 +362,7 @@ longdouble eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double 
     {
 
         double ra_p, dec_p, ra_g, dec_g;
-        double m1, m2, e_0, inc, theta_n, theta_0, phi, z, D, t_0, p_0;
+        double m1, m2,  inc, theta_n,  phi, z, D, t_0;
         int ih;
 
 
@@ -371,7 +371,7 @@ longdouble eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double 
         const double c = 2.998e8;      // in m/s
         const double msun = 1.9891e30; // in kg
         const double Mpc_to_m = 3.08568e22; // in m
-        const double yr_to_sec = 365.25*86400.; // in s
+//        const double yr_to_sec = 365.25*86400.; // in s
 
         ra_p = (double)psr->param[param_raj].val[0];
         dec_p   = (double)psr->param[param_decj].val[0];
@@ -379,15 +379,15 @@ longdouble eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double 
         dec_g     = psr->gwecc_dec;
         m1 = psr->gwecc_m1*msun; // READ IN Msun UNITS!
         m2 = psr->gwecc_m2*msun; // READ IN Msun UNITS!
-        e_0 = psr->gwecc_e;
+        //e_0 = psr->gwecc_e;
         inc = psr->gwecc_inc;
         theta_n = psr->gwecc_theta_nodes;
-        theta_0 = psr->gwecc_theta_0;
+        //theta_0 = psr->gwecc_theta_0;
         phi = psr->gwecc_nodes_orientation;
         z = psr->gwecc_redshift;
         D = psr->gwecc_distance*Mpc_to_m; // READ IN Mpc UNITS!
         t_0 = psr->gwecc_epoch; // READ IN MJD!
-        p_0 = (psr->gwecc_orbital_period)*yr_to_sec; // READ IN YEARS AT SOURCE!   
+        //p_0 = (psr->gwecc_orbital_period)*yr_to_sec; // READ IN YEARS AT SOURCE!   
 
         // schwarzschild radius
         double rs_m1 = Rs(m1);
@@ -411,7 +411,7 @@ longdouble eccRes(pulsar *psr, int i, int *coalesceFlag, double *prev_p, double 
         double theta = *prev_theta;
         double ec = *prev_e;
         double ax = *prev_a;
-        double M_c = (m1+m2)*pow(m1*m2/pow(m1+m2,2.),3./5.);
+// UNUSED VARIABLE //         double M_c = (m1+m2)*pow(m1*m2/pow(m1+m2,2.),3./5.);
         double k1, k2, k3, k4;
         double l1, l2, l3, l4;
         double o1, o2, o3, o4;
@@ -524,7 +524,7 @@ longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_
     {
 
         double ra_p, dec_p, ra_g, dec_g;
-        double m1, m2, e_0, inc, theta_n, theta_0, phi, z, D, t_0, p_0;
+        double m1, m2,  inc, theta_n,  phi, z, D, t_0;
         int ih;
 
 
@@ -533,7 +533,7 @@ longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_
         const double c = 2.998e8;      // in m/s
         const double msun = 1.9891e30; // in kg
         const double Mpc_to_m = 3.08568e22; // in m
-        const double yr_to_sec = 365.25*86400.; // in s
+//        const double yr_to_sec = 365.25*86400.; // in s
 
         ra_p = (double)psr->param[param_raj].val[0];
         dec_p   = (double)psr->param[param_decj].val[0];
@@ -541,15 +541,15 @@ longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_
         dec_g     = psr->gwecc_dec;
         m1 = psr->gwecc_m1*msun; // READ IN Msun UNITS!
         m2 = psr->gwecc_m2*msun; // READ IN Msun UNITS!
-        e_0 = psr->gwecc_e;
+        //e_0 = psr->gwecc_e;
         inc = psr->gwecc_inc;
         theta_n = psr->gwecc_theta_nodes;
-        theta_0 = psr->gwecc_theta_0;
+        //theta_0 = psr->gwecc_theta_0;
         phi = psr->gwecc_nodes_orientation;
         z = psr->gwecc_redshift;
         D = psr->gwecc_distance*Mpc_to_m; // READ IN Mpc UNITS!
         t_0 = psr->gwecc_epoch; // READ IN MJD!
-        p_0 = (psr->gwecc_orbital_period)*yr_to_sec; // READ IN YEARS AT SOURCE!   
+        //p_0 = (psr->gwecc_orbital_period)*yr_to_sec; // READ IN YEARS AT SOURCE!   
 
         // schwarzschild radius
         double rs_m1 = Rs(m1);
@@ -573,7 +573,7 @@ longdouble eccResWithEnergy(pulsar *psr, int i, int *coalesceFlag, double *prev_
         double theta = *prev_theta;
         double ec = *prev_e;
         double ax = *prev_a;
-        double M_c = (m1+m2)*pow(m1*m2/pow(m1+m2,2.),3./5.);
+// UNUSED VARIABLE //         double M_c = (m1+m2)*pow(m1*m2/pow(m1+m2,2.),3./5.);
         double k1, k2, k3, k4;
         double l1, l2, l3, l4;
         double o1, o2, o3, o4;
@@ -718,7 +718,7 @@ extern "C"
 #endif
 double dtdt(double ec, double t, double p) {
 
-    double G = 6.67e-11;
+// UNUSED VARIABLE //     double G = 6.67e-11;
     //double retval = (2.*M_PI/p)*pow(1.+ec*cos(t),2.)/(pow(1.-pow(ec,2.),3./2.));
     double retval = (2.*M_PI/p);
     return retval;
@@ -744,7 +744,7 @@ extern "C"
 double psrangle(double centre_long,double centre_lat,double psr_long,double psr_lat)
 {
     double dlon,dlat,a,c;
-    double deg2rad = M_PI/180.0;
+// UNUSED VARIABLE //     double deg2rad = M_PI/180.0;
 
     /* Apply the Haversine formula */
     dlon = (psr_long - centre_long);
@@ -767,7 +767,7 @@ extern "C"
 #endif
 double sphharm(int l, int m, double x) {
     //printf("In sphharm l = %i, m = %i, x = %lf\n",l,m,x);
-    double fact,oldfact,pll,pmm,pmmp1,pmmp2,omx2;
+    double fact,oldfact,pll,pmm,pmmp1,omx2;
     int i,ll;
     if (m < 0 || m > l || abs(x) > 1.) {
         printf("Bad arguments in routine sphharm!\n");
@@ -817,11 +817,10 @@ extern "C"
 double Findphi(double prob, double amp, double phase) {
     //printf("%lf %lf %lf\n",prob,amp,phase);
     double TOL=1.e-10;
-    double low,high,lowval,highval,phi,phival,twopi;
+    double low,high,highval,phi,phival,twopi;
     low=0.;
     twopi=2.*M_PI;
     high=twopi;
-    lowval=0.;
     highval=1.;
     while (high-low > TOL) {
         phi=0.5*(low+high);
@@ -844,7 +843,7 @@ extern "C"
 #endif
 void setupgeneralGW(gwgeneralSrc *gw)
 {
-    longdouble deg2rad = M_PI/180.0;
+// UNUSED VARIABLE //     longdouble deg2rad = M_PI/180.0;
     longdouble convert[3][3],trans[3][3];
     longdouble out[3][3];
     longdouble out_im[3][3];
@@ -1028,9 +1027,9 @@ longdouble calculateResidualgeneralGW(longdouble *kp,gwgeneralSrc *gw,longdouble
     longdouble earthVal1;
     longdouble tempVal[3];
     longdouble tempVal_im[3];
-    longdouble geo;
+// UNUSED VARIABLE //     longdouble geo;
     longdouble residual;
-    longdouble deg2rad = M_PI/longdouble(180.0);
+// UNUSED VARIABLE //     longdouble deg2rad = M_PI/longdouble(180.0);
     longdouble VC = longdouble(299792456.200);
     int i,k;
 
@@ -1060,7 +1059,7 @@ longdouble calculateResidualgeneralGW(longdouble *kp,gwgeneralSrc *gw,longdouble
     }
     else psrVal1 = longdouble(0.0);
 
-    geo      = psrVal1;
+    //geo      = psrVal1;
     //  printf("psrVal = %g %g\n",(double)psrVal1,(double)psrVal1_im);
     earthVal1 = psrVal1*sinl(gw->phase_g+time*gw->omega_g)+ 
         psrVal1_im*cosl(gw->phase_g+time*gw->omega_g); // sin -> cos
@@ -1335,9 +1334,9 @@ void GWdipolebackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdou
     printf("DIPOLE AMPS: %lf %lf %lf\n",dipoleamps[0],dipoleamps[1],dipoleamps[2]);
 
     double cth,thisprob,dipamp,dipphs,twopi;
-    double sign=1.;
-    if (dipoleamps[0]<0.)
-        sign=-1.;
+// UNUSED VARIABLE //     double sign=1.;
+//    if (dipoleamps[0]<0.)
+//        sign=-1.;
     twopi=2.*M_PI;
     dipamp=sqrt(dipoleamps[1]*dipoleamps[1]+dipoleamps[2]*dipoleamps[2]);
     if (dipoleamps[1])
@@ -1393,8 +1392,8 @@ void GWdipolebackground(gwSrc *gw,int numberGW,long *idum,longdouble flo,longdou
 extern "C"
 #endif
 int GWgeneralbackground_read(gwgeneralSrc *gw, FILE *file, int ireal){
-    char key[13];
-    int nreal;
+// UNUSED VARIABLE //     char key[13];
+// UNUSED VARIABLE //     int nreal;
     int ngw,id,igw,i;
     const unsigned int gwsize = 17*sizeof(longdouble);
 

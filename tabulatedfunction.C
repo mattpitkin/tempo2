@@ -41,7 +41,7 @@ TabulatedFunction_load(TabulatedFunction *func,
     FILE *f;
     char line[1024]="", *c;
     TabulatedFunctionSample sample;
-    int narg;
+// UNUSED VARIABLE //     int narg;
 
     DynamicArray_init(&func->samples, sizeof(TabulatedFunctionSample));
 
