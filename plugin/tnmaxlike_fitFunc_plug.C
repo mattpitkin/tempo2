@@ -47,6 +47,9 @@ int getNparams(pulsar *psr,int offset);
 int getNglobal(pulsar *psr,int npsr);
 double getConstraintDeriv(pulsar *psr,int ipos,int i,int k);
 
+void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
+void updateParameters(pulsar *psr,int p,double *val,double *error);
+
 
 ///////////////////Functions for TempoNest maximum likelihood Fitting////////////////
 
@@ -88,11 +91,11 @@ extern "C" void dgemm_(char *jobu, char *jobvt, int *m, int *n,
 /////////////////End Functions for TempoNest maximum likelihood Fitting/////////////////////
 
 
-extern "C" int pluginFitFunc(pulsar *psr,int npsr,const char *covarFuncFile) {
+extern "C" char* pluginFitFunc(pulsar *psr,int npsr,const char *covarFuncFile) {
 
+    printf("\n\nCALLING getTempoNextMaxLike!\n\n");
 #ifdef HAVE_LAPACK
 #ifdef HAVE_BLAS
-    printf("\n\nIncluding red noise and/or ECORR parameters, calling new dofit\n\n");
     getTempoNestMaxLike(psr, npsr);
     return 0;
 #else

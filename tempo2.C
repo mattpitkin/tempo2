@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
 
 #endif
 
+
     polyco_file[0] = '\0';
 
     timer_clk=clock();  

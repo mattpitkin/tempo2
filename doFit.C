@@ -54,15 +54,14 @@ void callFitFuncPlugin(pulsar *psr,int npsr, const char *covarFuncFile){
         char *(*entry)(pulsar *,int,const char*);
         void * module;
         char str[100];
-        char tempo2MachineType[MAX_FILELEN]="";
 
         logmsg("Calling fitting plugin: %s",psr[0].fitFunc);
-        strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
 
+        logmsg("%d",tempo2_plug_path_len);
         for (int iplug=0; iplug < tempo2_plug_path_len; iplug++) {
             sprintf(str,"%s/%s_fitFunc_%s_plug.t2",tempo2_plug_path[iplug],
                     psr[0].fitFunc,tempo2MachineType);
-            logmsg("Looking for %s",str);
+            logmsg("Looking for '%s'",str);
             module = dlopen(str, RTLD_NOW); 
             if (module==NULL) {
                 logerr("dlerror() = %s",dlerror());

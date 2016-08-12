@@ -139,12 +139,9 @@
 #define T2C_TEMPO   2
 
 
-
 /*! TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
 
-/*! TEMPO2 error messages */
-extern char TEMPO2_ERROR[];
 
 /*! for 'strong typing' - type for enum label */
 typedef int param_label;
@@ -928,8 +925,8 @@ extern "C" {
     void transform_units(struct pulsar *psr, int from, int to);
 
     /* This function uses the numerical recipes svdfit for the fitting */
-    void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
-    void updateParameters(pulsar *psr,int p,double *val,double *error);
+//    void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
+//    void updateParameters(pulsar *psr,int p,double *val,double *error);
 
     /* defineClockCorrectionSequence: call to provide the clock correction
        module with a sequence of files to use for corrections. May be called

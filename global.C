@@ -35,7 +35,6 @@
 //#include "tempo2pred_int.h"
 
 char TEMPO2_ENVIRON[MAX_STRLEN]="TEMPO2";
-char TEMPO2_ERROR[MAX_STRLEN]="";
 
 char NEWFIT=0;
 
@@ -45,7 +44,7 @@ double ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
 int forceGlobalFit = 0;
 int veryFast = 0;
 int displayCVSversion = 0;
-char tempo2MachineType[MAX_FILELEN] = "";
+char tempo2MachineType[MAX_FILELEN];
 
 char dcmFile[MAX_FILELEN]="NULL";
 char covarFuncFile[MAX_FILELEN]="NULL";

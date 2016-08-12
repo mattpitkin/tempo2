@@ -788,6 +788,8 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_h3:
         case param_h4:
         case param_stig:
+        case param_kin:
+        case param_kom:
             // all binary models are handled by a routine that identifies the correct binary model.
             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_binaryModels;
             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_binaryModels;
@@ -958,7 +960,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
 
             break;
         default:
-            logerr("ERROR: No methods for fitting parameter %d",fit_param);
+            logerr("ERROR: No methods for fitting parameter %s (%d)",label_str[fit_param],fit_param);
             break;
     }
 }
@@ -988,7 +990,7 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
 }
 
 
-double t2Fit_getParamDeriv(pulsar* psr, const param_label fit_param, const double x, const int i, const int k){
+double t2Fit_getParamDeriv(pulsar* psr, const int i, const double x, const param_label fit_param, const int k){
     paramDerivFunc f = getDerivFunction(psr,fit_param,k);
     return f(psr,0,x,i,fit_param,k);
 }
