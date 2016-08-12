@@ -30,16 +30,75 @@
 
 #include "tempo2.h"
 #include "t2fit.h"
+#include <string.h>
+#include <dlfcn.h>
+#include <stdlib.h>
 
 
 /**
  * Master fitting routine with or without cholesky, global or not.
  */
 void doFitAll(pulsar *psr,int npsr, const char *covarFuncFile) {
-        t2Fit(psr,npsr,covarFuncFile);
+    t2Fit(psr,npsr,covarFuncFile);
 }
 
 double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k){
     return t2Fit_getParamDeriv(psr,ipos,x,i,k);
 }
 
+
+
+void callFitFuncPlugin(pulsar *psr,int npsr, const char *covarFuncFile){
+    if (strcmp(psr[0].fitFunc,"default")!=0)
+    {
+        char *(*entry)(pulsar *,int,const char*);
+        void * module;
+        char str[100];
+        char tempo2MachineType[MAX_FILELEN]="";
+
+        logmsg("Calling fitting plugin: %s",psr[0].fitFunc);
+        strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
+
+        for (int iplug=0; iplug < tempo2_plug_path_len; iplug++) {
+            sprintf(str,"%s/%s_fitFunc_%s_plug.t2",tempo2_plug_path[iplug],
+                    psr[0].fitFunc,tempo2MachineType);
+            logmsg("Looking for %s",str);
+            module = dlopen(str, RTLD_NOW); 
+            if (module==NULL) {
+                logerr("dlerror() = %s",dlerror());
+            } else break;
+        }
+
+        module = dlopen(str, RTLD_NOW); 
+        if(!module)  {
+            logerr("dlopen() unable to open plugin: %s.",str);
+            exit(1);
+        }
+        /*
+         * Check that the plugin is compiled against the same version of tempo2.h
+         */
+        char ** pv  = (char**)dlsym(module, "plugVersionCheck");
+        if(pv!=NULL){
+            // there is a version check for this plugin
+            if(strcmp(TEMPO2_h_VER,*pv)){
+                logerr("Plugin version mismatch");
+                logerr(" '%s' != '%s'",TEMPO2_h_VER,*pv);
+                logerr(" Please recompile plugin against same tempo2 version!");
+                dlclose(module);
+                exit(1);
+            }
+        }
+
+
+        entry = (char*(*)(pulsar *,int,const char*))dlsym(module, "pluginFitFunc");
+        if( entry == NULL ) {
+            dlclose(module);
+            logerr("dlerror() failed while retrieving address.");
+            exit(1);
+        }
+        entry(psr,npsr,covarFuncFile);
+        logmsg("FitFunc plugin Returning\n");
+
+        return;
+    }
+}

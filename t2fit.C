@@ -32,7 +32,7 @@
  * where psr, ipsr, label and k are the same as above, and val and err are the post-fit value
  * and uncertanty
  *
- * 3) Add your fit parameter to t2Fit_fillFitInfo, either directly or through a subroutine.
+ * 3) Add your fit parameter to t2fit_fillOneParameterFitInfo().
  *
  * Best bet is to see how the other parameters are implemented and copy that!
  *
@@ -40,12 +40,18 @@
  */
 
 
+void callFitFuncPlugin(pulsar *psr,int npsr, const char *covarFuncFile); // currently in doFit.C
 
 
 // Remove elements from SVD sigma matrix below this value.
 #define T2_SVD_TOL 1e-27
 
 void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
+
+    if (strcmp(psr[0].fitFunc,"default")!=0){
+        callFitFuncPlugin(psr,npsr,covarFuncFile);
+        return;
+    }
 
     // if we have a model for the data covariance function, then use it.
     // Otherwise we we will just whiten using the error bars.
@@ -599,7 +605,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals){
 }
 
 
-void getFitInfo1(pulsar* psr, param_label fit_param, const int k, FitInfo& OUT){
+void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int k, FitInfo& OUT){
 
     unsigned N;
     bool sifunc;
@@ -835,7 +841,7 @@ paramDerivFunc getDerivFunction(pulsar* psr, param_label fit_param, const int k)
     nfo.nParams=0;
     nfo.nConstraints=0;
 
-    getFitInfo1(psr,fit_param,k,nfo);
+    t2fit_fillOneParameterFitInfo(psr,fit_param,k,nfo);
 
     return nfo.paramDerivs[0];
 }
@@ -848,7 +854,7 @@ void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
         }
         for(int k=0; k < psr->param[fit_param].aSize;k++){
             if (psr->param[fit_param].paramSet[k]>0 && psr->param[fit_param].fitFlag[k]==globalflag) {
-                getFitInfo1(psr,fit_param,k,OUT);
+                t2fit_fillOneParameterFitInfo(psr,fit_param,k,OUT);
             }
         }
     }
@@ -1091,3 +1097,5 @@ void TKleastSquares_svd_passN(double *x,double *y,double *sig2,int n,double *p,d
 }
 
 // END OF LEGACY ROUTINES
+
+
