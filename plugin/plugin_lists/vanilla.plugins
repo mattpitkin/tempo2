@@ -18,3 +18,4 @@ detectGWBnew_plug.C
 autoDM_plug.C
 add_pulseNumber_plug.C
 angle_plug.C
+tnmaxlike_fitFunc_plug.C
