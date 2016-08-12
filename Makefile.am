@@ -10,6 +10,16 @@ lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
 BUILT_SOURCES=TKcholesky.h TKlongdouble.h enum_str.h enum_str.C
 
 
+# VERSION 2016.08.1
+# c=1
+# r=1
+# a=0
+libtempo2_la_LDFLAGS=-version-info 1:1:0
+libt2toolkit_la_LDFLAGS=-version-info 1:1:0
+libtempo2pred_la_LDFLAGS=-version-info 1:1:0
+
+
+
 # Source files used by plugins that are not part of libtempo2
 xtra_dist_sources=choleskyRoutines.C choleskyRoutines.h
 
