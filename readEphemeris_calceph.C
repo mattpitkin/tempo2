@@ -281,4 +281,5 @@ void convertUnits(double *val,int units,int eclCoord)
     val[4] = val[4]*1000.0*scale/SPEED_LIGHT;
     val[5] = val[5]*1000.0*scale/SPEED_LIGHT;
     if (eclCoord==1) equ2ecl(val);
+    if (eclCoord==1) equ2ecl(val+3);
 }
