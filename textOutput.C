@@ -148,7 +148,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             printf("Chisqr/nfree = %.2f/%d = %g\t",chisqr,psr[p].fitNfree,chisqr/(double)psr[p].fitNfree);
             printf("pre/post = %g\n",psr[p].rmsPre/psr[p].rmsPost);
             if( psr[p].robust > 0){
-                printf(" >>> Robust fitting enabled. Robust loops = %d\n",psr[p].robust);
+                printf(" >>> Robust fitting enabled. Robust Mode = %c\n",psr[p].robust);
             }
         }
         printf("Number of fit parameters: %d\n",psr[p].nParam);

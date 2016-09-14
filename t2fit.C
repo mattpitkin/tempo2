@@ -330,7 +330,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
                 // the global params (they go first)
                 for(unsigned int g= 0; g < gParams; g++){
                     unsigned int j = g+nLocal;
-                    if(ipsr==0 && i==0 && writeResiduals){
+                    if(ipsr==0 && i==0 && writeResiduals&0x08){
                         logmsg("Row %d = %s %s(%d)",g,"global",label_str[global_fitinfo.paramIndex[g]],global_fitinfo.paramCounters[g]);
                     }
                     designMatrix[i+off_r][g] = gDM[ipsr][i][j];
@@ -338,7 +338,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
                 }
 
                 for(unsigned int j=0; j < nLocal; j++){
-                    if(i==0 && writeResiduals){
+                    if(i==0 && writeResiduals&0x08){
                         logmsg("Row %d = %s %s(%d)",j+off_f,psr[ipsr].name,label_str[psr[ipsr].fitinfo.paramIndex[j]],psr[ipsr].fitinfo.paramCounters[j]);
                     }
                     designMatrix[i+off_r][j+off_f] = gDM[ipsr][i][j];
