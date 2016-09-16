@@ -667,7 +667,7 @@ getCorrection(observation *obs, const char *clockFrom_c, const char *clockTo, in
     if (!strcasecmp(clockTo, clockFrom))
         return 0.0;
 
-    /*   printf("Getting %s<->%s\n", site->clock_name, clockTo); */
+    /*printf("Getting %s<->%s\n", site->clock_name, clockTo);*/ 
     sequence = getClockCorrectionSequence(clockFrom, clockTo, obs->sat,
             warnings);
 
