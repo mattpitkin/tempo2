@@ -47,7 +47,7 @@ longdouble DDmodel(pulsar *psr,int p,int ipos,int param)
     int norbits;
     longdouble  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,anhat,su;
     longdouble sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
-    longdouble csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
+    longdouble csigma,ce,cx,comega,cgamma,cm2,csi;
     const char *CVS_verNum = "$Id$";
 
     if (displayCVSversion == 1) CVSdisplayVersion("DDmodel.C","DDmodel()",CVS_verNum);
@@ -166,7 +166,7 @@ longdouble DDmodel(pulsar *psr,int p,int ipos,int param)
     cx=sw*cume+sqr1me2*cw*su;
     comega=x*(cw*cume-sqr1me2*sw*su);
     cgamma=su;
-    cdth=-ecc*ecc*x*cw*su/sqr1me2;
+    //cdth=-ecc*ecc*x*cw*su/sqr1me2;
     cm2=-2*dlogbr;
     csi=2*m2*(sw*cume+sqr1me2*cw*su)/brace; 
     if (param==param_pb)

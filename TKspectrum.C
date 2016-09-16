@@ -92,7 +92,7 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
     double specX[(int)ceil(1 + ofac * hifac * MAX_OBSN / 2.0)],specY[(int)ceil(1 + ofac * hifac * MAX_OBSN / 2.0)];
     int splineDaily=0;
     double mean;
-    int    i,j;
+    int    i;
     int    nAv=0;
     int    nInterp=0;
     int    nSmooth=0;
@@ -146,7 +146,7 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
     // Step 4: Fit a spline to the data and obtain equally spaced sampling
     if (fitSpline==1)
     {
-        double yd[MAX_OBSN][4],h;
+        double yd[MAX_OBSN][4];
 
         TKcmonot(nAv,avPtsX,avPtsY,yd);
         if (splineDaily==1)
@@ -220,7 +220,7 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
     if (calcWhite==1)
     {
         double reInterpX[MAX_OBSN],reInterpY[MAX_OBSN];
-        double yd[MAX_OBSN][4],h;
+        double yd[MAX_OBSN][4];
         int nReInterp=n,c=0;
         double xv=0.0,xvsq=0.0;
 
@@ -263,8 +263,8 @@ double TKspectrum(double *x,double *y,double *e,int n,int averageTime,int smooth
     }
     // Step 6: Calculate the spectrum
     {
-        int jmax;
-        double prob,var,tspan;
+// UNUSED VARIABLE //         int jmax;
+        double var,tspan;
         tspan = TKrange_d(smoothX,nSmooth);
 
         if (specType==1) // DFT
@@ -466,12 +466,12 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
 {
     longdouble s1,s2,s3,s4,s5;
     //double recA[MAX_OBSN],recB[MAX_OBSN];
-    double pred;
+// UNUSED VARIABLE //     double pred;
     double omega=0.0;
     double si,ci;
     double a,b;
     double omega0;
-    double var;
+// UNUSED VARIABLE //     double var;
     int i,j;
 
     //omega0 = 2.0*M_PI/TKrange_d(x,n);
@@ -522,14 +522,14 @@ void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY
 void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im)
 {
     complexVal spec[n];
-    double xo;
-    int nfreq;
+// UNUSED VARIABLE //     double xo;
+// UNUSED VARIABLE //     int nfreq;
     int i,j;
-    double f0;
+// UNUSED VARIABLE //     double f0;
     double range,t,f;
 
     range = TKrange_d(x,n)*(double)n/(double)(n-1);
-    nfreq = n/2;
+    //nfreq = n/2;
 
     for (i=0;i<n;i++)
         outX[i]=1.0/range*(i+1);
@@ -880,17 +880,17 @@ void TKspline_interpolate(int n,double *x,double *y,double yd[][4],double *inter
 
 void TKlomb_d(double *x,double *y,int n,double ofac,double hifac,double *ox,double *oy,int *outN,double *var)
 { 
-    double store;
+// UNUSED VARIABLE //     double store;
     double freq0;         /* Initial frequency */
     int i,j;
-    double arg;
+// UNUSED VARIABLE //     double arg;
     double sum1,sum2,sum3,sum4;
-    double tau;
-    double omegaTau,omega;
+// UNUSED VARIABLE //     double tau;
+    double omegaTau;
     double aveX;
     double ybar;
-    double alpha[n],delta,beta[n]; /* See equation 5.5.7 */
-    double ctheta,stheta,theta,omega0;
+    double alpha[n],beta[n]; /* See equation 5.5.7 */
+    double theta,omega0;
     double cosTau,sinTau,st,ct;
     double cosTheta[n],sinTheta[n];
     double scale;
@@ -1042,13 +1042,13 @@ int TK_fft(short int dir,long n,double *x,double *y)
 void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
         double *ret_e2,int *ret_nval,double mintau)
 {
-    int n,nbad,nfit,nread,idiag,niter,ntable,ios,nsigs,nuncor,ntot;
+    int nfit,niter,nuncor,ntot;
     int ndostats,nptot,nuncorbins,ntries;
-    double x,szlog,sz,cov4,rootsz,p4,sumwt,sumwtuncor,error,scale,bias;
-    double utjd2nuncor,wt,dplus,dminus,errlog,chidf,avewt,scalelog;
-    double taulog1,addvsq,szbias,dp,dm,tabledata[101];
+    double x,szlog,sz,cov4,rootsz,p4,sumwt,sumwtuncor,scale,bias;
+    double utjd2nuncor,wt,chidf,avewt;
+    double addvsq,szbias,dp,dm;
     int endit;
-    int   j;
+// UNUSED VARIABLE //     int   j;
 
     *ret_nval=0;
     nxunits = 0;
@@ -1069,13 +1069,11 @@ void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,doub
     if (nxunits <= -1 && nxunits >= -3) ndim=3;
     if (nxunits <= -4 && nxunits >= -6) ndim=1;
 
-    int nobs = psr.nobs;
-    double t2times[MAX_OBSN],t2resid[MAX_OBSN],t2error[MAX_OBSN],t0;
-    int i;
+// UNUSED VARIABLE //     int nobs = psr.nobs;
+// UNUSED VARIABLE //     double t0;
+// UNUSED VARIABLE //     int i;
     scale = 2.0*sqrt(5.0);
-    scalelog = log10(scale);
-    for (n=1;n<=100;n++)
-        tabledata[n] = 0.0;
+    //scalelog = log10(scale);
 
     readin(psr);
     tausec = taumax;
@@ -1174,14 +1172,14 @@ void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,doub
         {
             rootsz = tausec*tausec*sqrt(sz/sumwt)/scale;
             szlog = log10(rootsz);
-            errlog=0.0;
+            //errlog=0.0;
             bias=0.0;
             dp=0.0;
             dm=0.0;
             if (sumwtuncor > 1.0e-50)
             {
-                error=nuncorbins/sumwtuncor;
-                if (error > 0.0) errlog=2.0*taulog+0.5*log10(error)-scalelog;
+                //error=nuncorbins/sumwtuncor;
+//                if (error > 0.0) errlog=2.0*taulog+0.5*log10(error)-scalelog;
                 x=nuncorbins;
                 bias=0.17/x;
                 dm = 0.31/sqrt(x);
@@ -1192,8 +1190,8 @@ void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,doub
 
             }
             szbias = szlog-bias;
-            dplus = szbias + dp;
-            dminus = szbias - dm;
+            //dplus = szbias + dp;
+            //dminus = szbias - dm;
 
             ret_szbias[*ret_nval] = szbias;
             ret_tau[*ret_nval]    = log10(tauyear);
@@ -1220,11 +1218,11 @@ void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,doub
 /* WHAT AM I RETURNING IN AND OUT OF THIS FUNCTION? */
 void fit4(int *nfit,double *p4,double *cov4,int ndostats,double *chidf,double *avewt)
 {
-    int n,i,j,nbad,nok,nf,npt1,npt2,m,k;
+    int n,i,j,nbad,nok,npt1,npt2;
     static int npass=0;
     static int ntaulast=-1;
-    double am[21][21],aminv[21][21],fvec[21],determ,y,ylast,x,ave,rms,alv,yf;
-    double res,sumwt,par[5],wt,chisqu,degfree,utave,err4;
+    double am[21][21],aminv[21][21],fvec[21],determ,y,ylast,ave,rms,alv,yf;
+    double res,sumwt,par[5],wt,chisqu,degfree;
     static double scalefact=1.0;
     static double scalecon=1.0;
 
@@ -1305,8 +1303,8 @@ pos90:
         *p4=(*p4)/scalecon;
         *cov4=(*cov4)/scalecon/scalecon;
     }
-    utave=(utjd1/86400.0+utjd2/86400.0)/2.0;
-    err4=sqrt(*cov4);
+    //utave=(utjd1/86400.0+utjd2/86400.0)/2.0;
+    //err4=sqrt(*cov4);
     if (ntau!=ntaulast) ntaulast=ntau;
     ave=0.0;
     nok=0;
@@ -1460,9 +1458,9 @@ void getweights(int n, double *wt)
 void readin(pulsar psr)
 {
     int nalv,nread,n;
-    static int idiag = 0;
-    double tlast,ave,rms,var,sumwt,alv,t,x,sig,wt,t1,xr,xi,tautest;
-    double rootvar,permin;
+// UNUSED VARIABLE //     static int idiag = 0;
+    double ave,rms,var,sumwt,alv,t,x,sig,wt,t1,tautest;
+    double permin;
     static double unitfact = 1.0;
     double mean=0.0;
     int i;
@@ -1480,7 +1478,6 @@ void readin(pulsar psr)
     sumwt=0.0;
     alv=0.0;
     nalv=0;
-    tlast=0.0;
     sig=1.0;
     wt=1.0;
 
@@ -1566,7 +1563,6 @@ void readin(pulsar psr)
     }
     ave=ave/sumwt;
     var=var/sumwt;
-    rootvar=sqrt(var);
     rms=var-ave*ave;
     rms = sqrt(rms);
     if (nalv > 0 && alv > 0.0) alv=sqrt(alv/2.0/nalv);
@@ -1681,7 +1677,7 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
     if (nfit < 0)
         nfit=nres/2-1;
 
-    double chisq;
+// UNUSED VARIABLE //     double chisq;
     double param[2],error[2];
 
     logdbg("Entering calcSpectra\n");
@@ -1705,7 +1701,7 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
 
         //TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,2,cvm,&chisq,fitCosSineFunc,0,psr,1.0e-40,ip,uinv);
 
-        chisq = TKleastSquares(data,white_data, designMatrix, whiteDesignMatrix, nres,2,1e-40,1,param,error, NULL);
+        TKleastSquares(data,white_data, designMatrix, whiteDesignMatrix, nres,2,1e-40,1,param,error, NULL);
 
 
         specX[k] = omega/2.0/M_PI;

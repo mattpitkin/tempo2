@@ -50,8 +50,8 @@ double DDKmodel(pulsar *psr,int p,int ipos,int param)
     double orbits;
     int norbits;
     double  cu,onemecu,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,anhat,su;
-    double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb,ci,ti;
-    double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
+    double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb,ci;
+    double csigma,ce,cx,comega,cgamma,cm2,csi;
     double sin_omega,cos_omega,ki;
     double pmra,pmdec;
     double ki_dot,sini,cosi,tani,delta_i0,delta_j0,asi;
@@ -72,7 +72,7 @@ double DDKmodel(pulsar *psr,int p,int ipos,int param)
     ki = psr[p].param[param_kin].val[0]*M_PI/180.0;       
     si = sin(ki);
     ci = cos(ki);
-    ti = si/ci;
+    //ti = si/ci;
 
     /* Obtain proper motion in radians/sec */
     pmra  = psr[p].param[param_pmra].val[0]*M_PI/(180.0*3600.0e3)/(365.25*86400.0);
@@ -218,7 +218,7 @@ double DDKmodel(pulsar *psr,int p,int ipos,int param)
     cx=sw*cume+sqr1me2*cw*su;
     comega=asi*(cw*cume-sqr1me2*sw*su);
     cgamma=su;
-    cdth=-ecc*ecc*asi*cw*su/sqr1me2;
+    //cdth=-ecc*ecc*asi*cw*su/sqr1me2;
     cm2=-2*dlogbr;
     csi=2*m2*(sw*cume+sqr1me2*cw*su)/brace; 
 

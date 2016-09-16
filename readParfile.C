@@ -337,10 +337,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"TOFFSET")==0) /* Time offset */
     {
         char str[1000];
-        int k,nread;
+        int k;
         fgets(str,1000,fin);
         if (str[strlen(str)-1]=='\n') str[strlen(str)-1]='\0';
-        nread = sscanf(str,"%lf %lf %lf %lf %s %lf",&(psr->tOffset_f1[psr->nToffset]),
+        sscanf(str,"%lf %lf %lf %lf %s %lf",&(psr->tOffset_f1[psr->nToffset]),
                 &(psr->tOffset_f2[psr->nToffset]),
                 &(psr->tOffset_t1[psr->nToffset]),
                 &(psr->tOffset_t2[psr->nToffset]),

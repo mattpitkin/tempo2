@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "tempo2.h"
+#include "t2fit.h"
 #include <cpgplot.h>
 
 using namespace std; 
@@ -153,7 +154,7 @@ void callFit(pulsar *psr,int npsr)
       formResiduals(psr,npsr,1);
       
       /* Do the fitting */
-      if (iteration==0) doFit(psr,npsr,0);
+      if (iteration==0) t2Fit(psr,npsr,0);
       else textOutput(psr,npsr,globalParameter,0,0,0,"");
     }
 

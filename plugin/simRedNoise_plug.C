@@ -35,6 +35,7 @@
 #include "tempo2.h"
 #include "T2toolkit.h"
 #include "TKfit.h"
+#include "t2fit.h"
 #include "TKspectrum.h"
 
 using namespace std;
@@ -102,7 +103,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-      if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
+      if (i==0) t2Fit(psr,*npsr,0);   /* Do the fitting     */
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
 

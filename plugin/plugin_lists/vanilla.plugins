@@ -3,13 +3,12 @@ general_plug.C
 applet_plug.C
 general2_plug.C
 matrix_plug.C
-designmatrix_plug.C
+#designmatrix_plug.C just use -writeres
 transform_plug.C
 fake_plug.C
 publish_plug.C
 ppta_splug.C
 simRedNoise_plug.C
-dmmodel_fitFunc_plug.C
 bary_plug.C
 detectGWB_plug.C
 autoSpectralFit_plug.C
@@ -19,3 +18,4 @@ detectGWBnew_plug.C
 autoDM_plug.C
 add_pulseNumber_plug.C
 angle_plug.C
+tnmaxlike_fitFunc_plug.C

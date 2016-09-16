@@ -262,11 +262,11 @@ void preProcessSimple2 (pulsar *psr,
         {
             int yes=0;
 
-            char str1[100],str2[100],str3[100],str4[100],str5[100];
+            char str1[100],str2[100],str3[100];
             double val1, val2;
 
             /* Must parse jump string to determine whether this observation should jump or not */	      
-            int nread = sscanf(psr->jumpStr[k],"%s %s %s",str1,str2,str3);
+            sscanf(psr->jumpStr[k],"%s %s %s",str1,str2,str3);
             if (strcasecmp(str1,"MJD")==0 || strcasecmp(str1,"FREQ")==0)
             {
                 sscanf(str2,"%lf",&val1);
@@ -350,7 +350,7 @@ void preProcessSimple2 (pulsar *psr,
 
 void preProcessSimple3 (pulsar *psr)
 {  
-    int  i,j,k,l;
+    int  i,k,l;
     logdbg("Start preProcessSimple3");      
     //
     // Check fjump
@@ -358,7 +358,7 @@ void preProcessSimple3 (pulsar *psr)
     if (strlen(psr->fjumpID)>0)
     {
         char val[MAX_JUMPS][16];
-        int  nval[MAX_JUMPS];
+// UNUSED VARIABLE //         int  nval[MAX_JUMPS];
         int  nf=0;
         int found;
         // Find flag corresponding to longest data set

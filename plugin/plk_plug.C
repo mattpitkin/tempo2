@@ -3511,6 +3511,8 @@ void newTim(pulsar *psr)
 void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeMean,double mean,int count,
         int *id,int fitFlag,float *x,float *y)
 {
+    logwarn("view models currently disabled due to conflicts");
+#ifdef __DISABLED
     longdouble diff;
     //  float px[MAX_OBSN],py[MAX_OBSN],pyt[MAX_OBSN],pxt[MAX_OBSN];
     float *px,*py,*pyt,*pxt;
@@ -3705,6 +3707,7 @@ void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeM
         pyt[tempParam]-=tPmean;
     // Joris.
     cpgsci(1); cpgline(count,pxt,pyt);
+#endif
 }
 
 void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,longdouble origStart,

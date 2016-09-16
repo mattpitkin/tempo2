@@ -306,10 +306,11 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
     // RMS:  these don't do anything because acor=1, but set them to some arbitrary values to be pedantic
     double ifc=1, iexp=1;
     int inpt=1;
-    int cont;
+// UNUSED VARIABLE //     int cont;
 
 
-    cont = T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit, -1,0,NULL,-1);
+    //cont = ..
+    T2fitSpectra(preWhiteSpecX,preWhiteSpecY,nPreWhiteSpec,&modelAlpha,&modelFc,&modelNfit,&modelScale,&fitVar,1,usePreWhitening,modelFc, modelAlpha, modelNfit, -1,0,NULL,-1);
 
     NFIT = modelNfit;
 

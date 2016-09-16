@@ -96,7 +96,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
     double cu,onemecu=0,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,
            anhat,su=0;
     double sqr1me2,cume,brace,si,dlogbr,ds,da,a0,b0,d2bar,torb;
-    double csigma,ce,cx,comega,cgamma,cdth,cm2,csi, ckom, ckin;
+    double csigma,ce,cx,comega,cgamma,cm2,csi, ckom, ckin;
     double eps1,eps2,eps1dot,eps2dot;
     double ceps1,ceps2;
     double shapmax,cshapmax,sdds;
@@ -464,7 +464,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
                 cx=sw*cume+sqr1me2*cw*su;                     /* Equation 62d */
                 comega=x*(cw*cume-sqr1me2*sw*su);             /* Equation 62e */
                 cgamma=su;                                    /* Equation 62g */
-                cdth=-ecc*ecc*x*cw*su/sqr1me2;                /* Equation 62i */
+                //cdth=-ecc*ecc*x*cw*su/sqr1me2;                /* Equation 62i */
                 cm2=-2*dlogbr;                                /* Equation 62j */
                 if (psr[p].param[param_shapmax].paramSet[com]==1)
                     cshapmax = 2*m2*(sw*cume+sqr1me2*cw*su)/brace * (1.0-sdds);
@@ -753,7 +753,7 @@ void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
     double rad2deg = 180.0/M_PI;
     //double pxConv = 1.74532925199432958E-2/3600.0e3;//converts mas to rad
     double pxConv = M_PI/180.0/3600*1e-3; // converts mas to rad
-    double daopConv = 3.08568025e16;//pc in m
+// UNUSED VARIABLE //     double daopConv = 3.08568025e16;//pc in m
 
     //  logdbg("Going to get parameters");
     *si      = getParameter(psr,param_sini,com);
@@ -826,9 +826,9 @@ void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,
         longdouble *DK042,longdouble *DK013, longdouble *DK014, 
         longdouble *DK023, longdouble *DK024, longdouble *DK033, 
         longdouble *DK034, longdouble *DK043, longdouble *DK044){
-    double ki_dot,sini,cosi,tani;
+    double sini,cosi,tani;
     double sin_delta,cos_delta,sin_alpha,cos_alpha;
-    double delta_i0,delta_j0,xpr,ypr;
+    double delta_i0,delta_j0;
     si = sin(ki);
     /* Equation 10 in Kopeikin 1996 */
 
@@ -836,7 +836,7 @@ void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,
     sini = sin(ki);
     cosi = cos(ki);
     tani = sini/cosi;
-    ki_dot = -pmra * sin_omega + pmdec*cos_omega;  
+    //ki_dot = -pmra * sin_omega + pmdec*cos_omega;  
     /* Equation 8 in Kopeikin 1996 */
     //  (*x) += ((*x)*ki_dot/tani)*tt0;
     /* Equation 9 in Kopeikin 1996 */
@@ -862,8 +862,8 @@ void KopeikinTerms(pulsar *psr,int ipos,double ki,double pmra,double sin_omega,
         psr->obsn[ipos].earth_ssb[1]/AULTSC*sin_delta*sin_alpha+
         psr->obsn[ipos].earth_ssb[2]/AULTSC*cos_delta;
 
-    xpr = delta_i0*sin_omega - delta_j0*cos_omega;
-    ypr = delta_i0*cos_omega + delta_j0*sin_omega;
+    //xpr = delta_i0*sin_omega - delta_j0*cos_omega;
+    //ypr = delta_i0*cos_omega + delta_j0*sin_omega;
 
     /* Equations 18 and 19 in Kopeikin 1995 */
 
