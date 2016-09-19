@@ -1681,8 +1681,8 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
     double param[2],error[2];
 
     logdbg("Entering calcSpectra\n");
-    double** designMatrix = malloc_blas(nres,3);
-    double** whiteDesignMatrix = malloc_blas(nres,3);
+    double** designMatrix = malloc_blas(nres,2);
+    double** whiteDesignMatrix = malloc_blas(nres,2);
     double* white_data = static_cast<double*>(malloc(sizeof(double)*nres));
     // Should fit independently to all frequencies
     for (int k=0;k<nfit;k++)
