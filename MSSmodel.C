@@ -53,7 +53,7 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
     double an,ecc0,x0,omega0,k,xi,m2,orbits,phase,ecc,er,eth,du,om2dot,x2dot,si,b0,a0;
     double u,su,cu,onemecu,cae,sae,ae,x,sw,cw,alpha,beta,bg,dre,drep,drepp,anhat;
     double sqr1me2,cume,brace,dlogbr,ds,da,d2bar,torb,edot,dr,dth,gamma;
-    double csigma,ce,cx,comega,cgamma,cdth,cm2,csi;
+    double csigma,ce,cx,comega,cm2;
     int norbits;  
     double pb,eccentricity,a1,omega,omdot,xdot,am2,pbdot,tt0;
     double shapmax;
@@ -244,8 +244,8 @@ double MSSmodel(pulsar *psr,int p,int obs,int param)
     ce=su*csigma-x*sw-ecc*x*cw*su/sqr1me2;
     cx=sw*cume+sqr1me2*cw*su;
     comega=x*(cw*cume-sqr1me2*sw*su);
-    cgamma=su;
-    cdth=-ecc*ecc*x*cw*su/sqr1me2;
+    //cgamma=su;
+    //cdth=-ecc*ecc*x*cw*su/sqr1me2;
     cm2=-2*dlogbr;
     //csi=2*m2*(sw*cume+sqr1me2*cw*su)/brace;
 

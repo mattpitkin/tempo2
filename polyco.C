@@ -100,7 +100,7 @@ void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,i
     longdouble val[800];
     char date[12];
     longdouble tmin[800];
-    double globalParameter,utc;
+    double utc;
     int nsets;
     const char *CVS_verNum = "$Id$";
 
@@ -130,7 +130,6 @@ void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,i
 
     /* Set some defaults */
     psr[0].param[param_track].paramSet[0]=0;
-    globalParameter=0; 
 
     // Zap the output files so we can append days to them later
     fclose(fopen("polyco_new.dat","w"));

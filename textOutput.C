@@ -56,9 +56,9 @@ double dglep(pulsar psr,int gn,double fph);
 /* ******************************************** */
 void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname)
 {
-    double rms_pre=0.0,rms_post=0.0;
-    double mean_pre=0.0,mean_post=0.0,chisqr;
-    int i,p,count,k;
+// UNUSED VARIABLE //     double rms_post=0.0;
+    double chisqr;
+    int i,p,k;
     FILE *fout;
     const char *CVS_verNum = "$Id$";
 
@@ -69,11 +69,6 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
     for (p=0;p<npsr;p++)
     {
-        rms_pre=0.0;
-        rms_post=0.0;
-        mean_pre=0.0;
-        mean_post=0.0;
-        count=0;
 
         /* Determine RMS value */
         if (outRes==1) 
@@ -153,7 +148,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             printf("Chisqr/nfree = %.2f/%d = %g\t",chisqr,psr[p].fitNfree,chisqr/(double)psr[p].fitNfree);
             printf("pre/post = %g\n",psr[p].rmsPre/psr[p].rmsPost);
             if( psr[p].robust > 0){
-                printf(" >>> Robust fitting enabled. Robust loops = %d\n",psr[p].robust);
+                printf(" >>> Robust fitting enabled. Robust Mode = %c\n",psr[p].robust);
             }
         }
         printf("Number of fit parameters: %d\n",psr[p].nParam);
@@ -298,17 +293,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             if ( psr[p].waveScale == 2)
             {
 
-                double perr,pwr;
-                double xval,yval;
-                int j;
-                FILE *fout;
+// UNUSED VARIABLE //                 double pwr;
+// UNUSED VARIABLE //                 double yval;
+// UNUSED VARIABLE //                 int j;
+// UNUSED VARIABLE //                 FILE *fout;
                 printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","Freq","Period","Cosine amp","Sine amp","Power");
                 printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","(yr^-1)","(yr)","(s)","(s)","(s^2)");
                 printf("------------------------------------------------------------------------------\n");
                 for (i=0;i<psr[p].nWhite;i++)
                 {
-                    pwr = pow(psr[p].wave_cos[i],2)+pow(psr[p].wave_sine[i],2);
-                    perr = sqrt(pow(2*psr[p].wave_cos[i]*psr[p].wave_cos_err[i],2)+pow(2*psr[p].wave_sine[i]*psr[p].wave_sine_err[i],2));
+                    //pwr = pow(psr[p].wave_cos[i],2)+pow(psr[p].wave_sine[i],2);
+                    //perr = sqrt(pow(2*psr[p].wave_cos[i]*psr[p].wave_cos_err[i],2)+pow(2*psr[p].wave_sine[i]*psr[p].wave_sine_err[i],2));
                     ld_printf("WAVE%d\t%-15.5Lg %-15.5Lg %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g %-+10.5g  %-+10.5g %-+10.5g  \n",
                             i+1, // Wave number (counter starting at 1 - i.e. 'i' starts at 0)
                             (i+1)*psr[p].param[param_wave_om].val[0]/2.0/M_PI*365.25,       // Wave frequency (yr^-1) JORIS
@@ -328,9 +323,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             {
                 double om;
                 double perr,pwr;
-                double xval,yval;
-                int j;
-                FILE *fout;
+// UNUSED VARIABLE //                 double yval;
+// UNUSED VARIABLE //                 int j;
+// UNUSED VARIABLE //                 FILE *fout;
                 printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","Freq","Period","Cosine amp","Sine amp","Power");
                 printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","(yr^-1)","(yr)","(s)","(s)","(s^2)");
                 printf("------------------------------------------------------------------------------\n");
@@ -373,9 +368,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         {
 
             double perr,pwr;
-            double xval,yval;
-            int j;
-            FILE *fout;
+// UNUSED VARIABLE //             double yval;
+// UNUSED VARIABLE //             int j;
+// UNUSED VARIABLE //             FILE *fout;
             printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","Freq","Period","Cosine amp","Sine amp","Power");
             printf("      \t%-15.15s %-15.15s %-15.15s %-15.15s %-15.15s\n","(yr^-1)","(yr)","(s)","(s)","(s^2)");
             printf("------------------------------------------------------------------------------\n");
@@ -419,12 +414,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         (double)psr[p].quad_across_r_e[j],(double)psr[p].quad_across_i_e[j]);
             }
         }
+        /*
         if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&	
                 psr[p].param[param_gwm_amp].paramSet[1]==1 &&
                 (psr[p].param[param_gwm_amp].fitFlag[0]>0 ||
                  psr[p].param[param_gwm_amp].fitFlag[1]>0))
         {
-            int i,i0,i1;
+            int i,i1;
             for (i=0;i<psr[0].nParam;i++)
             {
                 if (psr[0].fitParamI[i] == param_gwm_amp && psr[0].fitParamK[i] == 0)
@@ -433,14 +429,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     i1 = i;
             }
             printf("\n");
-            //printf("GWM covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
+            printf("GWM covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
         }
         if (psr[p].param[param_gwb_amp].paramSet[0]==1 &&	
                 psr[p].param[param_gwb_amp].paramSet[1]==1 &&
                 (psr[p].param[param_gwb_amp].fitFlag[0]>0 ||
                  psr[p].param[param_gwb_amp].fitFlag[1]>0))
         {
-            int i,i0,i1;
+            int i,i1;
             for (i=0;i<psr[0].nParam;i++)
             {
                 if (psr[0].fitParamI[i] == param_gwb_amp && psr[0].fitParamK[i] == 0)
@@ -449,9 +445,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     i1 = i;
             }
             printf("\n");
-            //printf("GW BURST A1: %g A2: %g A1_A1 = %g A2_A2 = %g A1_A2 = %g \n" , (double) psr[0].param[param_gwb_amp].val[0], (double) psr[0].param[param_gwb_amp].val[1], (double) psr[0].covar[i0][i0], (double) psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
+            printf("GW BURST A1: %g A2: %g A1_A1 = %g A2_A2 = %g A1_A2 = %g \n" , (double) psr[0].param[param_gwb_amp].val[0], (double) psr[0].param[param_gwb_amp].val[1], (double) psr[0].covar[i0][i0], (double) psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
         }
-
+*/
 
         if (psr[p].param[param_dmmodel].paramSet[0]==1)
         {
@@ -642,12 +638,12 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         if (psr[p].param[param_pb].paramSet[0]==1 || psr[p].param[param_fb].paramSet[0]==1)
         {
             double err;
-            longdouble pb,a1,pbe,a1e,si=-2,si_lo=-2,si_hi=-2;
+            longdouble pb,a1,si=-2,si_lo=-2,si_hi=-2;
 
             pb  = psr[p].param[param_pb].val[0]*SECDAY;
-            pbe = psr[p].param[param_pb].err[0]*SECDAY;
+            //pbe = psr[p].param[param_pb].err[0]*SECDAY;
             a1  = psr[p].param[param_a1].val[0]*SPEED_LIGHT;
-            a1e = psr[p].param[param_a1].err[0]*SPEED_LIGHT;
+            //a1e = psr[p].param[param_a1].err[0]*SPEED_LIGHT;
 
             printf("Binary model: %s\n",psr[p].binaryModel);
 
@@ -787,7 +783,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }
 
                 /* Joris' distance calculations */
-                longdouble transV[4]; 
+// UNUSED VARIABLE //                 longdouble transV[4]; 
                 /* transverse velocity. 
 0: pxdistvalue 
 1: pxdisterror 
@@ -795,19 +791,19 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 3: pbdoterr */
                 if(psr[p].param[param_px].paramSet[0]==1){
                     longdouble pxdist[2]; // 0: value; 1: error
-                    longdouble pmsqrd[2];
+// UNUSED VARIABLE //                     longdouble pmsqrd[2];
                     pxdist[0] = (longdouble)(1.0/psr[p].param[param_px].val[0]*1000.0);
                     pxdist[1] = 1/powl(psr[p].param[param_px].val[0],2.0)*
                         psr[p].param[param_px].err[0]*1000.0;
                     printf("\nParallax distance is %lg (+/- %lg) pc.\n",(double)pxdist[0],
                             (double)pxdist[1]);
-                    pmsqrd[0] = powl(psr[p].param[param_pmra].val[0]*MASYR2RADS,2.0)+
+/*                    pmsqrd[0] = powl(psr[p].param[param_pmra].val[0]*MASYR2RADS,2.0)+
                         powl(psr[p].param[param_pmdec].val[0]*MASYR2RADS,2.0);
                     pmsqrd[1] = powl(2*psr[p].param[param_pmra].val[0]*
                             psr[p].param[param_pmra].err[0]*powl(MASYR2RADS,2.0),2.0)
                         +powl(2*psr[p].param[param_pmdec].val[0]*psr[p].param[param_pmdec].err[0]
                                 *powl(MASYR2RADS,2.0),2.0);
-                    /*transV[0] = sqrtl(pmsqrd[0])*pxdist[0]*PCM/1000.0; // now in km/s
+                    transV[0] = sqrtl(pmsqrd[0])*pxdist[0]*PCM/1000.0; // now in km/s
                       transV[1] = sqrtl(powl(pmsqrd[1]*pxdist[0]*PCM/(2.0*pmsqrd[0]),2.0)+
                       pmsqrd[0]*powl(pxdist[1]*PCM,2.0))/1000.0;
                       printf("\tTransverse velocity based on parallax distance: %lg +/- %lg km/s.\n",
@@ -1038,8 +1034,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             }
             else
             {
-                int ii,jj,kk;
-                double cv;
+                int ii,jj;
+// UNUSED VARIABLE //                 double cv;
                 for (ii=0;ii<psr[0].globalNfit;ii++)
                 {
                     for (jj=0;jj<psr[0].globalNfit;jj++)
@@ -1086,8 +1082,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }
                 else
                 {
-                    int ii,jj,kk;
-                    double cv;
+                    int ii,jj;
+// UNUSED VARIABLE //                     double cv;
                     for (ii=0;ii<psr[0].globalNfit;ii++)
                     {
                         for (jj=0;jj<psr[0].globalNfit;jj++)
@@ -1115,7 +1111,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             FILE *fout2;
             char fname2[1000];
             char str1[100],str2[100],str3[100],str4[100],str5[100];
-            int nread;
+// UNUSED VARIABLE //             int nread;
             printf("In here writing a new parameter file: %s\n",fname);
             if (strlen(fname)==0)
             {
@@ -1124,7 +1120,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             }
             else
             {
-                char fname3[1000];
+// UNUSED VARIABLE //                 char fname3[1000];
                 if (npsr > 1)
                     sprintf(fname2,"%s_%d",fname,p+1);
                 else{
@@ -1317,7 +1313,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 /* Add jumps */
                 for (i=1;i<=psr[p].nJumps;i++)
                 {
-                    nread = sscanf(psr[p].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
+                    sscanf(psr[p].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
                     if (strcasecmp(str1,"FREQ")==0 || strcasecmp(str1,"MJD")==0)
                         fprintf(fout2,"JUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
                     else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')

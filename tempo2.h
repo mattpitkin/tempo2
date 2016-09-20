@@ -139,12 +139,9 @@
 #define T2C_TEMPO   2
 
 
-
 /*! TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
 
-/*! TEMPO2 error messages */
-extern char TEMPO2_ERROR[];
 
 /*! for 'strong typing' - type for enum label */
 typedef int param_label;
@@ -181,6 +178,7 @@ enum label {
     param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
+    param_red_sin, param_red_cos,param_jitter,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -243,6 +241,9 @@ enum constraint {
     constraint_qifunc_c_year_xcos,
     constraint_qifunc_c_year_sin2,
     constraint_qifunc_c_year_cos2,
+    constraint_red_sin,
+    constraint_red_cos,
+    constraint_jitter,
     constraint_LAST /*!< marker for the last constraint */
 };
 
@@ -807,11 +808,11 @@ extern "C" {
     void formResiduals(pulsar *psr,int npsr,int removeMean);
     int  bootstrap(pulsar *psr,int p,int npsr);
     void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile) DEPRECATED;
-    void doFit(pulsar *psr,int npsr,int writeModel) DEPRECATED;
-    void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) DEPRECATED;
-    void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) DEPRECATED; 
+//    void doFit(pulsar *psr,int npsr,int writeModel) DEPRECATED;
+//    void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) DEPRECATED;
+//    void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) DEPRECATED; 
     void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
-    double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k) DEPRECATED;
+    double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
     void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname);
     void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
     void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
@@ -924,8 +925,8 @@ extern "C" {
     void transform_units(struct pulsar *psr, int from, int to);
 
     /* This function uses the numerical recipes svdfit for the fitting */
-    void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
-    void updateParameters(pulsar *psr,int p,double *val,double *error);
+//    void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
+//    void updateParameters(pulsar *psr,int p,double *val,double *error);
 
     /* defineClockCorrectionSequence: call to provide the clock correction
        module with a sequence of files to use for corrections. May be called

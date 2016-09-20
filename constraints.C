@@ -122,7 +122,7 @@ std::string get_constraint_name(enum constraint c){
 
 
 void matrixDMConstraintWeights(pulsar *psr){
-    int i,j,k;
+    int i,k;
     int nobs=0;
     int nfit=psr->dmoffsDMnum+psr->dmoffsCMnum;
     int nDM=psr->dmoffsDMnum;
@@ -199,7 +199,7 @@ void matrixDMConstraintWeights(pulsar *psr){
         double sum_wCM=0;
         for (i=0;i<nfit;i++)
         {
-            double sum=0.0;
+// UNUSED VARIABLE //             double sum=0.0;
             if(i < nDM){
                 psr->dmoffsDM_weight[i]=1.0/e[i]/e[i];
                 printf("constraints.C here: %d %g\n",i,e[i]);

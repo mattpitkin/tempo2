@@ -119,7 +119,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
     FILE *fin;
     char profileDir[MAX_STRLEN]="";
     char tt[MAX_STRLEN];
-    int nread=0,nread2,nObs=0,i,k;
+    int nread=0,nread2,nObs=0,i;
     char firstWord[1000],line[1000]="",dummy[1000];
     char param1[100];//,param2[100],param3[100],param4[100],param5[100];
     //char param6[100],param7[100],param8[100];
@@ -225,23 +225,22 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
                         }
                     }
 
-		  char sat_day_str[5];
-		  char sat_sec_str[1024];
+                    char sat_day_str[5];
+                    char sat_sec_str[1024];
 
-		  sat_sec_str[0] = '0';
-		  //sat_sec_str[1] = '.';
-		  int sindexcounter=0;
-		  for(int sindex = 0; sindex < 1024; sindex++){
-			if(sindex < 5){
-				sat_day_str[sindex] = sat_str[sindex];
-			}
-			if(sindex>=5){
-				sat_sec_str[sindex-4] = sat_str[sindex];
-			}
-		  }
+                    sat_sec_str[0] = '0';
+                    //sat_sec_str[1] = '.';
+                    for(int sindex = 0; sindex < 1024; sindex++){
+                        if(sindex < 5){
+                            sat_day_str[sindex] = sat_str[sindex];
+                        }
+                        if(sindex>=5){
+                            sat_sec_str[sindex-4] = sat_str[sindex];
+                        }
+                    }
 
-		  psr->obsn[nObs].sat_day = parse_longdouble(sat_day_str);
-		  psr->obsn[nObs].sat_sec = parse_longdouble(sat_sec_str);
+                    psr->obsn[nObs].sat_day = parse_longdouble(sat_day_str);
+                    psr->obsn[nObs].sat_sec = parse_longdouble(sat_sec_str);
 
                     psr->obsn[nObs].sat = parse_longdouble(sat_str);
                     psr->obsn[nObs].phaseOffset = 0.0;
@@ -287,10 +286,9 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
                                 // Check for DM changes
                                 if (strcmp(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-dme")==0)
                                 {
-                                    double dme,dm,toaErr,freq,toaCorr;
+                                    double dme,dm,freq,toaCorr;
                                     sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%lf",&dme);
                                     sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags-1],"%lf",&dm);
-                                    toaErr = psr->obsn[nObs].toaErr*1.0e-6;
                                     freq = psr->obsn[nObs].freq*1e6;
 
                                     toaCorr = dme/DM_CONST/1.0e-12/freq/freq;

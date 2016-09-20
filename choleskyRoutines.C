@@ -25,8 +25,8 @@ int T2guess_vals(double *x, double *y, int n, double *alpha, double *amp,  doubl
     int j;
 
 
-    double dgw;
-    dgw = x[1]-x[0];
+// UNUSED VARIABLE //     double dgw;
+    //dgw = x[1]-x[0];
 
 
     //exit(0);
@@ -360,7 +360,7 @@ int T2calculateSpectra(double *x,double *y,double *e,int n,int useErr,int preWhi
         int specType,double *specX,double *specY)
 {
     int nSpec;
-    int i;
+// UNUSED VARIABLE //     int i;
     int passSpecType;
     double outY_im[n],outY_re[n];
     printf("choleskyRoutines: calculateSpectra\n");
@@ -378,7 +378,7 @@ int T2calculateSpectra(double *x,double *y,double *e,int n,int useErr,int preWhi
 int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,double *modelAlpha,double *modelFc,int *modelNfit,double *modelScale,double *fitVar,int aval,int ipw,double ifc,double iexp,int inpt,double amp,int useBeta,double *betaVal,double cutoff)
 {
     static int time=1;
-    double v1,v2,m;
+    double v1,m;
     double df;
     int i;
     printf("choleskyRoutines: fitSpectra\n");
@@ -663,7 +663,7 @@ void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
         double *rese,int np,double *highFreqRes,double *errorScaleFactor, 
         int dcmflag,int useBeta,double betaVal)
 {
-    int i,j,ndays;
+    int i,ndays;
     double** m=malloc_uinv(np);
 
     printf("choleskyRoutines: calculateCholesky\n");
@@ -688,12 +688,12 @@ void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,i
 {
     int i,j;
     int nd = (int)(x[n-1]-x[0]+0.5);
-    int nc=0;
+// UNUSED VARIABLE //     int nc=0;
     int nzl=0;
-    int npts[nd];
+// UNUSED VARIABLE //     int npts[nd];
     double dt;
     double wt[nd];
-    double nzerolag=0.0;
+// UNUSED VARIABLE //     double nzerolag=0.0;
     printf("choleskyRoutines: calculateDailyCovar\n");
     for (i=0;i<nd;i++)
     {

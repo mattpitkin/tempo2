@@ -150,7 +150,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-      if (i==0) doFit(psr,*npsr,0);   /* Do the fitting     */
+      if (i==0) doFitAll(psr,*npsr,0);   /* Do the fitting     */
       else textOutput(psr,*npsr,globalParameter,0,0,0,"");  /* Display the output */
     }
 
@@ -394,7 +394,7 @@ void doPlugin3(pulsar *psr,char *flag,char parFile[MAX_PSR_VAL][MAX_FILELEN],cha
     
     formBatsAll(psr,1);         /* Form the barycentric arrival times */
     formResiduals(psr,1,1);    /* Form the residuals                 */
-    doFit(psr,1,0);   /* Do the fitting     */
+    doFitAll(psr,1,0);   /* Do the fitting     */
     formBatsAll(psr,1);         /* Form the barycentric arrival times */
     formResiduals(psr,1,1);    /* Form the residuals                 */
     textOutput(psr,1,globalParameter,0,0,0,"");  /* Display the output */
@@ -805,7 +805,7 @@ void doPlugin2(pulsar *psr,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[M
       preProcess(psr,1,argc,argv);
       formBatsAll(psr,1);                 /* Form the barycentric arrival times */
       formResiduals(psr,1,0);             /* Form the residuals                 */
-      doFit(psr,1,0);                     /* Do the fitting                     */ 
+      doFitAll(psr,1,0);                     /* Do the fitting                     */ 
       formBatsAll(psr,1);                 /* Form the barycentric arrival times */
       formResiduals(psr,1,0);             /* Form the residuals                 */
       textOutput(psr,1,0,0,0,0,"");
