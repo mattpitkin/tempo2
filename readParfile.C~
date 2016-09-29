@@ -595,16 +595,6 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 readValue(psr,str,fin,&(psr->param[param_sxr2]),sxidx);
         }
     }
-    else if (strncasecmp(str,"SXER_",5)==0)
-    {
-        int sxidx;
-        if (sscanf(str+5,"%d",&sxidx)==1)
-        {
-            sxidx--;
-            if (sxidx<psr->param[param_sxer].aSize)
-                readValue(psr,str,fin,&(psr->param[param_sxer]),sxidx);
-        }
-    }
     else if (strcasecmp(str,"DM")==0) /* Dispersion measure */
         readValue(psr,str,fin,&(psr->param[param_dm]),0);
     else if ((str[0]=='D' || str[0]=='d') &&  /* Higher DM derivatives */
@@ -1798,7 +1788,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
     char str[1000];
     parameter elong,elat;	
     int noread=0,endit;
-    const char *CVS_verNum = "$Id$";
+    const char *CVS_verNum = "$Id: fad72f7b0cdf31d6207b36e9a9edb9a64ae6c9f1 $";
 
     if (displayCVSversion == 1) CVSdisplayVersion((char *)"readParfile.C",(char *)"readParfile()",CVS_verNum);
 

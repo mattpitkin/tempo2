@@ -38,7 +38,7 @@
 void initialise(pulsar *psr,int noWarnings)
 {
     int p;
-    const char *CVS_verNum = "$Id$";
+    const char *CVS_verNum = "$Id: 95d8e5a77c716d8ff0c85e4126959bc7263b1da6 $";
 
     if (displayCVSversion == 1) CVSdisplayVersion("initialise.C","initialise()",CVS_verNum);
 
@@ -168,7 +168,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nJumps=0;
     psr->nToffset = 0;
     psr->ndmx = 0;
-    psr->nSx = 0;
+    psr->nsx = 0;
     psr->nconstraints = 0;
     psr->auto_constraints = 0;
     psr->jboFormat=0;
@@ -576,12 +576,6 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         strcpy(psr->param[param_sxr2].label[k],temp);
         sprintf(temp,"SXR2_%04d",k+1);
         strcpy(psr->param[param_sxr2].shortlabel[k],temp);
-
-
-        sprintf(temp,"SXER_%04d (MJD)",k+1);
-        strcpy(psr->param[param_sxer].label[k],temp);
-        sprintf(temp,"SXER_%04d",k+1);
-        strcpy(psr->param[param_sxer].shortlabel[k],temp);
     }
 }
 
@@ -608,8 +602,6 @@ void allocateMemory(pulsar *psr, int realloc)
             psr->param[i].aSize = 9;
         else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
             psr->param[i].aSize = MAX_DMX;
-        else if (i==param_sx || i==param_sxr1 || i==param_sxr2 || i==param_sxer)
-            psr->param[i].aSize = MAX_SX;
         else if (i==param_fd)
             psr->param[i].aSize = 9;
         else if (i==param_telx) psr->param[i].aSize = 4;

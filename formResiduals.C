@@ -251,7 +251,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             deltaT = (psr[p].obsn[i].bbat-psr[p].param[param_pepoch].val[0])*86400.0+torb;
             fct = psr[p].obsn[i].bbat-(int)psr[p].obsn[i].bbat - (psr[p].param[param_pepoch].val[0] - 
                     (int)psr[p].param[param_pepoch].val[0]);	   
-            ftpd = fct+torb/86400.0;	   
+            ftpd = fct+torb/86400.0;	  
+
+	    //printf("bbat: %i %.16Lg %.16Lg %.16Lg %.16Lg \n", i, psr[p].obsn[i].bbat, psr[p].obsn[i].bat, (psr[p].obsn[i].bbat-psr[p].obsn[i].bat)*24*60*60, torb);
+ 
             psr[p].obsn[i].pet = psr[p].obsn[i].bbat - torb/SECDAY;
 
             /* What is the extra -ntpd*(int)(psr.f0) term on the end??? */

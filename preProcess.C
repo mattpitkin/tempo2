@@ -508,13 +508,13 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
         }
 
         // Check TNEF and TNEQ
-        if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0 || psr[p].nTNSQ > 0)
+        if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0 || psr[p].nTNSQ > 0 || psr[p].TNGlobalEF != 1 || psr[p].TNGlobalEQ != -1000)
         {
             double err;
             printf("Updating TOA errors using TN parameters.\n");
             for (i=0;i<psr[p].nobs;i++)
             {
-                err = psr[p].obsn[i].toaErr;
+                err = 1.0*psr[p].obsn[i].toaErr;
                 for (j=0;j<psr[p].obsn[i].nFlags;j++)
                 {
                     //Check efac
@@ -522,13 +522,19 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                     {
                         if (strcmp(psr[p].obsn[i].flagID[j],psr[p].TNEFFlagID[k])==0)
                         {
-                            if (strcmp(psr[p].obsn[i].flagVal[j],psr[p].TNEFFlagVal[k])==0)
+                            if (strcmp(psr[p].obsn[i].flagVal[j],psr[p].TNEFFlagVal[k])==0){
+				printf("notglobal: %g %g %g\n", (double)psr[p].TNGlobalEF, (double)err, (double)err*psr[p].TNGlobalEF);
                                 err *= psr[p].TNEFVal[k];
+				}
                         }
                     }
+		}
 
+			printf("global: %i %g %g %g\n",i , (double)psr[p].TNGlobalEF, (double)err, (double)err*psr[p].TNGlobalEF);
 			err *= psr[p].TNGlobalEF;
 
+		for (j=0;j<psr[p].obsn[i].nFlags;j++)
+                {
                     //Check equad
                     for (k=0;k<psr[p].nTNEQ;k++)
                     {
@@ -540,8 +546,12 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                             }
                         }
                     }
+		}
 
-			err = sqrt(err*err + pow(10.0,psr[p].TNGlobalEQ+6)*pow(10.0,psr[p].TNGlobalEQ+6));
+		err = sqrt(err*err + pow(10.0,psr[p].TNGlobalEQ+6)*pow(10.0,psr[p].TNGlobalEQ+6));
+
+		for (j=0;j<psr[p].obsn[i].nFlags;j++)
+                {
                     //Check Squad
                     for (k=0;k<psr[p].nTNSQ;k++)
                     {

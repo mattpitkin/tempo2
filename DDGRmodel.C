@@ -135,13 +135,21 @@ double DDGRmodel(pulsar *psr,int p,int ipos,int param)
     } while (fabs(du)>1.0e-14);  /* 1e-12 in DDmodel */
 
     /*  DD equations 17a, 29 */
-    ae = 2.0*atan(sqrt((1+ecc)/(1-ecc))*tan(0.5*u));
+
+	su=sin(u);
+	cu=cos(u);
+	onemecu=1.0-ecc*cu;
+
+
+	double cae =(cu-ecc)/onemecu;                         /* Equation 17b */
+	double sae =sqrt(1.0-pow(ecc,2))*su/onemecu;          /* Equation 17c */
+	ae=atan2(sae,cae);
+
+    //ae = 2.0*atan(sqrt((1+ecc)/(1-ecc))*tan(0.5*u));
     if(ae<0.0) ae=ae+2.0*M_PI;
     ae = 2.0*M_PI*orbits + ae-phase;
     omega=omz/rad2deg + (k+xomdot/(an*rad2deg*365.25*86400.0))*ae;
     /* DD equations 46 through 52 */
-    su=sin(u);
-    cu=cos(u);
     sw=sin(omega);
     cw=cos(omega);
     alpha=x*sw;
@@ -150,7 +158,6 @@ double DDGRmodel(pulsar *psr,int p,int ipos,int param)
     dre=alpha*(cu-er) + bg*su;
     drep=-alpha*su + bg*cu;
     drepp=-alpha*cu - bg*su;
-    onemecu=1.0-ecc*cu;
     anhat=an/onemecu;
 
     /* DD equations 26,27,57 */
@@ -161,7 +168,7 @@ double DDGRmodel(pulsar *psr,int p,int ipos,int param)
     if(ipos == 0){psr[p].brace = 0;}
 	if (brace<=0)
     {
-    //`    printf("ERROR: In DDGR model, brace < 0\n");
+        printf("ERROR: In DDGR model, brace < 0\n");
 	psr[p].brace = -1;	
         //exit(1);
     }
@@ -178,6 +185,8 @@ double DDGRmodel(pulsar *psr,int p,int ipos,int param)
     /*  Now compute d2bar, the orbital time correction in DD equation 42. */
     d2bar=dre*(1-anhat*drep+(pow(anhat,2))*(pow(drep,2) + 0.5*dre*drepp -
                 +    0.5*ecc*su*dre*drep/onemecu)) + ds + da;
+
+    //printf("d2bar: %i %.16g %.16g %.16g %.16g %.16g %.16g %.16g %.16g %.16g %.16g\n", norbits, orbits, phase, (double)u, cu, d2bar, ds, anhat, dre, drep, drepp);
     torb=-d2bar;
 
     if (param==-1)  return torb;

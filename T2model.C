@@ -288,6 +288,9 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
             dlogbr=log(brace);
             ds=-2*m2*dlogbr;        /* Equation 26 */
 
+	//    printf("in ecc: anhat %g onemecu %g u %g phase %g dth %g\n", anhat, onemecu, u, phase, dth);
+
+
         }
         else if (psr[p].param[param_eps1].paramSet[com]==1)  /* ELL1 model */
         {
@@ -315,7 +318,6 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
             da=a0*sin(phase)+b0*cos(phase);  
 
             anhat = an; ecc = 0.0;
-
 
             /* Shapiro delay */
             if ( psr[p].param[param_h3].paramSet[0] * psr[p].param[param_stig].paramSet[0] == 1 
@@ -439,20 +441,37 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
         /* Equation 52 */
         if (onemecu != 0.0)
         {
+
+		double myterm1 = x*sin(phase);
+		double myterm2 = an*x*cos(phase);
+		double myterm3 = 0.5*an*an*myterm1*myterm1;
+
+		//printf("calc d2bar1 %g %g %i %g %g %g %g %Lg %Lg %Lg \n", anhat, drep, allTerms, dre, drepp, ds, da, DAOP, DSR, DOP);
+//		printf("scalc d2bar1 %g %g %g %g %g %g %g \n", cu, su, anhat, drep, dre, drepp, dre*(1-anhat*drep+allTerms*pow(anhat,2)*(pow(drep,2) + 0.5*dre*drepp -0.5*ecc*su*dre*drep/onemecu)));
+		//printf("scalc d2bar1 %.16g %.16g %g %g %g %g %g \n", (double)psr[p].obsn[ipos].bbat, phase,  myterm1*(1 - myterm2 + myterm3), myterm1, myterm2, myterm3, myterm1*(- myterm2 + myterm3));
             d2bar=dre*(1-anhat*drep+allTerms*pow(anhat,2)*
                     (pow(drep,2) + 0.5*dre*drepp - 
                      0.5*ecc*su*dre*drep/onemecu)) + allTerms*(ds+da+DAOP+DSR
                      + DOP);
+
+		//d2bar=dre;
         }
         else
         {
+	//	printf("calc d2bar %g %g %i %g %g %g %g %Lg %Lg %Lg \n", anhat, drep, allTerms, dre, drepp, ds, da, DAOP, DSR, DOP);
             d2bar=dre*(1-anhat*drep+allTerms*pow(anhat,2)*
                     (pow(drep,2) + 0.5*dre*drepp))
                 + allTerms*(ds+da+DAOP+DSR+DOP);
         }    
         //      printf("T2a: %g %g %g %g %g drepp=%g ecc=%g su =%g ome =%g ds = %g da = %g %g %g\n",(double)d2bar,(double)dre,(double)anhat,(double)drep,(double)allTerms,(double)drepp,(double)ecc,(double)su,(double)onemecu,(double)ds,(double)da,(double)DAOP,(double)DSR);
+	//d2bar = 0;
+
+//	printf("d2bar: %g %g \n", torb, d2bar);
         torb-=d2bar;                                  /* Equation 42  */
 
+
+
+	//printf("d2bar: %g \n", d2bar);
         if (param==-1 && com == psr[p].nCompanion-1) return torb;
         else if (param!=-1 && com==arr)
         {

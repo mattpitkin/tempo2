@@ -49,7 +49,7 @@
 #include "TKlog.h"
 
 
-#define TEMPO2_h_HASH "$Id$"
+#define TEMPO2_h_HASH "$Id: 3d916194de5e64b81275934793bed8baaa321e94 $"
 #define TEMPO2_h_VER "2015.09.0"
 #define TEMPO2_h_MAJOR_VER 2015.09
 #define TEMPO2_h_MINOR_VER 0
@@ -181,7 +181,7 @@ enum label {
     param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
     param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
-    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,param_sx, param_sxr1, param_sxr2, param_sxer,
+    param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
