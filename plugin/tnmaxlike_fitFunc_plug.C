@@ -1451,7 +1451,7 @@ void updateParameters(pulsar *psr,int p,double *val,double *error)
                 else if (strcmp(psr[p].binaryModel,"BTX")==0)
                     updateBTX(&psr[p],val[j],error[j],i,k);
                 else if (strcmp(psr[p].binaryModel,"ELL1")==0)
-                    updateELL1(&psr[p],val[j],error[j],i);
+                    updateELL1(&psr[p],val[j],error[j],i,k);
                 else if (strcmp(psr[p].binaryModel,"DD")==0)
                     updateDD(&psr[p],val[j],error[j],i);
                 else if (strcmp(psr[p].binaryModel,"DDK")==0)
