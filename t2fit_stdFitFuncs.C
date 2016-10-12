@@ -129,7 +129,7 @@ double t2FitFunc_binaryModels(pulsar *psr, int ipsr ,double x ,int ipos ,param_l
     else if (strcmp(psr->binaryModel,"BTX")==0)
         afunc = BTXmodel(psr,0,ipos,label,k);
     else if (strcmp(psr->binaryModel,"ELL1")==0)
-        afunc = ELL1model(psr,0,ipos,label);
+        afunc = ELL1model(psr,0,ipos,label,k);
     else if (strcmp(psr->binaryModel,"DD")==0)
         afunc = DDmodel(psr,0,ipos,label);
     else if (strcmp(psr->binaryModel,"DDK")==0)
@@ -162,7 +162,7 @@ void t2UpdateFunc_binaryModels(pulsar *psr, int ipsr ,param_label label,int k, d
     else if (strcmp(psr[ipsr].binaryModel,"BTX")==0)
         updateBTX(&psr[ipsr],val,error,label,k);
     else if (strcmp(psr[ipsr].binaryModel,"ELL1")==0)
-        updateELL1(&psr[ipsr],val,error,label);
+        updateELL1(&psr[ipsr],val,error,label,k);
     else if (strcmp(psr[ipsr].binaryModel,"DD")==0)
         updateDD(&psr[ipsr],val,error,label);
     else if (strcmp(psr[ipsr].binaryModel,"DDK")==0)

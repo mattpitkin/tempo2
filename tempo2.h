@@ -896,8 +896,8 @@ extern "C" {
     void updateBTJ(pulsar *psr,double val,double err,int pos,int arr);
     double BTXmodel(pulsar *psr,int p,int obs,int param,int arr);
     void updateBTX(pulsar *psr,double val,double err,int pos,int arr);
-    double ELL1model(pulsar *psr,int p,int obs,int param);
-    void updateELL1(pulsar *psr,double val,double err,int pos);
+    double ELL1model(pulsar *psr,int p,int obs,int param,int arr);
+    void updateELL1(pulsar *psr,double val,double err,int pos,int arr);
     longdouble DDmodel(pulsar *psr,int p,int obs,int param);
     void updateDD(pulsar *psr,double val,double err,int pos);
     double T2model(pulsar *psr,int p,int obs,int param,int arr);

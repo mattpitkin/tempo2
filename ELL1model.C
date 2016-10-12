@@ -57,7 +57,7 @@
 /* ------------------------------------------------------------------------- */
 
 
-double ELL1model(pulsar *psr,int p,int ipos,int param)
+double ELL1model(pulsar *psr,int p,int ipos,int param,int k)
 {
     double an,x0,m2,tt0,orbits,phase,e1,e2,dre,drep,drepp,brace,dlogbr,ds,da,pb;
     double eps1,eps2,eps1dot,eps2dot,si,a0,b0;
@@ -71,7 +71,10 @@ double ELL1model(pulsar *psr,int p,int ipos,int param)
     a0 = 0.0; /* WHAT SHOULD THESE BE? */
     b0 = 0.0;
 
-    pb    = psr[p].param[param_pb].val[0]*SECDAY;
+    if (psr[p].param[param_fb].paramSet[0]==1) 
+        pb    = 1.0/psr[p].param[param_fb].val[0];
+    else
+        pb    = psr[p].param[param_pb].val[0]*SECDAY;
 
     if (psr[p].param[param_pbdot].paramSet[0] == 1) pbdot = psr[p].param[param_pbdot].val[0];
     else pbdot=0.0;
@@ -163,6 +166,16 @@ double ELL1model(pulsar *psr,int p,int ipos,int param)
 
     if (param==param_pb)
         return -Csigma*an*SECDAY*tt0/(pb*SECDAY); /* Pb    */
+    else if (param==param_fb)
+    {
+        tt0 /= 1.0e7; 
+        double dfb = Csigma*an*tt0*pb;
+        if (k==0) return dfb;
+        for (int ik=1; ik<=k; ik++) {
+            dfb *= tt0/(double)(ik+1);
+        }
+        return dfb;
+    }
     else if (param==param_a1)
         return Cx;
     else if (param==param_eps1)
@@ -187,12 +200,17 @@ double ELL1model(pulsar *psr,int p,int ipos,int param)
     return 0.0;
 }
 
-void updateELL1(pulsar *psr,double val,double err,int pos)
+void updateELL1(pulsar *psr,double val,double err,int pos,int k)
 {
     if (pos==param_pb)
     {
         psr->param[param_pb].val[0] += val/SECDAY;
         psr->param[param_pb].err[0]  = err/SECDAY;
+    }
+    else if (pos==param_fb)
+    {
+        psr->param[param_fb].val[k] += (val/powl(1.0e7,k+1));
+        psr->param[param_fb].err[k]  = err/powl(1.0e7,k+1);
     }
     else if (pos==param_a1 || pos==param_eps1 || pos==param_eps2 || pos==param_tasc
             || pos==param_sini || pos == param_m2 
