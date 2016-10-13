@@ -10,11 +10,11 @@ lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
 BUILT_SOURCES=TKcholesky.h TKlongdouble.h enum_str.h enum_str.C
 
 
-# VERSION 2016.08.1
-# c=1
-# r=1
+# VERSION 2016.10.0
+# c=2
+# r=0
 # a=0
-libtempo2_la_LDFLAGS=-version-info 1:1:0
+libtempo2_la_LDFLAGS=-version-info 2:0:0
 libt2toolkit_la_LDFLAGS=-version-info 1:1:0
 libtempo2pred_la_LDFLAGS=-version-info 1:1:0
 
