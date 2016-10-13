@@ -767,6 +767,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         } 
     }
 
+    else if (strcasecmp(str,"CONSTRAINT_EFACTOR")==0){
+        fscanf(fin, "%lg",&psr->constraint_efactor);
+       logdbg("Constraint efactor set to %g", psr->constraint_efactor);
+    }
 
     /*
      * Specify fitting constraints
