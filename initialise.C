@@ -169,6 +169,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nToffset = 0;
     psr->ndmx = 0;
     psr->nconstraints = 0;
+    psr->constraint_efactor = 1e15;
     psr->auto_constraints = 0;
     psr->jboFormat=0;
     // Moved from readTimfile.C (next line):

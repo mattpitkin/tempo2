@@ -763,6 +763,7 @@ typedef struct pulsar {
 
 
     int nconstraints;                       /*!< Number of fit constraints specified                      */
+    double constraint_efactor;
     enum constraint constraints[MAX_PARAMS];/*!< Which constraints are specified */
     char auto_constraints;
 

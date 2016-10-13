@@ -165,6 +165,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             printf("Number of points in fit (including constraint points) = %d\n",psr[p].nFit);
             printf("Number of constraints in fit = %d\n",psr[p].nconstraints);
             printf("Number of observations in fit = %d\n",psr[p].nFit - psr[p].nconstraints);
+            printf("Constraint EFACTOR = %g\n",psr[p].constraint_efactor);
         }
         else
             printf("Number of points in fit = %d\n",psr[p].nFit);
@@ -1438,13 +1439,18 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 // add constraints
                 if (psr[p].auto_constraints){
                     fprintf(fout2,"CONSTRAIN AUTO\n");
+                    fprintf(fout2,"CONSTRAINT_EFACTOR %g\n",psr[p].constraint_efactor);
                 } else {
+                    if (psr[p].nconstraints > 0){
+                        fprintf(fout2,"CONSTRAINT_EFACTOR %g\n",psr[p].constraint_efactor);
+                    }
                     for (int i = 0; i < psr[p].nconstraints; i++){
                         if (psr[p].constraints[i]==constraint_dmmodel_mean){
                             fprintf(fout2,"CONSTRAIN DMMODEL\n");
                         }
                     }
                 }
+                
 
                 // white model file
 
