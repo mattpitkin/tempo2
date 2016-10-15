@@ -36,6 +36,70 @@
 #include "tempo2.h"
 #include "ifteph.h"
 
+
+void galactic_motion(double mjd, double *x, double *y, double *z)
+{
+  // assume galactic motion is in direction b=0, l=90 degrees at 220 km/s
+  
+  //
+  double gu,gv,gw;
+  //double **rmatrix;
+  
+  double yr;
+  yr= (mjd-51544.)/365.25;
+
+  // distance to centre of galaxy in light seconds
+  double dgal;
+  dgal=0.85e12;
+  double om,arg;
+  om=2.*M_PI/220e6;
+
+  arg=yr*om;
+
+  
+
+  gu=-dgal/2.*arg*arg+dgal/24.*arg*arg*arg*arg;
+  gv=-dgal/6.*arg*arg*arg;
+  
+
+  fprintf(stderr, "%.3e %.3e %.3e %.3e %.3e\n", om, yr, arg,gu, gv);
+  
+  float b11, b12, b13;
+  float b21, b22, b23;
+  float b31, b32, b33;
+
+  /* 
+  b[1][1]=-0.054876; 
+  b[2][1]=-0.873437; 
+  b[3][1]= -0.483835; 
+  b[1][2]=0.494110 ;
+  b[2][2]= -0.444830; 
+  b[3][2]= 0.746982 ;
+  b[1][3]= -0.867666 ;
+  b[2][3] = -0.198076;
+  b[3][3] = 0.455984; 
+  */
+  
+  b11=-0.054876; 
+  b21=-0.873437; 
+  b31= -0.483835; 
+  b12=0.494110 ;
+  b22= -0.444830; 
+  b32= 0.746982 ;
+  b13= -0.867666 ;
+  b23 = -0.198076;
+  b33 = 0.455984; 
+
+  *x=b11*gu+b12*gv;
+  *y=b21*gu+b22*gv;
+  *z=b31*gu+b32*gv;
+
+
+
+  return;
+}
+
+
 void convertUnits(double *val,int units,int eclCoord);
 
 #ifdef HAVE_CALCEPH
@@ -92,11 +156,21 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
             calceph_compute_unit(eph,jd0,jd1,3,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earth_ssb);
             convertUnits(psr[p].obsn[i].earth_ssb,psr[p].units, psr[p].eclCoord);
 
+	    // add in galactic rotation
+	    //double  galx, galy, galz;
+	    //galactic_motion( (double) psr[p].obsn[i].sat, &galx, &galy, &galz);
+	    // psr[p].obsn[i].earth_ssb[0]+= galx;
+	    // psr[p].obsn[i].earth_ssb[1]+= galy;
+	    //psr[p].obsn[i].earth_ssb[2]+= galz;
+
+	    
+
             // Calculate the Sun to SSB vector
             calceph_compute_unit(eph,jd0,jd1,11,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].sun_ssb);
             convertUnits(psr[p].obsn[i].sun_ssb,psr[p].units,psr[p].eclCoord);
 
-
+	    // add it solar system motion in Galaxy
+	    
 
 
             int iplanet;
@@ -210,6 +284,8 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 
 void tt2tb_calceph(pulsar *psr, int npsr)
 {
+  int res;
+  
     t_calcephbin *eph;
     int i,p;
     long double jd;
@@ -235,7 +311,7 @@ void tt2tb_calceph(pulsar *psr, int npsr)
 
             // Calculate the Earth to SSB vector
             //calceph_compute_unit(eph,jd0,jd1,3,12,CALCEPH_UNIT_KM|CALCEPH_UNIT_SEC,psr[p].obsn[i].earth_ssb);
-            calceph_compute(eph,jd0,jd1,16,0,ttcorr);
+            res=calceph_compute(eph,jd0,jd1,16,0,ttcorr);
 
 
 
@@ -251,7 +327,7 @@ void tt2tb_calceph(pulsar *psr, int npsr)
         }	
         calceph_close(eph);
 
-
+	psr[p].havecorrectionTT=res;
     }
     //exit(0);
     return;

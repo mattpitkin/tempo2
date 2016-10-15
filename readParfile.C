@@ -1615,12 +1615,17 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             //      parameter dummy[10];
             //      readValue(psr,str,fin,&dummy,0);
         }
-        /* Other allowed parameters that are unused */
-        else if (str[0]=='C') /* Comment line */
+	else if (strcasecmp(str, "AVERAGERES") ==0)
+	  {
+	    psr->AverageResiduals=1;
+	    fscanf(fin,"%s %f", &(psr->AverageFlag), &(psr->AverageEpochWidth));
+	  }
+    /* Other allowed parameters that are unused */
+	else if (str[0]=='C') /* Comment line */
             fgets(str,1000,fin);
         else if (str[0]=='I') /* Comment line */
             fgets(str,1000,fin);
-        else 
+	else 
         {
             displayMsg(1,(char *)"MISC1",(char *)"Unknown parameter in par file: ",str,psr->noWarnings);
         }

@@ -96,10 +96,10 @@ void tt2tb(pulsar *psr,int npsr)
                     deltaT = FB_deltaT(mjd_tt) - IFTE_TEPH0; /* FB code returns Teph-TDB not TT-TDB */
                 }
 
-		if(psr[p].useCalceph ==1)
+		if((psr[p].useCalceph ==1) && (psr[p].havecorrectionTT ==1))
 		  {
-		    fprintf(stderr, "here?\n");
-		    fprintf(stderr, "%.3Le\n",  psr[0].obsn[i].correctionTT_calcEph);
+		    // fprintf(stderr, "here?\n");
+		    //fprintf(stderr, "%.3Le\n",  psr[0].obsn[i].correctionTT_calcEph);
 		    deltaT = psr[0].obsn[i].correctionTT_calcEph;
 		  }
 

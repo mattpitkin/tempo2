@@ -395,6 +395,7 @@ typedef struct observation {
     longdouble correctionTT_TB;     /*!< Correction to TDB/TCB           */
     double einsteinRate;            /*!< Derivative of correctionTT_TB   */
   longdouble correctionTT_calcEph;
+ 
   longdouble correctionTT_Teph;   /*!< Correction to Teph              */
     longdouble correctionUT1;       /*!< Correction from site TOA to UT1 */
 
@@ -523,7 +524,7 @@ typedef struct pulsar {
     int gwecc_pulsarTermOn; //0 - earth, 1 - e + p, 2 - p only
 
 
-
+  int havecorrectionTT;
 
     // General pulsar information
     double posPulsar[3];            /*!< 3-vector pointing at pulsar                                */
