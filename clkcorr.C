@@ -224,7 +224,7 @@ DynamicArray *makeClockCorrectionSequence(const char *clockFrom, const char *clo
     size_t slen = 16;
     DynamicArray names; /* Array of clock names. Other values index this arr */
     int *S; /* Clocks for which shortest path are known */
-    int n_known;
+// UNUSED VARIABLE //     int n_known;
     int *Q; /* Remaining clocks */
     float *d; /* Best distance to a clock */
     int *edge_to_previous; /* edge to use to link to previous node */ 
@@ -341,7 +341,6 @@ DynamicArray *makeClockCorrectionSequence(const char *clockFrom, const char *clo
     }
 
     /* initialize S, Q, d, p */
-    n_known = 0;
     S = (int *)malloc(sizeof(int)*names.nelem);
     Q = (int *)malloc(sizeof(int)*names.nelem);
     d = (float *)malloc(sizeof(float)*names.nelem);
@@ -668,7 +667,7 @@ getCorrection(observation *obs, const char *clockFrom_c, const char *clockTo, in
     if (!strcasecmp(clockTo, clockFrom))
         return 0.0;
 
-    /*   printf("Getting %s<->%s\n", site->clock_name, clockTo); */
+    /*printf("Getting %s<->%s\n", site->clock_name, clockTo);*/ 
     sequence = getClockCorrectionSequence(clockFrom, clockTo, obs->sat,
             warnings);
 

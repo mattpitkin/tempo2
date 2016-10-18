@@ -121,10 +121,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         formResiduals(psr,*npsr,1);    /* Form the residuals                 */
         if (i==0) 
         {
-            if (strcmp(dcmFile,"NULL")==0 && strcmp(covarFuncFile,"NULL")==0)
-                doFit(psr,*npsr,0);
-            else
-                doFitDCM(psr,dcmFile,covarFuncFile,*npsr,0);
+            doFitAll(psr,*npsr,covarFuncFile);
         }
         else textOutput(psr,*npsr,0,0,0,0,"");  /* Display the output */
     }

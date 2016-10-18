@@ -185,7 +185,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         needToFreeCVM=true;
     }
 
-    if(writeResiduals==1 && white_data!=NULL && data != NULL){
+    if((writeResiduals&1) && white_data!=NULL && data != NULL){
         logdbg("Writing out whitened residuals");
         FILE* wFile=fopen("prefit.res","w");
         if (!wFile){
@@ -200,7 +200,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
 
     }
-    if(writeResiduals==1){
+    if(writeResiduals&2){
         logdbg("Writing out design matrix");
         FILE * wFile=fopen("design.matrix","w");
         if (!wFile){
@@ -216,6 +216,21 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
             }
             fclose(wFile);
         }
+        wFile=fopen("constraints.matrix","w");
+        if (!wFile){
+            printf("Unable to write out constraints matrix: cannot open file constraints.matrix\n");
+        }
+        else
+        {
+            for (i=0;i<nconstraints;i++) {
+                for (j=0;j<nparams;j++){
+                    fprintf(wFile,"%d %d %lg\n",i,j,constraintsMatrix[i][j]);
+                }
+                fprintf(wFile,"\n");
+            }
+            fclose(wFile);
+        }
+
     }
 
 
@@ -243,7 +258,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                 //if(i==j)logmsg("Cmatrix ic=%d ip=%d %lg",i,j,constraintsMatrix[i][j]);
             }
         }
-        if(writeResiduals==1){
+        if(writeResiduals&2){
             logdbg("Writing out augmented design matrix");
             FILE * wFile=fopen("adesign.matrix","w");
             if (!wFile){
@@ -411,9 +426,9 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
     }
 
-    if (writeResiduals){
+    if (writeResiduals&4){
         double sum,sum_w;
-        FILE* wFile=fopen("postfit.txt","w");
+        FILE* wFile=fopen("postfit.res","w");
         if (!wFile){
             printf("Unable to open file postfit.res for writing\n");
         }
@@ -452,10 +467,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
         //parameters for robust estimation
         double resid[ndata];//residual after the calculation of leastsquare
-        longdouble Weight[ndata];//reweights
-        double median = 0.0;
-        double newval[ndata];
-        double resid_new[ndata];
+        double Weight[ndata];//reweights
 
         //Calculating the residual
         for (j=0;j<ndata;j++)
@@ -470,14 +482,6 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
             resid[j]=white_data[j]-sum;
         }
 
-        //Median of residuals
-        for (i=0;i<ndata;i++)
-        {
-            newval[i]=fabs(resid[i]);
-        }      
-
-        median = TKfindMedian_d(newval, nparams);
-
         //Reweight 
         double c0 = 1.345;
 
@@ -489,34 +493,19 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
         double aWelsch = 2.11;
 
-        FILE *rp = fopen("Wresidual.txt", "w");
         switch (robust){
-            case '1':
-            case 'H':
+            case 'W':
                 for (j=0;j<ndata;j++)
                 {
-                    resid_new[j] = resid[j]/median;//(b[j]/white_data[j]);///sqrt(sigma);
-
-                    if (fabs(resid_new[j])<c0)
-                    {
-                        Weight[j] = 1.0;
-                    }
-                    else
-                    {
-                        Weight[j] = c0/fabs(resid_new[j]);
-                    }
+                    Weight[j] = 2*aWelsch*exp(-pow(resid[j]/aWelsch, 2));
                 }
-
                 break;
-
             case 'B':
                 for (j=0;j<ndata;j++)
                 {
-                    resid_new[j] = resid[j]/median;//(b[j]/white_data[j]);
-
-                    if (fabs(resid_new[j])<aBisquare)
+                    if (fabs(resid[j])<aBisquare)
                     {
-                        Weight[j] = pow(1-pow(resid_new[j]/aBisquare, 2),2);
+                        Weight[j] = pow(1-pow(resid[j]/aBisquare, 2),2);
                     }
                     else
                     {
@@ -525,48 +514,33 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                 }
                 break;
 
-            case 'R':
+            case 'H':
+            default:
                 for (j=0;j<ndata;j++)
                 {
-                    resid_new[j] = resid[j]/median;//(b[j]/white_data[j]);
 
-                    if (fabs(resid_new[j])<aHampel)
+                    double eta = resid[j];
+
+                    if (fabs(eta)<c0)
                     {
                         Weight[j] = 1.0;
                     }
                     else
                     {
-                        if (fabs(resid_new[j])<=bHampel)
-                        {
-                            Weight[j] = aHampel/fabs(resid_new[j]);
-                        }
-                        else
-                        {
-                            if (fabs(resid_new[j])<=cHampel)
-                            {
-                                Weight[j] = aHampel*(fabs(resid_new[j])-cHampel)/(fabs(resid_new[j])*(bHampel-cHampel));
-                            }
-                            else
-                            {
-                                Weight[j] = 0;
-                            }   
-                        }
+                        Weight[j] = c0/fabs(eta);
                     }
-                    fprintf(rp, "%d r=%lg   nr=%lg   eb=%lg  W=%lg\n", j+1, resid[j], resid_new[j], white_data[j]/data[j], (double)Weight[j]); 
-
                 }
-                break;
-            case 'W':
-                for (j=0;j<ndata;j++)
-                {
-                    resid_new[j] = resid[j]/median;//(b[j]/white_data[j]);
 
-                    Weight[j] = 2*aWelsch*exp(-pow(resid_new[j]/aWelsch, 2));
-                }
                 break;
         }
+        if (writeResiduals&4){
+            FILE *rp = fopen("robust.res", "w");
+            for (j=0;j<ndata;j++){
+                fprintf(rp, "%lg %lg %lg\n", resid[j], white_data[j]/data[j], (double)Weight[j]);
+            }
+            fclose(rp);
+        }
 
-        fclose(rp);
 
         //Substitute the reweight matrix
         for (i=0; i<ndata; i++)
@@ -578,11 +552,14 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
         //Calcluation via robust estimation algorithm
 
+        int save_writeResiduals = writeResiduals;
+        writeResiduals &= 0x4; // disable writing of prefit and design matrix, we have already done this!
         chisq = TKrobustConstrainedLeastSquares(data, white_data, 
                 designMatrix, white_designMatrix, 
                 constraintsMatrix,
                 ndata, nparams, nconstraints, 
                 tol, rescale_errors, outP, e, Ocvm,0);
+        writeResiduals=save_writeResiduals;
     }//end of if robust
 
 

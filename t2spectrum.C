@@ -16,8 +16,8 @@ int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *spec
 }
 
 int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr) {
-    int i,j,k;
-    int nSpec;
+    int i,k;
+// UNUSED VARIABLE //     int nSpec;
 
     if (nfit < 0)
         nfit=nres/2-1;
@@ -66,7 +66,7 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
 // The psr and ival parameters are ignored
 void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
 {
-    int i;
+// UNUSED VARIABLE //     int i;
     v[0] = 1; // Fit for mean
     v[1] = cos(GLOBAL_OMEGA*x);
     v[2] = sin(GLOBAL_OMEGA*x);
@@ -145,7 +145,7 @@ void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int 
 // The psr and ival parameters are ignored
 void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr)
 {
-    int i;
+// UNUSED VARIABLE //     int i;
     v[0] = cos(GLOBAL_OMEGA*x);
     v[1] = sin(GLOBAL_OMEGA*x);
 

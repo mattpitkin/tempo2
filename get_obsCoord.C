@@ -46,6 +46,8 @@ extern "C" long iau_sxp_(double *, double *, double *);
 extern "C" long iau_pxp_(double *, double *, double *);
 extern "C" long iau_c2t00b_(double *, double *, double *, double *, 
         double *, double *, double *);
+extern "C" long iau_c2t00a_(double *, double *, double *, double *, 
+        double *, double *, double *);
 extern "C" long iau_trxpv_(double *, double *, double *);
 extern "C" long iau_trxp_(double *, double *, double *);
 
@@ -535,18 +537,18 @@ double get_precessionMatrix(double prn[3][3],double mjd,double delp,double dele)
 {
     int i,j;
     /* For precession */
-    double t,zeta,dzeta,z,dz,theta,dtheta;
+    double t,zeta,z,theta;
     double par_zeta[3] = {2306.2181, 0.30188, 0.017998};
     double par_z[3] = {2306.2181, 1.09468, 0.018203};
     double par_theta[3] = {2004.3109, -0.42665, -0.041833};
     double seconds_per_rad = 3600.0*180.0/M_PI;
 
-    double czeta,szeta,dczeta,dszeta,cz,sz,dcz,dsz,ctheta,stheta,dctheta,dstheta;
+    double czeta,szeta,cz,sz,ctheta,stheta;
 
-    double nut[3][3],prc[3][3],dprecess[3][3];
+    double nut[3][3],prc[3][3];
 
     /* For nutation */
-    double dt;
+// UNUSED VARIABLE //     double dt;
     double eps=OBLQ*M_PI/180.0;
     double ceps;
     double seps;
@@ -556,24 +558,24 @@ double get_precessionMatrix(double prn[3][3],double mjd,double delp,double dele)
     t = (mjd-51544.5)/36525.0;
 
     zeta=t*(par_zeta[0]+t*(par_zeta[1]+t*par_zeta[2]))/seconds_per_rad;
-    dzeta=(par_zeta[0]+t*(2.0*par_zeta[1]+t*3.0*par_zeta[2]))/seconds_per_rad/36525.0;
+    //dzeta=(par_zeta[0]+t*(2.0*par_zeta[1]+t*3.0*par_zeta[2]))/seconds_per_rad/36525.0;
     z=t*(par_z[0]+t*(par_z[1]+t*par_z[2]))/seconds_per_rad;
-    dz=(par_z[0]+t*(2.0*par_z[1]+t*3.0*par_z[2]))/seconds_per_rad/36525.0;
+    //dz=(par_z[0]+t*(2.0*par_z[1]+t*3.0*par_z[2]))/seconds_per_rad/36525.0;
     theta=t*(par_theta[0]+t*(par_theta[1]+t*par_theta[2]))/seconds_per_rad;
-    dtheta=(par_theta[0]+t*(2.0*par_theta[1]+t*3.0*par_theta[2]))/seconds_per_rad/36525.0;
+    //dtheta=(par_theta[0]+t*(2.0*par_theta[1]+t*3.0*par_theta[2]))/seconds_per_rad/36525.0;
 
     czeta = cos(zeta);
     szeta = sin(zeta);
-    dczeta = -szeta*dzeta;
-    dszeta = czeta*dzeta;
+    //dczeta = -szeta*dzeta;
+    //dszeta = czeta*dzeta;
     cz = cos(z);
     sz = sin(z);
-    dcz = -sz*dz;
-    dsz = cz*dz;
+    //dcz = -sz*dz;
+    //dsz = cz*dz;
     ctheta = cos(theta);
     stheta = sin(theta);
-    dctheta = -stheta*dtheta;
-    dstheta = ctheta*dtheta;
+//    dctheta = -stheta*dtheta;
+ //   dstheta = ctheta*dtheta;
 
     prc[0][0] = czeta*ctheta*cz - szeta*sz;
     prc[1][0] = czeta*ctheta*sz + szeta*cz;
@@ -585,6 +587,7 @@ double get_precessionMatrix(double prn[3][3],double mjd,double delp,double dele)
     prc[1][2] = -stheta*sz;
     prc[2][2] = ctheta;
 
+    /*
     dprecess[0][0] = dczeta*ctheta*cz + czeta*dctheta*cz + czeta*ctheta*dcz - dszeta*sz - szeta*dsz;
     dprecess[1][0] = dczeta*ctheta*sz + czeta*dctheta*sz + czeta*ctheta*dsz + dszeta*cz + szeta*dcz;
     dprecess[2][0] = dczeta*stheta + czeta*dstheta;
@@ -594,7 +597,7 @@ double get_precessionMatrix(double prn[3][3],double mjd,double delp,double dele)
     dprecess[0][2] = - dstheta*cz - stheta*dcz;
     dprecess[1][2] = - dstheta*sz - stheta*dsz;
     dprecess[2][2] = dctheta;
-
+*/
     /* END OF PRECESSION.F */
 
     /* Start of NUTATION.F */
@@ -611,7 +614,7 @@ double get_precessionMatrix(double prn[3][3],double mjd,double delp,double dele)
     nut[2][1]=-nut[1][2];
     nut[2][2]=1.0;
 
-    dt = delp*cos(eps+dele);
+    //dt = delp*cos(eps+dele);
 
     /* From PRCNUT.f */
 

@@ -331,16 +331,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         char temp[1024];
         fscanf(fin,"%s",temp);
-        sprintf(psr->ephemeris,"%s/ephemeris/%s",getenv("TEMPO2"),temp);
+        sprintf(psr->ephemeris,"%s",temp);
         psr->useCalceph = 1;
     }
     else if (strcasecmp(str,"TOFFSET")==0) /* Time offset */
     {
         char str[1000];
-        int k,nread;
+        int k;
         fgets(str,1000,fin);
         if (str[strlen(str)-1]=='\n') str[strlen(str)-1]='\0';
-        nread = sscanf(str,"%lf %lf %lf %lf %s %lf",&(psr->tOffset_f1[psr->nToffset]),
+        sscanf(str,"%lf %lf %lf %lf %s %lf",&(psr->tOffset_f1[psr->nToffset]),
                 &(psr->tOffset_f2[psr->nToffset]),
                 &(psr->tOffset_t1[psr->nToffset]),
                 &(psr->tOffset_t2[psr->nToffset]),
@@ -767,6 +767,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         } 
     }
 
+    else if (strcasecmp(str,"CONSTRAINT_EFACTOR")==0){
+        fscanf(fin, "%lg",&psr->constraint_efactor);
+       logdbg("Constraint efactor set to %g", psr->constraint_efactor);
+    }
 
     /*
      * Specify fitting constraints

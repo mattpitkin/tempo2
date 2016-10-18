@@ -383,7 +383,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
       formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);           /* Form the residuals                 */
-      doFit(psr,*npsr,0);
+      doFitAll(psr,*npsr,0);
       formBatsAll(psr,*npsr);                 /* Form the barycentric arrival times */
       formResiduals(psr,*npsr,1);           /* Form the residuals                 */
       

@@ -20,7 +20,7 @@ CPPFLAGS=-I$(srcdir)/gtest-1.7.0/include -I$(srcdir)/gtest-1.7.0 -I$(top_srcdir)
 
 
 libgtest_la_SOURCES=gtest-1.7.0/src/gtest-all.cc
-testTKfit_LDADD=libgtest.la ../libt2toolkit.la @PTHREAD_LIBS@ @PTHREAD_CFLAGS@
-testTempo2_LDADD=libgtest.la ../libtempo2.la @PTHREAD_LIBS@ @PTHREAD_CFLAGS@
-testEndToEnd_LDADD=libgtest.la ../libtempo2.la @PTHREAD_LIBS@ @PTHREAD_CFLAGS@
+testTKfit_LDADD=libgtest.la ../libt2toolkit.la @PTHREAD_LIBS@ @PTHREAD_CFLAGS@ $(LIBADD_DLOPEN)
+testTempo2_LDADD=libgtest.la ../libtempo2.la @PTHREAD_LIBS@ @PTHREAD_CFLAGS@ $(LIBADD_DLOPEN)
+testEndToEnd_LDADD=libgtest.la ../libtempo2.la @PTHREAD_LIBS@ @PTHREAD_CFLAGS@ $(LIBADD_DLOPEN)
 

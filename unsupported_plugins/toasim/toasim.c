@@ -25,6 +25,7 @@ toasim_header_t *toasim_init_header(){
     toasim_header->nrealisations=0;
     toasim_header->d_start=0;
     toasim_header->d_offset=0;
+    toasim_header->rparam_len=0;
     return toasim_header;
 }
 

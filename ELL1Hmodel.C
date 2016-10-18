@@ -35,12 +35,12 @@ double ELL1Hmodel(pulsar *psr,int p,int ipos,int param){
     double an; // orbital angular velocity
     double x0,m2,tt0,orbits,phase,e1,e2,dre,drep,drepp,brace,dlogbr,ds,da,pb;
     double eps1,eps2,eps1dot,eps2dot,si,a0,b0,d2bar;
-    double torb,Csigma,Cx,Ceps1,Ceps2,Cm2,Csi,ct,t0asc,pbdot,xpbdot,x,xdot,am2;
+    double torb,Csigma,Cx,Ceps1,Ceps2,Cm2,Csi,ct,t0asc,pbdot,xpbdot,x,xdot;
     int norbits;
     double SUNMASS = 4.925490947e-6;
-    double ecc; // eccentricity
+// UNUSED VARIABLE //     double ecc; // eccentricity
     double TrueAnom; // true anomaly
-    double omega; // omega
+// UNUSED VARIABLE //     double omega; // omega
     // fw10 parameters:
     double h3, h4, stig;
     double lgf; // intermediate derivative calculation
@@ -193,11 +193,11 @@ double ELL1Hmodel(pulsar *psr,int p,int ipos,int param){
     brace = 1.0 - si * sin( phase );
     dlogbr = log( brace );
 
-    ecc = sqrt( e1 * e1 + e2 * e2 );
+    //ecc = sqrt( e1 * e1 + e2 * e2 );
     TrueAnom = phase;
     //TrueAnom = 2.0 * atan2( sqrt( 1.0 + ecc ) * sin( phase / 2.0 ), 
     //                       sqrt( 1.0 - ecc ) * cos( phase / 2.0 ) );
-    omega = atan2( e1, e2 );
+    //omega = atan2( e1, e2 );
     //lgf = log( 1.0 + stig * stig - 2.0 * stig * sin( TrueAnom + omega ) );
     double lsc, fs;
     fs = 1.0 + stig * stig - 2.0 * stig * sin( TrueAnom );

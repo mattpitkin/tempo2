@@ -95,6 +95,14 @@ void tt2tb(pulsar *psr,int npsr)
                 {
                     deltaT = FB_deltaT(mjd_tt) - IFTE_TEPH0; /* FB code returns Teph-TDB not TT-TDB */
                 }
+
+		if(psr[p].useCalceph ==1)
+		  {
+		    fprintf(stderr, "here?\n");
+		    fprintf(stderr, "%.3Le\n",  psr[0].obsn[i].correctionTT_calcEph);
+		    deltaT = psr[0].obsn[i].correctionTT_calcEph;
+		  }
+
                 /* Get term involving observatory position (if known) */
 
                 /*	for (k=0;k<3;k++)
@@ -211,17 +219,16 @@ double FB_deltaT(longdouble mjd_tt)
     double ctatv;    /* output TDB-TDT */
     longdouble tdt; /* jd1 + jd2  (Julian date) */
     static int tdbnrl=-1;
-    int nr,nrecl,j,k,np,nv;
+    int nr,j,k,np;
     double jda,jdb,tdbd1,tdbd2,t[2];
     int tdbdt,tdbncf;
     char fname[MAX_FILELEN];
-    double dna,dt1,temp,pc[18],tc,twot,dummy;
+    double dna,dt1,temp,pc[18],tc,twot;
     static double buf[16];
-    int l;
+// UNUSED VARIABLE //     int l;
 
     /* Initialise the TDB-TDT file (tdbinit.f) */
     /* Set up the TDB-TDT ephemeris file for reading */
-    nrecl = 4; /* If recl is in bytes (for Sun -- what about LINUX ????) */
 
     strcpy(fname,getenv(TEMPO2_ENVIRON));
     strcat(fname,TDBTDT_FILE);
@@ -232,11 +239,11 @@ double FB_deltaT(longdouble mjd_tt)
     tdbd2 = read_double();
     tdbdt = read_int();
     tdbncf = read_int();
-    dummy = read_double();
-    dummy = read_double();
-    dummy = read_double();
-    dummy = read_double();
-    dummy = read_double();
+    read_double();
+    read_double();
+    read_double();
+    read_double();
+    read_double();
 
     /* Use the corrected TT time and convert to Julian date */
     tdt = mjd_tt + 2400000.5; 
@@ -271,7 +278,6 @@ double FB_deltaT(longdouble mjd_tt)
 
     /* Interpolation: call interp(buf,t,tdbncf,1,  1,   1,   ctatv) */
     np = 2;
-    nv = 3;
     twot = 0.0; 
 
     pc[0] = 1.0; pc[1]=0.0;
@@ -279,13 +285,11 @@ double FB_deltaT(longdouble mjd_tt)
     dna = 1.0;
     dt1 = (int)(t[0]);
     temp = dna * t[0];
-    l = (int)(temp - dt1)+1;
     tc = 2.0*(fortran_mod(temp,1.0)+dt1)-1.0;
 
     if (tc != pc[1])
     {
         np = 2;
-        nv = 3; 
         pc[1] = tc;
         twot = tc+tc;	  
     } 

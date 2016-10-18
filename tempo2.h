@@ -90,7 +90,7 @@
 #define MAX_TOFFSET          10    /*!< Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /*!< Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX             512    /*!< Max number of DM steps allowed */
-#define MAX_FLAGS            20    /*!< Maximum number of flags in .tim file/observation */
+#define MAX_FLAGS            40    /*!< Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /*!< Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /*!< Maximum number of steps in the correction to TT  */ 
 #define SECDAY               86400.0       /*!< Number of seconds in 1 day                 */
@@ -139,12 +139,9 @@
 #define T2C_TEMPO   2
 
 
-
 /*! TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
 
-/*! TEMPO2 error messages */
-extern char TEMPO2_ERROR[];
 
 /*! for 'strong typing' - type for enum label */
 typedef int param_label;
@@ -174,13 +171,14 @@ enum label {
     param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
     param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
     param_wave_dm, param_waveepoch_dm,
-    param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet,param_waveepoch,param_ifunc,param_clk_offs,
+    param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet, param_dphaseplanet, param_waveepoch,param_ifunc,param_clk_offs,
     param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_cgw,param_quad_om,
     param_h3,param_h4,param_nharm,param_stig,
     param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
     param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
+    param_red_sin, param_red_cos,param_jitter,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -243,6 +241,9 @@ enum constraint {
     constraint_qifunc_c_year_xcos,
     constraint_qifunc_c_year_sin2,
     constraint_qifunc_c_year_cos2,
+    constraint_red_sin,
+    constraint_red_cos,
+    constraint_jitter,
     constraint_LAST /*!< marker for the last constraint */
 };
 
@@ -381,20 +382,29 @@ typedef struct observation {
     double averagebat;
     double averageres;
     double averageerr;
-    char        fname[MAX_FILELEN]; /*!< Name of data file giving TOA                               */
+  
+  double averagedmbat;
+  double averagedmres;
+  double averagedmerr;
+
+  
+  char        fname[MAX_FILELEN]; /*!< Name of data file giving TOA                               */
     char        telID[100];         /*!< Telescope ID                                               */
     clock_correction correctionsTT[MAX_CLK_CORR]; /*!< chain of corrections from site TOA to chosen realisation of TT */
     int nclock_correction;
 
     longdouble correctionTT_TB;     /*!< Correction to TDB/TCB           */
     double einsteinRate;            /*!< Derivative of correctionTT_TB   */
-    longdouble correctionTT_Teph;   /*!< Correction to Teph              */
+  longdouble correctionTT_calcEph;
+  longdouble correctionTT_Teph;   /*!< Correction to Teph              */
     longdouble correctionUT1;       /*!< Correction from site TOA to UT1 */
 
     double sun_ssb[6];              /*!< Ephemeris values for Sun w.r.t SSB (sec)             (RCS) */
     double sun_earth[6];            /*!< Ephemeris values for Sun w.r.t Earth (sec)                 */
     double planet_ssb[9][6];        /*!< Ephemeris values for all planets w.r.t. SSB (sec)   */
-    double jupiter_earth[6];        /*!< Ephemeris values for Jupiter w.r.t. Earth centre (sec)     */
+  double planet_ssb_tmr[9][6];
+  double planet_ssb_derv[9][6];
+  double jupiter_earth[6];        /*!< Ephemeris values for Jupiter w.r.t. Earth centre (sec)     */
     double saturn_earth[6];         /*!< Ephemeris values for Saturn w.r.t. Earth centre (sec)      */
     double venus_earth[6];          /*!< Ephemeris values for Venus w.r.t. Earth centre (sec)      */
     double uranus_earth[6];         /*!< Ephemeris values for Uranus w.r.t. Earth centre (sec)      */
@@ -691,6 +701,7 @@ typedef struct pulsar {
     int TNsubtractDM;
     int TNsubtractRed;
     int AverageResiduals; 
+    int AverageDMResiduals;
     char AverageFlag[MAX_FLAG_LEN];
     float AverageEpochWidth; 
 
@@ -752,6 +763,7 @@ typedef struct pulsar {
 
 
     int nconstraints;                       /*!< Number of fit constraints specified                      */
+    double constraint_efactor;
     enum constraint constraints[MAX_PARAMS];/*!< Which constraints are specified */
     char auto_constraints;
 
@@ -797,11 +809,11 @@ extern "C" {
     void formResiduals(pulsar *psr,int npsr,int removeMean);
     int  bootstrap(pulsar *psr,int p,int npsr);
     void doFitAll(pulsar *psr,int npsr,const char *covarFuncFile) DEPRECATED;
-    void doFit(pulsar *psr,int npsr,int writeModel) DEPRECATED;
-    void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) DEPRECATED;
-    void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) DEPRECATED; 
+//    void doFit(pulsar *psr,int npsr,int writeModel) DEPRECATED;
+//    void doFitDCM(pulsar *psr,const char *dcmFile,const char *covarFuncFile,int npsr,int writeModel) DEPRECATED;
+//    void doFitGlobal(pulsar *psr,int npsr,double *globalParameter,int nGlobal,int writeModel) DEPRECATED; 
     void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc, int* ip);
-    double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k) DEPRECATED;
+    double getParamDeriv(pulsar *psr,int ipos,double x,int i,int k);
     void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outRes,int newpar,const char *fname);
     void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
     void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB);
@@ -838,7 +850,8 @@ extern "C" {
     void toa2utc(pulsar *psr,int npsr);
     void utc2tai(pulsar *psr,int npsr);
     void tt2tb(pulsar *psr,int npsr);
-    void tai2tt(pulsar *psr,int npsr);
+  void tt2tb_calceph(pulsar *psr,int npsr);  
+  void tai2tt(pulsar *psr,int npsr);
     void tai2ut1(pulsar *psr,int npsr);
     void vectorPulsar(pulsar *psr,int npsr);
     void readEphemeris(pulsar *psr,int npsr,int addEphemNoise);
@@ -884,8 +897,8 @@ extern "C" {
     void updateBTJ(pulsar *psr,double val,double err,int pos,int arr);
     double BTXmodel(pulsar *psr,int p,int obs,int param,int arr);
     void updateBTX(pulsar *psr,double val,double err,int pos,int arr);
-    double ELL1model(pulsar *psr,int p,int obs,int param);
-    void updateELL1(pulsar *psr,double val,double err,int pos);
+    double ELL1model(pulsar *psr,int p,int obs,int param,int arr);
+    void updateELL1(pulsar *psr,double val,double err,int pos,int arr);
     longdouble DDmodel(pulsar *psr,int p,int obs,int param);
     void updateDD(pulsar *psr,double val,double err,int pos);
     double T2model(pulsar *psr,int p,int obs,int param,int arr);
@@ -913,8 +926,8 @@ extern "C" {
     void transform_units(struct pulsar *psr, int from, int to);
 
     /* This function uses the numerical recipes svdfit for the fitting */
-    void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
-    void updateParameters(pulsar *psr,int p,double *val,double *error);
+//    void FITfuncs(double x,double afunc[],int ma,pulsar *psr,int ipos,int ipsr);
+//    void updateParameters(pulsar *psr,int p,double *val,double *error);
 
     /* defineClockCorrectionSequence: call to provide the clock correction
        module with a sequence of files to use for corrections. May be called

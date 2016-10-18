@@ -12,7 +12,7 @@ extern "C" {
 #include <time.h>
 #endif
     extern int debugFlag;   /* Global = 1 if debug mode is running */
-    extern int writeResiduals;   /* Global = 1 if we are writing out post-fit residuals */
+    extern int writeResiduals;   /* Global. Bit1=prefit, bit2=designmatrix, bit3=postfit. Indicate we are writing out post-fit residuals */
     extern int tcheck;   /* Global = 1 if time check message should be printed is running */
     extern clock_t timer_clk;
     extern unsigned TK_errorCount;

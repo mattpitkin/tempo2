@@ -38,6 +38,138 @@
 /* Form the timing residuals from the timing model and the barycentric arrival times */
 void residualTracking(pulsar *psr);
 
+
+
+
+void averageDMResiduals(pulsar *psr, int npsr){
+
+    int systemcount = 0;
+    std::vector<std::string>systemnames;
+
+    double mintime=100000.0;
+    double maxtime=0.0;
+    float timestep = psr[0].AverageEpochWidth;
+    char* flagName = psr[0].AverageFlag;
+    fprintf(stderr, "width %.3e flag %s\n", timestep, flagName);
+
+    for(int o=0;o<psr[0].nobs;o++){
+        int found=0;
+        if((double)psr[0].obsn[o].bat > maxtime){maxtime=(double)psr[0].obsn[o].bat;}
+        if((double)psr[0].obsn[o].bat < mintime){mintime=(double)psr[0].obsn[o].bat;}
+        for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+            if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+
+                fprintf(stderr, "found flag\n");                
+                if(std::find(systemnames.begin(), systemnames.end(), psr[0].obsn[o].flagVal[f]) != systemnames.end()) {
+                } else {
+
+                    systemnames.push_back(psr[0].obsn[o].flagVal[f]);
+                    systemcount++;
+                }
+                found=1;
+            }
+        }
+
+        if(found==0){
+            printf("Observation %i is missing the -f flag, please check before continuing\n",o);return;
+        }
+    }
+
+    mintime=floor(mintime);
+    maxtime=ceil(maxtime);
+
+
+    int numbins=ceil((maxtime-mintime)/timestep);
+    double **AverageRes = new double*[systemcount];
+    double **AverageWeight = new double*[systemcount];
+    double **AverageBat = new double*[systemcount];
+    for(int i = 0; i < systemcount; i++){
+        AverageRes[i] = new double[numbins];
+        AverageWeight[i] = new double[numbins];
+        AverageBat[i] = new double[numbins];
+        for(int j = 0; j < numbins; j++){
+            AverageRes[i][j] = 0;
+            AverageWeight[i][j] = 0;
+            AverageBat[i][j] = 0;
+        }
+    }
+
+
+
+
+    for(int o=0;o<psr[0].nobs;o++){
+
+        for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+            if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+
+                int flagindex=-1;
+                for(int s = 0; s < static_cast<int>(systemnames.size()); s++){
+                    if(strcasecmp(psr[0].obsn[o].flagVal[f],systemnames[s].c_str())==0){
+                        flagindex = s;
+                    }
+                }
+
+                double freq=psr[0].obsn[o].freq/1400.;
+
+                int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+                double adjustedErr = pow(psr[0].obsn[o].toaErr*pow(10.0, -6), 2)*pow(freq,4.);
+                AverageWeight[flagindex][bin] += 1.0/adjustedErr;
+                AverageRes[flagindex][bin] += (double)psr[0].obsn[o].residual*freq*freq/adjustedErr;
+                AverageBat[flagindex][bin] += (double)psr[0].obsn[o].bat/adjustedErr;
+            }
+        }
+    }
+
+    for(int o=0;o<psr[0].nobs;o++){
+
+
+        //Is there an ECORR??
+        double EcorrVal=0;
+        for (int j=0;j<psr->obsn[o].nFlags;j++){
+            for (int k=0;k<psr->nTNECORR;k++){
+                if (strcmp(psr->obsn[o].flagID[j], psr->TNECORRFlagID[k])==0){
+                    if (strcmp(psr->obsn[o].flagVal[j],psr->TNECORRFlagVal[k])==0){
+                        EcorrVal=psr->TNECORRVal[k]*pow(10.0, -6);
+                        //printf("Ecorr: %i %g \n", o, EcorrVal);
+                    }
+                }
+            }
+        }
+        for (int f=0;f<psr[0].obsn[o].nFlags;f++){
+            if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
+                int flagindex=-1;
+                for(int s = 0; s < static_cast<int>(systemnames.size()); s++){
+                    if(strcasecmp(psr[0].obsn[o].flagVal[f],systemnames[s].c_str())==0){
+                        flagindex = s;
+                    }
+                }
+                int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+                psr[0].obsn[o].averagedmbat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
+                psr[0].obsn[o].averagedmres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
+                psr[0].obsn[o].averagedmerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
+            }
+        }
+    }
+
+    for(int o=0;o<psr[0].nobs;o++){
+        //		printf("Average: %g %g %g \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
+    }
+
+
+
+    for(int i = 0; i < systemcount; i++){
+        delete[] AverageRes[i];
+        delete[] AverageWeight[i];
+        delete[] AverageBat[i];
+    }
+    delete[] AverageRes;
+    delete[] AverageWeight;
+    delete[] AverageBat;
+
+
+}
+
+
 void averageResiduals(pulsar *psr, int npsr){
 
     int systemcount = 0;
@@ -139,6 +271,8 @@ void averageResiduals(pulsar *psr, int npsr){
                     }
                 }
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+
+
                 psr[0].obsn[o].averagebat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
                 psr[0].obsn[o].averageres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
                 psr[0].obsn[o].averageerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
@@ -146,10 +280,12 @@ void averageResiduals(pulsar *psr, int npsr){
         }
     }
 
+    FILE *avgfile;
+    avgfile=fopen("avg.dat", "w");
     for(int o=0;o<psr[0].nobs;o++){
-        //		printf("Average: %g %g %g \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
+        fprintf(avgfile,  "%.5f %.3e %3e \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
     }
-
+    fclose(avgfile);
 
 
     for(int i = 0; i < systemcount; i++){
@@ -168,13 +304,12 @@ void averageResiduals(pulsar *psr, int npsr){
 void formResiduals(pulsar *psr,int npsr,int removeMean)
 {
     longdouble residual;  /* Residual in phase */
-    longdouble nphase,phase5[MAX_OBSN],phase2,phase3,phase4,phase2state,lastResidual=0,priorResidual=0,ppRes=0;
-    longdouble lastBat=0.0,priorBat=0.0,ppBat=0.0;
+    longdouble nphase,phase5[MAX_OBSN],phase2,phase3,phase4,phase2state,lastResidual=0,priorResidual=0;
+    longdouble lastBat=0.0,priorBat=0.0;
     longdouble phaseJ,phaseW;
     longdouble ftpd,fct,ff0,phaseint;
-    longdouble torb,deltaT,dt00=0.0,dtm1=0.0,phas1=0.0;
+    longdouble torb,deltaT,dt00=0.0,phas1=0.0;
     longdouble mean,ct00=0.0;
-    int zeroID=0; // Observation number for point where the residual is set to zero
     int dtm1s=0;
     int nmean;
     int ntpd,nf0;
@@ -224,7 +359,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 if (strcmp(psr[p].binaryModel,"BT")==0)         torb = BTmodel(psr,p,i,-1);
                 else if (strcmp(psr[p].binaryModel,"BTJ")==0)   torb = BTJmodel(psr,p,i,-1,0);
                 else if (strcmp(psr[p].binaryModel,"BTX")==0)   torb = BTXmodel(psr,p,i,-1,0);
-                else if (strcmp(psr[p].binaryModel,"ELL1")==0)  torb = ELL1model(psr,p,i,-1);
+                else if (strcmp(psr[p].binaryModel,"ELL1")==0)  torb = ELL1model(psr,p,i,-1,0);
                 else if (strcmp(psr[p].binaryModel,"DD")==0)    torb = DDmodel(psr,p,i,-1);
                 else if (strcmp(psr[p].binaryModel,"DDK")==0)   torb = DDKmodel(psr,p,i,-1);
                 else if (strcmp(psr[p].binaryModel,"DDS")==0)   torb = DDSmodel(psr,p,i,-1);
@@ -445,22 +580,21 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             // Add in extra phase due to quadrupolar signal 
             if (psr[p].param[param_quad_om].paramSet[0] == 1)
             {
-                double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+                double omega_g;
                 //	       double res_e,res_i;
                 longdouble resp,resc,res_r,res_i;
-                double theta_p,theta_g,phi_p,phi_g;
+// UNUSED VARIABLE //                 double phi_g;
                 double lambda_p,beta_p,lambda,beta;
-                longdouble time;
+// UNUSED VARIABLE //                 longdouble time;
                 double n1,n2,n3;
                 double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
                 double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
                 double cosTheta;
 
-                double om;  /* Fundamental frequency */
+// UNUSED VARIABLE //                 double om;  /* Fundamental frequency */
                 double dt;  /* Change in time from pepoch */
 
                 dt = (psr[p].obsn[i].bbat - psr[p].quadEpoch)*86400.0;
-                om = psr[p].param[param_quad_om].val[0];
 
                 if (psr[p].param[param_raj].paramSet[1] == 1)
                     lambda_p = (double)psr[p].param[param_raj].val[1];
@@ -611,10 +745,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             /* Add in extra phase due to gravitational wave signal */
             if (psr[p].param[param_gwsingle].paramSet[0]==1 || psr[p].param[param_cgw].paramSet[0]==1)
             {
-                double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+                double omega_g;
                 //	       double res_e,res_i;
                 longdouble resp,resc,res_r,res_i;
-                double theta_p,theta_g,phi_p,phi_g;
+// UNUSED VARIABLE //                 double phi_g;
                 double lambda_p,beta_p,lambda,beta;
                 longdouble time;	      
                 double n1,n2,n3;
@@ -758,15 +892,15 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&
                     psr[p].param[param_gwm_amp].paramSet[1]==0)
             {
-                double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+// UNUSED VARIABLE //                 double omega_g;
                 //	       double res_e,res_i;
-                longdouble resp,resc,res_r,res_i;
-                double theta_p,theta_g,phi_p,phi_g;
+// UNUSED VARIABLE //                 longdouble res_i;
+// UNUSED VARIABLE //                 double phi_g;
                 double lambda_p,beta_p,lambda,beta;
-                longdouble time;	      
+// UNUSED VARIABLE //                 longdouble time;	      
                 double n1,n2,n3;
-                double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
-                double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+// UNUSED VARIABLE //                 double e33p;
+// UNUSED VARIABLE //                 double e33c;
                 double cosTheta;
                 double g1,g2,g3;
                 time    = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*longdouble(86400.0);
@@ -921,14 +1055,14 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             {
                 if (psr[p].obsn[i].bbat >= psr[p].gwm_epoch)
                 {
-                    longdouble wi,t1,t2;
-                    longdouble dt,speriod,tt;
-                    int k;
-                    double m,c,ival;
-                    double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+// UNUSED VARIABLE //                     longdouble t2;
+                    longdouble dt;
+// UNUSED VARIABLE //                     int k;
+// UNUSED VARIABLE //                     double ival;
+// UNUSED VARIABLE //                     double omega_g;
                     //	       double res_e,res_i;
-                    longdouble resp,resc,res_r,res_i;
-                    double theta_p,theta_g,phi_p,phi_g;
+                    longdouble resp,resc;
+// UNUSED VARIABLE //                     double phi_g;
                     double lambda_p,beta_p,lambda,beta;
                     double n1,n2,n3;
                     double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
@@ -975,7 +1109,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         resp = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resp); 
 
                     psr[p].quad_ifunc_geom_p = resp;
-                    //		   printf("Resp2 = %s %g %g\n",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
+                    logdbg("Resp2 = %s %g %g",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
                     // NOTE: These are for the cross terms. 
                     lambda   = psr[p].gwm_raj;
                     beta     = psr[p].gwm_decj;
@@ -1002,7 +1136,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     else
                         resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
                     psr[p].quad_ifunc_geom_c = resc;
-                    //		   printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
+                    // printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
                     dt = (psr[p].obsn[i].bbat - psr[p].gwm_epoch)*longdouble(86400.0);
                     //		   scale = -0.5*cos2Phi*(1-cosTheta);
                     phaseW += (psr[p].param[param_f].val[0]*dt*psr[p].param[param_gwm_amp].val[0]*psr[p].quad_ifunc_geom_p); 				
@@ -1030,12 +1164,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             /* Add in extra phase due to interpolation */
             if (psr[p].param[param_ifunc].paramSet[0] == 1)
             {
-                longdouble wi,t1,t2;
+                longdouble wi,t1;
                 longdouble dt,speriod,tt;
 
                 if (psr[p].param[param_ifunc].val[0] == 1) // Sinc interpolation
                 {
-                    t1=longdouble(0.0),t2=longdouble(0.0);
+                    t1=longdouble(0.0);
                     speriod = (longdouble)(psr[p].ifuncT[1]-psr[p].ifuncT[0]); 
                     //	       printf("ifuncN = %d\n",psr[p].ifuncN);
                     for (k=0;k<psr[p].ifuncN;k++)
@@ -1078,7 +1212,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 else if (psr[p].param[param_ifunc].val[0] == 0) // No interpolation
                 {
                     int k;
-                    double m,c,ival;
+                    double ival;
                     for (k=0;k<psr[p].ifuncN-1;k++)
                     {
                         if ((double)psr[p].obsn[i].sat >= psr[p].ifuncT[k])
@@ -1094,18 +1228,18 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             /* Add in extra phase due to interpolation */
             if (psr[p].param[param_quad_ifunc_p].paramSet[0] == 1)
             {
-                longdouble wi,t1,t2;
-                longdouble dt,speriod,tt;
+// UNUSED VARIABLE //                 longdouble t2;
+// UNUSED VARIABLE //                 longdouble tt;
                 int k;
                 double m,c,ival;
-                double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+// UNUSED VARIABLE //                 double omega_g;
                 //	       double res_e,res_i;
-                longdouble resp,resc,res_r,res_i;
-                double theta_p,theta_g,phi_p,phi_g;
+                longdouble resp;
+// UNUSED VARIABLE //                 double phi_g;
                 double lambda_p,beta_p,lambda,beta;
                 double n1,n2,n3;
                 double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
-                double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+// UNUSED VARIABLE //                 double e33c;
                 double cosTheta;
 
                 if ((psr[p].quad_ifunc_geom_p == 0) && (psr[p].param[param_quad_ifunc_p].val[0] == 0 || psr[p].param[param_quad_ifunc_p].val[0] == 1 || psr[p].param[param_quad_ifunc_p].val[0] == 3)) 
@@ -1173,17 +1307,17 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             // Cross term
             if (psr[p].param[param_quad_ifunc_c].paramSet[0] == 1 && psr[p].param[param_quad_ifunc_c].val[0] > 0)
             {
-                longdouble wi,t1,t2;
-                longdouble dt,speriod,tt;
+// UNUSED VARIABLE //                 longdouble t2;
+// UNUSED VARIABLE //                 longdouble tt;
                 int k;
                 double m,c,ival;
-                double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+// UNUSED VARIABLE //                 double omega_g;
                 //	       double res_e,res_i;
-                longdouble resp,resc,res_r,res_i;
-                double theta_p,theta_g,phi_p,phi_g;
+                longdouble resc;
+// UNUSED VARIABLE //                 double phi_g;
                 double lambda_p,beta_p,lambda,beta;
                 double n1,n2,n3;
-                double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+// UNUSED VARIABLE //                 double e33p;
                 double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
                 double cosTheta;
 
@@ -1457,8 +1591,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 
 
-                    double phi, cphi, c2phi;
-                    phi = acos((rhox*polx + rhoy*poly + rhoz*polz)/rho/pol);
+                    double  cphi, c2phi;
                     cphi = (rhox*polx + rhoy*poly + rhoz*polz)/rho/pol;
                     c2phi = 2*cphi*cphi-1;
 
@@ -1500,12 +1633,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
                 //longdouble wi,t1,t2;
                 longdouble dt, prefac;
-                int k;
-                double m,c,ival;
-                double kp_theta,kp_phi,kp_kg,p_plus,p_cross,gamma,omega_g;
+// UNUSED VARIABLE //                 int k;
+// UNUSED VARIABLE //                 double ival;
+// UNUSED VARIABLE //                 double omega_g;
                 //	       double res_e,res_i;
-                longdouble resp,resc,res_r,res_i;
-                double theta_p,theta_g,phi_p,phi_g;
+                longdouble resp,resc;
+// UNUSED VARIABLE //                 double phi_g;
                 double lambda_p,beta_p,lambda,beta;
                 double n1,n2,n3;
                 double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
@@ -1579,7 +1712,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 else
                     resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
                 psr[p].gwb_geom_c = resc;
-                //		   printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
+                //printf("Resc2 = %s %g %g %g %g\n",psr[p].name,(double)resc,(double)psr[p].quad_ifunc_geom_c,(double)cosTheta,(double)(longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))));
 
                 // exp(-(t-T0)**2/2./w**2)
 
@@ -1678,7 +1811,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 //		 phas1 = fortran_mod((phase5[i]),longdouble(1.0)); 
 
                 //
-                zeroID=i;
                 //	       printf("phas1 set to observation number %d\n",i);
                 break;
             }
@@ -1742,7 +1874,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 if (dtm1s>1 && fabs(psr[p].obsn[i].bat-lastBat) > 1 
                         && fabs(lastBat-priorBat) > 1) // Have 3 points each separated by more than 1 day
                 {
-                    double m1,m2,m3,m4,m5;
+                    double m1,m2,m3,m4;
                     m1 = (double)(lastResidual-priorResidual)/(lastBat-priorBat);
                     m2 = (double)(residual-lastResidual)/(psr[p].obsn[i].bat-lastBat);
                     m3 = (double)(residual-1-lastResidual)/(psr[p].obsn[i].bat-lastBat);
@@ -1810,7 +1942,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             if (gotit==1)
             {
                 dtm1s ++;
-                dtm1 = dt00;
                 dt00  = residual;
 
                 ct00 = psr[p].obsn[i].bbat;
@@ -1819,9 +1950,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 time=1;
             psr[p].obsn[i].residual = residual/psr[p].param[param_f].val[0];
 
-            ppRes = priorResidual;
             priorResidual=lastResidual;
-            ppBat = priorBat;
             priorBat = lastBat;
             lastResidual=residual;
             lastBat = psr[p].obsn[i].bat;
@@ -1849,7 +1978,6 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 if (psr[p].obsn[i].sat > psr[p].obsn[psr[p].phaseJumpID[k]].sat)
                     psr[p].obsn[i].pulseN -= psr[p].phaseJumpDir[k];
 
-            //	   printf("At this point: %.5f %.5f %.5f %.5f %d %.5f %g\n",(double)psr[p].obsn[i].sat,(double)phase5[i],(double)nphase,(double)fortran_nlong(phase5[i]),zeroID,(double)phas1,(double)psr[p].obsn[i].pulseN);
 
 
             if (psr[p].obsn[i].deleted!=1)
@@ -1886,7 +2014,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         }
         if(psr[p].TNsubtractDM==1){
             for (i=0;i<psr[p].nobs;i++){
-                double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
+// UNUSED VARIABLE //                 double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
                 psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
             }
         }
@@ -1894,9 +2022,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             averageResiduals(psr, 1);
         }
 
+        if(psr[p].AverageDMResiduals == 1){
+            averageDMResiduals(psr,1);
 
-
-
+        }
 
     }
 

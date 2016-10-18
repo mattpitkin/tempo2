@@ -1,0 +1,74 @@
+#!/bin/bash
+root=`dirname $0`
+if [[ $# -lt 2 ]] ; then
+	echo "$0 .par .tim [ndays] [characterise.tim]"
+	echo "Generate some fake TOAs from real data. Give a .par and .tim and optional ndays future TOAs to simulate."
+	echo "You can specify a second .tim file to do the characterisation on, which may not include the full real data set"
+	exit
+fi
+
+
+
+
+
+
+par=$1
+tim=$2
+ndays=0
+simtim=$tim
+if [[ $# -gt 2 ]] ; then
+	ndays=$3
+fi
+if [[ $# -gt 3 ]] ; then
+	simtim=$4
+fi
+
+psr=`head -n 1 $par | awk '{print $2}'`
+echo "PAR = $par"
+echo "TIM = $tim"
+echo "PSR = $psr"
+fpsr=$psr
+
+#if [[ "$psr" =~ "^[JB]" ]] ; then
+#	fpsr=`echo $psr | sed -e 's:^[JB]:F:'`
+#else
+#	fpsr="F$psr"
+#fi
+
+if [[ $ndays -gt 0 ]] ; then
+	echo "Simuate future data..."
+	echo TOA_characterise.py $simtim  --select "MULTI_PDFB4 MULTI_PDFB3 10CM_PDFB4 50CM_PDFB3 50CM_APSR" --simulate $ndays --psr $psr --shuffle
+	TOA_characterise.py $simtim  --select "MULTI_PDFB4 MULTI_PDFB3 10CM_PDFB4 50CM_PDFB3 50CM_APSR" --simulate $ndays --psr $psr --shuffle
+	cp sim.tim sim.tim.tmp
+	cp $tim sim.tim
+	grep SIML sim.tim.tmp >> sim.tim
+	\rm sim.tim.tmp
+else
+	cp $tim sim.tim
+fi
+
+
+echo "Form ideal timeseries"
+echo tempo2 -gr formIdeal -f $par sim.tim 
+tempo2 -gr formIdeal -f $par sim.tim 
+
+echo mv sim.tim.sim ${fpsr}_ideal.tim
+mv sim.tim.sim ${fpsr}_ideal.tim
+
+rm sim.tim
+
+echo "tempo2 -gr plk -f $par ${fpsr}_ideal.tim"
+
+echo "Now go ahead and create some perturbations"
+
+
+if [[ ! -e make_perturbations_${fpsr}.sh ]] ; then
+	cp $root/default_make_perturbation  make_perturbations_${fpsr}.sh
+else
+	echo "make_perturbations_${fpsr}.sh already exists: not overwriting!"
+fi
+
+
+
+
+echo "edit the ./make_perturbations_${fpsr}.sh script to set up the perturbations you want to include"

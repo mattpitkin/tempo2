@@ -17,6 +17,7 @@ typedef __float128 longdouble;
 #define sinl sinq
 #define floorl floorq
 #define fabsl fabsq
+#define powl powq
 
 /* function to get longdouble as string (%g style). This returns
    std::string, from which you can get a normal C char * like this:
@@ -32,8 +33,48 @@ std::string print_longdouble(const longdouble &ld);
 /* function to parse a string as longdouble */
 
 #ifdef __cplusplus
+
+inline __float128 cos(__float128 v) {
+    return cosq(v);
+}
+
+inline __float128 sin(__float128 v) {
+    return sinq(v);
+}
+
+inline __float128 fabs(__float128 v) {
+    return fabsq(v);
+}
+inline __float128 sqrt(__float128 v) {
+    return sqrtq(v);
+}
+inline __float128 asin(__float128 v) {
+    return asinq(v);
+}
+
+inline __float128 atan2(__float128 v, __float128 v2) {
+    return atan2q(v,v2);
+}
+
+inline __float128 pow(__float128 v, double p) {
+    return powq(v,p);
+}
+inline __float128 exp(__float128 v) {
+    return expq(v);
+}
+inline __float128 log10(__float128 v) {
+    return log10q(v);
+}
+inline __float128 log(__float128 v) {
+    return logq(v);
+}
+inline __float128 tan(__float128 v) {
+    return tanq(v);
+}
+
+
 extern "C" {
-#endif
+#endif // c++
 
     longdouble parse_longdouble(const char *str);
 
