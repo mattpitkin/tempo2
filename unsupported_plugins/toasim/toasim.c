@@ -19,6 +19,7 @@ toasim_header_t *toasim_init_header(){
     toasim_header->gparam_desc=toasim_header->short_desc;
     toasim_header->gparam_vals=toasim_header->short_desc;
     toasim_header->rparam_desc=toasim_header->short_desc;
+    toasim_header->rparam_len=0;
     toasim_header->seed=0;
     toasim_header->ntoa=0;
     toasim_header->nrealisations=0;
