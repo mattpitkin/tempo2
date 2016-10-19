@@ -290,6 +290,13 @@ int main(int argc, char *argv[])
     }
     npsr = 0;   /* Initialise the number of pulsars */
     nGlobal=0;
+
+
+
+    // set the extra clock path if
+    if (getenv("TEMPO2_CLOCK_DIR")!=NULL){
+        strncpy(tempo2_clock_path,getenv("TEMPO2_CLOCK_DIR"), MAX_STRLEN);
+    }
     /* Obtain command line arguments */
     logdbg("Running getInputs %d",psr[0].nits);
     getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,

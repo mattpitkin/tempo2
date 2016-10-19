@@ -264,6 +264,7 @@ extern int displayCVSversion; /*!< Display CVS version */
 extern char dcmFile[MAX_FILELEN];
 extern char covarFuncFile[MAX_FILELEN];
 
+extern char tempo2_clock_path[MAX_STRLEN]; /*!< paths to search for clock files */
 extern char tempo2_plug_path[32][MAX_STRLEN]; /*!< paths to search for plugins */
 extern int tempo2_plug_path_len;
 

@@ -51,6 +51,8 @@ char covarFuncFile[MAX_FILELEN]="NULL";
 char tempo2_plug_path[32][MAX_STRLEN];
 int tempo2_plug_path_len=0;
 
+char tempo2_clock_path[MAX_STRLEN]="";
+
 // From choleskyRoutines.h ... "some global variables that Ryan is still using for diagnostic purposes"
 double FCALPHA, WNLEVEL, EXPSMOOTH, UPW, NFIT, FCFINAL;
 
