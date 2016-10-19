@@ -264,6 +264,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     //display chisq?
     int showChisq = 0;
     char flagColour[100];
+    char saveonquit[100];
     const char *CVS_verNum = "$Revision: 1.61 $";
     int recordStrokes=0;
     char recordFileStr[1024];
@@ -275,6 +276,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     if (displayCVSversion == 1) CVSdisplayVersion("plk_plug.C","plugin",CVS_verNum);
 
     strcpy(flagColour,"");
+    strcpy(saveonquit,"");
 
     *npsr = 1;  /* This graphical interface will only show results for one pulsar */
 
@@ -374,6 +376,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         {
             strcpy(flagColour,argv[++i]);
         }
+        else if (strcmp(argv[i],"-saveonquit") == 0)
+        {
+            strcpy(saveonquit,argv[++i]);
+        }
+
         else if (strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0){
             printf("\n TEMPO2 plk plugin\n");
             printf("===================\n");
@@ -479,6 +486,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     if (recordStrokes==1)
       fclose(recordFile);
     
+    if (strlen(saveonquit)){
+        char str[1024];
+        snprintf(str,1024,"%s.tim",saveonquit);
+        writeTim(str,psr,"tempo2");
+
+        snprintf(str,1024,"%s.par",saveonquit);
+        textOutput(psr,*npsr,0,0,0,1,str);
+
+    }
 
     if (debugFlag==1) printf("plk: End\n");
     return 0;

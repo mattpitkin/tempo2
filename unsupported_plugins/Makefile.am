@@ -1,11 +1,11 @@
-SUBDIRS=toasim ppta glast
+SUBDIRS=toasim splug glast
 
 
-ppta:
-	make -C ppta
+splug:
+	make -C splug
 
-ppta-install:
-	make -C ppta install
+splug-install:
+	make -C splug install
 
 toasim:
 	make -C toasim
