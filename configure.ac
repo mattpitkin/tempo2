@@ -208,7 +208,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile
                  unsupported_plugins/Makefile
                  unsupported_plugins/toasim/Makefile
-                 unsupported_plugins/ppta/Makefile
+                 unsupported_plugins/splug/Makefile
                  unsupported_plugins/glast/Makefile
                  tests/Makefile
                  ])
