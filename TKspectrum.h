@@ -59,6 +59,7 @@ void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *
 
 int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit);
 
+int calcSpectraErr_complex(double **uinv,double *resx,double *resy,int nres,double *specX,double *specR, double* specI,double* specE,int nfit);
 
 typedef struct complexVal {
     double real;
