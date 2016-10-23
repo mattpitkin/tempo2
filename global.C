@@ -83,17 +83,25 @@ void clock_corrections(pulsar *psr,int npsr)
     //   tai2tt(psr,npsr);      /* 4. TAI -> TT                     */
     logdbg("Calling tt2tb");
     //tt2tb(psr,npsr);          /* 5. Rough estimate of TT-TB (+-2.2 microsec) */
-  if(psr[0].useCalceph ==0)
-    {
-      
-      tt2tb(psr,npsr);         
-    }
-  else
-    {
-      tt2tb_calceph(psr,npsr);
-      tt2tb(psr,npsr);
-    }
+
+    int ipsr;
     
+    for(ipsr=0;ipsr<npsr;ipsr++)
+      {
+	if (psr[ipsr].useCalceph == 1)
+	  {
+	    tt2tb_calceph(&psr[ipsr], 1);
+	  }
+	else
+	  {
+	    tt2tb(&psr[ipsr],1);         
+    	  }
+
+	  
+      }
+    
+    
+ 
 
     logdbg("Done clock corrections");
 }
@@ -106,27 +114,63 @@ void ephemeris_routines(pulsar *psr,int npsr)
     logtchk("call vectorPulsar()");
     vectorPulsar(psr,npsr);   /* 1. Form a vector pointing at the pulsar */
     logtchk("call readEphemeris()");
+
+    /*
     if (psr[0].useCalceph == 0)
-      readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+      readEphemeris(psr,npsr,0);
     else
       readEphemeris_calceph(psr,npsr);
+    */
+
+    int ipsr;
+    for(ipsr=0;ipsr<npsr;ipsr++)
+      {
+	if(psr[ipsr].useCalceph ==0)
+	  {
+	    readEphemeris(&psr[ipsr],1,0);/* 2. Read the ephemeris */
+	  }
+	else
+	  {
+	    readEphemeris_calceph(&psr[ipsr],1);
+	  }
+      }
+
+
+
+
     logtchk("call get_obsCoord()");
     get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
     logtchk("call tt2tb()");
-    if  (psr[0].useCalceph == 0)
+
+    
+    
+    
+      /* Observatory/time-dependent part of TT-TB */
+
+	
+    for(ipsr=0;ipsr<npsr;ipsr++)
       {
-      tt2tb(psr,npsr);          /* Observatory/time-dependent part of TT-TB */
+	if(psr[ipsr].useCalceph==1)
+	  {
+	    tt2tb(&psr[ipsr],1);
+	    tt2tb_calceph(&psr[ipsr],1);
+	  }
+	else
+	  {
+	    tt2tb(&psr[ipsr],1);       
+	  }
       }
-    else
-      {
-	tt2tb(psr,npsr); 
-	tt2tb_calceph(psr,npsr);
-      }
+       
     logtchk("call readEphemeris()");
-    if (psr[0].useCalceph == 0)
-        readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
-    else
-        readEphemeris_calceph(psr,npsr);
+
+    for(ipsr=0;ipsr<npsr;ipsr++)
+      {
+        if (psr[ipsr].useCalceph == 0)
+	  readEphemeris(&psr[ipsr],1,0);  /* Re-evaluate ephemeris with correct TB */ 
+	else
+	  readEphemeris_calceph(&psr[ipsr],1);
+      }
+
 }
 
 void formBatsAll(pulsar *psr,int npsr)
