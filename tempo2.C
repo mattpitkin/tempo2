@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     const char *CVS_verNum = "$Id$";
 
 #ifdef HAVE_QDINSTALL
-
+	static unsigned int oldcw;
     fpu_fix_start(&oldcw);
     fpu_fix_end(&oldcw);
 
