@@ -98,7 +98,7 @@ double solarWindModel(pulsar psr,int iobs)
     int   nCurrent;
     int fileNum;
     double closestAngle,angle;
-    int iAngle;
+// UNUSED VARIABLE //     int iAngle;
 
 
     double fast_ne = 2.5; // From 3. This change was suggested by Bill Coles by phone to G. Hobbs
@@ -151,14 +151,14 @@ double solarWindModel(pulsar psr,int iobs)
         nCurrent = readCurrentSheet(fname,currentLon,currentLat);      
         // Now check the closest angle to the current sheet for the current position
         closestAngle = findAngle(crlon[i],helat[i],currentLon[0]*deg2rad,currentLat[0]*deg2rad)/deg2rad;
-        iAngle=0;
+        //iAngle=0;
         for (j=1;j<nCurrent;j++)
         {
             angle = findAngle(crlon[i],helat[i],currentLon[j]*deg2rad,currentLat[j]*deg2rad)/deg2rad;
             if (angle < closestAngle)
             {
                 closestAngle = angle;
-                iAngle = j;
+                //iAngle = j;
             } 
         }
         //      printf("Closest = %g %d\n",closestAngle,iAngle);
@@ -185,7 +185,7 @@ double solarWindModel(pulsar psr,int iobs)
 double findAngle(double lon1,double lat1,double lon2,double lat2)
 {
     double dlon,dlat,a,c;
-    double deg2rad = M_PI/180.0;
+// UNUSED VARIABLE //     double deg2rad = M_PI/180.0;
 
     /* Apply the Haversine formula */
     dlon = (lon2 - lon1);
@@ -272,7 +272,7 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,
     double zkl;
     double ya;
     double gs,ra,de;
-    double delta_PA,cl;
+    double cl;
     double dp;
 
     int lp;
@@ -287,17 +287,17 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,
     double zlagtm;
     int ileap;
     double zhr,zle1,zle2,zlpp;
-    double delcrle,rote1,rote2,delcrl;
+    double rote1,rote2,delcrl;
 
     double x[3][3];
-    double a[3],b[3],c[3],e[2],h[3];
-    double pe1[36],pe2[36],pe3[36];
+    double a[3],b[3],c[3];
+//    double pe2[36],pe3[36];
 
     zlonan = 1.28573 + 7.89327 * (iyr + iday/365.+ 50. )/ 32400.;
     zkl    = cos(eclat);
     // ya = ecliptic longitude of the sun
     ya     = elsun2(iyr,iday,secs,&gs,&ra,&de); // Check inputs and outputs here
-    delta_PA = atan(-0.12722*cos(ya-zlonan)); // Check atan or atan2
+    //delta_PA = atan(-0.12722*cos(ya-zlonan)); // Check atan or atan2
     // cl = distance from Earth to the point P of closest approach
     cl = cos(ya-eclon)*zkl;
     dp = sqrt(1.0-cl*cl);
@@ -361,9 +361,9 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,
             printf("ERROR: lp cannot be %d\n",lp);
             exit(1);
         }
-        pe1[lp] = b[0];
-        pe2[lp] = b[1];
-        pe3[lp] = b[2];
+        //pe1[lp] = b[0];
+        //pe2[lp] = b[1];
+        //pe3[lp] = b[2];
 
         // c is a unit vector pointing from the earth to the
         // source in heliographic coordinates
@@ -396,12 +396,12 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,
         b[2] = x[2][0]*snx+x[2][1]*sny;
 
         b1b2 = sqrt(b[0]*b[0]+b[1]*b[1]);
-        e[0] = snx;
-        e[1] = sny;
+        //e[0] = snx;
+        //e[1] = sny;
 
-        h[0] = b[0];
-        h[1] = b[1];
-        h[2] = b[2];
+        //h[0] = b[0];
+        //h[1] = b[1];
+        //h[2] = b[2];
 
         // heliographic latitude of the earth at the time of observation
         *helate = atan2(b[2],b1b2);
@@ -439,7 +439,7 @@ void mcl2(double eclon,double eclat,int iyr,int iday,double secs,double vel,
 
         // crlne - carrington longitude of sub-earth point at the time of the
         // observation in radians
-        delcrle = zlagtm/1.692002;
+        //delcrle = zlagtm/1.692002;
         rote1 = 1556.-zle1/360.0;
         rote2 = 1556.-zle2/360.0;
         *rote = (int)(rote1) + (rote2 - (int)rote2);
@@ -571,7 +571,7 @@ void mjd2date(int mjd,int *iyr,int *yy, int *mm, int *dd, int *iday) /*MJD to da
     k=0;
     if( m1==14 || m1==15 ) k=1;
     *mm=m1-1-k*12;
-    int mk=m1-1-k*12;
+// UNUSED VARIABLE //     int mk=m1-1-k*12;
     *iyr=y1+k;
     *yy=*iyr+1900;
     if((*yy%4==0 && *yy%100!=0) || (*yy%400==0))

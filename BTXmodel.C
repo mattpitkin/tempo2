@@ -39,7 +39,7 @@ double BTXmodel(pulsar *psr,int p,int ipos,int param,int k)
     double torb;
     double tt0;
     double orbits;
-    int i,j;
+    int j;
     //  double pb;     /* Orbital period (sec) */
     //  double pbdot;
     //  double xpbdot;

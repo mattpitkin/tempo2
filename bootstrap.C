@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tempo2.h"
+#include "t2fit.h"
 
 /* Routines to calculate the fitted parameter uncertainties using a Monte-Carlo bootstrap 
  * method.  These routines are based on the bootmc.f tempo1 algorithms
@@ -46,13 +47,13 @@ double random(long *idum);
 
 int bootstrap(pulsar *psr,int p,int npsr)
 {
-    longdouble param[MAX_PARAMS],err[MAX_PARAMS],psq[MAX_PARAMS],xmean[MAX_PARAMS];
+    longdouble param[MAX_PARAMS],psq[MAX_PARAMS],xmean[MAX_PARAMS];
     longdouble result[MAX_PARAMS][MAX_ITER];
-    longdouble fac,x1,x2,xmid,sum,sumwt,wgt,x,dt,mean,meansq,sdev;
+    longdouble sum,sumwt,wgt,x,dt,mean,meansq,sdev;
     int nFit=0,nFit2,npts,okay;
     int i,j,k,ii,nboot,iter,l;
-    int il1,il2,ih1,ih2;
-    double globalParam;
+// UNUSED VARIABLE //     int ih2;
+// UNUSED VARIABLE //     double globalParam;
     long idum = -999;              /* Should be set be clock, or user */
     const char *CVS_verNum = "$Id$";
 
@@ -79,7 +80,7 @@ int bootstrap(pulsar *psr,int p,int npsr)
                 param[nFit] = psr[p].param[i].val[k]; /* - psr[p].param[i].prefit[k]; */
                 ld_printf("Initial param = %s %Lf %Lf\n",psr[p].param[i].label[0],
                         psr[p].param[i].val[k], psr[p].param[i].prefit[k]);
-                err[nFit]   = psr[p].param[i].err[k];
+                //err[nFit]   = psr[p].param[i].err[k];
                 psq[nFit]   = 0.0;
                 nFit++;
                 psr[p].param[i].val[k] = psr[p].param[i].prefit[k];
@@ -108,14 +109,14 @@ int bootstrap(pulsar *psr,int p,int npsr)
 
 
     /* Do the bootstrap monte-carlo */
-    fac  = sqrt((double)npts);
-    x1   = 0.342*nboot;
-    x2   = 0.477*nboot;
-    xmid = 0.5*(nboot+1); 
-    il1  = (int)((xmid-x1)+0.5);
-    il2  = (int)((xmid-x2)+0.5);
-    ih1  = (int)((xmid+x1)+0.5);
-    ih2  = (int)((xmid+x2)+0.5);
+    // fac  = sqrt((double)npts);
+    //x1   = 0.342*nboot;
+    //x2   = 0.477*nboot;
+    //xmid = 0.5*(nboot+1); 
+    //il1  = (int)((xmid-x1)+0.5);
+    //il2  = (int)((xmid-x2)+0.5);
+    //ih1  = (int)((xmid+x1)+0.5);
+    //ih2  = (int)((xmid+x2)+0.5);
 
     for (iter=0;iter<nboot;iter++)
     {
@@ -161,7 +162,7 @@ int bootstrap(pulsar *psr,int p,int npsr)
         }
         writeTim("testout.tim",psr,"fred");
         psr[p].bootStrap = 0;
-        doFit(&psr[p],1,0);
+        t2Fit(&psr[p],1,NULL);
         /*   textOutput(psr,npsr,globalParam,0,0,0,""); */ /* Output results to the screen */
 
         j=0;

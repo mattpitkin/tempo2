@@ -139,17 +139,50 @@ ClockCorrectionSequence_getEndMJD(DynamicArray *sequence)
     return mjd;
 }
 
-    void
-initialize_ClockCorrections(int dispWarnings)
+void initialize_ClockCorrections(int dispWarnings)
 {
     glob_t g;
     char pattern[1024];
     char **pfname;
     int globRet;
+    int default_badness=0;
 
     ClockCorrectionFunction func;
     DynamicArray_init(&clockCorrectionFunctions, sizeof(ClockCorrectionFunction));
     DynamicArray_init(&clockCorrectionSequences, sizeof(DynamicArray));
+
+
+    if(strlen(tempo2_clock_path)){
+
+        logmsg("Note, using '%s' to look for extra clock files",tempo2_clock_path);
+        /* load all .clk files in tempo2 clock path */
+        sprintf(pattern, "%s/*.clk", tempo2_clock_path);
+        globRet = glob(pattern, 0, NULL, &g);
+        if (globRet == GLOB_NOSPACE)
+        { printf("Out of memory in clkcorr.C\n"); exit(1);}
+#ifdef GLOB_ABORTED
+        else if (globRet == GLOB_ABORTED)
+        { printf("Read error in clkcorr.C\n"); exit(1); }
+#endif
+#ifdef GLOB_NOMATCH
+        else if (globRet == GLOB_NOMATCH)
+        {
+            logwarn("No clock correction files in '%s'\n",tempo2_clock_path);
+        }
+#endif
+        else {
+            for (pfname = g.gl_pathv; *pfname != NULL; pfname++)
+            {
+                ClockCorrectionFunction_load(&func, *pfname);
+                DynamicArray_push_back(&clockCorrectionFunctions, &func);
+                    logdbg("Loaded clock correction %s : %s -> %s badness %.3g",
+                            func.table.fileName, func.clockFrom, func.clockTo, func.badness);
+            }
+            clockCorrections_initialized = 1;
+            globfree(&g);
+            default_badness++;
+        }
+    }
 
     /* load all .clk files in $TEMPO2/clock */
     sprintf(pattern, "%s/clock/*.clk", getenv(TEMPO2_ENVIRON));
@@ -168,9 +201,9 @@ initialize_ClockCorrections(int dispWarnings)
     for (pfname = g.gl_pathv; *pfname != NULL; pfname++)
     {
         ClockCorrectionFunction_load(&func, *pfname);
+        func.badness += default_badness;
         DynamicArray_push_back(&clockCorrectionFunctions, &func);
-        if (dispWarnings==0)
-            printf("Loaded clock correction %s : %s -> %s badness %.3g\n",
+            logdbg("Loaded clock correction %s : %s -> %s badness %.3g",
                     func.table.fileName, func.clockFrom, func.clockTo, func.badness);
     }
     clockCorrections_initialized = 1;
@@ -224,7 +257,7 @@ DynamicArray *makeClockCorrectionSequence(const char *clockFrom, const char *clo
     size_t slen = 16;
     DynamicArray names; /* Array of clock names. Other values index this arr */
     int *S; /* Clocks for which shortest path are known */
-    int n_known;
+// UNUSED VARIABLE //     int n_known;
     int *Q; /* Remaining clocks */
     float *d; /* Best distance to a clock */
     int *edge_to_previous; /* edge to use to link to previous node */ 
@@ -341,7 +374,6 @@ DynamicArray *makeClockCorrectionSequence(const char *clockFrom, const char *clo
     }
 
     /* initialize S, Q, d, p */
-    n_known = 0;
     S = (int *)malloc(sizeof(int)*names.nelem);
     Q = (int *)malloc(sizeof(int)*names.nelem);
     d = (float *)malloc(sizeof(float)*names.nelem);
@@ -668,7 +700,7 @@ getCorrection(observation *obs, const char *clockFrom_c, const char *clockTo, in
     if (!strcasecmp(clockTo, clockFrom))
         return 0.0;
 
-    /*   printf("Getting %s<->%s\n", site->clock_name, clockTo); */
+    /*printf("Getting %s<->%s\n", site->clock_name, clockTo);*/ 
     sequence = getClockCorrectionSequence(clockFrom, clockTo, obs->sat,
             warnings);
 

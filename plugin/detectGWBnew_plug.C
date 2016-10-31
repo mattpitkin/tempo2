@@ -202,8 +202,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	  // Do the standard pulsar fits and get record the IFUNCs
 	  //    
 	  printf("Currently npts = %d\n",psr[0].nobs);
-	  //doFitDCM(psr,"NULL",covarFuncFile,*npsr,0);       /* Do the fitting     */
-	  doFit(psr,*npsr,0);       /* Do the fitting     */
+	  doFitAll(psr,*npsr,0);       /* Do the fitting     */
 	  //   if (write_debug_files){
 	  //	  formBatsAll(psr,*npsr);             /* Form the barycentric arrival times */
 	  //	  formResiduals(psr,*npsr,1);         /* Form the residuals                 */

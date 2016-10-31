@@ -600,6 +600,20 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
+                        else if (strcasecmp(var,"pulseN0")==0) /* Pulse number */
+                        {
+                            longdouble phase;
+                            ld_sprintf(disp,"%lld",psr[0].obsn[varN].pulseN-psr[0].obsn[0].pulseN); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);			
+                        }
+                        else if (strcasecmp(var,"pulseN")==0) /* Pulse number */
+                        {
+                            longdouble phase;
+                            ld_sprintf(disp,"%lld",psr[0].obsn[varN].pulseN); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);			
+                        }
                         else if (strcasecmp(var,"npulse")==0) /* Pulse number */
                         {
                             longdouble phase;

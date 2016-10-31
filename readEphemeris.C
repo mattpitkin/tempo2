@@ -55,14 +55,14 @@ double gasdev(long *idum);
 /* ******************************************** */
 void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 {
-    double jd_teph[2]; /* Julian date = MJD - 2400000.5, in Eph frame (~=TDB) */
+// UNUSED VARIABLE //     double jd_teph[2]; /* Julian date = MJD - 2400000.5, in Eph frame (~=TDB) */
     longdouble jd;
     void *ephem;
     char nams[2000][6];
     double emrat;
     double vals[2000];
     double one_au;
-    int err_code;
+// UNUSED VARIABLE //     int err_code;
     int i,p;
     const char *CVS_verNum = "$Id$";
 
@@ -164,8 +164,8 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             /* JPL ephemeris is based on ephemeris time */
             jd = psr[p].obsn[i].sat + getCorrectionTT(psr[p].obsn+i)/SECDAY + 
                 psr[p].obsn[i].correctionTT_Teph/SECDAY+2400000.5; 
-            jd_teph[0] = (double)((int)jd); /* 2452620.0; */
-            jd_teph[1] = (double)(jd - (int)jd); /* 0.08342753346369;  */
+            //jd_teph[0] = (double)((int)jd); /* 2452620.0; */
+            //jd_teph[1] = (double)(jd - (int)jd); /* 0.08342753346369;  */
             /*	  if (psr[0].obsn[i].deleted==0) printf("Giving ephemeris reader: %.14Lf %.14f %.14f\n",jd,jd_teph[0],jd_teph[1]); */
 
             /* Convert to TDB if necessary */ 
@@ -175,7 +175,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             // 	  jd_teph += IFTE_TEPH0/86400.0;
 
             /* Calculate position of Sun from solar-system BC (SSB) */
-            err_code = jpl_pleph(ephem, jd, 11, 12, psr[p].obsn[i].sun_ssb, 1);
+            jpl_pleph(ephem, jd, 11, 12, psr[p].obsn[i].sun_ssb, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].sun_ssb[0]*=one_au/SPEED_LIGHT; psr[p].obsn[i].sun_ssb[1]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].sun_ssb[2]*=one_au/SPEED_LIGHT;
@@ -186,7 +186,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].sun_ssb);
 
             /* Calculate position of Sun from Earth */
-            err_code = jpl_pleph(ephem, jd, 11, 3, psr[p].obsn[i].sun_earth, 1);
+            jpl_pleph(ephem, jd, 11, 3, psr[p].obsn[i].sun_earth, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].sun_earth[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].sun_earth[1]*=one_au/SPEED_LIGHT; 
@@ -206,7 +206,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             {
                 if ((psr[p].param[param_dphaseplanet].paramSet[iplanet] == 1) || (psr[p].param[param_dmassplanet].paramSet[iplanet] == 1))
                 {
-                    err_code = jpl_pleph(ephem, jd, iplanet+1, 12, 
+                    jpl_pleph(ephem, jd, iplanet+1, 12, 
                             psr[p].obsn[i].planet_ssb[iplanet], 1);
                     // Convert to sec and lt-s/s from AU and AU/day
                     psr[p].obsn[i].planet_ssb[iplanet][0]*=one_au/SPEED_LIGHT; 
@@ -225,7 +225,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             {
                 if ((psr[p].param[param_dphaseplanet].paramSet[iplanet] == 1)  || (psr[p].param[param_dmassplanet].paramSet[iplanet] == 1))
                 {
-                    err_code = jpl_pleph(ephem, jd+1e-6, iplanet+1, 12, 
+                    jpl_pleph(ephem, jd+1e-6, iplanet+1, 12, 
                             psr[p].obsn[i].planet_ssb_tmr[iplanet], 1);
                     // Convert to sec and lt-s/s from AU and AU/day
                     psr[p].obsn[i].planet_ssb_tmr[iplanet][0]*=one_au/SPEED_LIGHT; 
@@ -264,7 +264,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 
 
             /* Actually should determine this position at the time the pulse passes the pulsar */
-            err_code = jpl_pleph(ephem, jd, 5, 3, psr[p].obsn[i].jupiter_earth, 1);
+            jpl_pleph(ephem, jd, 5, 3, psr[p].obsn[i].jupiter_earth, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].jupiter_earth[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].jupiter_earth[1]*=one_au/SPEED_LIGHT; 
@@ -276,7 +276,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].jupiter_earth);
 
             /* Actually should determine this position at the time the pulse passes the pulsar */
-            err_code = jpl_pleph(ephem, jd, 6, 3, psr[p].obsn[i].saturn_earth, 1);
+            jpl_pleph(ephem, jd, 6, 3, psr[p].obsn[i].saturn_earth, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].saturn_earth[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].saturn_earth[1]*=one_au/SPEED_LIGHT; 
@@ -286,7 +286,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             psr[p].obsn[i].saturn_earth[5]*=one_au/86400.0/SPEED_LIGHT; 
             if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].saturn_earth);
 
-            err_code = jpl_pleph(ephem, jd, 2, 3, psr[p].obsn[i].venus_earth, 1);
+            jpl_pleph(ephem, jd, 2, 3, psr[p].obsn[i].venus_earth, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].venus_earth[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].venus_earth[1]*=one_au/SPEED_LIGHT; 
@@ -297,7 +297,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].venus_earth);
 
             /* Actually should determine this position at the time the pulse passes the pulsar */
-            err_code = jpl_pleph(ephem, jd, 7, 3, psr[p].obsn[i].uranus_earth, 1);
+            jpl_pleph(ephem, jd, 7, 3, psr[p].obsn[i].uranus_earth, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].uranus_earth[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].uranus_earth[1]*=one_au/SPEED_LIGHT; 
@@ -309,7 +309,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].uranus_earth);
 
             /* Actually should determine this position at the time the pulse passes the pulsar */
-            err_code = jpl_pleph(ephem, jd, 8, 3, psr[p].obsn[i].neptune_earth, 1);
+            jpl_pleph(ephem, jd, 8, 3, psr[p].obsn[i].neptune_earth, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].neptune_earth[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].neptune_earth[1]*=one_au/SPEED_LIGHT; 
@@ -321,7 +321,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].neptune_earth);
 
             /* Calculate position of centre of Earth from the SSB */
-            err_code = jpl_pleph(ephem, jd, 3, 12, psr[p].obsn[i].earth_ssb, 1);
+            jpl_pleph(ephem, jd, 3, 12, psr[p].obsn[i].earth_ssb, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].earth_ssb[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].earth_ssb[1]*=one_au/SPEED_LIGHT; 
@@ -370,7 +370,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             */
 
             /* Calculate position of Earth-Moon BC from the SSB */
-            err_code = jpl_pleph(ephem, jd, 13, 12, psr[p].obsn[i].earthMoonBary_ssb, 1);
+            jpl_pleph(ephem, jd, 13, 12, psr[p].obsn[i].earthMoonBary_ssb, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].earthMoonBary_ssb[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].earthMoonBary_ssb[1]*=one_au/SPEED_LIGHT; 
@@ -384,7 +384,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
 
             /* Calculate position of Moon from the Earth */
 
-            err_code = jpl_pleph(ephem, jd, 13, 3, psr[p].obsn[i].earthMoonBary_earth, 1);
+            jpl_pleph(ephem, jd, 13, 3, psr[p].obsn[i].earthMoonBary_earth, 1);
             /* Convert to sec and lt-s/s from AU and AU/day*/
             psr[p].obsn[i].earthMoonBary_earth[0]*=one_au/SPEED_LIGHT; 
             psr[p].obsn[i].earthMoonBary_earth[1]*=one_au/SPEED_LIGHT; 
@@ -393,7 +393,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             psr[p].obsn[i].earthMoonBary_earth[4]*=one_au/86400.0/SPEED_LIGHT; 
             psr[p].obsn[i].earthMoonBary_earth[5]*=one_au/86400.0/SPEED_LIGHT;
 
-            /* 	  err_code = jpl_pleph(ephem, jd_teph, 10, 3, psr[p].obsn[i].earthMoonBary_earth, 1); */
+            /* 	  jpl_pleph(ephem, jd_teph, 10, 3, psr[p].obsn[i].earthMoonBary_earth, 1); */
             /*	  psr[p].obsn[i].earthMoonBary_earth[0]*=-one_au/(1.0+emrat)/SPEED_LIGHT; 
                   psr[p].obsn[i].earthMoonBary_earth[1]*=-one_au/(1.0+emrat)/SPEED_LIGHT; 
                   psr[p].obsn[i].earthMoonBary_earth[2]*=-one_au/(1.0+emrat)/SPEED_LIGHT;
@@ -404,7 +404,7 @@ void readEphemeris(pulsar *psr,int npsr,int addEphemNoise)
             if (psr[p].eclCoord==1) equ2ecl(psr[p].obsn[i].earthMoonBary_earth);
 
             /* Calculate obsn[i].nutations */
-            err_code = jpl_pleph(ephem, jd, 14, 3, psr[p].obsn[i].nutations, 1);
+            jpl_pleph(ephem, jd, 14, 3, psr[p].obsn[i].nutations, 1);
             /* Note interpolation done in the JPL reading routines */
             //	  printf("Checking for interpolation %d\n",psr[p].nTelDX);
             if (psr[p].nTelDX > 0)

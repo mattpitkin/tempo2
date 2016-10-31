@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2016.08.1],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/psrsoft/tempo2])
+AC_INIT([Tempo2],[2016.10.0],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/psrsoft/tempo2])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -208,7 +208,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile plugin/Makefile sofa/Makefile
                  unsupported_plugins/Makefile
                  unsupported_plugins/toasim/Makefile
-                 unsupported_plugins/ppta/Makefile
+                 unsupported_plugins/splug/Makefile
                  unsupported_plugins/glast/Makefile
                  tests/Makefile
                  ])

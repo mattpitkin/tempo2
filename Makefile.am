@@ -10,11 +10,11 @@ lib_LTLIBRARIES=libtempo2.la libtempo2pred.la libt2toolkit.la
 BUILT_SOURCES=TKcholesky.h TKlongdouble.h enum_str.h enum_str.C
 
 
-# VERSION 2016.08.1
-# c=1
-# r=1
+# VERSION 2016.10.0
+# c=2
+# r=0
 # a=0
-libtempo2_la_LDFLAGS=-version-info 1:1:0
+libtempo2_la_LDFLAGS=-version-info 2:0:0
 libt2toolkit_la_LDFLAGS=-version-info 1:1:0
 libtempo2pred_la_LDFLAGS=-version-info 1:1:0
 
@@ -23,7 +23,7 @@ libtempo2pred_la_LDFLAGS=-version-info 1:1:0
 # Source files used by plugins that are not part of libtempo2
 xtra_dist_sources=choleskyRoutines.C choleskyRoutines.h
 
-FITFUNCS=t2fit_stdFitFuncs.C t2fit_position.C t2fit_fitwaves.C t2fit_glitch.C t2fit_ifunc.C t2fit_dmmodel.C t2fit_dmother.C
+FITFUNCS=t2fit_stdFitFuncs.C t2fit_position.C t2fit_fitwaves.C t2fit_glitch.C t2fit_ifunc.C t2fit_dmmodel.C t2fit_dmother.C t2fit_nestlike.C constraints_nestlike.C
 
 #It'd be better to sort out which headers are neaded by which target, but I'm to busy to do that right now.
 headers=GWsim.h T2toolkit.h TKfit.h TKspectrum.h dynarr.h ifteph.h jpl_int.h jpleph.h read_fortran.h read_fortran2.h tabulatedfunction.h tempo2.h tempo2Util.h tempo2pred.h tempo2pred_int.h constraints.h choleskyRoutines.h T2accel.h TKmatrix.h TKsvd.h cholesky.h TKlog.h t2fit.h $(FITFUNCS:.C=.h) $(BUILT_SOURCES) TKlongdouble.float128.h TKlongdouble.ld.h

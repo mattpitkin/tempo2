@@ -530,7 +530,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	      formBatsAll(psr,1);         /* Form the barycentric arrival times */
 	      printf("Forming residuals\n");
 	      formResiduals(psr,1,1);    /* Form the residuals                 */
-	      if (j==0) doFit(psr,1,0);   /* Do the fitting     */
+	      if (j==0) doFitAll(psr,1,0);   /* Do the fitting     */
 	      else textOutput(psr,1,globalParameter,0,0,0,(char *)"");  /* Display the output */
 	    }
 	  printf("Complete the fit\n");
@@ -656,7 +656,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	{
 	  formBatsAll(psr,1);         /* Form the barycentric arrival times */
 	  formResiduals(psr,1,1);    /* Form the residuals                 */
-	  if (j==0) doFit(psr,1,0);   /* Do the fitting     */
+	  if (j==0) doFitAll(psr,1,0);   /* Do the fitting     */
 	  else textOutput(psr,1,globalParameter,0,0,0,(char *)"");  /* Display the output */
 	}
     

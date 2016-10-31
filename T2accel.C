@@ -41,7 +41,7 @@ int accel_uinv(double* _m, int n){
     int i,j;
 
     double* _u=_m;
-    double* _uinv=_m;
+// UNUSED VARIABLE //     double* _uinv=_m;
 
 
     // LAPACK Cholesky factorisation.
@@ -239,7 +239,7 @@ double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int npa
 
 void accel_multMatrixVec(double* m1,double* v, int ndata,int npol, double* out){
 
-    int m,n,k;
+    int m,n;
     double alpha=1.0,beta=0;
     int inc=1;
 
