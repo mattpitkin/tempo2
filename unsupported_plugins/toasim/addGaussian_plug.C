@@ -48,6 +48,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	long double result;
 	long seed = TKsetSeed();
 
+        long seed2 = TKsetSeed();
+        
+        double offset1;
+        double offset2;
+
+        double beta = 0.3;
+        double sigma2 = 5;
+        double mu2 = 0;
+
 	//
 	// For the output file
 	//
@@ -87,6 +96,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		if (strcmp(argv[i],"-seed")==0){
 			sscanf(argv[++i],"%ld",&seed);
 		}
+		if (strcmp(argv[i],"-muc")==0){
+			sscanf(argv[++i],"%ld",&mu2);
+		}
+		if (strcmp(argv[i],"-sigmac")==0){
+			sscanf(argv[++i],"%ld",&sigma2);
+		}
+		if (strcmp(argv[i],"-pc")==0){
+			sscanf(argv[++i],"%ld",&beta);
+		}
 	}
 
 	if (seed > 0)seed=-seed;
@@ -124,7 +142,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 				fflush(stdout);
 			}
 			for (j=0;j<psr[p].nobs;j++){
-					offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
+                                        offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
+                                        offset1 = TKranDev(&seed);
+
+                                        if (offset1<=beta){
+					                  offsets[j] = (double)(mu2*1.0e-6+sigma2*psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));                
+                                        }
+                                        else
+                                        {
+                                               offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
+                                        }
 			}
 			toasim_write_corrections(corr,header,file);
 		}
