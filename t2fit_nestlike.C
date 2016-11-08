@@ -23,10 +23,48 @@ double t2FitFunc_nestlike_red(pulsar *psr, int ipsr ,double x ,int ipos ,param_l
     return ret;
 }
 
+double t2FitFunc_nestlike_red_dm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
+    double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+    double freq = ((double)(k+1.0))/(maxtspan);
+    double kappa = DM_CONST*1e-12;
+    double ret=0;
+    switch (label){
+        case param_red_dm_cos:
+            ret = cos(2.0*M_PI*freq*x)/(kappa*(pow((double)psr[ipsr].obsn[ipos].freqSSB,2)));
+            break;
+        case param_red_dm_sin:
+            ret = sin(2.0*M_PI*freq*x)/(kappa*(pow((double)psr[ipsr].obsn[ipos].freqSSB,2)));
+            break;
+        default:
+            assert(0);
+            break;
+    }
+    return ret;
+}
+
 
 
 void t2UpdateFunc_nestlike_red(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
     logmsg("%d %s %d %lg %lg",ipsr,label_str[label],k,val,err);
+    for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+        double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
+            double y = t2FitFunc_nestlike_red(psr,ipsr,x,iobs,label,k);
+        psr[ipsr].obsn[iobs].TNRedSignal  += y *val;
+        psr[ipsr].obsn[iobs].TNRedErr     += pow(y*err,2);
+
+    }
+}
+
+
+void t2UpdateFunc_nestlike_red_dm(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
+    logmsg("%d %s %d %lg %lg",ipsr,label_str[label],k,val,err);
+    for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+        double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
+            double y = t2FitFunc_nestlike_red_dm(psr,ipsr,x,iobs,label,k);
+        psr[ipsr].obsn[iobs].TNDMSignal  += y *val;
+        psr[ipsr].obsn[iobs].TNDMErr     += pow(y*err,2);
+
+    }
 }
 
 
