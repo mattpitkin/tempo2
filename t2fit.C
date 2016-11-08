@@ -93,6 +93,21 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
      * to get the input data and design matricies etc.
      */
     for (size_t ipsr=0; ipsr < npsr; ipsr++) {
+        /**
+         * Temponest parameters write random crap to the observation struct.
+         * So we should clear them first or it will just do wierd stuff.
+         */
+        if (psr->TNRedAmp && psr->TNRedGam) {
+            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+                if(psr[0].TNsubtractRed==0)psr[ipsr].obsn[iobs].TNRedSignal = 0;
+                psr[ipsr].obsn[iobs].TNRedErr = 0;
+            }
+        }
+        if (psr->TNDMAmp && psr->TNDMGam) {
+            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+                psr[ipsr].obsn[iobs].TNDMErr = 0;
+            }
+        }
 
         double *psr_x   = (double*)malloc(sizeof(double)*psr[ipsr].nobs);
         double *psr_y   = (double*)malloc(sizeof(double)*psr[ipsr].nobs);
@@ -436,6 +451,26 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
 
     }
+
+
+
+    /**
+     * Need to squareroot the TN error bars.
+     * @TODO: Please can we make a non-hack way of doing this.
+     */
+    for (int ipsr = 0; ipsr < npsr; ++ipsr){
+        if (psr->TNRedAmp && psr->TNRedGam) {
+            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+                psr[ipsr].obsn[iobs].TNRedErr = sqrt(psr[ipsr].obsn[iobs].TNRedErr);
+            }
+        }
+        if (psr->TNDMAmp && psr->TNDMGam) {
+            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+                psr[ipsr].obsn[iobs].TNDMErr = sqrt(psr[ipsr].obsn[iobs].TNDMErr);
+            }
+        }
+    }
+
 }
 
 
@@ -617,6 +652,32 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 ++OUT.nConstraints;
             }
         }
+
+        if (psr->TNDMAmp && psr->TNDMGam) {
+            for (int i=0;i<psr->TNDMC;++i) {
+                /**
+                 * Temporary fix here!
+                 * Enable the TN parameters.
+                 */
+                psr->param[param_red_dm_sin].fitFlag[0]=1;
+                psr->param[param_red_dm_cos].fitFlag[0]=1;
+
+                psr->param[param_red_dm_sin].paramSet[0]=1;
+                psr->param[param_red_dm_cos].paramSet[0]=1;
+
+                // End of temporary fix.
+
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_dm_sin;
+                OUT.constraintCounters[OUT.nConstraints]=i;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_dm;
+                ++OUT.nConstraints;
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_dm_cos;
+                OUT.constraintCounters[OUT.nConstraints]=i;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_dm;
+                ++OUT.nConstraints;
+            }
+        }
+
         // ECORR parameters
         // Fits for a constrained jump for each "epoch" (i.e. observation)
         int nepochs=0;
@@ -714,6 +775,16 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         psr->param[param_red_cos].fitFlag[0]=0;
         psr->param[param_red_sin].paramSet[0]=0;
         psr->param[param_red_cos].paramSet[0]=0;
+    }
+    if (psr->TNDMAmp && psr->TNDMGam) {
+        /**
+         * Temporary fix here!
+         * Disable the TN parameters.
+         */
+        psr->param[param_red_dm_sin].fitFlag[0]=0;
+        psr->param[param_red_dm_cos].fitFlag[0]=0;
+        psr->param[param_red_dm_sin].paramSet[0]=0;
+        psr->param[param_red_dm_cos].paramSet[0]=0;
     }
 
 
@@ -957,7 +1028,20 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
                 OUT.paramIndex[OUT.nParams]=fit_param;
                 ++OUT.nParams;
             }
+            break;
 
+        case param_red_dm_sin:
+        case param_red_dm_cos:
+            {
+                for (int i=0; i < psr->TNDMC ; ++i){
+                    OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red_dm;
+                    OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red_dm;
+                    OUT.paramCounters[OUT.nParams]=i;
+                    OUT.paramIndex[OUT.nParams]=fit_param;
+                    ++OUT.nParams;
+                }
+
+            }
             break;
         default:
             logerr("ERROR: No methods for fitting parameter %s (%d)",label_str[fit_param],fit_param);
@@ -972,7 +1056,11 @@ paramDerivFunc getDerivFunction(pulsar* psr, param_label fit_param, const int k)
 
     t2fit_fillOneParameterFitInfo(psr,fit_param,k,nfo);
 
-    return nfo.paramDerivs[0];
+    int ip;
+    for(ip = 0; ip < nfo.nParams; ++ip){
+        if (nfo.paramCounters[ip]==k) break;
+    }
+    return nfo.paramDerivs[ip];
 }
 
 
