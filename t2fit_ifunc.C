@@ -5,6 +5,7 @@
 
 double ifunc(const double* mjd, const double t,const int N, const int k){
     double yoffs[MAX_IFUNC];
+    logdbg("ifunc %lg => %lg : %lg %d %d",mjd[0],mjd[N-1],t,N,k);
     assert(k<N);
 
     for (int ioff =0;ioff<N;ioff++){
