@@ -12,8 +12,12 @@ double GLOBAL_OMEGA;
 int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar* psr) {
 
     //  pulsar *psr=NULL;
-    return calcSpectra_ri_T(uinv,resx,resy,nres,specX,specY_R,specY_I,nfit,(resx[nres-1]-resx[0]),'N',psr);
+//    return calcSpectra_ri_T(uinv,resx,resy,nres,specX,specY_R,specY_I,nfit,(resx[nres-1]-resx[0]),'N',psr);
+    return calcSpectraErr_complex(uinv,resx,resy,nres,specX,specY_R,specY_I,NULL,nfit);
 }
+
+
+
 
 int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr) {
     int i,k;
