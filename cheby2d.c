@@ -72,6 +72,12 @@
 #endif
 
 
+long double parse_ld_cheby(const char* str){
+    long double ld;
+    sscanf(str, "%Lf", &ld);
+    return ld;
+}
+
 
 void Cheby2D_Init(Cheby2D *cheby, int nx, int ny)
 {
@@ -456,21 +462,21 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
         {
             if (sscanf(line, "%*s %s %s", str1,str2)!=2)
                 return -4;
-            cm->mjd_start = (long double)parse_longdouble(str1);
-            cm->mjd_end = (long double)parse_longdouble(str2);
+            cm->mjd_start = (long double)parse_ld_cheby(str1);
+            cm->mjd_end = (long double)parse_ld_cheby(str2);
         }
         else if (!strcasecmp(keyword, "FREQ_RANGE"))
         {
             if (sscanf(line, "%*s %s %s", str1, str2)!=2)
                 return -5;
-            cm->freq_start = (long double)parse_longdouble(str1);
-            cm->freq_end = (long double)parse_longdouble(str2);
+            cm->freq_start = (long double)parse_ld_cheby(str1);
+            cm->freq_end = (long double)parse_ld_cheby(str2);
         }
         else if (!strcasecmp(keyword, "DISPERSION_CONSTANT"))
         {
             if (sscanf(arg, "%s", str1)!=1)
                 return -6;
-            cm->dispersion_constant = (long double)parse_longdouble(str1);
+            cm->dispersion_constant = (long double)parse_ld_cheby(str1);
         }
         else if (!strcasecmp(keyword, "NCOEFF_TIME"))
         {
@@ -500,7 +506,7 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
                 {
                     if (sscanf(line+ichar, "%s %n",str1, &nread)!=1)
                         return -10;
-                    cm->cheby.coeff[iy*cm->cheby.nx+ix] = (long double)parse_longdouble(str1);
+                    cm->cheby.coeff[iy*cm->cheby.nx+ix] = (long double)parse_ld_cheby(str1);
                     ichar += nread;
                 }
             }
@@ -510,7 +516,7 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
                 {
                     if (sscanf(line+ichar, "%s %n",str1, &nread)!=1)
                         return -10;
-                    cm->cheby.coeff[iy*cm->cheby.nx+ix] = (long double)parse_longdouble(str1);
+                    cm->cheby.coeff[iy*cm->cheby.nx+ix] = (long double)parse_ld_cheby(str1);
                     ichar += nread;
                     if ((iy+1)%3==0)
                     {

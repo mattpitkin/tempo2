@@ -434,17 +434,19 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
         else
         {
-            for (i=0;i<ndata;i++)
-            {
-                sum=0;
-                sum_w=0;
-                for (j=0;j<nparams;j++){
-                    sum += designMatrix[i][j]*outP[j];
-                    sum_w += white_designMatrix[i][j]*outP[j];
+            if(outP!=NULL){
+                for (i=0;i<ndata;i++)
+                {
+                    sum=0;
+                    sum_w=0;
+                    for (j=0;j<nparams;j++){
+                        sum += designMatrix[i][j]*outP[j];
+                        sum_w += white_designMatrix[i][j]*outP[j];
+                    }
+                    fprintf(wFile,"%d %lg %lg\n",i,(double)(data[i]-sum),(double)(white_data[i]-sum_w));
                 }
-                fprintf(wFile,"%d %lg %lg\n",i,(double)(data[i]-sum),(double)(white_data[i]-sum_w));
+                fclose(wFile);
             }
-            fclose(wFile);
         }
     }
     if(needToFreeCVM){

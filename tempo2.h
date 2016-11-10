@@ -178,7 +178,7 @@ enum label {
     param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
-    param_red_sin, param_red_cos,param_jitter,
+    param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -243,6 +243,8 @@ enum constraint {
     constraint_qifunc_c_year_cos2,
     constraint_red_sin,
     constraint_red_cos,
+    constraint_red_dm_sin,
+    constraint_red_dm_cos,
     constraint_jitter,
     constraint_LAST /*!< marker for the last constraint */
 };

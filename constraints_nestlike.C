@@ -34,6 +34,35 @@ double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam
 
 }
 
+double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+    assert(iconstraint == constraint_red_dm_sin || iconstraint == constraint_red_dm_cos);
+
+    /* Constrain if
+     *   This frequency matches the constraint frequency
+     * and
+     *   Sin/cos matches
+     */
+    if (constraintk==k &&
+            (
+             ((iconstraint == constraint_red_dm_sin) && (iparam == param_red_dm_sin)) ||
+             ((iconstraint == constraint_red_dm_cos) && (iparam == param_red_dm_cos)) )
+            ) {
+        double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+        double DMAmp = pow(10.,psr[ipsr].TNDMAmp);
+        double freq = ((double)(k+1.0))/(maxtspan);
+        double DMIndex = psr[ipsr].TNDMGam;
+
+        /***
+         * Still no idea what this equation represents! Copied from LL's code MJK2016
+         */
+        double rho = (DMAmp*DMAmp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMIndex))/(maxtspan*24*60*60);
+
+        return 1.0/sqrt(rho);
+    } else return 0;
+
+}
+
+
 double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
     assert (iconstraint == constraint_jitter);
 
