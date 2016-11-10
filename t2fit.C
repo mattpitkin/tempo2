@@ -44,6 +44,8 @@
 
 void callFitFuncPlugin(pulsar *psr,int npsr, const char *covarFuncFile); // currently in doFit.C
 
+void t2fit_postfit(pulsar* psr, int npsr);
+void t2fit_prefit(pulsar* psr, int npsr);
 
 // Remove elements from SVD sigma matrix below this value.
 #define T2_SVD_TOL 1e-27
@@ -54,6 +56,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         callFitFuncPlugin(psr,npsr,covarFuncFile);
         return;
     }
+
+    t2fit_prefit(psr,npsr);
 
     // if we have a model for the data covariance function, then use it.
     // Otherwise we we will just whiten using the error bars.
@@ -93,22 +97,6 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
      * to get the input data and design matricies etc.
      */
     for (size_t ipsr=0; ipsr < npsr; ipsr++) {
-        /**
-         * Temponest parameters write random crap to the observation struct.
-         * So we should clear them first or it will just do wierd stuff.
-         */
-        if (psr->TNRedAmp && psr->TNRedGam) {
-            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
-                if(psr[0].TNsubtractRed==0)psr[ipsr].obsn[iobs].TNRedSignal = 0;
-                psr[ipsr].obsn[iobs].TNRedErr = 0;
-            }
-        }
-        if (psr->TNDMAmp && psr->TNDMGam) {
-            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
-                psr[ipsr].obsn[iobs].TNDMErr = 0;
-            }
-        }
-
         double *psr_x   = (double*)malloc(sizeof(double)*psr[ipsr].nobs);
         double *psr_y   = (double*)malloc(sizeof(double)*psr[ipsr].nobs);
         double *psr_white_y   = (double*)malloc(sizeof(double)*psr[ipsr].nobs);
@@ -452,11 +440,41 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
     }
 
+    t2fit_postfit(psr,npsr);
+}
 
+/**
+ * Some routines need to do stuff before the fit. They go in here.
+ */
+void t2fit_prefit(pulsar* psr, int npsr){
+    for (int ipsr=0; ipsr < npsr; ++ipsr){
+        /**
+         * Temponest parameters write random crap to the observation struct.
+         * So we should clear them first or it will just do wierd stuff.
+         */
+        if (psr->TNRedAmp && psr->TNRedGam) {
+            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+                if(psr[0].TNsubtractRed==0)psr[ipsr].obsn[iobs].TNRedSignal = 0;
+                psr[ipsr].obsn[iobs].TNRedErr = 0;
+            }
+        }
+        if (psr->TNDMAmp && psr->TNDMGam) {
+            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+                psr[ipsr].obsn[iobs].TNDMErr = 0;
+            }
+        }
+    }
+
+
+}
+
+/**
+ * Some fit stuff might need to do some things after the fit. They go in here.
+ */
+void t2fit_postfit(pulsar* psr, int npsr){
 
     /**
      * Need to squareroot the TN error bars.
-     * @TODO: Please can we make a non-hack way of doing this.
      */
     for (int ipsr = 0; ipsr < npsr; ++ipsr){
         if (psr->TNRedAmp && psr->TNRedGam) {
@@ -625,7 +643,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
 
     /*
      * These are the temponest derived constraints
-     * Probably want to extract this as a method
+     * @TODO: Probably want to extract this as a method
      */
     {
         if (psr->TNRedAmp && psr->TNRedGam) {

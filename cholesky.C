@@ -573,10 +573,7 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
 
     /****
      *
-     * TODO: Need to fix this - should not have 200 in it.
-     *
      * Needs to have point closest to start/end as reference point for each way.
-     *
      *
      */
     for(i=0;i<np-nc;i++){
