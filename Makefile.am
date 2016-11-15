@@ -61,7 +61,7 @@ libt2toolkit_la_include_HEADERS = TKfit.h TKmatrix.h T2toolkit.h TKsvd.h TKchole
 TKcholesky.h: cholesky.h
 	cp $(srcdir)/cholesky.h TKcholesky.h
 
-libtempo2pred_la_SOURCES = $(headers) tempo2pred.c cheby2d.c t1polyco.c TKlongdouble.C
+libtempo2pred_la_SOURCES = $(headers) tempo2pred.c cheby2d.c t1polyco.c
 libtempo2pred_la_CFLAGS = -fPIC
 #libtempo2pred_la_LDFLAGS = -static
 libtempo2pred_la_LIBADD =
