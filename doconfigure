@@ -8,7 +8,7 @@ if [[ "$mode" == "O" ]] ; then
 elif [[ "$mode" == "D" ]] ; then
     ADDFLAGS="-O0 -g3 -Wall -Wfatal-errors -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=deprecated-declarations -fdiagnostics-color=auto"
 else
-	ADDFLAGS="-O2 -g  -fdiagnostics-color=auto"
+	ADDFLAGS="-O2 -g  -fdiagnostics-color=auto -march=core2 -mtune=generic -pipe"
 fi
 
 export CFLAGS="$ADDFLAGS $CFLAGS"
