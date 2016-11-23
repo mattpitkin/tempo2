@@ -22,7 +22,7 @@ TOASIM_src=toasim.h toasim.c toasim_compute.c toasim_io.c makeRedNoise.C makeRed
 libtoasim_la_SOURCES=$(TOASIM_src)
 
 read_toasim_SOURCES=read_toasim.c
-read_toasim_LDADD=libtoasim.la -lfftw3f ../../libtempo2.la
+read_toasim_LDADD=libtoasim.la -lfftw3f 
 
 plugin_LDFLAGS= -shared -module -avoid-version -shrext .t2 -lfftw3f
 addDmVar_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addDmVar_plug.C $(TOASIM_src)

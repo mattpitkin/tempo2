@@ -277,9 +277,11 @@ initialize_meteorology_table(int dispWarnings,
     { printf("Read error in tropo.C\n"); exit(1); }
 #endif
 #ifdef GLOB_NOMATCH
-    else if (globRet == GLOB_NOMATCH)
-    { if (dispWarnings==0)
-        printf("No .%s files in $TEMPO2/%s\n", extension, path); return; }
+    else if (globRet == GLOB_NOMATCH) { 
+        if (dispWarnings==0){
+            printf("No .%s files in $TEMPO2/%s\n", extension, path); return; 
+        }
+    }
 #endif
 
     for (pfname = g.gl_pathv; *pfname != NULL; pfname++)

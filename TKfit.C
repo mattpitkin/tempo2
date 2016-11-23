@@ -38,6 +38,7 @@
 #include "T2toolkit.h"
 #include "T2accel.h"
 #include "TKfit.h"
+#include "TKrobust.h"
 
 void TKremovePoly_f(float *px,float *py,int n,int m)
 {
@@ -161,6 +162,15 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         double** designMatrix, double** white_designMatrix,
         double** constraintsMatrix, int ndata,int nparams, int nconstraints, double tol, char rescale_errors,
         double* outP, double* e, double** Ocvm, char robust){
+
+    if (robust > 48 ){
+       return TKrobust(data,white_data,
+               designMatrix, white_designMatrix, constraintsMatrix, ndata, nparams, nconstraints, tol,
+               rescale_errors,outP,e,Ocvm, robust);
+    }//end of if robust
+
+
+
     double chisq = 0;
     int i,j,k;
 
@@ -463,108 +473,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
     /** Robust Estimator code by Wang YiDi, Univ. Manchester 2015 **/
 
-    if (robust > 48 ){
-        double sum;
-        logmsg("ROBUST '%c'",robust);
-
-        //parameters for robust estimation
-        double resid[ndata];//residual after the calculation of leastsquare
-        double Weight[ndata];//reweights
-
-        //Calculating the residual
-        for (j=0;j<ndata;j++)
-        {
-            sum = 0.0;
-
-            for (k=0;k<nparams;k++)
-            {
-                sum += outP[k]*white_designMatrix[j][k];
-            }
-
-            resid[j]=white_data[j]-sum;
-        }
-
-        //Reweight 
-        double c0 = 1.345;
-
-        double aBisquare = 4.685;
-
-        double aHampel = 0.902*1.5;
-        double bHampel = 0.902*3.5;
-        double cHampel = 0.902*8;
-
-        double aWelsch = 2.11;
-
-        switch (robust){
-            case 'W':
-                for (j=0;j<ndata;j++)
-                {
-                    Weight[j] = 2*aWelsch*exp(-pow(resid[j]/aWelsch, 2));
-                }
-                break;
-            case 'B':
-                for (j=0;j<ndata;j++)
-                {
-                    if (fabs(resid[j])<aBisquare)
-                    {
-                        Weight[j] = pow(1-pow(resid[j]/aBisquare, 2),2);
-                    }
-                    else
-                    {
-                        Weight[j] = 0;
-                    }
-                }
-                break;
-
-            case 'H':
-            default:
-                for (j=0;j<ndata;j++)
-                {
-
-                    double eta = resid[j];
-
-                    if (fabs(eta)<c0)
-                    {
-                        Weight[j] = 1.0;
-                    }
-                    else
-                    {
-                        Weight[j] = c0/fabs(eta);
-                    }
-                }
-
-                break;
-        }
-        if (writeResiduals&4){
-            FILE *rp = fopen("robust.res", "w");
-            for (j=0;j<ndata;j++){
-                fprintf(rp, "%lg %lg %lg\n", resid[j], white_data[j]/data[j], (double)Weight[j]);
-            }
-            fclose(rp);
-        }
-
-
-        //Substitute the reweight matrix
-        for (i=0; i<ndata; i++)
-        {
-            white_data[i] *= Weight[i];
-
-            for (j=0; j<nparams; j++)  white_designMatrix[i][j] *= Weight[i];    
-        } 
-
-        //Calcluation via robust estimation algorithm
-
-        int save_writeResiduals = writeResiduals;
-        writeResiduals &= 0x4; // disable writing of prefit and design matrix, we have already done this!
-        chisq = TKrobustConstrainedLeastSquares(data, white_data, 
-                designMatrix, white_designMatrix, 
-                constraintsMatrix,
-                ndata, nparams, nconstraints, 
-                tol, rescale_errors, outP, e, Ocvm,0);
-        writeResiduals=save_writeResiduals;
-    }//end of if robust
-
-
+   
     return chisq;
 }
 
