@@ -1076,7 +1076,7 @@ paramDerivFunc getDerivFunction(pulsar* psr, param_label fit_param, const int k)
 
     t2fit_fillOneParameterFitInfo(psr,fit_param,k,nfo);
 
-    int ip;
+    unsigned ip;
     for(ip = 0; ip < nfo.nParams; ++ip){
         if (nfo.paramCounters[ip]==k) break;
     }

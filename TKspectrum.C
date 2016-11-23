@@ -1665,11 +1665,13 @@ void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, doubl
 } //interpolateSplineSmoothFixedXPts
 
 int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit) {
+    if (nfit < 0)
+        nfit=nres/2-1;
     double specI[nfit];
-    double* specR = specY;
+    double specR[nfit];
     int ret=calcSpectraErr_complex(uinv,resx,resy,nres,specX,specR,specI,specE,nfit);
-    for (int k=0;k<ret;k++){
-        specY[k] = pow(specY[k],2)+pow(specI[k],2);
+    for (int k=0;k<nfit;k++){
+        specY[k] = pow(specR[k],2)+pow(specI[k],2);
     }
     return ret;
 }
