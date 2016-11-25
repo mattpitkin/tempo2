@@ -250,6 +250,9 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 
                     /*		  strcpy(psr->obsn[nObs].flagID[0],"FLAGID");
                               strcpy(psr->obsn[nObs].flagVal[0],"FLAGVAL"); */
+
+                    // set the last char to a whitespace to prevent getting the newline char into the last flag value
+                    line[(int)strlen(line)-1]=' ';
                     for (i=0;i<(int)strlen(line)-1;i++)
                     {
                         if (line[i]=='-' && (line[i+1] < 48 || line[i+1] > 57))
