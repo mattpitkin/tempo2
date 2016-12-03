@@ -197,7 +197,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
             //	  printf("Have read %s\n",line);
 
             /* Remove whitespace (or eol) characters at end of line */
-            while (isspace(line[strlen(line)-1])) line[strlen(line)-1]='\0';
+            while (strlen(line) > 0 && isspace(line[strlen(line)-1])) line[strlen(line)-1]='\0';
             if (line[0]!='C' && line[0]!='#') /* Ignore comment lines     */
             {
                 /* Read default columns */
