@@ -20,6 +20,7 @@ pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install add2state-ins
 
 TOASIM_src=toasim.h toasim.c toasim_compute.c toasim_io.c makeRedNoise.C makeRedNoise.h
 libtoasim_la_SOURCES=$(TOASIM_src)
+libtoasim_la_LIBADD=../../libt2toolkit.la
 
 read_toasim_SOURCES=read_toasim.c
 read_toasim_LDADD=libtoasim.la -lfftw3f 
