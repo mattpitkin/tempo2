@@ -124,6 +124,16 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         t2Fit_fillFitInfo(psr+ipsr,psr[ipsr].fitinfo,global_fitinfo,
                 psr_x,psr_toaidx, psr_ndata);
 
+        if(writeResiduals&2){
+            FILE *fp = fopen("param.labels","w");
+            ///TODO
+            for(int ip=0; ip < psr[ipsr].fitinfo.nParams; ++ip){
+                fprintf(fp,"%d %s %d\n",ip,label_str[psr[ipsr].fitinfo.paramIndex[ip]],psr[ipsr].fitinfo.paramCounters[ip]);
+            }
+            fclose(fp);
+        }
+
+
         /**
          * The whitening matrix behaves diferently if we have a covariance matrix.
          * If we have a covariance matrix, uinv is an ndata x ndata triangular matrix.
