@@ -145,7 +145,9 @@ AC_DEFUN([SWIN_PACKAGE_TRY_LINK],
   cf_lib_path_list="$with_[$1]_lib_dir $swin_search_path [$5] ."
 
   ac_save_CFLAGS="$CFLAGS"
+  ac_save_CXXFLAGS="$CFLAGS"
   CFLAGS="$[$1]_CFLAGS $ac_save_CFLAGS"
+  CXXFLAGS="$[$1]_CFLAGS $ac_save_CXXFLAGS"
 
   ac_save_LIBS="$LIBS"
 
@@ -163,6 +165,7 @@ AC_DEFUN([SWIN_PACKAGE_TRY_LINK],
   done
 
   CFLAGS="$ac_save_CFLAGS"
+  CXXFLAGS="$ac_save_CXXFLAGS"
   LIBS="$ac_save_LIBS"
 
 ])
