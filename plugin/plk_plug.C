@@ -264,6 +264,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     //display chisq?
     int showChisq = 0;
     char flagColour[100];
+    char saveonquit[100];
     const char *CVS_verNum = "$Revision: 1.61 $";
     int recordStrokes=0;
     char recordFileStr[1024];
@@ -275,6 +276,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     if (displayCVSversion == 1) CVSdisplayVersion("plk_plug.C","plugin",CVS_verNum);
 
     strcpy(flagColour,"");
+    strcpy(saveonquit,"");
 
     *npsr = 1;  /* This graphical interface will only show results for one pulsar */
 
@@ -374,6 +376,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         {
             strcpy(flagColour,argv[++i]);
         }
+        else if (strcmp(argv[i],"-saveonquit") == 0)
+        {
+            strcpy(saveonquit,argv[++i]);
+        }
+
         else if (strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0){
             printf("\n TEMPO2 plk plugin\n");
             printf("===================\n");
@@ -479,6 +486,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     if (recordStrokes==1)
       fclose(recordFile);
     
+    if (strlen(saveonquit)){
+        char str[1024];
+        snprintf(str,1024,"%s.tim",saveonquit);
+        writeTim(str,psr,"tempo2");
+
+        snprintf(str,1024,"%s.par",saveonquit);
+        textOutput(psr,*npsr,0,0,0,1,str);
+
+    }
 
     if (debugFlag==1) printf("plk: End\n");
     return 0;
@@ -1040,6 +1056,33 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 } while (px[0] < plotx2 || px[2] > plotx1);
                 cpgsls(1);
             }
+            if(psr[0].param[param_glep].aSize > 0 && (xplot==3 || xplot==5)) { 
+                // display glitch epochs
+                for (i=0; i < psr[0].param[param_glep].aSize; ++i) {
+                float xch,ych;
+                char tstr[10];
+                cpgsls(4); cpgsci(7);
+                cpgsch(0.5);
+
+                cpgqcs(4,&xch,&ych);
+
+                cpgsci(6);
+
+                px[0] = psr[0].param[param_glep].val[i] - centreEpoch;
+                px[1] = px[0];
+                py[0]=ploty1;
+                py[1]=ploty2;
+
+                cpgline(2,px,py);
+                snprintf(tstr,10,"%d",i+1);
+                cpgtext(px[0]-xch/2.0,py[1]+ych/2.0,tstr);
+
+                cpgsls(1); cpgsci(1);
+                cpgsch(fontSize);
+
+
+                }
+            }
             if (psr[0].nPhaseJump > 0 && (xplot==3 || xplot==5)) // Display phase jumps
             {
                 char tstr[10];
@@ -1259,16 +1302,16 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             cpgband(0,0,0,0,&mouseX,&mouseY,&key);
             /* Check key press */
             if (key=='q') exitFlag=1;
-	   else if (key=='1') {
-	     if ((xplot!=3 && yplot!=1)){setZoomX1 = 0; setZoomX2 = 0;} 
-	     xplot=3; yplot=1;fitFlag=1; setZoomY1 = 0; setZoomY2 =0;
-	     if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 1");
-	   }
-	   else if (key=='2') {
-	     if ((xplot!=3 && yplot!=2)){setZoomX1 = 0; setZoomX2 = 0;} 
-	     xplot=3; yplot=2;fitFlag=2;setZoomY1 = 0; setZoomY2 =0;
-	     if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 2");
-	   }
+            else if (key=='1') {
+                if ((xplot!=3 && yplot!=1)){setZoomX1 = 0; setZoomX2 = 0;} 
+                xplot=3; yplot=1;fitFlag=1; setZoomY1 = 0; setZoomY2 =0;
+                if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 1");
+            }
+            else if (key=='2') {
+                if ((xplot!=3 && yplot!=2)){setZoomX1 = 0; setZoomX2 = 0;} 
+                xplot=3; yplot=2;fitFlag=2;setZoomY1 = 0; setZoomY2 =0;
+                if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 2");
+            }
             else if (key=='3' && psr[0].param[param_pb].paramSet[0]==1) {xplot=4;yplot=1;fitFlag=3;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
             else if (key=='4' && psr[0].param[param_pb].paramSet[0]==1) {xplot=4;yplot=2;fitFlag=4;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
             else if (key=='5') {xplot=5; yplot=1;fitFlag=5;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
@@ -1343,12 +1386,16 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             else if(key=='K'){
                 printf("youve presssed K!!!\n");
                 if(psr[0].TNsubtractRed==0){
-                    printf("will substract Red Noise on next Fit \n");
+                    printf("Subtract red noise from fit\n");
                     psr[0].TNsubtractRed=1;
+                    formResiduals(psr,npsr,1); // iteration);
+                    //textOutput(psr,npsr,0,0,0,0,"");
                 }
                 else if(psr[0].TNsubtractRed==1){
-                    printf("will Re-add Red Noise on next Fit \n");
+                    printf("Do Not Subtract Red Noise on next Fit \n");
                     psr[0].TNsubtractRed=0;
+                    formResiduals(psr,npsr,1); // iteration);
+                    //textOutput(psr,npsr,0,0,0,0,"");
                 }
 
             }
@@ -2063,7 +2110,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     /* Need to update doFit.C to take notice of START and FINISH */
                     /* for this to work properly                                 */
 
-		  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile,zoom,recordStrokes,recordFile);
+                    reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,xplot,dcmFile,covarFuncFile,zoom,recordStrokes,recordFile);
                     setZoomY1 = 0;
                     setZoomY2 = 0;
                 }
@@ -2155,9 +2202,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                         }
                     }
                     if (menu>0 && mouseY > ploty2)
-		      checkMenu(psr,mouseX,mouseY,2,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset,recordStrokes,recordFile);
+                        checkMenu(psr,mouseX,mouseY,2,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset,recordStrokes,recordFile);
                     else
-		      deletePoint(psr,x,y,id,count,mouseX,mouseY,recordStrokes,recordFile); /* Delete closest point */
+                        deletePoint(psr,x,y,id,count,mouseX,mouseY,recordStrokes,recordFile); /* Delete closest point */
                 }
                 else if (key=='p') changeParameters(psr);   /* Change parameter values */
                 else if (key==12) /* Add line to plot */
@@ -2302,26 +2349,26 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                         }
                     }
                     if ((menu==1 || menu==2) && mouseY > ploty2)
-		      checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset,recordStrokes,recordFile);
+                        checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset,recordStrokes,recordFile);
                     else if (menu==3 && (mouseY > ploty2 || mouseX < plotx1 || mouseY < ploty1))
                     {
-		      checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset,recordStrokes,recordFile);
+                        checkMenu(psr,mouseX,mouseY,1,fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,menu,xplot,parFile,timFile,argc,argv,&xplot,&yplot,&graphics, highlightID,highlightVal,&highlightNum,aspect,fontType,lineWidth,bkgrdColour,lineColour,&jumpOffset,zoom,&paramOffset,recordStrokes,recordFile);
                     }
                     else
                         idPoint(psr,x,y,id,count,mouseX,mouseY); /* Identify closest point */
                 }
-		else if (key=='?') // Add log comment for the recording
-		  {
-		    char logStr[4096];
-		    printf("Enter text for log ");
-		    fgets(logStr,sizeof(logStr),stdin);
-		    logStr[strlen(logStr)-1]='\0';
-		    recordStrokesFunc(recordFile,"log entry",logStr);
-		  }
-		else if (key=='~') // Replay next line in the replay file
-		  {
-		    replayLine(recordFile,argc,argv,psr,fitFlag,&setZoomX1,&setZoomX2,&setZoomY1,&setZoomY2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,npsr,xplot,dcmFile,covarFuncFile,&zoom,&xplot,&yplot);
-		  }	    
+                else if (key=='?') // Add log comment for the recording
+                {
+                    char logStr[4096];
+                    printf("Enter text for log ");
+                    fgets(logStr,sizeof(logStr),stdin);
+                    logStr[strlen(logStr)-1]='\0';
+                    recordStrokesFunc(recordFile,"log entry",logStr);
+                }
+                else if (key=='~') // Replay next line in the replay file
+                {
+                    replayLine(recordFile,argc,argv,psr,fitFlag,&setZoomX1,&setZoomX2,&setZoomY1,&setZoomY2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,npsr,xplot,dcmFile,covarFuncFile,&zoom,&xplot,&yplot);
+                }	    
                 else if (key=='s')  /* Start zoom */
                 {
                     setZoomX1 = 1;
@@ -2392,12 +2439,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     psr[0].param[param_finish].val[0] = origFinish;
                     psr[0].param[param_start].fitFlag[0] = 0;
                     psr[0].param[param_finish].fitFlag[0] = 0;
-		    if (recordStrokes==1)
-		      {
-			char tStr[1024];
-			sprintf(tStr,"%Lf %Lf",origStart,origFinish);
-			recordStrokesFunc(recordFile,"unzoom",tStr);
-		      }
+                    if (recordStrokes==1)
+                    {
+                        char tStr[1024];
+                        sprintf(tStr,"%Lf %Lf",origStart,origFinish);
+                        recordStrokesFunc(recordFile,"unzoom",tStr);
+                    }
                 }
                 else if (key==13) /* Toggle menu bar */
                 {
@@ -2434,12 +2481,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                                 (y[i]>delY1) &&
                                 (y[i]<delY2)) {
                             psr[0].obsn[id[i]].deleted = 1;
-			    if (recordStrokes==1)
-			      {
-				char recordStr[1024];
-				sprintf(recordStr,"%d %s",id[i],psr[0].obsn[id[i]].fname);
-				recordStrokesFunc(recordFile,"deletePoint",recordStr);
-			      }
+                            if (recordStrokes==1)
+                            {
+                                char recordStr[1024];
+                                sprintf(recordStr,"%d %s",id[i],psr[0].obsn[id[i]].fname);
+                                recordStrokesFunc(recordFile,"deletePoint",recordStr);
+                            }
                         }
                     }
                 }
@@ -2741,11 +2788,11 @@ float deletePoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,f
     }
     psr[0].obsn[iclosest].deleted=1;
     if (recordStrokes==1)
-      {
-	char recordStr[1024];
-	sprintf(recordStr,"%d %s",iclosest,psr[0].obsn[iclosest].fname);
-	recordStrokesFunc(recordFile,"deletePoint",recordStr);
-      }
+    {
+        char recordStr[1024];
+        sprintf(recordStr,"%d %s",iclosest,psr[0].obsn[iclosest].fname);
+        recordStrokesFunc(recordFile,"deletePoint",recordStr);
+    }
     return 0.0;
 }
 
@@ -2921,15 +2968,15 @@ void overPlotShapiro(pulsar *psr,float offset,longdouble centreEpoch)
 }
 
 void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,
-	       int setZoomX1,int setZoomX2,
-	       float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,
-	       longdouble centreEpoch,int menu,int plotx,char parFile[][MAX_FILELEN],
-	       char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,
-	       int *yplot,int *graphics,
-	       char highlightID[100][100],char  highlightVal[100][100],
-	       int *highlightNum,float aspect,int fontType,int lineWidth,
-	       char *bkgrdColour,char *lineColour,int *jumpOffset,int zoom,
-	       int *paramOffset,int recordStrokes,FILE *recordFile) 
+        int setZoomX1,int setZoomX2,
+        float zoomX1,float zoomX2,longdouble origStart,longdouble origFinish,
+        longdouble centreEpoch,int menu,int plotx,char parFile[][MAX_FILELEN],
+        char timFile[][MAX_FILELEN],int argc,char *argv[],int *xplot,
+        int *yplot,int *graphics,
+        char highlightID[100][100],char  highlightVal[100][100],
+        int *highlightNum,float aspect,int fontType,int lineWidth,
+        char *bkgrdColour,char *lineColour,int *jumpOffset,int zoom,
+        int *paramOffset,int recordStrokes,FILE *recordFile) 
 {
     float x1,x2,y1,y2,x3,x4,y3,y4,x7,y7,xscale,yscale,xscale2,x0;
     float x5,x6,y5,y6;
@@ -3054,7 +3101,7 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,
         {
             // Doing the refit
 
-	  reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,1,plotx,dcmFile,covarFuncFile,zoom,recordStrokes,recordFile);
+            reFit(fitFlag,setZoomX1,setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,1,plotx,dcmFile,covarFuncFile,zoom,recordStrokes,recordFile);
 
             /*     callFit(psr,1); */ /* MUST FIX FOR ZOOM MODES */
         }
@@ -3815,19 +3862,19 @@ void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeM
 }
 
 void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,
-	   longdouble origStart, longdouble origFinish,longdouble centreEpoch,
-	   pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile,
-	   int zoom,int recordStrokes,FILE *recordFile)
+        longdouble origStart, longdouble origFinish,longdouble centreEpoch,
+        pulsar *psr,int npsr,int plotX,char *dcmFile,char *covarFuncFile,
+        int zoom,int recordStrokes,FILE *recordFile)
 {
-  int i,k;
-  char recordStr[1024];
-  int tempt=0;
-  printf("Redoing the fit %d (%g %d %d)\n",zoom,(double)origStart,setZoomX1,fitFlag);
+    int i,k;
+    char recordStr[1024];
+    int tempt=0;
+    printf("Redoing the fit %d (%g %d %d)\n",zoom,(double)origStart,setZoomX1,fitFlag);
 
-  if (recordStrokes==1)
-    recordStrokesFunc(recordFile,"Start fit description","");
+    if (recordStrokes==1)
+        recordStrokesFunc(recordFile,"Start fit description","");
 
-  if (fitFlag==1 || fitFlag==2)
+    if (fitFlag==1 || fitFlag==2)
     {
         if (setZoomX1 == 0) {
             if (origStart==-1)
@@ -3880,36 +3927,36 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,
 
     }
     if (recordStrokes==1)
-     {
-       if (psr[0].param[param_start].fitFlag[0]==1)
-	 {
-	   sprintf(recordStr,"%Lf",psr[0].param[param_start].val[0]);
-	   recordStrokesFunc(recordFile,"Fit start",recordStr);	        
-	 }
-       if (psr[0].param[param_finish].fitFlag[0]==1)
-	 {
-	   sprintf(recordStr,"%Lf",psr[0].param[param_finish].val[0]);
-	   recordStrokesFunc(recordFile,"Fit finish",recordStr);	        
-	 }
-       sprintf(recordStr,"%d",psr[0].fitMode);
-       recordStrokesFunc(recordFile,"Fit weighting",recordStr);
-       strcpy(recordStr,"");
-       for (i=0;i<MAX_PARAMS;i++)
-	 {
-	   for (k=0;k<psr->param[i].aSize;k++)
-	     {
-	       if (psr->param[i].fitFlag[k]==1)
-		 {
-		   if (tempt==1)
-		     strcat(recordStr," ");
-		   else
-		     tempt=1;
-		   strcat(recordStr,psr->param[i].shortlabel[k]);
-		 }
-	     }
-	 }
-       recordStrokesFunc(recordFile,"Fit params",recordStr);	        
-     }
+    {
+        if (psr[0].param[param_start].fitFlag[0]==1)
+        {
+            sprintf(recordStr,"%Lf",psr[0].param[param_start].val[0]);
+            recordStrokesFunc(recordFile,"Fit start",recordStr);	        
+        }
+        if (psr[0].param[param_finish].fitFlag[0]==1)
+        {
+            sprintf(recordStr,"%Lf",psr[0].param[param_finish].val[0]);
+            recordStrokesFunc(recordFile,"Fit finish",recordStr);	        
+        }
+        sprintf(recordStr,"%d",psr[0].fitMode);
+        recordStrokesFunc(recordFile,"Fit weighting",recordStr);
+        strcpy(recordStr,"");
+        for (i=0;i<MAX_PARAMS;i++)
+        {
+            for (k=0;k<psr->param[i].aSize;k++)
+            {
+                if (psr->param[i].fitFlag[k]==1)
+                {
+                    if (tempt==1)
+                        strcat(recordStr," ");
+                    else
+                        tempt=1;
+                    strcat(recordStr,psr->param[i].shortlabel[k]);
+                }
+            }
+        }
+        recordStrokesFunc(recordFile,"Fit params",recordStr);	        
+    }
 
     /* Convert all prefit values to postfit values */
     for (i=0;i<MAX_PARAMS;i++)
@@ -3929,10 +3976,10 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,
     /* Form residuals */
     formResiduals(psr,npsr,1); // iteration);
     textOutput(psr,npsr,0,0,0,0,"");
-    
+
     if (recordStrokes==1)
-      recordStrokesFunc(recordFile,"End fit description","");
-    
+        recordStrokesFunc(recordFile,"End fit description","");
+
 
     logdbg("Leaving with %g %d",(double)origFinish,psr[0].param[param_finish].fitFlag[0]);
 }
@@ -4497,187 +4544,187 @@ double lmst2(double mjd,double olong,double *tsid,double *tsid_der)
 
 void recordHeaderInfo(FILE *recordFile,int argc,char *argv[])
 {
-  int i;
-  time_t now;
-  struct tm *mytime;
-  char dir[1024];
-  char strTime[1024];
+    int i;
+    time_t now;
+    struct tm *mytime;
+    char dir[1024];
+    char strTime[1024];
 
-  now = time(NULL);
-  mytime = gmtime(&now);
-  strftime(strTime,sizeof(strTime),"%FT%TZ",mytime);
-  getcwd(dir,sizeof(dir));
-  
-  printf("Current time = %s\n",asctime(mytime));
-  fprintf(recordFile,"[%s] [%s] [%s]\n",strTime,"directory",dir);
+    now = time(NULL);
+    mytime = gmtime(&now);
+    strftime(strTime,sizeof(strTime),"%FT%TZ",mytime);
+    getcwd(dir,sizeof(dir));
 
-  fprintf(recordFile,"[%s] [%s] [",strTime,"arguments");
-  for (i=0;i<argc;i++)
-    fprintf(recordFile,"%s ",argv[i]);
-  fprintf(recordFile,"]\n");
+    printf("Current time = %s\n",asctime(mytime));
+    fprintf(recordFile,"[%s] [%s] [%s]\n",strTime,"directory",dir);
+
+    fprintf(recordFile,"[%s] [%s] [",strTime,"arguments");
+    for (i=0;i<argc;i++)
+        fprintf(recordFile,"%s ",argv[i]);
+    fprintf(recordFile,"]\n");
 }
 
 void checkReadRecordHead(FILE *recordFile,int argc,char *argv[])
 {
-  printf("Currently not checking the record head\n");
+    printf("Currently not checking the record head\n");
 }
 
 
 void recordStrokesFunc(FILE *recordFile,char *cmd,char *param)
 {
-  time_t now;
-  struct tm *mytime;
-  char strTime[1024];
+    time_t now;
+    struct tm *mytime;
+    char strTime[1024];
 
-  now = time(NULL);
-  mytime = gmtime(&now);
-  strftime(strTime,sizeof(strTime),"%FT%TZ",mytime);
+    now = time(NULL);
+    mytime = gmtime(&now);
+    strftime(strTime,sizeof(strTime),"%FT%TZ",mytime);
 
-  fprintf(recordFile,"[%s] [%s] [%s]\n",strTime,cmd,param);
+    fprintf(recordFile,"[%s] [%s] [%s]\n",strTime,cmd,param);
 }
 
 
 void replayLine(FILE *recordFile,int argc,char *argv[],pulsar *psr,int fitFlag,int *setZoomX1,int *setZoomX2,int *setZoomY1,int *setZoomY2,float zoomX1,float zoomX2,longdouble origStart,
-		longdouble origFinish,longdouble centreEpoch,int npsr,int plotX,char *dcmFile,char *covarFuncFile,int *zoom,int *xplot,int *yplot)
+        longdouble origFinish,longdouble centreEpoch,int npsr,int plotX,char *dcmFile,char *covarFuncFile,int *zoom,int *xplot,int *yplot)
 {
-  char line[4096];
-  char date[1024];
-  char action[1024];
-  char options[4096];
-  char *tok;
-  int i,j,k;
-  int repeat=0;
+    char line[4096];
+    char date[1024];
+    char action[1024];
+    char options[4096];
+    char *tok;
+    int i,j,k;
+    int repeat=0;
 
-  do {
-    if (fgets(line,sizeof(line),recordFile) == NULL)
-      {
-	printf("Replay finished\n");
-	repeat=-1;
-      }
-    else
-      {
-	tok = strtok(line,"]"); strcpy(date,tok+1);
-	tok = strtok(NULL,"]"); strcpy(action,tok+2);
-	tok = strtok(NULL,"]"); strcpy(options,tok+2);
-	printf("Date: %s\n",date);
-	printf("Action: %s\n",action);
-	printf("Options: %s\n",options);
-	
-	// Do the action
-	if (strcmp(action,"directory")==0)
-	  {
-	    char dir[1024];
-	    getcwd(dir,sizeof(dir));
-	    if (strcmp(dir,options)==0)
-	      printf("In same directory as original processing\n");
-	    else
-	      printf("WARNING: not in same directory as original processing\n");
-	  }
-	else if (strcmp(action,"arguments")==0)
-	  {
-	    char *ttok;
-	    
-	    ttok = strtok(options," ");
-	    for (i=0;i<argc;i++)
-	      {
-		if (strcmp(argv[i],ttok)==0)
-		  printf("Argument %d (%s) identical\n",i,argv[i]);
-		else
-		  printf(" WARNING: argument %d different (was %s now %s)\n",i,ttok,argv[i]);
-		ttok = strtok(NULL," ");
-	      }
-	  }
-	else if (strcmp(action,"deletePoint")==0)
-	  {
-	    char *ttok;
-	    int id;
-	    ttok = strtok(options," ");
-	    sscanf(ttok,"%d",&id);
-	    ttok = strtok(NULL," ");
-	    if (strcmp(ttok,psr[0].obsn[id].fname)==0)
-	      printf("Deleting observation: %s\n",ttok);
-	    else
-	      {
-		printf("ERROR: trying to delete file %s, but have %s\n",ttok,psr[0].obsn[id].fname);
-		exit(1);
-	      }
-	    
-	    psr[0].obsn[id].deleted=1;
-	  }
-	else if (strcmp(action,"xyplot")==0)
-	  {
-	    sscanf(options,"%d %d",xplot,yplot);
-	    printf("Setting plot axes\n");
-	  }
-	else if (strcmp(action,"unzoom")==0)
-	  {
-	    sscanf(options,"%Lf %Lf",&psr[0].param[param_start].val[0],&psr[0].param[param_finish].val[0]);
-	    *zoom=0;
-	    *setZoomX1 = 0; *setZoomX2 = 0; *setZoomY1 = 0; *setZoomY2 = 0;
-	    psr[0].param[param_start].fitFlag[0] = 0;
-	    psr[0].param[param_finish].fitFlag[0] = 0;
-	    
-	  }
-	else if (strcmp(action,"Start fit description")==0) // Set up defaults for the fit
-	  {
-	    repeat=1;
-	    psr[0].param[param_start].fitFlag[0] = 0;
-	    psr[0].param[param_finish].fitFlag[0] = 0;	
-	  }
-	else if (strcmp(action,"Fit start")==0)
-	  {
-	    sscanf(options,"%Lf",&(psr[0].param[param_start].val[0]));
-	    psr[0].param[param_start].fitFlag[0] = 1;
-	  }
-	else if (strcmp(action,"Fit finish")==0)
-	  {
-	    sscanf(options,"%Lf",&(psr[0].param[param_finish].val[0]));
-	    psr[0].param[param_finish].fitFlag[0] = 1;
-	  }
-	else if (strcmp(action,"Fit weighting")==0)
-	  sscanf(options,"%d",&(psr[0].fitMode));
-	else if (strcmp(action,"Fit params")==0)
-	  {
-	    char *token;
-	    for (i=0;i<MAX_PARAMS;i++)
-	      {
-		for (k=0;k<psr->param[i].aSize;k++)
-		  psr->param[i].fitFlag[k]=0;
-	      }
-	    
-	    token = strtok(options," ");
-	    while (token != NULL)
-	      {
-		for (i=0;i<MAX_PARAMS;i++)
-		  {
-		    for (k=0;k<psr->param[i].aSize;k++)
-		      {
-			if (strcmp(psr->param[i].shortlabel[k],token)==0)
-			  {
-			    printf("Fitting for >%s<\n",token);
-			    psr->param[i].fitFlag[k]=1;
-			  }
-		      }
-		  }
-		token = strtok(NULL," ");
-	      }
-	    repeat=0;	
-	  }
-	else if (strcmp(action,"End fit description")==0)
-	  {
-	    reFit(0,*setZoomX1,*setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,plotX,dcmFile,covarFuncFile,*zoom,0,recordFile);
-	    
-	    printf("Completed fit\n");
-	    repeat=0;
-	  }
-      }
-  } while (repeat==1);
+    do {
+        if (fgets(line,sizeof(line),recordFile) == NULL)
+        {
+            printf("Replay finished\n");
+            repeat=-1;
+        }
+        else
+        {
+            tok = strtok(line,"]"); strcpy(date,tok+1);
+            tok = strtok(NULL,"]"); strcpy(action,tok+2);
+            tok = strtok(NULL,"]"); strcpy(options,tok+2);
+            printf("Date: %s\n",date);
+            printf("Action: %s\n",action);
+            printf("Options: %s\n",options);
 
-  if (repeat==0)
+            // Do the action
+            if (strcmp(action,"directory")==0)
+            {
+                char dir[1024];
+                getcwd(dir,sizeof(dir));
+                if (strcmp(dir,options)==0)
+                    printf("In same directory as original processing\n");
+                else
+                    printf("WARNING: not in same directory as original processing\n");
+            }
+            else if (strcmp(action,"arguments")==0)
+            {
+                char *ttok;
+
+                ttok = strtok(options," ");
+                for (i=0;i<argc;i++)
+                {
+                    if (strcmp(argv[i],ttok)==0)
+                        printf("Argument %d (%s) identical\n",i,argv[i]);
+                    else
+                        printf(" WARNING: argument %d different (was %s now %s)\n",i,ttok,argv[i]);
+                    ttok = strtok(NULL," ");
+                }
+            }
+            else if (strcmp(action,"deletePoint")==0)
+            {
+                char *ttok;
+                int id;
+                ttok = strtok(options," ");
+                sscanf(ttok,"%d",&id);
+                ttok = strtok(NULL," ");
+                if (strcmp(ttok,psr[0].obsn[id].fname)==0)
+                    printf("Deleting observation: %s\n",ttok);
+                else
+                {
+                    printf("ERROR: trying to delete file %s, but have %s\n",ttok,psr[0].obsn[id].fname);
+                    exit(1);
+                }
+
+                psr[0].obsn[id].deleted=1;
+            }
+            else if (strcmp(action,"xyplot")==0)
+            {
+                sscanf(options,"%d %d",xplot,yplot);
+                printf("Setting plot axes\n");
+            }
+            else if (strcmp(action,"unzoom")==0)
+            {
+                sscanf(options,"%Lf %Lf",&psr[0].param[param_start].val[0],&psr[0].param[param_finish].val[0]);
+                *zoom=0;
+                *setZoomX1 = 0; *setZoomX2 = 0; *setZoomY1 = 0; *setZoomY2 = 0;
+                psr[0].param[param_start].fitFlag[0] = 0;
+                psr[0].param[param_finish].fitFlag[0] = 0;
+
+            }
+            else if (strcmp(action,"Start fit description")==0) // Set up defaults for the fit
+            {
+                repeat=1;
+                psr[0].param[param_start].fitFlag[0] = 0;
+                psr[0].param[param_finish].fitFlag[0] = 0;	
+            }
+            else if (strcmp(action,"Fit start")==0)
+            {
+                sscanf(options,"%Lf",&(psr[0].param[param_start].val[0]));
+                psr[0].param[param_start].fitFlag[0] = 1;
+            }
+            else if (strcmp(action,"Fit finish")==0)
+            {
+                sscanf(options,"%Lf",&(psr[0].param[param_finish].val[0]));
+                psr[0].param[param_finish].fitFlag[0] = 1;
+            }
+            else if (strcmp(action,"Fit weighting")==0)
+                sscanf(options,"%d",&(psr[0].fitMode));
+            else if (strcmp(action,"Fit params")==0)
+            {
+                char *token;
+                for (i=0;i<MAX_PARAMS;i++)
+                {
+                    for (k=0;k<psr->param[i].aSize;k++)
+                        psr->param[i].fitFlag[k]=0;
+                }
+
+                token = strtok(options," ");
+                while (token != NULL)
+                {
+                    for (i=0;i<MAX_PARAMS;i++)
+                    {
+                        for (k=0;k<psr->param[i].aSize;k++)
+                        {
+                            if (strcmp(psr->param[i].shortlabel[k],token)==0)
+                            {
+                                printf("Fitting for >%s<\n",token);
+                                psr->param[i].fitFlag[k]=1;
+                            }
+                        }
+                    }
+                    token = strtok(NULL," ");
+                }
+                repeat=0;	
+            }
+            else if (strcmp(action,"End fit description")==0)
+            {
+                reFit(0,*setZoomX1,*setZoomX2,zoomX1,zoomX2,origStart,origFinish,centreEpoch,psr,npsr,plotX,dcmFile,covarFuncFile,*zoom,0,recordFile);
+
+                printf("Completed fit\n");
+                repeat=0;
+            }
+        }
+    } while (repeat==1);
+
+    if (repeat==0)
     {
-      printf("---------------------\n");
-      printf("press '~' for the next processing step\n");
-      printf("---------------------\n");
+        printf("---------------------\n");
+        printf("press '~' for the next processing step\n");
+        printf("---------------------\n");
     }
 }
 

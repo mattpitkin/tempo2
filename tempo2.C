@@ -42,11 +42,6 @@
 #include "t2fit.h"
 #include <dlfcn.h>
 
-#ifdef HAVE_QDINSTALL
-#include <qd/dd_real.h>
-#include <qd/fpu.h>
-#endif
-
 // #include "T2toolkit.h"
 
 void ephemeris_routines(pulsar *psr,int npsr);
@@ -80,14 +75,6 @@ int main(int argc, char *argv[])
     char **commandLine;
     clock_t startClock,endClock;
     const char *CVS_verNum = "$Id$";
-
-#ifdef HAVE_QDINSTALL
-
-    fpu_fix_start(&oldcw);
-    fpu_fix_end(&oldcw);
-
-#endif
-
 
     polyco_file[0] = '\0';
 
@@ -290,6 +277,13 @@ int main(int argc, char *argv[])
     }
     npsr = 0;   /* Initialise the number of pulsars */
     nGlobal=0;
+
+
+
+    // set the extra clock path if
+    if (getenv("TEMPO2_CLOCK_DIR")!=NULL){
+        strncpy(tempo2_clock_path,getenv("TEMPO2_CLOCK_DIR"), MAX_STRLEN);
+    }
     /* Obtain command line arguments */
     logdbg("Running getInputs %d",psr[0].nits);
     getInputs(psr,argc, commandLine, timFile,parFile,&listparms,&npsr,&nGlobal,&outRes,&writeModel,
@@ -349,10 +343,6 @@ int main(int argc, char *argv[])
             }
             logdbg("--ENTER GRAPHICAL PLUGIN--");
             logtchk("Start graphical plugin");
-
-#ifdef HAVE_QDINSTALL
-            fpu_fix_end(&oldcw);
-#endif
             entry(argc,commandLine,psr,&npsr);
             logtchk("End graphical plugin");
             return 0;

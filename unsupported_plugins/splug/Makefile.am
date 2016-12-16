@@ -1,6 +1,6 @@
 plugindir=@TEMPO2_PLUG_INSTALL@
 
-plugin_LTLIBRARIES=ppta_dr1_@T2ARCH@_splug.la
+plugin_LTLIBRARIES=ppta_dr1_@T2ARCH@_splug.la jbo_@T2ARCH@_splug.la
 
 
 ###
@@ -12,7 +12,7 @@ LDFLAGS+= -shared -module -avoid-version -shrext .t2
 AM_CPPFLAGS=-I@top_srcdir@/
 
 
-pluginINSTALLS=ppta_dr1-install
+pluginINSTALLS=ppta_dr1-install jbo-install
 
 
 
@@ -20,6 +20,12 @@ ppta_dr1_@T2ARCH@_splug_la_SOURCES=@top_srcdir@/tempo2.h ppta_dr1_splug.C
 ppta_dr1_@T2ARCH@_splug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
 ppta_dr1-install: ppta_dr1_@T2ARCH@_splug.la
 	$(INSTALL) .libs/ppta_dr1_@T2ARCH@_splug.t2 $(plugindir)
+
+
+jbo_@T2ARCH@_splug_la_SOURCES=@top_srcdir@/tempo2.h jbo_splug.C 
+jbo_@T2ARCH@_splug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
+jbo-install: jbo_@T2ARCH@_splug.la
+	$(INSTALL) .libs/jbo_@T2ARCH@_splug.t2 $(plugindir)
 
 
 install: $(pluginINSTALLS)

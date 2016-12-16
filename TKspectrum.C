@@ -1664,20 +1664,32 @@ void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, doubl
     TKspline_interpolate(inN, inX, inY, yd, tempX, interpY, nTemp);
 } //interpolateSplineSmoothFixedXPts
 
-
+int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit) {
+    if (nfit < 0)
+        nfit=nres/2-1;
+    double specI[nfit];
+    double specR[nfit];
+    int ret=calcSpectraErr_complex(uinv,resx,resy,nres,specX,specR,specI,specE,nfit);
+    for (int k=0;k<nfit;k++){
+        specY[k] = pow(specR[k],2)+pow(specI[k],2);
+    }
+    return ret;
+}
 /***
  * Update 2015-09-15 M. J. Keith
  *
  * Removed need for global variable and "fake" pulsar.
+ * Now returns complex values to eliminate need for buggy calcspectra_ri
  *
  */
-int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit)
+
+int calcSpectraErr_complex(double **uinv,double *resx,double *resy,int nres,double *specX,double *specR, double* specI,double* specE,int nfit)
 {
 
     if (nfit < 0)
         nfit=nres/2-1;
 
-// UNUSED VARIABLE //     double chisq;
+    // UNUSED VARIABLE //     double chisq;
     double param[2],error[2];
 
     logdbg("Entering calcSpectra\n");
@@ -1705,7 +1717,9 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
 
 
         specX[k] = omega/2.0/M_PI;
-        specY[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(param[0],2)+pow(param[1],2))/pow(365.25*86400.0,2); 
+        const double v = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2);
+        specR[k] = sqrt(v)*param[0];
+        specI[k] = sqrt(v)*param[1];
         if(specE!=NULL){
             specE[k] = (resx[nres-1]-resx[0])/365.25/2.0*(pow(error[0],2)+pow(error[1],2))/pow(365.25*86400.0,2);
         }

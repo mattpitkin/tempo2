@@ -209,6 +209,10 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
             {
                 strcpy(polyco_file, argv[++i]);
             }
+            else if (strcmp(argv[i],"-clkdir")==0)
+            {
+                strcpy(tempo2_clock_path, argv[++i]);
+            }
             else if (i==argc-1 && gotTim==0) /* Must be .tim file name */
             {
                 strcpy(timFile[timfile_num],argv[i]);	    

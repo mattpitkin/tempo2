@@ -648,6 +648,13 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         readValue(psr,str,fin,&(psr->param[param_wave_om]),0);
         psr->waveScale = 0;
     }
+
+    else if (strcasecmp(str,"WAVE_FREQ")==0) /* Fundamental frequency in human units of yr^-1*/
+    {
+        readValue(psr,str,fin,&(psr->param[param_wave_om]),0);
+        psr->param[param_wave_om].val[0] *= (2.0*M_PI/365.25);
+        psr->waveScale = 0;
+    }
     else if (strcasecmp(str,"WAVE_SCALE")==0)
         fscanf(fin,"%lf",&psr->waveScale);
     else if (strstr(str,"WAVE")!=NULL || strstr(str,"wave")!=NULL)
@@ -767,6 +774,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         } 
     }
 
+    else if (strcasecmp(str,"CONSTRAINT_EFACTOR")==0){
+        fscanf(fin, "%lg",&psr->constraint_efactor);
+       logdbg("Constraint efactor set to %g", psr->constraint_efactor);
+    }
 
     /*
      * Specify fitting constraints

@@ -649,9 +649,10 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                         {
                             int l;
                             strcpy(disp,"");
+                            strcat(disp,psr[0].obsn[varN].telID);
                             for (l=0;l<psr[0].obsn[varN].nclock_correction;l++)
                             {
-                                if (l!=0)
+                            //    if (l!=0)
                                     strcat(disp,"->");
                                 strcat(disp,psr[0].obsn[varN].correctionsTT[l].corrects_to);
                             }

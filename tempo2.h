@@ -50,9 +50,9 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2015.09.0"
-#define TEMPO2_h_MAJOR_VER 2015.09
-#define TEMPO2_h_MINOR_VER 0
+#define TEMPO2_h_VER "2016.11.3"
+#define TEMPO2_h_MAJOR_VER 2016.11
+#define TEMPO2_h_MINOR_VER 3
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /*!< DM0 -> DMn where n=10                            */
@@ -178,7 +178,7 @@ enum label {
     param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
-    param_red_sin, param_red_cos,param_jitter,
+    param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -243,6 +243,8 @@ enum constraint {
     constraint_qifunc_c_year_cos2,
     constraint_red_sin,
     constraint_red_cos,
+    constraint_red_dm_sin,
+    constraint_red_dm_cos,
     constraint_jitter,
     constraint_LAST /*!< marker for the last constraint */
 };
@@ -264,6 +266,7 @@ extern int displayCVSversion; /*!< Display CVS version */
 extern char dcmFile[MAX_FILELEN];
 extern char covarFuncFile[MAX_FILELEN];
 
+extern char tempo2_clock_path[MAX_STRLEN]; /*!< paths to search for clock files */
 extern char tempo2_plug_path[32][MAX_STRLEN]; /*!< paths to search for plugins */
 extern int tempo2_plug_path_len;
 
@@ -763,6 +766,7 @@ typedef struct pulsar {
 
 
     int nconstraints;                       /*!< Number of fit constraints specified                      */
+    double constraint_efactor;
     enum constraint constraints[MAX_PARAMS];/*!< Which constraints are specified */
     char auto_constraints;
 
@@ -896,8 +900,8 @@ extern "C" {
     void updateBTJ(pulsar *psr,double val,double err,int pos,int arr);
     double BTXmodel(pulsar *psr,int p,int obs,int param,int arr);
     void updateBTX(pulsar *psr,double val,double err,int pos,int arr);
-    double ELL1model(pulsar *psr,int p,int obs,int param);
-    void updateELL1(pulsar *psr,double val,double err,int pos);
+    double ELL1model(pulsar *psr,int p,int obs,int param,int arr);
+    void updateELL1(pulsar *psr,double val,double err,int pos,int arr);
     longdouble DDmodel(pulsar *psr,int p,int obs,int param);
     void updateDD(pulsar *psr,double val,double err,int pos);
     double T2model(pulsar *psr,int p,int obs,int param,int arr);
