@@ -196,8 +196,8 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
                 valid=-2;
             //	  printf("Have read %s\n",line);
 
-            /* Remove \n character at end */
-            if (line[strlen(line)-1]=='\n') line[strlen(line)-1]='\0';
+            /* Remove whitespace (or eol) characters at end of line */
+            while (strlen(line) > 0 && isspace(line[strlen(line)-1])) line[strlen(line)-1]='\0';
             if (line[0]!='C' && line[0]!='#') /* Ignore comment lines     */
             {
                 /* Read default columns */
@@ -250,6 +250,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
 
                     /*		  strcpy(psr->obsn[nObs].flagID[0],"FLAGID");
                               strcpy(psr->obsn[nObs].flagVal[0],"FLAGVAL"); */
+
                     for (i=0;i<(int)strlen(line)-1;i++)
                     {
                         if (line[i]=='-' && (line[i+1] < 48 || line[i+1] > 57))

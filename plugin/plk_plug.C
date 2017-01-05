@@ -1056,6 +1056,33 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 } while (px[0] < plotx2 || px[2] > plotx1);
                 cpgsls(1);
             }
+            if(psr[0].param[param_glep].aSize > 0 && (xplot==3 || xplot==5)) { 
+                // display glitch epochs
+                for (i=0; i < psr[0].param[param_glep].aSize; ++i) {
+                float xch,ych;
+                char tstr[10];
+                cpgsls(4); cpgsci(7);
+                cpgsch(0.5);
+
+                cpgqcs(4,&xch,&ych);
+
+                cpgsci(6);
+
+                px[0] = psr[0].param[param_glep].val[i] - centreEpoch;
+                px[1] = px[0];
+                py[0]=ploty1;
+                py[1]=ploty2;
+
+                cpgline(2,px,py);
+                snprintf(tstr,10,"%d",i+1);
+                cpgtext(px[0]-xch/2.0,py[1]+ych/2.0,tstr);
+
+                cpgsls(1); cpgsci(1);
+                cpgsch(fontSize);
+
+
+                }
+            }
             if (psr[0].nPhaseJump > 0 && (xplot==3 || xplot==5)) // Display phase jumps
             {
                 char tstr[10];
@@ -1275,16 +1302,16 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             cpgband(0,0,0,0,&mouseX,&mouseY,&key);
             /* Check key press */
             if (key=='q') exitFlag=1;
-	   else if (key=='1') {
-	     if ((xplot!=3 && yplot!=1)){setZoomX1 = 0; setZoomX2 = 0;} 
-	     xplot=3; yplot=1;fitFlag=1; setZoomY1 = 0; setZoomY2 =0;
-	     if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 1");
-	   }
-	   else if (key=='2') {
-	     if ((xplot!=3 && yplot!=2)){setZoomX1 = 0; setZoomX2 = 0;} 
-	     xplot=3; yplot=2;fitFlag=2;setZoomY1 = 0; setZoomY2 =0;
-	     if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 2");
-	   }
+            else if (key=='1') {
+                if ((xplot!=3 && yplot!=1)){setZoomX1 = 0; setZoomX2 = 0;} 
+                xplot=3; yplot=1;fitFlag=1; setZoomY1 = 0; setZoomY2 =0;
+                if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 1");
+            }
+            else if (key=='2') {
+                if ((xplot!=3 && yplot!=2)){setZoomX1 = 0; setZoomX2 = 0;} 
+                xplot=3; yplot=2;fitFlag=2;setZoomY1 = 0; setZoomY2 =0;
+                if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 2");
+            }
             else if (key=='3' && psr[0].param[param_pb].paramSet[0]==1) {xplot=4;yplot=1;fitFlag=3;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
             else if (key=='4' && psr[0].param[param_pb].paramSet[0]==1) {xplot=4;yplot=2;fitFlag=4;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
             else if (key=='5') {xplot=5; yplot=1;fitFlag=5;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
