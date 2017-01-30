@@ -319,6 +319,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/%s",getenv("TEMPO2"),psr->ephemeris);
         else if (strcmp(psr->ephemeris,"DE421")==0)
             sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/DE421.1950.2050",getenv("TEMPO2"));
+        else if (strcmp(psr->ephemeris,"DE435")==0)
+		{
+            sprintf(psr->ephemeris,"%s/ephemeris/de435t.bsp",getenv("TEMPO2"));
+			psr->useCalceph = 1;
+		}
+        else if (strcmp(psr->ephemeris,"DE436")==0)
+		{
+            sprintf(psr->ephemeris,"%s/ephemeris/de436t.bsp",getenv("TEMPO2"));
+			psr->useCalceph = 1;
+		}
         else
             sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/%s.1950.2050",getenv("TEMPO2"),psr->ephemeris);
     }
