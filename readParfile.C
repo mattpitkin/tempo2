@@ -321,12 +321,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/DE421.1950.2050",getenv("TEMPO2"));
         else if (strcmp(psr->ephemeris,"DE435")==0)
 		{
-            sprintf(psr->ephemeris,"%s/ephemeris/de435t.bsp",getenv("TEMPO2"));
+            sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/de435t.bsp",getenv("TEMPO2"));
 			psr->useCalceph = 1;
 		}
         else if (strcmp(psr->ephemeris,"DE436")==0)
 		{
-            sprintf(psr->ephemeris,"%s/ephemeris/de436t.bsp",getenv("TEMPO2"));
+            sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/de436t.bsp",getenv("TEMPO2"));
 			psr->useCalceph = 1;
 		}
         else
@@ -335,13 +335,14 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"EPHEM_FILE")==0)
     {
         fscanf(fin,"%s",psr->ephemeris);
-        strcpy(psr->JPL_EPHEMERIS,psr->ephemeris);
+        strcpy(psr->JPL_EPHEMERIS, psr->ephemeris);
     }
     else if (strcasecmp(str,"EPH_FILE")==0)
     {
         char temp[1024];
         fscanf(fin,"%s",temp);
         sprintf(psr->ephemeris,"%s",temp);
+        strcpy(psr->JPL_EPHEMERIS, psr->ephemeris);
         psr->useCalceph = 1;
     }
     else if (strcasecmp(str,"TOFFSET")==0) /* Time offset */
