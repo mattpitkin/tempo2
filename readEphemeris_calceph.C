@@ -73,11 +73,11 @@ void readEphemeris_calceph(pulsar *psr,int npsr)
 
     for (p=0;p<npsr;p++)
     {
-        eph = calceph_open(psr[p].ephemeris);
+        eph = calceph_open(psr[p].JPL_EPHEMERIS);
         if (eph) {
-            printf("Successfully opened ephemeris >%s<\n",psr[p].ephemeris);
+            printf("Successfully opened ephemeris >%s<\n",psr[p].JPL_EPHEMERIS);
         } else {
-            printf("Error: unable to open ephemeris >%s< for pulsar >%s<\n",psr[p].ephemeris,psr[p].name);
+            printf("Error: unable to open ephemeris >%s< for pulsar >%s<\n",psr[p].JPL_EPHEMERIS, psr[p].name);
             exit(1);
         }
         // Now read the ephemeris for each observation
@@ -218,11 +218,11 @@ void tt2tb_calceph(pulsar *psr, int npsr)
 
     for (p=0;p<npsr;p++)
     {
-        eph = calceph_open(psr[p].ephemeris);
+        eph = calceph_open(psr[p].JPL_EPHEMERIS);
         if (eph) {
-            printf("Successfully opened ephemeris >%s<\n",psr[p].ephemeris);
+            printf("Successfully opened ephemeris >%s<\n",psr[p].JPL_EPHEMERIS);
         } else {
-            printf("Error: unable to open ephemeris >%s< for pulsar >%s<\n",psr[p].ephemeris,psr[p].name);
+            printf("Error: unable to open ephemeris >%s< for pulsar >%s<\n",psr[p].JPL_EPHEMERIS,psr[p].name);
             exit(1);
         }
         // Now read the ephemeris for each observation
