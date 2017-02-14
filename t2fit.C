@@ -287,6 +287,13 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             psr[ipsr].fitChisq = chisq;
             psr[ipsr].fitNfree = psr_ndata + nConstraints - nParams;
 
+
+            psr[ipsr].nParam = psr[ipsr].fitinfo.nParams;
+            for (int iparam = 0; iparam <  psr[ipsr].nParam; ++iparam){
+                psr[ipsr].fitParamI[iparam] = psr[ipsr].fitinfo.paramIndex[iparam];
+                psr[ipsr].fitParamK[iparam] = psr[ipsr].fitinfo.paramCounters[iparam];
+            }
+
             logdbg("Updating the parameters");
             logtchk("updating the parameter values");
             /*
