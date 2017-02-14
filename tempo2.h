@@ -887,6 +887,9 @@ extern "C" {
     void equ2ecl(double *x);
     void copyParam(parameter p1,parameter *p2);
     void copyPSR(pulsar *p,int p1,int p2);
+
+    void updateEpoch_str(pulsar* psr, int p, const char* newEpoch);
+    void updateEpoch(pulsar* psr, int p, longdouble nMJD);
     longdouble getParameterValue(pulsar *psr,int param,int arr);
     void simplePlot(pulsar *psr, double unitFlag);
     double solarWindModel(pulsar psr,int iobs);
