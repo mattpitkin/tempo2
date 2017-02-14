@@ -1,5 +1,3 @@
-[![Build Status](https://drone.io/bitbucket.org/psrsoft/tempo2/status.png)](https://drone.io/bitbucket.org/psrsoft/tempo2/latest)
-
 Git INSTALLATION README
 =======================
 
