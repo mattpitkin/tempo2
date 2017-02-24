@@ -58,6 +58,7 @@ AC_DEFUN([SWIN_LIB_PGPLOT],
   ac_save_LIBS="$LIBS"
   LIBS="$ac_save_LIBS $PGPLOT_LIBS"
   CFLAGS="$ac_save_CFLAGS $PGPLOT_CFLAGS"
+  CXXFLAGS="$ac_save_CFLAGS $PGPLOT_CFLAGS"
 
   AC_TRY_LINK([#include <cpgplot.h>],[cpgopen(""); cpgend();],
               have_pgplot=yes, have_pgplot=no)
