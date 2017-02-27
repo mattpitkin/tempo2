@@ -59,11 +59,7 @@ AC_DEFUN([SWIN_LIB_PGPLOT],
   ac_save_LIBS="$LIBS"
   LIBS="$ac_save_LIBS $PGPLOT_LIBS"
   CFLAGS="$ac_save_CFLAGS $PGPLOT_CFLAGS"
-<<<<<<< HEAD
-  CXXFLAGS="$ac_save_CFLAGS $PGPLOT_CFLAGS"
-=======
   CXXFLAGS="$ac_save_CXXFLAGS $PGPLOT_CFLAGS"
->>>>>>> remotes/psrsoft/tempo2/master
 
   AC_TRY_LINK([#include <cpgplot.h>],[cpgopen(""); cpgend();],
               have_pgplot=yes, have_pgplot=no)
