@@ -46,6 +46,7 @@ void help() /* Display help */
     printf("-param label    : stride fit for this parameter\n");
     printf("-delta          : output offset from orig fit.\n");
     printf("-delta_epoch    : output offset from orig fit, corrected for the change in epoch.\n");
+    printf("-pars           : write .par files with start/finish flags.\n");
     printf("                  Note - this will remove F1, PM in .par file etc from output.\n");
     printf("                  \n");
     printf("Use e.g. -nofit to prevent initial fit.\n");
@@ -70,10 +71,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     int param_k[MAX_P];
     double values[MAX_E][MAX_P];
     double errors[MAX_E][MAX_P];
+    double starts[MAX_E];
+    double ends[MAX_E];
 
     double ovalues[MAX_P];
     bool delta=false;
     bool delta_correct_epoch=false;
+    char pars=0;
 
     const char *CVS_verNum = "$Revision: 1.1 $";
 
@@ -99,6 +103,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             end=atof(argv[++i]);
         } else if(strcmp(argv[i],"-delta")==0){
             delta=true;
+        } else if(strcmp(argv[i],"-pars")==0){
+            pars=1;
         } else if(strcmp(argv[i],"-delta_epoch")==0){
             delta=true;
             delta_correct_epoch=true;
@@ -154,6 +160,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
     double t=start+width/2.0;
     unsigned int iepoch=0;
+    char outpar[80];
+    strcpy(outpar,"");
 
     logmsg("%lf %lf",t,end);
     while (t < end) {
@@ -162,6 +170,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             for (int k=0; k < psr[0].param[ip].aSize; ++k){
                 psr->param[ip].fitFlag[k]=0;
             }
+        }
+        for (int ij=0; ij <= psr->nJumps; ++ij) {
+            psr->fitJump[ij]=0;
         }
         for (int ip=0; ip < nparam; ++ip){
             psr->param[params[ip]].fitFlag[param_k[ip]] = 1;
@@ -173,6 +184,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         psr->param[param_finish].val[0] = t+width/2.0;
         psr->param[param_finish].paramSet[0] = 1;
         psr->param[param_finish].fitFlag[0] = 1;
+
+        starts[iepoch] = t-width/2.0;
+        ends[iepoch] = t+width/2.0;
 
         updateEpoch(psr,0,t);
 
@@ -187,10 +201,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
         formResiduals(psr,*npsr,1);    /* Form the residuals                 */
 
+        int ndata=0;
+        for (int i=0; i < psr->nobs; ++i) {
+            if( psr->obsn[i].bat > psr->param[param_start].val[0] 
+                    && psr->obsn[i].bat < psr->param[param_finish].val[0]
+                    ) ndata++;
+        }
+
+        if(ndata < (nparam+2)){
+            t += dt;
+            continue;
+        }
+
+
         t2Fit(psr,*npsr,covarFuncFile);
         formBatsAll(psr,*npsr);                /* Form Barycentric arrival times */
         formResiduals(psr,*npsr,1);       /* Form residuals */
-        textOutput(psr,*npsr,globalParameter,0,0,0,"");
+        if(pars){
+            sprintf(outpar,"stride.%lf",t);
+        }
+        textOutput(psr,*npsr,globalParameter,0,0,pars,outpar);
 
         for (int ip=0; ip < nparam; ++ip){
             values[iepoch][ip] = psr->param[params[ip]].val[param_k[ip]];
@@ -226,6 +256,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         for (int ip=0; ip < nparam; ++ip){
             fprintf(out,"\t%.20g\t%g",values[iepoch][ip], errors[iepoch][ip]);
         }
+
+        fprintf(out,"\t%.20g\t%g",starts[iepoch], ends[iepoch]);
         t+=dt;
         fprintf(out,"\n");
     }
