@@ -15,6 +15,10 @@ def fakeGWsources(args):
     # Read the .par and .tim file
     toas,par = header.readParTim()
 
+    header.nrealisations=1
+    header.ntoa = len(toas)
+
+
     # Just a debug print the content
     print toas[0]
     print par['coord']
