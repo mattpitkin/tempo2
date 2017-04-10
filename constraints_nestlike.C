@@ -89,3 +89,48 @@ double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int ipa
         return 0;
     }
 }
+
+double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+    assert(iconstraint == constraint_band_red_sin || iconstraint == constraint_band_red_cos);
+
+    /* Constrain if
+     *   This frequency matches the constraint frequency
+     * and
+     *   Sin/cos matches
+     */
+    if (constraintk==k &&
+            (
+             ((iconstraint == constraint_band_red_sin) && (iparam == param_band_red_sin)) ||
+             ((iconstraint == constraint_band_red_cos) && (iparam == param_band_red_cos)) )
+       ) {
+        int iband = 0;
+        int ichan = k;
+        while (ichan >= psr[ipsr].TNBandNoiseC[iband]){
+            ichan -= psr[ipsr].TNBandNoiseC[iband];
+            ++iband;
+        }
+
+        // we are in channel ichan, band iband.
+
+
+
+        double BandLF = psr[ipsr].TNBandNoiseLF[iband];
+        double BandHF = psr[ipsr].TNBandNoiseHF[iband];
+        double BandAmp=pow(10.0, psr[ipsr].TNBandNoiseAmp[iband]);
+        double BandSpec=psr[ipsr].TNBandNoiseGam[iband];
+
+
+        double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+        double freq = ((double)(ichan+1.0))/(maxtspan);
+
+
+        /***
+         * No idea what this equation represents! Copied from LL's code MJK2016
+         */
+
+        double rho = (BandAmp*BandAmp/12.0/(M_PI*M_PI))*pow(f1yr,(-3)) * pow(freq*365.25,(-BandSpec))/(maxtspan*24*60*60);	
+        return 1.0/sqrt(rho);
+    } else return 0;
+
+}
+
