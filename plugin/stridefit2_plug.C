@@ -185,8 +185,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         psr->param[param_finish].paramSet[0] = 1;
         psr->param[param_finish].fitFlag[0] = 1;
 
-        starts[iepoch] = t-width/2.0;
-        ends[iepoch] = t+width/2.0;
 
         updateEpoch(psr,0,t);
 
@@ -213,6 +211,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             continue;
         }
 
+
+        starts[iepoch] = t-width/2.0;
+        ends[iepoch] = t+width/2.0;
 
         t2Fit(psr,*npsr,covarFuncFile);
         formBatsAll(psr,*npsr);                /* Form Barycentric arrival times */
