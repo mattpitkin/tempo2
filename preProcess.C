@@ -424,7 +424,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                 sprintf(str,"%s/%s_%s_splug.t2",tempo2_plug_path[iplug],
                         selectPlugName,tempo2MachineType);
                 logmsg("Looking for %s",str);
-                module = dlopen(str, RTLD_NOW); 
+                module = dlopen(str, RTLD_NOW|RTLD_GLOBAL); 
                 if(module==NULL){	  
                     printf("dlerror() = %s\n",dlerror());
                 } else break;
@@ -434,7 +434,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
             //	  sprintf(str,"%s/plugins/%s_%s_splugt2",getenv(TEMPO2_ENVIRON),
             //		  selectPlugName,tempo2MachineType);
             //	  printf("Looking for %s\n",str);
-            //	  module = dlopen(str, RTLD_NOW); 
+            //	  module = dlopen(str, RTLD_NOW|RTLD_GLOBAL); 
             if(!module)  {
                 fprintf(stderr, "[error]: dlopen() failed while resolving symbols.\n" );
                 fprintf(stderr, "dlerror() = %s\n",dlerror());
