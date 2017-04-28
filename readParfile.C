@@ -4,23 +4,23 @@
 //  Copyright (C) 2006,2007,2008,2009, George Hobbs, Russell Edwards
 
 /*
- *    This file is part of TEMPO2. 
- * 
- *    TEMPO2 is free software: you can redistribute it and/or modify 
- *    it under the terms of the GNU General Public License as published by 
- *    the Free Software Foundation, either version 3 of the License, or 
- *    (at your option) any later version. 
- *    TEMPO2 is distributed in the hope that it will be useful, 
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- *    GNU General Public License for more details. 
- *    You should have received a copy of the GNU General Public License 
- *    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>. 
+ *    This file is part of TEMPO2.
+ *
+ *    TEMPO2 is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *    TEMPO2 is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *    You should have received a copy of the GNU General Public License
+ *    along with TEMPO2.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /*
- *    If you use TEMPO2 then please acknowledge it by citing 
- *    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2, 
+ *    If you use TEMPO2 then please acknowledge it by citing
+ *    Hobbs, Edwards & Manchester (2006) MNRAS, Vol 369, Issue 2,
  *    pp. 655-672 (bibtex: 2006MNRAS.369..655H)
  *    or Edwards, Hobbs & Manchester (2006) MNRAS, VOl 372, Issue 4,
  *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
@@ -56,10 +56,10 @@ int setupParameterFileDefaults(pulsar *psr)
     return 0;
 }
 
-/* ******************************************** 
+/* ********************************************
  * readSimpleParfile
  *
- * a simple read of a standard T2 parameter file 
+ * a simple read of a standard T2 parameter file
  * mainly used for PSRCHIVE applications
  *
  * Currently not working for ecliptic coordinates
@@ -89,7 +89,7 @@ int readSimpleParfile (FILE *fin, pulsar *p)
     for (j=0;j<elong.aSize;j++)
     {
         elong.paramSet[j] = 0;
-        elong.err[j]      = 0.0;	     
+        elong.err[j]      = 0.0;
     }
 
     elat.aSize = 1;
@@ -111,7 +111,7 @@ int readSimpleParfile (FILE *fin, pulsar *p)
     for (j=0;j<elat.aSize;j++)
     {
         elat.paramSet[0] = 0;
-        elat.err[j]      = 0.0;	     
+        elat.err[j]      = 0.0;
     }
 
     while (!feof(fin))
@@ -210,7 +210,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         char val[1000];
         fscanf(fin,"%s", val);
-        psr->dilateFreq = 
+        psr->dilateFreq =
             (val[0]=='1'||val[0]=='y'||val[0]=='Y');
     }
     else if (strcasecmp(str,"IBOOT")==0)
@@ -244,18 +244,18 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         char unit[1000];
         fscanf(fin,"%s", unit);
-        if (strcasecmp(unit,"IF99")==0) 
+        if (strcasecmp(unit,"IF99")==0)
             psr->timeEphemeris = IF99_TIMEEPH;
-        else if (strcasecmp(unit,"FB90")==0) 
+        else if (strcasecmp(unit,"FB90")==0)
             psr->timeEphemeris = FB90_TIMEEPH;
     }
     else if (strcasecmp(str, "T2CMETHOD")==0)
     {
         char unit[1000];
         fscanf(fin,"%s", unit);
-        if (strcasecmp(unit,"IAU2000B")==0) 
+        if (strcasecmp(unit,"IAU2000B")==0)
             psr->t2cMethod = T2C_IAU2000B;
-        else if (strcasecmp(unit,"TEMPO")==0) 
+        else if (strcasecmp(unit,"TEMPO")==0)
             psr->t2cMethod = T2C_TEMPO;
     }
     else if (strcasecmp(str, "CLK_CORR_CHAIN")==0)
@@ -310,25 +310,13 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         }
 
     }
-    else if (strcasecmp(str,"EPHEM")==0) 
+    else if (strcasecmp(str,"EPHEM")==0)
     {
         fscanf(fin,"%s",psr->ephemeris);
-        if (strcmp(psr->ephemeris, "DE414")==0)	
+        if (strcmp(psr->ephemeris, "DE414")==0)
             sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/DE414.1960.2020",getenv("TEMPO2"));
         else if (strcmp(psr->ephemeris,"INPOP06")==0)
             sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/%s",getenv("TEMPO2"),psr->ephemeris);
-        else if (strcmp(psr->ephemeris,"DE421")==0)
-            sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/DE421.1950.2050",getenv("TEMPO2"));
-        else if (strcmp(psr->ephemeris,"DE435")==0)
-		{
-            sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/de435t.bsp",getenv("TEMPO2"));
-			psr->useCalceph = 1;
-		}
-        else if (strcmp(psr->ephemeris,"DE436")==0)
-		{
-            sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/de436t.bsp",getenv("TEMPO2"));
-			psr->useCalceph = 1;
-		}
         else
             sprintf(psr->JPL_EPHEMERIS,"%s/ephemeris/%s.1950.2050",getenv("TEMPO2"),psr->ephemeris);
     }
@@ -514,7 +502,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         int fval;
         if (sscanf(str+2,"%d",&fval)==1)
         {
-            if (fval<psr->param[param_f].aSize) 
+            if (fval<psr->param[param_f].aSize)
                 readValue(psr,str,fin,&(psr->param[param_fd]),fval-1);
         }
     }
@@ -589,7 +577,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"TELX")==0)
         readValue(psr,str,fin,&(psr->param[param_telx]),0);
     else if ((str[0]=='T' || str[0]=='t') &&  /* Higher DM derivatives */
-            (str[1]=='E' || str[1]=='e') && 
+            (str[1]=='E' || str[1]=='e') &&
             (str[2]=='L' || str[2]=='l') &&
             (str[3]=='X' || str[3]=='x') && isdigit(str[4]))
     {
@@ -603,7 +591,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"TELY")==0)
         readValue(psr,str,fin,&(psr->param[param_tely]),0);
     else if ((str[0]=='T' || str[0]=='t') &&  /* Higher DM derivatives */
-            (str[1]=='E' || str[1]=='e') && 
+            (str[1]=='E' || str[1]=='e') &&
             (str[2]=='L' || str[2]=='l') &&
             (str[3]=='Y' || str[3]=='y') && isdigit(str[4]))
     {
@@ -617,7 +605,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"TELZ")==0)
         readValue(psr,str,fin,&(psr->param[param_telz]),0);
     else if ((str[0]=='T' || str[0]=='t') &&  /* Higher DM derivatives */
-            (str[1]=='E' || str[1]=='e') && 
+            (str[1]=='E' || str[1]=='e') &&
             (str[2]=='L' || str[2]=='l') &&
             (str[3]=='Z' || str[3]=='z') && isdigit(str[4]))
     {
@@ -653,7 +641,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 
     /* ----------------- */
     /* Whitening params  */
-    /* ----------------- */ 
+    /* ----------------- */
     else if (strcasecmp(str,"WAVE_OM")==0) /* Fundamental frequency */
     {
         readValue(psr,str,fin,&(psr->param[param_wave_om]),0);
@@ -695,7 +683,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 
     /* ------------------- */
     /* Quad polar function */
-    /* ------------------- */ 
+    /* ------------------- */
     else if (strcasecmp(str,"QUAD_OM")==0) /* Fundamental frequency */
         readValue(psr,str,fin,&(psr->param[param_quad_om]),0);
     else if (strcasecmp(str,"QUAD_POS")==0) // Position of quadrupole
@@ -718,7 +706,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
      * DMMODEL fitting.
      *
      */
-    else if (strcasecmp(str,"DMMODEL")==0) 
+    else if (strcasecmp(str,"DMMODEL")==0)
     {
         readValue(psr,str,fin,&(psr->param[param_dmmodel]),0);
         psr->dmoffsCMnum=0;
@@ -745,11 +733,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         if (psr->dmoffsDMnum > MAX_IFUNC){
             fprintf(stderr,"ERROR: Too many DMMODEL DM values - need to increase MAX_IFUNC\n");
             exit(1);
-        } 
+        }
         if (psr->dmoffsCMnum > MAX_IFUNC){
             fprintf(stderr,"ERROR: Too many DMMODEL CM values - need to increase MAX_IFUNC\n");
             exit(1);
-        } 
+        }
     }
     else if (strcasecmp(str,"_DM")==0)
     {
@@ -765,7 +753,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         if (psr->dmoffsDMnum > MAX_IFUNC){
             fprintf(stderr,"ERROR: Too many DMMODEL DM values - need to increase MAX_IFUNC\n");
             exit(1);
-        } 
+        }
     }
     else if (strcasecmp(str,"_CM")==0)
     {
@@ -782,7 +770,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         if (psr->dmoffsCMnum > MAX_IFUNC){
             fprintf(stderr,"ERROR: Too many CMMODEL CM values - need to increase MAX_IFUNC\n");
             exit(1);
-        } 
+        }
     }
 
     else if (strcasecmp(str,"CONSTRAINT_EFACTOR")==0){
@@ -910,9 +898,9 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     /*
      * Single source graviational waves (GWs)
      */
-    else if (strcasecmp(str,"CGW_FREQ")==0) 
+    else if (strcasecmp(str,"CGW_FREQ")==0)
         readValue(psr,str,fin,&(psr->param[param_cgw]),0);
-    else if (strcasecmp(str,"GW_SINGLE")==0) 
+    else if (strcasecmp(str,"GW_SINGLE")==0)
         readValue(psr,str,fin,&(psr->param[param_gwsingle]),0);
     else if (strcasecmp(str,"GW_POSITION")==0)
         fscanf(fin,"%lf %lf",&psr->gwsrc_ra,&psr->gwsrc_dec);
@@ -934,7 +922,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf",&psr->cgw_mc);
 
     // Eccentric binary source graviational waves -- Vikram Ravi
-    else if (strcasecmp(str,"GWECC_AMP")==0) 
+    else if (strcasecmp(str,"GWECC_AMP")==0)
         readValue(psr,str,fin,&(psr->param[param_gwecc]),0);
     else if (strcasecmp(str,"GWECC_POSITION")==0)
         fscanf(fin,"%lf %lf",&psr->gwecc_ra,&psr->gwecc_dec);
@@ -964,7 +952,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         fscanf(fin,"%d",&psr->gwecc_pulsarTermOn);
         // 0 - no, 1 - yes, 2 - only
-        if (psr->param[param_gwecc].paramSet[0] == 1) 
+        if (psr->param[param_gwecc].paramSet[0] == 1)
         {
             strcpy(psr->param[param_gwecc].label[0],"GWECC_AMP");
             strcpy(psr->param[param_gwecc].shortlabel[0],"GWECC_AMP");
@@ -1121,16 +1109,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         psr->phaseJump[psr->nPhaseJump] = parse_longdouble(str);
         psr->phaseJumpID[psr->nPhaseJump]=-1;
         psr->nPhaseJump++;
-    }  
+    }
 
     /* /---------\
        | T2 EFAC |
        \---------/ */
     else if( strcasecmp( str, "T2EFAC") == 0 ) // EFAC for given flag
-    { 
+    {
         int nefacFlag = psr->nT2efac;
-        fscanf( fin, "%s %s %lf", psr->T2efacFlagID[nefacFlag], 
-                psr->T2efacFlagVal[nefacFlag], 
+        fscanf( fin, "%s %s %lf", psr->T2efacFlagID[nefacFlag],
+                psr->T2efacFlagVal[nefacFlag],
                 &psr->T2efacVal[nefacFlag] );
         ( psr->nT2efac )++;
     }
@@ -1139,10 +1127,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
        | T2 EQUAD |
        \----------/ */
     else if( strcasecmp( str, "T2EQUAD") == 0 ) // EQUAD for given flag
-    { 
+    {
         int nequadFlag = psr->nT2equad;
-        fscanf( fin, "%s %s %lf", psr->T2equadFlagID[nequadFlag], 
-                psr->T2equadFlagVal[nequadFlag], 
+        fscanf( fin, "%s %s %lf", psr->T2equadFlagID[nequadFlag],
+                psr->T2equadFlagVal[nequadFlag],
                 &psr->T2equadVal[nequadFlag] );
         ( psr->nT2equad )++;
     }
@@ -1205,7 +1193,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     /* /---------\
        | TN ECORR |
        \---------/ */
-    else if( strcasecmp( str, "ECORR") == 0 || strcasecmp( str, "TNECORR") == 0)  
+    else if( strcasecmp( str, "ECORR") == 0 || strcasecmp( str, "TNECORR") == 0)
         // ECORR for given flag
     {
         int necorrFlag = psr->nTNECORR;
@@ -1263,12 +1251,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
        | TNBandDM |
        \---------/ */
 
-    else if (strcasecmp(str,"TNBandDM")==0){ /* TempoNest Band DM */   
-        fscanf( fin, "%lf %lf %d", 
+    else if (strcasecmp(str,"TNBandDM")==0){ /* TempoNest Band DM */
+        fscanf( fin, "%lf %lf %d",
                 &psr->TNBandDMAmp,
                 &psr->TNBandDMGam,
                 &psr->TNBandDMC);
-    }    
+    }
 
     /* /-------------\
        | TNBandNoise |
@@ -1279,7 +1267,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf( fin, "%lf %lf %lf %lf %d",
                 &psr->TNBandNoiseLF[nTNBandNoiseFlag],
                 &psr->TNBandNoiseHF[nTNBandNoiseFlag],
-                &psr->TNBandNoiseAmp[nTNBandNoiseFlag],	
+                &psr->TNBandNoiseAmp[nTNBandNoiseFlag],
                 &psr->TNBandNoiseGam[nTNBandNoiseFlag],
                 &psr->TNBandNoiseC[nTNBandNoiseFlag]);
         ( psr->nTNBandNoise )++;
@@ -1291,7 +1279,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
        | TNGroupNoise |
        \------------ -/ */
 
-    else if (strcasecmp(str,"TNGroupNoise")==0){ /* TempoNest Group Noise */   
+    else if (strcasecmp(str,"TNGroupNoise")==0){ /* TempoNest Group Noise */
         int nTNGroupNoiseFlag = psr->nTNGroupNoise;
         fscanf( fin, "%s %s %lf %lf %d", psr->TNGroupNoiseFlagID[nTNGroupNoiseFlag],
                 psr->TNGroupNoiseFlagVal[nTNGroupNoiseFlag],
@@ -1299,7 +1287,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 &psr->TNGroupNoiseGam[nTNGroupNoiseFlag],
                 &psr->TNGroupNoiseC[nTNGroupNoiseFlag]);
         ( psr->nTNGroupNoise )++;
-    }    
+    }
 
 
 
@@ -1307,9 +1295,9 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
        | TNDMEvents |
        \---------/ */
 
-    else if (strcasecmp(str,"TNDMEvent")==0){ /* TempoNest DM Event Start position */   
+    else if (strcasecmp(str,"TNDMEvent")==0){ /* TempoNest DM Event Start position */
         int nTNDMEv = psr->nDMEvents;
-        fscanf( fin, "%lf %lf %lf %lf %d %d %d", 
+        fscanf( fin, "%lf %lf %lf %lf %d %d %d",
                 &psr->TNDMEvStart[nTNDMEv],
                 &psr->TNDMEvLength[nTNDMEv],
                 &psr->TNDMEvAmp[nTNDMEv],
@@ -1319,7 +1307,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 &psr->TNDMEvQuad[nTNDMEv]);
 
         ( psr->nDMEvents )++;
-    }    
+    }
 
 
 
@@ -1329,16 +1317,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
        \-----------------/ */
 
 
-    else if (strcasecmp(str,"TNShapeletEvent")==0){ /* TempoNest DM Shapelet Event Start position */   
+    else if (strcasecmp(str,"TNShapeletEvent")==0){ /* TempoNest DM Shapelet Event Start position */
         int nTNEv = psr->nTNShapeletEvents;
-        fscanf( fin, "%d %lf %lf %lf", 
+        fscanf( fin, "%d %lf %lf %lf",
                 &psr->TNShapeletEvN[nTNEv],
                 &psr->TNShapeletEvPos[nTNEv],
                 &psr->TNShapeletEvWidth[nTNEv],
                 &psr->TNShapeletEvFScale[nTNEv]);
 
         ( psr->nTNShapeletEvents )++;
-    }        
+    }
 
     /* ----------------- */
     /* Binary Parameters */
@@ -1358,7 +1346,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     /* BT Binary parameters */
     else if (strcasecmp(str,"A1")==0)
         readValue(psr,str,fin,&(psr->param[param_a1]),0);
-    else if (strcasecmp(str,"A1DOT")!=0 && (str[0]=='A' || str[0]=='a') && 
+    else if (strcasecmp(str,"A1DOT")!=0 && (str[0]=='A' || str[0]=='a') &&
             (str[1]=='1'))
     {
         int val;
@@ -1367,18 +1355,18 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             if (val-1<psr->param[param_a1].aSize)
                 readValue(psr,str,fin,&(psr->param[param_a1]),val-1);
         }
-    }       
+    }
     else if (strcasecmp(str,"EDOT")==0 || strcasecmp(str,"ECCDOT")==0)
     {
         readValue(psr,str,fin,&(psr->param[param_edot]),0);
-        if (fabs(psr->param[param_edot].val[0]) > 1e-7) 
+        if (fabs(psr->param[param_edot].val[0]) > 1e-7)
             psr->param[param_edot].val[0] *= 1.0e-12;
     }
     else if (strcasecmp(str,"E")==0 || strcmp(str,"ECC")==0)
         readValue(psr,str,fin,&(psr->param[param_ecc]),0);
     else if (((str[0]=='E' || str[0]=='e') &&  /* Higher ECC derivatives */
                 (str[1]=='C' || str[1]=='c') &&
-                (str[2]=='C' || str[2]=='c')) || 
+                (str[2]=='C' || str[2]=='c')) ||
             ((str[0]=='E' || str[0]=='e') && str[1]=='_'))
     {
         int eccval;
@@ -1389,10 +1377,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             if (eccval-1<psr->param[param_ecc].aSize)
                 readValue(psr,str,fin,&(psr->param[param_ecc]),eccval-1);
         }
-    }       
+    }
     else if (strcasecmp(str,"T0")==0)
         readValue(psr,str,fin,&(psr->param[param_t0]),0);
-    else if ((str[0]=='T' || str[0]=='t') && 
+    else if ((str[0]=='T' || str[0]=='t') &&
             (str[1]=='0'))
     {
         int val;
@@ -1401,10 +1389,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             if (val-1<psr->param[param_t0].aSize)
                 readValue(psr,str,fin,&(psr->param[param_t0]),val-1);
         }
-    }       
+    }
     else if (strcasecmp(str,"OM")==0)
         readValue(psr,str,fin,&(psr->param[param_om]),0);
-    /*  else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') && 
+    /*  else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') &&
         (str[1]=='M' || str[1]=='m'))
         {
         int val;
@@ -1413,14 +1401,14 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         if (val-1<psr->param[param_om].aSize)
         readValue(psr,str,fin,&(psr->param[param_om]),val);
         }
-        }*/    
+        }*/
         else if  (strcasecmp(str,"OM2DOT")==0)
         {
             readValue(psr,str,fin,&(psr->param[param_om2dot]),0);
 
         }
 
-        else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') && 
+        else if (strcasecmp(str,"OMDOT")!=0 && (str[0]=='O' || str[0]=='o') &&
                 (str[1]=='M' || str[1]=='m'))
         {
             int val;
@@ -1452,7 +1440,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                     if (pbval > psr->nCompanion) psr->nCompanion=pbval;
                 }
             }
-        }       
+        }
         else if (str[0]=='F' && str[1]=='B')
         {
             int fbval;
@@ -1506,8 +1494,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             if (fabs(psr->param[param_a1dot].val[0]) > 1e-7) /* Check units: DO BETTER JOB */
                 psr->param[param_a1dot].val[0]*=1.0e-12;
             psr->param[param_a1dot].prefit[0] = psr->param[param_a1dot].val[0];
-        }  
-        else if ( strcasecmp(str,"X2DOT")==0) 
+        }
+        else if ( strcasecmp(str,"X2DOT")==0)
         {
             // Ryan: set this value which is used in THE MSS model plugin
             // These shouldn't be used in the same place, so hopefully this doesn't cause anything to crash!
@@ -1532,7 +1520,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         {
 
             readValue(psr,str,fin,&(psr->param[param_eps1dot]),0);
-            if (fabs(psr->param[param_eps1dot].val[0]) > 1e-7) 
+            if (fabs(psr->param[param_eps1dot].val[0]) > 1e-7)
                 psr->param[param_eps1dot].val[0] *= 1.0e-12;
             psr->param[param_eps1dot].prefit[0] = psr->param[param_eps1dot].val[0];
         }
@@ -1541,7 +1529,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         else if (strcasecmp(str,"EPS2DOT")==0)
         {
             readValue(psr,str,fin,&(psr->param[param_eps2dot]),0);
-            if (fabs(psr->param[param_eps2dot].val[0]) > 1e-7) 
+            if (fabs(psr->param[param_eps2dot].val[0]) > 1e-7)
                 psr->param[param_eps2dot].val[0] *= 1.0e-12;
             psr->param[param_eps2dot].prefit[0] = psr->param[param_eps2dot].val[0];
         }
@@ -1642,7 +1630,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             fgets(str,1000,fin);
         else if (str[0]=='I') /* Comment line */
             fgets(str,1000,fin);
-        else 
+        else
         {
             displayMsg(1,(char *)"MISC1",(char *)"Unknown parameter in par file: ",str,psr->noWarnings);
         }
@@ -1666,7 +1654,7 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
         if(psr->param[param_wave_om].paramSet[0] == 1){
             copyParam(psr->param[param_pepoch],&(psr->param[param_waveepoch]));
             strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
-            strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH"); 
+            strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH");
             printf("Setting waveepoch to %g\n",(double)psr->param[param_waveepoch].val[0]);
         }else{
             // waveepoch isn't set, but neither is wave_om. Ergo: we're
@@ -1685,7 +1673,7 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
         if(psr->param[param_wave_dm].paramSet[0] == 1){
             copyParam(psr->param[param_pepoch],&(psr->param[param_waveepoch_dm]));
             strcpy(psr->param[param_waveepoch_dm].label[0],"WAVEEPOCHDM (MJD)");
-            strcpy(psr->param[param_waveepoch_dm].shortlabel[0],"WAVEEPOCHDM"); 
+            strcpy(psr->param[param_waveepoch_dm].shortlabel[0],"WAVEEPOCHDM");
             printf("Setting waveepoch to %g\n",(double)psr->param[param_waveepoch_dm].val[0]);
         }else{
             // waveepoch isn't set, but neither is wave_om. Ergo: we're
@@ -1776,7 +1764,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
     FILE *fin;
     int nread,p,j,k;
     char str[1000];
-    parameter elong,elat;	
+    parameter elong,elat;
     int noread=0,endit;
     const char *CVS_verNum = "$Id$";
 
@@ -1800,7 +1788,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
     for (j=0;j<elong.aSize;j++)
     {
         elong.paramSet[j] = 0;
-        elong.err[j]      = 0.0;	     
+        elong.err[j]      = 0.0;
     }
 
     elat.aSize = 1;
@@ -1820,7 +1808,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
     for (j=0;j<elat.aSize;j++)
     {
         elat.paramSet[0] = 0;
-        elat.err[j]      = 0.0;	     
+        elat.err[j]      = 0.0;
     }
 
 
@@ -1883,7 +1871,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
                     if (str[26]=='3') strcpy(psr[p].binaryModel,"DD");
                     if (str[26]=='4') strcpy(psr[p].binaryModel,"DDGR");
                     if (str[26]=='5') strcpy(psr[p].binaryModel,"H88");
-                    if (str[26]=='6') strcpy(psr[p].binaryModel,"BT+");	      
+                    if (str[26]=='6') strcpy(psr[p].binaryModel,"BT+");
                     if (str[26]=='7') strcpy(psr[p].binaryModel,"DDT");
                     if (str[26]=='8') strcpy(psr[p].binaryModel,"DD+");
                     if (str[26]=='9') strcpy(psr[p].binaryModel,"BT2P");
@@ -1891,21 +1879,21 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
                     strcpy(psr[p].JPL_EPHEMERIS,getenv(TEMPO2_ENVIRON));
                     strcat(psr[p].JPL_EPHEMERIS,"/ephemeris/DE200.1950.2050");
                     /* Now get parameter values */
-                    fgets(str,1000,fin);	      	     
+                    fgets(str,1000,fin);
                     strcpy(psr[p].name,str); psr[p].name[12]='\0';
                     getValue(str,21,40,&psr[p],param_raj,0);
                     getValue(str,41,60,&psr[p],param_decj,0);
                     getValue(str,61,70,&psr[p],param_pmra,0);
                     getValue(str,71,80,&psr[p],param_pmdec,0);
 
-                    fgets(str,1000,fin);	      	     
+                    fgets(str,1000,fin);
                     getValue(str,2,20,&psr[p],param_f,0);
                     getValue(str,21,40,&psr[p],param_f,1);
                     getValue(str,41,60,&psr[p],param_pepoch,0);
                     getValue(str,61,70,&psr[p],param_f,2);
                     getValue(str,71,80,&psr[p],param_px,0);
 
-                    fgets(str,1000,fin);	      	     
+                    fgets(str,1000,fin);
                     getValue(str,9,20,&psr[p],param_dm,0);
                     psr[p].fixedFormat = 4;
 
@@ -1942,7 +1930,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
                     {
                         if (noread==-1 && strcasecmp(str,"TOAS")==0)
                             endit=1;
-                        checkLine(&psr[p],str,fin,&elong,&elat); 
+                        checkLine(&psr[p],str,fin,&elong,&elat);
                     }
                 }
                 checkAllSet(&psr[p],elong,elat,parFile[p]);
@@ -1962,7 +1950,7 @@ void readParfile(pulsar *psr,char parFile[][MAX_FILELEN],char timFile[][MAX_FILE
     free(elong.fitFlag);  free(elong.paramSet);  free(elong.label);  free(elong.shortlabel);
 
     free(elat.val);  free(elat.err);  free(elat.prefit);  free(elat.prefitErr);
-    free(elat.fitFlag);  free(elat.paramSet);  free(elat.label);  free(elat.shortlabel); 
+    free(elat.fitFlag);  free(elat.paramSet);  free(elat.label);  free(elat.shortlabel);
 }
 
 
@@ -2005,7 +1993,7 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
         {
             parameter->linkTo[(parameter->nLinkTo)++] = param_px;
             psr->param[param_px].linkFrom[(psr->param[param_px].nLinkFrom)++] = param_dshk;
-            //I think the next two lines are superfluous since this is now all done in preProcess.C. 
+            //I think the next two lines are superfluous since this is now all done in preProcess.C.
             psr->param[param_dshk].val[0] = psr->param[param_px].val[0];
             psr->param[param_dshk].prefit[0] = getParameterValue(psr,param_dshk,0);
             psr->param[param_dshk].paramSet[0]=1;
@@ -2054,7 +2042,7 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
 
             return 0;
         }
-    } 
+    }
 
     /* Change e.g. D+02 to e+02 as expected in C */
     for (i=0;i<(int)strlen(str1);i++)
@@ -2086,7 +2074,7 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
         strcpy(psr->rajStrPre,str1);
         strcpy(psr->rajStrPost,str1);
         parameter->val[arr] = turn_deg(hms_turn(str1))*M_PI/180.0;
-        if (parameter->val[arr]<0) 
+        if (parameter->val[arr]<0)
         {
             char retstr[100];
             printf("ERROR: have negative RAJ: %.14lf\n",(double)parameter->val[arr]);
@@ -2105,7 +2093,7 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
     }
     else if (strcasecmp(pmtr,"EPHVER")==0) // Check strings for EPHVER
     {
-        if (strcasecmp(str1,"2")==0 || strcasecmp(str1,"5")==0) 
+        if (strcasecmp(str1,"2")==0 || strcasecmp(str1,"5")==0)
             parameter->val[arr] = parse_longdouble(str1);
         else if (strcasecmp(str1,"TEMPO1")==0)
             parameter->val[arr] = 2;
@@ -2166,7 +2154,7 @@ int readValue(pulsar *psr,char *pmtr,FILE *fin,parameter *parameter,int arr)
              parameter->val[arr]*psr->param[param_f].err[0]) *
             (2.0/psr->param[param_f].val[0]*parameter->val[arr]*
              parameter->val[arr]*psr->param[param_f].err[0]) +
-            (psr->param[param_f].val[0]*psr->param[param_f].val[0]*parameter->err[arr]) * 
+            (psr->param[param_f].val[0]*psr->param[param_f].val[0]*parameter->err[arr]) *
             (psr->param[param_f].val[0]*psr->param[param_f].val[0]*parameter->err[arr]);
     }
     /* Indicate that this parameter has been set */
@@ -2186,32 +2174,32 @@ void getValue(char *str,int v1,int v2,pulsar *psr,int label,int arr)
     segment[v2-v1+1]='\0';
     if (label == param_raj) /* Must convert to ':' form and to radians */
     {
-        strcpy(t1,str+v1);   t1[2]='\0'; 
-        strcpy(t2,str+v1+2); t2[2]='\0'; 
-        strcpy(t3,str+v1+4); t3[v2-v1-4]='\0'; 
+        strcpy(t1,str+v1);   t1[2]='\0';
+        strcpy(t2,str+v1+2); t2[2]='\0';
+        strcpy(t3,str+v1+4); t3[v2-v1-4]='\0';
         sprintf(temp,"%s:%s:%s",t1,t2,t3);
         temp[v2-v1+1+2]='\0';
         strcpy(psr->rajStrPre,temp);
-        psr->param[label].val[arr] = turn_deg(hms_turn(temp))*M_PI/180.0;	      
+        psr->param[label].val[arr] = turn_deg(hms_turn(temp))*M_PI/180.0;
         psr->param[label].paramSet[arr] = 1;
-        if (psr->param[label].val[arr]<0) 
+        if (psr->param[label].val[arr]<0)
         {
             logerr("Have negative RAJ: %.14lf",(double)psr->param[label].val[arr]);
             return;
         }
-        psr->param[label].prefit[arr] = psr->param[label].val[arr];   
+        psr->param[label].prefit[arr] = psr->param[label].val[arr];
     }
     else if (label == param_decj) /* Must convert to ':' form and to radians */
     {
-        strcpy(t1,str+v1);   t1[2]='\0'; 
-        strcpy(t2,str+v1+2); t2[2]='\0'; 
-        strcpy(t3,str+v1+4); t3[v2-v1-4]='\0'; 
+        strcpy(t1,str+v1);   t1[2]='\0';
+        strcpy(t2,str+v1+2); t2[2]='\0';
+        strcpy(t3,str+v1+4); t3[v2-v1-4]='\0';
         psr->param[label].paramSet[arr] = 1;
         sprintf(temp,"%s:%s:%s",t1,t2,t3);
         temp[v2-v1+1+2]='\0';
         strcpy(psr->decjStrPre,temp);
-        psr->param[label].val[arr] = turn_deg(dms_turn(temp))*M_PI/180.0;	      
-        psr->param[label].prefit[arr] = psr->param[label].val[arr];   
+        psr->param[label].val[arr] = turn_deg(dms_turn(temp))*M_PI/180.0;
+        psr->param[label].prefit[arr] = psr->param[label].val[arr];
     }
     else
     {
