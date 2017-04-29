@@ -255,8 +255,14 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%s", unit);
         if (strcasecmp(unit,"IAU2000B")==0)
             psr->t2cMethod = T2C_IAU2000B;
-        else if (strcasecmp(unit,"TEMPO")==0)
+        else if (strcasecmp(unit,"TEMPO")==0){
             psr->t2cMethod = T2C_TEMPO;
+            if (psr->useCalceph){
+                displayMsg(1,(char *)"T2C",(char *)"Using Calceph with TEMPO T2CMETHOD. Setting T2CMETHOD to IAU2000B.",
+                    (char *)"",psr->noWarnings);
+                psr->t2cMethod = T2C_IAU2000B;
+            }
+        }
     }
     else if (strcasecmp(str, "CLK_CORR_CHAIN")==0)
     {
@@ -332,6 +338,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         sprintf(psr->ephemeris,"%s",temp);
         strcpy(psr->JPL_EPHEMERIS, psr->ephemeris);
         psr->useCalceph = 1;
+        if (psr->t2cMethod == T2C_TEMPO){
+            displayMsg(1,(char *)"T2C",(char *)"Using Calceph with TEMPO T2CMETHOD. Setting T2CMETHOD to IAU2000B.",
+                (char *)"",psr->noWarnings);
+            psr->t2cMethod = T2C_IAU2000B;
+        }
     }
     else if (strcasecmp(str,"TOFFSET")==0) /* Time offset */
     {
