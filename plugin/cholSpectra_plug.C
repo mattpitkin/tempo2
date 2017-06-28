@@ -156,262 +156,265 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    logmsg("Do the fitting");
 
 
-   for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
-   {
-	  formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-	  formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-	  if (i==0) doFitAll(psr,*npsr,covarFuncFile);   /* Do the fitting     */
-	  else textOutput(psr,*npsr,globalParameter,0,0,newpar,newparname);  /* Display the output */
+   for (it=0;it<psr[0].nits;it++) {
+
+       for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
+       {
+           formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+           formResiduals(psr,*npsr,1);    /* Form the residuals                 */
+           if (i==0) doFitAll(psr,*npsr,covarFuncFile);   /* Do the fitting     */
+           else textOutput(psr,*npsr,globalParameter,0,0,newpar,newparname);  /* Display the output */
+       }
    }
 
    for (int p = 0; p < *npsr; p++){
-	  for (int param=0; param < MAX_PARAMS; param++){
-		 psr[p].param[param].fitFlag[0]=0;
-	  }
+       for (int param=0; param < MAX_PARAMS; param++){
+           psr[p].param[param].fitFlag[0]=0;
+       }
    }
 
    if(xfactor!=1.0){
-	  logmsg("Multiplying X axis by %lf",xfactor);
+       logmsg("Multiplying X axis by %lf",xfactor);
    }
 
    if(xspec){
-	  if(autoNspec)nSpec=16;
-	  int p1,p2;
-	  double crossR,crossI,P1,P2;
-	  double *p1_x,*p2_x,*p1_yr,*p2_yr,*p1_yi,*p2_yi;
-	  p1_x = (double*)malloc(nSpec*sizeof(double));
-	  p2_x = (double*)malloc(nSpec*sizeof(double));
-	  p1_yr = (double*)malloc(nSpec*sizeof(double));
-	  p1_yi = (double*)malloc(nSpec*sizeof(double));
-	  p2_yr = (double*)malloc(nSpec*sizeof(double));
-	  p2_yi = (double*)malloc(nSpec*sizeof(double));
+       if(autoNspec)nSpec=16;
+       int p1,p2;
+       double crossR,crossI,P1,P2;
+       double *p1_x,*p2_x,*p1_yr,*p2_yr,*p1_yi,*p2_yi;
+       p1_x = (double*)malloc(nSpec*sizeof(double));
+       p2_x = (double*)malloc(nSpec*sizeof(double));
+       p1_yr = (double*)malloc(nSpec*sizeof(double));
+       p1_yi = (double*)malloc(nSpec*sizeof(double));
+       p2_yr = (double*)malloc(nSpec*sizeof(double));
+       p2_yi = (double*)malloc(nSpec*sizeof(double));
 
-	  double **cc_x, **cc_yr, **cc_yi;
-	  if (use_ccache){
-		 cc_x = (double**)malloc(sizeof(double*)*(*npsr));
-		 cc_yr= (double**)malloc(sizeof(double*)*(*npsr));
-		 cc_yi= (double**)malloc(sizeof(double*)*(*npsr));
-		 for (p1 = 0; p1 < *npsr; p1++){
-			cc_x[p1]=NULL;
-		 }
-	  }
-	  if(roundem){
-		 for (p1 = 0; p1 < *npsr; p1++){
-			psr[p1].param[param_start].val[0] = double(int(psr[p1].param[param_start].val[0]/50.0)*50.0);
-			psr[p1].param[param_finish].val[0] = double(int(psr[p1].param[param_finish].val[0]/50.0+1)*50.0);
+       double **cc_x, **cc_yr, **cc_yi;
+       if (use_ccache){
+           cc_x = (double**)malloc(sizeof(double*)*(*npsr));
+           cc_yr= (double**)malloc(sizeof(double*)*(*npsr));
+           cc_yi= (double**)malloc(sizeof(double*)*(*npsr));
+           for (p1 = 0; p1 < *npsr; p1++){
+               cc_x[p1]=NULL;
+           }
+       }
+       if(roundem){
+           for (p1 = 0; p1 < *npsr; p1++){
+               psr[p1].param[param_start].val[0] = double(int(psr[p1].param[param_start].val[0]/50.0)*50.0);
+               psr[p1].param[param_finish].val[0] = double(int(psr[p1].param[param_finish].val[0]/50.0+1)*50.0);
 
-		 }
-	  }
+           }
+       }
 
-	  logmsg("Producing Cross Spectra");
-	  for (p1 = 0; p1 < *npsr; p1++){
-		 for (p2 = p1+1; p2 < *npsr; p2++){
-			double p1_start_o = psr[p1].param[param_start].val[0];
-			double p2_start_o = psr[p2].param[param_start].val[0];
-			double p1_finish_o = psr[p1].param[param_finish].val[0];
-			double p2_finish_o = psr[p2].param[param_finish].val[0];
+       logmsg("Producing Cross Spectra");
+       for (p1 = 0; p1 < *npsr; p1++){
+           for (p2 = p1+1; p2 < *npsr; p2++){
+               double p1_start_o = psr[p1].param[param_start].val[0];
+               double p2_start_o = psr[p2].param[param_start].val[0];
+               double p1_finish_o = psr[p1].param[param_finish].val[0];
+               double p2_finish_o = psr[p2].param[param_finish].val[0];
 
-			double maxx = min(p1_finish_o,p2_finish_o);
-			double minx = max(p1_start_o,p2_start_o);
-			logmsg("%s X %s -- Overlap: %lf -> %lf",psr[p1].name,psr[p2].name,minx,maxx);
-			if ((maxx - minx < 1)){
-			   logmsg("Less than 1 day overlap, cannot continue");
-			   continue;
-			}
-			// Here we set the start/finish so that it only computes spectra of overlap data.
-			psr[p1].param[param_start].paramSet[0]=1;
-			psr[p1].param[param_start].fitFlag[0]=1;
-			psr[p1].param[param_finish].paramSet[0]=1;
-			psr[p1].param[param_finish].fitFlag[0]=1;
+               double maxx = min(p1_finish_o,p2_finish_o);
+               double minx = max(p1_start_o,p2_start_o);
+               logmsg("%s X %s -- Overlap: %lf -> %lf",psr[p1].name,psr[p2].name,minx,maxx);
+               if ((maxx - minx < 1)){
+                   logmsg("Less than 1 day overlap, cannot continue");
+                   continue;
+               }
+               // Here we set the start/finish so that it only computes spectra of overlap data.
+               psr[p1].param[param_start].paramSet[0]=1;
+               psr[p1].param[param_start].fitFlag[0]=1;
+               psr[p1].param[param_finish].paramSet[0]=1;
+               psr[p1].param[param_finish].fitFlag[0]=1;
 
-			psr[p1].param[param_f].fitFlag[0]=1;
-			psr[p1].param[param_f].fitFlag[1]=1;
+               psr[p1].param[param_f].fitFlag[0]=1;
+               psr[p1].param[param_f].fitFlag[1]=1;
 
-			psr[p2].param[param_start].paramSet[0]=1;
-			psr[p2].param[param_start].fitFlag[0]=1;
-			psr[p2].param[param_finish].paramSet[0]=1;
-			psr[p2].param[param_finish].fitFlag[0]=1;
+               psr[p2].param[param_start].paramSet[0]=1;
+               psr[p2].param[param_start].fitFlag[0]=1;
+               psr[p2].param[param_finish].paramSet[0]=1;
+               psr[p2].param[param_finish].fitFlag[0]=1;
 
-			psr[p2].param[param_f].fitFlag[0]=1;
-			psr[p2].param[param_f].fitFlag[1]=1;
+               psr[p2].param[param_f].fitFlag[0]=1;
+               psr[p2].param[param_f].fitFlag[1]=1;
 
-			psr[p1].param[param_start].val[0]=minx;
-			psr[p2].param[param_start].val[0]=minx;
-			psr[p1].param[param_finish].val[0]=maxx;
-			psr[p2].param[param_finish].val[0]=maxx;
+               psr[p1].param[param_start].val[0]=minx;
+               psr[p2].param[param_start].val[0]=minx;
+               psr[p1].param[param_finish].val[0]=maxx;
+               psr[p2].param[param_finish].val[0]=maxx;
 
-			double realTspan=0;
-			if (tspan < 0)
-			   realTspan = maxx-minx;
-			else{
-			   if (1.2*(maxx-minx) < realTspan){
-				  logerr("Refusing to make tspan larger than 1.2 times actual data span");
-				  realTspan=maxx-minx;
-			   }
-			   printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
-			   realTspan=tspan;
-			}
-			realTspan=-realTspan; // this tells it to use this to set omega, rather than scaling by nsamples/(nsamples-1)
-			logmsg("Tspan=%lf",realTspan);
+               double realTspan=0;
+               if (tspan < 0)
+                   realTspan = maxx-minx;
+               else{
+                   if (1.2*(maxx-minx) < realTspan){
+                       logerr("Refusing to make tspan larger than 1.2 times actual data span");
+                       realTspan=maxx-minx;
+                   }
+                   printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
+                   realTspan=tspan;
+               }
+               realTspan=-realTspan; // this tells it to use this to set omega, rather than scaling by nsamples/(nsamples-1)
+               logmsg("Tspan=%lf",realTspan);
 
-			verbose_calc_spectra=true;
-			char dop1=1;
-			char dop2=1;
-			if (use_ccache){
-			   if (cc_x[p1] != NULL && p1_start_o == minx && p1_finish_o == maxx){
-				  // can use cached p1
-				  memcpy(p1_x,cc_x[p1],sizeof(double)*nSpec);
-				  memcpy(p1_yr,cc_yr[p1],sizeof(double)*nSpec);
-				  memcpy(p1_yi,cc_yi[p1],sizeof(double)*nSpec);
-				  logmsg("CACHED %s",psr[p1].name);
-				  cache_hits++;
-				  dop1=0;
-			   }
-			   if (cc_x[p2] != NULL && p2_start_o == minx && p2_finish_o == maxx){
-				  // can use cached p2
-				  memcpy(p2_x,cc_x[p2],sizeof(double)*nSpec);
-				  memcpy(p2_yr,cc_yr[p2],sizeof(double)*nSpec);
-				  memcpy(p2_yi,cc_yi[p2],sizeof(double)*nSpec);
-				  logmsg("CACHED %s",psr[p2].name);
-				  cache_hits++;
-				  dop2=0;
-			   }
-			}
-			if (dop1){
-			   formBatsAll(psr+p1,1);        
-			   formResiduals(psr+p1,1,1);   
-			   doFitAll(psr+p1,1,covarFuncFile);   
-			   formBatsAll(psr+p1,1);        
-			   formResiduals(psr+p1,1,1);   
-			   textOutput(psr+p1,1,globalParameter,0,0,newpar,newparname);
-			   calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi,outWhite,outUinv);
-			}
-			if (dop2){
-			   doFitAll(psr+p2,1,covarFuncFile);   
-			   formBatsAll(psr+p2,1);        
-			   formResiduals(psr+p2,1,1);   
-			   textOutput(psr+p2,1,globalParameter,0,0,newpar,newparname);
-			   calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi,outWhite,outUinv);
-			}
-			if (use_ccache){
-			   if (cc_x[p1] == NULL && p1_start_o == minx && p1_finish_o == maxx){
-				  // can cache p1
-				  cc_x[p1] = (double*)malloc(sizeof(double)*nSpec);
-				  cc_yr[p1] = (double*)malloc(sizeof(double)*nSpec);
-				  cc_yi[p1] = (double*)malloc(sizeof(double)*nSpec);
-				  memcpy(cc_x[p1],p1_x,sizeof(double)*nSpec);
-				  memcpy(cc_yr[p1],p1_yr,sizeof(double)*nSpec);
-				  memcpy(cc_yi[p1],p1_yi,sizeof(double)*nSpec);
-			   }
-			   if (cc_x[p2] == NULL && p2_start_o == minx && p2_finish_o == maxx){
-				  // can cache p2
-				  cc_x[p2] = (double*)malloc(sizeof(double)*nSpec);
-				  cc_yr[p2] = (double*)malloc(sizeof(double)*nSpec);
-				  cc_yi[p2] = (double*)malloc(sizeof(double)*nSpec);
-				  memcpy(cc_x[p2],p2_x,sizeof(double)*nSpec);
-				  memcpy(cc_yr[p2],p2_yr,sizeof(double)*nSpec);
-				  memcpy(cc_yi[p2],p2_yi,sizeof(double)*nSpec);
-			   }
-			}
-			sprintf(fname,"%s.%s.xspec",psr[p1].name,psr[p2].name);
-			fout=fopen(fname,"w");
-			for (i=0; i < nSpec; i++){
-			   //365.25*crossX[i],crossY_r[i],crossY_i[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i])
-			   // X = 1 x 2*
-			   if (p1_x[i]!=p2_x[i]){
-				  logerr("X scale for %s not same as for %s!!! %lf %lf",psr[p1].name,psr[p2].name,p1_x[i],p2_x[i]);
-				  exit(2);
-			   }
-			   crossR = p1_yr[i]*p2_yr[i] + p1_yi[i]*p2_yi[i];
-			   crossI = p1_yi[i]*p2_yr[i] - p1_yr[i]*p2_yi[i];
-			   P1     = p1_yr[i]*p1_yr[i] + p1_yi[i]*p1_yi[i];
-			   P2     = p2_yr[i]*p2_yr[i] + p2_yi[i]*p2_yi[i];
-			   fprintf(fout,"%.8g\t%.4g\t%.4g\t%.4g\t%.4g\n",xfactor*p1_x[i],crossR,crossI,P1,P2);
-			}
-			fclose(fout);
+               verbose_calc_spectra=true;
+               char dop1=1;
+               char dop2=1;
+               if (use_ccache){
+                   if (cc_x[p1] != NULL && p1_start_o == minx && p1_finish_o == maxx){
+                       // can use cached p1
+                       memcpy(p1_x,cc_x[p1],sizeof(double)*nSpec);
+                       memcpy(p1_yr,cc_yr[p1],sizeof(double)*nSpec);
+                       memcpy(p1_yi,cc_yi[p1],sizeof(double)*nSpec);
+                       logmsg("CACHED %s",psr[p1].name);
+                       cache_hits++;
+                       dop1=0;
+                   }
+                   if (cc_x[p2] != NULL && p2_start_o == minx && p2_finish_o == maxx){
+                       // can use cached p2
+                       memcpy(p2_x,cc_x[p2],sizeof(double)*nSpec);
+                       memcpy(p2_yr,cc_yr[p2],sizeof(double)*nSpec);
+                       memcpy(p2_yi,cc_yi[p2],sizeof(double)*nSpec);
+                       logmsg("CACHED %s",psr[p2].name);
+                       cache_hits++;
+                       dop2=0;
+                   }
+               }
+               if (dop1){
+                   formBatsAll(psr+p1,1);        
+                   formResiduals(psr+p1,1,1);   
+                   doFitAll(psr+p1,1,covarFuncFile);   
+                   formBatsAll(psr+p1,1);        
+                   formResiduals(psr+p1,1,1);   
+                   textOutput(psr+p1,1,globalParameter,0,0,newpar,newparname);
+                   calculateSpectrum(psr+p1,realTspan,nSpec,p1_x,p1_yr,p1_yi,outWhite,outUinv);
+               }
+               if (dop2){
+                   doFitAll(psr+p2,1,covarFuncFile);   
+                   formBatsAll(psr+p2,1);        
+                   formResiduals(psr+p2,1,1);   
+                   textOutput(psr+p2,1,globalParameter,0,0,newpar,newparname);
+                   calculateSpectrum(psr+p2,realTspan,nSpec,p2_x,p2_yr,p2_yi,outWhite,outUinv);
+               }
+               if (use_ccache){
+                   if (cc_x[p1] == NULL && p1_start_o == minx && p1_finish_o == maxx){
+                       // can cache p1
+                       cc_x[p1] = (double*)malloc(sizeof(double)*nSpec);
+                       cc_yr[p1] = (double*)malloc(sizeof(double)*nSpec);
+                       cc_yi[p1] = (double*)malloc(sizeof(double)*nSpec);
+                       memcpy(cc_x[p1],p1_x,sizeof(double)*nSpec);
+                       memcpy(cc_yr[p1],p1_yr,sizeof(double)*nSpec);
+                       memcpy(cc_yi[p1],p1_yi,sizeof(double)*nSpec);
+                   }
+                   if (cc_x[p2] == NULL && p2_start_o == minx && p2_finish_o == maxx){
+                       // can cache p2
+                       cc_x[p2] = (double*)malloc(sizeof(double)*nSpec);
+                       cc_yr[p2] = (double*)malloc(sizeof(double)*nSpec);
+                       cc_yi[p2] = (double*)malloc(sizeof(double)*nSpec);
+                       memcpy(cc_x[p2],p2_x,sizeof(double)*nSpec);
+                       memcpy(cc_yr[p2],p2_yr,sizeof(double)*nSpec);
+                       memcpy(cc_yi[p2],p2_yi,sizeof(double)*nSpec);
+                   }
+               }
+               sprintf(fname,"%s.%s.xspec",psr[p1].name,psr[p2].name);
+               fout=fopen(fname,"w");
+               for (i=0; i < nSpec; i++){
+                   //365.25*crossX[i],crossY_r[i],crossY_i[i],py_r1[i]*py_r1[i]+py_i1[i]*py_i1[i],py_r2[i]*py_r2[i]+py_i2[i]*py_i2[i])
+                   // X = 1 x 2*
+                   if (p1_x[i]!=p2_x[i]){
+                       logerr("X scale for %s not same as for %s!!! %lf %lf",psr[p1].name,psr[p2].name,p1_x[i],p2_x[i]);
+                       exit(2);
+                   }
+                   crossR = p1_yr[i]*p2_yr[i] + p1_yi[i]*p2_yi[i];
+                   crossI = p1_yi[i]*p2_yr[i] - p1_yr[i]*p2_yi[i];
+                   P1     = p1_yr[i]*p1_yr[i] + p1_yi[i]*p1_yi[i];
+                   P2     = p2_yr[i]*p2_yr[i] + p2_yi[i]*p2_yi[i];
+                   fprintf(fout,"%.8g\t%.4g\t%.4g\t%.4g\t%.4g\n",xfactor*p1_x[i],crossR,crossI,P1,P2);
+               }
+               fclose(fout);
 
-			// Set the start/finish back to orig values for the next iteration.
-			psr[p1].param[param_start].val[0]=p1_start_o;
-			psr[p2].param[param_start].val[0]=p2_start_o;
-			psr[p1].param[param_finish].val[0]=p1_finish_o;
-			psr[p2].param[param_finish].val[0]=p2_finish_o;
-
-
-
-		 }
-	  }
-
-	  free(p1_x);
-	  free(p2_x);
-	  free(p1_yr);
-	  free(p1_yi);
-	  free(p2_yr);
-	  free(p2_yi);
-	  if(use_ccache){
-		 logmsg("CACHE HITS = %d",cache_hits);
-		 for (p1 = 0; p1 < *npsr; p1++){
-			if(cc_x[p1]!=NULL){
-			   logmsg("Free cc: %s",psr[p1].name);
-			   free(cc_x[p1]);
-			   free(cc_yi[p1]);
-			   free(cc_yr[p1]);
-			}
-		 }
-		 free(cc_x);
-		 free(cc_yr);
-		 free(cc_yi);
+               // Set the start/finish back to orig values for the next iteration.
+               psr[p1].param[param_start].val[0]=p1_start_o;
+               psr[p2].param[param_start].val[0]=p2_start_o;
+               psr[p1].param[param_finish].val[0]=p1_finish_o;
+               psr[p2].param[param_finish].val[0]=p2_finish_o;
 
 
-	  }
+
+           }
+       }
+
+       free(p1_x);
+       free(p2_x);
+       free(p1_yr);
+       free(p1_yi);
+       free(p2_yr);
+       free(p2_yi);
+       if(use_ccache){
+           logmsg("CACHE HITS = %d",cache_hits);
+           for (p1 = 0; p1 < *npsr; p1++){
+               if(cc_x[p1]!=NULL){
+                   logmsg("Free cc: %s",psr[p1].name);
+                   free(cc_x[p1]);
+                   free(cc_yi[p1]);
+                   free(cc_yr[p1]);
+               }
+           }
+           free(cc_x);
+           free(cc_yr);
+           free(cc_yi);
+
+
+       }
    }else{
-	  logmsg("Producing spectra");
-	  double* px;
-	  double* py_r;
-	  double* py_i;
-	  double origTspan=tspan;
-	  for (p=0; p < *npsr ; p++){
-		 pulsar* thepulsar = psr+p;
-		 tspan=origTspan;
+       logmsg("Producing spectra");
+       double* px;
+       double* py_r;
+       double* py_i;
+       double origTspan=tspan;
+       for (p=0; p < *npsr ; p++){
+           pulsar* thepulsar = psr+p;
+           tspan=origTspan;
 
-		 maxx=thepulsar->param[param_finish].val[0];
-		 minx=thepulsar->param[param_start].val[0];
-		 if (tspan < 0)
-			tspan = maxx-minx;
-		 else{
-			if (1.2*(maxx-minx) < tspan){
-			   printf("tspan=%lg, maxx-minx=%lg",maxx-minx,tspan);
-			   logerr("Refusing to make tspan larger than 1.2 times actual data span");
-			   exit(1);
-			}
-			printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
-			tspan=-tspan;
-		 }
+           maxx=thepulsar->param[param_finish].val[0];
+           minx=thepulsar->param[param_start].val[0];
+           if (tspan < 0)
+               tspan = maxx-minx;
+           else{
+               if (1.2*(maxx-minx) < tspan){
+                   printf("tspan=%lg, maxx-minx=%lg",maxx-minx,tspan);
+                   logerr("Refusing to make tspan larger than 1.2 times actual data span");
+                   exit(1);
+               }
+               printf("NOTE: using tspan=%lf, default would have been %lf\n",tspan,maxx-minx);
+               tspan=-tspan;
+           }
 
-		 if (autoNspec){
-			nSpec = 128;
-			while (nSpec > psr->nFit && nSpec > 8){
-			   nSpec /=2;
-			}
-		 }
-		 px = (double*)malloc(sizeof(double)*nSpec);
-		 py_r = (double*)malloc(sizeof(double)*nSpec);
-		 py_i = (double*)malloc(sizeof(double)*nSpec);
+           if (autoNspec){
+               nSpec = 128;
+               while (nSpec > psr->nFit && nSpec > 8){
+                   nSpec /=2;
+               }
+           }
+           px = (double*)malloc(sizeof(double)*nSpec);
+           py_r = (double*)malloc(sizeof(double)*nSpec);
+           py_i = (double*)malloc(sizeof(double)*nSpec);
 
-		 logmsg("Doing the calculation %s Nspec=%d\n",thepulsar->name,nSpec);
-		 verbose_calc_spectra=true;
-		 calculateSpectrum(thepulsar,tspan,nSpec,px,py_r,py_i,outWhite,outUinv);
-		 logmsg("Write files");
-		 sprintf(fname,"%s.spec",thepulsar->name);
-		 fout = fopen(fname,"w");
-		 for (i=0;i<nSpec;i++)
-			fprintf(fout,"%g %g %g %g\n",xfactor*px[i],py_r[i]*py_r[i]+py_i[i]*py_i[i],py_r[i],py_i[i]);
-		 fclose(fout);
-		 free(px);
-		 free(py_r);
-		 free(py_i);
+           logmsg("Doing the calculation %s Nspec=%d\n",thepulsar->name,nSpec);
+           verbose_calc_spectra=true;
+           calculateSpectrum(thepulsar,tspan,nSpec,px,py_r,py_i,outWhite,outUinv);
+           logmsg("Write files");
+           sprintf(fname,"%s.spec",thepulsar->name);
+           fout = fopen(fname,"w");
+           for (i=0;i<nSpec;i++)
+               fprintf(fout,"%g %g %g %g\n",xfactor*px[i],py_r[i]*py_r[i]+py_i[i]*py_i[i],py_r[i],py_i[i]);
+           fclose(fout);
+           free(px);
+           free(py_r);
+           free(py_i);
 
-		 logmsg("Finished\n");
-	  }
+           logmsg("Finished\n");
+       }
    }
    return 0;
 }
@@ -419,110 +422,110 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 const char * plugVersionCheck = TEMPO2_h_VER;
 
 void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i,int outWhite,int outUinv) {
-   int i;
-   double **uinv;
-   FILE *fin;
-   int ndays=0;
-   double resx[psr->nobs],resy[psr->nobs],rese[psr->nobs];
-   int ip[psr->nobs];
+    int i;
+    double **uinv;
+    FILE *fin;
+    int ndays=0;
+    double resx[psr->nobs],resy[psr->nobs],rese[psr->nobs];
+    int ip[psr->nobs];
 
 
-   logmsg("calculateSpectrum '%s' %f %d",psr->name,T,nSpec);
-// only do between start and finish
+    logmsg("calculateSpectrum '%s' %f %d",psr->name,T,nSpec);
+    // only do between start and finish
 
-   int nobs=0;
-   for (i=0;i<psr->nobs;i++){
-	  if(psr->obsn[i].deleted !=0)continue;
-	  if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
-			(psr->param[param_start].val[0] > psr->obsn[i].sat))
-		 continue;
-	  if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
-			psr->param[param_finish].val[0] < psr->obsn[i].sat)
-		 continue;
-	  nobs++;
-   }
+    int nobs=0;
+    for (i=0;i<psr->nobs;i++){
+        if(psr->obsn[i].deleted !=0)continue;
+        if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+                (psr->param[param_start].val[0] > psr->obsn[i].sat))
+            continue;
+        if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+                psr->param[param_finish].val[0] < psr->obsn[i].sat)
+            continue;
+        nobs++;
+    }
 
-   logmsg("Total obs = %d, Good obs = %d",psr->nobs,nobs);
-   //  printf("Calculating the spectrum\n");
-   uinv = malloc_uinv(nobs);
+    logmsg("Total obs = %d, Good obs = %d",psr->nobs,nobs);
+    //  printf("Calculating the spectrum\n");
+    uinv = malloc_uinv(nobs);
 
-   int ir=0;
-   for (i=0;i<psr->nobs;i++)
-   {
-	  if(psr->obsn[i].deleted !=0)continue;
-	  if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
-			(psr->param[param_start].val[0] > psr->obsn[i].sat))
-		 continue;
-	  if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
-			psr->param[param_finish].val[0] < psr->obsn[i].sat)
-		 continue;
+    int ir=0;
+    for (i=0;i<psr->nobs;i++)
+    {
+        if(psr->obsn[i].deleted !=0)continue;
+        if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
+                (psr->param[param_start].val[0] > psr->obsn[i].sat))
+            continue;
+        if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
+                psr->param[param_finish].val[0] < psr->obsn[i].sat)
+            continue;
 
-	  resx[ir] = (double)(psr->obsn[i].sat-toffset);
-	  resy[ir] = (double)(psr->obsn[i].residual);
-	  rese[ir] = (double)(psr->obsn[i].toaErr*1.0e-6);
-	  ip[ir]=i;
-	  ir++;
-   }
+        resx[ir] = (double)(psr->obsn[i].sat-toffset);
+        resy[ir] = (double)(psr->obsn[i].residual);
+        rese[ir] = (double)(psr->obsn[i].toaErr*1.0e-6);
+        ip[ir]=i;
+        ir++;
+    }
 
 
-   //  printf("Allocated memory\n");
+    //  printf("Allocated memory\n");
 
-   // Read in the covariance function
-   if (strcmp(covarFuncFile,"NULL")==0){
-	  sprintf(covarFuncFile,"covarFunc.dat_%s",psr->name);
-	  logmsg("Warning: Assuming -dcf %s",covarFuncFile);
-   }
+    // Read in the covariance function
+    if (strcmp(covarFuncFile,"NULL")==0){
+        sprintf(covarFuncFile,"covarFunc.dat_%s",psr->name);
+        logmsg("Warning: Assuming -dcf %s",covarFuncFile);
+    }
 
-   logmsg("Get Cholesky 'uinv' matrix from '%s'",covarFuncFile);
-   getCholeskyMatrix(uinv,covarFuncFile,psr,resx,resy,rese,nobs,0,ip);
-   logdbg("Got uinv, now compute spectrum.");
+    logmsg("Get Cholesky 'uinv' matrix from '%s'",covarFuncFile);
+    getCholeskyMatrix(uinv,covarFuncFile,psr,resx,resy,rese,nobs,0,ip);
+    logdbg("Got uinv, now compute spectrum.");
 
-   // Must calculate uinv for the pulsar
-   //
-   //   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
-   char mde = 'N';
-   if (T < 0){
-	  mde='T';
-	  T=-T;
-   }
-   calcSpectra_ri_T(uinv,resx,resy,nobs,px,py_r,py_i,nSpec,T,mde,psr);
+    // Must calculate uinv for the pulsar
+    //
+    //   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
+    char mde = 'N';
+    if (T < 0){
+        mde='T';
+        T=-T;
+    }
+    calcSpectra_ri_T(uinv,resx,resy,nobs,px,py_r,py_i,nSpec,T,mde,psr);
 
-   if (outUinv==1)
-     {
-       FILE *fout;
-       int i,j;
+    if (outUinv==1)
+    {
+        FILE *fout;
+        int i,j;
 
-       fout = fopen("cholSpectra.uinv","w");
-       for (i=0;i<nobs;i++){
-	 for (j=0;j<nobs;j++)
-	   {
-	     //	     printf("%d %d %g\n",i,j,uinv[i][j]);
-	     fprintf(fout,"%d %d %g\n",i,j,uinv[i][j]);
-	   }
-       }
-       fclose(fout);
-     }
-   if (outWhite==1)
-     {
-       double outRes[nobs];
-       FILE *fout;
+        fout = fopen("cholSpectra.uinv","w");
+        for (i=0;i<nobs;i++){
+            for (j=0;j<nobs;j++)
+            {
+                //	     printf("%d %d %g\n",i,j,uinv[i][j]);
+                fprintf(fout,"%d %d %g\n",i,j,uinv[i][j]);
+            }
+        }
+        fclose(fout);
+    }
+    if (outWhite==1)
+    {
+        double outRes[nobs];
+        FILE *fout;
 
-       printf("Outputting whitened residuals\n");
-       T2getWhiteRes(resx,resy,rese,nobs,uinv,outRes);
-       if (!(fout = fopen("whiteRes.dat","w"))){
-	 printf("Unable to open file whiteRes.dat\n");
-	 exit(1);
-       }
-       for (i=0;i<nobs;i++)
-	 {
-	   ld_printf("%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
-	   ld_fprintf(fout,"%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
-	 }
-       fclose(fout);
-     }
+        printf("Outputting whitened residuals\n");
+        T2getWhiteRes(resx,resy,rese,nobs,uinv,outRes);
+        if (!(fout = fopen("whiteRes.dat","w"))){
+            printf("Unable to open file whiteRes.dat\n");
+            exit(1);
+        }
+        for (i=0;i<nobs;i++)
+        {
+            ld_printf("%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
+            ld_fprintf(fout,"%g %g %g %g %.5Lf\n",resx[i],resy[i],rese[i],outRes[i],psr->obsn[i].sat);
+        }
+        fclose(fout);
+    }
 
-   // Free uinv
-   free_uinv(uinv);
+    // Free uinv
+    free_uinv(uinv);
 
 }
 
