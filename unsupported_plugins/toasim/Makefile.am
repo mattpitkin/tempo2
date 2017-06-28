@@ -85,6 +85,5 @@ createRealisation-install: createRealisation_@T2ARCH@_plug.la
 
 
 
-install: $(pluginINSTALLS) .libs/libtoasim.la read_toasim
-	$(INSTALL) .libs/libtoasim.la $(libdir)
+install: $(pluginINSTALLS) install-libLTLIBRARIES read_toasim
 	$(INSTALL) .libs/read_toasim $(bindir)
