@@ -156,7 +156,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    logmsg("Do the fitting");
 
 
-   for (it=0;it<psr[0].nits;it++) {
+   for (int it=0;it<psr[0].nits;it++) {
 
        for (i=0;i<2;i++)                   /* Do two iterations for pre- and post-fit residuals*/
        {
