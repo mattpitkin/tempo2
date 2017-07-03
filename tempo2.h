@@ -90,6 +90,7 @@
 #define MAX_TOFFSET          10    /*!< Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /*!< Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX             512    /*!< Max number of DM steps allowed */
+#define MAX_SX              512     /*!< Max number of Scatter steps allowed */
 #define MAX_FLAGS            40    /*!< Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /*!< Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /*!< Maximum number of steps in the correction to TT  */ 
@@ -179,7 +180,7 @@ enum label {
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
     param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos,
-    param_band_red_sin, param_band_red_cos,
+    param_band_red_sin, param_band_red_cos,param_sx, param_sxr1, param_sxr2, param_sxer,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -563,6 +564,7 @@ typedef struct pulsar {
     char   tOffsetSite[MAX_TOFFSET][100],tOffsetFlags[MAX_TOFFSET][1000];
     int    nToffset;
     int    ndmx;                    /*!< Number of DM steps */
+    int    nSx;                     /*!< Number of Scatter steps */
     double fitChisq;                /*!< Chisq value from the fit */
     int    fitNfree;                /*!< Number of degrees of freedom in fit */
     int    globalNfit;              /*!< Total number of parameters in the fit */
