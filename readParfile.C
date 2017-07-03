@@ -573,6 +573,49 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 readValue(psr,str,fin,&(psr->param[param_dmxr2]),dmxidx);
         }
     }
+
+    else if (strncasecmp(str,"SX_",3)==0)
+    {
+        int sxidx;
+        if (sscanf(str+3,"%d",&sxidx)==1)
+        {
+            //printf("got dmxidx=%d\n", dmxidx);
+            sxidx--;
+            if (sxidx<psr->param[param_sx].aSize)
+                readValue(psr,str,fin,&(psr->param[param_sx]),sxidx);
+            if (psr->nSx < sxidx+1) psr->nSx = sxidx + 1;
+        }
+    }
+    else if (strncasecmp(str,"SXR1_",5)==0)
+    {
+        int sxidx;
+        if (sscanf(str+5,"%d",&sxidx)==1)
+        {
+            sxidx--;
+            if (sxidx<psr->param[param_sxr1].aSize)
+                readValue(psr,str,fin,&(psr->param[param_sxr1]),sxidx);
+        }
+    }
+    else if (strncasecmp(str,"SXR2_",5)==0)
+    {
+        int sxidx;
+        if (sscanf(str+5,"%d",&sxidx)==1)
+        {
+            sxidx--;
+            if (sxidx<psr->param[param_sxr2].aSize)
+                readValue(psr,str,fin,&(psr->param[param_sxr2]),sxidx);
+        }
+    }
+    else if (strncasecmp(str,"SXER_",5)==0)
+    {
+        int sxidx;
+        if (sscanf(str+5,"%d",&sxidx)==1)
+        {
+            sxidx--;
+            if (sxidx<psr->param[param_sxer].aSize)
+                readValue(psr,str,fin,&(psr->param[param_sxer]),sxidx);
+        }
+    }
     else if (strcasecmp(str,"DM")==0) /* Dispersion measure */
         readValue(psr,str,fin,&(psr->param[param_dm]),0);
     else if ((str[0]=='D' || str[0]=='d') &&  /* Higher DM derivatives */
