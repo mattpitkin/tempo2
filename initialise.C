@@ -183,6 +183,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nT2equad = 0; // Number of T2EQUADs
     psr->T2globalEfac = 1; // A global multiplying factor
 
+    psr->nSx = 0; //number of SX parameters
     psr->nTNEF  = 0; // Number of TNEFACs
     psr->nTNEQ = 0; // Number of TNEQUADs
     psr->nTNECORR = 0; // Number of TNECORRs
@@ -557,6 +558,31 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"DMXR2_%04d",k+1);
         strcpy(psr->param[param_dmxr2].shortlabel[k],temp);
     }
+        for (k=0;k<psr->param[param_sx].aSize;k++)
+    {
+        sprintf(temp,"SX_%04d (cm^-3 pc)",k+1);
+        strcpy(psr->param[param_sx].label[k],temp);
+        sprintf(temp,"SX_%04d",k+1);
+        strcpy(psr->param[param_sx].shortlabel[k],temp);
+
+        sprintf(temp,"SXR1_%04d (MJD)",k+1);
+        strcpy(psr->param[param_sxr1].label[k],temp);
+        sprintf(temp,"SXR1_%04d",k+1);
+        strcpy(psr->param[param_sxr1].shortlabel[k],temp);
+
+        sprintf(temp,"SXR2_%04d (MJD)",k+1);
+        strcpy(psr->param[param_sxr2].label[k],temp);
+        sprintf(temp,"SXR2_%04d",k+1);
+        strcpy(psr->param[param_sxr2].shortlabel[k],temp);
+
+
+        sprintf(temp,"SXER_%04d (MJD)",k+1);
+        strcpy(psr->param[param_sxer].label[k],temp);
+        sprintf(temp,"SXER_%04d",k+1);
+        strcpy(psr->param[param_sxer].shortlabel[k],temp);
+      }
+        
+
 }
 
 
@@ -615,7 +641,8 @@ void allocateMemory(pulsar *psr, int realloc)
             psr->param[i].err[j]      = 0.0;	     
             psr->param[i].val[j]      = 0.0;
         }
-    }
+
+	}
 }
 
 
