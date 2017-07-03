@@ -134,11 +134,11 @@ SWIN_LIB_CFITSIO
 
 # Check for openmp (optional package)
 AX_OPENMP([have_openmp=yes],[have_openmp=no])
-#if test X$have_openmp == Xyes; then
-#    CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
-#    CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS -DHAVE_OPENMP"
-#    LDFLAGS="$LDFLAGS $OPENMP_CXXFLAGS"
-#fi
+if test X$have_openmp == Xyes; then
+    CFLAGS="$CFLAGS $OPENMP_CFLAGS -DHAVE_OPENMP"
+    CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS -DHAVE_OPENMP"
+    LDFLAGS="$LDFLAGS $OPENMP_CXXFLAGS"
+fi
 
 
 
