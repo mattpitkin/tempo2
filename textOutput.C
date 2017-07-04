@@ -283,8 +283,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             {
                 if (psr[p].jumpSAT[i] == 1){
                     printf("SAT Jump %d (%s): %.14g %.14g ",i,psr[p].jumpStr[i],psr[p].jumpVal[i],psr[p].jumpValErr[i]);
+                } else {
+                    printf("Jump %d (%s): %.14g %.14g ",i,psr[p].jumpStr[i],psr[p].jumpVal[i],psr[p].jumpValErr[i]);
                 }
-                printf("Jump %d (%s): %.14g %.14g ",i,psr[p].jumpStr[i],psr[p].jumpVal[i],psr[p].jumpValErr[i]);
                 if (psr[p].fitJump[i]==1) printf("Y\n");
                 else printf("N\n");
             }
