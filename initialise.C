@@ -53,6 +53,8 @@ void initialise(pulsar *psr,int noWarnings)
 
 void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
 {
+
+
     int fail = 0;
     int i,j,k;
     char temp[100];
@@ -559,12 +561,14 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"DMXR2_%04d",k+1);
         strcpy(psr->param[param_dmxr2].shortlabel[k],temp);
     }
+
         for (k=0;k<psr->param[param_sx].aSize;k++)
     {
         sprintf(temp,"SX_%04d (cm^-3 pc)",k+1);
         strcpy(psr->param[param_sx].label[k],temp);
         sprintf(temp,"SX_%04d",k+1);
         strcpy(psr->param[param_sx].shortlabel[k],temp);
+
 
         sprintf(temp,"SXR1_%04d (MJD)",k+1);
         strcpy(psr->param[param_sxr1].label[k],temp);
@@ -609,6 +613,8 @@ void allocateMemory(pulsar *psr, int realloc)
             psr->param[i].aSize = 9;
         else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
             psr->param[i].aSize = MAX_DMX;
+	else if (i==param_sx || i==param_sxr1 || i==param_sxr2 || i==param_sxer)
+		psr->param[i].aSize = MAX_SX;
         else if (i==param_fd)
             psr->param[i].aSize = 9;
         else if (i==param_telx) psr->param[i].aSize = 4;
