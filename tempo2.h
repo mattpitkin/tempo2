@@ -553,6 +553,7 @@ typedef struct pulsar {
     int    nJumps;                  /*!< Number of jumps                                            */
     char fjumpID[16];
     double jumpVal[MAX_JUMPS];      /*!< Value of jump                                              */
+    char   jumpSAT[MAX_JUMPS];      /*!< This jump is in SAT rather than phase */
     int    fitJump[MAX_JUMPS];      /*!< = 1 if fit for jump                                        */
     double jumpValErr[MAX_JUMPS];   /*!< Error on jump                                              */
     char   jumpStr[MAX_JUMPS][MAX_STRLEN]; /*!< String describing jump                              */
