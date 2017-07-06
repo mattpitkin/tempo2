@@ -238,8 +238,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         else if (strcasecmp(unit,"SI")==0) psr->units = SI_UNITS;
     }
     else if (strcasecmp(str,"NE1AU")==0 || strcasecmp(str,"NE_SW")==0 ||
-            strcasecmp(str,"SOLARN0")==0)
-        fscanf(fin,"%lf",&(psr->ne_sw));
+            strcasecmp(str,"SOLARN0")==0){
+            readValue( psr, str, fin, &( psr->param[param_ne_sw] ), 0 );
+            psr->ne_sw = psr->param[param_ne_sw].val[0];
+            // fitting for NE_SW breaks if it is zero, so set to negligable value
+            if (psr->ne_sw < 1e-20)psr->ne_sw = 1e-20;
+    }
     else if (strcasecmp(str, "TIMEEPH")==0)
     {
         char unit[1000];
