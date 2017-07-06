@@ -179,6 +179,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     for (i=0;i<MAX_JUMPS;i++)
     {
         psr->jumpVal[i] = 0.0;
+        psr->jumpSAT[i] = 0;
         psr->jumpValErr[i] = 0.0;
     }
     psr->nT2efac  = 0; // Number of T2EFACs
