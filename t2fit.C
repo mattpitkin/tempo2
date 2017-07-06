@@ -1137,6 +1137,14 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
 
             }
             break;
+
+        case param_ne_sw:
+            // solar wind
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ne_sw;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ne_sw;
+            ++OUT.nParams;
+            break;
+
         default:
             logerr("ERROR: No methods for fitting parameter %s (%d)",label_str[fit_param],fit_param);
             break;
