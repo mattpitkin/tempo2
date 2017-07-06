@@ -332,7 +332,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                            err *= psr[p].TNGlobalEF;
                 }
 
-		if(psr[p].TNGlobalEQ > 0){
+		if(psr[p].TNGlobalEQ != 0){
 			double TNEquad = pow(10.0,psr[p].TNGlobalEQ+6)*pow(10.0,psr[p].TNGlobalEQ+6);
                         err = sqrt(err*err + TNEquad);
                 }
