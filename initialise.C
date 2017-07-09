@@ -342,6 +342,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_dshk].label[0],"DSHK (kpc)");
     strcpy(psr->param[param_dshk].shortlabel[0],"DSHK");
 
+    strcpy(psr->param[param_iperharm].label[0],"IPERHARM");
+    strcpy(psr->param[param_iperharm].shortlabel[0],"IPERHARM");
+
     /* Telescope coordinates */
 
     strcpy(psr->param[param_telx].shortlabel[0],"TELX");
