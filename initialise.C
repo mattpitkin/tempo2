@@ -179,6 +179,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     for (i=0;i<MAX_JUMPS;i++)
     {
         psr->jumpVal[i] = 0.0;
+        psr->jumpSAT[i] = 0;
         psr->jumpValErr[i] = 0.0;
     }
     psr->nT2efac  = 0; // Number of T2EFACs
@@ -340,6 +341,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_track].shortlabel[0],"TRACK");
     strcpy(psr->param[param_dshk].label[0],"DSHK (kpc)");
     strcpy(psr->param[param_dshk].shortlabel[0],"DSHK");
+
+    strcpy(psr->param[param_iperharm].label[0],"IPERHARM");
+    strcpy(psr->param[param_iperharm].shortlabel[0],"IPERHARM");
 
     /* Telescope coordinates */
 
@@ -506,6 +510,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_brake].label[0],"BRAKING INDEX"); 
     strcpy(psr->param[param_brake].shortlabel[0],"BRAKE");
 
+    strcpy( psr->param[param_ne_sw].label[0], "NE_SW (cm^-3)" );
+    strcpy( psr->param[param_ne_sw].shortlabel[0], "NE_SW" );
 
     for (k=0;k<psr->param[param_bpjep].aSize;k++)
     {
