@@ -3077,6 +3077,7 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,
                                 strcmp(psr[0].param[i].shortlabel[j],"START")!=0 &&
                                 strcmp(psr[0].param[i].shortlabel[j],"FINISH")!=0 &&
                                 strcmp(psr[0].param[i].shortlabel[j],"TRACK")!=0 &&
+                                strcmp(psr[0].param[i].shortlabel[j],"IPERHARM")!=0 &&
                                 strcmp(psr[0].param[i].shortlabel[j],"TZRMJD")!=0 &&
                                 strcmp(psr[0].param[i].shortlabel[j],"TZRFRQ")!=0 &&
                                 strcmp(psr[0].param[i].shortlabel[j],"TRES")!=0 &&
@@ -3440,6 +3441,7 @@ void drawMenu(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,i
                             strcmp(psr[0].param[i].shortlabel[j],"START")!=0 &&
                             strcmp(psr[0].param[i].shortlabel[j],"FINISH")!=0 &&
                             strcmp(psr[0].param[i].shortlabel[j],"TRACK")!=0 &&
+                            strcmp(psr[0].param[i].shortlabel[j],"IPERHARM")!=0 &&
                             strcmp(psr[0].param[i].shortlabel[j],"TZRMJD")!=0 &&
                             strcmp(psr[0].param[i].shortlabel[j],"TZRFRQ")!=0 &&
                             strcmp(psr[0].param[i].shortlabel[j],"TRES")!=0 &&

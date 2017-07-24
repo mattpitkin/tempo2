@@ -181,6 +181,8 @@ enum label {
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
     param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos,
     param_band_red_sin, param_band_red_cos,param_sx, param_sxr1, param_sxr2, param_sxer,
+    param_group_red_sin, param_group_red_cos,
+    param_ne_sw,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -249,6 +251,8 @@ enum constraint {
     constraint_band_red_cos,
     constraint_red_dm_sin,
     constraint_red_dm_cos,
+    constraint_group_red_sin,
+    constraint_group_red_cos,
     constraint_jitter,
     constraint_LAST /*!< marker for the last constraint */
 };
@@ -553,6 +557,7 @@ typedef struct pulsar {
     int    nJumps;                  /*!< Number of jumps                                            */
     char fjumpID[16];
     double jumpVal[MAX_JUMPS];      /*!< Value of jump                                              */
+    char   jumpSAT[MAX_JUMPS];      /*!< This jump is in SAT rather than phase */
     int    fitJump[MAX_JUMPS];      /*!< = 1 if fit for jump                                        */
     double jumpValErr[MAX_JUMPS];   /*!< Error on jump                                              */
     char   jumpStr[MAX_JUMPS][MAX_STRLEN]; /*!< String describing jump                              */
