@@ -1015,7 +1015,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             break;
         case param_dmassplanet:
             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_planet;
-            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_planet;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
             ++OUT.nParams;
             break;
         case param_wave_om:
