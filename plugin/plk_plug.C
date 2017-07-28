@@ -2675,6 +2675,7 @@ void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id,int *
 void changeFitParameters(pulsar *psr)
 {
     int i,k=0;
+    int a=0;
     char yesno[100];
 
     /* CLEAR STDIN */
@@ -2687,20 +2688,28 @@ void changeFitParameters(pulsar *psr)
     if(strcmp(yesno,"")!=0){
         /* Determine the parameter */
         for(i=0;i<MAX_PARAMS;i++){
-            if(strcmp(*psr[0].param[i].shortlabel,yesno)==0){
-                k=i;
-                break;
+            for (int ia =0; ia < psr[0].param[i].aSize; ia++){
+                if(strcmp(psr[0].param[i].shortlabel[ia],yesno)==0){
+                    k=i;
+                    a=ia;
+                    break;
+                }
             }
         }
 
-        /* Turn fitting on/off */
-        if(psr[0].param[k].fitFlag[0]==1){
-            printf("Turning fitting off for %s.\n",yesno);
-            psr[0].param[k].fitFlag[0]=0;
+        if(psr[0].param[k].paramSet[a]==0){
+            psr[0].param[k].paramSet[a]=1;
+            psr[0].param[k].val[a]=0;
         }
-        else if(psr[0].param[k].fitFlag[0]==0){
+
+        /* Turn fitting on/off */
+        if(psr[0].param[k].fitFlag[a]==1){
+            printf("Turning fitting off for %s.\n",yesno);
+            psr[0].param[k].fitFlag[a]=0;
+        }
+        else if(psr[0].param[k].fitFlag[a]==0){
             printf("Turning fitting on for %s.\n",yesno);
-            psr[0].param[k].fitFlag[0]=1;
+            psr[0].param[k].fitFlag[a]=1;
         }
     }
     else if(strcmp(yesno,"")==0){
@@ -2729,7 +2738,7 @@ void changeFitParameters(pulsar *psr)
             }
         }
     }
-    callFit(psr,1);
+    //callFit(psr,1);
 }
 
 
