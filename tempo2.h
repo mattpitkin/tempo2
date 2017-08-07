@@ -90,6 +90,7 @@
 #define MAX_TOFFSET          10    /*!< Number of time jumps allowed in .par file        */
 #define MAX_QUAD             150   /*!< Maximum number of frequency channels in quadrupolar function */
 #define MAX_DMX             512    /*!< Max number of DM steps allowed */
+#define MAX_SX              512     /*!< Max number of Scatter steps allowed */
 #define MAX_FLAGS            40    /*!< Maximum number of flags in .tim file/observation */
 #define MAX_FLAG_LEN         32    /*!< Maximum number of characters in each flag */
 #define MAX_CLK_CORR         30    /*!< Maximum number of steps in the correction to TT  */ 
@@ -179,6 +180,9 @@ enum label {
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
     param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos,
+    param_band_red_sin, param_band_red_cos,param_sx, param_sxr1, param_sxr2, param_sxer,
+    param_group_red_sin, param_group_red_cos,
+    param_ne_sw,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -243,8 +247,12 @@ enum constraint {
     constraint_qifunc_c_year_cos2,
     constraint_red_sin,
     constraint_red_cos,
+    constraint_band_red_sin,
+    constraint_band_red_cos,
     constraint_red_dm_sin,
     constraint_red_dm_cos,
+    constraint_group_red_sin,
+    constraint_group_red_cos,
     constraint_jitter,
     constraint_LAST /*!< marker for the last constraint */
 };
@@ -444,6 +452,11 @@ typedef struct observation {
     int  obsNjump;                  /*!< Number of jumps for this observation */
     double efac;                    /*!< Error multiplication factor                                */
     double equad;                   /*!< Value to add in quadrature                                 */
+    double snr;
+    double pnoise;
+    double tobs;
+    double chisq;
+    double bline;
 } observation;
 
 
@@ -544,6 +557,7 @@ typedef struct pulsar {
     int    nJumps;                  /*!< Number of jumps                                            */
     char fjumpID[16];
     double jumpVal[MAX_JUMPS];      /*!< Value of jump                                              */
+    char   jumpSAT[MAX_JUMPS];      /*!< This jump is in SAT rather than phase */
     int    fitJump[MAX_JUMPS];      /*!< = 1 if fit for jump                                        */
     double jumpValErr[MAX_JUMPS];   /*!< Error on jump                                              */
     char   jumpStr[MAX_JUMPS][MAX_STRLEN]; /*!< String describing jump                              */
@@ -555,6 +569,7 @@ typedef struct pulsar {
     char   tOffsetSite[MAX_TOFFSET][100],tOffsetFlags[MAX_TOFFSET][1000];
     int    nToffset;
     int    ndmx;                    /*!< Number of DM steps */
+    int    nSx;                     /*!< Number of Scatter steps */
     double fitChisq;                /*!< Chisq value from the fit */
     int    fitNfree;                /*!< Number of degrees of freedom in fit */
     int    globalNfit;              /*!< Total number of parameters in the fit */
@@ -772,6 +787,7 @@ typedef struct pulsar {
 
     FitInfo fitinfo;
 
+    int brace;
 
 } pulsar;
 
@@ -887,6 +903,9 @@ extern "C" {
     void equ2ecl(double *x);
     void copyParam(parameter p1,parameter *p2);
     void copyPSR(pulsar *p,int p1,int p2);
+
+    void updateEpoch_str(pulsar* psr, int p, const char* newEpoch);
+    void updateEpoch(pulsar* psr, int p, longdouble nMJD);
     longdouble getParameterValue(pulsar *psr,int param,int arr);
     void simplePlot(pulsar *psr, double unitFlag);
     double solarWindModel(pulsar psr,int iobs);

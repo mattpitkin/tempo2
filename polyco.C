@@ -131,9 +131,6 @@ void polyco(pulsar *psr,int npsr,longdouble polyco_MJD1,longdouble polyco_MJD2,i
     /* Set some defaults */
     psr[0].param[param_track].paramSet[0]=0;
 
-    // Zap the output files so we can append days to them later
-    fclose(fopen("polyco_new.dat","w"));
-    fclose(fopen("newpolyco.dat","w"));
 
     for (afmjd=polyco_MJD1; afmjd <= polyco_MJD2; afmjd+=tsid)
     {

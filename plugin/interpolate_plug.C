@@ -685,8 +685,8 @@ const char * plugVersionCheck = TEMPO2_h_VER;
 #define NR_END 1
 #define FREE_ARG char*
 
-void free_vector(double *v, long nl, long nh)
-/* free a double vector allocated with vector() */
+void free_myvector(double *v, long nl, long nh)
+/* free a double myvector allocated with myvector() */
 {
 	free((FREE_ARG) (v+nl-NR_END));
 }
@@ -699,13 +699,13 @@ void nrerror(const char *error_text)
 	fprintf(stderr,"...now exiting to system...\n");
 	exit(1);
 }
-double *vector(long nl, long nh)
-/* allocate a double vector with subscript range v[nl..nh] */
+double *myvector(long nl, long nh)
+/* allocate a double myvector with subscript range v[nl..nh] */
 {
 	double *v;
 
 	v=(double *)malloc((size_t) ((nh-nl+1+NR_END)*sizeof(double)));
-	if (!v) nrerror("allocation failure in vector()");
+	if (!v) nrerror("allocation failure in myvector()");
 	return v-nl+NR_END;
 }
 
@@ -717,7 +717,7 @@ void ludcmp(double **a, int n, int *indx, double *d)
   double big,dum,sum,temp;
   double *vv;
   
-  vv=vector(0,n-1);
+  vv=myvector(0,n-1);
   *d=1.0;
   for (i=0;i<n;i++) {
     big=0.0;
@@ -759,7 +759,7 @@ void ludcmp(double **a, int n, int *indx, double *d)
       for (i=j+1;i<n;i++) a[i][j] *= dum;
     }
   }
-  free_vector(vv,0,n-1);
+  free_myvector(vv,0,n-1);
 }
 #undef TINY
 #undef NRANSI

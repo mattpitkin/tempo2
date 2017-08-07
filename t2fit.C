@@ -287,6 +287,13 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             psr[ipsr].fitChisq = chisq;
             psr[ipsr].fitNfree = psr_ndata + nConstraints - nParams;
 
+
+            psr[ipsr].nParam = psr[ipsr].fitinfo.nParams;
+            for (int iparam = 0; iparam <  psr[ipsr].nParam; ++iparam){
+                psr[ipsr].fitParamI[iparam] = psr[ipsr].fitinfo.paramIndex[iparam];
+                psr[ipsr].fitParamK[iparam] = psr[ipsr].fitinfo.paramCounters[iparam];
+            }
+
             logdbg("Updating the parameters");
             logtchk("updating the parameter values");
             /*
@@ -680,6 +687,63 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 ++OUT.nConstraints;
             }
         }
+        if (psr->nTNBandNoise > 0){
+            int counter=0;
+            for (int iband =0; iband < psr->nTNBandNoise; ++iband){
+                for (int i=0;i<psr->TNBandNoiseC[iband];++i) {
+                    /**
+                     * Temporary fix here!
+                     * Enable the TN parameters.
+                     */
+                    psr->param[param_band_red_sin].fitFlag[0]=1;
+                    psr->param[param_band_red_cos].fitFlag[0]=1;
+
+                    psr->param[param_band_red_sin].paramSet[0]=1;
+                    psr->param[param_band_red_cos].paramSet[0]=1;
+
+                    // End of temporary fix.
+
+                    OUT.constraintIndex[OUT.nConstraints]=constraint_band_red_sin;
+                    OUT.constraintCounters[OUT.nConstraints]=counter;
+                    OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_band;
+                    ++OUT.nConstraints;
+                    OUT.constraintIndex[OUT.nConstraints]=constraint_band_red_cos;
+                    OUT.constraintCounters[OUT.nConstraints]=counter;
+                    OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_band;
+                    ++OUT.nConstraints;
+                    ++counter;
+                }
+            }
+        }
+
+        if (psr->nTNGroupNoise > 0){
+            int counter=0;
+            for (int igroup =0; igroup < psr->nTNGroupNoise; ++igroup){
+                for (int i=0;i<psr->TNGroupNoiseC[igroup];++i) {
+                    /**
+                     * Temporary fix here!
+                     * Enable the TN parameters.
+                     */
+                    psr->param[param_group_red_sin].fitFlag[0]=1;
+                    psr->param[param_group_red_cos].fitFlag[0]=1;
+
+                    psr->param[param_group_red_sin].paramSet[0]=1;
+                    psr->param[param_group_red_cos].paramSet[0]=1;
+
+                    // End of temporary fix.
+
+                    OUT.constraintIndex[OUT.nConstraints]=constraint_group_red_sin;
+                    OUT.constraintCounters[OUT.nConstraints]=counter;
+                    OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_group;
+                    ++OUT.nConstraints;
+                    OUT.constraintIndex[OUT.nConstraints]=constraint_group_red_cos;
+                    OUT.constraintCounters[OUT.nConstraints]=counter;
+                    OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_group;
+                    ++OUT.nConstraints;
+                    ++counter;
+                }
+            }
+        }
 
         if (psr->TNDMAmp && psr->TNDMGam) {
             for (int i=0;i<psr->TNDMC;++i) {
@@ -804,6 +868,27 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         psr->param[param_red_sin].paramSet[0]=0;
         psr->param[param_red_cos].paramSet[0]=0;
     }
+    if (psr->nTNBandNoise > 0 ) {
+        /**
+         * Temporary fix here!
+         * Disable the TN parameters.
+         */
+        psr->param[param_band_red_sin].fitFlag[0]=0;
+        psr->param[param_band_red_cos].fitFlag[0]=0;
+        psr->param[param_band_red_sin].paramSet[0]=0;
+        psr->param[param_band_red_cos].paramSet[0]=0;
+    }
+    if (psr->nTNGroupNoise > 0 ) {
+        /**
+         * Temporary fix here!
+         * Disable the TN parameters.
+         */
+        psr->param[param_group_red_sin].fitFlag[0]=0;
+        psr->param[param_group_red_cos].fitFlag[0]=0;
+        psr->param[param_group_red_sin].paramSet[0]=0;
+        psr->param[param_group_red_cos].paramSet[0]=0;
+    }
+
     if (psr->TNDMAmp && psr->TNDMGam) {
         /**
          * Temporary fix here!
@@ -1060,6 +1145,42 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             }
             break;
 
+        case param_band_red_sin:
+        case param_band_red_cos:
+            {
+                int counter=0;
+                for (int iband=0; iband < psr->nTNBandNoise ; ++iband){
+                    for (int i=0; i < psr->TNBandNoiseC[iband] ; ++i){
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_band;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_band;
+                        OUT.paramCounters[OUT.nParams]=counter;
+                        OUT.paramIndex[OUT.nParams]=fit_param;
+                        ++OUT.nParams;
+                        ++counter;
+                    }
+                }
+            }
+            break;
+
+        case param_group_red_sin:
+        case param_group_red_cos:
+            {
+                int counter=0;
+                for (int igroup=0; igroup < psr->nTNGroupNoise ; ++igroup){
+                    for (int i=0; i < psr->TNGroupNoiseC[igroup] ; ++i){
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_group;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_group;
+                        OUT.paramCounters[OUT.nParams]=counter;
+                        OUT.paramIndex[OUT.nParams]=fit_param;
+                        ++OUT.nParams;
+                        ++counter;
+                    }
+                }
+            }
+            break;
+
+
+
         case param_red_dm_sin:
         case param_red_dm_cos:
             {
@@ -1073,6 +1194,14 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
 
             }
             break;
+
+        case param_ne_sw:
+            // solar wind
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ne_sw;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ne_sw;
+            ++OUT.nParams;
+            break;
+
         default:
             logerr("ERROR: No methods for fitting parameter %s (%d)",label_str[fit_param],fit_param);
             break;

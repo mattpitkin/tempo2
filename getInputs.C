@@ -68,7 +68,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 
     if (argc==2 && strcasecmp(argv[1],"-allParTim")!=0) /* Just have .tim file name */
     {
-        if (strcmp(argv[1],"-h")==0) /* Some help */
+        if (strcmp(argv[1],"-h")==0 || strcmp(argv[1],"-H")==0) /* Some help */
         {
             printf("\n");
             printf("%s\n\n",PACKAGE_STRING);
@@ -78,9 +78,9 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
             printf("\n");
             printf("Options: \n\n");
 
-            printf("-epoch centre     Centres the PEPOCH in the fit\n");
             printf("-f parFile        Selects parameter file\n");
-            printf("-dcm dcmFile      Data covariance matrix file\n");
+            printf("-epoch centre     Centres the PEPOCH in the fit\n");
+            printf("-dcf model        Enable Generalised Least Squares using given model file\n");
             printf("-gr name          Uses 'name' plugin for graphical interface\n");
             printf("-h                This help\n");
             printf("-list             Provides listing of clock corrections and residuals etc.\n");
@@ -96,12 +96,20 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
             printf("-norescale        Do not rescale parameter uncertainties by the sqrt(red. chisq)\n");
             printf("-displayVersion   Display detailed CVS version number of every file used.\n");
             printf("-noaccel          Disable LAPACK/BLAS acceleration.\n");
+            printf("-qrfit            Use QR decomposition instead of SVD (faster, more reliable)\n");
+            printf("-writeres         Write out prefit/postfit and design matrix in fit.\n");
+            printf("-debug            Print debuging information and files (very verbose!).\n");
+            printf("-clkdir {dir}     Add {dir} to the start of the clock search path.\n");
             printf("-v                Print verson number.\n");
-            printf("\n\n");
-            printf("Available plugins\n");
-            printplugs(false);
-            //	  system("ls $TEMPO2/plugins/ | grep plug | sed s/\"_\"/\" \"/ | awk '{print \"  - \" $1}' | sort | uniq");
-            printf("-----------------\n");
+            printf("-H                Print more help, including list of plugins \n");
+            printf("\n");
+            if (strcmp(argv[1],"-H")==0){
+                printf("\n\n");
+                printf("Available plugins\n");
+                printplugs(false);
+                //	  system("ls $TEMPO2/plugins/ | grep plug | sed s/\"_\"/\" \"/ | awk '{print \"  - \" $1}' | sort | uniq");
+                printf("-----------------\n");
+            }
             exit(1);
         }	    
         strcpy(timFile[timfile_num],argv[1]);

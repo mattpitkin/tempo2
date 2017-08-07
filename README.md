@@ -1,5 +1,3 @@
-[![Build Status](https://drone.io/bitbucket.org/psrsoft/tempo2/status.png)](https://drone.io/bitbucket.org/psrsoft/tempo2/latest)
-
 Git INSTALLATION README
 =======================
 
@@ -143,10 +141,10 @@ If you have pgplot installed, but it is not detected by the configure script, ch
 Check that you are using the same build of gcc and gfortran (or whatever compiler you are using).
 
 Note that on MacOSX there is often an issue where the default compiler is incompatible with gfortran.
-The gfortran compatible version is often called gcc-4 and gxx-4 or similar. Use this with:
+The gfortran compatible version is often called gcc-6 and gxx-6 or similar. Use this with:
 
-    export CC=gcc-4
-    export CXX=g++-4
+    export CC=gcc-6
+    export CXX=g++-6
 
 and reconfigure.
 

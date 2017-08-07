@@ -46,3 +46,4 @@ enum_str.C
 enum_str.h
 mpack_lite.double.inc
 mpack_lite.__float128.inc
+ltmain.sh

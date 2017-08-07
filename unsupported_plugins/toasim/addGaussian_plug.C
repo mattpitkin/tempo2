@@ -40,129 +40,138 @@ void updateDMvals(pulsar *psr,int p);
 
 extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
 {
-	char parFile[MAX_PSR][MAX_FILELEN];
-	char timFile[MAX_PSR][MAX_FILELEN];
-	int i,nit,j,p;
-	char fname[MAX_FILELEN];
-	double globalParameter;
-	long double result;
-	long seed = TKsetSeed();
+    char parFile[MAX_PSR][MAX_FILELEN];
+    char timFile[MAX_PSR][MAX_FILELEN];
+    int i,nit,j,p;
+    char fname[MAX_FILELEN];
+    double globalParameter;
+    long double result;
+    long seed = TKsetSeed();
 
-        long seed2 = TKsetSeed();
-        
-        double offset1;
-        double offset2;
+    long seed2 = TKsetSeed();
 
-        double beta = 0.3;
-        double sigma2 = 5;
-        double mu2 = 0;
+    double offset1;
+    double offset2;
 
-	//
-	// For the output file
-	//
-	toasim_header_t* header;
-	toasim_header_t* read_header;
-	FILE* file;
-	double offsets[MAX_OBSN]; // Will change to doubles - should use malloc
-	// Create a set of corrections.
-	toasim_corrections_t* corr = (toasim_corrections_t*)malloc(sizeof(toasim_corrections_t));
+    double beta = 0.3;
+    double sigma2 = 5;
+    double mu2 = 0;
+    bool outlier_enabled=false;
 
-	corr->offsets=offsets;
-	// Same length string in every iteration - defined in r_param_length see below
-	corr->a0=0; // constant
-	corr->a1=0; // a1*x
-	corr->a2=0; // a2*x*X
+    //
+    // For the output file
+    //
+    toasim_header_t* header;
+    toasim_header_t* read_header;
+    FILE* file;
+    double offsets[MAX_OBSN]; // Will change to doubles - should use malloc
+    // Create a set of corrections.
+    toasim_corrections_t* corr = (toasim_corrections_t*)malloc(sizeof(toasim_corrections_t));
 
-	*npsr = 0;
-	nit = 1;
+    corr->offsets=offsets;
+    // Same length string in every iteration - defined in r_param_length see below
+    corr->a0=0; // constant
+    corr->a1=0; // a1*x
+    corr->a2=0; // a2*x*X
 
-	printf("Graphical Interface: addGaussian\n");
-	printf("Author:              G. Hobbs, M. Keith\n");
-	printf("Version:             1.0\n");
+    *npsr = 0;
+    nit = 1;
 
-	/* Obtain all parameters from the command line */
-	for (i=2;i<argc;i++)
-	{
+    printf("Graphical Interface: addGaussian\n");
+    printf("Author:              G. Hobbs, M. Keith\n");
+    printf("Version:             1.0\n");
 
-		if (strcmp(argv[i],"-nreal")==0){
-			nit=atoi(argv[++i]);
-		}
-		if (strcmp(argv[i],"-f")==0)
-		{
-			strcpy(parFile[*npsr],argv[++i]); 
-			strcpy(timFile[*npsr],argv[++i]);
-			(*npsr)++;
-		}
-		if (strcmp(argv[i],"-seed")==0){
-			sscanf(argv[++i],"%ld",&seed);
-		}
-		if (strcmp(argv[i],"-muc")==0){
-			sscanf(argv[++i],"%ld",&mu2);
-		}
-		if (strcmp(argv[i],"-sigmac")==0){
-			sscanf(argv[++i],"%ld",&sigma2);
-		}
-		if (strcmp(argv[i],"-pc")==0){
-			sscanf(argv[++i],"%ld",&beta);
-		}
-	}
+    /* Obtain all parameters from the command line */
+    for (i=2;i<argc;i++)
+    {
 
-	if (seed > 0)seed=-seed;
-
-	readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
-	// Now read in all the .tim files
-	readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
-
-	preProcess(psr,*npsr,argc,argv);
-
-	for (p=0;p<*npsr;p++)
-	{
-		printf("NTOA = %d\n",psr[p].nobs);
-		header = toasim_init_header();
-		strcpy(header->short_desc,"addGaussian");
-		strcpy(header->invocation,argv[0]);
-		strcpy(header->timfile_name,timFile[p]);
-		strcpy(header->parfile_name,"Unknown");
-		header->seed = seed;
-
-		header->ntoa = psr[p].nobs;
-		header->nrealisations = nit;
-
-		// First we write the header...
-		sprintf(fname,"%s.addGauss",timFile[p]);
-		file = toasim_write_header(header,fname);
+        if (strcmp(argv[i],"-nreal")==0){
+            nit=atoi(argv[++i]);
+        }
+        if (strcmp(argv[i],"-f")==0)
+        {
+            strcpy(parFile[*npsr],argv[++i]); 
+            strcpy(timFile[*npsr],argv[++i]);
+            (*npsr)++;
+        }
+        if (strcmp(argv[i],"-seed")==0){
+            sscanf(argv[++i],"%ld",&seed);
+        }
 
 
-		for (i=0;i<nit;i++)
-		{
-			if(i%10 == 0){
-				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-				printf("Iteration %d/%d",i+1,nit);
-				fflush(stdout);
-			}
-			for (j=0;j<psr[p].nobs;j++){
-                                        offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
-                                        offset1 = TKranDev(&seed);
+        if (strcmp(argv[i],"-muc")==0){
+            outlier_enabled=true;
+            sscanf(argv[++i],"%ld",&mu2);
+        }
+        if (strcmp(argv[i],"-sigmac")==0){
+            outlier_enabled=true;
+            sscanf(argv[++i],"%ld",&sigma2);
+        }
+        if (strcmp(argv[i],"-pc")==0){
+            outlier_enabled=true;
+            sscanf(argv[++i],"%ld",&beta);
+        }
+    }
 
-                                        if (offset1<=beta){
-					                  offsets[j] = (double)(mu2*1.0e-6+sigma2*psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));                
-                                        }
-                                        else
-                                        {
-                                               offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
-                                        }
-			}
-			toasim_write_corrections(corr,header,file);
-		}
-		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-		printf("Iteration %d/%d\n",i,nit);
+    if (seed > 0)seed=-seed;
 
-		printf("Close file\n");
-		fclose(file);
-	}
-	return 0;
+    readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+    // Now read in all the .tim files
+    readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+
+    preProcess(psr,*npsr,argc,argv);
+
+    for (p=0;p<*npsr;p++)
+    {
+        printf("NTOA = %d\n",psr[p].nobs);
+        header = toasim_init_header();
+        strcpy(header->short_desc,"addGaussian");
+        strcpy(header->invocation,argv[0]);
+        strcpy(header->timfile_name,timFile[p]);
+        strcpy(header->parfile_name,"Unknown");
+        header->seed = seed;
+
+        header->ntoa = psr[p].nobs;
+        header->nrealisations = nit;
+
+        // First we write the header...
+        sprintf(fname,"%s.addGauss",timFile[p]);
+        file = toasim_write_header(header,fname);
+
+
+        for (i=0;i<nit;i++)
+        {
+            if(i%10 == 0){
+                printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+                printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+                printf("Iteration %d/%d",i+1,nit);
+                fflush(stdout);
+            }
+            for (j=0;j<psr[p].nobs;j++){
+                offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
+
+                if (outlier_enabled){
+                offset1 = TKranDev(&seed);
+
+                if (offset1<=beta){
+                    offsets[j] = (double)(mu2*1.0e-6+sigma2*psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));                
+                }
+                else
+                {
+                    offsets[j] = (double)(psr[p].obsn[j].toaErr*1.0e-6*TKgaussDev(&seed));
+                }
+                }
+            }
+            toasim_write_corrections(corr,header,file);
+        }
+        printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+        printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+        printf("Iteration %d/%d\n",i,nit);
+
+        printf("Close file\n");
+        fclose(file);
+    }
+    return 0;
 }
 
 const char * plugVersionCheck = TEMPO2_h_VER;

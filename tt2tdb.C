@@ -98,8 +98,8 @@ void tt2tb(pulsar *psr,int npsr)
 
 		if(psr[p].useCalceph ==1)
 		  {
-		    fprintf(stderr, "here?\n");
-		    fprintf(stderr, "%.3Le\n",  psr[0].obsn[i].correctionTT_calcEph);
+		    //fprintf(stderr, "here?\n");
+		    //fprintf(stderr, "%.3Le\n",  psr[0].obsn[i].correctionTT_calcEph);
 		    deltaT = psr[0].obsn[i].correctionTT_calcEph;
 		  }
 

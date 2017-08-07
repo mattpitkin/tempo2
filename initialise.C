@@ -53,6 +53,8 @@ void initialise(pulsar *psr,int noWarnings)
 
 void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
 {
+
+
     int fail = 0;
     int i,j,k;
     char temp[100];
@@ -177,12 +179,14 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     for (i=0;i<MAX_JUMPS;i++)
     {
         psr->jumpVal[i] = 0.0;
+        psr->jumpSAT[i] = 0;
         psr->jumpValErr[i] = 0.0;
     }
     psr->nT2efac  = 0; // Number of T2EFACs
     psr->nT2equad = 0; // Number of T2EQUADs
     psr->T2globalEfac = 1; // A global multiplying factor
 
+    psr->nSx = 0; //number of SX parameters
     psr->nTNEF  = 0; // Number of TNEFACs
     psr->nTNEQ = 0; // Number of TNEQUADs
     psr->nTNECORR = 0; // Number of TNECORRs
@@ -337,6 +341,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_track].shortlabel[0],"TRACK");
     strcpy(psr->param[param_dshk].label[0],"DSHK (kpc)");
     strcpy(psr->param[param_dshk].shortlabel[0],"DSHK");
+
+    strcpy(psr->param[param_iperharm].label[0],"IPERHARM");
+    strcpy(psr->param[param_iperharm].shortlabel[0],"IPERHARM");
 
     /* Telescope coordinates */
 
@@ -503,6 +510,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_brake].label[0],"BRAKING INDEX"); 
     strcpy(psr->param[param_brake].shortlabel[0],"BRAKE");
 
+    strcpy( psr->param[param_ne_sw].label[0], "NE_SW (cm^-3)" );
+    strcpy( psr->param[param_ne_sw].shortlabel[0], "NE_SW" );
 
     for (k=0;k<psr->param[param_bpjep].aSize;k++)
     {
@@ -557,6 +566,33 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"DMXR2_%04d",k+1);
         strcpy(psr->param[param_dmxr2].shortlabel[k],temp);
     }
+
+        for (k=0;k<psr->param[param_sx].aSize;k++)
+    {
+        sprintf(temp,"SX_%04d (cm^-3 pc)",k+1);
+        strcpy(psr->param[param_sx].label[k],temp);
+        sprintf(temp,"SX_%04d",k+1);
+        strcpy(psr->param[param_sx].shortlabel[k],temp);
+
+
+        sprintf(temp,"SXR1_%04d (MJD)",k+1);
+        strcpy(psr->param[param_sxr1].label[k],temp);
+        sprintf(temp,"SXR1_%04d",k+1);
+        strcpy(psr->param[param_sxr1].shortlabel[k],temp);
+
+        sprintf(temp,"SXR2_%04d (MJD)",k+1);
+        strcpy(psr->param[param_sxr2].label[k],temp);
+        sprintf(temp,"SXR2_%04d",k+1);
+        strcpy(psr->param[param_sxr2].shortlabel[k],temp);
+
+
+        sprintf(temp,"SXER_%04d (MJD)",k+1);
+        strcpy(psr->param[param_sxer].label[k],temp);
+        sprintf(temp,"SXER_%04d",k+1);
+        strcpy(psr->param[param_sxer].shortlabel[k],temp);
+      }
+        
+
 }
 
 
@@ -582,6 +618,8 @@ void allocateMemory(pulsar *psr, int realloc)
             psr->param[i].aSize = 9;
         else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
             psr->param[i].aSize = MAX_DMX;
+	else if (i==param_sx || i==param_sxr1 || i==param_sxr2 || i==param_sxer)
+		psr->param[i].aSize = MAX_SX;
         else if (i==param_fd)
             psr->param[i].aSize = 9;
         else if (i==param_telx) psr->param[i].aSize = 4;
@@ -615,7 +653,8 @@ void allocateMemory(pulsar *psr, int realloc)
             psr->param[i].err[j]      = 0.0;	     
             psr->param[i].val[j]      = 0.0;
         }
-    }
+
+	}
 }
 
 
