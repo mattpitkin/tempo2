@@ -1,5 +1,6 @@
 #include <cmath>
 #include <assert.h>
+#include <string.h>
 #include "t2fit_nestlike.h"
 #include "enum_str.h"
 
@@ -84,3 +85,161 @@ double t2FitFunc_nestlike_jitter(pulsar *psr, int ipsr ,double x ,int ipos ,para
 void t2UpdateFunc_nestlike_jitter(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
     logmsg("%d %s %.2f %lg %lg",ipsr,label_str[label],(double)psr[ipsr].obsn[k].bat,val,err);
 }
+
+
+
+
+
+double t2FitFunc_nestlike_band(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+	int totalBandNoiseCoeff=0;
+
+    int iband = 0;
+    int ichan = k;
+    while (ichan >= psr[ipsr].TNBandNoiseC[iband]){
+        ichan -= psr[ipsr].TNBandNoiseC[iband];
+        ++iband;
+    }
+
+    // we are in channel ichan, band iband.
+
+
+    double ret = 0;
+
+    double BandLF = psr[ipsr].TNBandNoiseLF[iband];
+    double BandHF = psr[ipsr].TNBandNoiseHF[iband];
+    double BandAmp=pow(10.0, psr[ipsr].TNBandNoiseAmp[iband]);
+    double BandSpec=psr[ipsr].TNBandNoiseGam[iband];
+
+
+    double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+    double freq = ((double)(ichan+1.0))/(maxtspan);
+
+    // check that we are indeed in a band
+    if (psr[ipsr].obsn[ipos].freq > BandLF && psr[ipsr].obsn[ipos].freq < BandHF) {
+        switch (label){
+            case param_band_red_cos:
+                ret = cos(2.0*M_PI*freq*x);
+                break;
+            case param_band_red_sin:
+                ret = sin(2.0*M_PI*freq*x);
+                break;
+            default:
+                assert(0);
+                break;
+        }
+    }
+    return ret;
+}
+
+
+double t2FitFunc_nestlike_group(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+
+    int totalGroupCoeff=0;
+
+    int igroup = 0;
+    int ichan = k;
+    while (ichan >= psr[ipsr].TNGroupNoiseC[igroup]){
+        ichan -= psr[ipsr].TNGroupNoiseC[igroup];
+        ++igroup;
+    }
+
+    // we are in channel ichan, group igroup.
+
+
+    double ret=0.0;
+
+    double GroupAmp=pow(10.0, psr[ipsr].TNGroupNoiseAmp[igroup]);
+    double GroupSpec=psr[ipsr].TNGroupNoiseGam[igroup];
+    int GroupC=psr[ipsr].TNGroupNoiseC[igroup];
+
+    double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+    double freq = ((double)(ichan+1.0))/(maxtspan);
+
+    bool ingrp=false;
+
+    for (int j=0; j < psr[ipsr].obsn[ipos].nFlags; j++) {
+        //Check Group Noise Flag
+        if (strcmp(
+                    psr[ipsr].obsn[ipos].flagID[j],
+                    psr[ipsr].TNGroupNoiseFlagID[igroup]
+                    )==0 ) {
+            if (strcmp(
+                        psr[ipsr].obsn[ipos].flagVal[j],
+                        psr[ipsr].TNGroupNoiseFlagVal[igroup]
+                      )==0 ) {
+                ingrp=true;
+                break;
+            }
+        }
+    }
+
+    if(ingrp){ // we are in this group
+        switch (label){
+            case param_group_red_cos:
+                ret = cos(2.0*M_PI*freq*x);
+                break;
+            case param_group_red_sin:
+                ret = sin(2.0*M_PI*freq*x);
+                break;
+            default:
+                assert(0);
+                break;
+        }
+
+    }
+    return ret;
+
+}
+
+
+
+void t2UpdateFunc_nestlike_band(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
+    int iband = 0;
+    int ichan = k;
+    while (ichan >= psr[ipsr].TNBandNoiseC[iband]){
+        ichan -= psr[ipsr].TNBandNoiseC[iband];
+        ++iband;
+    }
+
+    // we are in channel ichan, band iband.
+    logmsg("%d %s %d %d %d %lg %lg",ipsr,label_str[label],k,iband,ichan,val,err);
+    for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+        double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
+        double y = t2FitFunc_nestlike_band(psr,ipsr,x,iobs,label,k);
+        psr[ipsr].obsn[iobs].TNRedSignal  += y *val;
+        psr[ipsr].obsn[iobs].TNRedErr     += pow(y*err,2);
+
+    }
+}
+
+void t2UpdateFunc_nestlike_group(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
+    int igroup = 0;
+    int ichan = k;
+    while (ichan >= psr[ipsr].TNGroupNoiseC[igroup]){
+        ichan -= psr[ipsr].TNGroupNoiseC[igroup];
+        ++igroup;
+    }
+
+    // we are in channel ichan, group igroup.
+    logmsg("%d %s %d %d %d %lg %lg",ipsr,label_str[label],k,igroup,ichan,val,err);
+    for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+        double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
+        double y = t2FitFunc_nestlike_group(psr,ipsr,x,iobs,label,k);
+        psr[ipsr].obsn[iobs].TNRedSignal  += y *val;
+        psr[ipsr].obsn[iobs].TNRedErr     += pow(y*err,2);
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

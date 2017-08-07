@@ -301,13 +301,13 @@ int main(int argc, char *argv[])
             if (strcmp(commandLine[i],"-gr2")==0){
                 sprintf(str,"./%s_%s_plug.t2",commandLine[i+1],tempo2MachineType);
                 printf("Looking for %s\n",str);
-                module = dlopen(str, RTLD_NOW);
+                module = dlopen(str, RTLD_NOW|RTLD_GLOBAL);
             } else{
                 for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
                     sprintf(str,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
                             commandLine[i+1],tempo2MachineType);
                     printf("Looking for %s\n",str);
-                    module = dlopen(str, RTLD_NOW); 
+                    module = dlopen(str, RTLD_NOW|RTLD_GLOBAL); 
                     if(module==NULL){	  
                         printf("dlerror() = %s\n",dlerror());
                     } else break;
@@ -570,7 +570,7 @@ int main(int argc, char *argv[])
                         sprintf(str,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
                                 outputSO,tempo2MachineType);
                         printf("Looking for %s\n",str);
-                        module = dlopen(str, RTLD_NOW); 
+                        module = dlopen(str, RTLD_NOW|RTLD_GLOBAL); 
                         if(module==NULL){	  
                             printf("dlerror() = %s\n",dlerror());
                         } else break;

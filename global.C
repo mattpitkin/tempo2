@@ -63,133 +63,132 @@ double FCALPHA, WNLEVEL, EXPSMOOTH, UPW, NFIT, FCFINAL;
 
 void extra_delays(pulsar *psr,int npsr)
 {  
-    const char *CVS_verNum = "$Id$";
-    if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"extra_delays()",CVS_verNum);
+	const char *CVS_verNum = "$Id$";
+	if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"extra_delays()",CVS_verNum);
 
-    calculate_bclt(psr,npsr);/* 3. Calculate bclt  */
-    /*  shapiro_delay(psr,npsr); */ /* 1. Calculate the Shapiro delay */
-    /* dm_delays(psr,npsr); */    /* 2. Extra dispersion measure delays */  
+	calculate_bclt(psr,npsr);/* 3. Calculate bclt  */
+	/*  shapiro_delay(psr,npsr); */ /* 1. Calculate the Shapiro delay */
+	/* dm_delays(psr,npsr); */    /* 2. Extra dispersion measure delays */  
 }
 
 void clock_corrections(pulsar *psr,int npsr)
 {  
-    const char *CVS_verNum = "$Id$";
-    if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"clock_corrections()",CVS_verNum);
+	const char *CVS_verNum = "$Id$";
+	if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"clock_corrections()",CVS_verNum);
 
-    logdbg("Calling toa2utc");
-    toa2utc(psr,npsr);        /* 1. UTC(Observatory) -> UTC(NIST) */
-    logdbg("Calling tai2ut1");
-    //   utc2tai(psr,npsr);     /* 2. UTC(NIST) -> TAI              */
-    tai2ut1(psr,npsr);        /* 3. TAI -> UT1                    */
-    //   tai2tt(psr,npsr);      /* 4. TAI -> TT                     */
-    logdbg("Calling tt2tb");
-    //tt2tb(psr,npsr);          /* 5. Rough estimate of TT-TB (+-2.2 microsec) */
-  if(psr[0].useCalceph ==0)
-    {
-      
-      tt2tb(psr,npsr);         
-    }
-  else
-    {
-      tt2tb_calceph(psr,npsr);
-      tt2tb(psr,npsr);
-    }
-    
+	logdbg("Calling toa2utc");
+	toa2utc(psr,npsr);        /* 1. UTC(Observatory) -> UTC(NIST) */
+	logdbg("Calling tai2ut1");
+	//   utc2tai(psr,npsr);     /* 2. UTC(NIST) -> TAI              */
+	tai2ut1(psr,npsr);        /* 3. TAI -> UT1                    */
+	//   tai2tt(psr,npsr);      /* 4. TAI -> TT                     */
+	logdbg("Calling tt2tb");
+	//tt2tb(psr,npsr);          /* 5. Rough estimate of TT-TB (+-2.2 microsec) */
+	if(psr[0].useCalceph ==0)
+	{
 
-    logdbg("Done clock corrections");
+		tt2tb(psr,npsr);         
+	}
+	else
+	{
+		tt2tb_calceph(psr,npsr);
+		tt2tb(psr,npsr);
+	}
+
+
+	logdbg("Done clock corrections");
 }
 
 void ephemeris_routines(pulsar *psr,int npsr)
 { 
-    const char *CVS_verNum = "$Id$";
-    if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"ephemeris_routines()",CVS_verNum);
+	const char *CVS_verNum = "$Id$";
+	if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"ephemeris_routines()",CVS_verNum);
 
-    logtchk("call vectorPulsar()");
-    vectorPulsar(psr,npsr);   /* 1. Form a vector pointing at the pulsar */
-    logtchk("call readEphemeris()");
-    if (psr[0].useCalceph == 0)
-      readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
-    else
-      readEphemeris_calceph(psr,npsr);
-    logtchk("call get_obsCoord()");
-    get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
-    logtchk("call tt2tb()");
-    if  (psr[0].useCalceph == 0)
-      {
-      tt2tb(psr,npsr);          /* Observatory/time-dependent part of TT-TB */
-      }
-    else
-      {
-	tt2tb(psr,npsr); 
-	tt2tb_calceph(psr,npsr);
-      }
-    logtchk("call readEphemeris()");
-    if (psr[0].useCalceph == 0)
-        readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
-    else
-        readEphemeris_calceph(psr,npsr);
+	logtchk("call vectorPulsar()");
+	vectorPulsar(psr,npsr);   /* 1. Form a vector pointing at the pulsar */
+	logtchk("call readEphemeris()");
+	if (psr[0].useCalceph == 0)
+		readEphemeris(psr,npsr,0);/* 2. Read the ephemeris */
+	else
+		readEphemeris_calceph(psr,npsr);
+	logtchk("call get_obsCoord()");
+	get_obsCoord(psr,npsr);   /* 3. Get Coordinate of observatory relative to Earth's centre */
+	logtchk("call tt2tb()");
+	if  (psr[0].useCalceph == 0)
+	{
+		tt2tb(psr,npsr);          /* Observatory/time-dependent part of TT-TB */
+	}
+	else
+	{
+		tt2tb(psr,npsr); 
+		tt2tb_calceph(psr,npsr);
+	}
+	logtchk("call readEphemeris()");
+	if (psr[0].useCalceph == 0)
+		readEphemeris(psr,npsr,0);  /* Re-evaluate ephemeris with correct TB */ 
+	else
+		readEphemeris_calceph(psr,npsr);
 }
 
 void formBatsAll(pulsar *psr,int npsr)
 {
-    const char *CVS_verNum = "$Id$";
-    if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"formBatsAll()",CVS_verNum);
+	const char *CVS_verNum = "$Id$";
+	if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"formBatsAll()",CVS_verNum);
 
-    logtchk("enter formBatsAll()");
-    logdbg("Calling clock corrections");
-    logtchk("call clock_corrections()");
-    clock_corrections(psr,npsr);          /* Clock corrections  ... */  
-    logdbg("Reading ephemeris routines");
-    logtchk("call ephemeris_routines()");
-    ephemeris_routines(psr,npsr);         /* Ephemeris routines ... */
-    logdbg("Reading extra delays");
-    logtchk("call extra_delays()");
-    extra_delays(psr,npsr);               /* Other time delays  ... */
-    logtchk("call formBats()");
-    formBats(psr,npsr);                   /* Form Barycentric arrival times */
-    logtchk("call secularMotion()");
-    secularMotion(psr,npsr); 
-    logtchk("exit formBatsAll()");
+	logtchk("enter formBatsAll()");
+	logdbg("Calling clock corrections");
+	logtchk("call clock_corrections()");
+	clock_corrections(psr,npsr);          /* Clock corrections  ... */  
+	logdbg("Reading ephemeris routines");
+	logtchk("call ephemeris_routines()");
+	ephemeris_routines(psr,npsr);         /* Ephemeris routines ... */
+	logdbg("Reading extra delays");
+	logtchk("call extra_delays()");
+	extra_delays(psr,npsr);               /* Other time delays  ... */
+	logtchk("call formBats()");
+	formBats(psr,npsr);                   /* Form Barycentric arrival times */
+	logtchk("call secularMotion()");
+	secularMotion(psr,npsr); 
+	logtchk("exit formBatsAll()");
 }
 
 // Only recalculate that which is likely
 // to change if psr position has been altered.
 void updateBatsAll(pulsar *psr, int npsr)
 {
-    const char *CVS_verNum = "$Id$";
-    if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"updateBatsAll()",CVS_verNum);
+	const char *CVS_verNum = "$Id$";
+	if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"updateBatsAll()",CVS_verNum);
 
-    vectorPulsar(psr, npsr);
-    calculate_bclt(psr, npsr);
-    formBats(psr, npsr);
-    secularMotion(psr,npsr); 
+	vectorPulsar(psr, npsr);
+	calculate_bclt(psr, npsr);
+	formBats(psr, npsr);
+	secularMotion(psr,npsr); 
 }
 
 
 // Display the version number if it hasn't already been displayed
 void CVSdisplayVersion(const char *file,const char *func,const char *verNum)
 {
-    static char alreadyFunc[MAX_FUNCTIONS][64],alreadyFile[MAX_FUNCTIONS][64];
-    static int counter=0;
-    int i,have=0;
-    for (i=0;i<counter;i++)
-    {
-        if (strcmp(alreadyFunc[i],func)==0 &&
-                strcmp(alreadyFile[i],file)==0)
-        {
-            have=1;
-            break;
-        }
-    }
-    if (have==0)
-    {
-        if (counter==0) // First go display tempo2.h version
-            printf("[TEMPO2 VERSION:] [%-20.20s] [%-20.20s] [%-20.20s]\n","tempo2.h","",TEMPO2_h_VER);
-        printf("[TEMPO2 VERSION:] [%-20.20s] [%-20.20s] [%-20.20s]\n",file,func,verNum);
-        strcpy(alreadyFunc[counter],func);
-        strcpy(alreadyFile[counter],file);
-        counter++;
-    }
+	static char alreadyFunc[MAX_FUNCTIONS][64],alreadyFile[MAX_FUNCTIONS][64];
+	static int counter=0;
+	int i,have=0;
+	for (i=0;i<counter;i++)
+	{
+		if (strcmp(alreadyFunc[i],func)==0 &&
+				strcmp(alreadyFile[i],file)==0)
+		{
+			have=1;
+			break;
+		}
+	}
+	if (have==0)
+	{
+		if (counter==0) // First go display tempo2.h version
+			printf("[TEMPO2 VERSION:] [%-20.20s] [%-20.20s] [%-20.20s]\n","tempo2.h","",TEMPO2_h_VER);
+		printf("[TEMPO2 VERSION:] [%-20.20s] [%-20.20s] [%-20.20s]\n",file,func,verNum);
+		strcpy(alreadyFunc[counter],func);
+		strcpy(alreadyFile[counter],file);
+		counter++;
+	}
 }
-
 

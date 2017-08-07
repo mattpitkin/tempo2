@@ -60,8 +60,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	printf("------------------------------------------\n");
 	printf("Output interface:    fermi\n");
 	printf("Author:              Lucas Guillemot\n");
-	printf("Updated:             4 October 2013\n");
-	printf("Version:             5.10\n");
+	printf("Updated:             10 April 2017\n");
+	printf("Version:             6.0\n");
 	printf("------------------------------------------\n");
 	printf("\n");
 
@@ -103,6 +103,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     int  using_tt        = 1;
 	
 	int  ophase          = 0;
+	int  cacheft2        = 0;
 	int  graph	         = 1;
 	int  output_file     = 0;
 	int  output_pos      = 0;
@@ -152,6 +153,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 	double obs_earth[max_rows][3];
 
 	double sctime1 = 0., sctime2 = 0.;
+	double **scposn   = NULL;
+	double *sctime    = NULL;
 	double scposn1[3] = {0., 0., 0.};
 	double scposn2[3] = {0., 0., 0.};
 	double intposn[3] = {0., 0., 0.};
@@ -249,6 +252,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		{
 			ophase = 1;
 		}
+		else if (strcmp(argv[i],"-cacheft2")==0)
+		{
+			cacheft2 = 1;
+		}
 		else if (strcmp(argv[i],"-col")==0)
 		{
 			strcpy(phasecol,argv[i+1]);
@@ -292,6 +299,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			printf("\t -profile XXX: stores the binned light curve in file XXX (plotting mode only)\n");
 			printf("\t -phase: stores phases in the FT1 by the ones calculated by TEMPO2\n");
 			printf("\t -ophase: will calculate orbital phases instead of pulse phases. Changes default column name to ORBITAL_PHASE.\n");
+			printf("\t -cacheft2: will read the FT2 file once, and store spacecraft positions and times into memory. Can speed up the process substantially.\n");
 			printf("\t -col XXX: phases will be stored in column XXX. Default is PULSE_PHASE\n");
 			printf("\t -tmin XXX: event times smaller than MJD XXX will be skipped.\n");
 			printf("\t -tmax XXX: event times larger than MJD XXX will be skipped.\n");
@@ -393,7 +401,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             else if (strcmp(value,"TT"))
             {
                 fprintf(stderr,"Error: TIMESYS is %s rather than TT or TDB; unable to proceed.\n", value);
-                exit(2);
+                exit(-1);
             }
         }
         else
@@ -608,15 +616,65 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			if (temptime > maxFT2time) maxFT2time = temptime;
 		}
 	}
+	
+	fits_close_file(ft2, &status);
+	
+	if (cacheft2)
+	{
+		printf("Allocating memory for FT2 spacecraft positions.\n");
+		
+		sctime = (double *) calloc(nrows_FT2, sizeof(double));
+		if (sctime == NULL)
+		{
+			fprintf(stderr,"Unable to allocate memory for sctime.\n");
+			exit(-1);
+		}
 
+		scposn = (double **) calloc(nrows_FT2, sizeof(double *));
+		if (scposn == NULL)
+		{
+			fprintf(stderr,"Unable to allocate memory for scposn.\n");
+			exit(-1);
+		}
+		
+		for (j=0; j<nrows_FT2; j++)
+		{
+			scposn[j] = (double *) calloc(3, sizeof(double));
+			if (scposn[j] == NULL)
+			{
+				fprintf(stderr,"Unable to allocate memory for scposn.\n");
+				exit(-1);
+			}
+		}
+		
+		printf("Caching FT2 data.\n");
+		
+		if (!fits_open_file(&ft2,FT2, READONLY, &open_status))
+		{
+			fits_movabs_hdu(ft2,2,NULL,&status);
+			
+			for (j = 1; j<=nrows_FT2; j++)
+			{
+				fits_read_col_dbl(ft2,FT2_time_col1,j,1,1,nulval,&temptime,&anynul,&status);
+				fits_read_col_dbl(ft2,FT2_pos_col,j,1,3,nulval,scposn1,&anynul,&status);
+				sctime[j-1] = temptime;
+				
+				for (i=0;i<3;i++)
+				{
+					scposn[j-1][i] = scposn1[i];
+				}
+			}
+		}
+		
+		fits_close_file(ft2, &status);
+	}
+	
 	if (open_status != 0)
 	{
 		printf("Can't find %s !\n",FT2);
 		exit(-1);
 	}
 
-	fits_close_file(ft2, &status);
-	
 	printf("First START date in FT2:  %lf MET (s)\n",minFT2time);
 	printf(" Last START date in FT2:  %lf MET (s)\n\n",maxFT2time);
 	
@@ -827,26 +885,63 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			}
 			else
 			{
-				if (!fits_open_file(&ft2,FT2, READONLY, &status))
+				if (cacheft2)
 				{
-					fits_movabs_hdu(ft2,2,NULL,&status);
-	
-					if (time_MET_TT[i] < sctime1) j = 1;		// Important, if times in FT1 are not monotonically increasing
-	
-					for (;j<=nrows_FT2;j++)
+					sctime1 = sctime[j];
+					
+					if (time_MET_TT[i] < sctime1)
 					{
-						fits_read_col_dbl(ft2,FT2_time_col1,j,1,1,nulval,&sctime2,&anynul,&status);
-	
+						while ((time_MET_TT[i] < sctime2) && (j >= 1))
+						{
+							sctime2 = sctime[j];
+							j--;
+						}
+					}
+					
+					for (;j<=nrows_FT2; j++)
+					{
+						sctime2 = sctime[j];
 						if (time_MET_TT[i] < sctime2) break;
 					}
-	
-					fits_read_col_dbl(ft2,FT2_time_col1,j-1,1,1,nulval,&sctime1,&anynul,&status);
-	
-					fits_read_col_dbl(ft2,FT2_pos_col,j-1,1,3,nulval,scposn1,&anynul,&status);
-					fits_read_col_dbl(ft2,FT2_pos_col,j,1,3,nulval,scposn2,&anynul,&status);
+					
+					sctime1 = sctime[j-1];
+					for (k=0;k<3;k++)
+					{
+						scposn1[k] = scposn[j-1][k];
+						scposn2[k] = scposn[j][k];
+					}
 				}
-	
-				fits_close_file(ft2, &status);
+				else
+				{
+					if (!fits_open_file(&ft2,FT2, READONLY, &status))
+					{
+						fits_movabs_hdu(ft2,2,NULL,&status);
+						
+						if (time_MET_TT[i] < sctime1)		// Important, if times in FT1 are not monotonically increasing
+						{
+							// Don't go back to the start, just read backwards until we get to where we should be
+							while ((time_MET_TT[i] < sctime2) && (j > 1))
+							{
+								fits_read_col_dbl(ft2,FT2_time_col1,j,1,1,nulval,&sctime2,&anynul,&status);
+								j--;
+							}
+						}
+						
+						for (;j<=nrows_FT2;j++)
+						{
+							fits_read_col_dbl(ft2,FT2_time_col1,j,1,1,nulval,&sctime2,&anynul,&status);
+							
+							if (time_MET_TT[i] < sctime2) break;
+						}
+						
+						fits_read_col_dbl(ft2,FT2_time_col1,j-1,1,1,nulval,&sctime1,&anynul,&status);
+						
+						fits_read_col_dbl(ft2,FT2_pos_col,j-1,1,3,nulval,scposn1,&anynul,&status);
+						fits_read_col_dbl(ft2,FT2_pos_col,j,1,3,nulval,scposn2,&anynul,&status);
+					}
+					
+					fits_close_file(ft2, &status);
+				}
 				
 				// Interpolation
 				fract = (time_MET_TT[i] - sctime1) / (sctime2 - sctime1);
@@ -1260,6 +1355,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 	if (output_file) fclose(outputf);
 	if (output_pos)  fclose(output_posf);
+	
+	if (cacheft2)
+	{
+		free(sctime);
+		
+		for (j=0; j<nrows_FT2; j++)
+		{
+			free(scposn[j]);
+		}
+	}
 
 	// ------------------------------------------------- //
 	// Graphical output
