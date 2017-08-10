@@ -54,7 +54,7 @@ longdouble get_mjdref(fitsfile*ft_in) {
     while (1) {
 
         status = 0;
-        if (!fits_read_key(ft_in, TDOUBLE, (char*)"MJDREFI", 
+        if (!fits_read_key(ft_in, TDOUBLE, (char*)"MJDREFI",
                     (void*)&mjdrefi, comment, &status)) {
             mjdrefi_set = 1;
             if (mjdreff_set)
@@ -62,7 +62,7 @@ longdouble get_mjdref(fitsfile*ft_in) {
         }
 
         status = 0;
-        if (!fits_read_key(ft_in, TDOUBLE, (char*)"MJDREFF", 
+        if (!fits_read_key(ft_in, TDOUBLE, (char*)"MJDREFF",
                     (void*)&mjdreff, comment, &status)) {
             mjdreff_set = 1;
             if (mjdrefi_set)
@@ -70,7 +70,7 @@ longdouble get_mjdref(fitsfile*ft_in) {
         }
 
         status = 0;
-        if (!fits_read_key(ft_in, TDOUBLE, (char*)"MJDREF", 
+        if (!fits_read_key(ft_in, TDOUBLE, (char*)"MJDREF",
                     (void*)&mjdref, comment, &status)) {
             return mjdref;
         }
@@ -96,7 +96,7 @@ void check_barycentered(fitsfile*ft_in, int event_hdu) {
         exit(14);
     }
     status = 0;
-    if (fits_read_key(ft_in, TSTRING, (char*)"TIMESYS", 
+    if (fits_read_key(ft_in, TSTRING, (char*)"TIMESYS",
             (void*)value, comment, &status)) {
         fprintf(stderr,"Assuming TIMESYS is TDB\n");
     } else {
@@ -104,9 +104,9 @@ void check_barycentered(fitsfile*ft_in, int event_hdu) {
             fprintf(stderr,"Error: TIMESYS is %s rather than TDB; input file has not been barycentered\n", value);
             exit(2);
         }
-    } 
+    }
     status = 0;
-    if( fits_read_key(ft_in, TSTRING, (char*)"TIMEREF", 
+    if( fits_read_key(ft_in, TSTRING, (char*)"TIMEREF",
             (void*)value, comment, &status)) {
         fprintf(stderr,"Warning: assuming TIMEREF is SOLARSYSTEM\n");
     } else {
@@ -118,7 +118,7 @@ void check_barycentered(fitsfile*ft_in, int event_hdu) {
 }
 
 
-extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr) 
+extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
     // Provide basic information
     printf("\n");
@@ -152,12 +152,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     char timecol[32];
     strcpy(timecol,"TIME");
     char command[128];
-    
+
     char error_buffer[128];
     char history[128];
     int  par_file      = 0;
     int  in_file      = 0;
-    
+
     int  ophase        = 0;
     int  graph         = 0;
     int  output_file   = 0;
@@ -191,21 +191,21 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     // Time and satellite position definitions
     // ------------------------------------------------- */
 
-    longdouble mjd_ref = 51910.0007428703703703703; 
+    longdouble mjd_ref = 51910.0007428703703703703;
     int mjd_ref_set = 0;
     int timesys_found = 0;
     int timeref_found = 0;
     int phasecol_exists = 0;
     double temptime;
     double minFT1time = 999999999., maxFT1time = 0.;
-    
+
     double time_MET_TDB[max_rows];
     longdouble time_MJD_TDB;
     double obs_earth[max_rows][3];
 
     longdouble lasttime, tzrmjd_bary;
     double lastpos[3];
-    
+
     double tpb;
 
     /* ------------------------------------------------- //
@@ -227,7 +227,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                 fprintf(stderr, "Option -f requires an argument\n");
                 exit(5);
             }
-            strcpy(parFile[0],argv[i]); 
+            strcpy(parFile[0],argv[i]);
         }
         else if (strcmp(argv[i],"-in")==0)
         {
@@ -268,7 +268,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                 exit(5);
             }
             strcpy(phasecol,argv[i]);
-        }   
+        }
         else if (strcmp(argv[i],"-hdu")==0)
         {
             event_hdu_set = 1;
@@ -277,7 +277,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                 exit(5);
             }
             event_hdu = atoi(argv[i]);
-        }   
+        }
         else if (strcmp(argv[i],"-timecol")==0)
         {
             if (++i>=argc) {
@@ -285,7 +285,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                 exit(5);
             }
             strcpy(timecol,argv[i]);
-        }   
+        }
         else if (strcmp(argv[i],"-mjdref")==0)
         {
             if (++i>=argc) {
@@ -294,7 +294,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             }
             mjd_ref=parse_longdouble(argv[i]);
             mjd_ref_set = 1;
-        }   
+        }
         else if (strcmp(argv[i],"-h")==0)
         {
             // FIXME: option to accept a time column in MJDs
@@ -311,10 +311,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             printf("\t -mjdref XXX: use XXX as MJDREF instead of looking in header\n");
             printf("\t -h: this help.\n");
             printf("===============================================\n");
-            exit(0);            
+            exit(0);
         }
     }
-    
+
     if (!in_file)
     {
         printf("No input FITS file !\n");
@@ -360,7 +360,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         }
         check_barycentered(ft_in, event_hdu);
         mjd_ref = get_mjdref(ft_in);
-        
+
         fits_movabs_hdu(ft_in,event_hdu,NULL,&status);
 
         fits_get_num_rows(ft_in, &nrows_FT1, &status);
@@ -390,9 +390,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                 phasecol_exists = 1;
             }
         }
-        
+
         //
-        
+
         for (i=1;i<=nrows_FT1;i++)
         {
             fits_read_col_dbl(ft_in,FT1_time_col,i,1,1,nulval,&temptime,&anynul,&status);
@@ -400,7 +400,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             if (temptime > maxFT1time) maxFT1time = temptime;
         }
     }
-    
+
     if (open_status != 0)
     {
         fprintf(stderr,"Can't read input file '%s'!\n",FT_in);
@@ -413,7 +413,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     ld_printf("MJDREF: %Lf\n",mjd_ref);
     ld_printf("First photon date in input: %lf MET (s), MJD %Lf\n",minFT1time,minFT1time/86400.+mjd_ref);
     ld_printf(" Last photon date in input: %lf MET (s), MJD %Lf\n\n",maxFT1time,maxFT1time/86400.+mjd_ref);
-    
+
     // Copy input file to output file, possibly adding room for a new column
     if (phase_replace) {
         char FT_in_filter[MAX_FILELEN+20];
@@ -473,17 +473,17 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     float *phase;
     float *times;
-        
-        phase  = (float *)calloc(max_rows,sizeof(float));
-        times  = (float *)calloc(max_rows,sizeof(float));
-    
+
+        phase  = (float *)calloc(max_rows+2,sizeof(float));
+        times  = (float *)calloc(max_rows+2,sizeof(float));
+
     float tmin   = 100000., tmax   = -100000.;
-    
-    
+
+
     /* ------------------------------------------------- //
     // Barycentric TZRMJD
     // ------------------------------------------------- */
-    
+
     // A temporary file is created. It is first used to get the barycentered TZR
     temp_tim = fopen(timFile[0],"w+");
     fprintf(temp_tim,"FORMAT 1\n");
@@ -493,7 +493,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     // Load the arrival times
     readParfile(psr,parFile,timFile,*npsr);
     readTimfile(psr,timFile,*npsr);
-    
+
     if (ophase && (psr[0].param[param_pb].paramSet[0] == 0))
     {
         printf("Error: no binary parameters found in %s !\n",parFile[0]);
@@ -501,7 +501,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         system(command);
         exit(-1);
     }
-    
+
     if (psr->tzrsite[0] == '@')
     {
         tzrmjd_bary = psr->param[param_tzrmjd].val[0];
@@ -510,23 +510,23 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
         psr->obsn[0].sat = psr->param[param_tzrmjd].val[0];
         psr->obsn[0].freq = psr->param[param_tzrfrq].val[0];
-        strcpy(psr->obsn[0].telID, psr->tzrsite); 
+        strcpy(psr->obsn[0].telID, psr->tzrsite);
         psr->obsn[0].deleted = 0;
         psr->obsn[0].nFlags = 0;
         psr->obsn[0].delayCorr = 1;
         psr->obsn[0].clockCorr = 1;
-        
+
         // Form barycentric TZR
         formBatsAll(psr,*npsr);
         tzrmjd_bary = psr->obsn[0].bat;
     }
-    
-    
-    
+
+
+
 
     /* ------------------------------------------------- //
     // Main loop
-    // ------------------------------------------------- */ 
+    // ------------------------------------------------- */
     if (fits_open_file(&ft_in,FT_in, READONLY, &status)) {
         fprintf(stderr, "Problem reading from %s\n", FT_in);
         exit(6);
@@ -563,7 +563,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         for (i=0;i<nrows2;i++)
         {
-            time_MJD_TDB = time_MET_TDB[i]/86400.+mjd_ref;      
+            time_MJD_TDB = time_MET_TDB[i]/86400.+mjd_ref;
             if (psr[0].units == TDB_UNITS) {
                 ld_fprintf(temp_tim," photons 0.0 %.12Lf 0.00000 @\n",time_MJD_TDB);
             } else {
@@ -576,10 +576,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         fclose(temp_tim);
 
         // Load the arrival times
-        readParfile(psr,parFile,timFile,*npsr); 
+        readParfile(psr,parFile,timFile,*npsr);
         readTimfile(psr,timFile,*npsr);
-        
-        
+
+
 
 
         /* ------------------------------------------------- //
@@ -598,7 +598,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             for (k=0;k<3;k++) psr[0].obsn[i].observatory_earth[k] = psr[0].obsn[i-1].observatory_earth[k];
         }
 
-    
+
         /* ------------------------------------------------- //
         // Stick in a fake obs to get the reference phase
         // ------------------------------------------------- */
@@ -608,7 +608,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         psr->obsn[0].nFlags = 0;
         psr->obsn[0].delayCorr = 0;
         psr->obsn[0].clockCorr = 0;
-        
+
         // ------------------------------------------------- //
         // Form barycentric arrival times - step 1
         // ------------------------------------------------- //
@@ -618,14 +618,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         // ------------------------------------------------- //
         // Calculate event phases - step 1
-        // ------------------------------------------------- //     
+        // ------------------------------------------------- //
         formResiduals(psr,*npsr,0.0);
 
-        for (i=1;i<nrows2;i++)
+        for (i=1;i<nrows2+1;i++)
         {
                         if (ophase == 0)
                         {
-                                phase[event] = modf(psr[0].obsn[i].phase,&intpart);         
+                                phase[event] = modf(psr[0].obsn[i].phase,&intpart);
                                 if (phase[event] < 0.) phase[event]++;
                         }
                         else
@@ -638,7 +638,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                                 {
                                         tpb = (psr[0].obsn[i].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
                                 }
-                                
+
                                 phase[event] = modf(tpb+1000000.0,&intpart);;
                                 if (phase[event] < 0.) phase[event]++;
                         }
@@ -646,15 +646,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                         times[event] = psr[0].obsn[i].bat;
                         if (times[event] > tmax)    tmax = times[event];
                         if (times[event] < tmin)    tmin = times[event];
-                
+
             if (output_file)
             {
                 fprintf(outputf,"%d\t",event + rows_status);
                 ld_fprintf(outputf,"%20.15Lf %12.10le\n",psr[0].obsn[i].bat,phase[event]);
             }
-    
+
             event++;
-        }       
+        }
 
         // ------------------------------------------------- //
         // Calculation of the event phases - step 2
@@ -662,7 +662,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         // ------------------------------------------------- //
         psr[0].obsn[1].sat = lasttime;
         for (k=0;k<3;k++) psr[0].obsn[1].observatory_earth[k] = lastpos[k];
-    
+
         // ------------------------------------------------- //
         // Form barycentric arrival times - step 2
         // ------------------------------------------------- //
@@ -670,9 +670,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         // ------------------------------------------------- //
         // Calculate event phases - step 2
-        // ------------------------------------------------- //     
+        // ------------------------------------------------- //
         formResiduals(psr,*npsr,0.0);
-    
+
                 if (ophase == 0)
                 {
                         phase[event] = modf(psr[0].obsn[1].phase,&intpart);
@@ -688,12 +688,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                         {
                                 tpb = (psr[0].obsn[1].bat-psr[0].param[param_t0].val[0])/(psr[0].param[param_pb].val[0]);
                         }
-                        
+
                         phase[event] = modf(tpb+1000000.0,&intpart);;
                         if (phase[event] < 0.) phase[event]++;
                 }
-        
-                times[event] = psr[0].obsn[1].bat;      
+
+                times[event] = psr[0].obsn[1].bat;
                 if (times[event] > tmax)    tmax = times[event];
                 if (times[event] < tmin)    tmin = times[event];
 
@@ -710,9 +710,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         {
             for (event2=rows_status;event2<rows_status+nrows2;event2++)
             {
-                if (graph == 0) i = event2 - rows_status;
-                else i = event2 - 1;
-            
+                if (graph == 0) i = event2 - rows_status + 1;
+                else i = event2;
+
                 fits_write_col_flt(ft_out,FT1_phase_col,event2,1,1,&phase[i],&status);
             }
 
@@ -720,30 +720,30 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         /* ------------------------------------------------- //
         // End of the loop
-        // ------------------------------------------------- */ 
+        // ------------------------------------------------- */
         rows_status += nrows2;
         rows_left   = nrows_FT1 - rows_status + 1;
         nrows2      = min(rows_left,max_rows);
-        
+
                 event = 0;
     }
     if (phase_replace)
-        fits_close_file(ft_out, &status);      
+        fits_close_file(ft_out, &status);
     fits_close_file(ft_in, &status);
-        
+
     // ------------------------------------------------- //
     // Add a little bit of history to the header
     // ------------------------------------------------- //
     if (phase_replace)
     {
             sprintf(history,"Pulse phases calculated with the TEMPO2 photons plugin using ephemeris %s",parFile[0]);
-            
+
             if (!fits_open_file(&ft_out,FT_out, READWRITE, &open_status))
             {
                     status = 0;
                     fits_movabs_hdu(ft_out,event_hdu,NULL,&status);
                     fits_write_history(ft_out,history,&status);
-                    
+
                     if (status != 0)
                     {
                             fits_get_errstatus(status,error_buffer);
@@ -751,7 +751,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                             exit(-1);
                     }
             }
-            
+
             fits_close_file(ft_out, &status);
     }
 
@@ -761,11 +761,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     // ------------------------------------------------- //
     // Clean temporary tim file
-    // ------------------------------------------------- // 
+    // ------------------------------------------------- //
 
     sprintf(command,"rm -f %s",timFile[0]);
     system(command);
-    
+
     return 0;
 }
 
@@ -792,11 +792,11 @@ static void random_string(int length, char *str)
 {
     int i;
     int char_type;
-    
+
     for(i = 0; i < length; i++)
     {
         char_type = (int)(3 * (rand() / (RAND_MAX + 1.0)));
-    
+
         switch(char_type)
         {
             case 0:
@@ -812,6 +812,5 @@ static void random_string(int length, char *str)
                 str[i] = random_number();
                 break;
         }
-    }  
+    }
 }
-
