@@ -331,11 +331,11 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     if (doGlobalFit){
 
         const unsigned int nobs = totalGlobalData;
-        logmsg("Allocate Global Design Matrix");
+        logdbg("Allocate Global Design Matrix");
         double** designMatrix = malloc_blas(nobs,totalGlobalParams);
         double** white_designMatrix = malloc_blas(nobs,totalGlobalParams);
 
-        logmsg("Allocate Global Constraints Matrix");
+        logdbg("Allocate Global Constraints Matrix");
         double** constraintsMatrix = NULL;
         
         if (totalGlobalConstraints > 0){
