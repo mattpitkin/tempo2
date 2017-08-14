@@ -408,20 +408,25 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         psr->setTelVelZ=1;
         readValue(psr,str,fin,&(psr->param[param_tel_dz]),0);
-    }
-    else if (strcasecmp(str,"TEL_VX")==0)  /* Set telescope velocity in X */
+    } else if (strcasecmp(str,"TEL_VX")==0)  /* Set telescope velocity in X */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_vx]),0);
-    else if (strcasecmp(str,"TEL_VY")==0)  /* Set telescope velocity in Y */
+    } else if (strcasecmp(str,"TEL_VY")==0)  /* Set telescope velocity in Y */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_vy]),0);
-    else if (strcasecmp(str,"TEL_VZ")==0)  /* Set telescope velocity in Z */
+    } else if (strcasecmp(str,"TEL_VZ")==0)  /* Set telescope velocity in Z */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_vz]),0);
-    else if (strcasecmp(str,"TEL_X0")==0)  /* Set telescope position in X */
+    } else if (strcasecmp(str,"TEL_X0")==0)  /* Set telescope position in X */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_x0]),0);
-    else if (strcasecmp(str,"TEL_Y0")==0)  /* Set telescope position in Y */
+    } else if (strcasecmp(str,"TEL_Y0")==0)  /* Set telescope position in Y */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_y0]),0);
-    else if (strcasecmp(str,"TEL_Z0")==0)  /* Set telescope position in Z */
+    } else if (strcasecmp(str,"TEL_Z0")==0)  /* Set telescope position in Z */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_z0]),0);
-    else if (strcasecmp(str,"SQIFUNC_p")==0)  /* Set quad interpolation function for plus*/
+    } else if (strcasecmp(str,"SQIFUNC_p")==0)  /* Set quad interpolation function for plus*/
         readValue(psr,str,fin,&(psr->param[param_quad_ifunc_p]),0);
     else if (strcasecmp(str,"SQIFUNC_c")==0)  /* Set quad interpolation function for cross*/
         readValue(psr,str,fin,&(psr->param[param_quad_ifunc_c]),0);
