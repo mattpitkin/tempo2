@@ -63,6 +63,10 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     // Otherwise we we will just whiten using the error bars.
     bool haveCovar = (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL"));
 
+    for(int p=0; p < npsr; ++p){
+        if (psr[p].auto_constraints)autoConstraints(psr,p,npsr);
+    }
+
     /**
      * Find out if there are any global parameters and what they are...
      */
@@ -81,6 +85,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
     unsigned long long totalGlobalParams=gParams;
     unsigned long long totalGlobalConstraints=gConstraints;
+
+    logdbg("totalGlobalParams=%d totalGlobalConstraints=%d",totalGlobalParams,totalGlobalConstraints);
 
     //    double* gX[MAX_PSR]; // "x" values for each pulsar
     double* gY[MAX_PSR]; // "y" values for each pulsar
@@ -145,6 +151,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             sortToAs(psr+ipsr);
 
             // malloc_uinv does a blas-compatible allocation of a 2-d array.
+            logdbg("Create uinv array");
             uinv = malloc_uinv(psr_ndata);
             psr[ipsr].fitMode=1; // Note: forcing this to 1 as the Cholesky fit is a weighted fit
             logmsg("Doing a FULL COVARIANCE MATRIX fit");
@@ -188,6 +195,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          * M.p = d
          * It is ndata x nparams in size. We also allocate the whitened DM here.
          */
+        logdbg("Allocate design matrix and white design matrix");
         double** designMatrix = malloc_blas(psr_ndata,nParams);
         double** white_designMatrix = malloc_blas(psr_ndata,nParams);
         for (unsigned int idata =0; idata < psr_ndata; ++idata){
@@ -212,6 +220,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         if(psr[ipsr].fitinfo.nConstraints > 0){
 
             computeConstraintWeights(psr+ipsr);
+            logdbg("Allocate constraints matrix");
             constraintsMatrix = malloc_blas(nConstraints,nParams);
             for (unsigned int iconstraint =0; iconstraint < nConstraints; ++iconstraint){
                 // similar to t2Fit_buildDesignMatrix, t2Fit_buildConstraintsMatrix
@@ -322,10 +331,16 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     if (doGlobalFit){
 
         const unsigned int nobs = totalGlobalData;
+        logmsg("Allocate Global Design Matrix");
         double** designMatrix = malloc_blas(nobs,totalGlobalParams);
         double** white_designMatrix = malloc_blas(nobs,totalGlobalParams);
 
-        double** constraintsMatrix = malloc_blas(totalGlobalConstraints,totalGlobalParams);
+        logmsg("Allocate Global Constraints Matrix");
+        double** constraintsMatrix = NULL;
+        
+        if (totalGlobalConstraints > 0){
+            constraintsMatrix = malloc_blas(totalGlobalConstraints,totalGlobalParams);
+        }
 
         double *y   = (double*)malloc(sizeof(double)*nobs);
         double *white_y   = (double*)malloc(sizeof(double)*nobs);
@@ -372,6 +387,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             }
 
             for(unsigned int i=0; i < psr[ipsr].fitinfo.nConstraints; i++){
+                assert(constraintsMatrix);
                 for(unsigned int j=0; j < nLocal; j++){
                     constraintsMatrix[i+off_c][j+off_f] = gCM[ipsr][i][j];
                 }
@@ -452,7 +468,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         free(y);
         free_blas(designMatrix);
         free_blas(white_designMatrix);
-        free_blas(constraintsMatrix);
+        if(constraintsMatrix)free_blas(constraintsMatrix);
 
 
     }
@@ -1082,7 +1098,6 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             break;
 
         case param_ifunc:
-        case param_clk_offs:
         case param_quad_ifunc_p:
         case param_quad_ifunc_c:
             // ifunc-alikes
@@ -1202,6 +1217,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             ++OUT.nParams;
             break;
 
+        case param_clk_offs:
         default:
             logerr("ERROR: No methods for fitting parameter %s (%d)",label_str[fit_param],fit_param);
             break;
