@@ -1075,7 +1075,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_tely:
         case param_telz:
             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos;
-            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
             ++OUT.nParams;
             break;
         case param_tel_dx:
@@ -1086,13 +1086,14 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             if(fit_param==param_tel_dx)N=psr->nTelDX;
             if(fit_param==param_tel_dy)N=psr->nTelDY;
             if(fit_param==param_tel_dz)N=psr->nTelDZ;
-            if(psr->param[fit_param].val[0] == -1)N=0;
-            else if (psr->param[fit_param].val[0] < 2 )N=N;
-            else N=N-1;
+
+            if (psr->param[fit_param].val[0] == 2 )N=N-1;
+
             for (unsigned i = 0; i < N; ++i){
-                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos;
-                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos;
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos_delta;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos_delta;
                 OUT.paramIndex[OUT.nParams]=fit_param;
+                OUT.paramCounters[OUT.nParams]=i;
                 ++OUT.nParams;
             }
             break;

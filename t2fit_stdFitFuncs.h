@@ -29,8 +29,10 @@ double t2FitFunc_stdGravWav(pulsar *psr, int ipsr ,double x ,int ipos ,param_lab
 void t2UpdateFunc_stdGravWav(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
 
 
+double t2FitFunc_telPos_delta(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
+void t2UpdateFunc_telPos_delta(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
+
 double t2FitFunc_telPos(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
-void t2UpdateFunc_telPos(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
 
 
 double t2FitFunc_ifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
