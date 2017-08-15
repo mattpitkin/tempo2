@@ -338,6 +338,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%s",psr->ephemeris);
         strcpy(psr->JPL_EPHEMERIS, psr->ephemeris);
     }
+    else if (strcasecmp(str,"AVERAGERES") ==0)
+      {
+	psr->AverageResiduals=1;
+	fscanf(fin,"%s %f", &psr->AverageFlag, &psr->AverageEpochWidth);
+      }
     else if (strcasecmp(str,"EPH_FILE")==0)
     {
         char temp[1024];
