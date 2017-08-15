@@ -1,5 +1,5 @@
 #include "t2fit_dmmodel.h"
-#include "t2fit_ifunc.h"
+#include "ifunc.h"
 #include "TKlog.h"
 #include <cmath>
 #include <assert.h>
