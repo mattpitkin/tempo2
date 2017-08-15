@@ -9,8 +9,8 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - mkdir build
-          - cd build
-          - ../tempo2/configure
+          - ls
+          - ./bootstrap
+          - ./configure
           - make
           - make check
