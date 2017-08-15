@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tempo2.h"
+#include "ifunc.h"
 
 longdouble solarWindModel(pulsar psr);
 
@@ -136,7 +137,6 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         /* Are we using DM values using DMMODEL parameter? */
         if (psr[p].param[param_dmmodel].paramSet[0] == 1)
         {
-            double m,c;
             static int t=0xFFFF;
             dmval=0;
             //double meanDM=(double)psr[p].param[param_dm].val[0];
@@ -174,28 +174,9 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
                 t = t & 0xFF0F;
             }
 
-            if ((double)psr[p].obsn[i].sat < psr[p].dmoffsDM_mjd[0])
-                dmval = meanDM + psr[p].dmoffsDM[0];
-            else if ((double)psr[p].obsn[i].sat > psr[p].dmoffsDM_mjd[psr[p].dmoffsDMnum-1])
-                dmval = meanDM+psr[p].dmoffsDM[psr[p].dmoffsDMnum-1];
-            else
-            {
-                for (k=0;k<psr[p].dmoffsDMnum-1;k++)
-                {
-                    if ((double)psr[p].obsn[i].sat >= psr[p].dmoffsDM_mjd[k] &&
-                            (double)psr[p].obsn[i].sat < psr[p].dmoffsDM_mjd[k+1])
-                    {
-                        // Do linear interpolation
-                        // Note: this is also used at various points in the 
-                        // code (e.g., textOutput.C - if any changes are 
-                        // made here then these changes should be made throughout!
-                        m = (psr[p].dmoffsDM[k]-psr[p].dmoffsDM[k+1])/(psr[p].dmoffsDM_mjd[k]-psr[p].dmoffsDM_mjd[k+1]);
-                        c = psr[p].dmoffsDM[k]-m*psr[p].dmoffsDM_mjd[k];
-                        dmval = m*(double)psr[p].obsn[i].sat+c + meanDM;
-                        break;
-                    }
-                }
-            }
+            //dmoffs is basically an ifunc
+            dmval = meanDM + ifunc(psr[p].dmoffsDM_mjd,psr[p].dmoffsDM,(double)psr[p].obsn[i].sat,psr[p].dmoffsDMnum);
+
         }
         else
         {

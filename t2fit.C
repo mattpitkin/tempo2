@@ -1106,9 +1106,8 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             N=0;
             sifunc=0;
             if(fit_param==param_ifunc){
-                psr->param[fit_param].val[0]==2; // use sinusoids?
+                sifunc = psr->param[fit_param].val[0]==1; // use sinusoids?
                 N=psr->ifuncN;
-                sifunc=!sifunc;
             }
             if(fit_param==param_clk_offs)N=psr->clkOffsN;
             if(fit_param==param_quad_ifunc_p)N=psr->quad_ifuncN_p;
