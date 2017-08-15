@@ -33,6 +33,7 @@
 #include <math.h>
 #include "tempo2.h"
 #include "GWsim.h"
+#include "ifunc.h"
 #include <vector>
 #include <algorithm>
 /* Form the timing residuals from the timing model and the barycentric arrival times */
@@ -1193,21 +1194,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 }
                 else if (psr[p].param[param_ifunc].val[0] == 2) // Linear interpolation
                 {
-                    int k;
-                    double m,c,ival;
-                    for (k=0;k<psr[p].ifuncN-1;k++)
-                    {
-                        if ((double)psr[p].obsn[i].sat >= psr[p].ifuncT[k] &&
-                                (double)psr[p].obsn[i].sat < psr[p].ifuncT[k+1])
-                        {
-                            m = (psr[p].ifuncV[k]-psr[p].ifuncV[k+1])/(psr[p].ifuncT[k]-psr[p].ifuncT[k+1]);
-                            c = psr[p].ifuncV[k]-m*psr[p].ifuncT[k];
-
-                            ival = m*(double)psr[p].obsn[i].sat+c;
-                            break;
-                        }
-                    }
-                    phaseW += (psr[p].param[param_f].val[0]*ival); 				
+                    double ival = ifunc(psr[p].ifuncT,psr[p].ifuncV,(double)psr[p].obsn[i].sat,psr[p].ifuncN);
+                    phaseW += (psr[p].param[param_f].val[0]*ival);
                 }
                 else if (psr[p].param[param_ifunc].val[0] == 0) // No interpolation
                 {
@@ -1225,21 +1213,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 }
             }
 
-            /* Add in extra phase due to interpolation */
+            /* plus term for Quad ifuncs*/
             if (psr[p].param[param_quad_ifunc_p].paramSet[0] == 1)
             {
-// UNUSED VARIABLE //                 longdouble t2;
-// UNUSED VARIABLE //                 longdouble tt;
-                int k;
-                double m,c,ival;
-// UNUSED VARIABLE //                 double omega_g;
-                //	       double res_e,res_i;
                 longdouble resp;
-// UNUSED VARIABLE //                 double phi_g;
                 double lambda_p,beta_p,lambda,beta;
                 double n1,n2,n3;
                 double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
-// UNUSED VARIABLE //                 double e33c;
                 double cosTheta;
 
                 if ((psr[p].quad_ifunc_geom_p == 0) && (psr[p].param[param_quad_ifunc_p].val[0] == 0 || psr[p].param[param_quad_ifunc_p].val[0] == 1 || psr[p].param[param_quad_ifunc_p].val[0] == 3)) 
@@ -1289,39 +1269,21 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         psr[p].quad_ifunc_geom_p = resp;
                     }
                 }
-                for (k=0;k<psr[p].quad_ifuncN_p-1;k++)
-                {
-                    if ((double)psr[p].obsn[i].sat >= psr[p].quad_ifuncT_p[k] &&
-                            (double)psr[p].obsn[i].sat < psr[p].quad_ifuncT_p[k+1])
-                    {
-                        m = (psr[p].quad_ifuncV_p[k]-psr[p].quad_ifuncV_p[k+1])/(psr[p].quad_ifuncT_p[k]-psr[p].quad_ifuncT_p[k+1]);
-                        c = psr[p].quad_ifuncV_p[k]-m*psr[p].quad_ifuncT_p[k];
 
-                        ival = m*(double)psr[p].obsn[i].sat+c;
-                        break;
-                    }
-                }
-                phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_p); 				
+                double ival = ifunc(psr[p].quad_ifuncT_p,psr[p].quad_ifuncV_p,(double)psr[p].obsn[i].sat,psr[p].quad_ifuncN_p);
+                phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_p);
             }
 
             // Cross term
-            if (psr[p].param[param_quad_ifunc_c].paramSet[0] == 1 && psr[p].param[param_quad_ifunc_c].val[0] > 0)
+            if (psr[p].param[param_quad_ifunc_c].paramSet[0] == 1)
             {
-// UNUSED VARIABLE //                 longdouble t2;
-// UNUSED VARIABLE //                 longdouble tt;
-                int k;
-                double m,c,ival;
-// UNUSED VARIABLE //                 double omega_g;
-                //	       double res_e,res_i;
                 longdouble resc;
-// UNUSED VARIABLE //                 double phi_g;
                 double lambda_p,beta_p,lambda,beta;
                 double n1,n2,n3;
-// UNUSED VARIABLE //                 double e33p;
                 double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
                 double cosTheta;
 
-                if ((psr[p].quad_ifunc_geom_c == 0) || psr[p].quad_ifunc_geom_c == 3)
+                if ((psr[p].quad_ifunc_geom_c == 0) && (psr[p].param[param_quad_ifunc_c].val[0] == 0 || psr[p].param[param_quad_ifunc_c].val[0] == 1 || psr[p].param[param_quad_ifunc_c].val[0] == 3)) 
                 {
                     if (psr[p].param[param_quad_ifunc_c].val[0] == 3)
                         psr[p].quad_ifunc_geom_c = 1;
@@ -1367,18 +1329,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         psr[p].quad_ifunc_geom_c = resc;
                     }
                 }
-                for (k=0;k<psr[p].quad_ifuncN_c-1;k++)
-                {
-                    if ((double)psr[p].obsn[i].sat >= psr[p].quad_ifuncT_c[k] &&
-                            (double)psr[p].obsn[i].sat < psr[p].quad_ifuncT_c[k+1])
-                    {
-                        m = (psr[p].quad_ifuncV_c[k]-psr[p].quad_ifuncV_c[k+1])/(psr[p].quad_ifuncT_c[k]-psr[p].quad_ifuncT_c[k+1]);
-                        c = psr[p].quad_ifuncV_c[k]-m*psr[p].quad_ifuncT_c[k];
 
-                        ival = m*(double)psr[p].obsn[i].sat+c;
-                        break;
-                    }
-                }
+                double ival = ifunc(psr[p].quad_ifuncT_c,psr[p].quad_ifuncV_c,(double)psr[p].obsn[i].sat,psr[p].quad_ifuncN_c);
                 phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_c); 				
             }
 
@@ -1482,21 +1434,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     psr[p].quad_ifunc_geom_p = resp;
                 }
 
-                double m,c, ival;
 
 
-                for (k=0;k<psr[p].quad_ifuncN_p-1;k++)
-                {
-                    if ((double)psr[p].obsn[i].sat >= psr[p].quad_ifuncT_p[k] &&
-                            (double)psr[p].obsn[i].sat < psr[p].quad_ifuncT_p[k+1])
-                    {
-                        m = (psr[p].quad_ifuncV_p[k]-psr[p].quad_ifuncV_p[k+1])/(psr[p].quad_ifuncT_p[k]-psr[p].quad_ifuncT_p[k+1]);
-                        c = psr[p].quad_ifuncV_p[k]-m*psr[p].quad_ifuncT_p[k];
-
-                        ival = m*(double)psr[p].obsn[i].sat+c;
-                        break;
-                    }
-                }
+                double ival = ifunc(psr[p].quad_ifuncT_p,psr[p].quad_ifuncV_p,(double)psr[p].obsn[i].sat,psr[p].quad_ifuncN_p);
                 phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_p); 	
 
 
@@ -1603,21 +1543,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     psr[p].quad_ifunc_geom_c = resc;
                 }
 
-                double m,c, ival;
 
 
-                for (k=0;k<psr[p].quad_ifuncN_c-1;k++)
-                {
-                    if ((double)psr[p].obsn[i].sat >= psr[p].quad_ifuncT_c[k] &&
-                            (double)psr[p].obsn[i].sat < psr[p].quad_ifuncT_c[k+1])
-                    {
-                        m = (psr[p].quad_ifuncV_c[k]-psr[p].quad_ifuncV_c[k+1])/(psr[p].quad_ifuncT_c[k]-psr[p].quad_ifuncT_c[k+1]);
-                        c = psr[p].quad_ifuncV_c[k]-m*psr[p].quad_ifuncT_c[k];
-
-                        ival = m*(double)psr[p].obsn[i].sat+c;
-                        break;
-                    }
-                }
+                double ival = ifunc(psr[p].quad_ifuncT_c,psr[p].quad_ifuncV_c,(double)psr[p].obsn[i].sat,psr[p].quad_ifuncN_c);
                 phaseW += (psr[p].param[param_f].val[0]*ival*psr[p].quad_ifunc_geom_c); 	
 
 
