@@ -9,7 +9,7 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - ls
+          - export TEMPO2=`pwd`/T2runtime
           - ./bootstrap
           - ./configure
           - make
