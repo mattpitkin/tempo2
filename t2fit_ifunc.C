@@ -57,7 +57,7 @@ double t2FitFunc_sifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
                 sinfunc(psr[ipsr].quad_ifuncT_p,static_cast<double>(psr[ipsr].obsn[ipos].bat),k);
             break;
         case param_quad_ifunc_c:
-            ret=psr[ipsr].quad_ifunc_geom_c*
+            ret = psr[ipsr].quad_ifunc_geom_c*
                 sinfunc(psr[ipsr].quad_ifuncT_c,static_cast<double>(psr[ipsr].obsn[ipos].bat),k);
             break;
         default:
@@ -78,7 +78,7 @@ double t2FitFunc_ifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label la
                 ifunc(psr[ipsr].quad_ifuncT_p,static_cast<double>(psr[ipsr].obsn[ipos].sat),psr[ipsr].quad_ifuncN_p,k);
             break;
         case param_quad_ifunc_c:
-            ret *= psr[ipsr].quad_ifunc_geom_c *
+            ret = psr[ipsr].quad_ifunc_geom_c *
                 ifunc(psr[ipsr].quad_ifuncT_c,static_cast<double>(psr[ipsr].obsn[ipos].sat),psr[ipsr].quad_ifuncN_c,k);
             break;
         default:
