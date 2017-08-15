@@ -189,7 +189,6 @@ double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
     assert(label==param_dmassplanet);
     return dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
 }
-void t2UpdateFunc_planet(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     assert(label==param_dm);
