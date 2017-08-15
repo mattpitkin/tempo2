@@ -63,6 +63,10 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     // Otherwise we we will just whiten using the error bars.
     bool haveCovar = (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL"));
 
+    for(int p=0; p < npsr; ++p){
+        if (psr[p].auto_constraints)autoConstraints(psr,p,npsr);
+    }
+
     /**
      * Find out if there are any global parameters and what they are...
      */
@@ -81,6 +85,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
     unsigned long long totalGlobalParams=gParams;
     unsigned long long totalGlobalConstraints=gConstraints;
+
+    logdbg("totalGlobalParams=%d totalGlobalConstraints=%d",totalGlobalParams,totalGlobalConstraints);
 
     //    double* gX[MAX_PSR]; // "x" values for each pulsar
     double* gY[MAX_PSR]; // "y" values for each pulsar
@@ -145,6 +151,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             sortToAs(psr+ipsr);
 
             // malloc_uinv does a blas-compatible allocation of a 2-d array.
+            logdbg("Create uinv array");
             uinv = malloc_uinv(psr_ndata);
             psr[ipsr].fitMode=1; // Note: forcing this to 1 as the Cholesky fit is a weighted fit
             logmsg("Doing a FULL COVARIANCE MATRIX fit");
@@ -188,6 +195,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          * M.p = d
          * It is ndata x nparams in size. We also allocate the whitened DM here.
          */
+        logdbg("Allocate design matrix and white design matrix");
         double** designMatrix = malloc_blas(psr_ndata,nParams);
         double** white_designMatrix = malloc_blas(psr_ndata,nParams);
         for (unsigned int idata =0; idata < psr_ndata; ++idata){
@@ -212,6 +220,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         if(psr[ipsr].fitinfo.nConstraints > 0){
 
             computeConstraintWeights(psr+ipsr);
+            logdbg("Allocate constraints matrix");
             constraintsMatrix = malloc_blas(nConstraints,nParams);
             for (unsigned int iconstraint =0; iconstraint < nConstraints; ++iconstraint){
                 // similar to t2Fit_buildDesignMatrix, t2Fit_buildConstraintsMatrix
@@ -322,10 +331,16 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     if (doGlobalFit){
 
         const unsigned int nobs = totalGlobalData;
+        logdbg("Allocate Global Design Matrix");
         double** designMatrix = malloc_blas(nobs,totalGlobalParams);
         double** white_designMatrix = malloc_blas(nobs,totalGlobalParams);
 
-        double** constraintsMatrix = malloc_blas(totalGlobalConstraints,totalGlobalParams);
+        logdbg("Allocate Global Constraints Matrix");
+        double** constraintsMatrix = NULL;
+        
+        if (totalGlobalConstraints > 0){
+            constraintsMatrix = malloc_blas(totalGlobalConstraints,totalGlobalParams);
+        }
 
         double *y   = (double*)malloc(sizeof(double)*nobs);
         double *white_y   = (double*)malloc(sizeof(double)*nobs);
@@ -336,7 +351,6 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
         logdbg("Building matricies for global fit... npsr=%u",npsr);
         logdbg("nobs=%u, totalGlobalParams=%u, totalGlobalConstraints=%u",nobs,totalGlobalParams,totalGlobalConstraints);
-        logwarn("This mode is not supported yet!!!");
 
 
         for (unsigned int ipsr = 0; ipsr < npsr ; ++ipsr){
@@ -372,6 +386,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             }
 
             for(unsigned int i=0; i < psr[ipsr].fitinfo.nConstraints; i++){
+                assert(constraintsMatrix);
                 for(unsigned int j=0; j < nLocal; j++){
                     constraintsMatrix[i+off_c][j+off_f] = gCM[ipsr][i][j];
                 }
@@ -452,7 +467,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         free(y);
         free_blas(designMatrix);
         free_blas(white_designMatrix);
-        free_blas(constraintsMatrix);
+        if(constraintsMatrix)free_blas(constraintsMatrix);
 
 
     }
@@ -1059,7 +1074,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_tely:
         case param_telz:
             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos;
-            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
             ++OUT.nParams;
             break;
         case param_tel_dx:
@@ -1070,25 +1085,28 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             if(fit_param==param_tel_dx)N=psr->nTelDX;
             if(fit_param==param_tel_dy)N=psr->nTelDY;
             if(fit_param==param_tel_dz)N=psr->nTelDZ;
-            if(psr->param[fit_param].val[0] == -1)N=0;
-            else if (psr->param[fit_param].val[0] < 2 )N=N;
-            else N=N-1;
+
+            if (psr->param[fit_param].val[0] == 2 )N=N-1;
+
             for (unsigned i = 0; i < N; ++i){
-                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos;
-                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos;
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos_delta;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos_delta;
                 OUT.paramIndex[OUT.nParams]=fit_param;
+                OUT.paramCounters[OUT.nParams]=i;
                 ++OUT.nParams;
             }
             break;
 
-        case param_ifunc:
         case param_clk_offs:
+            logwarn("clock offset cannot be fit under this version - fix soon!");
+        case param_ifunc:
         case param_quad_ifunc_p:
         case param_quad_ifunc_c:
             // ifunc-alikes
             N=0;
-            sifunc=psr->param[fit_param].val[0]==2; // use sinusoids?
+            sifunc=0;
             if(fit_param==param_ifunc){
+                psr->param[fit_param].val[0]==2; // use sinusoids?
                 N=psr->ifuncN;
                 sifunc=!sifunc;
             }
@@ -1108,15 +1126,6 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             }
             break;
 
-        case param_gwsingle:
-            for (unsigned i = 0; i < 4; ++i){
-                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGravWav;
-                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGravWav;
-                OUT.paramCounters[OUT.nParams]=i;
-                OUT.paramIndex[OUT.nParams]=fit_param;
-                ++OUT.nParams;
-            }
-            break;
         case param_dmmodel:
             for (int i = 0; i < psr->dmoffsDMnum; ++i){
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelDM;
@@ -1200,6 +1209,31 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ne_sw;
             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ne_sw;
             ++OUT.nParams;
+            break;
+
+        case param_gwm_amp:
+            // gw memory
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwm_amp;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+            ++OUT.nParams;
+            break;
+
+        case param_quad_om:
+            for (unsigned i = 0; i < 4*psr->nQuad; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_quad_om;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_quad_om;
+                OUT.paramCounters[OUT.nParams]=i;
+                ++OUT.nParams;
+            }
+            break;
+        case param_gwsingle:
+            for (unsigned i = 0; i < 4; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwsingle;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_gwsingle;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
             break;
 
         default:
