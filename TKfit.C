@@ -296,6 +296,10 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
 
     } else {
+#else
+        if(useT2accel==2) {
+            logwarn("Can't use QR fitting without LAPACK/BLAS. Defaulting to SVD.");
+        }
 #endif
         // quad precision arrays for fitting if using SVD
         // the augmented data matrix

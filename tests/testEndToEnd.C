@@ -8,7 +8,6 @@ TEST(testEndToEnd,checkIdeal){
     pulsar *psr = &_psr;
     MAX_PSR=1;
     char timFile[MAX_PSR][MAX_FILELEN],parFile[MAX_PSR][MAX_FILELEN];
-    char** argv=NULL;
     int npsr=1;
     initialise(psr,0); /* Initialise all */
 
@@ -26,7 +25,7 @@ TEST(testEndToEnd,checkIdeal){
         ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),TEST_DELTA) << DATDIR "/test3.par test3.tim do not give idealised ToAs";
     }
 
-    doFitAll(psr,npsr,"NULL");
+    t2Fit(psr,npsr,"NULL");
 
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
@@ -41,7 +40,6 @@ TEST(testEndToEnd,checkDE430){
     pulsar *psr = &_psr;
     MAX_PSR=1;
     char timFile[MAX_PSR][MAX_FILELEN],parFile[MAX_PSR][MAX_FILELEN];
-    char** argv=NULL;
     int npsr=1;
     initialise(psr,0); /* Initialise all */
 
@@ -59,7 +57,7 @@ TEST(testEndToEnd,checkDE430){
         ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),TEST_DELTA) << DATDIR "/test_de430.par test_de430.tim do not give idealised ToAs";
     }
 
-    doFitAll(psr,npsr,"NULL");
+    t2Fit(psr,npsr,"NULL");
 
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
@@ -89,10 +87,10 @@ TEST(testEndToEnd,checkFit){
     psr->noWarnings=2;
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
-    doFitAll(psr,npsr,"NULL");
+    t2Fit(psr,npsr,"NULL");
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
-    doFitAll(psr,npsr,"NULL");
+    t2Fit(psr,npsr,"NULL");
 
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
@@ -121,7 +119,7 @@ TEST(testEndToEnd,gracefulBadFit){
     formBatsAll(psr,npsr);
     formResiduals(psr,npsr,0);
     TK_errorCount=0;
-    doFitAll(psr,npsr,"NULL");
+    t2Fit(psr,npsr,"NULL");
 //    ASSERT_GT(TK_errorCount,1u);
 ASSERT_EQ(1,1);
     TK_errorCount=0;
