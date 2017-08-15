@@ -351,7 +351,6 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
         logdbg("Building matricies for global fit... npsr=%u",npsr);
         logdbg("nobs=%u, totalGlobalParams=%u, totalGlobalConstraints=%u",nobs,totalGlobalParams,totalGlobalConstraints);
-        logwarn("This mode is not supported yet!!!");
 
 
         for (unsigned int ipsr = 0; ipsr < npsr ; ++ipsr){
@@ -1098,13 +1097,16 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             }
             break;
 
+        case param_clk_offs:
+            logwarn("clock offset cannot be fit under this version - fix soon!");
         case param_ifunc:
         case param_quad_ifunc_p:
         case param_quad_ifunc_c:
             // ifunc-alikes
             N=0;
-            sifunc=psr->param[fit_param].val[0]==2; // use sinusoids?
+            sifunc=0;
             if(fit_param==param_ifunc){
+                psr->param[fit_param].val[0]==2; // use sinusoids?
                 N=psr->ifuncN;
                 sifunc=!sifunc;
             }
@@ -1218,7 +1220,6 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             ++OUT.nParams;
             break;
 
-        case param_clk_offs:
         default:
             logerr("ERROR: No methods for fitting parameter %s (%d)",label_str[fit_param],fit_param);
             break;
