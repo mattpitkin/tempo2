@@ -216,8 +216,6 @@ void t2UpdateFunc_simpleMinus(pulsar *psr, int ipsr ,param_label label,int k, do
 
 
 
-double t2FitFunc_stdGravWav(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_stdGravWav(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_telPos_delta(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     double ret=0;
