@@ -1126,15 +1126,6 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             }
             break;
 
-        case param_gwsingle:
-            for (unsigned i = 0; i < 4; ++i){
-                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGravWav;
-                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGravWav;
-                OUT.paramCounters[OUT.nParams]=i;
-                OUT.paramIndex[OUT.nParams]=fit_param;
-                ++OUT.nParams;
-            }
-            break;
         case param_dmmodel:
             for (int i = 0; i < psr->dmoffsDMnum; ++i){
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelDM;
@@ -1218,6 +1209,31 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ne_sw;
             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ne_sw;
             ++OUT.nParams;
+            break;
+
+        case param_gwm_amp:
+            // gw memory
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwm_amp;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+            ++OUT.nParams;
+            break;
+
+        case param_quad_om:
+            for (unsigned i = 0; i < 4*psr->nQuad; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_quad_om;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_quad_om;
+                OUT.paramCounters[OUT.nParams]=i;
+                ++OUT.nParams;
+            }
+            break;
+        case param_gwsingle:
+            for (unsigned i = 0; i < 4; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwsingle;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_gwsingle;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
             break;
 
         default:
