@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <assert.h>
 #include <cstring>
+#include "ifunc.h"
 
 /**
  *
