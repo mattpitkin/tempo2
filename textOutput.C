@@ -402,9 +402,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         {
             printf("GW single source:\n");
             printf("Omega: %g\n",(double)psr[p].param[param_gwsingle].val[0]);
-            printf("Aplus = %g (%g) %g (%g)\n",psr[p].gwsrc_aplus_r,psr[p].gwsrc_aplus_r_e,
+            printf("Aplus = %lg (%lg) %lg (%lg)\n",psr[p].gwsrc_aplus_r,psr[p].gwsrc_aplus_r_e,
                     psr[p].gwsrc_aplus_i,psr[p].gwsrc_aplus_i_e);
-            printf("Across = %g (%g) %g (%g)\n",psr[p].gwsrc_across_r,psr[p].gwsrc_across_r_e,
+            printf("Across = %lg (%lg) %lg (%lg)\n",psr[p].gwsrc_across_r,psr[p].gwsrc_across_r_e,
                     psr[p].gwsrc_across_i,psr[p].gwsrc_across_i_e);
         }
         if (psr[p].param[param_quad_om].paramSet[0]==1)

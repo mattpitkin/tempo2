@@ -20,7 +20,6 @@ double t2FitFunc_binaryModels(pulsar *psr, int ipsr ,double x ,int ipos ,param_l
 void t2UpdateFunc_binaryModels(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
 
 double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
-void t2UpdateFunc_planet(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
 
 double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
 // dm is "simple"
