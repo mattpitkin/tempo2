@@ -189,6 +189,49 @@ double t2FitFunc_gwb_amp(pulsar *psr, int ipsr ,double x ,int ipos ,param_label 
 }
 
 
+double t2FitFunc_gwcs_amp(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    double res=0;
+    longdouble dt;
+    longdouble prefac;
+    double extra;
+    longdouble width,width_day;
+    
+    if (psr[ipsr].param[param_gwcs_amp].paramSet[0]==1)
+    {
+        dt = (psr[ipsr].obsn[ipos].bbat - psr[ipsr].gwcs_epoch)*86400.0;
+	width = psr[ipsr].gwcs_width*86400.0;
+	width_day = psr[ipsr].gwcs_width;
+	
+	
+	if (psr[ipsr].obsn[ipos].sat < psr[ipsr].gwcs_epoch-width_day/2.0)
+	  res=0;
+	else if (psr[ipsr].obsn[ipos].sat < psr[ipsr].gwcs_epoch)
+	  {
+	    extra =   (3.0/4.0*(pow(0.5*width,4.0/3.0)-pow(fabs(dt),4.0/3.0))-
+		       pow(0.5*width,1.0/3.0)*(dt+0.5*width));
+	    
+	    res = psr[ipsr].gwcs_geom_p*extra;
+	  }
+	else if (psr[ipsr].obsn[ipos].sat < psr[ipsr].gwcs_epoch+width_day/2.0)
+	  {
+	    extra =   (3.0/4.0*(pow(0.5*width,4.0/3.0)+pow(fabs(dt),4.0/3.0))-
+		       pow(0.5*width,1.0/3.0)*(dt+0.5*width));
+	    
+	    res = psr[ipsr].gwcs_geom_p*extra;
+	  }
+	else
+	  {
+	    extra=-0.25*(pow(0.5,1.0/3.0)*pow(width,4.0/3.0));
+	    res = psr[ipsr].gwcs_geom_p*extra;
+	  }
+	printf("res is %g\n",(double)res);
+    }
+    printf("n here and returning: %g %g\n",res,(double)psr[ipsr].gwcs_geom_p);
+    return res;
+
+}
+
+
 
 
 double t2FitFunc_quad_om(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
