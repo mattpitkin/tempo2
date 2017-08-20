@@ -293,6 +293,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_waveepoch_dm].shortlabel[0],"WAVEEPOCHD");
     strcpy(psr->param[param_gwm_amp].label[0],"GWM_AMP");
     strcpy(psr->param[param_gwm_amp].shortlabel[0],"GWM_AMP");
+    strcpy(psr->param[param_gwcs_amp].label[0],"GWCS_AMP");
+    strcpy(psr->param[param_gwcs_amp].shortlabel[0],"GWCS_AMP");
     strcpy(psr->param[param_gwm_amp].label[1],"GWM_AMP_2");
     strcpy(psr->param[param_gwm_amp].shortlabel[1],"GWM_AMP_2");
     strcpy(psr->param[param_gwb_amp].label[0],"GWB_AMP");
@@ -629,7 +631,8 @@ void allocateMemory(pulsar *psr, int realloc)
         else if (i==param_tel_dy) psr->param[i].aSize = MAX_TEL_DY;
         else if (i==param_tel_dz) psr->param[i].aSize = MAX_TEL_DZ;
         else if (i==param_raj || i==param_decj) psr->param[i].aSize = 2; // Use second for gravitational wave work
-        else if (i==param_gwm_amp) psr->param[i].aSize = 2; 
+        else if (i==param_gwm_amp) psr->param[i].aSize = 2;
+	else if (i==param_gwcs_amp) psr->param[i].aSize = 2; 
         else if (i==param_gwb_amp) psr->param[i].aSize =2;
         else psr->param[i].aSize = 1;
 

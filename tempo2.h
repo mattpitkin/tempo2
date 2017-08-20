@@ -177,7 +177,7 @@ enum label {
     param_h3,param_h4,param_nharm,param_stig,
     param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
     param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
-    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
+    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwcs_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
     param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos,
     param_band_red_sin, param_band_red_cos,param_sx, param_sxr1, param_sxr2, param_sxer,
@@ -512,6 +512,15 @@ typedef struct pulsar {
     double gwm_epoch;
     double gwm_phi; // Polarisation angle
     double gwm_dphase; // Phase offset (similar to GLPH)
+
+  
+  // Gravitational wave single cosmic string parameters
+  double gwcs_raj;
+  double gwcs_decj;
+  double gwcs_epoch;
+  double gwcs_width;
+  double gwcs_geom_p;
+  double gwcs_geom_c;
 
     // Ryan's gw burst parameters
     double gwb_epoch;

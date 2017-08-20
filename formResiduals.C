@@ -1146,6 +1146,125 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             }	 
 
 
+	    // Gravitational wave signal caused by a single cosmic string burst
+	    // Added in by G. Hobbs (20th Aug) based on equations from Naoyuki
+            //
+            if (psr[p].param[param_gwcs_amp].paramSet[0]==1)
+            {
+                double lambda_p,beta_p,lambda,beta;
+		long double dt;
+                double n1,n2,n3;
+                double cosTheta;
+                double g1,g2,g3;
+		double width,width_day;
+		double extra;
+
+		longdouble resp,resc;
+		double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
+		double e11c,e21c,e31c,e12c,e22c,e32c,e13c,e23c,e33c;
+
+
+		lambda_p = (double)psr[p].param[param_raj].val[0];
+		beta_p   = (double)psr[p].param[param_decj].val[0];
+		lambda   = psr[p].gwcs_raj;
+		beta     = psr[p].gwcs_decj;
+		
+                    // Pulsar vector
+		n1 = cosl(lambda_p)*cosl(beta_p);
+		n2 = sinl(lambda_p)*cosl(beta_p);
+		n3 = sinl(beta_p);
+		
+		cosTheta = cosl(beta)*cosl(beta_p)*cosl(lambda-lambda_p)+
+		  sinl(beta)*sinl(beta_p);
+		
+		// From KJ's paper
+		// Gravitational wave matrix
+		
+		// NOTE: This is for the plus terms.  For cross should use different terms
+		e11p = pow(sinl(lambda),2)-pow(cosl(lambda),2)*pow(sinl(beta),2);
+		e21p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+		e31p = cosl(lambda)*sinl(beta)*cosl(beta);
+		
+		e12p = -sinl(lambda)*cosl(lambda)*(pow(sinl(beta),2)+1);
+		e22p = pow(cosl(lambda),2)-pow(sinl(lambda),2)*pow(sinl(beta),2);
+		e32p = sinl(lambda)*sinl(beta)*cosl(beta);
+		
+		e13p = cosl(lambda)*sinl(beta)*cosl(beta);
+		e23p = sinl(lambda)*sinl(beta)*cosl(beta);
+		e33p = -powl(cosl(beta),2);
+
+		resp = (n1*(n1*e11p+n2*e12p+n3*e13p)+
+			n2*(n1*e21p+n2*e22p+n3*e23p)+
+			n3*(n1*e31p+n2*e32p+n3*e33p));
+		
+		//		   printf("Resp = %s %g %g\n",psr[p].name,(double)resp,(double)cosTheta);
+		if ((1-cosTheta)==0.0)
+		  resp = 0.0;  // Check if this is sensible
+		else
+		  resp = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resp); 
+		psr[p].gwcs_geom_p = resp;
+		logdbg("Resp2 = %s %g %g",psr[p].name,(double)resp,(double)psr[p].quad_ifunc_geom_p);
+		// NOTE: These are for the cross terms. 
+		lambda   = psr[p].gwcs_raj;
+		beta     = psr[p].gwcs_decj;
+		
+
+		e11c = sinl(2*lambda)*sinl(beta);
+		e21c = -cosl(2*lambda)*sinl(beta);
+		e31c = -sinl(lambda)*cosl(beta);
+		
+		e12c = -cosl(2*lambda)*sinl(beta);
+		e22c = -sinl(2*lambda)*sinl(beta);
+		e32c = cosl(lambda)*cosl(beta);
+		
+		e13c = -sinl(lambda)*cosl(beta);
+		e23c = cosl(lambda)*cosl(beta);
+		e33c  = 0;
+		
+		resc = (n1*(n1*e11c+n2*e12c+n3*e13c)+
+			n2*(n1*e21c+n2*e22c+n3*e23c)+
+			n3*(n1*e31c+n2*e32c+n3*e33c));
+		//		   printf("Resc = %s %g %g\n",psr[p].name,(double)resc,(double)cosTheta);
+		if ((1-cosTheta)==0.0)
+		  resc = 0.0;  // Check if this is sensible
+		else
+		  resc = longdouble(1.0)/(longdouble(2.0)*(longdouble(1.0)-cosTheta))*(resc); 
+		psr[p].gwcs_geom_c = resc;
+
+		    		
+
+		dt = (psr[p].obsn[i].sat - psr[p].gwcs_epoch)*86400.0;
+		width = psr[p].gwcs_width*86400.0;
+		width_day = psr[p].gwcs_width;
+		
+                /* Only has effect after the event epoch */
+		if (psr[p].obsn[i].sat < psr[p].gwcs_epoch-width_day/2.0)
+		  {
+		    extra=0;
+		  }
+		else if (psr[p].obsn[i].sat <= psr[p].gwcs_epoch)
+		  {
+		    
+		    extra = (psr[p].param[param_gwcs_amp].val[0]*
+			     (3.0/4.0*(pow(0.5*width,4.0/3.0)-pow(fabs(dt),4.0/3.0))-
+			      pow(0.5*width,1.0/3.0)*(dt+0.5*width)));
+		  }
+		else if (psr[p].obsn[i].sat <= psr[p].gwcs_epoch+width_day/2.0)
+		  {
+		    extra = (psr[p].param[param_gwcs_amp].val[0]*
+			     (3.0/4.0*(pow(0.5*width,4.0/3.0)+pow(fabs(dt),4.0/3.0))-
+			      pow(0.5*width,1.0/3.0)*(dt+0.5*width)));
+		  }
+		else
+		  {
+		    extra = -0.25*(pow(0.5,1.0/3.0)*psr[p].param[param_gwcs_amp].val[0]*pow(width,4.0/3.0));
+		    
+		  }
+		// Noting here that Ax = 0 --- this should become a phase term??
+		phaseW += (psr[p].param[param_f].val[0]*extra*psr[p].gwcs_geom_p);
+            }
+
+
             /* Add in extra phase due to clock offset */
             if (psr[p].param[param_clk_offs].paramSet[0] == 1)
             {

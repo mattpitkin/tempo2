@@ -1217,6 +1217,13 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             ++OUT.nParams;
             break;
 
+    case param_gwcs_amp:
+      // gw cosmic string
+      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwcs_amp;
+      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+      ++OUT.nParams;
+      break;
+
         case param_quad_om:
             for (unsigned i = 0; i < 4*psr->nQuad; ++i){
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_quad_om;
