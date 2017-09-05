@@ -419,13 +419,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         (double)psr[p].quad_across_r_e[j],(double)psr[p].quad_across_i_e[j]);
             }
         }
-        /*
-        if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&	
+	// GH: added this back in
+	/*        if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&	
                 psr[p].param[param_gwm_amp].paramSet[1]==1 &&
                 (psr[p].param[param_gwm_amp].fitFlag[0]>0 ||
                  psr[p].param[param_gwm_amp].fitFlag[1]>0))
         {
-            int i,i1;
+	  int i,i0,i1;
             for (i=0;i<psr[0].nParam;i++)
             {
                 if (psr[0].fitParamI[i] == param_gwm_amp && psr[0].fitParamK[i] == 0)
@@ -441,7 +441,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 (psr[p].param[param_gwb_amp].fitFlag[0]>0 ||
                  psr[p].param[param_gwb_amp].fitFlag[1]>0))
         {
-            int i,i1;
+	  int i,i0,i1;
             for (i=0;i<psr[0].nParam;i++)
             {
                 if (psr[0].fitParamI[i] == param_gwb_amp && psr[0].fitParamK[i] == 0)
@@ -452,7 +452,26 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             printf("\n");
             printf("GW BURST A1: %g A2: %g A1_A1 = %g A2_A2 = %g A1_A2 = %g \n" , (double) psr[0].param[param_gwb_amp].val[0], (double) psr[0].param[param_gwb_amp].val[1], (double) psr[0].covar[i0][i0], (double) psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
         }
-*/
+	// GH: End adding the GWM information back in
+	*/
+	//	 GH: Adding in covariance for GWCS
+        if (psr[p].param[param_gwcs_amp].paramSet[0]==1 &&	
+	    psr[p].param[param_gwcs_amp].paramSet[1]==1 &&
+	    (psr[p].param[param_gwcs_amp].fitFlag[0]>0 ||
+	     psr[p].param[param_gwcs_amp].fitFlag[1]>0))
+	  {
+	    int i,i0,i1;
+	    i0=i1=0;
+            for (i=0;i<psr[0].nParam;i++)
+	      {
+                if (psr[0].fitParamI[i] == param_gwcs_amp && psr[0].fitParamK[i] == 0)
+		  i0 = i;
+                if (psr[0].fitParamI[i] == param_gwcs_amp && psr[0].fitParamK[i] == 1)
+		  i1 = i;
+	      }
+	    printf("\n");
+            printf("GWCS covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
+	    } 
 
         if (psr[p].param[param_dmmodel].paramSet[0]==1)
         {
