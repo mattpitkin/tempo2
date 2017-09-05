@@ -210,23 +210,24 @@ double t2FitFunc_gwcs_amp(pulsar *psr, int ipsr ,double x ,int ipos ,param_label
 	    extra =   (3.0/4.0*(pow(0.5*width,4.0/3.0)-pow(fabs(dt),4.0/3.0))-
 		       pow(0.5*width,1.0/3.0)*(dt+0.5*width));
 	    
-	    res = psr[ipsr].gwcs_geom_p*extra;
 	  }
 	else if (psr[ipsr].obsn[ipos].sat < psr[ipsr].gwcs_epoch+width_day/2.0)
 	  {
 	    extra =   (3.0/4.0*(pow(0.5*width,4.0/3.0)+pow(fabs(dt),4.0/3.0))-
 		       pow(0.5*width,1.0/3.0)*(dt+0.5*width));
 	    
-	    res = psr[ipsr].gwcs_geom_p*extra;
 	  }
 	else
 	  {
 	    extra=-0.25*(pow(0.5,1.0/3.0)*pow(width,4.0/3.0));
-	    res = psr[ipsr].gwcs_geom_p*extra;
 	  }
-	printf("res is %g\n",(double)res);
     }
-    printf("n here and returning: %g %g\n",res,(double)psr[ipsr].gwcs_geom_p);
+
+    if (k==0)
+      res = psr[ipsr].gwcs_geom_p*extra;
+    else if (k==1)
+      res = psr[ipsr].gwcs_geom_c*extra;
+
     return res;
 
 }
