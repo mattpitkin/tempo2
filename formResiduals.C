@@ -1157,7 +1157,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 double cosTheta;
                 double g1,g2,g3;
 		double width,width_day;
-		double extra;
+		double extra1,extra2;
 
 		longdouble resp,resc;
 		double e11p,e21p,e31p,e12p,e22p,e32p,e13p,e23p,e33p;
@@ -1240,28 +1240,34 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 /* Only has effect after the event epoch */
 		if (psr[p].obsn[i].sat < psr[p].gwcs_epoch-width_day/2.0)
 		  {
-		    extra=0;
+		    extra1=0;
+		    extra2=0;
 		  }
 		else if (psr[p].obsn[i].sat <= psr[p].gwcs_epoch)
-		  {
-		    
-		    extra = (psr[p].param[param_gwcs_amp].val[0]*
+		  {		    
+		    extra1 = (psr[p].param[param_gwcs_amp].val[0]*
+			     (3.0/4.0*(pow(0.5*width,4.0/3.0)-pow(fabs(dt),4.0/3.0))-
+			      pow(0.5*width,1.0/3.0)*(dt+0.5*width)));
+		    extra2 = (psr[p].param[param_gwcs_amp].val[1]*
 			     (3.0/4.0*(pow(0.5*width,4.0/3.0)-pow(fabs(dt),4.0/3.0))-
 			      pow(0.5*width,1.0/3.0)*(dt+0.5*width)));
 		  }
 		else if (psr[p].obsn[i].sat <= psr[p].gwcs_epoch+width_day/2.0)
 		  {
-		    extra = (psr[p].param[param_gwcs_amp].val[0]*
+		    extra1 = (psr[p].param[param_gwcs_amp].val[0]*
+			     (3.0/4.0*(pow(0.5*width,4.0/3.0)+pow(fabs(dt),4.0/3.0))-
+			      pow(0.5*width,1.0/3.0)*(dt+0.5*width)));
+		    extra2 = (psr[p].param[param_gwcs_amp].val[1]*
 			     (3.0/4.0*(pow(0.5*width,4.0/3.0)+pow(fabs(dt),4.0/3.0))-
 			      pow(0.5*width,1.0/3.0)*(dt+0.5*width)));
 		  }
 		else
 		  {
-		    extra = -0.25*(pow(0.5,1.0/3.0)*psr[p].param[param_gwcs_amp].val[0]*pow(width,4.0/3.0));
-		    
+		    extra1 = -0.25*(pow(0.5,1.0/3.0)*psr[p].param[param_gwcs_amp].val[0]*pow(width,4.0/3.0));
+		    extra2 = -0.25*(pow(0.5,1.0/3.0)*psr[p].param[param_gwcs_amp].val[1]*pow(width,4.0/3.0));		    
 		  }
 		// Noting here that Ax = 0 --- this should become a phase term??
-		phaseW += (psr[p].param[param_f].val[0]*extra*psr[p].gwcs_geom_p);
+		phaseW += (psr[p].param[param_f].val[0]*(extra1*psr[p].gwcs_geom_p+extra2*psr[p].gwcs_geom_c));
             }
 
 

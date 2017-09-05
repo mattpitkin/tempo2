@@ -968,7 +968,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 printf("DE200 Jupiter mass not set\n");
             }
         }
-        if (psr[p].quad_ifuncN_p > 0 || psr[p].param[param_gwm_amp].paramSet[1] == 1)
+        if (psr[p].quad_ifuncN_p > 0 || psr[p].param[param_gwm_amp].paramSet[1] == 1 || psr[p].param[param_gwcs_amp].paramSet[1]==1)
         {
             printf("Geometrical factor for pulsar %d (%s) = %g %g\n",p,psr[p].name,psr[p].quad_ifunc_geom_p,psr[p].quad_ifunc_geom_c);
         }

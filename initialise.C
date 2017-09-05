@@ -293,8 +293,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_waveepoch_dm].shortlabel[0],"WAVEEPOCHD");
     strcpy(psr->param[param_gwm_amp].label[0],"GWM_AMP");
     strcpy(psr->param[param_gwm_amp].shortlabel[0],"GWM_AMP");
-    strcpy(psr->param[param_gwcs_amp].label[0],"GWCS_AMP");
-    strcpy(psr->param[param_gwcs_amp].shortlabel[0],"GWCS_AMP");
+    strcpy(psr->param[param_gwcs_amp].label[0],"GWCS_AMP1");
+    strcpy(psr->param[param_gwcs_amp].shortlabel[0],"GWCS_AMP1");
+    strcpy(psr->param[param_gwcs_amp].label[1],"GWCS_AMP2");
+    strcpy(psr->param[param_gwcs_amp].shortlabel[1],"GWCS_AMP2");
     strcpy(psr->param[param_gwm_amp].label[1],"GWM_AMP_2");
     strcpy(psr->param[param_gwm_amp].shortlabel[1],"GWM_AMP_2");
     strcpy(psr->param[param_gwb_amp].label[0],"GWB_AMP");

@@ -1045,8 +1045,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"GWM_DPHASE")==0)
         fscanf(fin,"%lf",&psr->gwm_dphase);
     // Single cosmic string source creating gravitational waves
-    else if (strcasecmp(str,"GWCS_AMP")==0)
+    else if (strcasecmp(str,"GWCS_A1")==0)
       readValue(psr,str,fin,&(psr->param[param_gwcs_amp]),0);
+    else if (strcasecmp(str,"GWCS_A2")==0)
+      readValue(psr,str,fin,&(psr->param[param_gwcs_amp]),1);
     else if (strcasecmp(str,"GWCS_POSITION")==0)
         fscanf(fin,"%lf %lf",&psr->gwcs_raj,&psr->gwcs_decj);
     else if (strcasecmp(str,"GWCS_EPOCH")==0)
