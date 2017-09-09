@@ -15,3 +15,6 @@ void t2Fit_buildConstraintsMatrix(pulsar* psr,int ipsr, int iconstraint, double*
 void t2Fit_updateParameters(pulsar *psr,int ipsr,double *val,double *error);
 
 double t2Fit_getParamDeriv(pulsar* psr, const param_label fit_param, const double x, const int i, const int k);
+
+
+int t2Fit_getParamMatrixRow(const FitInfo &fitinfo, const int ipsr, const param_label fit_param, const int k);

@@ -302,6 +302,17 @@ typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param
  */
 typedef void (*paramUpdateFunc)(struct pulsar*, int,param_label,int,double,double);
 
+
+typedef struct FitOutput {
+    double parameterEstimates[MAX_FIT];
+    double errorEstimates[MAX_FIT];
+    int indexPsr[MAX_FIT];
+    param_label indexParam[MAX_FIT];
+    int indexCounter[MAX_FIT];
+    int totalNfit;
+} FitOutput;
+
+
 /*!
  * @brief contains details of the fit
  *
@@ -319,7 +330,9 @@ typedef struct FitInfo {
     paramDerivFunc paramDerivs[MAX_FIT];
     constraintDerivFunc constraintDerivs[MAX_FIT];
     paramUpdateFunc updateFunctions[MAX_FIT];
+    FitOutput output;
 } FitInfo;
+
 
 
 typedef struct storePrecision {
@@ -586,10 +599,10 @@ typedef struct pulsar {
     int    nFit;                    /*!< Number of points in the fit */
     int    nParam;                  /*!< Number of parameters in the fit */
     int    nGlobal;                 /*!< Number of global parameters in the fit */
-    int fitParamGlobalI[MAX_FIT];   // number of global parameters in fit
-    int fitParamGlobalK[MAX_FIT];    // number of global parameters in fit
-    int    fitParamI[MAX_FIT];
-    int    fitParamK[MAX_FIT];
+//    int fitParamGlobalI[MAX_FIT];   // number of global parameters in fit
+//    int fitParamGlobalK[MAX_FIT];    // number of global parameters in fit
+//    int    fitParamI[MAX_FIT];
+//    int    fitParamK[MAX_FIT];
     int    fitMode;                 /*!< = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
     char    robust;
     int    rescaleErrChisq;         /*!< = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
