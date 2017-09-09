@@ -63,7 +63,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     // Otherwise we we will just whiten using the error bars.
     bool haveCovar = (covarFuncFile!=NULL && strcmp(covarFuncFile,"NULL"));
 
-    for(int p=0; p < npsr; ++p){
+    for(unsigned p=0; p < npsr; ++p){
         if (psr[p].auto_constraints)autoConstraints(psr,p,npsr);
     }
 
@@ -133,7 +133,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         if(writeResiduals&2){
             FILE *fp = fopen("param.labels","w");
             ///TODO
-            for(int ip=0; ip < psr[ipsr].fitinfo.nParams; ++ip){
+            for(unsigned ip=0; ip < psr[ipsr].fitinfo.nParams; ++ip){
                 fprintf(fp,"%d %s %d\n",ip,label_str[psr[ipsr].fitinfo.paramIndex[ip]],psr[ipsr].fitinfo.paramCounters[ip]);
             }
             fclose(fp);
@@ -275,9 +275,6 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
             double chisq; // the post-fit chi-squared
 
-            // allocate memory for the output of TKleastSquares
-            double* parameterEstimates = (double*)malloc(sizeof(double)*nParams);
-            double* errorEstimates = (double*)malloc(sizeof(double)*nParams);
 
             /*
              * Call TKleastSquares, or in fact, TKrobustConstrainedLeastSquares,
@@ -289,7 +286,10 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             chisq = TKrobustConstrainedLeastSquares(psr_y,psr_white_y,
                     designMatrix,white_designMatrix,constraintsMatrix,
                     psr_ndata,nParams,nConstraints,
-                    T2_SVD_TOL,1,parameterEstimates,errorEstimates,psr[ipsr].covar,
+                    T2_SVD_TOL,1,
+                    psr[ipsr].fitinfo.output.parameterEstimates,
+                    psr[ipsr].fitinfo.output.errorEstimates,
+                    psr[ipsr].covar,
                     psr[ipsr].robust);
 
             // update the pulsar struct as appropriate
@@ -298,9 +298,12 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
 
             psr[ipsr].nParam = psr[ipsr].fitinfo.nParams;
+            psr[ipsr].nGlobal = 0;
+            psr[ipsr].fitinfo.output.totalNfit = psr[ipsr].fitinfo.nParams;
             for (int iparam = 0; iparam <  psr[ipsr].nParam; ++iparam){
-                psr[ipsr].fitParamI[iparam] = psr[ipsr].fitinfo.paramIndex[iparam];
-                psr[ipsr].fitParamK[iparam] = psr[ipsr].fitinfo.paramCounters[iparam];
+                psr[ipsr].fitinfo.output.indexPsr[iparam] = ipsr;
+                psr[ipsr].fitinfo.output.indexParam[iparam] = psr[ipsr].fitinfo.paramIndex[iparam];
+                psr[ipsr].fitinfo.output.indexCounter[iparam] = psr[ipsr].fitinfo.paramCounters[iparam];
             }
 
             logdbg("Updating the parameters");
@@ -309,7 +312,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
              * This routine calls the appropriate update functions to apply the result of the fit
              * to the origianal (non-linearised) pulsar parameters.
              */
-            t2Fit_updateParameters(psr,ipsr,parameterEstimates,errorEstimates);
+            t2Fit_updateParameters(psr,ipsr,psr[ipsr].fitinfo.output.parameterEstimates,
+                    psr[ipsr].fitinfo.output.errorEstimates);
             logtchk("complete updating the parameter values");
             logdbg("Completed updating the parameters");
 
@@ -318,8 +322,6 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
              * Might make a difference for very large datasets.
              */
             logdbg("Free fit memory");
-            free(parameterEstimates);
-            free(errorEstimates);
             free_blas(designMatrix);
             free_blas(white_designMatrix);
             if (constraintsMatrix) free_blas(constraintsMatrix);
@@ -337,7 +339,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
         logdbg("Allocate Global Constraints Matrix");
         double** constraintsMatrix = NULL;
-        
+
         if (totalGlobalConstraints > 0){
             constraintsMatrix = malloc_blas(totalGlobalConstraints,totalGlobalParams);
         }
@@ -358,22 +360,41 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             logdbg("ipsr=%u, off_r = %u, off_c=%u, off_f=%u, nlocal=%u",
                     ipsr,off_r,off_c,off_f,nLocal);
 
+            psr[ipsr].nParam = psr[ipsr].fitinfo.nParams; // TODO: check, should this be local params only?
+            psr[ipsr].nGlobal = gParams;
+            psr[ipsr].fitinfo.output.totalNfit =totalGlobalParams ;
+            psr[ipsr].globalNfit = totalGlobalParams;
+
             // the fit parameters
             for(unsigned int i=0; i < gNdata[ipsr]; i++){
 
                 // the global params (they go first)
                 for(unsigned int g= 0; g < gParams; g++){
                     unsigned int j = g+nLocal;
-                    if(ipsr==0 && i==0 && writeResiduals&0x08){
-                        logmsg("Row %d = %s %s(%d)",g,"global",label_str[global_fitinfo.paramIndex[g]],global_fitinfo.paramCounters[g]);
+                    if(i==0) {
+                        // make sure that we know what row of the output vectors is what!
+                        psr[0].fitinfo.output.indexPsr[g] = -1;
+                        psr[0].fitinfo.output.indexParam[g] = global_fitinfo.paramIndex[g];
+                        psr[0].fitinfo.output.indexCounter[g] = global_fitinfo.paramCounters[g];
+                       if (ipsr==0 && writeResiduals&0x08){
+                           logmsg("Row %d = %s %s(%d)",g,"global",label_str[global_fitinfo.paramIndex[g]],global_fitinfo.paramCounters[g]);
+                       }
                     }
+
                     designMatrix[i+off_r][g] = gDM[ipsr][i][j];
                     white_designMatrix[i+off_r][g] = gWDM[ipsr][i][j];
                 }
 
                 for(unsigned int j=0; j < nLocal; j++){
-                    if(i==0 && writeResiduals&0x08){
-                        logmsg("Row %d = %s %s(%d)",j+off_f,psr[ipsr].name,label_str[psr[ipsr].fitinfo.paramIndex[j]],psr[ipsr].fitinfo.paramCounters[j]);
+                    if(i==0) {
+                        // again, make sure we know what row is what in the output.
+                        int iparam = j+off_f;
+                        psr[0].fitinfo.output.indexPsr[iparam] = ipsr;
+                        psr[0].fitinfo.output.indexParam[iparam] = psr[ipsr].fitinfo.paramIndex[j];
+                        psr[0].fitinfo.output.indexCounter[iparam] = psr[ipsr].fitinfo.paramCounters[j];
+                        if(writeResiduals&0x08){
+                            logmsg("Row %d = %s %s(%d)",j+off_f,psr[ipsr].name,label_str[psr[ipsr].fitinfo.paramIndex[j]],psr[ipsr].fitinfo.paramCounters[j]);
+                        }
                     }
                     designMatrix[i+off_r][j+off_f] = gDM[ipsr][i][j];
                     white_designMatrix[i+off_r][j+off_f] = gWDM[ipsr][i][j];
@@ -412,12 +433,13 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
         double chisq; // the post-fit chi-squared
 
-        double* parameterEstimates = (double*)malloc(sizeof(double)*totalGlobalParams);
-        double* errorEstimates = (double*)malloc(sizeof(double)*totalGlobalParams);
         chisq = TKrobustConstrainedLeastSquares(y,white_y,
                 designMatrix,white_designMatrix,constraintsMatrix,
                 nobs,totalGlobalParams,totalGlobalConstraints,
-                T2_SVD_TOL,1,parameterEstimates,errorEstimates,psr[0].covar,
+                T2_SVD_TOL,1,
+                psr[0].fitinfo.output.parameterEstimates,
+                psr[0].fitinfo.output.errorEstimates,
+                psr[0].covar,
                 psr[0].robust);
         // for now the CVM ends up in psr[0].covar.
 
@@ -426,6 +448,13 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             // update the pulsar struct as appropriate
             psr[ipsr].fitChisq = chisq;
             psr[ipsr].fitNfree = nobs + totalGlobalConstraints - totalGlobalParams;
+
+            if(ipsr!=0){
+                memcpy(&psr[ipsr].fitinfo.output, &psr[0].fitinfo.output, sizeof(FitOutput));
+                for (int i=0; i < totalGlobalParams; ++i) {
+                    memcpy(psr[ipsr].covar[i],psr[0].covar[i],MAX_FIT*sizeof(double));
+                }
+            }
 
 
 
@@ -438,14 +467,14 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
              * Notice: Globals go at the end of the individual pulsar arrays.
              */
             for (unsigned i = 0; i < np; ++i){
-                psr_parameterEstimates[i] = parameterEstimates[off_p];
-                psr_errorEstimates[i] = errorEstimates[off_p];
+                psr_parameterEstimates[i] = psr[ipsr].fitinfo.output.parameterEstimates[off_p];
+                psr_errorEstimates[i] = psr[ipsr].fitinfo.output.errorEstimates[off_p];
                 ++off_p;
             }
 
             for (unsigned i = 0; i < gParams; ++i){
-                psr_parameterEstimates[i+np] = parameterEstimates[i];
-                psr_errorEstimates[i+np] = errorEstimates[i];
+                psr_parameterEstimates[i+np] = psr[ipsr].fitinfo.output.parameterEstimates[i];
+                psr_errorEstimates[i+np] = psr[ipsr].fitinfo.output.errorEstimates[i];
             }
 
             logdbg("Updating the parameters");
@@ -460,9 +489,10 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             logdbg("Completed updating the parameters");
             free(psr_parameterEstimates);
             free(psr_errorEstimates);
+
+
         }
-        free(parameterEstimates);
-        free(errorEstimates);
+
         free(white_y);
         free(y);
         free_blas(designMatrix);
@@ -647,7 +677,9 @@ void t2Fit_fillGlobalFitInfo(pulsar* psr, unsigned int npsr,FitInfo &OUT){
     t2Fit_fillFitInfo_INNER(psr,OUT,2);
 }
 
-void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const double* psr_x, const int* psr_toaidx, const int psr_ndata){
+void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const double* psr_x, const int* psr_toaidx, const int psr_ndata) {
+    // wipe any old fit info. Make sure to keep a reference to the output CVM array!
+    memset(&OUT,0,sizeof(FitInfo));
 
     OUT.nParams=1;
     OUT.nConstraints=0;
@@ -915,7 +947,6 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         psr->param[param_red_dm_cos].paramSet[0]=0;
     }
 
-
 }
 
 
@@ -927,318 +958,318 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
     OUT.paramCounters[OUT.nParams]=k;
     printf("Fit_params = %d ecc = %d gwcs = %d\n",fit_param,param_gwecc,param_gwcs_amp);
     switch(fit_param){
-    case param_raj:
-    case param_decj:
-    case param_pmra:
-    case param_pmdec:
-    case param_px:
-    case param_pmrv:
-    case param_dshk:
-      // positional parameters and parallax
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdPosition;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdPosition;
-      ++OUT.nParams;
-      break;
-    case param_start:
-    case param_finish:
-      // these parameters are not actually fitted for...
-      break;
-    case param_f:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdFreq;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdFreq;
-      ++OUT.nParams;
-      break;
-    case param_brake:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdFreq;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
-      ++OUT.nParams;
-      break;
-    case param_sini:
-    case param_pb:
-    case param_fb:
-    case param_t0:
-    case param_a1:
-    case param_om:
-    case param_ecc:
-    case param_edot:
-    case param_e2dot:
-    case param_xpbdot:
-    case param_pbdot:
-    case param_a1dot:
-    case param_a2dot:
-    case param_omdot:
-    case param_orbpx:
-    case param_tasc:
-    case param_eps1:
-    case param_eps2:
-    case param_eps1dot:
-    case param_eps2dot:
-    case param_m2:
-    case param_gamma:
-    case param_mtot:
-    case param_bp:
-    case param_bpp:
-    case param_dr:
-    case param_dtheta:
-    case param_bpjep:
-    case param_bpjph:
-    case param_bpja1:
-    case param_bpjec:
-    case param_bpjom:
-    case param_bpjpb:
-    case param_h3:
-    case param_h4:
-    case param_stig:
-    case param_kin:
-    case param_kom:
-      // all binary models are handled by a routine that identifies the correct binary model.
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_binaryModels;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_binaryModels;
-      ++OUT.nParams;
-      break;
-    case param_dm:
-      // Dispersion measure and derivatives
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdDm;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
-      ++OUT.nParams;
-      break;
-    case param_fddc:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fddc;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
-      ++OUT.nParams;
-      break;
-    case param_fd:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fd;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
-      ++OUT.nParams;
-      break;
-    case param_dm_sin1yr:
-    case param_dm_cos1yr:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmsinusoids;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
-      ++OUT.nParams;
-      break;
-    case param_fddi:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_notImplemented;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_notImplemented;
-      ++OUT.nParams;
-      break;
-    case param_dmx:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmx;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
-      ++OUT.nParams;
-      break;
-    case param_dmassplanet:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_planet;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
-      ++OUT.nParams;
-      break;
-    case param_wave_om:
-      // fitwaves has many parameters to fit.
-      N=2;
-      if (psr->waveScale == 2)N=4;
-      for (unsigned i = 0; i < static_cast<unsigned>(psr->nWhite*N); ++i){
-	OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fitwaves;
-	OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fitwaves;
-	OUT.paramCounters[OUT.nParams]=i;
-	OUT.paramIndex[OUT.nParams]=fit_param;
-	++OUT.nParams;
-      }
-      break;
-    case param_wave_dm:
-      // fitwaves has many parameters to fit.
-      for (unsigned i = 0; i < static_cast<unsigned>(psr->nWhite_dm*2); ++i){
-	OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fitwaves;
-	OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fitwaves;
-	OUT.paramCounters[OUT.nParams]=i;
-	OUT.paramIndex[OUT.nParams]=fit_param;
-	++OUT.nParams;
-      }
-      break;
-      
-    case param_glep:
-    case param_glph:
-    case param_glf0:
-    case param_glf1:
-    case param_glf0d:
-    case param_gltd:
-    case param_glf2:
-      // glitches
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGlitch;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
-      if(fit_param==param_glf2)OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGlitch;
-      ++OUT.nParams;
-      break;
-      
-    case param_telx:
-    case param_tely:
-    case param_telz:
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
-      ++OUT.nParams;
-      break;
-    case param_tel_dx:
-    case param_tel_dy:
-    case param_tel_dz:
-      // complicated to work out how many of these parameters there are
-      // (blame George??)
-      if(fit_param==param_tel_dx)N=psr->nTelDX;
-      if(fit_param==param_tel_dy)N=psr->nTelDY;
-      if(fit_param==param_tel_dz)N=psr->nTelDZ;
-      
-      if (psr->param[fit_param].val[0] == 2 )N=N-1;
-      
-      for (unsigned i = 0; i < N; ++i){
-	OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos_delta;
-	OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos_delta;
-	OUT.paramIndex[OUT.nParams]=fit_param;
-	OUT.paramCounters[OUT.nParams]=i;
-	++OUT.nParams;
-      }
-      break;
-      
-    case param_clk_offs:
-      logwarn("clock offset cannot be fit under this version - fix soon!");
-    case param_ifunc:
-    case param_quad_ifunc_p:
-    case param_quad_ifunc_c:
-      // ifunc-alikes
-      N=0;
-      sifunc=0;
-      if(fit_param==param_ifunc){
-	sifunc = psr->param[fit_param].val[0]==1; // use sinusoids?
-	N=psr->ifuncN;
-      }
-      if(fit_param==param_clk_offs)N=psr->clkOffsN;
-      if(fit_param==param_quad_ifunc_p)N=psr->quad_ifuncN_p;
-      if(fit_param==param_quad_ifunc_c)N=psr->quad_ifuncN_c;
-      if(sifunc){
-	logwarn("Sinusoidal ifuncs");
-      }
-      for (unsigned i = 0; i < N; ++i){
-	if(sifunc) OUT.paramDerivs[OUT.nParams] = t2FitFunc_sifunc;
-	else OUT.paramDerivs[OUT.nParams] = t2FitFunc_ifunc;
-	OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_ifunc;
-	OUT.paramCounters[OUT.nParams]=i;
-	OUT.paramIndex[OUT.nParams]=fit_param;
-	++OUT.nParams;
-      }
-      break;
-      
-    case param_dmmodel:
-      for (int i = 0; i < psr->dmoffsDMnum; ++i){
-	OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelDM;
-	OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_dmmodelDM;
-	OUT.paramCounters[OUT.nParams]=i;
-	OUT.paramIndex[OUT.nParams]=fit_param;
-	++OUT.nParams;
-      }
-      for (int i = 0; i < psr->dmoffsCMnum; ++i){
-	OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelCM;
-	OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_dmmodelCM;
-	OUT.paramCounters[OUT.nParams]=i+psr->dmoffsDMnum;
-	OUT.paramIndex[OUT.nParams]=fit_param;
-	++OUT.nParams;
-      }
-      break;
-      
-    case param_red_sin:
-    case param_red_cos:
-      for (int i=0; i < psr->TNRedC ; ++i){
-	OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red;
-	OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red;
-	OUT.paramCounters[OUT.nParams]=i;
-	OUT.paramIndex[OUT.nParams]=fit_param;
-	++OUT.nParams;
-      }
-      break;
-      
-    case param_band_red_sin:
-    case param_band_red_cos:
-      {
-	int counter=0;
-	for (int iband=0; iband < psr->nTNBandNoise ; ++iband){
-	  for (int i=0; i < psr->TNBandNoiseC[iband] ; ++i){
-	    OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_band;
-	    OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_band;
-	    OUT.paramCounters[OUT.nParams]=counter;
-	    OUT.paramIndex[OUT.nParams]=fit_param;
-	    ++OUT.nParams;
-	    ++counter;
-	  }
-	}
-      }
-      break;
-      
-    case param_group_red_sin:
-    case param_group_red_cos:
-      {
-	int counter=0;
-	for (int igroup=0; igroup < psr->nTNGroupNoise ; ++igroup){
-	  for (int i=0; i < psr->TNGroupNoiseC[igroup] ; ++i){
-	    OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_group;
-	    OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_group;
-	    OUT.paramCounters[OUT.nParams]=counter;
-	    OUT.paramIndex[OUT.nParams]=fit_param;
-	    ++OUT.nParams;
-	    ++counter;
-	  }
-	}
-      }
-      break;
-      
-      
-      
-    case param_red_dm_sin:
-    case param_red_dm_cos:
-      {
-	for (int i=0; i < psr->TNDMC ; ++i){
-	  OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red_dm;
-	  OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red_dm;
-	  OUT.paramCounters[OUT.nParams]=i;
-	  OUT.paramIndex[OUT.nParams]=fit_param;
-	  ++OUT.nParams;
-	}
-	
-      }
-      break;
-      
-    case param_ne_sw:
-      // solar wind
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ne_sw;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ne_sw;
-      ++OUT.nParams;
-      break;
-      
-    case param_gwecc:
-      // gw ECC amplitude
-      ++OUT.nParams;
-      break;
-      
-      
-    case param_gwm_amp:
-            // gw memory
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwm_amp;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
-      ++OUT.nParams;
-      break;
-      
-    case param_gwcs_amp:
-      // gw cosmic string
-      OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwcs_amp;
-      OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
-      ++OUT.nParams;
-      break;
+        case param_raj:
+        case param_decj:
+        case param_pmra:
+        case param_pmdec:
+        case param_px:
+        case param_pmrv:
+        case param_dshk:
+            // positional parameters and parallax
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdPosition;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdPosition;
+            ++OUT.nParams;
+            break;
+        case param_start:
+        case param_finish:
+            // these parameters are not actually fitted for...
+            break;
+        case param_f:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdFreq;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdFreq;
+            ++OUT.nParams;
+            break;
+        case param_brake:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdFreq;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+            ++OUT.nParams;
+            break;
+        case param_sini:
+        case param_pb:
+        case param_fb:
+        case param_t0:
+        case param_a1:
+        case param_om:
+        case param_ecc:
+        case param_edot:
+        case param_e2dot:
+        case param_xpbdot:
+        case param_pbdot:
+        case param_a1dot:
+        case param_a2dot:
+        case param_omdot:
+        case param_orbpx:
+        case param_tasc:
+        case param_eps1:
+        case param_eps2:
+        case param_eps1dot:
+        case param_eps2dot:
+        case param_m2:
+        case param_gamma:
+        case param_mtot:
+        case param_bp:
+        case param_bpp:
+        case param_dr:
+        case param_dtheta:
+        case param_bpjep:
+        case param_bpjph:
+        case param_bpja1:
+        case param_bpjec:
+        case param_bpjom:
+        case param_bpjpb:
+        case param_h3:
+        case param_h4:
+        case param_stig:
+        case param_kin:
+        case param_kom:
+            // all binary models are handled by a routine that identifies the correct binary model.
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_binaryModels;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_binaryModels;
+            ++OUT.nParams;
+            break;
+        case param_dm:
+            // Dispersion measure and derivatives
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdDm;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+            ++OUT.nParams;
+            break;
+        case param_fddc:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fddc;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+            ++OUT.nParams;
+            break;
+        case param_fd:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fd;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+            ++OUT.nParams;
+            break;
+        case param_dm_sin1yr:
+        case param_dm_cos1yr:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmsinusoids;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+            ++OUT.nParams;
+            break;
+        case param_fddi:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_notImplemented;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_notImplemented;
+            ++OUT.nParams;
+            break;
+        case param_dmx:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmx;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+            ++OUT.nParams;
+            break;
+        case param_dmassplanet:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_planet;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+            ++OUT.nParams;
+            break;
+        case param_wave_om:
+            // fitwaves has many parameters to fit.
+            N=2;
+            if (psr->waveScale == 2)N=4;
+            for (unsigned i = 0; i < static_cast<unsigned>(psr->nWhite*N); ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fitwaves;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fitwaves;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
+            break;
+        case param_wave_dm:
+            // fitwaves has many parameters to fit.
+            for (unsigned i = 0; i < static_cast<unsigned>(psr->nWhite_dm*2); ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fitwaves;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fitwaves;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
+            break;
 
-    case param_quad_om:
-      for (unsigned i = 0; i < 4*psr->nQuad; ++i){
-	OUT.paramDerivs[OUT.nParams]     =t2FitFunc_quad_om;
-	OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_quad_om;
-	OUT.paramCounters[OUT.nParams]=i;
-	++OUT.nParams;
-      }
-      break;
-    case param_gwsingle:
+        case param_glep:
+        case param_glph:
+        case param_glf0:
+        case param_glf1:
+        case param_glf0d:
+        case param_gltd:
+        case param_glf2:
+            // glitches
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGlitch;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+            if(fit_param==param_glf2)OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGlitch;
+            ++OUT.nParams;
+            break;
+
+        case param_telx:
+        case param_tely:
+        case param_telz:
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+            ++OUT.nParams;
+            break;
+        case param_tel_dx:
+        case param_tel_dy:
+        case param_tel_dz:
+            // complicated to work out how many of these parameters there are
+            // (blame George??)
+            if(fit_param==param_tel_dx)N=psr->nTelDX;
+            if(fit_param==param_tel_dy)N=psr->nTelDY;
+            if(fit_param==param_tel_dz)N=psr->nTelDZ;
+
+            if (psr->param[fit_param].val[0] == 2 )N=N-1;
+
+            for (unsigned i = 0; i < N; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_telPos_delta;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_telPos_delta;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                OUT.paramCounters[OUT.nParams]=i;
+                ++OUT.nParams;
+            }
+            break;
+
+        case param_clk_offs:
+            logwarn("clock offset cannot be fit under this version - fix soon!");
+        case param_ifunc:
+        case param_quad_ifunc_p:
+        case param_quad_ifunc_c:
+            // ifunc-alikes
+            N=0;
+            sifunc=0;
+            if(fit_param==param_ifunc){
+                sifunc = psr->param[fit_param].val[0]==1; // use sinusoids?
+                N=psr->ifuncN;
+            }
+            if(fit_param==param_clk_offs)N=psr->clkOffsN;
+            if(fit_param==param_quad_ifunc_p)N=psr->quad_ifuncN_p;
+            if(fit_param==param_quad_ifunc_c)N=psr->quad_ifuncN_c;
+            if(sifunc){
+                logwarn("Sinusoidal ifuncs");
+            }
+            for (unsigned i = 0; i < N; ++i){
+                if(sifunc) OUT.paramDerivs[OUT.nParams] = t2FitFunc_sifunc;
+                else OUT.paramDerivs[OUT.nParams] = t2FitFunc_ifunc;
+                OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_ifunc;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
+            break;
+
+        case param_dmmodel:
+            for (int i = 0; i < psr->dmoffsDMnum; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelDM;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_dmmodelDM;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
+            for (int i = 0; i < psr->dmoffsCMnum; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_dmmodelCM;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_dmmodelCM;
+                OUT.paramCounters[OUT.nParams]=i+psr->dmoffsDMnum;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
+            break;
+
+        case param_red_sin:
+        case param_red_cos:
+            for (int i=0; i < psr->TNRedC ; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
+            break;
+
+        case param_band_red_sin:
+        case param_band_red_cos:
+            {
+                int counter=0;
+                for (int iband=0; iband < psr->nTNBandNoise ; ++iband){
+                    for (int i=0; i < psr->TNBandNoiseC[iband] ; ++i){
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_band;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_band;
+                        OUT.paramCounters[OUT.nParams]=counter;
+                        OUT.paramIndex[OUT.nParams]=fit_param;
+                        ++OUT.nParams;
+                        ++counter;
+                    }
+                }
+            }
+            break;
+
+        case param_group_red_sin:
+        case param_group_red_cos:
+            {
+                int counter=0;
+                for (int igroup=0; igroup < psr->nTNGroupNoise ; ++igroup){
+                    for (int i=0; i < psr->TNGroupNoiseC[igroup] ; ++i){
+                        OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_group;
+                        OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_group;
+                        OUT.paramCounters[OUT.nParams]=counter;
+                        OUT.paramIndex[OUT.nParams]=fit_param;
+                        ++OUT.nParams;
+                        ++counter;
+                    }
+                }
+            }
+            break;
+
+
+
+        case param_red_dm_sin:
+        case param_red_dm_cos:
+            {
+                for (int i=0; i < psr->TNDMC ; ++i){
+                    OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red_dm;
+                    OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red_dm;
+                    OUT.paramCounters[OUT.nParams]=i;
+                    OUT.paramIndex[OUT.nParams]=fit_param;
+                    ++OUT.nParams;
+                }
+
+            }
+            break;
+
+        case param_ne_sw:
+            // solar wind
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ne_sw;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ne_sw;
+            ++OUT.nParams;
+            break;
+
+        case param_gwecc:
+            // gw ECC amplitude
+            ++OUT.nParams;
+            break;
+
+
+        case param_gwm_amp:
+            // gw memory
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwm_amp;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+            ++OUT.nParams;
+            break;
+
+        case param_gwcs_amp:
+            // gw cosmic string
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwcs_amp;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+            ++OUT.nParams;
+            break;
+
+        case param_quad_om:
+            for (unsigned i = 0; i < 4*psr->nQuad; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_quad_om;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_quad_om;
+                OUT.paramCounters[OUT.nParams]=i;
+                ++OUT.nParams;
+            }
+            break;
+        case param_gwsingle:
             for (unsigned i = 0; i < 4; ++i){
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_gwsingle;
                 OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_gwsingle;
@@ -1289,6 +1320,22 @@ double t2Fit_getParamDeriv(pulsar* psr, const int i, const double x, const param
 }
 
 
+
+int t2Fit_getParamMatrixRow(const FitInfo &fitinfo, const int ipsr, const param_label fit_param, const int k){
+    int ret=-1;
+
+    for (unsigned i = 0; i < fitinfo.output.totalNfit; ++i) {
+        // note that ipsr -1 represents global paramters, so applies to all pulsars
+        if (((fitinfo.output.indexPsr[i] == ipsr) || (fitinfo.output.indexPsr[i] == -1))
+                && fitinfo.output.indexParam[i] == fit_param
+                && fitinfo.output.indexCounter[i] == k) {
+            ret=i;
+            break;
+        }
+
+    }
+    return ret;
+}
 
 
 

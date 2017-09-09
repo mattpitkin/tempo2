@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tempo2.h"
+#include "TKmatrix.h"
 
 void initialise(pulsar *psr,int noWarnings)
 {
@@ -61,7 +62,6 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
 
     psr->nobs = 0;
     //  psr->obsn = NULL;
-    psr->covar = NULL;
 
     //  if (psr->obsn == NULL)
     psr->obsn = (observation *)malloc(sizeof(observation)*MAX_OBSN);
@@ -69,20 +69,6 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     if (psr->obsn == NULL)
         fail = 1;
 
-    if (fullSetup && !fail) {
-
-        psr->covar = (double **)malloc(sizeof(double *)*MAX_PARAMS);
-
-        if (psr->covar != NULL) {
-            for(i=0;i<MAX_PARAMS;i++) {
-                psr->covar[i] = (double *)malloc(sizeof(double)*MAX_PARAMS);
-                if (psr->covar[i] == NULL) {
-                    fail = 1;
-                    break;
-                }
-            }
-        }
-    }
     // Initialise the barycentre vectors:
     //
     // To the best of my knowledge, this only ever happens in
@@ -114,6 +100,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         exit(1);
     }  /* This memory gets deallocated by destroyOne */
 
+
+    psr->covar = malloc_blas(MAX_FIT,MAX_FIT);
 
     strcpy(psr->eopc04_file,"/earth/eopc04_IAU2000.62-now");
     strcpy(psr->filterStr,"");
@@ -674,11 +662,7 @@ void destroyOne (pulsar *psr)
     if (psr->obsn)
         free (psr->obsn);
 
-    if (psr->covar) {
-        for(i=0;i<MAX_PARAMS;i++)
-            free (psr->covar[i]);
-        free (psr->covar);
-    }
+    free_blas(psr->covar);
 
     destroyMemory(psr);
 }
