@@ -144,8 +144,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       {
         for (j = 0; j < psr[0].globalNfit; j++)
           {
-            if ((psr[0].fitParamI[i] == param_quad_ifunc_p || psr[0].fitParamI[i] == param_quad_ifunc_c) && 
-				(psr[0].fitParamI[j] == param_quad_ifunc_p || psr[0].fitParamI[j] == param_quad_ifunc_c))
+            if ((psr[0].fitinfo.output.indexParam[i] == param_quad_ifunc_p || psr[0].fitinfo.output.indexParam[i] == param_quad_ifunc_c) && 
+				(psr[0].fitinfo.output.indexParam[j] == param_quad_ifunc_p || psr[0].fitinfo.output.indexParam[j] == param_quad_ifunc_c))
               {
                 gsl_matrix_set (Sigma_n, i, j, psr[0].covar[i][j]);
               }

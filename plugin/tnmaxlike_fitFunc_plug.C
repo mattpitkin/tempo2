@@ -121,8 +121,8 @@ int getNglobal(pulsar *psr,int npsr){
                             i!=param_tel_dx && i!= param_tel_dy && i!=param_tel_dz &&
                             i!=param_quad_ifunc_p && i!=param_quad_ifunc_c && i!=param_gwsingle && i!=param_wave_dm)
                     {
-                        psr->fitParamI[nGlobal]  = i;
-                        psr->fitParamK[nGlobal]  = k;
+                        psr->fitinfo.output.indexParam[nGlobal]  = i;
+                        psr->fitinfo.output.indexCounter[nGlobal]  = k;
 
                         nGlobal++;
                     }
@@ -134,13 +134,13 @@ int getNglobal(pulsar *psr,int npsr){
     if (psr[0].param[param_wave_om].fitFlag[0]==2)
     {
         for (i=0;i<psr->nWhite*2;i++)
-        {psr->fitParamI[nGlobal+i]  = param_wave_om; psr->fitParamK[nGlobal+i]  = i;}
+        {psr->fitinfo.output.indexParam[nGlobal+i]  = param_wave_om; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
         nGlobal+=psr[0].nWhite*2;
     }
     if (psr[0].param[param_wave_dm].fitFlag[0]==2)
     {
         for (i=0;i<psr->nWhite_dm*2;i++)
-        {psr->fitParamI[nGlobal+i]  = param_wave_dm; psr->fitParamK[nGlobal+i]  = i;}
+        {psr->fitinfo.output.indexParam[nGlobal+i]  = param_wave_dm; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
         nGlobal+=psr[0].nWhite_dm*2;
     }
 
@@ -152,19 +152,19 @@ int getNglobal(pulsar *psr,int npsr){
         if (psr[0].param[param_ifunc].val[0] == 0)
         {
             for (i=0;i<psr->ifuncN-1;i++)
-            {psr->fitParamI[nGlobal+i]  = param_ifunc; psr->fitParamK[nGlobal+i]  = i;}
+            {psr->fitinfo.output.indexParam[nGlobal+i]  = param_ifunc; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
             nGlobal+=psr[0].ifuncN-1;
         }
         else
         {
             for (i=0;i<psr->ifuncN;i++)
-            {psr->fitParamI[nGlobal+i]  = param_ifunc; psr->fitParamK[nGlobal+i]  = i;}
+            {psr->fitinfo.output.indexParam[nGlobal+i]  = param_ifunc; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
             nGlobal+=psr[0].ifuncN;
         }
     }
     if (psr[0].param[param_quad_om].fitFlag[0]==2){
         for (i=0;i<psr->nQuad*4;i++)
-        {psr->fitParamI[nGlobal+i]  = param_quad_om; psr->fitParamK[nGlobal+i]  = i;}
+        {psr->fitinfo.output.indexParam[nGlobal+i]  = param_quad_om; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
         nGlobal+=psr[0].nQuad*4;
     }
 
@@ -172,11 +172,11 @@ int getNglobal(pulsar *psr,int npsr){
     {
         if (psr->param[param_tel_dx].val[0] < 2){
             for (i=0;i<psr->nTelDX;i++)
-            {psr->fitParamI[nGlobal+i]  = param_tel_dx; psr->fitParamK[nGlobal+i]  = i;}
+            {psr->fitinfo.output.indexParam[nGlobal+i]  = param_tel_dx; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
             nGlobal+=(psr[0].nTelDX);
         } else if (psr->param[param_tel_dx].val[0] == 2){
             for (i=0;i<psr->nTelDX-1;i++)
-            {psr->fitParamI[nGlobal+i]  = param_tel_dx; psr->fitParamK[nGlobal+i]  = i;}
+            {psr->fitinfo.output.indexParam[nGlobal+i]  = param_tel_dx; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
             nGlobal+=(psr[0].nTelDX-1);
         }
     }
@@ -184,11 +184,11 @@ int getNglobal(pulsar *psr,int npsr){
     {     
         if (psr->param[param_tel_dy].val[0] < 2){
             for (i=0;i<psr->nTelDY;i++)
-            {psr->fitParamI[nGlobal+i]  = param_tel_dy; psr->fitParamK[nGlobal+i]  = i;}
+            {psr->fitinfo.output.indexParam[nGlobal+i]  = param_tel_dy; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
             nGlobal+=(psr[0].nTelDY);
         } else if (psr->param[param_tel_dy].val[0] < 2) {
             for (i=0;i<psr->nTelDY-1;i++)
-            {psr->fitParamI[nGlobal+i]  = param_tel_dy; psr->fitParamK[nGlobal+i]  = i;}
+            {psr->fitinfo.output.indexParam[nGlobal+i]  = param_tel_dy; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
             nGlobal+=(psr[0].nTelDY-1);
         }
     }
@@ -196,12 +196,12 @@ int getNglobal(pulsar *psr,int npsr){
     {
         if (psr->param[param_tel_dz].val[0] < 2){
             for (i=0;i<psr->nTelDZ;i++)
-            {psr->fitParamI[nGlobal+i]  = param_tel_dz; psr->fitParamK[nGlobal+i]  = i;}
+            {psr->fitinfo.output.indexParam[nGlobal+i]  = param_tel_dz; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
 
             nGlobal+=(psr[0].nTelDZ);
         } else if (psr->param[param_tel_dz].val[0] == 2){
             for (i=0;i<psr->nTelDZ-1;i++)
-            {psr->fitParamI[nGlobal+i]  = param_tel_dz; psr->fitParamK[nGlobal+i]  = i;}
+            {psr->fitinfo.output.indexParam[nGlobal+i]  = param_tel_dz; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
 
             nGlobal+=(psr[0].nTelDZ-1);
         }
@@ -209,20 +209,20 @@ int getNglobal(pulsar *psr,int npsr){
     if (psr->param[param_quad_ifunc_p].fitFlag[0]==2)
     {
         for (i=0;i<psr->quad_ifuncN_p;i++)
-        {psr->fitParamI[nGlobal+i]  = param_quad_ifunc_p; psr->fitParamK[nGlobal+i]  = i;}
+        {psr->fitinfo.output.indexParam[nGlobal+i]  = param_quad_ifunc_p; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
 
         nGlobal+=(psr->quad_ifuncN_p);
     }
     if (psr->param[param_quad_ifunc_c].fitFlag[0]==2)
     {
         for (i=0;i<psr->quad_ifuncN_c;i++)
-        {psr->fitParamI[nGlobal+i]  = param_quad_ifunc_c; psr->fitParamK[nGlobal+i]  = i;}
+        {psr->fitinfo.output.indexParam[nGlobal+i]  = param_quad_ifunc_c; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
         nGlobal+=(psr->quad_ifuncN_c);
     }
     if (psr[0].param[param_gwsingle].fitFlag[0]==2)
     {
         for (i=0;i<4;i++)
-        {psr->fitParamI[nGlobal+i]  = param_gwsingle; psr->fitParamK[nGlobal+i]  = i;}
+        {psr->fitinfo.output.indexParam[nGlobal+i]  = param_gwsingle; psr->fitinfo.output.indexCounter[nGlobal+i]  = i;}
 
         nGlobal+=(4);
     }
@@ -243,8 +243,8 @@ int getNparams(pulsar *psr,int offset)
             if (psr->param[i].paramSet[k]==1 && psr->param[i].fitFlag[k]==1) {
                 if (i!=param_start && i!=param_finish && i!=param_dmmodel && i!=param_gwsingle)
                 {
-                    psr->fitParamI[npol+offset]  = i;
-                    psr->fitParamK[npol+offset]  = k;
+                    psr->fitinfo.output.indexParam[npol+offset]  = i;
+                    psr->fitinfo.output.indexCounter[npol+offset]  = k;
                     npol++;
                 }
             }
@@ -255,8 +255,8 @@ int getNparams(pulsar *psr,int offset)
     {
         if (psr->fitJump[i]==1)
         {
-            psr->fitParamI[npol+offset]  = -1;
-            psr->fitParamK[npol+offset]  = 0;
+            psr->fitinfo.output.indexParam[npol+offset]  = -1;
+            psr->fitinfo.output.indexCounter[npol+offset]  = 0;
             npol++;
         }
     }
@@ -267,21 +267,21 @@ int getNparams(pulsar *psr,int offset)
         if (psr->waveScale==1)
         {
             for (i=0;i<psr->nWhite*2-1;i++)
-            {psr->fitParamI[npol+i+offset]  = param_wave_om; psr->fitParamK[npol+i+offset]  = i;}
+            {psr->fitinfo.output.indexParam[npol+i+offset]  = param_wave_om; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
             npol+=psr->nWhite*2-1;
 
         }
         else if (psr->waveScale==2)
         {
             for (i=0;i<psr->nWhite*4-1;i++)
-            {psr->fitParamI[npol+i+offset]  = param_wave_om; psr->fitParamK[npol+i+offset]  = i;}
+            {psr->fitinfo.output.indexParam[npol+i+offset]  = param_wave_om; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
             npol+=psr->nWhite*4-1;
         }
         else
         {
             for (i=0;i<psr->nWhite*2-1;i++)
-            {psr->fitParamI[npol+i+offset]  = param_wave_om; psr->fitParamK[npol+i+offset]  = i;}
+            {psr->fitinfo.output.indexParam[npol+i+offset]  = param_wave_om; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
             npol+=psr->nWhite*2-1;      
         }
     }
@@ -289,7 +289,7 @@ int getNparams(pulsar *psr,int offset)
     {
 
         for (i=0;i<psr->nWhite_dm*2-1;i++)
-        {psr->fitParamI[npol+i+offset]  = param_wave_dm; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_wave_dm; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
         npol+=psr->nWhite_dm*2-1;
 
     }
@@ -298,7 +298,7 @@ int getNparams(pulsar *psr,int offset)
     if (psr->param[param_quad_om].fitFlag[0]==1)
     {
         for (i=0;i<psr->nQuad*4-1;i++)
-        {psr->fitParamI[npol+i+offset]  = param_quad_om; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_quad_om; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=(psr->nQuad*4)-1;
     }
@@ -307,14 +307,14 @@ int getNparams(pulsar *psr,int offset)
         if (psr->param[param_ifunc].val[0] == 0)
         {
             for (i=0;i<psr->ifuncN-1;i++)
-            {psr->fitParamI[npol+i+offset]  = param_ifunc; psr->fitParamK[npol+i+offset]  = i;}
+            {psr->fitinfo.output.indexParam[npol+i+offset]  = param_ifunc; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
             npol+=(psr->ifuncN-1);
         }
         else
         {
             for (i=0;i<psr->ifuncN-1;i++)
-            {psr->fitParamI[npol+i+offset]  = param_ifunc; psr->fitParamK[npol+i+offset]  = i;}
+            {psr->fitinfo.output.indexParam[npol+i+offset]  = param_ifunc; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
             npol+=(psr->ifuncN-1);
         }
@@ -322,34 +322,34 @@ int getNparams(pulsar *psr,int offset)
     if (psr->param[param_clk_offs].fitFlag[0]==1)
     {
         for (i=0;i<psr->clkOffsN-1;i++)
-        {psr->fitParamI[npol+i+offset]  = param_clk_offs; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_clk_offs; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=(psr->clkOffsN-1);
     }
     if (psr->param[param_tel_dx].fitFlag[0]==1 && psr->param[param_tel_dx].val[0] < 2)
     {
         for (i=0;i<psr->nTelDX-1;i++)
-        {psr->fitParamI[npol+i+offset]  = param_tel_dx; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_tel_dx; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=(psr->nTelDX-1);
     }
     else if (psr->param[param_tel_dx].fitFlag[0]==1 && psr->param[param_tel_dx].val[0] == 2)
     {
         for (i=0;i<psr->nTelDX-2;i++)
-        {psr->fitParamI[npol+i+offset]  = param_tel_dx; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_tel_dx; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
         npol+=(psr->nTelDX-2);
     }
     if (psr->param[param_tel_dy].fitFlag[0]==1 && psr->param[param_tel_dy].val[0] < 2)
     {
         for (i=0;i<psr->nTelDY-1;i++)
-        {psr->fitParamI[npol+i+offset]  = param_tel_dy; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_tel_dy; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=(psr->nTelDY-1);
     }
     else if (psr->param[param_tel_dy].fitFlag[0]==1 && psr->param[param_tel_dy].val[0] == 2)
     {
         for (i=0;i<psr->nTelDY-2;i++)
-        {psr->fitParamI[npol+i+offset]  = param_tel_dy; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_tel_dy; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
 
         npol+=(psr->nTelDY-2);
@@ -357,39 +357,39 @@ int getNparams(pulsar *psr,int offset)
     if (psr->param[param_tel_dz].fitFlag[0]==1 && psr->param[param_tel_dz].val[0] < 2)
     {
         for (i=0;i<psr->nTelDZ-1;i++)
-        {psr->fitParamI[npol+i+offset]  = param_tel_dz; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_tel_dz; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=(psr->nTelDZ-1);
     }
     else if (psr->param[param_tel_dz].fitFlag[0]==1 && psr->param[param_tel_dz].val[0] == 2)
     {
         for (i=0;i<psr->nTelDZ-2;i++)
-        {psr->fitParamI[npol+i+offset]  = param_tel_dz; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_tel_dz; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=(psr->nTelDZ-2);
     }
     if (psr->param[param_quad_ifunc_p].fitFlag[0]==1)
     {
         for (i=0;i<psr->quad_ifuncN_p-1;i++)
-        {psr->fitParamI[npol+i+offset]  = param_quad_ifunc_p; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_quad_ifunc_p; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=(psr->quad_ifuncN_p-1);
     }
     if (psr->param[param_quad_ifunc_c].fitFlag[0]==1)
     {
         for (i=0;i<psr->quad_ifuncN_c-1;i++)
-        {psr->fitParamI[npol+i+offset]  = param_quad_ifunc_c; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_quad_ifunc_c; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=(psr->quad_ifuncN_c-1);
     }
     /* Add extra parameters for DMMODEL fitting */
     if (psr->param[param_dmmodel].fitFlag[0]==1){
         for (i=0;i<psr->dmoffsDMnum;i++)
-        {psr->fitParamI[npol+i+offset]  = -2; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = -2; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=psr->dmoffsDMnum;
         for (i=0;i<psr->dmoffsCMnum;i++)
-        {psr->fitParamI[npol+i+offset]  = -3; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = -3; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
 
         npol+=psr->dmoffsCMnum;
     }
@@ -397,7 +397,7 @@ int getNparams(pulsar *psr,int offset)
     if (psr->param[param_gwsingle].fitFlag[0]==1)
     {
         for (i=0;i<4;i++)
-        {psr->fitParamI[npol+i+offset]  = param_gwsingle; psr->fitParamK[npol+i+offset]  = i;}
+        {psr->fitinfo.output.indexParam[npol+i+offset]  = param_gwsingle; psr->fitinfo.output.indexCounter[npol+i+offset]  = i;}
         npol+=4; 
     }
     return npol;

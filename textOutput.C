@@ -34,6 +34,8 @@
 #include "tempo2.h"
 #include "constraints.h"
 #include "TKfit.h"
+#include "t2fit.h"
+#include "enum_str.h"
 
 //#define TSUN (4.925490947e-6L) (Should be tempo2.h now).
 
@@ -156,8 +158,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         {
             printf("\nGlobal fit:\n\n");
             printf("Number of fit parameters in total, nt: %d\n",psr[p].globalNfit);
-            printf("Number of observations without constraints, no: %d\n",psr[p].globalNoConstrain);
-            printf("chisq/(nt-no) = %g\n",chisqr/(psr[p].globalNoConstrain-psr[p].globalNfit));
+//            printf("Number of observations without constraints, no: %d\n",psr[p].globalNoConstrain);
+//            printf("chisq/(nt-no) = %g\n",chisqr/(psr[p].globalNoConstrain-psr[p].globalNfit));
             printf("\n");
         }
         if (psr[p].nconstraints > 0)
@@ -419,20 +421,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         (double)psr[p].quad_across_r_e[j],(double)psr[p].quad_across_i_e[j]);
             }
         }
-	// GH: added this back in
-	/*        if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&	
+        // GH: added this back in
+        if (psr[p].param[param_gwm_amp].paramSet[0]==1 &&	
                 psr[p].param[param_gwm_amp].paramSet[1]==1 &&
                 (psr[p].param[param_gwm_amp].fitFlag[0]>0 ||
                  psr[p].param[param_gwm_amp].fitFlag[1]>0))
         {
-	  int i,i0,i1;
-            for (i=0;i<psr[0].nParam;i++)
-            {
-                if (psr[0].fitParamI[i] == param_gwm_amp && psr[0].fitParamK[i] == 0)
-                    i0 = i;
-                if (psr[0].fitParamI[i] == param_gwm_amp && psr[0].fitParamK[i] == 1)
-                    i1 = i;
-            }
+            int i0,i1;
+            i0 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_gwm_amp, 0);
+            i1 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_gwm_amp, 1);
             printf("\n");
             printf("GWM covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
         }
@@ -441,37 +438,28 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 (psr[p].param[param_gwb_amp].fitFlag[0]>0 ||
                  psr[p].param[param_gwb_amp].fitFlag[1]>0))
         {
-	  int i,i0,i1;
-            for (i=0;i<psr[0].nParam;i++)
-            {
-                if (psr[0].fitParamI[i] == param_gwb_amp && psr[0].fitParamK[i] == 0)
-                    i0 = i;
-                if (psr[0].fitParamI[i] == param_gwb_amp && psr[0].fitParamK[i] == 1)
-                    i1 = i;
-            }
+            int i0,i1;
+            i0 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_gwb_amp, 0);
+            i1 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_gwb_amp, 1);
+
             printf("\n");
             printf("GW BURST A1: %g A2: %g A1_A1 = %g A2_A2 = %g A1_A2 = %g \n" , (double) psr[0].param[param_gwb_amp].val[0], (double) psr[0].param[param_gwb_amp].val[1], (double) psr[0].covar[i0][i0], (double) psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
         }
-	// GH: End adding the GWM information back in
-	*/
-	//	 GH: Adding in covariance for GWCS
+        // GH: End adding the GWM information back in
+        //	 GH: Adding in covariance for GWCS
         if (psr[p].param[param_gwcs_amp].paramSet[0]==1 &&	
-	    psr[p].param[param_gwcs_amp].paramSet[1]==1 &&
-	    (psr[p].param[param_gwcs_amp].fitFlag[0]>0 ||
-	     psr[p].param[param_gwcs_amp].fitFlag[1]>0))
-	  {
-	    int i,i0,i1;
-	    i0=i1=0;
-            for (i=0;i<psr[0].nParam;i++)
-	      {
-                if (psr[0].fitParamI[i] == param_gwcs_amp && psr[0].fitParamK[i] == 0)
-		  i0 = i;
-                if (psr[0].fitParamI[i] == param_gwcs_amp && psr[0].fitParamK[i] == 1)
-		  i1 = i;
-	      }
-	    printf("\n");
-            printf("GWCS covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[0].covar[i0][i0],psr[0].covar[i1][i1],psr[0].covar[i0][i1]);
-	    } 
+                psr[p].param[param_gwcs_amp].paramSet[1]==1 &&
+                (psr[p].param[param_gwcs_amp].fitFlag[0]>0 ||
+                 psr[p].param[param_gwcs_amp].fitFlag[1]>0))
+        {
+            int i0,i1;
+
+            i0 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_gwcs_amp, 0);
+            i1 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_gwcs_amp, 1);
+
+            printf("\n");
+            printf("GWCS covariances: A1_A1 = %g A2_A2 = %g A1_A2 = %g\n",psr[p].covar[i0][i0],psr[p].covar[i1][i1],psr[p].covar[i0][i1]);
+        } 
 
         if (psr[p].param[param_dmmodel].paramSet[0]==1)
         {
@@ -674,29 +662,24 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             /* Display mass function */
             if (psr[p].param[param_a1].paramSet[0]==1)
             {
-                int c1=0,c2=0,j,a,count=0;
+                int c1=0,c2=0;
                 longdouble fn;
 
                 fn  = 4*M_PI*M_PI/GM*pow(a1,3)/pow(pb,2);	      
                 printf("Mass function                  = %.12f ",(double)fn);
 
-                for (j=0;j<MAX_PARAMS;j++)
-                {
-                    for (a=0;a<psr[p].param[j].aSize;a++)
-                    {
-                        if (j==param_a1 && a==0)
-                            c1 = count;
-                        if (j==param_pb && a==0)
-                            c2 = count;
-                        if (psr[p].param[j].fitFlag[a]==1)
-                            count++;
-                    }
+                c1 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_a1, 0);
+                c2 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_pb, 0);
+                if (c1 >= 0 && c2 >= 0){
+
+                    /* use covariance matrix to determine error */
+                    err = fn * sqrt(9.0*pow(sqrt(psr[p].covar[c1][c1])*SPEED_LIGHT/a1,2) 
+                            +  4.0*pow(sqrt(psr[p].covar[c2][c2])/pb,2) 
+                            - 12.0*psr[p].covar[c1][c2]*SPEED_LIGHT/(a1*pb));
+                    printf(" +- %.12f solar masses \n",err);
+                } else {
+                    printf("\n");
                 }
-                /* use covariance matrix to determine error */
-                err = fn * sqrt(9.0*pow(sqrt(psr[p].covar[c1][c1])*SPEED_LIGHT/a1,2) 
-                        +  4.0*pow(sqrt(psr[p].covar[c2][c2])/pb,2) 
-                        - 12.0*psr[p].covar[c1][c2]*SPEED_LIGHT/(a1*pb));
-                printf(" +- %.12f solar masses \n",err);
                 printf("Minimum, median and maximum companion mass: %.4g < %.4f < %.4f solar masses\n",
                         m2(fn,1.0,1.35),m2(fn,0.866025403,1.35),m2(fn,0.4358898944,1.35));
 
@@ -807,7 +790,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }
 
                 /* Joris' distance calculations */
-// UNUSED VARIABLE //                 longdouble transV[4]; 
+                // UNUSED VARIABLE //                 longdouble transV[4]; 
                 /* transverse velocity. 
 0: pxdistvalue 
 1: pxdisterror 
@@ -815,23 +798,23 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 3: pbdoterr */
                 if(psr[p].param[param_px].paramSet[0]==1){
                     longdouble pxdist[2]; // 0: value; 1: error
-// UNUSED VARIABLE //                     longdouble pmsqrd[2];
+                    // UNUSED VARIABLE //                     longdouble pmsqrd[2];
                     pxdist[0] = (longdouble)(1.0/psr[p].param[param_px].val[0]*1000.0);
                     pxdist[1] = 1/powl(psr[p].param[param_px].val[0],2.0)*
                         psr[p].param[param_px].err[0]*1000.0;
                     printf("\nParallax distance is %lg (+/- %lg) pc.\n",(double)pxdist[0],
                             (double)pxdist[1]);
-/*                    pmsqrd[0] = powl(psr[p].param[param_pmra].val[0]*MASYR2RADS,2.0)+
-                        powl(psr[p].param[param_pmdec].val[0]*MASYR2RADS,2.0);
-                    pmsqrd[1] = powl(2*psr[p].param[param_pmra].val[0]*
-                            psr[p].param[param_pmra].err[0]*powl(MASYR2RADS,2.0),2.0)
-                        +powl(2*psr[p].param[param_pmdec].val[0]*psr[p].param[param_pmdec].err[0]
-                                *powl(MASYR2RADS,2.0),2.0);
-                    transV[0] = sqrtl(pmsqrd[0])*pxdist[0]*PCM/1000.0; // now in km/s
-                      transV[1] = sqrtl(powl(pmsqrd[1]*pxdist[0]*PCM/(2.0*pmsqrd[0]),2.0)+
-                      pmsqrd[0]*powl(pxdist[1]*PCM,2.0))/1000.0;
-                      printf("\tTransverse velocity based on parallax distance: %lg +/- %lg km/s.\n",
-                      (double)transV[0],(double)transV[1]);*/
+                    /*                    pmsqrd[0] = powl(psr[p].param[param_pmra].val[0]*MASYR2RADS,2.0)+
+                                          powl(psr[p].param[param_pmdec].val[0]*MASYR2RADS,2.0);
+                                          pmsqrd[1] = powl(2*psr[p].param[param_pmra].val[0]*
+                                          psr[p].param[param_pmra].err[0]*powl(MASYR2RADS,2.0),2.0)
+                                          +powl(2*psr[p].param[param_pmdec].val[0]*psr[p].param[param_pmdec].err[0]
+                     *powl(MASYR2RADS,2.0),2.0);
+                     transV[0] = sqrtl(pmsqrd[0])*pxdist[0]*PCM/1000.0; // now in km/s
+                     transV[1] = sqrtl(powl(pmsqrd[1]*pxdist[0]*PCM/(2.0*pmsqrd[0]),2.0)+
+                     pmsqrd[0]*powl(pxdist[1]*PCM,2.0))/1000.0;
+                     printf("\tTransverse velocity based on parallax distance: %lg +/- %lg km/s.\n",
+                     (double)transV[0],(double)transV[1]);*/
                 }
 
                 if(psr[p].param[param_pbdot].paramSet[0]==1){
@@ -1059,36 +1042,31 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             else
             {
                 int ii,jj;
-// UNUSED VARIABLE //                 double cv;
                 for (ii=0;ii<psr[0].globalNfit;ii++)
                 {
                     for (jj=0;jj<psr[0].globalNfit;jj++)
                     {
-                        if (psr[0].fitParamI[ii] >=0 && psr[0].fitParamI[jj] >= 0)
+                        if (psr[0].covar[ii][ii] == 0 || psr[0].covar[jj][jj] == 0)
                         {
-                            if (psr[0].param[psr[0].fitParamI[ii]].fitFlag[0] == 2 && psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
-                            {
-                                if (psr[0].covar[ii][ii] == 0 || psr[0].covar[jj][jj] == 0)
-                                {
-                                    printf("Diagonal element of covariance matrix = 0\n");
-                                    fprintf(fout,"%d %d nan\n",ii,jj);
-                                }
-                                else
-                                    fprintf(fout,"%d %d %g\n",ii,jj,psr[0].covar[ii][jj]/sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
-                            }
+                            printf("Diagonal element of covariance matrix = 0\n");
+                            fprintf(fout,"%d %d nan\n",ii,jj);
                         }
+                        else
+                            fprintf(fout,"%d %d %g\n",ii,jj,psr[0].covar[ii][jj]/sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
                     }
                     fprintf(fout,"\n");
                 }
                 for (jj=0;jj<psr[0].globalNfit;jj++)
                 {
-                    if (psr[0].fitParamI[jj] >= 0)
-                    {
-                        if (psr[0].param[psr[0].fitParamI[jj]].fitFlag[0] == 2)
-                        {			  
-                            fprintf(fout,"# %d %d %d %s\n",jj,psr[0].fitParamI[jj],psr[0].fitParamK[jj],psr[0].param[psr[0].fitParamI[jj]].label[0]);
-                        }
+                    fprintf(fout,"# %d %d %d %s",jj,psr[0].fitinfo.output.indexParam[jj] ,
+                            psr[0].fitinfo.output.indexCounter[jj] ,
+                            label_str[psr[0].fitinfo.output.indexParam[jj]]);
+                    if(psr[0].fitinfo.output.indexPsr[jj] == -1){
+                        fprintf(fout," GLOBAL");
+                    } else {
+                        fprintf(fout," %s",psr[psr[0].fitinfo.output.indexPsr[jj]].name);
                     }
+                    fprintf(fout,"\n");
                 }
 
                 fclose(fout);
@@ -1107,21 +1085,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 else
                 {
                     int ii,jj;
-// UNUSED VARIABLE //                     double cv;
+                    
                     for (ii=0;ii<psr[0].globalNfit;ii++)
                     {
                         for (jj=0;jj<psr[0].globalNfit;jj++)
                         {
-                            //			    fprintf(fout,"Checking %d %d %d %d\n",psr[0].fitParamI[ii],psr[0].fitParamI[jj],param_quad_ifunc_p,param_quad_ifunc_c);
-                            if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c) && 
-                                    (psr[0].fitParamI[jj] == param_quad_ifunc_p || psr[0].fitParamI[jj] == param_quad_ifunc_c))
+                            if ((psr[0].fitinfo.output.indexParam[ii] == param_quad_ifunc_p || psr[0].fitinfo.output.indexParam[ii] == param_quad_ifunc_c) && 
+                                    (psr[0].fitinfo.output.indexParam[jj] == param_quad_ifunc_p || psr[0].fitinfo.output.indexParam[jj] == param_quad_ifunc_c))
                             {
-                                //				fprintf(fout,"%g ",psr[0].covar[ii][jj]);
-                                fprintf(fout,"%d %d %.15g\n",ii,jj,psr[0].covar[ii][jj]); ///sqrt(psr[0].covar[ii][ii]*psr[0].covar[jj][jj]));
+                                fprintf(fout,"%d %d %.15g\n",ii,jj,psr[0].covar[ii][jj]); 
                             }
                         }
-                        //			if ((psr[0].fitParamI[ii] == param_quad_ifunc_p || psr[0].fitParamI[ii] == param_quad_ifunc_c))
-                        //			  fprintf(fout,"\n");
                     }
                     fprintf(fout,"# globalNfit = %d\n",psr[0].globalNfit);
                     fclose(fout);
@@ -1135,7 +1109,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             FILE *fout2;
             char fname2[1000];
             char str1[100],str2[100],str3[100],str4[100],str5[100];
-// UNUSED VARIABLE //             int nread;
+            // UNUSED VARIABLE //             int nread;
             printf("In here writing a new parameter file: %s\n",fname);
             if (strlen(fname)==0)
             {
@@ -1144,7 +1118,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             }
             else
             {
-// UNUSED VARIABLE //                 char fname3[1000];
+                // UNUSED VARIABLE //                 char fname3[1000];
                 if (npsr > 1)
                     sprintf(fname2,"%s_%d",fname,p+1);
                 else{
@@ -1317,14 +1291,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 else
                     fprintf(fout2, "%-21.21s%s\n", "CORRECT_TROPOSPHERE", "Y");
 
-		if (psr[p].useCalceph == 0)
-		  {
-		    fprintf(fout2,"%-15.15s%s\n","EPHEM",psr[p].ephemeris);
-		  }
-		else
-		  {
-		    fprintf(fout2,"%-15.15s%s\n","EPH_FILE",psr[p].ephemeris);
-		  }
+                if (psr[p].useCalceph == 0)
+                {
+                    fprintf(fout2,"%-15.15s%s\n","EPHEM",psr[p].ephemeris);
+                }
+                else
+                {
+                    fprintf(fout2,"%-15.15s%s\n","EPH_FILE",psr[p].ephemeris);
+                }
 
                 fprintf(fout2,"%-15.15s%s\n","NITS","1");
                 fprintf(fout2,"%-15.15s%d\n","NTOA",psr[p].nFit);
@@ -1473,7 +1447,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         }
                     }
                 }
-                
+
 
                 // white model file
 
