@@ -593,17 +593,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             if (fileout==1) fclose(fout);
         }
 
-        if (psr[0].param[param_f].paramSet[0]==1 && psr[0].param[param_f].paramSet[1]==1)
+        if (psr[p].param[param_f].paramSet[0]==1 && psr[p].param[param_f].paramSet[1]==1)
         {
             longdouble p0,p1,age,bs,p0e,p1e;
             longdouble f0,f1,f0e,f1e;
 
             printf("\nDerived parameters:\n\n");
 
-            f0 = psr[0].param[param_f].val[0];
-            f1 = psr[0].param[param_f].val[1];
-            f0e = psr[0].param[param_f].err[0];
-            f1e = psr[0].param[param_f].err[1];
+            f0 = psr[p].param[param_f].val[0];
+            f1 = psr[p].param[param_f].val[1];
+            f0e = psr[p].param[param_f].err[0];
+            f1e = psr[p].param[param_f].err[1];
 
             p0 = (1.0/f0);
             p0e = 1.0/f0/f0*f0e;
@@ -617,14 +617,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             printf("tau_c (Myr) = %.5g\n",(double)age);
             printf("bs (G)      = %.5g\n\n",(double)bs);
         }
-        if ((psr[0].param[param_brake].paramSet[0]==1) && (psr[0].param[param_f].paramSet[1]==1))
+        if ((psr[p].param[param_brake].paramSet[0]==1) && (psr[p].param[param_f].paramSet[1]==1))
         {
             longdouble F2brake,F1,F0;
             longdouble F3brake;
             longdouble bindex;
-            F1 = psr[0].param[param_f].val[1];
-            F0 = psr[0].param[param_f].val[0];
-            bindex= psr[0].param[param_brake].val[0];
+            F1 = psr[p].param[param_f].val[1];
+            F0 = psr[p].param[param_f].val[0];
+            bindex= psr[p].param[param_brake].val[0];
             F2brake= bindex*F1*F1/F0;
             F3brake= bindex*(2*bindex-1)*F1*F1*F1/F0/F0;
             ld_printf("F2 derived from braking index %.5Le\n", F2brake);
@@ -634,12 +634,12 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
         }
 
-        if ((psr[0].param[param_f].paramSet[2]==1) && (psr[0].param[param_brake].paramSet[0]==0))
+        if ((psr[p].param[param_f].paramSet[2]==1) && (psr[p].param[param_brake].paramSet[0]==0))
         {
             longdouble brake,F1,F0,F2;
-            F1 = psr[0].param[param_f].val[1];
-            F0 = psr[0].param[param_f].val[0];
-            F2 = psr[0].param[param_f].val[2];
+            F1 = psr[p].param[param_f].val[1];
+            F0 = psr[p].param[param_f].val[0];
+            F2 = psr[p].param[param_f].val[2];
             brake= F0*F2/(F1*F1);
             ld_printf("Braking index derived from F0,F1,F2 %.3Lf\n",brake);
 
