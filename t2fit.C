@@ -956,7 +956,6 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
     bool sifunc;
     OUT.paramIndex[OUT.nParams]=fit_param;
     OUT.paramCounters[OUT.nParams]=k;
-    printf("Fit_params = %d ecc = %d gwcs = %d\n",fit_param,param_gwecc,param_gwcs_amp);
     switch(fit_param){
         case param_raj:
         case param_decj:
