@@ -118,8 +118,10 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          * returns the number of data points.
          */
         const unsigned int psr_ndata = t2Fit_getFitData(psr+ipsr,psr_x,psr_y,psr_e,psr_toaidx);
+        logdbg("psr_ndata = %d",psr_ndata);
         assert(psr_ndata > 0u);
         psr[ipsr].nFit = psr_ndata; // pulsar.nFit is the number of data points used in the fit.
+
 
 
         /**
@@ -628,6 +630,9 @@ void t2Fit_buildDesignMatrix(pulsar* psr,int ipsr,double x, int ipos, double* af
         paramDerivFunc func = fitinfo->paramDerivs[ifit];
         // call the function allocated to this fit parameter
         afunc[ifit] = func(psr,ipsr,x,ipos,param,fitinfo->paramCounters[ifit]);
+        if (isnan(afunc[ifit])){
+            logerr("An element of the design matrix is NAN: %s %lg %d %s %d",psr[ipsr].name,x,ipos,label_str[param],fitinfo->paramCounters[ifit]);
+        }
     }
 }
 
