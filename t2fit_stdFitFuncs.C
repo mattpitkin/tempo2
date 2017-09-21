@@ -301,15 +301,15 @@ double t2FitFunc_telPos(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
 
     arg*=maclaurin_scale_factor;
 
-    if (strcmp(psr->obsn[ipos].telID,"STL_FBAT")==0) {
+    if (strcmp(psr[ipsr].obsn[ipos].telID,"STL_FBAT")==0) {
         switch(label){
 
             case param_telx:
-                return  psr->posPulsar[0]*arg;
+                return  psr[ipsr].posPulsar[0]*arg;
             case param_tely:
-                return  psr->posPulsar[1]*arg;
+                return  psr[ipsr].posPulsar[1]*arg;
             case param_telz:
-                return  psr->posPulsar[2]*arg;
+                return  psr[ipsr].posPulsar[2]*arg;
             default:
                 assert(0);
         }

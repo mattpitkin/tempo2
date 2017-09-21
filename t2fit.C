@@ -514,15 +514,15 @@ void t2fit_prefit(pulsar* psr, int npsr){
     for (int ipsr=0; ipsr < npsr; ++ipsr){
         /**
          * Temponest parameters write random crap to the observation struct.
-         * So we should clear them first or it will just do wierd stuff.
+         * So we should clear them first or it will just do weird stuff.
          */
-        if (psr->TNRedAmp && psr->TNRedGam) {
+        if (psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 if(psr[0].TNsubtractRed==0)psr[ipsr].obsn[iobs].TNRedSignal = 0;
                 psr[ipsr].obsn[iobs].TNRedErr = 0;
             }
         }
-        if (psr->TNDMAmp && psr->TNDMGam) {
+        if (psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNDMErr = 0;
             }
@@ -541,12 +541,12 @@ void t2fit_postfit(pulsar* psr, int npsr){
      * Need to squareroot the TN error bars.
      */
     for (int ipsr = 0; ipsr < npsr; ++ipsr){
-        if (psr->TNRedAmp && psr->TNRedGam) {
+        if (psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNRedErr = sqrt(psr[ipsr].obsn[iobs].TNRedErr);
             }
         }
-        if (psr->TNDMAmp && psr->TNDMGam) {
+        if (psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNDMErr = sqrt(psr[ipsr].obsn[iobs].TNDMErr);
             }
