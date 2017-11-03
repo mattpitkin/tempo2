@@ -93,6 +93,7 @@
  3828714.504   -169458.987      5080647.749      DARNHALL            l
  3859711.492   -201995.082      5056134.285      KNOCKIN             m  
  3923069.135   -146804.404      5009320.570      DEFFORD             n  
+ 3919982.752    2651.9820       5013849.826      CAMBRIDGE           cam
        0.0           1.0              0.0        COE                 coe  
 # MJK Approximate location for Princeton observatory
  1288748.38 -4694221.77 4107418.80              PRINCETON           princeton
@@ -101,15 +102,16 @@
 ###### Telescope ID changed from the Jodrell obsys.dat file
 #
  3822252.643   -153995.683      5086051.443      JODRELL2            q
-# 3822252.643   -153995.683      5086051.443      JODRELL3            jbdfb
-# 3822252.643   -153995.683      5086051.443      JODRELL4            jbroach
  3822473.365   -153692.318      5085851.303      JB_MKII             jbmk2
  3822294.825   -153862.275      5085987.071      JB_42ft             jb42
 #
 # New telescopes
-# 284543.5      -175324.040      2400.            LA_PALMA            p
  1719555.576   5327021.651      3051967.932      LA_PALMA            p
- -1602196.60   -5042313.47      3553971.51       LWA1                lwa1       
+ -1602196.60   -5042313.47      3553971.51       LWA1                lwa1
+
+ 6346273.5310  -33779.7127      634844.9454      GRAO                grao
+
+
 # Fake telescope for IPTA data challenge
    6378138.00    0.0     0.0                      AXIS                axi  
 
