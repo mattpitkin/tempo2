@@ -260,7 +260,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
 
         // add the extra equations for constraints to the end of the least-squares problem.
-        logmsg("QR nparams=%d nconst=%d ndata=%d",nparams,nconstraints,ndata);
+        logdbg("QR nparams=%d nconst=%d ndata=%d",nparams,nconstraints,ndata);
         for (i=0;i<nconstraints;i++){
             augmented_white_data[i+ndata] = 0;
             for (j=0;j<nparams;j++) {
@@ -288,6 +288,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
 
         chisq = accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
+        logdbg("CHISQ = %lg",chisq);
         rescale_errors=false;
         free_blas(augmented_DM);
 

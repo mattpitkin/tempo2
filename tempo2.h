@@ -745,6 +745,8 @@ typedef struct pulsar {
     char AverageFlag[MAX_FLAG_LEN];
     float AverageEpochWidth; 
 
+    double detUinv;
+
 
     int outputTMatrix;
     int useTNOrth;
