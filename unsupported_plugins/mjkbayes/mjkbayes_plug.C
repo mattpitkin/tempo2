@@ -359,17 +359,24 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
             }
             if (strncasecmp(keyword2,"param",5) == 0){
                 // parameter fit
-                fscanf(infile,"%s %d %lg %lg",keyword3, &k,&centre,&halfrange);
+                fscanf(infile,"%s %lg %lg",keyword3, &centre,&halfrange);
                 int thelab=-1;
                 for(int param=0; param < param_LAST; ++param){
-                    if(psr->param[param].aSize > k && strcasecmp(keyword3,psr->param[param].shortlabel[k])==0){
-                        thelab=param;
-                        break;
-                    }
+                    for (int ik=0; ik < psr->param[param].aSize; ++ik)
+                        if(strcasecmp(keyword3,psr->param[param].shortlabel[ik])==0){
+                            k=ik;
+                            thelab=param;
+                            break;
+                        }
                 }
                 if (thelab==-1){
                     logerr("no such parameter '%s'",keyword3);
                 }
+
+                psr->param[thelab].paramSet[k]=1;
+                psr->param[thelab].val[k] = centre;
+                psr->param[thelab].fitFlag[k]=0;
+
                 data->fittype[ifit]  = FITTYPE_PARAM;
                 data->fitlabel[ifit]  = (label)thelab;
                 data->fitoffset[ifit] = centre;
