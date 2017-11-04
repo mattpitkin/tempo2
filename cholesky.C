@@ -387,9 +387,14 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
 
 void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
     int i;
+    double det = 1;
     for(i=0;i<np;i++){
         uinv[0][i]=1.0/rese[i];
+        det += log(uinv[0][i]);
     }
+    psr->detUinv=det;
+    logdbg("det(uinv)=%lg (C diagonal)",det);
+
 }
 
 
