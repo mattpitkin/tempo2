@@ -76,6 +76,11 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
         logdbg("Reading covariance function using 'PSRJ' is now depricated");
         sprintf(modelFileName,"covarFunc.dat_%s",psr->name);
         cholesky_readFromCovarianceFunction(m,modelFileName,resx,resy,rese,np,nc);
+    } else if (strcmp(fname,"TNPARAM")==0){
+        double alpha=psr->TNRedGam;
+        double amp=psr->TNRedAmp;
+        double fc = psr->TNRedCorner;
+        cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
     } else {
         cholesky_readT2CholModel(m,fname,resx,resy,rese,np,nc,ip,psr);
     }
@@ -90,12 +95,14 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
         }
     }
     logdbg("mbefore = ");
+    if(debugFlag){
     for (i=0;i<5;i++)
     { 
         for (j=0;j<5;j++) fprintf(LOG_OUTFILE,"%10g ",m[i][j]); 
         fprintf(LOG_OUTFILE,"\n");
     }
     fprintf(LOG_OUTFILE,"\n");
+    }
 
     // make sure constraints are not covariant with anything.
     logdbg("Ensuring constraints have zero co-variance, np = %d, nc = %d",np,nc);
@@ -136,6 +143,15 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
         logerr("Error with formUinv");
         exit(ret);
     }
+    logdbg("compute determinant of uinv");
+    double det = 1;
+    for (i=0;i<np;i++){
+        det += log(uinv[i][i]);
+    }
+    psr->detUinv=det;
+    logdbg("det(uinv)=%lg",det);
+
+
     for(i=0;i<np+1;i++)free(m[i]);
     free(m);
 }
@@ -155,6 +171,10 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
     bool first=true;
 
     FILE* infile=fopen(fname,"r");
+    if (!infile) {
+        logerr("could not read file '%s'",fname);
+        exit(1);
+    }
 
     recursion+=1;
 
@@ -495,21 +515,21 @@ void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *r
     }
 
     //   cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
-    printf("Using extra covariance matrix from: %s\n",fileName);
+    logmsg("Using extra covariance matrix from: %s\n",fileName);
     for (i=0;i<np+nc;i++)
     {
         for (j=0;j<np+nc;j++)
         {
             if (fscanf(fin,"%lf",&m[i][j])!=1)
             {
-                printf("Error reading element (%d,%d) from %s\n",i,j,fileName);
+                logwarn("Error reading element (%d,%d) from %s\n",i,j,fileName);
                 exit(1);
             }
         }
     }
     if (fscanf(fin,"%lf",&dummy)==1)
     {
-        printf("WARNING: %s seems to have too many elements\n",fileName);
+        logwarn("WARNING: %s seems to have too many elements\n",fileName);
     }
     fclose(fin);
 }
@@ -621,11 +641,11 @@ void cholesky_dmModelCovarParam(double **m, double alpha, double a, double b,dou
     int ndays=ceil((resx[np-1])-(resx[0])+1e-10);
     covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
 
-    printf("In DMCovarParam function\n");
+    logmsg("In DMCovarParam function\n");
     for (i=0; i <= ndays; i++){
         x = (i+1e-10);
         covarFunc[i]=a*exp(-pow(x/b,alpha));
-        printf("DMCovarParam: %g\n",covarFunc[i]);
+        logmsg("DMCovarParam: %g\n",covarFunc[i]);
     }
     cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
 

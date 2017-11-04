@@ -12,6 +12,7 @@ extern "C" {
 #include <time.h>
 #endif
     extern int debugFlag;   /* Global = 1 if debug mode is running */
+    extern int quietFlag;   /* Global = 1 if quite mode is running */
     extern int writeResiduals;   /* Global. Bit1=prefit, bit2=designmatrix, bit3=postfit. Indicate we are writing out post-fit residuals */
     extern int tcheck;   /* Global = 1 if time check message should be printed is running */
     extern clock_t timer_clk;
@@ -46,8 +47,9 @@ extern "C" {
 #define WHERETCHK "[%s:%d] T=%.2f s: "
 #define _LOG(_fmt,...) _TKchklog(LOG_OUTFILE,_fmt,##__VA_ARGS__)
 //fprintf(LOG_OUTFILE,_TKchklog(_fmt),##__VA_ARGS__)
-#define logmsg(_fmt, ...) _LOG(WHERESTR _fmt ENDL, WHEREARG,##__VA_ARGS__)
-#define logdbg(_fmt, ...)  if(debugFlag)logmsg(_fmt,##__VA_ARGS__)
+#define logall(_fmt, ...) _LOG(WHERESTR _fmt ENDL, WHEREARG,##__VA_ARGS__)
+#define logmsg(_fmt, ...)  if(!quietFlag)logall(_fmt,##__VA_ARGS__)
+#define logdbg(_fmt, ...)  if(debugFlag)logall(_fmt,##__VA_ARGS__)
 #define logerr(_fmt, ...) do{TK_STORE_ERROR(_fmt,##__VA_ARGS__); _LOG(WHEREERR _fmt ENDERR ENDL,  WHEREARG,##__VA_ARGS__);}while(0)
 #define logwarn(_fmt, ...) do{TK_STORE_WARNING(_fmt,##__VA_ARGS__); _LOG(WHEREWARN _fmt ENDL,  WHEREARG,##__VA_ARGS__);}while(0)
 #define logtchk(_fmt, ...) if(tcheck)_LOG(WHERETCHK _fmt ENDL, WHEREARG,(clock()-timer_clk)/(float)CLOCKS_PER_SEC,##__VA_ARGS__)
