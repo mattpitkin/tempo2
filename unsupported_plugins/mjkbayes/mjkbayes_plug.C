@@ -39,6 +39,10 @@
 #include "../../constraints_nestlike.h"
 #include "../../t2fit_nestlike.h"
 #include "../../TKmatrix.h"
+#include "../../T2toolkit.h"
+
+#include <vector>
+#include <mpi.h>
 
 
 using namespace std;
@@ -96,48 +100,20 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     formResiduals(psr,*npsr,1);    /* Form the residuals                 */
 
     if (false){
-    t2Fit(psr,*npsr,covarFuncFile);
+        t2Fit(psr,*npsr,covarFuncFile);
 
-    formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-    formResiduals(psr,*npsr,1);    /* Form the residuals                 */
+        formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
+        formResiduals(psr,*npsr,1);    /* Form the residuals                 */
 
-    textOutput(psr,*npsr,0,0,0,0,0);
+        textOutput(psr,*npsr,0,0,0,0,0);
     }
 
+    int myid=0;
+    MPI_Init(NULL,NULL);
+    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
     mjkcontext* data = static_cast<mjkcontext*>(calloc(sizeof(mjkcontext),1));
 
     loadmjkbayescfg(cfg,psr,data);
-
-    /*
-    data->fittype[0]  = FITTYPE_PARAM;
-    data->fitlabel[0]  = param_pmra;
-    data->fitoffset[0] = 4;
-    data->fitscale[0]  = 6.0;
-    data->fitk[0]  = 0;
-
-    data->fittype[1]  = FITTYPE_PARAM;
-    data->fitlabel[1]  = param_pmdec;
-    data->fitoffset[1] = 4;
-    data->fitscale[1]  = 6;
-    data->fitk[1]  = 0;
-
-
-    data->fittype[2]  = FITTYPE_CHOL;
-    data->fitoffset[2] = -26;
-    data->fitscale[2]  = 8;
-    data->fitk[2]  = FITTYPE_CHOL_K_AMP;
-
-    data->fittype[3]  = FITTYPE_CHOL;
-    data->fitoffset[3] = 4;
-    data->fitscale[3]  = 2;
-    data->fitk[3]  = FITTYPE_CHOL_K_ALPHA;
-
-    data->fittype[2]  = FITTYPE_CHOL;
-    data->fitoffset[2] = 0.01;
-    data->fitscale[2]  = 0.04;
-    data->fitk[2]  = FITTYPE_CHOL_K_FC;
-*/
-
 
     data->psr = psr;
     data->debugfile = fopen("mjkres/debug","w");
@@ -174,7 +150,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     int pWrap[ndims];				// which parameters to have periodic boundary conditions?
     for(int i = 0; i < ndims; i++) pWrap[i] = 0;
 
-    char root[100];
 
     int seed = -1;					// random no. generator seed, if < 0 then take the seed from system clock
 
@@ -184,7 +159,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     int outfile = 1;				// write output files?
 
-    int initMPI = 1;				// initialize MPI routines?, relevant only if compiling with MPI
+    int initMPI = 0;				// initialize MPI routines?, relevant only if compiling with MPI
     // set it to F if you want your main program to handle MPI initialization
 
     double logZero = -1E90;				// points with loglike < logZero will be ignored by MultiNest
@@ -195,17 +170,26 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     void *context = reinterpret_cast<void*>(data);				// not required by MultiNest, any additional information user wants to pass
 
 
-    strcpy(root,"mjkres/mm");
+    strcpy(data->root,"mjkres/mm");
     // shut tempo2 up whilst we do the sampling!
     quietFlag=1;
 
     // calling MultiNest
 
-    nested::run(IS, mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LogLike, dumper, context);
+    //nested::run(IS, mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, data->root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LogLike, dumper, context);
+
+
+    quietFlag=0;
+    logmsg("End %d",myid);
+    if(myid==0){
+        mjkbayes_analyse(psr, data);
+    }
 
     quietFlag=0;
     fclose(data->debugfile);
     free(data);
+
+    MPI_Finalize();
 
     return 0;
 }
@@ -283,25 +267,25 @@ void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 
     lnew = -0.5 * (psr->fitChisq) + psr->detUinv;
 
-//    fprintf(data->debugfile,"%lg %lg %lg %lg %lg\n",psr->TNRedAmp,psr->TNRedGam,psr->fitChisq,psr->detUinv,lnew);
+    //    fprintf(data->debugfile,"%lg %lg %lg %lg %lg\n",psr->TNRedAmp,psr->TNRedGam,psr->fitChisq,psr->detUinv,lnew);
 
-//    textOutput(psr,1,0,0,0,1,"zz.par"); /* Output results to the screen */
+    //    textOutput(psr,1,0,0,0,1,"zz.par"); /* Output results to the screen */
 
-//    exit(1);
+    //    exit(1);
 
 
 
     // copy pre-fit value back over so we always start `fresh'
     for (int iparam =0; iparam < MAX_PARAMS; ++iparam) {
         for (int k=0; k < psr->param[iparam].aSize; ++k) {
-        psr->param[iparam].val[k] = psr->param[iparam].prefit[k];
+            psr->param[iparam].val[k] = psr->param[iparam].prefit[k];
         }
     }
     if (errorsChanged) {
-    // copy the errors back also
-    for (int iobs=0; iobs < psr->nobs; ++iobs){
-        psr->obsn[iobs].toaErr = psr->obsn[iobs].origErr;
-    }
+        // copy the errors back also
+        for (int iobs=0; iobs < psr->nobs; ++iobs){
+            psr->obsn[iobs].toaErr = psr->obsn[iobs].origErr;
+        }
 
     }
 }
@@ -314,20 +298,21 @@ void dumper(int &nSamples, int &nlive, int &nPar, double **physLive, double **po
 
     // the posterior distribution
     // postdist will have nPar parameters in the first nPar columns & loglike value & the posterior probability in the last two columns
+    /*
+       int i, j;
 
-    int i, j;
-
-    double postdist[nSamples][nPar + 2];
-    for( i = 0; i < nPar + 2; i++ )
-        for( j = 0; j < nSamples; j++ )
-            postdist[j][i] = posterior[0][i * nSamples + j];
+       double postdist[nSamples][nPar + 2];
+       for( i = 0; i < nPar + 2; i++ )
+       for( j = 0; j < nSamples; j++ )
+       postdist[j][i] = posterior[0][i * nSamples + j];
     // last set of live points
     // pLivePts will have nPar parameters in the first nPar columns & loglike value in the last column
 
     double pLivePts[nlive][nPar + 1];
     for( i = 0; i < nPar + 1; i++ )
-        for( j = 0; j < nlive; j++ )
-            pLivePts[j][i] = physLive[0][i * nlive + j];
+    for( j = 0; j < nlive; j++ )
+    pLivePts[j][i] = physLive[0][i * nlive + j];
+    */
 }
 
 
@@ -464,5 +449,37 @@ char* mjkbayesflagmask(pulsar* psr, const char* flag, const char* flagval){
     }
     logmsg("matched %d obsevations",count);
     return mask;
+}
+
+
+void mjkbayes_analyse(pulsar* psr, struct mjkcontext *context){
+    logmsg("Analyse Results");
+    char fname[1024];
+    snprintf(fname,1024,"%spost_equal_weights.dat",context->root);
+    FILE* postequal_f = fopen(fname,"r");
+
+    std::vector<double> loglike;
+    std::vector<std::vector<double>> params(context->nfit);
+    while (!feof(postequal_f)) {
+        double val;
+        for (int i=0; i < context->nfit; ++i){
+            int n = fscanf(postequal_f,"%lg",&val);
+            if (n != 1) break;
+            params[i].push_back(val);
+        }
+
+        int n = fscanf(postequal_f,"%lg",&val);
+        if (n != 1) break;
+        loglike.push_back(val);
+    }
+
+
+    for (int iparam=0; iparam < context->nfit; ++iparam) {
+        double mean = TKmean_d(&params[iparam][0],params[iparam].size());
+        double max  = TKfindMax_d(&params[iparam][0],params[iparam].size());
+        double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
+        logmsg("%lg %lg %lg",mean,max,sigma);
+    }
+
 }
 

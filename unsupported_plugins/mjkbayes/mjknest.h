@@ -20,8 +20,10 @@ struct mjkcontext {
     pulsar* psr;
     FILE* debugfile;
     char* flagmask[1024];
+    char root[1024];
 };
 
+void mjkbayes_analyse(pulsar* psr, struct mjkcontext *context);
 
 
 void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
@@ -31,3 +33,4 @@ void dumper(int &nSamples, int &nlive, int &nPar, double **physLive, double **po
 void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *context);
 
 char* mjkbayesflagmask(pulsar* psr, const char* flag, const char* flagval);
+
