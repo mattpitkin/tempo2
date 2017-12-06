@@ -170,13 +170,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     void *context = reinterpret_cast<void*>(data);				// not required by MultiNest, any additional information user wants to pass
 
 
-    strcpy(data->root,"mjkres/mm");
+    strcpy(data->root,"mjkres/mm-");
     // shut tempo2 up whilst we do the sampling!
     quietFlag=1;
 
     // calling MultiNest
 
-    //nested::run(IS, mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, data->root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LogLike, dumper, context);
+    nested::run(IS, mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, data->root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LogLike, dumper, context);
 
 
     quietFlag=0;
@@ -356,6 +356,7 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
                 }
                 if (thelab==-1){
                     logerr("no such parameter '%s'",keyword3);
+                    exit(1);
                 }
 
                 psr->param[thelab].paramSet[k]=1;
@@ -474,11 +475,42 @@ void mjkbayes_analyse(pulsar* psr, struct mjkcontext *context){
     }
 
 
+    char lab[1024];
     for (int iparam=0; iparam < context->nfit; ++iparam) {
         double mean = TKmean_d(&params[iparam][0],params[iparam].size());
         double max  = TKfindMax_d(&params[iparam][0],params[iparam].size());
         double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
-        logmsg("%lg %lg %lg",mean,max,sigma);
+        lab[0]='\0';
+        switch(context->fittype[iparam]) {
+            case FITTYPE_PARAM:
+                strcpy(lab,psr->param[context->fitlabel[iparam]].shortlabel[context->fitk[iparam]]);
+                break;
+            case FITTYPE_CHOL:
+                switch(context->fitk[iparam]){
+                    case FITTYPE_CHOL_K_ALPHA:
+                        strcpy(lab,"CHOL alpha");
+                        break;
+                    case FITTYPE_CHOL_K_AMP:
+                        strcpy(lab,"CHOL log(amp)");
+                        break;
+                    case FITTYPE_CHOL_K_FC:
+                        strcpy(lab,"CHOL fc");
+                        break;
+                    default:
+                        strcpy(lab,"????");
+                        break;
+                }
+
+                break;
+            case FITTYPE_EFAC:
+                strcpy(lab,"EFAC");
+                break;
+            case FITTYPE_EQUAD:
+                strcpy(lab,"EQUAD");
+                break;
+        }
+
+        printf("% 16s % 9.7lg % 9.7lg % 9.7lg\n",lab,mean,max,sigma);
     }
 
 }
