@@ -34,7 +34,7 @@
 #include <assert.h>
 #include "tempo2.h"
 #include "t2fit.h"
-#include "mjknest.h"
+#include "mjkbayes.h"
 #include "multinest.h"
 #include "../../constraints_nestlike.h"
 #include "../../t2fit_nestlike.h"
@@ -66,6 +66,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     char cfg[MAX_FILELEN];
     strcpy(cfg,"mjkbayes.cfg");
     int i;
+    bool actuallydoit = true;
     *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
 
 
@@ -89,6 +90,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         if (strcmp(argv[i],"-cfg")==0) {
             strcpy(cfg,argv[++i]);
         }
+        if (strcmp(argv[i],"-anaonly")==0) {
+            actuallydoit=false;
+        }
 
     }
 
@@ -99,14 +103,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
     formResiduals(psr,*npsr,1);    /* Form the residuals                 */
 
-    if (false){
-        t2Fit(psr,*npsr,covarFuncFile);
-
-        formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
-        formResiduals(psr,*npsr,1);    /* Form the residuals                 */
-
-        textOutput(psr,*npsr,0,0,0,0,0);
-    }
 
     int myid=0;
     MPI_Init(NULL,NULL);
@@ -115,12 +111,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     loadmjkbayescfg(cfg,psr,data);
 
+
     data->psr = psr;
     data->debugfile = fopen("mjkres/debug","w");
     if(!data->debugfile){
         logerr("ERROR opening debug file");
     }
-
 
     int IS = 1;					// do Nested Importance Sampling?
 
@@ -134,9 +130,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     double tol = 0.5;				// tol, defines the stopping criteria
 
-    int ndims = data->nfit;					// dimensionality (no. of free parameters)
+    int ndims = data->params.size();					// dimensionality (no. of free parameters)
 
-    int nPar = ndims;					// total no. of parameters including free & derived parameters
+    int nPar = ndims+data->xtra.size();					// total no. of parameters including free & derived parameters
 
     int nClsPar = ndims;				// no. of parameters to do mode separation on
 
@@ -176,8 +172,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     // calling MultiNest
 
+    if (actuallydoit) {
     nested::run(IS, mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, data->root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, LogLike, dumper, context);
 
+
+    }
 
     quietFlag=0;
     logmsg("End %d",myid);
@@ -196,29 +195,70 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 
 
+double computeLogLike(double *Cube, mjkcontext* data, const char* outpar);
+double computeLogLike(double *Cube, mjkcontext* data){
+    return computeLogLike(Cube,data,0);
+}
+
 void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 {
     mjkcontext* data = reinterpret_cast<mjkcontext*>(context);
-    pulsar* psr = data->psr;
+    assert(data->params.size() == ndim);
+    for (int i=0; i < data->params.size(); ++i){
+        Cube[i] = Cube[i]*2.0 - 1.0;
+        Cube[i] *= data->params[i].fitscale;
+        Cube[i] += data->params[i].fitoffset;
+        //printf("%lg %lg %lg %s\n",Cube[i],data->params[i].fitscale,data->params[i].fitoffset,data->params[i].shortlabel(data->psr).c_str());
+    }
+    lnew = computeLogLike(Cube, data);
+}
 
+double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
+    pulsar* psr = data->psr;
 
     bool useTNPARAM=false;
     bool remakeResiduals=false;
     bool errorsChanged=false;
+    bool binarymodel=false;
+    double asini=0,m2=0,ecc=0,pb=0,incl=0;
+    double m1 = 0;
+    double prior=0;
 
 
-    assert((data->nfit)==ndim);
 
-    for (int i=0; i < data->nfit; ++i){
-        Cube[i] = Cube[i]*2.0 - 1.0;
-        Cube[i] *= data->fitscale[i];
-        Cube[i] += data->fitoffset[i];
-        if (data->fittype[i] == FITTYPE_PARAM) {
+    for (int i=0; i < data->params.size(); ++i){
+        const mjkparam* p = &(data->params[i]);
+
+        if (p->fittype == FITTYPE_PARAM) {
             remakeResiduals=true;
-            psr->param[data->fitlabel[i]].val[data->fitk[i]] = Cube[i];
-        } else if (data->fittype[i] == FITTYPE_CHOL){
+            psr->param[p->fitlabel].val[p->fitk] = Cube[i];
+        } else if (p->fittype == FITTYPE_BIN){
+            binarymodel=true;
+            remakeResiduals=true;
+            switch(p->fitk){
+                case FITTYPE_BIN_K_ASINI:
+                    asini=Cube[i];
+                    break;
+                case FITTYPE_BIN_K_M2:
+                    m2=Cube[i];
+                    break;
+                case FITTYPE_BIN_K_ECC:
+                    ecc=Cube[i];
+                    break;
+                case FITTYPE_BIN_K_PB:
+                    pb=Cube[i];
+                    break;
+                case FITTYPE_BIN_K_INC:
+                    incl=(M_PI*Cube[i]/180.);
+                    break;
+                case FITTYPE_BIN_K_M1:
+                    logerr("Can't fit for M1 right now, use PB/ASINI instead");
+                    exit(1);
+                    break;
+            }
+        } else if (p->fittype == FITTYPE_CHOL){
             useTNPARAM = true;
-            switch(data->fitk[i]){
+            switch(p->fitk){
                 case FITTYPE_CHOL_K_ALPHA:
                     psr->TNRedGam = Cube[i];
                     break;
@@ -232,25 +272,77 @@ void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
                     logwarn("BAD CHOL_K!!");
                     break;
             }
-        } else if(data->fittype[i] == FITTYPE_EFAC){
+        } else if(p->fittype == FITTYPE_EFAC){
             errorsChanged=true;
             for (int iobs=0; iobs < psr->nobs; ++iobs){
-                if(data->flagmask[data->fitk[i]][iobs]){
+                if(p->flagmask[iobs]){
                     psr->obsn[iobs].toaErr = Cube[i] * psr->obsn[iobs].toaErr;
                 }
             }
-        } else if(data->fittype[i] == FITTYPE_EQUAD){
+        }
+    }
+
+
+    // second round to get EQUAD that has to come after EFAC
+    for (int i=0; i < data->params.size(); ++i){
+        const mjkparam* p = &(data->params[i]);
+        if(p->fittype == FITTYPE_EQUAD){
             errorsChanged=true;
             for (int iobs=0; iobs < psr->nobs; ++iobs){
-                if(data->flagmask[data->fitk[i]][iobs]){
+                if(p->flagmask[iobs]){
                     psr->obsn[iobs].toaErr = (sqrt(pow(psr->obsn[iobs].toaErr,2)+pow(Cube[i],2)));
                 }
             }
         }
-
-
-
     }
+
+
+    if (binarymodel) {
+        double a = asini/ sin(incl);
+        double massfunc = 0.618 * a*a*a/pb/pb/24.0/24.0;
+
+        m1 = sqrt(m2*m2*m2 / massfunc) - m2;
+
+        double mtot= m1+m2;
+        //double massfunc = m2*m2*m2/(mtot*mtot);
+        //double a = pow(massfunc*pb*pb*24.0*24.0/0.618,1.0/3.0);
+        //double pb = sqrt(0.681*(a*a*a)/massfunc)/24.0; // in days.
+
+        double omdot = 39.73 * pow(pb*24.0,-5./3.) * pow(mtot,2./3.) / (1-ecc*ecc);
+
+        double To = 4.925490947e-6; // Pb in seconds, masses in solar masses
+        double f_e = (1.0 + (73./24.)*ecc*ecc + (37./96.)*ecc*ecc*ecc*ecc)/pow(1-ecc*ecc,3.5);
+
+        double xdot = -(64.0/5.0)*SPEED_LIGHT*To*To*pow(2*M_PI/(pb*86400.0),2)*f_e*m1*m2*m2/mtot;
+
+        double pbdot = -(192*M_PI/5.0)*pow(To,5.0/3.0)*pow(pb*86400.0/M_PI/2.0,-5.0/3.0)*f_e*m1*m2/pow(mtot,1.0/3.0);
+
+        prior += log(sin(incl));
+
+        psr->param[param_pb].val[0] = pb;
+        psr->param[param_ecc].val[0] = ecc;
+        psr->param[param_a1].val[0] = asini;
+
+        psr->param[param_m2].val[0] = m2;
+
+        psr->param[param_omdot].val[0] = omdot;
+        psr->param[param_sini].val[0] = sin(incl);
+        psr->param[param_a1dot].val[0] = xdot;
+        psr->param[param_pbdot].val[0] = pbdot;
+
+        /*
+        printf("PB     %lg\n",pb);
+        printf("A:     %lg\n",a);
+        printf("mf:    %lg\n",massfunc);
+        printf("m1:    %lg\n",m1);
+        printf("m2:    %lg\n",m2);
+        printf("ecc:   %lg\n",ecc);
+        printf("omdot: %lg\n",omdot);
+        printf("asini: %lg\n",asini);
+        */
+    }
+
+
 
     if(remakeResiduals) {
         formBatsAll(psr,1);         /* Form the barycentric arrival times */
@@ -265,7 +357,7 @@ void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 
 
 
-    lnew = -0.5 * (psr->fitChisq) + psr->detUinv;
+    double lnew = -0.5 * (psr->fitChisq) + psr->detUinv + prior;
 
     //    fprintf(data->debugfile,"%lg %lg %lg %lg %lg\n",psr->TNRedAmp,psr->TNRedGam,psr->fitChisq,psr->detUinv,lnew);
 
@@ -273,12 +365,16 @@ void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 
     //    exit(1);
 
-
-
-    // copy pre-fit value back over so we always start `fresh'
-    for (int iparam =0; iparam < MAX_PARAMS; ++iparam) {
-        for (int k=0; k < psr->param[iparam].aSize; ++k) {
-            psr->param[iparam].val[k] = psr->param[iparam].prefit[k];
+    for (int ixtra=0; ixtra < data->xtra.size(); ++ixtra) {
+        const mjkparam* xtra = &(data->xtra[ixtra]);
+        const int idx = data->params.size() + ixtra;
+        if (xtra->fittype == FITTYPE_BIN){
+            if (xtra->fitk == FITTYPE_BIN_K_M1){
+                Cube[idx] = m1;
+            }
+        }
+        if (xtra->fittype == FITTYPE_PARAM){
+            Cube[idx] = psr->param[xtra->fitlabel].val[xtra->fitk];
         }
     }
     if (errorsChanged) {
@@ -287,7 +383,42 @@ void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
             psr->obsn[iobs].toaErr = psr->obsn[iobs].origErr;
         }
 
+
     }
+
+    if(outpar != 0) {
+        const int orig_nEF=psr->nTNEF;
+        const int orig_nEQ=psr->nTNEQ;
+        // temporarily add the white parameters
+        for (int i=0; i < data->params.size(); ++i){
+            const mjkparam* p = &(data->params[i]);
+            if(p->fittype == FITTYPE_EFAC){
+                strcpy(psr->TNEFFlagID[psr->nTNEF],p->flagid.c_str());
+                strcpy(psr->TNEFFlagVal[psr->nTNEF],p->flagval.c_str());
+                psr->TNEFVal[psr->nTNEF]=Cube[i];
+                psr->nTNEF++;
+            }
+            if(p->fittype == FITTYPE_EQUAD){
+                strcpy(psr->TNEQFlagID[psr->nTNEQ],p->flagid.c_str());
+                strcpy(psr->TNEQFlagVal[psr->nTNEQ],p->flagval.c_str());
+                psr->TNEQVal[psr->nTNEQ]=log10(Cube[i])-6.0;
+                psr->nTNEQ++;
+            }
+
+        }
+        textOutput(psr,1,0,0,0,1,outpar);
+        psr->nTNEF = orig_nEF;
+        psr->nTNEQ = orig_nEQ;
+    }
+    // copy pre-fit value back over so we always start `fresh'
+    for (int iparam =0; iparam < MAX_PARAMS; ++iparam) {
+        for (int k=0; k < psr->param[iparam].aSize; ++k) {
+            psr->param[iparam].val[k] = psr->param[iparam].prefit[k];
+        }
+    }
+
+
+    return lnew;
 }
 
 
@@ -329,12 +460,41 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
     char flagval[maxlen];
     double centre=0;
     double halfrange=1;
+    bool havewhite=false;
     int k=0;
-    int iflag=0;
-    int ifit=0;
     while (!feof(infile)){
         int read = fscanf(infile,"%s",keyword);
         if (read<=0)continue;
+        logmsg("Read keyword '%s'",keyword);
+        if (strncasecmp(keyword,"xtra",4) == 0){
+            fscanf(infile,"%s",keyword2);
+            if (strncasecmp(keyword2,"binary",6) == 0){
+                fscanf(infile,"%s",keyword3);
+                if(strcasecmp(keyword3,"M1")==0){
+                    mjkparam p(FITTYPE_BIN,param_LAST,FITTYPE_BIN_K_M1);
+                    data->xtra.push_back(p);
+                    logmsg("Got: eXport 'bin_M1' no prior");
+                }
+            }
+            if (strncasecmp(keyword2,"param",5) == 0){
+                int thelab=-1;
+                fscanf(infile,"%s",keyword3);
+                for(int param=0; param < param_LAST; ++param){
+                    for (int ik=0; ik < psr->param[param].aSize; ++ik)
+                        if(strcasecmp(keyword3,psr->param[param].shortlabel[ik])==0){
+                            k=ik;
+                            thelab=param;
+                            break;
+                        }
+                }
+                if (thelab==-1){
+                    logerr("no such parameter '%s'",keyword3);
+                    exit(1);
+                }
+                data->xtra.emplace_back(FITTYPE_PARAM,(label)thelab,k);
+                logmsg("Got: eXport '%s' no prior",psr->param[thelab].shortlabel[k]);
+            }
+        }
         if (strncasecmp(keyword,"fit",3) == 0){
             // toggle a fit parameter. Need to know second word
             int read = fscanf(infile,"%s",keyword2);
@@ -359,74 +519,117 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
                     exit(1);
                 }
 
+                // we are going to search over this parameter, so disable fitting.
                 psr->param[thelab].paramSet[k]=1;
                 psr->param[thelab].val[k] = centre;
                 psr->param[thelab].fitFlag[k]=0;
 
-                data->fittype[ifit]  = FITTYPE_PARAM;
-                data->fitlabel[ifit]  = (label)thelab;
-                data->fitoffset[ifit] = centre;
-                data->fitscale[ifit]  = halfrange;
-                data->fitk[ifit]  = k;
-                ++ifit;
+                data->params.emplace_back(FITTYPE_PARAM,(label)thelab,k,centre,halfrange);
+
                 logmsg("Got: Fit for '%s' uniform prior over %lg to %lg",psr->param[thelab].shortlabel[k],centre-halfrange,centre+halfrange);
             }
             if (strncasecmp(keyword2,"chol",4) == 0){
                 // cholesky fit
                 fscanf(infile,"%s %lg %lg",keyword3, &centre,&halfrange);
-                data->fittype[ifit]  = FITTYPE_CHOL;
-                data->fitoffset[ifit] = centre;
-                data->fitscale[ifit]  = halfrange;
+                mjkparam p(FITTYPE_CHOL,param_LAST,0,centre,halfrange);
                 if(strcasecmp(keyword3,"amp")==0) {
-                    data->fitk[ifit]  = FITTYPE_CHOL_K_AMP;
+                    p.fitk=FITTYPE_CHOL_K_AMP;
                     logmsg("Got: Fit for DCF[log(amp)], uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
 
                 } else if(strcasecmp(keyword3,"fc")==0) {
-                    data->fitk[ifit]  = FITTYPE_CHOL_K_FC;
+                    p.fitk=FITTYPE_CHOL_K_FC;
                     logmsg("Got: Fit for DCF[fc], uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
 
                 } else if(strcasecmp(keyword3,"alpha")==0) {
-                    data->fitk[ifit]  = FITTYPE_CHOL_K_ALPHA;
+                    p.fitk=FITTYPE_CHOL_K_ALPHA;
                     logmsg("Got: Fit for DCF[alpha] uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
 
                 } else {
                     logerr("invalid chol keyword '%s'",keyword3);
                     exit(1);
                 }
-                ++ifit;
+                data->params.push_back(p);
+            }
+            if (strncasecmp(keyword2,"binary",6) == 0){
+                fscanf(infile,"%s %lg %lg",keyword3, &centre,&halfrange);
+                mjkparam p(FITTYPE_BIN,param_LAST,0,centre,halfrange);
+
+                psr->param[param_pb].paramSet[0]=1;
+                psr->param[param_pb].fitFlag[0]=0;
+
+                psr->param[param_a1].paramSet[0]=1;
+                psr->param[param_a1].fitFlag[0]=0;
+
+                psr->param[param_ecc].paramSet[0]=1;
+                psr->param[param_ecc].fitFlag[0]=0;
+
+
+                psr->param[param_omdot].paramSet[0]=1;
+                psr->param[param_omdot].fitFlag[0]=0;
+
+                psr->param[param_m2].paramSet[0]=1;
+                psr->param[param_m2].fitFlag[0]=0;
+                psr->param[param_a1dot].paramSet[0]=1;
+                psr->param[param_a1dot].fitFlag[0]=0;
+
+                psr->param[param_pbdot].paramSet[0]=1;
+                psr->param[param_pbdot].fitFlag[0]=0;
+
+
+                psr->param[param_sini].paramSet[0]=1;
+                psr->param[param_sini].fitFlag[0]=0;
+
+                if(strcasecmp(keyword3,"asini")==0) {
+                    p.fitk=FITTYPE_BIN_K_ASINI;
+                    logmsg("Got: Fit for binary asin(i), uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                }else if(strcasecmp(keyword3,"m2")==0) {
+                    p.fitk=FITTYPE_BIN_K_M2;
+                    logmsg("Got: Fit for binary M2, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                } else if(strcasecmp(keyword3,"ecc")==0) {
+                    p.fitk=FITTYPE_BIN_K_ECC;
+                    logmsg("Got: Fit for binary ECC, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                } else if(strcasecmp(keyword3,"pb")==0) {
+                    p.fitk=FITTYPE_BIN_K_PB;
+                    logmsg("Got: Fit for binary pb, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                } else if(strcasecmp(keyword3,"inc")==0) {
+                    p.fitk = FITTYPE_BIN_K_INC;
+                    logmsg("Got: Fit for binary inclination, sin(i) prior over %lg to %lg deg",centre-halfrange,centre+halfrange);
+                }
+                data->params.push_back(p);
             }
             if (strncasecmp(keyword2,"white",5) == 0){
                 // white noise
+                havewhite=true;
                 fscanf(infile,"%s",keyword3);
                 if (strncasecmp(keyword3,"efac",8) == 0){
                     fscanf(infile,"%s %s %lg %lg",flag,flagval,&centre,&halfrange);
-                    data->fittype[ifit]   = FITTYPE_EFAC;
-                    data->fitoffset[ifit] = centre;
-                    data->fitscale[ifit]  = halfrange;
-                    data->fitk[ifit]      = iflag;
-                    data->flagmask[iflag] = mjkbayesflagmask(psr,flag,flagval);
-                    iflag++;
-                    ifit++;
+                    mjkparam p(FITTYPE_EFAC,param_LAST,0,centre,halfrange);
+                    p.flagmask = mjkbayesflagmask(psr,flag,flagval);
+                    p.flagid = std::string(flag);
+                    p.flagval = std::string(flagval);
+                    data->params.push_back(p);
                     logmsg("Got: Fit for EFAC (%s %s), uniform prior over %lg to %lg",flag,flagval,centre-halfrange,centre+halfrange);
                 } else if (strncasecmp(keyword3,"equad",8) == 0){
                     fscanf(infile,"%s %s %lg %lg",flag,flagval,&centre,&halfrange);
-                    data->fittype[ifit]   = FITTYPE_EQUAD;
-                    data->fitoffset[ifit] = centre;
-                    data->fitscale[ifit]  = halfrange;
-                    data->fitk[ifit]      = iflag;
-                    data->flagmask[iflag] = mjkbayesflagmask(psr,flag,flagval);
-                    iflag++;
-                    ifit++;
+                    mjkparam p(FITTYPE_EQUAD,param_LAST,0,centre,halfrange);
+                    p.flagmask = mjkbayesflagmask(psr,flag,flagval);
+                    p.flagid = std::string(flag);
+                    p.flagval = std::string(flagval);
+                    data->params.push_back(p);
                     logmsg("Got: Fit for EQUAD (%s %s), uniform prior over %lg to %lg",flag,flagval,centre-halfrange,centre+halfrange);
                 }
             }
         }
     }
-    data->nfit = ifit;
 
-    if(iflag > 0){
+    if(havewhite){
         for (int iobs=0; iobs < psr->nobs; ++iobs){
             psr->obsn[iobs].origErr = psr->obsn[iobs].toaErr; // we cheat here!
+            psr->nTNEF = 0;
+            psr->nTNEQ = 0;
+            
+            psr->nT2efac = 0;
+            psr->nT2equad = 0;
         }
     }
 
@@ -459,11 +662,13 @@ void mjkbayes_analyse(pulsar* psr, struct mjkcontext *context){
     snprintf(fname,1024,"%spost_equal_weights.dat",context->root);
     FILE* postequal_f = fopen(fname,"r");
 
+    snprintf(fname,1024,"%s.paramnames",context->root);
+    FILE* labels_f = fopen(fname,"w");
     std::vector<double> loglike;
-    std::vector<std::vector<double>> params(context->nfit);
+    std::vector<std::vector<double>> params(context->params.size()+context->xtra.size());
     while (!feof(postequal_f)) {
         double val;
-        for (int i=0; i < context->nfit; ++i){
+        for (int i=0; i < context->params.size()+context->xtra.size(); ++i){
             int n = fscanf(postequal_f,"%lg",&val);
             if (n != 1) break;
             params[i].push_back(val);
@@ -475,43 +680,47 @@ void mjkbayes_analyse(pulsar* psr, struct mjkcontext *context){
     }
 
 
-    char lab[1024];
-    for (int iparam=0; iparam < context->nfit; ++iparam) {
-        double mean = TKmean_d(&params[iparam][0],params[iparam].size());
-        double max  = TKfindMax_d(&params[iparam][0],params[iparam].size());
-        double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
-        lab[0]='\0';
-        switch(context->fittype[iparam]) {
-            case FITTYPE_PARAM:
-                strcpy(lab,psr->param[context->fitlabel[iparam]].shortlabel[context->fitk[iparam]]);
-                break;
-            case FITTYPE_CHOL:
-                switch(context->fitk[iparam]){
-                    case FITTYPE_CHOL_K_ALPHA:
-                        strcpy(lab,"CHOL alpha");
-                        break;
-                    case FITTYPE_CHOL_K_AMP:
-                        strcpy(lab,"CHOL log(amp)");
-                        break;
-                    case FITTYPE_CHOL_K_FC:
-                        strcpy(lab,"CHOL fc");
-                        break;
-                    default:
-                        strcpy(lab,"????");
-                        break;
-                }
-
-                break;
-            case FITTYPE_EFAC:
-                strcpy(lab,"EFAC");
-                break;
-            case FITTYPE_EQUAD:
-                strcpy(lab,"EQUAD");
-                break;
+    int imax = 0;
+    for (int isamp=0; isamp < loglike.size(); ++isamp) {
+        if (loglike[isamp] > loglike[imax]) {
+            imax = isamp;
         }
-
-        printf("% 16s % 9.7lg % 9.7lg % 9.7lg\n",lab,mean,max,sigma);
     }
+    double maxlike= loglike[imax];
+
+    std::vector<double> maxcube;
+    std::vector<double> meancube;
+
+
+    for (int iparam=0; iparam < context->params.size(); ++iparam) {
+        double mean = TKmean_d(&params[iparam][0],params[iparam].size());
+        double max  = params[iparam][imax];
+        double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
+        maxcube.push_back(max);
+        meancube.push_back(mean);
+        std::string lab = context->params[iparam].shortlabel(psr);
+        printf("% 16s % 9.7lg % 9.7lg % 9.7lg\n",lab.c_str(),mean,max,sigma);
+        fprintf(labels_f,"%d %s\n",iparam,lab.c_str());
+    }
+    for (int ixtra=0; ixtra < context->xtra.size(); ++ixtra) {
+        int iparam=context->params.size()+ixtra;
+        double mean = TKmean_d(&params[iparam][0],params[iparam].size());
+        double max  = params[iparam][imax];
+        maxcube.push_back(max);
+        meancube.push_back(mean);
+        double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
+        std::string lab = context->xtra[ixtra].shortlabel(psr);
+        printf("% 16s % 9.7lg % 9.7lg % 9.7lg\n",lab.c_str(),mean,max,sigma);
+        fprintf(labels_f,"%d %s\n",iparam,lab.c_str());
+    }
+
+    fclose(labels_f);
+
+    snprintf(fname,1024,"%smaxlike.par",context->root);
+    double freshlike = computeLogLike(&maxcube[0],context,fname);
+    snprintf(fname,1024,"%smean.par",context->root);
+    double meanlike = computeLogLike(&maxcube[0],context,fname);
+    logmsg("LL %lg %lg %lg",maxlike,freshlike,meanlike);
 
 }
 

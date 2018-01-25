@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [[ "$HOSTNAME" == "lindisfarne" ]] ; then
+if [[ "$HOSTNAME" == "lindisfarne.jb.man.ac.uk" ]] ; then
 ARCH=darwin15
 
-CXX=g++-7
+CXX=g++-7 
 
-cmd="$CXX -o $TEMPO2/plugins/mjkbayes_${ARCH}_plug.t2 mjkbayes_plug.C -ltempo2 -I../.. $LDFLAGS $CFLAGS -shared -fPIC -O2 /Users/mkeith/Code/tempo2/TempoNest/MultiNest/libnest3.a -lgfortran -llapack -lmpi -lmpi_mpifh"
+cmd="$CXX -o $TEMPO2/plugins/mjkbayes_${ARCH}_plug.t2 mjkbayes_plug.C -ltempo2 -I../.. $LDFLAGS $CFLAGS -shared -fPIC -O2 /Users/mkeith/Code/tempo2/TempoNest/MultiNest/libnest3.a -lgfortran -llapack -lmpi -lmpi_mpifh  -Wfatal-errors"
 
 fi
 

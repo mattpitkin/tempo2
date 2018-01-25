@@ -631,7 +631,8 @@ void t2Fit_buildDesignMatrix(pulsar* psr,int ipsr,double x, int ipos, double* af
         // call the function allocated to this fit parameter
         afunc[ifit] = func(psr,ipsr,x,ipos,param,fitinfo->paramCounters[ifit]);
         if (isnan(afunc[ifit])){
-            logerr("An element of the design matrix is NAN: %s %lg %d %s %d",psr[ipsr].name,x,ipos,label_str[param],fitinfo->paramCounters[ifit]);
+            logerr("An element of the design matrix is NaN: %s %lg %d %s %d",psr[ipsr].name,x,ipos,label_str[param],fitinfo->paramCounters[ifit]);
+            exit(1);
         }
     }
 }
