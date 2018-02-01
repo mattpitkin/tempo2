@@ -4049,6 +4049,8 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
             x[count] = (float)(double)psr[0].obsn[iobs].residual/unitFlag;
             if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averageres);}
             else if (psr[0].AverageDMResiduals ==1){x[count] = (float)(psr[0].obsn[iobs].averagedmres);}
+	    else if (psr[0].TNsubtractRed ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
+	    else if  (psr[0].TNsubtractDM ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
 
         }
         else

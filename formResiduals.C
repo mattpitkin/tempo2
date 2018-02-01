@@ -1937,14 +1937,16 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
         if(psr[p].TNsubtractRed==1){
             for (i=0;i<psr[p].nobs;i++){
-                psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
-            }
+	      //psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
+	      psr[p].obsn[i].residualtn = psr[p].obsn[i].residual - psr[p].obsn[i].TNRedSignal;
+	    }
         }
         if(psr[p].TNsubtractDM==1){
             for (i=0;i<psr[p].nobs;i++){
 // UNUSED VARIABLE //                 double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
-                psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
-            }
+	      //psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
+	      psr[p].obsn[i].residualtn = psr[p].obsn[i].residual - psr[p].obsn[i].TNDMSignal;
+	    }
         }
         if(psr[p].AverageResiduals == 1){
             averageResiduals(psr, 1);
