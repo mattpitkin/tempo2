@@ -51,7 +51,8 @@ void t2UpdateFunc_nestlike_red(pulsar *psr, int ipsr ,param_label label,int k, d
         double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
             double y = t2FitFunc_nestlike_red(psr,ipsr,x,iobs,label,k);
         psr[ipsr].obsn[iobs].TNRedSignal  += y *val;
-        psr[ipsr].obsn[iobs].TNRedErr     += pow(y*err,2);
+        psr[ipsr].obsn[iobs].TNRedErr     = pow(y*err,2);
+	//fprintf(stderr, "are we here????\n");
 
     }
 }

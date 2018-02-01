@@ -375,8 +375,9 @@ typedef struct observation {
     int delayCorr;                  /*!< = 1 for time delay corrections to be applied, = 0 for BAT  */
     int deleted;                    /*!< = 1 if observation has been deleted, = -1 if not included in fit*/
     longdouble prefitResidual;      /*!< Pre-fit residual                                           */
-    longdouble residual;            /*!< residual                                                   */
-    double      addedNoise;
+    longdouble residual;            /*!< residual                        */
+  longdouble residualtn;
+  double      addedNoise;
     double      TNRedSignal;	  /*!< Model red noise signal from temponest fit */
     double      TNRedErr;		  /*!< Error on Model red noise signal from temponest fit */
     double      TNDMSignal;         /*!< Model DM signal from temponest fit */
