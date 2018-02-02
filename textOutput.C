@@ -1492,6 +1492,8 @@ double calcRMS(pulsar *psr,int p)
     double sumwt=0.0,rms_pre=0.0,rms_post=0.0,wgt=0.0,sumsq_post=0.0;
     double sumsq_pre=0.0,sum_pre=0.0,sum_post=0.0,mean_post=0.0,mean_pre=0.0;
     int i,count=0;
+    double sum_tn=0.,sumsq_tn=0.0,rms_tn=0.0;
+    
 
     for (i=0;i<psr[p].nobs;i++)
     {
@@ -1512,7 +1514,11 @@ double calcRMS(pulsar *psr,int p)
 
             sumsq_post += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
             sum_post   += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
-            sumwt += wgt;
+
+	    sumsq_tn += (double)(wgt*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]);
+	    sum_tn += (double)(wgt*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]);
+	    
+	    sumwt += wgt;
             mean_post += (double)psr[p].obsn[i].residual;
             count++;
         }
@@ -1523,12 +1529,17 @@ double calcRMS(pulsar *psr,int p)
 
     rms_pre = sqrt((sumsq_pre-sum_pre*sum_pre/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
     rms_post = sqrt((sumsq_post-sum_post*sum_post/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
+    rms_tn = sqrt((sumsq_tn-sum_tn*sum_tn/sumwt)/sumwt)*1e3/psr[p].param[param_f].val[0]*1e3;
+    
+
     logdbg("textOutput %g %g %g %G %d",rms_pre,rms_post,sumsq_pre,sum_pre,count);
 
 
     psr[p].rmsPre  = rms_pre;
     psr[p].rmsPost = rms_post;
+      psr[p].rmstn = rms_tn;
     psr[p].param[param_tres].val[0] = rms_post;
+    psr[p].param[param_trestn].val[0] = rms_tn;
     psr[p].param[param_tres].paramSet[0] = 1;
     return sumwt;
 }

@@ -1002,7 +1002,18 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 else strcpy(rmsStr,"rms");
             }
 
-            if (yplot==2) sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPost,fitType);
+            if (yplot==2)
+	      {
+		if ((psr[0].TNsubtractDM==1) || (psr[0].TNsubtractRed ==1))
+		  {
+		    sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmstn,fitType);
+		  }
+		else
+		  {
+		  sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPost,fitType);
+		  }
+	      }
+	      
             else sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPre,fitType);
 
             if (showChisq == 1)
@@ -1376,11 +1387,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 if(psr[0].TNsubtractDM==0){
                     printf("will substract PL DM Variations on next Fit \n");
                     psr[0].TNsubtractDM=1;
-                }
+		    formResiduals(psr,npsr,1);
+		     textOutput(psr,npsr,0,0,0,0,"");
+		}
                 else if(psr[0].TNsubtractDM==1){
                     printf("will Re-add PL DM Variations on next Fit \n");
                     psr[0].TNsubtractDM=0;
-                }
+		    formResiduals(psr,npsr,1);
+		     textOutput(psr,npsr,0,0,0,0,"");
+		}
 
             }
             else if(key=='K'){
@@ -1389,13 +1404,13 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     printf("Subtract red noise from fit\n");
                     psr[0].TNsubtractRed=1;
                     formResiduals(psr,npsr,1); // iteration);
-                    //textOutput(psr,npsr,0,0,0,0,"");
+                    textOutput(psr,npsr,0,0,0,0,"");
                 }
                 else if(psr[0].TNsubtractRed==1){
                     printf("Do Not Subtract Red Noise on next Fit \n");
                     psr[0].TNsubtractRed=0;
                     formResiduals(psr,npsr,1); // iteration);
-                    //textOutput(psr,npsr,0,0,0,0,"");
+                    textOutput(psr,npsr,0,0,0,0,"");
                 }
 
             }
