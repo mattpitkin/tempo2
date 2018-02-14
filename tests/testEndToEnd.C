@@ -35,6 +35,40 @@ TEST(testEndToEnd,checkIdeal){
 
 }
 
+TEST(testEndToEnd,checkIdeal_jb){
+    pulsar _psr;
+    pulsar *psr = &_psr;
+    MAX_PSR=1;
+    char timFile[MAX_PSR][MAX_FILELEN],parFile[MAX_PSR][MAX_FILELEN];
+    int npsr=1;
+    initialise(psr,0); /* Initialise all */
+
+    strcpy(parFile[0],DATDIR "/test3_jb.par");
+    strcpy(timFile[0],DATDIR "/test3_jb.tim");
+
+    readParfile(psr,parFile,timFile,npsr);
+    readTimfile(psr,timFile,npsr);
+    preProcessSimple(psr);
+
+    psr->noWarnings=2;
+    formBatsAll(psr,npsr);
+    formResiduals(psr,npsr,0);
+    for(int iobs = 0; iobs < psr->nobs; iobs++){
+        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),TEST_DELTA) << DATDIR "/test3_jb.par test3_jb.tim do not give idealised ToAs";
+    }
+
+    t2Fit(psr,npsr,"NULL");
+
+    formBatsAll(psr,npsr);
+    formResiduals(psr,npsr,0);
+    for(int iobs = 0; iobs < psr->nobs; iobs++){
+        ASSERT_LT(static_cast<double>(fabsl(psr->obsn[iobs].residual)),TEST_DELTA) << "Fitting has caused error in ideal";
+    }
+
+}
+
+
+
 TEST(testEndToEnd,checkDE430){
     pulsar _psr;
     pulsar *psr = &_psr;
