@@ -42,6 +42,7 @@
 #include "../../T2toolkit.h"
 
 #include <vector>
+#include <algorithm>
 #include <mpi.h>
 
 
@@ -224,6 +225,13 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
     double m1 = 0;
     double prior=0;
 
+    double *prefitjump;
+
+    if (psr->nJumps > 0){
+        prefitjump = new double[psr->nJumps];
+        std::copy(psr->jumpVal,psr->jumpVal+psr->nJumps+1,prefitjump);
+    }
+
 
 
     for (int i=0; i < data->params.size(); ++i){
@@ -331,15 +339,15 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
         psr->param[param_pbdot].val[0] = pbdot;
 
         /*
-        printf("PB     %lg\n",pb);
-        printf("A:     %lg\n",a);
-        printf("mf:    %lg\n",massfunc);
-        printf("m1:    %lg\n",m1);
-        printf("m2:    %lg\n",m2);
-        printf("ecc:   %lg\n",ecc);
-        printf("omdot: %lg\n",omdot);
-        printf("asini: %lg\n",asini);
-        */
+           printf("PB     %lg\n",pb);
+           printf("A:     %lg\n",a);
+           printf("mf:    %lg\n",massfunc);
+           printf("m1:    %lg\n",m1);
+           printf("m2:    %lg\n",m2);
+           printf("ecc:   %lg\n",ecc);
+           printf("omdot: %lg\n",omdot);
+           printf("asini: %lg\n",asini);
+           */
     }
 
 
@@ -389,6 +397,9 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
     if(outpar != 0) {
         const int orig_nEF=psr->nTNEF;
         const int orig_nEQ=psr->nTNEQ;
+        // disable the temporary used TNred parameters
+        psr->TNRedAmp = psr->TNRedGam = 0;
+
         // temporarily add the white parameters
         for (int i=0; i < data->params.size(); ++i){
             const mjkparam* p = &(data->params[i]);
@@ -416,6 +427,11 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
             psr->param[iparam].val[k] = psr->param[iparam].prefit[k];
         }
     }
+    if (psr->nJumps > 0){
+        std::copy(prefitjump,prefitjump+psr->nJumps+1,psr->jumpVal);
+        delete[] prefitjump;
+    }
+
 
 
     return lnew;
@@ -627,7 +643,7 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
             psr->obsn[iobs].origErr = psr->obsn[iobs].toaErr; // we cheat here!
             psr->nTNEF = 0;
             psr->nTNEQ = 0;
-            
+
             psr->nT2efac = 0;
             psr->nT2equad = 0;
         }
@@ -664,6 +680,9 @@ void mjkbayes_analyse(pulsar* psr, struct mjkcontext *context){
 
     snprintf(fname,1024,"%s.paramnames",context->root);
     FILE* labels_f = fopen(fname,"w");
+
+    snprintf(fname,1024,"%s.results",context->root);
+    FILE* results_f = fopen(fname,"w");
     std::vector<double> loglike;
     std::vector<std::vector<double>> params(context->params.size()+context->xtra.size());
     while (!feof(postequal_f)) {
@@ -690,6 +709,7 @@ void mjkbayes_analyse(pulsar* psr, struct mjkcontext *context){
 
     std::vector<double> maxcube;
     std::vector<double> meancube;
+    std::vector<double> sigmacube;
 
 
     for (int iparam=0; iparam < context->params.size(); ++iparam) {
@@ -698,29 +718,47 @@ void mjkbayes_analyse(pulsar* psr, struct mjkcontext *context){
         double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
         maxcube.push_back(max);
         meancube.push_back(mean);
+        sigmacube.push_back(sigma);
+    }
+    for (int ixtra=0; ixtra < context->xtra.size(); ++ixtra) {
+        int iparam=context->params.size()+ixtra;
+        double mean = TKmean_d(&params[iparam][0],params[iparam].size());
+        double max  = params[iparam][imax];
+        double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
+        maxcube.push_back(max);
+        meancube.push_back(mean);
+        sigmacube.push_back(sigma);
+    }
+
+
+    snprintf(fname,1024,"%smaxlike.par",context->root);
+    double freshlike = computeLogLike(&maxcube[0],context,fname);
+    snprintf(fname,1024,"%smean.par",context->root);
+    double meanlike = computeLogLike(&meancube[0],context,fname);
+    logmsg("LL %lg %lg %lg",maxlike,freshlike,meanlike);
+
+    for (int iparam=0; iparam < context->params.size(); ++iparam) {
+        double mean = TKmean_d(&params[iparam][0],params[iparam].size());
+        double max  = params[iparam][imax];
+        double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
         std::string lab = context->params[iparam].shortlabel(psr);
         printf("% 16s % 9.7lg % 9.7lg % 9.7lg\n",lab.c_str(),mean,max,sigma);
+        fprintf(results_f,"% 16s % 9.7lg % 9.7lg % 9.7lg\n",lab.c_str(),mean,max,sigma);
         fprintf(labels_f,"%d %s\n",iparam,lab.c_str());
     }
     for (int ixtra=0; ixtra < context->xtra.size(); ++ixtra) {
         int iparam=context->params.size()+ixtra;
         double mean = TKmean_d(&params[iparam][0],params[iparam].size());
         double max  = params[iparam][imax];
-        maxcube.push_back(max);
-        meancube.push_back(mean);
         double sigma = sqrt(TKvariance_d(&params[iparam][0],params[iparam].size()));
         std::string lab = context->xtra[ixtra].shortlabel(psr);
         printf("% 16s % 9.7lg % 9.7lg % 9.7lg\n",lab.c_str(),mean,max,sigma);
+        fprintf(results_f,"% 16s % 9.7lg % 9.7lg % 9.7lg\n",lab.c_str(),mean,max,sigma);
         fprintf(labels_f,"%d %s\n",iparam,lab.c_str());
     }
 
     fclose(labels_f);
-
-    snprintf(fname,1024,"%smaxlike.par",context->root);
-    double freshlike = computeLogLike(&maxcube[0],context,fname);
-    snprintf(fname,1024,"%smean.par",context->root);
-    double meanlike = computeLogLike(&maxcube[0],context,fname);
-    logmsg("LL %lg %lg %lg",maxlike,freshlike,meanlike);
+    fclose(results_f);
 
 }
 
