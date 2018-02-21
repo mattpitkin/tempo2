@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-cmd="$CXX -o $TEMPO2/plugins/mjk_darwin13_plug.t2 mjk_plug.C -ltempo2 -lpgplot -lcpgplot -I.. -shared -fPIC -O2" 
+cmd="$CXX -o $TEMPO2/plugins/mjk_darwin15_plug.t2 mjk2_plug.C $CFLAGS $LDFLAGS -ltempo2 -I.. -shared -fPIC -O2" 
 
 echo $cmd
 $cmd

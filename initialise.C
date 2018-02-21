@@ -201,6 +201,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nDMEvents=0;
     psr->nTNShapeletEvents=0;
     psr->sorted=0;
+    psr->detUinv=0;
     allocateMemory(psr,0);
     /*  psr->param[param_track].paramSet[0]=1;
         psr->param[param_track].val[0]=0.0;
