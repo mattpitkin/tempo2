@@ -249,7 +249,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     char parFile[MAX_PSR][MAX_FILELEN];
     char timFile[MAX_PSR][MAX_FILELEN];
     char newParFile[MAX_FILELEN];
-    char gr[100]="/xs";
+    char gr[100];
+    strcpy(gr,"/xs");
     double unitFlag=1.0;  /* plot in seconds */
     float lockx1=0,lockx2=0;
     float locky1=0,locky2=0;
