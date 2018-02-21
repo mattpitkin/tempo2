@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 int debugFlag = 0;
+int quietFlag = 0;
 unsigned TK_errorCount = 0;
 unsigned TK_warnCount = 0;
 int writeResiduals=0;

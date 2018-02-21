@@ -55,9 +55,9 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
     for (k=0;k<nfit;k++)
     {
         GLOBAL_OMEGA = 2.0*M_PI/(T*binfactor)*(k+1);
-        printf("In here k = %d\n",k);
+        logdbg("In here k = %d\n",k);
         TKleastSquares_single_pulsar(resx,resy,nres,param,NULL,3,NULL,&chisq,FIT_FUNC,psr,1.0e-40,ip,1,uinv);
-        printf("Out here k = %d\n",k);
+        logdbg("Out here k = %d\n",k);
         v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
         specX[k] = GLOBAL_OMEGA/2.0/M_PI;
         specY_R[k] = sqrt(v[k])*param[1];

@@ -96,7 +96,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
     double** gCM[MAX_PSR]; // constraints matrix for each pulsar
     unsigned int gNdata[MAX_PSR]; // number of data points for each pulsar (size of x and y)
 
-    logmsg("NEW fit routine. GlobalFit=%s",doGlobalFit ? "true" : "false");
+    logdbg("NEW fit routine. GlobalFit=%s",doGlobalFit ? "true" : "false");
 
     /**
      * However we are going to do the fit, we want to loop over all the pulsars
@@ -631,7 +631,8 @@ void t2Fit_buildDesignMatrix(pulsar* psr,int ipsr,double x, int ipos, double* af
         // call the function allocated to this fit parameter
         afunc[ifit] = func(psr,ipsr,x,ipos,param,fitinfo->paramCounters[ifit]);
         if (isnan(afunc[ifit])){
-            logerr("An element of the design matrix is NAN: %s %lg %d %s %d",psr[ipsr].name,x,ipos,label_str[param],fitinfo->paramCounters[ifit]);
+            logerr("An element of the design matrix is NaN: %s %lg %d %s %d",psr[ipsr].name,x,ipos,label_str[param],fitinfo->paramCounters[ifit]);
+            exit(1);
         }
     }
 }
@@ -1306,9 +1307,9 @@ paramDerivFunc getDerivFunction(pulsar* psr, param_label fit_param, const int k)
 
 void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
     for (param_label fit_param=0; fit_param < param_LAST; ++fit_param){
-        if (fit_param == param_ifunc){
+/*        if (fit_param == param_ifunc){
             logmsg("if: %d %d %d",psr->param[fit_param].paramSet[0],psr->param[fit_param].fitFlag[0],psr->param[fit_param].aSize);
-        }
+        }*/
         for(int k=0; k < psr->param[fit_param].aSize;k++){
             if (psr->param[fit_param].paramSet[k]>0 && psr->param[fit_param].fitFlag[k]==globalflag) {
                 t2fit_fillOneParameterFitInfo(psr,fit_param,k,OUT);

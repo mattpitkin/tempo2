@@ -967,7 +967,7 @@ int TK_fft(short int dir,long n,double *x,double *y)
     int m;
 
     m = (int)(log(n)/log(2)+0.1);
-    printf("m = %d, n = %ld %g %g %g %d\n",m,n,log(n),log(2),log(n)/log(2),(int)(log(n)/log(2)+0.1));
+    logdbg("m = %d, n = %ld %g %g %g %d\n",m,n,log(n),log(2),log(n)/log(2),(int)(log(n)/log(2)+0.1));
     /* Do the bit reversal */
     i2 = n >> 1;
     j = 0;
@@ -1019,7 +1019,6 @@ int TK_fft(short int dir,long n,double *x,double *y)
             c2 = -c2;
         c1 = sqrt((1.0 + c1) / 2.0);
     }
-    printf("Here 3\n");
     /* Scaling for forward transform */
     if (dir == 1) {
         for (i=0;i<n;i++) {
