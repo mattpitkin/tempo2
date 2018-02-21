@@ -260,7 +260,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
         }
 
         // add the extra equations for constraints to the end of the least-squares problem.
-        logdbg("QR nparams=%d nconst=%d ndata=%d",nparams,nconstraints,ndata);
+        logmsg("QR nparams=%d nconst=%d ndata=%d",nparams,nconstraints,ndata);
         for (i=0;i<nconstraints;i++){
             augmented_white_data[i+ndata] = 0;
             for (j=0;j<nparams;j++) {
@@ -288,7 +288,6 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
 
         chisq = accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
-        logdbg("CHISQ = %lg",chisq);
         rescale_errors=false;
         free_blas(augmented_DM);
 
@@ -373,6 +372,8 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                     cvm[i][j] = cvm[j][i] = (double)sum;
                 }
             } 
+
+            
 
             if(debugFlag==1) {
                 FILE *fout;
@@ -465,6 +466,25 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
                 fclose(wFile);
             }
         }
+        if (computeCVM) {
+            FILE *fout;
+            fout = fopen("cov.matrix","w");
+            if (!fout){
+                printf("Unable to open file cov.matrix for writing\n");
+            }
+            else{
+                for (i=0;i<nparams;i++)
+                {
+                    for (j=0;j<nparams;j++)
+                    {
+                        fprintf(fout,"%g ",cvm[i][j]);
+                    }
+                    fprintf(fout,"\n");
+                }
+                fclose(fout);
+            }
+        }
+
     }
     if(needToFreeCVM){
         if (Ocvm != NULL){
@@ -480,7 +500,7 @@ double TKrobustConstrainedLeastSquares(double* data, double* white_data,
 
     /** Robust Estimator code by Wang YiDi, Univ. Manchester 2015 **/
 
-   
+
     return chisq;
 }
 
