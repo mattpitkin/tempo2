@@ -3,9 +3,9 @@
 # which is the first word on the line. One or more aliases may be listed for
 # each observatory.
 
-gbt 1
+gbt 1 gb
 atca 2
-ao 3 arecebo
+ao 3 arecebo arecibo
 hobart 4
 nanshan 5
 tid43 6
