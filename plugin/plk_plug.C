@@ -1627,7 +1627,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 else if (key=='C') /* Run UNIX command */
                 {
                     char str[1000];
-                    printf("Command: "); gets(str);
+                    printf("Command: ");
+           fgets(str,1000,stdin);
                     for (j=0;j<highlightNum;j++)
                     {	
                         ncount=0;
@@ -2520,7 +2521,7 @@ void changeParameters(pulsar *psr)
     printf("Setting parameters\n\n");
 
     printf("Enter name of parameter to change, or hit enter for a full list.\n");
-    gets(yesno);
+    fgets(yesno,100,stdin);
     if(strcmp(yesno,"")!=0){
         /* Determine the parameter */
         for(i=0;i<MAX_PARAMS;i++){
@@ -2544,7 +2545,7 @@ void changeParameters(pulsar *psr)
         printf("Enter desired value for parameter:\n");
         printf("%s = %.14lg : change to (don't change: n)\t",yesno,
                 (double)psr[0].param[k].val[deriv]);
-        gets(yesno);
+   fgets(yesno,100,stdin);
         if(!(yesno[0]=='n'))
             psr[0].param[k].val[deriv] = parse_longdouble(yesno);
     }
@@ -2557,7 +2558,7 @@ void changeParameters(pulsar *psr)
                 if (psr[0].param[i].paramSet[k]==1) /* If parameter set */
                 {
                     printf("%s = %.14f : change [(n = default)]\t",psr[0].param[i].label[k],(double)psr[0].param[i].val[k]);
-                    gets(yesno);
+           fgets(yesno,100,stdin);
                     if (!(yesno[0]=='n' || yesno[0]=='N' || strlen(yesno)==0))
                         psr[0].param[i].val[k] = parse_longdouble(yesno);
 
@@ -2685,7 +2686,7 @@ void changeFitParameters(pulsar *psr)
     printf("Setting fitting parameters\n\n");
 
     printf("Enter name of parameter to switch fitting for, or hit enter for a full list.\n");
-    gets(yesno);
+    fgets(yesno,100,stdin);
     if(strcmp(yesno,"")!=0){
         /* Determine the parameter */
         for(i=0;i<MAX_PARAMS;i++){
@@ -2724,14 +2725,14 @@ void changeFitParameters(pulsar *psr)
                     if (psr[0].param[i].fitFlag[k]==1)
                     {
                         printf("%s fitting (turn off fitting 'y', otherwise hit enter)\t",psr[0].param[i].label[k]);
-                        gets(yesno);
+           fgets(yesno,100,stdin);
                         if (yesno[0]=='y' || yesno[0]=='Y')
                             psr[0].param[i].fitFlag[k]=0;
                     }
                     else if (psr[0].param[i].fitFlag[k]==0)
                     {
                         printf("%s not fitting (turn on fitting 'y', otherwise hit enter)\t",psr[0].param[i].label[k]);
-                        gets(yesno);
+           fgets(yesno,100,stdin);
                         if (yesno[0]=='y' || yesno[0]=='Y')
                             psr[0].param[i].fitFlag[k]=1;
                     }
