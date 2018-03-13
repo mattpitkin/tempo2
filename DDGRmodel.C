@@ -128,10 +128,13 @@ double DDGRmodel(pulsar *psr,int p,int ipos,int param)
     phase=2.0*M_PI*(orbits-norbits);
     /*  Compute eccentric anomaly u by iterating Kepler's equation. */
     u=phase+ecc*sin(phase)*(1.0+ecc*cos(phase));
-    fac = 1.0/(1.0-ecc*cos(u));  /* NOTE COULD BE WRONG IN DDmodel - SEE USE OF FAC !!!! */
+
     do {
-        du=(phase-(u-ecc*sin(u)))*fac; 
+        
+    	fac = 1.0/(1.0-ecc*cos(u));  /* NOTE COULD BE WRONG IN DDmodel - SEE USE OF FAC !!!! */
+	du=(phase-(u-ecc*sin(u)))*fac; 
         u=u+du;
+   	
     } while (fabs(du)>1.0e-14);  /* 1e-12 in DDmodel */
 
     /*  DD equations 17a, 29 */
