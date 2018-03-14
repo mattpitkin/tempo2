@@ -1,4 +1,4 @@
-plugindir=@TEMPO2_PLUG_INSTALL@
+plugindir=$(DESTDIR)@TEMPO2_PLUG_INSTALL@
 
 plugin_LTLIBRARIES=glast_@T2ARCH@_plug.la
 
