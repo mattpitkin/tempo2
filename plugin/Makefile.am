@@ -1,4 +1,5 @@
-plugindir=@TEMPO2_PLUG_INSTALL@
+plugindir=$(DESTDIR)@TEMPO2_PLUG_INSTALL@
+
 ###
 #
 # This sets the includes and options that are needed to build nice modules with libtool

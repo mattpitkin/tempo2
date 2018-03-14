@@ -1,4 +1,4 @@
-plugindir=@TEMPO2_PLUG_INSTALL@
+plugindir=$(DESTDIR)@TEMPO2_PLUG_INSTALL@
 
 plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian_@T2ARCH@_plug.la add2state_@T2ARCH@_plug.la formIdeal_@T2ARCH@_plug.la createRealisation_@T2ARCH@_plug.la addRedNoise_@T2ARCH@_plug.la addCGW_@T2ARCH@_plug.la addInstrumentalIssues_@T2ARCH@_plug.la
 
