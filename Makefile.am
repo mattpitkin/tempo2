@@ -107,15 +107,17 @@ plugins-clean:
 	$(MAKE) -C plugin clean
 
 plugins-install: plugins
-	mkdir -p $(TEMPO2)/plugins
 	$(MAKE) -C plugin plugins-install
 
 
 unsupported: all
 	$(MAKE) -C unsupported_plugins
 
+# We make sure to make the plugins directory before installing 
+# unsupported plugins, incase someone doesn't install plugins first
+# for some reason
 unsupported-install: unsupported
-	mkdir -p $(TEMPO2)/plugins
+	$(MAKE) -C plugin plugdir
 	$(MAKE) -C unsupported_plugins install
 
 unsupported-clean:
