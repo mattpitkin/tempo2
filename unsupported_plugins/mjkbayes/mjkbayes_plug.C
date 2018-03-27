@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <math.h>
+#include <sstream>
+#include <string>
 #include <assert.h>
 #include "tempo2.h"
 #include "t2fit.h"
@@ -217,7 +219,9 @@ void LogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context)
 double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
     pulsar* psr = data->psr;
 
-    bool useTNPARAM=false;
+
+
+    bool haveModel=false;
     bool remakeResiduals=false;
     bool errorsChanged=false;
     bool binarymodel=false;
@@ -225,7 +229,10 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
     double m1 = 0;
     double prior=0;
 
+    double chol_alpha, chol_amp, chol_fc;
+
     double *prefitjump;
+    std::stringstream model;
 
     if (psr->nJumps > 0){
         prefitjump = new double[psr->nJumps];
@@ -264,22 +271,19 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
                     exit(1);
                     break;
             }
-        } else if (p->fittype == FITTYPE_CHOL){
-            useTNPARAM = true;
-            switch(p->fitk){
-                case FITTYPE_CHOL_K_ALPHA:
-                    psr->TNRedGam = Cube[i];
-                    break;
-                case FITTYPE_CHOL_K_AMP:
-                    psr->TNRedAmp = pow(10.0,Cube[i]);
-                    break;
-                case FITTYPE_CHOL_K_FC:
-                    psr->TNRedCorner = Cube[i];
-                    break;
-                default:
-                    logwarn("BAD CHOL_K!!");
-                    break;
+        } else if (p->fittype == FITTYPE_CVM){
+            haveModel = true;
+            model << "MODEL " << p->txt;
+            for (int k=0; k < p->fitk; ++k){
+                p = &(data->params[i]);
+                if (p->exp){
+                    model << " " << pow(10.0,Cube[i]);
+                } else {
+                    model << " " << Cube[i];
+                }
+                ++i;
             }
+            model << "\n";
         } else if(p->fittype == FITTYPE_EFAC){
             errorsChanged=true;
             for (int iobs=0; iobs < psr->nobs; ++iobs){
@@ -357,8 +361,8 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
         formResiduals(psr,1,1);    /* Form the residuals                 */
     }
 
-    if (useTNPARAM){
-        t2Fit(psr,1,"TNPARAM");
+    if (haveModel){
+        t2Fit(psr,1,model.str().c_str());
     } else {
         t2Fit(psr,1,NULL);
     }
@@ -367,7 +371,6 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
 
     double lnew = -0.5 * (psr->fitChisq) + psr->detUinv + prior;
 
-    //    fprintf(data->debugfile,"%lg %lg %lg %lg %lg\n",psr->TNRedAmp,psr->TNRedGam,psr->fitChisq,psr->detUinv,lnew);
 
     //    textOutput(psr,1,0,0,0,1,"zz.par"); /* Output results to the screen */
 
@@ -398,7 +401,6 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
         const int orig_nEF=psr->nTNEF;
         const int orig_nEQ=psr->nTNEQ;
         // disable the temporary used TNred parameters
-        psr->TNRedAmp = psr->TNRedGam = 0;
 
         // temporarily add the white parameters
         for (int i=0; i < data->params.size(); ++i){
@@ -420,6 +422,16 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
         textOutput(psr,1,0,0,0,1,outpar);
         psr->nTNEF = orig_nEF;
         psr->nTNEQ = orig_nEQ;
+
+        if (haveModel){
+            char modelout[1024];
+            snprintf(modelout,1024,"%s.model",outpar);
+            FILE* ff = fopen(modelout,"w");
+            printf("Write model to '%s'\n",modelout);
+            fprintf(ff,"%s",model.str().c_str());
+            fclose(ff);
+        }
+
     }
     // copy pre-fit value back over so we always start `fresh'
     for (int iparam =0; iparam < MAX_PARAMS; ++iparam) {
@@ -461,6 +473,7 @@ void dumper(int &nSamples, int &nlive, int &nPar, double **physLive, double **po
     pLivePts[j][i] = physLive[0][i * nlive + j];
     */
 }
+
 
 
 
@@ -544,27 +557,28 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
 
                 logmsg("Got: Fit for '%s' uniform prior over %lg to %lg",psr->param[thelab].shortlabel[k],centre-halfrange,centre+halfrange);
             }
-            if (strncasecmp(keyword2,"chol",4) == 0){
-                // cholesky fit
-                fscanf(infile,"%s %lg %lg",keyword3, &centre,&halfrange);
-                mjkparam p(FITTYPE_CHOL,param_LAST,0,centre,halfrange);
-                if(strcasecmp(keyword3,"amp")==0) {
-                    p.fitk=FITTYPE_CHOL_K_AMP;
-                    logmsg("Got: Fit for DCF[log(amp)], uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+            if (strncasecmp(keyword2,"cov",4) == 0){
 
-                } else if(strcasecmp(keyword3,"fc")==0) {
-                    p.fitk=FITTYPE_CHOL_K_FC;
-                    logmsg("Got: Fit for DCF[fc], uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                fscanf(infile,"%s",keyword3);
+                char dat[1024];
+                char* txt = fgets(dat,1024,infile);
 
-                } else if(strcasecmp(keyword3,"alpha")==0) {
-                    p.fitk=FITTYPE_CHOL_K_ALPHA;
-                    logmsg("Got: Fit for DCF[alpha] uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
-
-                } else {
-                    logerr("invalid chol keyword '%s'",keyword3);
-                    exit(1);
+                int ii=0;
+                while(txt!=NULL){
+                    mjkparam p(FITTYPE_CVM,param_LAST,ii);
+                    p.txt = std::string(keyword3);
+                    txt = p.parseScaleoffset(txt);
+                    if (txt!=NULL){
+                        data->params.push_back(p);
+                        logmsg("%s",p.fitdesc(psr).c_str());
+                        ++ii;
+                    }
                 }
-                data->params.push_back(p);
+
+                for (int i=0; i < ii; ++i){
+                    (data->params.end()-i-1)->fitk=ii;
+                }
+
             }
             if (strncasecmp(keyword2,"binary",6) == 0){
                 fscanf(infile,"%s %lg %lg",keyword3, &centre,&halfrange);

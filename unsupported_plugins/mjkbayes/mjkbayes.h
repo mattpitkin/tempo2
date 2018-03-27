@@ -3,14 +3,10 @@
 #include <string>
 
 #define FITTYPE_PARAM 0
-#define FITTYPE_CHOL 1
+#define FITTYPE_CVM 1
 #define FITTYPE_EFAC 2
 #define FITTYPE_EQUAD 3
 #define FITTYPE_BIN 4
-
-#define FITTYPE_CHOL_K_AMP 0
-#define FITTYPE_CHOL_K_ALPHA 1
-#define FITTYPE_CHOL_K_FC 2
 
 #define FITTYPE_BIN_K_ASINI 11
 #define FITTYPE_BIN_K_M2    12
@@ -28,15 +24,74 @@ class mjkparam {
                fitlabel(fitlabel),
                fitk(fitk),
                fitscale(halfrange),
-               fitoffset(centre) {
+               fitoffset(centre),
+               exp(false) {
                }
         mjkparam(int fittype, label fitlabel, int fitk) : 
             fittype(fittype),
                fitlabel(fitlabel),
                fitk(fitk),
                fitscale(0),
-               fitoffset(0) {
+               fitoffset(0),
+               exp(false) {
                }
+
+        char* parseScaleoffset(char* string){
+            while(string[0] != '\0' && isspace(string[0])){
+                ++string;
+            }
+            if (string[0]=='\0') return 0;
+            if (string[0]=='^') {
+                exp=true;
+                ++string;
+            }
+            if (string[0]=='\0') return 0;
+            if (string[0]=='[') {
+                ++string;
+                // start and finish values
+                int end=strlen(string);
+                for (int i=0; i < end; ++i) {
+                    if (string[i]==']'){
+                        string[i]='\0';
+                        end=i+1;
+                        break;
+                    }
+                }
+                double start,fin;
+                sscanf(string,"%lg %lg",&start,&fin);
+                fitscale = (fin-start)/2.0;
+                fitoffset = (fin+start)/2.0;
+                string += end;
+                return string;
+            }
+            if (string[0]=='(') {
+                // centre and half-range
+                int end=strlen(string);
+                for (int i=0; i < end; ++i) {
+                    if (string[i]==')'){
+                        end=i+1;
+                        string[i]='\0';
+                        break;
+                    }
+                }
+                sscanf(string,"%lg %lg",&fitoffset,&fitscale);
+                string += end;
+                return string;
+            }
+
+        }
+
+        std::string fitdesc(const pulsar* psr) const {
+            std::stringstream ss;
+            if (exp) {
+                ss << "log("<<shortlabel(psr) << ")";
+            }else{
+                ss << shortlabel(psr);
+            }
+            ss << " from " << fitoffset-fitscale << " to " << fitoffset+fitscale << "\n";
+            return ss.str();
+
+        }
 
         std::string shortlabel(const pulsar* psr) const {
             switch(fittype) {
@@ -58,17 +113,8 @@ class mjkparam {
                             return "bin_M1";
                     }
                     break;
-                case FITTYPE_CHOL:
-                    switch(fitk){
-                        case FITTYPE_CHOL_K_ALPHA:
-                            return "CHOL_alpha";
-                        case FITTYPE_CHOL_K_AMP:
-                            return "CHOL_log(amp)";
-                        case FITTYPE_CHOL_K_FC:
-                            return "CHOL_fc";
-                    }
-
-                    break;
+                case FITTYPE_CVM:
+                    return txt;
                 case FITTYPE_EFAC:
                     return "EFAC";
                 case FITTYPE_EQUAD:
@@ -84,8 +130,10 @@ class mjkparam {
         double fitscale;
         double fitoffset;
         char* flagmask;
+        bool exp;
         std::string flagid;
         std::string flagval;
+        std::string txt;
 };
 
 struct mjkcontext {
