@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <sstream>
+#include <fstream>
 #include <ctype.h>
 #include <math.h>
 #include "TKlongdouble.h"
@@ -10,6 +13,9 @@
 #include "cholesky.h"
 
 #define LINE_LENGTH 2048
+
+void cholesky_readT2Model2(double **m, std::stringstream &ss ,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
+void cholesky_readT2Model1(double **m, std::stringstream &ss,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
 
 /*
  * Derive a covariance matrix from the given filename.
@@ -76,11 +82,6 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
         logdbg("Reading covariance function using 'PSRJ' is now depricated");
         sprintf(modelFileName,"covarFunc.dat_%s",psr->name);
         cholesky_readFromCovarianceFunction(m,modelFileName,resx,resy,rese,np,nc);
-    } else if (strcmp(fname,"TNPARAM")==0){
-        double alpha=psr->TNRedGam;
-        double amp=psr->TNRedAmp;
-        double fc = psr->TNRedCorner;
-        cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
     } else {
         cholesky_readT2CholModel(m,fname,resx,resy,rese,np,nc,ip,psr);
     }
@@ -162,18 +163,21 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
     char val[LINE_LENGTH];
     char dmy[LINE_LENGTH];
     char key[LINE_LENGTH];
-    char line[LINE_LENGTH];
     char psrJ[LINE_LENGTH];
     double mjd_start=_mjd_start;
     double mjd_end=_mjd_end;
 
 
+    std::stringstream content;
+
     bool first=true;
 
-    FILE* infile=fopen(fname,"r");
-    if (!infile) {
-        logerr("could not read file '%s'",fname);
-        exit(1);
+    if (strncmp(fname,"MODEL",5)==0){
+        content << std::string(fname);
+    } else {
+        std::ifstream file(fname);
+        content << file.rdbuf();
+        file.close();
     }
 
     recursion+=1;
@@ -181,13 +185,13 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
 
     strcpy(psrJ,_psrJ);
 
-    while(!feof(infile)){
-        char* tmp=fgets(line,LINE_LENGTH,infile);
+    std::string line;
+    while(std::getline(content,line)){
+        const char* tmp = line.c_str();
         if (first){
             //if the first character in the file is a numeric digit, assume that we have a DCF file.
             if(isdigit(tmp[0])){
                 // assume that we have 
-                fclose(infile);
                 cholesky_readFromCovarianceFunction(m,fname,resx,resy,rese,np,nc);
                 return;
             } else{
@@ -195,85 +199,80 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
             }
             first=false;
         }
-        if (tmp==line){
-            while(tmp[0]==' ' || tmp[0]=='\t')tmp++;
-            if (tmp[0]=='#') continue;
-            int ok=sscanf(tmp,"%s",key);
-            if (ok==-1)continue;
-            logdbg("key[%d]: %s ('%s' '%s')\n",recursion,key,psrJ,psr->name);
+        while(tmp[0]==' ' || tmp[0]=='\t')tmp++;
+        if (tmp[0]=='#') continue;
+        int ok=sscanf(tmp,"%s",key);
+        if (ok==-1)continue;
+        logdbg("key[%d]: %s ('%s' '%s')\n",recursion,key,psrJ,psr->name);
 
-            // now test what the keyword is...
-            //
-            if (strcmp(key,"CLEAR")==0 || strcmp(key,"END")==0){
-                psrJ[0]='\0';
-                mjd_start=0.0;
-                mjd_end=99999.0;
+        // now test what the keyword is...
+        //
+        if (strcmp(key,"CLEAR")==0 || strcmp(key,"END")==0){
+            psrJ[0]='\0';
+            mjd_start=0.0;
+            mjd_end=99999.0;
+            continue;
+        }
+
+        if (strcmp(key,"PSR")==0){
+            sscanf(tmp,"%s %s",dmy,psrJ);
+        }
+
+        if(psrJ[0]!='\0' && strcmp(psrJ,psr->name))continue;
+        if (strcmp(key,"MJD")==0){
+            sscanf(tmp,"%s %lf %lf",dmy,&mjd_start,&mjd_end);
+        }
+        if (strcmp(key,"INCLUDE")==0){
+            sscanf(tmp,"%s %s",dmy,val);
+            cholesky_readT2CholModel_R(m,mm,val,resx,resy,rese,np,nc,ip,psr,psrJ,mjd_start,mjd_end,recursion);
+        }
+        if (strcmp(key,"DCF")==0){
+            sscanf(tmp,"%s %s",dmy,val);
+            cholesky_readFromCovarianceFunction(mm,val,resx,resy,rese,np,nc);
+            addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+        }
+        else if (strcmp(key,"ECM")==0){ // Extra covariance matrix
+            sscanf(tmp,"%s %s",dmy,val);
+            cholesky_ecm(mm,val,resx,resy,rese,np,nc);
+            addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+        }
+
+        if (strcmp(key,"MODEL")==0){
+            sscanf(tmp,"%s %s",dmy,val);
+            if (strcmp(val,"T2PowerLaw")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
+                cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if(strcmp(val,"DM")==0){
+                double D,d,ref_freq;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&D,&d,&ref_freq);
+                cholesky_dmModel(mm,D,d,ref_freq,resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if(strcmp(val,"DMCovarParam")==0){ // Added by Daniel Reardon and George Hobbs
+                double alpha,a,b;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&a,&b);
+                cholesky_dmModelCovarParam(mm,alpha,a,b,resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"1")==0){
+                cholesky_readT2Model1(mm,content,resx,resy,rese,np,nc,ip,psr);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"2")==0){
+                cholesky_readT2Model2(mm,content,resx,resy,rese,np,nc,ip,psr);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2")==0){
                 continue;
             }
-
-            if (strcmp(key,"PSR")==0){
-                sscanf(tmp,"%s %s",dmy,psrJ);
-            }
-
-            if(psrJ[0]!='\0' && strcmp(psrJ,psr->name))continue;
-            if (strcmp(key,"MJD")==0){
-                sscanf(tmp,"%s %lf %lf",dmy,&mjd_start,&mjd_end);
-            }
-            if (strcmp(key,"INCLUDE")==0){
-                sscanf(tmp,"%s %s",dmy,val);
-                cholesky_readT2CholModel_R(m,mm,val,resx,resy,rese,np,nc,ip,psr,psrJ,mjd_start,mjd_end,recursion);
-            }
-            if (strcmp(key,"DCF")==0){
-                sscanf(tmp,"%s %s",dmy,val);
-                cholesky_readFromCovarianceFunction(mm,val,resx,resy,rese,np,nc);
-                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-            }
-            else if (strcmp(key,"ECM")==0){ // Extra covariance matrix
-                sscanf(tmp,"%s %s",dmy,val);
-                cholesky_ecm(mm,val,resx,resy,rese,np,nc);
-                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-            }
-
-            if (strcmp(key,"MODEL")==0){
-                sscanf(tmp,"%s %s",dmy,val);
-                if (strcmp(val,"T2PowerLaw")==0){
-                    double alpha,amp,fc;
-                    sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
-                    cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if(strcmp(val,"DM")==0){
-                    double D,d,ref_freq;
-                    sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&D,&d,&ref_freq);
-                    cholesky_dmModel(mm,D,d,ref_freq,resx, resy,rese,np, nc);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if(strcmp(val,"DMCovarParam")==0){ // Added by Daniel Reardon and George Hobbs
-                    double alpha,a,b;
-                    sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&a,&b);
-                    cholesky_dmModelCovarParam(mm,alpha,a,b,resx, resy,rese,np, nc);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if (strcmp(val,"1")==0){
-                    cholesky_readT2Model1(mm,infile,resx,resy,rese,np,nc,ip,psr);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if (strcmp(val,"2")==0){
-                    cholesky_readT2Model2(mm,infile,resx,resy,rese,np,nc,ip,psr);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if (strcmp(val,"T2")==0){
-                    continue;
-                }
-                logerr("Model type '%s' not understood",val);
-                exit(1);
-            }
-        } else {
-            break;
+            logerr("Model type '%s' not understood",val);
+            exit(1);
         }
 
     }
-    fclose(infile);
 
 }
 
@@ -483,27 +482,37 @@ int cholesky_formUinv(double **uinv,double** m,int np){
 
 
 
-void cholesky_readT2Model1(double **m, FILE* file,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
+void cholesky_readT2Model1(double **m, std::stringstream &ss,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
     char dmy[LINE_LENGTH];
     double alpha;
     double fc;
     double amp;
-    fscanf(file,"%s %lg\n",dmy,&alpha);
-    fscanf(file,"%s %lg\n",dmy,&fc);
-    fscanf(file,"%s %lg\n",dmy,&amp);
+    std::string s;
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&alpha);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&fc);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&amp);
     cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
 }
 
-void cholesky_readT2Model2(double **m, FILE* file,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
+void cholesky_readT2Model2(double **m, std::stringstream &ss ,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
     char dmy[LINE_LENGTH];
     double alpha;
     double beta;
     double fc;
     double amp;
-    fscanf(file,"%s %lg\n",dmy,&alpha);
-    fscanf(file,"%s %lg\n",dmy,&beta);
-    fscanf(file,"%s %lg\n",dmy,&fc);
-    fscanf(file,"%s %lg\n",dmy,&amp);
+
+    std::string s;
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&alpha);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&beta);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&fc);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&amp);
     cholesky_powerlawModel_withBeta(m,alpha,beta,fc,amp, resx, resy,rese,np, nc);
 }
 

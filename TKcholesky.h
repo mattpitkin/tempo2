@@ -14,8 +14,6 @@ extern "C" {
 
 #ifdef __Tempo2_h
     void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip);
-    void cholesky_readT2Model1(double **m, FILE* file,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
-    void cholesky_readT2Model2(double **m, FILE* file,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
     void cholesky_readT2CholModel(double **m, const char* fname,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
     void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr,double mjd_start,double mjd_end);
 #endif
