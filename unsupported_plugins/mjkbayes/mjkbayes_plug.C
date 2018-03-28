@@ -487,13 +487,15 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
     char keyword3[maxlen];
     char flag[maxlen];
     char flagval[maxlen];
-    double centre=0;
-    double halfrange=1;
     bool havewhite=false;
     int k=0;
     while (!feof(infile)){
         int read = fscanf(infile,"%s",keyword);
         if (read<=0)continue;
+        if (keyword[0] =='#'){
+            fgets(line,1024,infile);
+            continue;
+        }
         logmsg("Read keyword '%s'",keyword);
         if (strncasecmp(keyword,"xtra",4) == 0){
             fscanf(infile,"%s",keyword2);
@@ -533,7 +535,7 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
             }
             if (strncasecmp(keyword2,"param",5) == 0){
                 // parameter fit
-                fscanf(infile,"%s %lg %lg",keyword3, &centre,&halfrange);
+                fscanf(infile,"%s",keyword3);
                 int thelab=-1;
                 for(int param=0; param < param_LAST; ++param){
                     for (int ik=0; ik < psr->param[param].aSize; ++ik)
@@ -548,21 +550,28 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
                     exit(1);
                 }
 
+                fscanf(infile,"%s",keyword3);
+                char dat[1024];
+                char* txt = fgets(dat,1024,infile);
+
+                mjkparam p(FITTYPE_PARAM,(label)thelab,k);
+                txt = p.parseScaleoffset(txt);
+
                 // we are going to search over this parameter, so disable fitting.
                 psr->param[thelab].paramSet[k]=1;
-                psr->param[thelab].val[k] = centre;
+                psr->param[thelab].val[k] = p.fitoffset;
                 psr->param[thelab].fitFlag[k]=0;
 
-                data->params.emplace_back(FITTYPE_PARAM,(label)thelab,k,centre,halfrange);
+                // add the parameter to the params list.
+                data->params.push_back(p);
 
-                logmsg("Got: Fit for '%s' uniform prior over %lg to %lg",psr->param[thelab].shortlabel[k],centre-halfrange,centre+halfrange);
+                logmsg("%s",p.fitdesc(psr).c_str());
             }
             if (strncasecmp(keyword2,"cov",4) == 0){
 
                 fscanf(infile,"%s",keyword3);
                 char dat[1024];
                 char* txt = fgets(dat,1024,infile);
-
                 int ii=0;
                 while(txt!=NULL){
                     mjkparam p(FITTYPE_CVM,param_LAST,ii);
@@ -581,8 +590,7 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
 
             }
             if (strncasecmp(keyword2,"binary",6) == 0){
-                fscanf(infile,"%s %lg %lg",keyword3, &centre,&halfrange);
-                mjkparam p(FITTYPE_BIN,param_LAST,0,centre,halfrange);
+                fscanf(infile,"%s",keyword3);
 
                 psr->param[param_pb].paramSet[0]=1;
                 psr->param[param_pb].fitFlag[0]=0;
@@ -609,44 +617,70 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
                 psr->param[param_sini].paramSet[0]=1;
                 psr->param[param_sini].fitFlag[0]=0;
 
+
+                char dat[1024];
+                char* txt = fgets(dat,1024,infile);
+
+                mjkparam p(FITTYPE_BIN,param_LAST,0);
+                txt = p.parseScaleoffset(txt);
+
                 if(strcasecmp(keyword3,"asini")==0) {
                     p.fitk=FITTYPE_BIN_K_ASINI;
-                    logmsg("Got: Fit for binary asin(i), uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                    //logmsg("Got: Fit for binary asin(i), uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
                 }else if(strcasecmp(keyword3,"m2")==0) {
                     p.fitk=FITTYPE_BIN_K_M2;
-                    logmsg("Got: Fit for binary M2, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                    //logmsg("Got: Fit for binary M2, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
                 } else if(strcasecmp(keyword3,"ecc")==0) {
                     p.fitk=FITTYPE_BIN_K_ECC;
-                    logmsg("Got: Fit for binary ECC, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                    //logmsg("Got: Fit for binary ECC, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
                 } else if(strcasecmp(keyword3,"pb")==0) {
                     p.fitk=FITTYPE_BIN_K_PB;
-                    logmsg("Got: Fit for binary pb, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
+                    //logmsg("Got: Fit for binary pb, uniform prior over %lg to %lg",centre-halfrange,centre+halfrange);
                 } else if(strcasecmp(keyword3,"inc")==0) {
                     p.fitk = FITTYPE_BIN_K_INC;
-                    logmsg("Got: Fit for binary inclination, sin(i) prior over %lg to %lg deg",centre-halfrange,centre+halfrange);
+                    //logmsg("Got: Fit for binary inclination, sin(i) prior over %lg to %lg deg",centre-halfrange,centre+halfrange);
                 }
+                // add the parameter to the params list.
                 data->params.push_back(p);
+
+                logmsg("%s",p.fitdesc(psr).c_str());
+
+
             }
             if (strncasecmp(keyword2,"white",5) == 0){
                 // white noise
                 havewhite=true;
                 fscanf(infile,"%s",keyword3);
                 if (strncasecmp(keyword3,"efac",8) == 0){
-                    fscanf(infile,"%s %s %lg %lg",flag,flagval,&centre,&halfrange);
-                    mjkparam p(FITTYPE_EFAC,param_LAST,0,centre,halfrange);
+                    fscanf(infile,"%s %s",flag,flagval);
+                    mjkparam p(FITTYPE_EFAC,param_LAST,0);
+
+                    char dat[1024];
+                    char* txt = fgets(dat,1024,infile);
+
+                    txt = p.parseScaleoffset(txt);
+
                     p.flagmask = mjkbayesflagmask(psr,flag,flagval);
                     p.flagid = std::string(flag);
                     p.flagval = std::string(flagval);
                     data->params.push_back(p);
-                    logmsg("Got: Fit for EFAC (%s %s), uniform prior over %lg to %lg",flag,flagval,centre-halfrange,centre+halfrange);
+                    //logmsg("Got: Fit for EFAC (%s %s), uniform prior over %lg to %lg",flag,flagval,centre-halfrange,centre+halfrange);
+                    logmsg("%s",p.fitdesc(psr).c_str());
+
                 } else if (strncasecmp(keyword3,"equad",8) == 0){
-                    fscanf(infile,"%s %s %lg %lg",flag,flagval,&centre,&halfrange);
-                    mjkparam p(FITTYPE_EQUAD,param_LAST,0,centre,halfrange);
+                    fscanf(infile,"%s %s",flag,flagval);
+                    mjkparam p(FITTYPE_EQUAD,param_LAST,0);
+                    char dat[1024];
+                    char* txt = fgets(dat,1024,infile);
+
+                    txt = p.parseScaleoffset(txt);
+
                     p.flagmask = mjkbayesflagmask(psr,flag,flagval);
                     p.flagid = std::string(flag);
                     p.flagval = std::string(flagval);
                     data->params.push_back(p);
-                    logmsg("Got: Fit for EQUAD (%s %s), uniform prior over %lg to %lg",flag,flagval,centre-halfrange,centre+halfrange);
+                    //logmsg("Got: Fit for EQUAD (%s %s), uniform prior over %lg to %lg",flag,flagval,centre-halfrange,centre+halfrange);
+                    logmsg("%s",p.fitdesc(psr).c_str());
                 }
             }
         }

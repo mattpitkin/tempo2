@@ -65,6 +65,7 @@ class mjkparam {
                 return string;
             }
             if (string[0]=='(') {
+                ++string;
                 // centre and half-range
                 int end=strlen(string);
                 for (int i=0; i < end; ++i) {
