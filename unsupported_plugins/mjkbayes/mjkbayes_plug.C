@@ -283,6 +283,7 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
                 }
                 ++i;
             }
+            --i;
             model << "\n";
         } else if(p->fittype == FITTYPE_EFAC){
             errorsChanged=true;
@@ -583,6 +584,8 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
                         ++ii;
                     }
                 }
+
+                logmsg("Got %d cov parameters for %s",ii,keyword3);
 
                 for (int i=0; i < ii; ++i){
                     (data->params.end()-i-1)->fitk=ii;
