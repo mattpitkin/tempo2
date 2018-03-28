@@ -17,6 +17,9 @@
 void cholesky_readT2Model2(double **m, std::stringstream &ss ,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
 void cholesky_readT2Model1(double **m, std::stringstream &ss,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
 
+void cholesky_sqexp_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc);
+void cholesky_matern15_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc);
+void cholesky_matern25_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc);
 void cholesky_cov2dm(double **mm, pulsar *psr, int *ip,int np,int nc);
 
 /*
@@ -251,6 +254,45 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
                 double alpha,amp,fc;
                 sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
                 cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2SqExpDM")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_sqexp_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2SqExp")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_sqexp_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2Matern1.5")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_matern15_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2Matern1.5DM")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_matern15_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2Matern2.5")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_matern25_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2Matern2.5DM")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_matern25_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
                 cholesky_cov2dm(mm,psr,ip,np,nc);
                 addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
                 continue;
@@ -707,6 +749,91 @@ void cholesky_dmModel(double **m, double D_d, double d, double ref_freq,double *
     cholesky_powerlawModel(m,alpha,fc,pism,resx,resy,rese,np,nc);
 
 }
+
+void cholesky_matern15_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc){
+
+    int ndays;
+    double *covarFunc;
+    logmsg("Generate covar matrix from Matern Kernel model (A=%lg sigma=%lf nu=1.5) (np=%d, nc=%d)",modelA,modelSigma,np,nc);
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+
+    double x;
+    double k1 = sqrt(3.0)/modelSigma;
+    for (int i=0; i <= ndays ; ++i){
+        x=i;
+        covarFunc[i] = modelA*(1.0 + k1*x) * exp(-x*k1);
+    }
+
+    if(debugFlag){
+        FILE* outFile = fopen("newDCF","w");
+        for(int i=0;i<ndays;i++){
+            fprintf(outFile,"%lg\n",covarFunc[i]);
+        }
+        fclose(outFile);
+    }
+
+    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+    free(covarFunc);
+}
+void cholesky_matern25_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc){
+
+    int ndays;
+    double *covarFunc;
+    logmsg("Generate covar matrix from Matern Kernel model (A=%lg sigma=%lf nu=2.5) (np=%d, nc=%d)",modelA,modelSigma,np,nc);
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+
+    double x;
+    double k1 = sqrt(5.0)/modelSigma;
+    double k2 = 5.0/modelSigma/modelSigma/3.0;
+    for (int i=0; i <= ndays ; ++i){
+        x=i;
+        covarFunc[i] = modelA*(1.0 + k1*x + k2*x*x) * exp(-x*k1);
+    }
+
+    if(debugFlag){
+        FILE* outFile = fopen("newDCF","w");
+        for(int i=0;i<ndays;i++){
+            fprintf(outFile,"%lg\n",covarFunc[i]);
+        }
+        fclose(outFile);
+    }
+
+    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+    free(covarFunc);
+}
+
+
+
+void cholesky_sqexp_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc){
+
+    int ndays;
+    double *covarFunc;
+    logmsg("Generate covar matrix from Square Exponential model (A=%lg sigma=%lf) (np=%d, nc=%d)",modelA,modelSigma,np,nc);
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+
+    double x;
+    double K = 1.0/(2.*modelSigma*modelSigma);
+    for (int i=0; i <= ndays ; ++i){
+        x=i;
+        covarFunc[i] = modelA*exp(-x*x*K);
+    }
+
+    if(debugFlag){
+        FILE* outFile = fopen("newDCF","w");
+        for(int i=0;i<ndays;i++){
+            fprintf(outFile,"%lg\n",covarFunc[i]);
+        }
+        fclose(outFile);
+    }
+
+    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+    free(covarFunc);
+}
+
+
 
 void cholesky_powerlawModel(double **m, double modelAlpha, double modelFc, double modelA,double *resx,double *resy,double *rese,int np, int nc){
 

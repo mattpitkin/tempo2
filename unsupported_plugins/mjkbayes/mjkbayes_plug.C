@@ -551,7 +551,6 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
                     exit(1);
                 }
 
-                fscanf(infile,"%s",keyword3);
                 char dat[1024];
                 char* txt = fgets(dat,1024,infile);
 
