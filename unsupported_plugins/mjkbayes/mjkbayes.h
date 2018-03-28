@@ -79,13 +79,18 @@ class mjkparam {
                 string += end;
                 return string;
             }
+            if (isdigit(string[0])) {
+                // simple centre and half-range
+                sscanf(string,"%lg %lg",&fitoffset,&fitscale);
+                return 0;
+            }
 
         }
 
         std::string fitdesc(const pulsar* psr) const {
             std::stringstream ss;
             if (exp) {
-                ss << "log("<<shortlabel(psr) << ")";
+                ss << "log("<< shortlabel(psr) << ")";
             }else{
                 ss << shortlabel(psr);
             }

@@ -17,6 +17,8 @@
 void cholesky_readT2Model2(double **m, std::stringstream &ss ,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
 void cholesky_readT2Model1(double **m, std::stringstream &ss,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
 
+void cholesky_cov2dm(double **mm, pulsar *psr, int *ip,int np,int nc);
+
 /*
  * Derive a covariance matrix from the given filename.
  *
@@ -245,7 +247,15 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
                 cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
                 addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
                 continue;
+            } else if (strcmp(val,"T2PowerLawDM")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
+                cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
             } else if(strcmp(val,"DM")==0){
+
                 double D,d,ref_freq;
                 sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&D,&d,&ref_freq);
                 cholesky_dmModel(mm,D,d,ref_freq,resx, resy,rese,np, nc);
@@ -702,7 +712,7 @@ void cholesky_powerlawModel(double **m, double modelAlpha, double modelFc, doubl
 
     int ndays,i;
     double *covarFunc;
-    logmsg("Generate covar matrix from powerlaw model (a=%lf fc=%lf A=%lg)",modelAlpha,modelFc,modelA);
+    logmsg("Generate covar matrix from powerlaw model (a=%lf fc=%lf A=%lg) (np=%d, nc=%d)",modelAlpha,modelFc,modelA,np,nc);
     ndays=ceil((resx[np-1])-(resx[0])+1e-10);
     covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
     int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,0,0,covarFunc,resx,resy,rese,np);
@@ -742,4 +752,18 @@ void cholesky_powerlawModel_withBeta(double **m, double modelAlpha, double model
 
     cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
     free(covarFunc);
+}
+
+
+// this could be made more efficient!
+void cholesky_cov2dm(double **mm, pulsar *psr, int *ip,int np,int nc){
+    for (int i = 0; i < np; ++i){
+        double f1 = psr->obsn[ip[i]].freq;
+        double g1 = 1.0/(DM_CONST*f1*f1);
+        for (int j = 0; j < np; ++j){
+            double f2 = psr->obsn[ip[j]].freq;
+            double g2 = 1.0/(DM_CONST*f2*f2);
+            mm[i][j] *= g1*g2;
+        }
+    }
 }
