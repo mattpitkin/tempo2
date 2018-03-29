@@ -202,6 +202,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nTNShapeletEvents=0;
     psr->sorted=0;
     psr->detUinv=0;
+    psr->dmoffs_fills_TN=0;
     allocateMemory(psr,0);
     /*  psr->param[param_track].paramSet[0]=1;
         psr->param[param_track].val[0]=0.0;
@@ -588,6 +589,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         strcpy(psr->param[param_sxer].shortlabel[k],temp);
       }
         
+        for (k=0; k < MAX_PARAMS; ++k){
+            psr->constraint_special[k]=0;
+        }
 
 }
 
@@ -664,6 +668,14 @@ void destroyOne (pulsar *psr)
         free (psr->obsn);
 
     free_blas(psr->covar);
+
+    for (int k=0; k < MAX_PARAMS; ++k){
+        if(psr->constraint_special[k]){
+            free(psr->constraint_special[k]);
+        }
+    }
+
+
 
     destroyMemory(psr);
 }

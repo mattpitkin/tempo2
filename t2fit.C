@@ -3,11 +3,13 @@
 #include "t2fit_nestlike.h"
 #include "constraints.h"
 #include "constraints_nestlike.h"
+#include "constraints_covar.h"
 #include <TKfit.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <enum_str.h>
+#include <vector>
 
 
 
@@ -516,13 +518,13 @@ void t2fit_prefit(pulsar* psr, int npsr){
          * Temponest parameters write random crap to the observation struct.
          * So we should clear them first or it will just do weird stuff.
          */
-        if (psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) {
+        if ((psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) || psr[ipsr].dmoffs_fills_TN) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 if(psr[0].TNsubtractRed==0)psr[ipsr].obsn[iobs].TNRedSignal = 0;
                 psr[ipsr].obsn[iobs].TNRedErr = 0;
             }
         }
-        if (psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) {
+        if ((psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) || psr[ipsr].dmoffs_fills_TN) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNDMErr = 0;
             }
@@ -541,12 +543,13 @@ void t2fit_postfit(pulsar* psr, int npsr){
      * Need to squareroot the TN error bars.
      */
     for (int ipsr = 0; ipsr < npsr; ++ipsr){
-        if (psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) {
+        if ((psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) || psr[ipsr].dmoffs_fills_TN) {
+
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNRedErr = sqrt(psr[ipsr].obsn[iobs].TNRedErr);
             }
         }
-        if (psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) {
+        if ((psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) || psr[ipsr].dmoffs_fills_TN) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNDMErr = sqrt(psr[ipsr].obsn[iobs].TNDMErr);
             }
@@ -645,7 +648,7 @@ void t2Fit_buildConstraintsMatrix(pulsar* psr,int ipsr, int iconstraint, double*
     for (unsigned int ifit = 0; ifit < fitinfo->nParams; ifit++){
         param_label p_label= fitinfo->paramIndex[ifit];
         // call the function allocated to this constraint
-        afunc[ifit] = func(psr,ipsr,c_label,p_label,fitinfo->constraintCounters[iconstraint],fitinfo->paramCounters[ifit]);
+        afunc[ifit] = func(psr,ipsr,c_label,p_label,fitinfo->constraintCounters[iconstraint],fitinfo->paramCounters[ifit],fitinfo->constraintSpecial[iconstraint]);
     }
 }
 
@@ -695,13 +698,55 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
     OUT.updateFunctions[0]=t2UpdateFunc_zero;
     OUT.paramIndex[0]=param_ZERO;
 
+    // reset the determinant for Binv. This is actually a log, but I think it will eventually just
+    // multiply things by 1 if left at zero.
+    psr->detBinv = 0; 
     /*
      * these are the "classical" tempo2 constraints.
      */
     for (int i=0;i<psr->nconstraints;++i) {
         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
         OUT.constraintCounters[OUT.nConstraints]=0;
-        switch(psr->constraints[i]){
+        switch (psr->constraints[i]) {
+            case constraint_dmmodel_cmcov:
+                {
+                    // we need to make Binv.
+                    int nCM = psr->dmoffsCMnum;
+                    // the matrix won't invert without something on the diagonal. Put 0.1 ns for now
+                    std::vector<double> etmp(nCM,1e-10); 
+                    // TODO: IMPORTANT! need to find a way to free this!
+                    // MJK 2018 - I am making a memory leak here...
+                    double** Binv = malloc_uinv(nCM);
+                    getCholeskyMatrix(Binv,psr->constraint_special[i],psr, psr->dmoffsCM_mjd,psr->dmoffsCM,&etmp[0], nCM,0,NULL);
+                    psr->detBinv += psr->detUinv;
+                    for (int i=0; i < nCM; ++i) {
+                        OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
+                        OUT.constraintCounters[OUT.nConstraints]=i;
+                        OUT.constraintSpecial[OUT.nConstraints] = (void*)Binv[i];
+                        OUT.constraintDerivs[OUT.nConstraints] = constraints_covar_dmmodel_cm;
+                        ++OUT.nConstraints;
+                    }
+                    break;
+                }
+            case constraint_dmmodel_dmcov:
+                {
+                    // we need to make Binv.
+                    int nDM = psr->dmoffsDMnum;
+                    // the matrix won't invert without something on the diagonal. Put 1e-6 cm-3pc for now.
+                    std::vector<double> etmp(nDM,1e-6);
+                    double** Binv = malloc_uinv(nDM);
+                    getCholeskyMatrix(Binv,psr->constraint_special[i],psr, psr->dmoffsDM_mjd,psr->dmoffsDM,&etmp[0], nDM,0,NULL);
+                    
+                    for (int i=0; i < nDM; ++i) {
+                        OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
+                        OUT.constraintCounters[OUT.nConstraints]=i;
+                        OUT.constraintSpecial[OUT.nConstraints] = (void*)Binv[i];
+                        OUT.constraintDerivs[OUT.nConstraints] = constraints_covar_dmmodel_dm;
+                        ++OUT.nConstraints;
+                    }
+                    break;
+                }
+
             default:
                 // this is a quick fix to avoid re-writing code.
                 OUT.constraintDerivs[OUT.nConstraints] = standardConstraintFunctions;

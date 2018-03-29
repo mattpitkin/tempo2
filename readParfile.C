@@ -782,6 +782,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         readValue(psr,str,fin,&(psr->param[param_dmmodel]),0);
         psr->dmoffsCMnum=0;
         psr->dmoffsDMnum=0;
+        psr->dmoffs_fills_TN=1;
     }
     //  else if (strstr(str,"DMVAL")!=NULL || strstr(str,"dmval")!=NULL)
     else if (strcasecmp(str,"DMOFF")==0)
@@ -856,114 +857,132 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         char cname[1024];
         fscanf(fin, "%s",cname);
 
-        if((strcasecmp(cname,"AUTO")==0)){
-            psr->auto_constraints=1;
-        }
-        /*
-         * Constraints for DMMODEL.
-         * The DMMODEL constraint affects 4 constraints.
-         */
-        if((strcasecmp(cname,"DMMODEL_X")==0)){
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
-        }
-        if((strcasecmp(cname,"DMMODEL_DM1")==0)){
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_dm1;
-        }
-        if((strcasecmp(cname,"DMMODEL_CUBIC")==0)){
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_3;
-        }
-        if((strcasecmp(cname,"DMMODEL_PX")==0)){
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_px;
-        }
+         if((strcasecmp(cname,"DMMODEL_CMCOV")==0)){
+             // read the line into the special constraint
+             char* txt = fgets(cname, 1024,fin);
+             psr->constraints[psr->nconstraints] = constraint_dmmodel_cmcov;
+             psr->constraint_special[psr->nconstraints] = (char*)malloc(strlen(txt)+2);
+             strcpy(psr->constraint_special[psr->nconstraints],txt);
+             psr->constraint_special[psr->nconstraints][strlen(txt)]='\n';
+             psr->nconstraints++;
+             
+         } else if ((strcasecmp(cname,"DMMODEL_DMCOV")==0)){
+             char* txt = fgets(cname, 1024,fin);
+             psr->constraints[psr->nconstraints] = constraint_dmmodel_dmcov;
+             psr->constraint_special[psr->nconstraints] = (char*)malloc(strlen(txt));
+             strcpy(psr->constraint_special[psr->nconstraints],txt);
+             psr->nconstraints++;
 
-        if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_OLD")==0)
-                || strcasecmp(cname,"DMMODEL_DM1")==0){
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_1;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_2;
-        }
-        if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_YEAR")==0)
-                || strcasecmp(cname,"DMMODEL_DM1")==0){
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xsin;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xcos;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos2;
-            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin2;
-            //	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_px;
-        }
+         } else {
+             if((strcasecmp(cname,"AUTO")==0)){
+                 psr->auto_constraints=1;
+             }
+             /*
+              * Constraints for DMMODEL.
+              * The DMMODEL constraint affects 4 constraints.
+              */
+             if((strcasecmp(cname,"DMMODEL_X")==0)){
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
+             }
+             if((strcasecmp(cname,"DMMODEL_DM1")==0)){
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_dm1;
+             }
+             if((strcasecmp(cname,"DMMODEL_CUBIC")==0)){
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_3;
+             }
+             if((strcasecmp(cname,"DMMODEL_PX")==0)){
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_px;
+             }
 
-        if(strcasecmp(cname,"IFUNC_ONLYF0F1")==0){
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
-        }
+             if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_OLD")==0)
+                     || strcasecmp(cname,"DMMODEL_DM1")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_1;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_2;
+             }
+             if((strcasecmp(cname,"DMMODEL")==0)  || (strcasecmp(cname,"DMMODEL_YEAR")==0)
+                     || strcasecmp(cname,"DMMODEL_DM1")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xsin;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_xcos;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_cos2;
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_year_sin2;
+                 //	      psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_px;
+             }
 
-        if(strcasecmp(cname,"IFUNC_ONLYPHI0")==0){
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
-        }
+             if(strcasecmp(cname,"IFUNC_ONLYF0F1")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
+             }
 
-        if(strcasecmp(cname,"IFUNC")==0){
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xsin;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xcos;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin2;
-            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos2;
+             if(strcasecmp(cname,"IFUNC_ONLYPHI0")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+             }
 
-        }
-        if(strcasecmp(cname,"TEL_DX")==0){
-            psr->constraints[psr->nconstraints++] = constraint_tel_dx_0;
-            psr->constraints[psr->nconstraints++] = constraint_tel_dx_1;
-            psr->constraints[psr->nconstraints++] = constraint_tel_dx_2;
-        }
-        if(strcasecmp(cname,"TEL_DY")==0){
-            psr->constraints[psr->nconstraints++] = constraint_tel_dy_0;
-            psr->constraints[psr->nconstraints++] = constraint_tel_dy_1;
-            psr->constraints[psr->nconstraints++] = constraint_tel_dy_2;
-        }
-        if(strcasecmp(cname,"TEL_DZ")==0){
-            psr->constraints[psr->nconstraints++] = constraint_tel_dz_0;
-            psr->constraints[psr->nconstraints++] = constraint_tel_dz_1;
-            psr->constraints[psr->nconstraints++] = constraint_tel_dz_2;
-        }
-        if(strcasecmp(cname,"QIFUNC_p")==0 || strcasecmp(cname,"QIFUNC_p_offset")==0){
-            psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_0;
-        }
-        if(strcasecmp(cname,"QIFUNC_p")==0 || strcasecmp(cname,"QIFUNC_p_F0F1")==0){
+             if(strcasecmp(cname,"IFUNC")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_1;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xsin;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xcos;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin2;
+                 psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos2;
 
-            psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_1;
-            psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_2;
-        }
-        if(strcasecmp(cname,"QIFUNC_p")==0|| strcasecmp(cname,"QIFUNC_p_YEAR")==0){
+             }
+             if(strcasecmp(cname,"TEL_DX")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dx_0;
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dx_1;
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dx_2;
+             }
+             if(strcasecmp(cname,"TEL_DY")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dy_0;
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dy_1;
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dy_2;
+             }
+             if(strcasecmp(cname,"TEL_DZ")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dz_0;
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dz_1;
+                 psr->constraints[psr->nconstraints++] = constraint_tel_dz_2;
+             }
+             if(strcasecmp(cname,"QIFUNC_p")==0 || strcasecmp(cname,"QIFUNC_p_offset")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_0;
+             }
+             if(strcasecmp(cname,"QIFUNC_p")==0 || strcasecmp(cname,"QIFUNC_p_F0F1")==0){
 
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_xsin;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_xcos;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin2;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos2;
-        }
-        if(strcasecmp(cname,"QIFUNC_c")==0 || strcasecmp(cname,"QIFUNC_c_offset")==0){
-            psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_0;
-        }
-        if(strcasecmp(cname,"QIFUNC_c")==0 || strcasecmp(cname,"QIFUNC_c_F0F1")==0){
-            psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_1;
-            psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_2;
-        }
-        if(strcasecmp(cname,"QIFUNC_c")==0|| strcasecmp(cname,"QIFUNC_c_YEAR")==0){
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_xsin;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_xcos;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin2;
-            psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos2;
-        }
+                 psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_1;
+                 psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_p_2;
+             }
+             if(strcasecmp(cname,"QIFUNC_p")==0|| strcasecmp(cname,"QIFUNC_p_YEAR")==0){
+
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_xsin;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_xcos;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_sin2;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_p_year_cos2;
+             }
+             if(strcasecmp(cname,"QIFUNC_c")==0 || strcasecmp(cname,"QIFUNC_c_offset")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_0;
+             }
+             if(strcasecmp(cname,"QIFUNC_c")==0 || strcasecmp(cname,"QIFUNC_c_F0F1")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_1;
+                 psr->constraints[psr->nconstraints++] = constraint_quad_ifunc_c_2;
+             }
+             if(strcasecmp(cname,"QIFUNC_c")==0|| strcasecmp(cname,"QIFUNC_c_YEAR")==0){
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_xsin;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_xcos;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_sin2;
+                 psr->constraints[psr->nconstraints++] = constraint_qifunc_c_year_cos2;
+             }
+         }
 
     }
     /*

@@ -4,7 +4,7 @@
 #include <string.h>
 #define f1yr (1.0/3.16e7)
 
-double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_red_sin || iconstraint == constraint_red_cos);
 
     /* Constrain if
@@ -34,7 +34,7 @@ double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam
 
 }
 
-double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_red_dm_sin || iconstraint == constraint_red_dm_cos);
 
     /* Constrain if
@@ -63,7 +63,7 @@ double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int ipa
 }
 
 
-double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert (iconstraint == constraint_jitter);
 
     if (iparam == param_jitter && constraintk == k) {
@@ -90,7 +90,7 @@ double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int ipa
     }
 }
 
-double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_band_red_sin || iconstraint == constraint_band_red_cos);
 
     /* Constrain if
@@ -135,7 +135,7 @@ double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int ipara
 }
 
 
-double constraints_nestlike_group(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_group(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_group_red_sin || iconstraint == constraint_group_red_cos);
 
     /* Constrain if
