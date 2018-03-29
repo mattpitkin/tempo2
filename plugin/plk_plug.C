@@ -1377,10 +1377,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 if(psr[0].TNsubtractDM==0){
                     printf("will substract PL DM Variations on next Fit \n");
                     psr[0].TNsubtractDM=1;
+                    formResiduals(psr,npsr,1); // iteration);
                 }
                 else if(psr[0].TNsubtractDM==1){
                     printf("will Re-add PL DM Variations on next Fit \n");
                     psr[0].TNsubtractDM=0;
+                    formResiduals(psr,npsr,1); // iteration);
                 }
 
             }
@@ -3211,8 +3213,8 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
         else if (mouseY==11) *yplot=13;
         else if (mouseY==12) *yplot=14;
         else if (mouseY==13) *yplot=15;
-        else if (mouseY==14 &&  psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) *yplot=16;
-        else if (mouseY==15 && psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0) *yplot=17;
+        else if (mouseY==14 && ((psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) || (psr[0].dmoffsCMnum > 0))) *yplot=16;
+        else if (mouseY==15 && ((psr[0].TNDMAmp  != 0 && psr[0].TNDMGam  != 0) || (psr[0].dmoffsDMnum > 0))) *yplot=17;
 
     }
 
@@ -3516,10 +3518,10 @@ void drawMenu3(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,
     drawAxisSel(0,0.34,"sidereal time",xplot==13,yplot==13);
     drawAxisSel(0,0.28,"hour angle",xplot==14,yplot==14);
     drawAxisSel(0,0.22,"para. angle",xplot==15,yplot==15);
-    if(psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0){
+    if((psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) || (psr[0].dmoffsCMnum > 0)){
         drawAxisSel(0,0.16,"Red Noise",xplot==16,yplot==16);
     }
-    if(psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0){
+    if((psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0) || (psr[0].dmoffsDMnum > 0)){
         drawAxisSel(0,0.10,"DM Var",xplot==17,yplot==17);
     }
 

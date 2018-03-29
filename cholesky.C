@@ -177,6 +177,8 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
 
     bool first=true;
 
+    while(fname[0]==' ' || fname[0]=='\t')fname++;
+
     if (strncmp(fname,"MODEL",5)==0){
         content << std::string(fname);
     } else {
@@ -200,7 +202,7 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
                 cholesky_readFromCovarianceFunction(m,fname,resx,resy,rese,np,nc);
                 return;
             } else{
-                logmsg("Reading a Tempo2 MODEL file: %s",fname);
+                logmsg("Reading a Tempo2 MODEL file: '%s'",fname);
             }
             first=false;
         }
@@ -641,6 +643,18 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
     int istart=0;
     int iend=0;
 
+    // if we aren't really doing a pulsar, e.g. model for ifunc or dmmodel
+    // Then we don't have ip, and don't deal with start and end
+    // Maybe we can fix this better in future, but for now this should be fine.
+    if (ip==NULL){
+    logdbg("Adding matrix m to mm (MJD range disabled as ip=NULL)");
+        for(i=0;i<np-nc;i++){
+            for(j=0;j<np-nc;j++){
+                m[i][j]+=mm[i][j];
+            }
+         }
+    } else {
+
     logdbg("Adding matrix m to mm (MJD range: %lf -> %lf) %lf %lf",mjd_start,mjd_end,(double)psr->obsn[ip[0]].sat,(double)psr->obsn[ip[np-nc-1]].sat);
     for(i=0;i<np-nc;i++){
         if(psr->obsn[ip[i]].sat>mjd_start){
@@ -656,6 +670,7 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
     }
 
     logdbg("istart=%d iend=%d (%d)",istart,iend,np-nc);
+
 
     /****
      *
@@ -691,6 +706,7 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
             }
 
         }
+    }
     }
 }
 

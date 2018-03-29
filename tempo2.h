@@ -202,6 +202,8 @@ enum constraint {
     constraint_dmmodel_cw_1,
     constraint_dmmodel_cw_2,
     constraint_dmmodel_cw_3,
+    constraint_dmmodel_cmcov,
+    constraint_dmmodel_dmcov,
     constraint_ifunc_0,
     constraint_ifunc_1,
     constraint_ifunc_2,
@@ -295,7 +297,7 @@ typedef double (*paramDerivFunc)(struct pulsar*, int,double,int,param_label,int)
  * Used to build the derivative matrix for the least squares solvers.
  *
  */
-typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param_label,int,int);
+typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param_label,int,int,void*);
 
 /*!
  * @brief a function used to update the parameters after a fit.
@@ -329,6 +331,7 @@ typedef struct FitInfo {
     int constraintCounters[MAX_FIT];
     paramDerivFunc paramDerivs[MAX_FIT];
     constraintDerivFunc constraintDerivs[MAX_FIT];
+    void* constraintSpecial[MAX_FIT];
     paramUpdateFunc updateFunctions[MAX_FIT];
     FitOutput output;
 } FitInfo;
@@ -502,6 +505,7 @@ typedef struct pulsar {
     double dmoffsCM[MAX_IFUNC];
     double dmoffsCM_error[MAX_IFUNC];
     double dmoffsCM_weight[MAX_IFUNC];
+    char dmoffs_fills_TN;
 
     // Single source gravitational wave information
     double gwsrc_ra;
@@ -746,6 +750,7 @@ typedef struct pulsar {
     float AverageEpochWidth; 
 
     double detUinv;
+    double detBinv;
 
 
     int outputTMatrix;
@@ -808,12 +813,17 @@ typedef struct pulsar {
     double constraint_efactor;
     enum constraint constraints[MAX_PARAMS];/*!< Which constraints are specified */
     char auto_constraints;
+    char *constraint_special[MAX_PARAMS]; /* Special constraint parameters */
+
+
 
     FitInfo fitinfo;
 
     int brace;
 
 } pulsar;
+
+
 
 
 // PLUGIN FUNCTIONS
