@@ -7,6 +7,7 @@
 #define FITTYPE_EFAC 2
 #define FITTYPE_EQUAD 3
 #define FITTYPE_BIN 4
+#define FITTYPE_CONCVM 5
 
 #define FITTYPE_BIN_K_ASINI 11
 #define FITTYPE_BIN_K_M2    12
@@ -120,6 +121,8 @@ class mjkparam {
                     }
                     break;
                 case FITTYPE_CVM:
+                    return txt;
+                case FITTYPE_CONCVM:
                     return txt;
                 case FITTYPE_EFAC:
                     return "EFAC";

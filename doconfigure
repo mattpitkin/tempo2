@@ -20,6 +20,9 @@ echo "CXXFLAGS = '$CXXFLAGS'"
 echo "LDFLAGS  = '$LDFLAGS'"
 echo "PREFIX = '$PREFIX'"
 
+
+LDFLAGS="$LDFLAGS"
+
 export PREFIX
 export CFLAGS
 export CXXFLAGS

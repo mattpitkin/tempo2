@@ -34,7 +34,7 @@
 #include <sstream>
 #include <string>
 #include <assert.h>
-#include "tempo2.h"
+#include "../../tempo2.h"
 #include "t2fit.h"
 #include "mjkbayes.h"
 #include "multinest.h"
@@ -42,6 +42,7 @@
 #include "../../t2fit_nestlike.h"
 #include "../../TKmatrix.h"
 #include "../../T2toolkit.h"
+#include "../../constraints.h"
 
 #include <vector>
 #include <algorithm>
@@ -72,6 +73,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     bool actuallydoit = true;
     *npsr = 1;  /* For a graphical interface that only shows results for one pulsar */
 
+    char quiet=1;
+
 
     printf("Graphical Interface: mjkbayes\n");
     printf("Author:              Michael Keith\n");
@@ -93,6 +96,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         if (strcmp(argv[i],"-cfg")==0) {
             strcpy(cfg,argv[++i]);
         }
+        if (strcmp(argv[i],"-v")==0) {
+            quiet=0;
+        }
+
         if (strcmp(argv[i],"-anaonly")==0) {
             actuallydoit=false;
         }
@@ -105,6 +112,14 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
     formResiduals(psr,*npsr,1);    /* Form the residuals                 */
+
+
+    /// Slightly strange, but lets make sure every parameter has a sensible prefit value
+    for (int iparam =0; iparam < MAX_PARAMS; ++iparam) {
+        for (int k=0; k < psr->param[iparam].aSize; ++k) {
+            psr->param[iparam].prefit[k] = psr->param[iparam].val[k];
+        }
+    }
 
 
     int myid=0;
@@ -170,9 +185,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
 
     strcpy(data->root,"mjkres/mm-");
-    // shut tempo2 up whilst we do the sampling!
-    quietFlag=1;
 
+    // shut tempo2 up whilst we do the sampling!
+    quietFlag=quiet;
     // calling MultiNest
 
     if (actuallydoit) {
@@ -285,6 +300,21 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
             }
             --i;
             model << "\n";
+        } else if (p->fittype == FITTYPE_CONCVM){
+            std::stringstream cmodel;
+            cmodel << "MODEL " << p->txt;
+            for (int k=0; k < p->fitk; ++k){
+                p = &(data->params[i]);
+                if (p->exp){
+                    cmodel << " " << pow(10.0,Cube[i]);
+                } else {
+                    cmodel << " " << Cube[i];
+                }
+                ++i;
+            }
+            --i;
+            cmodel << "\n";
+            strncpy(psr->constraint_special[(int)p->fitlabel],cmodel.str().c_str(),1024);
         } else if(p->fittype == FITTYPE_EFAC){
             errorsChanged=true;
             for (int iobs=0; iobs < psr->nobs; ++iobs){
@@ -370,7 +400,9 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
 
 
 
-    double lnew = -0.5 * (psr->fitChisq) + psr->detUinv + prior;
+//   printf("% 10.4lg %10.4lg\n",psr->detUinv,psr->detBinv);
+
+    double lnew = -0.5 * (psr->fitChisq) + psr->detUinv + prior + psr->detBinv;
 
 
     //    textOutput(psr,1,0,0,0,1,"zz.par"); /* Output results to the screen */
@@ -444,6 +476,13 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
         std::copy(prefitjump,prefitjump+psr->nJumps+1,psr->jumpVal);
         delete[] prefitjump;
     }
+    if (psr->dmoffsDMnum > 0){
+        memset(psr->dmoffsDM,0,sizeof(double)*psr->dmoffsDMnum);
+    }
+    if (psr->dmoffsCMnum > 0){
+        memset(psr->dmoffsCM,0,sizeof(double)*psr->dmoffsCMnum);
+    }
+
 
 
 
@@ -567,7 +606,7 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
 
                 logmsg("%s",p.fitdesc(psr).c_str());
             }
-            if (strncasecmp(keyword2,"cov",4) == 0){
+            if (strncasecmp(keyword2,"cov",3) == 0){
 
                 fscanf(infile,"%s",keyword3);
                 char dat[1024];
@@ -591,6 +630,50 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
                 }
 
             }
+            if (strncasecmp(keyword2,"constrain",9) == 0){
+
+                fscanf(infile,"%s",keyword3);
+                constraint c =constraint_LAST;
+
+                logmsg("Got constrain: %s",keyword3);
+
+                if (strcasecmp(keyword3,"DMMODEL_COVCM")==0) c=constraint_dmmodel_cmcov;
+                if (strcasecmp(keyword3,"DMMODEL_COVDM")==0) c=constraint_dmmodel_dmcov;
+
+                if (c==constraint_LAST) {
+                    logerr("Not sure what to do with '%s'",keyword3);
+                    exit(1);
+                }
+
+                int ic;
+                for (ic=0; ic < psr->nconstraints; ++ic){
+                    if(psr->constraints[ic] == c)break;
+                }
+                psr->constraints[ic] = c;
+                psr->constraint_special[ic] = (char*)malloc(1024);
+                if(ic >= psr->nconstraints)psr->nconstraints=ic+1;
+
+                fscanf(infile,"%s",keyword3);
+                char dat[1024];
+                char* txt = fgets(dat,1024,infile);
+                int ii=0;
+                while(txt!=NULL){
+                    mjkparam p(FITTYPE_CONCVM,(label)ic,ii);
+                    p.txt = std::string(keyword3);
+                    txt = p.parseScaleoffset(txt);
+                    if (txt!=NULL){
+                        data->params.push_back(p);
+                        logmsg("%s",p.fitdesc(psr).c_str());
+                        ++ii;
+                    }
+                }
+                logmsg("Got %d constrain cov parameters for %s (nconstraints=%d) %s",ii,keyword3,psr->nconstraints,get_constraint_name(c).c_str());
+                for (int i=0; i < ii; ++i){
+                    (data->params.end()-i-1)->fitk=ii;
+                }
+
+            }
+
             if (strncasecmp(keyword2,"binary",6) == 0){
                 fscanf(infile,"%s",keyword3);
 

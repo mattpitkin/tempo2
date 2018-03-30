@@ -141,6 +141,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         /*      printf("Weighted RMS pre-fit residual = %.3f (us), RMS post-fit residual = %.3f (us)\n",wrms_pre,rms_post); */
         /*      printf("Fit Chisq = %.4e\t",psr[p].fitChisq*pow(psr[p].param[param_f0].val,2)); */
 
+        double ll = -0.5 * (psr[p].fitChisq) + psr[p].detUinv + psr[p].detBinv;
+        printf("Log-likelihood: %lg (%lg + %lg + %lg)\n",ll,-0.5 * (psr[p].fitChisq),psr[p].detUinv ,psr[p].detBinv);
         if (psr[p].fitMode==1)
         {
             printf("Fit Chisq = %.4g\t",psr[p].fitChisq);
@@ -1444,6 +1446,12 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     for (int i = 0; i < psr[p].nconstraints; i++){
                         if (psr[p].constraints[i]==constraint_dmmodel_mean){
                             fprintf(fout2,"CONSTRAIN DMMODEL\n");
+                        }
+                        if (psr[p].constraints[i]==constraint_dmmodel_dmcov){
+                            fprintf(fout2,"CONSTRAIN DMMODEL_DMCOV %s\n",psr[p].constraint_special[i]);
+                        }
+                        if (psr[p].constraints[i]==constraint_dmmodel_cmcov){
+                            fprintf(fout2,"CONSTRAIN DMMODEL_CMCOV %s\n",psr[p].constraint_special[i]);
                         }
                     }
                 }

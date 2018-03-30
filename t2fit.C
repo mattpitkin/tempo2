@@ -380,9 +380,9 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
                         psr[0].fitinfo.output.indexPsr[g] = -1;
                         psr[0].fitinfo.output.indexParam[g] = global_fitinfo.paramIndex[g];
                         psr[0].fitinfo.output.indexCounter[g] = global_fitinfo.paramCounters[g];
-                       if (ipsr==0 && writeResiduals&0x08){
-                           logmsg("Row %d = %s %s(%d)",g,"global",label_str[global_fitinfo.paramIndex[g]],global_fitinfo.paramCounters[g]);
-                       }
+                        if (ipsr==0 && writeResiduals&0x08){
+                            logmsg("Row %d = %s %s(%d)",g,"global",label_str[global_fitinfo.paramIndex[g]],global_fitinfo.paramCounters[g]);
+                        }
                     }
 
                     designMatrix[i+off_r][g] = gDM[ipsr][i][j];
@@ -701,9 +701,6 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
     // reset the determinant for Binv. This is actually a log, but I think it will eventually just
     // multiply things by 1 if left at zero.
     psr->detBinv = 0; 
-    /*
-     * these are the "classical" tempo2 constraints.
-     */
     for (int i=0;i<psr->nconstraints;++i) {
         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
         OUT.constraintCounters[OUT.nConstraints]=0;
@@ -713,21 +710,31 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     // we need to make Binv.
                     int nCM = psr->dmoffsCMnum;
                     // the matrix won't invert without something on the diagonal. Put 0.1 ns for now
-                    std::vector<double> etmp(nCM,1e-10); 
+                    std::vector<double> etmp(nCM,1e-11); 
                     // TODO: IMPORTANT! need to find a way to free this!
                     // MJK 2018 - I am making a memory leak here...
                     double** Binv = malloc_uinv(nCM);
                     getCholeskyMatrix(Binv,psr->constraint_special[i],psr, psr->dmoffsCM_mjd,psr->dmoffsCM,&etmp[0], nCM,0,NULL);
                     psr->detBinv += psr->detUinv;
                     for (int i=0; i < nCM; ++i) {
+//                        for (int j=0; j < nCM; ++j){
+//                            printf("%lg ",Binv[i][j]);
+//                        }
+//                        printf("ZZZ\n");
                         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
                         OUT.constraintCounters[OUT.nConstraints]=i;
+
                         OUT.constraintSpecial[OUT.nConstraints] = (void*)Binv[i];
+//                        double* tttt = (double*)malloc(sizeof(double)*nCM);
+//                        for (int jj=0; jj < nCM; ++jj){
+//                            tttt[jj] = Binv[jj][i];
+//                        }
+//                        OUT.constraintSpecial[OUT.nConstraints] = (void*)tttt;
                         OUT.constraintDerivs[OUT.nConstraints] = constraints_covar_dmmodel_cm;
                         ++OUT.nConstraints;
                     }
-                    break;
                 }
+                break;
             case constraint_dmmodel_dmcov:
                 {
                     // we need to make Binv.
@@ -736,7 +743,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     std::vector<double> etmp(nDM,1e-6);
                     double** Binv = malloc_uinv(nDM);
                     getCholeskyMatrix(Binv,psr->constraint_special[i],psr, psr->dmoffsDM_mjd,psr->dmoffsDM,&etmp[0], nDM,0,NULL);
-                    
+
                     for (int i=0; i < nDM; ++i) {
                         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
                         OUT.constraintCounters[OUT.nConstraints]=i;
@@ -744,9 +751,11 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                         OUT.constraintDerivs[OUT.nConstraints] = constraints_covar_dmmodel_dm;
                         ++OUT.nConstraints;
                     }
-                    break;
                 }
-
+                break;
+                /*
+                 * these are the "classical" tempo2 constraints.
+                 */
             default:
                 // this is a quick fix to avoid re-writing code.
                 OUT.constraintDerivs[OUT.nConstraints] = standardConstraintFunctions;
@@ -1353,9 +1362,9 @@ paramDerivFunc getDerivFunction(pulsar* psr, param_label fit_param, const int k)
 
 void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
     for (param_label fit_param=0; fit_param < param_LAST; ++fit_param){
-/*        if (fit_param == param_ifunc){
-            logmsg("if: %d %d %d",psr->param[fit_param].paramSet[0],psr->param[fit_param].fitFlag[0],psr->param[fit_param].aSize);
-        }*/
+        /*        if (fit_param == param_ifunc){
+                  logmsg("if: %d %d %d",psr->param[fit_param].paramSet[0],psr->param[fit_param].fitFlag[0],psr->param[fit_param].aSize);
+                  }*/
         for(int k=0; k < psr->param[fit_param].aSize;k++){
             if (psr->param[fit_param].paramSet[k]>0 && psr->param[fit_param].fitFlag[k]==globalflag) {
                 t2fit_fillOneParameterFitInfo(psr,fit_param,k,OUT);
