@@ -38,7 +38,7 @@ double ifunc(const double* mjd, const double* yoffs, const double t,const int N)
         return yoffs[0];
     } else if(t > mjd[N-1]){
         return yoffs[N-1];
-    } else{
+    } else {
         // find the pair we are between...
         for (int ioff =0;ioff<N;ioff++){
             if(t >= mjd[ioff] && t < mjd[ioff+1]){

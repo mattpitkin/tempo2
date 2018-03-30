@@ -111,6 +111,11 @@ std::string get_constraint_name(unsigned c){
         case constraint_qifunc_c_year_cos2:
             return "QIFUNC_c_YEAR C.cos(2t) = 0";
 
+        case constraint_dmmodel_cmcov:
+            return "DMMODEL_CM covariance function";
+        case constraint_dmmodel_dmcov:
+            return "DMMODEL_DM covariance function";
+
         default:
             return "UNKNOWN!";
     }
