@@ -144,10 +144,18 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
 
 
     logdbg("Form uinv from cholesky matrix 'm'");
+
     int ret = cholesky_formUinv(uinv,m,np);
     if (ret!=0) {
-        logerr("Error with formUinv");
-        exit(ret);
+        logerr("Error with formUinv... adding 0.1%% to diagonal");
+        for(i=0;i<np;i++){
+            m[i][i] *= 1.001;
+        }
+        ret = cholesky_formUinv(uinv,m,np);
+        if (ret!=0) {
+            logerr("Error with formUinv");
+            exit(ret);
+        }
     }
     logdbg("compute determinant of uinv");
     double det = 1;
@@ -250,6 +258,19 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
                 double alpha,amp,fc;
                 sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
                 cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2YrPowerLaw")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
+                cholesky_powerlawModel(mm,alpha,fc,amp*pow(fc,-alpha), resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2YrPowerLawDM")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
+                cholesky_powerlawModel(mm,alpha,fc,amp*pow(fc,-alpha), resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
                 addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
                 continue;
             } else if (strcmp(val,"T2PowerLawDM")==0){
@@ -440,7 +461,7 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
 
 void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
     int i;
-    double det = 1;
+    double det = 0;
     for(i=0;i<np;i++){
         uinv[0][i]=1.0/rese[i];
         det += log(uinv[0][i]);
@@ -628,7 +649,7 @@ void cholesky_readT2CholModel(double **m, const char* fname,double *resx,double 
 
 
     cholesky_readT2CholModel_R(m,mm,fname,resx,resy,rese,np,nc,ip,psr,psrJ,0.0,99999.0,0);
-    for(i=0;i<np;i++)free(mm[i]);
+    for(i=0;i<np+1;i++)free(mm[i]);
     free(mm);
 
 

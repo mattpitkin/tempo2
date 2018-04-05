@@ -250,7 +250,7 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
     std::stringstream model;
 
     if (psr->nJumps > 0){
-        prefitjump = new double[psr->nJumps];
+        prefitjump = new double[psr->nJumps+1];
         std::copy(psr->jumpVal,psr->jumpVal+psr->nJumps+1,prefitjump);
     }
 
@@ -314,7 +314,9 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
             }
             --i;
             cmodel << "\n";
+            //printf("%s %p\n",cmodel.str().c_str(),psr->constraint_special[(int)p->fitlabel]);
             strncpy(psr->constraint_special[(int)p->fitlabel],cmodel.str().c_str(),1024);
+
         } else if(p->fittype == FITTYPE_EFAC){
             errorsChanged=true;
             for (int iobs=0; iobs < psr->nobs; ++iobs){
@@ -393,7 +395,10 @@ double computeLogLike(double *Cube, mjkcontext* data, const char* outpar){
     }
 
     if (haveModel){
-        t2Fit(psr,1,model.str().c_str());
+        char* str = (char*) malloc(model.str().length()+1);
+        strcpy(str,model.str().c_str());
+        t2Fit(psr,1,str);
+        free(str);
     } else {
         t2Fit(psr,1,NULL);
     }
@@ -637,8 +642,8 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
 
                 logmsg("Got constrain: %s",keyword3);
 
-                if (strcasecmp(keyword3,"DMMODEL_COVCM")==0) c=constraint_dmmodel_cmcov;
-                if (strcasecmp(keyword3,"DMMODEL_COVDM")==0) c=constraint_dmmodel_dmcov;
+                if (strcasecmp(keyword3,"DMMODEL_CMCOV")==0) c=constraint_dmmodel_cmcov;
+                if (strcasecmp(keyword3,"DMMODEL_DMCOV")==0) c=constraint_dmmodel_dmcov;
 
                 if (c==constraint_LAST) {
                     logerr("Not sure what to do with '%s'",keyword3);
@@ -650,7 +655,7 @@ void loadmjkbayescfg(const char* cfg, pulsar* psr, mjkcontext *data) {
                     if(psr->constraints[ic] == c)break;
                 }
                 psr->constraints[ic] = c;
-                psr->constraint_special[ic] = (char*)malloc(1024);
+                psr->constraint_special[ic] = (char*)malloc(1025);
                 if(ic >= psr->nconstraints)psr->nconstraints=ic+1;
 
                 fscanf(infile,"%s",keyword3);
