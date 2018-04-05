@@ -865,7 +865,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 if(yplot==2 && psr[0].AverageResiduals == 1){errBar[count] = psr[0].obsn[i].averageerr/1e-6;}
                 if(yplot==2 && psr[0].AverageDMResiduals == 1){errBar[count] = psr[0].obsn[i].averagedmerr/1e-6;}
                 if(yplot==16){errBar[count] = (float) psr[0].obsn[i].TNRedErr/1e-6;}
-                if(yplot==17){errBar[count] = (float) psr[0].obsn[i].TNDMErr/1e-6;}
+                if(yplot==17){
+                    double DMKappa=2.410*pow(10.0,-16);
+                    double freq=(double)psr[0].obsn[i].freqSSB;
+                    errBar[count] = (float) psr[0].obsn[i].TNDMErr*(DMKappa*pow(freq,2))*1e6;
+                }
                 if (bad==0) count++;	    
             }
         }

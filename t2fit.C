@@ -743,7 +743,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     std::vector<double> etmp(nDM,1e-6);
                     double** Binv = malloc_uinv(nDM);
                     getCholeskyMatrix(Binv,psr->constraint_special[i],psr, psr->dmoffsDM_mjd,psr->dmoffsDM,&etmp[0], nDM,0,NULL);
-
+                    psr->detBinv += psr->detUinv;
                     for (int i=0; i < nDM; ++i) {
                         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
                         OUT.constraintCounters[OUT.nConstraints]=i;
