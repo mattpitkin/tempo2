@@ -26,7 +26,7 @@ class mjkparam {
                fitk(fitk),
                fitscale(halfrange),
                fitoffset(centre),
-               exp(false) {
+               exp(false),fixed(false) {
                }
         mjkparam(int fittype, label fitlabel, int fitk) : 
             fittype(fittype),
@@ -34,7 +34,7 @@ class mjkparam {
                fitk(fitk),
                fitscale(0),
                fitoffset(0),
-               exp(false) {
+               exp(false),fixed(false) {
                }
 
         char* parseScaleoffset(char* string){
@@ -47,6 +47,24 @@ class mjkparam {
                 ++string;
             }
             if (string[0]=='\0') return 0;
+            if (string[0]=='!') {
+                // Fixed value
+                fixed=true;
+                ++string;
+                int end=strlen(string);
+                for (int i=0; i < end; ++i) {
+                    if (string[i]=='!'){
+                        string[i]='\0';
+                        end=i+1;
+                        break;
+                    }
+                }
+                sscanf(string,"%lg",&fitoffset);
+                fitscale=0;
+                string += end;
+                return string;
+
+            }
             if (string[0]=='[') {
                 ++string;
                 // start and finish values
@@ -143,6 +161,7 @@ class mjkparam {
         std::string flagid;
         std::string flagval;
         std::string txt;
+        bool fixed;
 };
 
 struct mjkcontext {

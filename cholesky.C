@@ -147,9 +147,9 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
 
     int ret = cholesky_formUinv(uinv,m,np);
     if (ret!=0) {
-        logerr("Error with formUinv... adding 0.1%% to diagonal");
+        logwarn("Error with formUinv... adding 0.01%% to diagonal (e.g. m[0][0] %lg + %lg)",m[0][0],m[0][0]*0.0001);
         for(i=0;i<np;i++){
-            m[i][i] *= 1.001;
+            m[i][i] *= 1.0001;
         }
         ret = cholesky_formUinv(uinv,m,np);
         if (ret!=0) {

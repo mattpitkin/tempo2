@@ -710,7 +710,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     // we need to make Binv.
                     int nCM = psr->dmoffsCMnum;
                     // the matrix won't invert without something on the diagonal. Put 0.1 ns for now
-                    std::vector<double> etmp(nCM,1e-11); 
+                    std::vector<double> etmp(nCM,1e-10);
                     // TODO: IMPORTANT! need to find a way to free this!
                     // MJK 2018 - I am making a memory leak here...
                     double** Binv = malloc_uinv(nCM);
