@@ -113,6 +113,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     formBatsAll(psr,*npsr);         /* Form the barycentric arrival times */
     formResiduals(psr,*npsr,1);    /* Form the residuals                 */
 
+    psr[0].dmoffs_fills_TN = 0;
 
     /// Slightly strange, but lets make sure every parameter has a sensible prefit value
     for (int iparam =0; iparam < MAX_PARAMS; ++iparam) {

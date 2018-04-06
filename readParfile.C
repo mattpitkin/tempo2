@@ -881,6 +881,9 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
               * Constraints for DMMODEL.
               * The DMMODEL constraint affects 4 constraints.
               */
+             if((strcasecmp(cname,"DMMODEL_ZERO")==0)){
+                 psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
+             }
              if((strcasecmp(cname,"DMMODEL_X")==0)){
                  psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
                  psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;

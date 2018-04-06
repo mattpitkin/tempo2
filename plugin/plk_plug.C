@@ -4266,7 +4266,11 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
             }
         }
 
-        x[count]=(float)(psr[0].obsn[iobs].TNDMSignal*(DMKappa*pow(freq,2)) + dmDot);
+        if(psr[0].dmoffs_fills_TN) {
+            x[count]=(float)(-psr[0].obsn[iobs].TNDMSignal*(DMKappa*pow(freq,2)) + dmDot);
+        }else{
+            x[count]=(float)(psr[0].obsn[iobs].TNDMSignal*(DMKappa*pow(freq,2)) + dmDot);
+        }
     }
     else if (plot==18) // Plot on flag value
     {
