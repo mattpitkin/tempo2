@@ -170,7 +170,7 @@ enum label {
     param_tzrmjd,param_tzrfrq,param_fddc,param_fddi,param_fd,param_dr,param_dtheta,param_tspan,
     param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
     param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
-    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
+    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,param_trestn,
     param_wave_dm, param_waveepoch_dm,
     param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet, param_dphaseplanet, param_waveepoch,param_ifunc,param_clk_offs,
     param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_cgw,param_quad_om,
@@ -388,8 +388,9 @@ typedef struct observation {
     int delayCorr;                  /*!< = 1 for time delay corrections to be applied, = 0 for BAT  */
     int deleted;                    /*!< = 1 if observation has been deleted, = -1 if not included in fit*/
     longdouble prefitResidual;      /*!< Pre-fit residual                                           */
-    longdouble residual;            /*!< residual                                                   */
-    double      addedNoise;
+    longdouble residual;            /*!< residual                        */
+  longdouble residualtn;
+  double      addedNoise;
     double      TNRedSignal;	  /*!< Model red noise signal from temponest fit */
     double      TNRedErr;		  /*!< Error on Model red noise signal from temponest fit */
     double      TNDMSignal;         /*!< Model DM signal from temponest fit */
@@ -638,7 +639,7 @@ typedef struct pulsar {
     int  nStorePrecision;
     int  bootStrap;           /*!< > 0 if calculating errors using bootstrap Monte-Carlo method */
     char tzrsite[100];        /*!< Site-code for polyco                                         */
-    double rmsPre,rmsPost;
+  double rmsPre,rmsPost, rmstn;
     char deleteFileName[100]; /*!< File name containing deleted points                          */
     int  nits;                /*!< Number of iterations for the fit                             */
     int  ipm;                 /*!< = 1 if use interplanetary medium DM correction, = 0 otherwise*/
