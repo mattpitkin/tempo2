@@ -518,13 +518,15 @@ void t2fit_prefit(pulsar* psr, int npsr){
          */
         if (psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
-                if(psr[0].TNsubtractRed==0)psr[ipsr].obsn[iobs].TNRedSignal = 0;
-                psr[ipsr].obsn[iobs].TNRedErr = 0;
+	      //if(psr[0].TNsubtractRed==0)
+	      psr[ipsr].obsn[iobs].TNRedSignal = 0;
+	      psr[ipsr].obsn[iobs].TNRedErr = 0;
             }
         }
         if (psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
-                psr[ipsr].obsn[iobs].TNDMErr = 0;
+             	    psr[ipsr].obsn[iobs].TNDMSignal =0;
+		    psr[ipsr].obsn[iobs].TNDMErr = 0;
             }
         }
     }

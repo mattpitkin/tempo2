@@ -711,6 +711,27 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
+			if (strcasecmp(var, "posttn") ==0) /*temponest red noise subtracted residuals*/
+			{
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].residualtn-sub1*psr[0].obsn[first].residualtn)); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+			}
+	   
+			if (strcasecmp(var, "tndm") ==0) /*temponest dm max-like signal*/
+			{
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNDMSignal)); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+			}
+		   
+			if (strcasecmp(var, "tnrn") ==0) /*temponest red noise make-like signal*/
+			{
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNRedSignal)); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+			}
+
                         if (strcasecmp(var,"pre_phase")==0) /* prefit residual in phase */
                         {
                             sprintf(disp,format,(longdouble)(psr[0].obsn[varN].prefitResidual-sub1*psr[0].obsn[first].prefitResidual)*psr[0].param[param_f].val[0]); 
