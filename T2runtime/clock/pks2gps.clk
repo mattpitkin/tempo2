@@ -234,51 +234,63 @@
 #Comments from merged data file:
 #>Mon Feb 20 14:50:08 2017 Imported from file pkclk00.log
 #Comments from merged data file:
-#>Thu Feb 23 15:07:51 2017 Imported from file pkclk00.log
+#>Fri Mar  9 21:35:28 2018 Imported from file pkclk00.log.201704
 #Comments from merged data file:
-#>Mon Feb 27 12:21:25 2017 Imported from file pkclk00.log
+#>Fri Mar  9 21:36:40 2018 Imported from file pkclk00.log.201705
 #Comments from merged data file:
-#>Sat Mar 25 18:09:22 2017 Imported from file pkclk00.log.201703
+#>Fri Mar  9 21:37:26 2018 Imported from file pkclk00.log.201706
 #Comments from merged data file:
-#>Sat Mar 25 18:10:32 2017 Imported from file pkclk00.log
+#>Fri Mar  9 21:38:24 2018 Imported from file pkclk00.log.201707
 #Comments from merged data file:
-#>Wed Apr 12 11:32:16 2017 Imported from file pkclk00.log.201704
+#>Fri Mar  9 21:39:40 2018 Imported from file pkclk00.log.201708
 #Comments from merged data file:
-#>Wed Apr 12 11:34:38 2017 Imported from file pkclk00.log
+#>Fri Mar  9 21:40:25 2018 Imported from file pkclk00.log.201709
 #Comments from merged data file:
-#>Tue Jun  6 16:33:07 2017 Imported from file pkclk00.log.201706
+#>Fri Mar  9 21:41:33 2018 Imported from file pkclk00.log.201710
 #Comments from merged data file:
-#>Tue Jul 18 13:53:20 2017 Imported from file pkclk00.log.201707
+#>Fri Mar  9 21:43:05 2018 Imported from file pkclk00.log.201711
 #Comments from merged data file:
-#>Tue Aug  1 20:20:53 2017 Imported from file pkclk00.log.201708
+#>Fri Mar  9 21:45:35 2018 Imported from file pkclk00.log.201712
 #Comments from merged data file:
-#>Wed Oct  4 10:00:52 2017 Imported from file pkclk00.log.201710
+#>Fri Mar  9 21:46:34 2018 Imported from file pkclk00.log.201801
 #Comments from merged data file:
-#>Tue Jan 16 16:03:45 2018 Imported from file pkclk00.log.201801
+#>Fri Mar  9 21:49:28 2018 Imported from file pkclk00.log.201802
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201704
+#>Wed May  2 11:02:44 2018 Imported from file pkclk00.log.201803
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201705
+#>Wed May  2 11:06:30 2018 Imported from file pkclk00.log.201804
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201706
+#>Wed May  2 11:07:07 2018 Imported from file pkclk00.log.201805
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201707
+#>Mon May 14 10:35:16 2018 Imported from file pkclk00.log.201703
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201708
+#>Mon May 14 10:36:06 2018 Imported from file pkclk00.log.201704
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201709
+#>Mon May 14 10:36:20 2018 Imported from file pkclk00.log.201705
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201710
+#>Mon May 14 10:36:35 2018 Imported from file pkclk00.log.201706
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201711
+#>Mon May 14 10:36:51 2018 Imported from file pkclk00.log.201707
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201712
+#>Mon May 14 10:37:05 2018 Imported from file pkclk00.log.201708
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201801
+#>Mon May 14 10:37:20 2018 Imported from file pkclk00.log.201709
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201802
+#>Mon May 14 10:37:44 2018 Imported from file pkclk00.log.201710
 #Comments from merged data file:
-#>Fri Mar  9 12:22:43 2018 Imported from file pkclk00.log.201803
+#>Mon May 14 10:37:57 2018 Imported from file pkclk00.log.201711
+#Comments from merged data file:
+#>Mon May 14 10:38:11 2018 Imported from file pkclk00.log.201712
+#Comments from merged data file:
+#>Mon May 14 10:38:29 2018 Imported from file pkclk00.log.201801
+#Comments from merged data file:
+#>Mon May 14 10:38:44 2018 Imported from file pkclk00.log.201802
+#Comments from merged data file:
+#>Mon May 14 10:38:57 2018 Imported from file pkclk00.log.201803
+#Comments from merged data file:
+#>Mon May 14 10:39:09 2018 Imported from file pkclk00.log.201804
+#Comments from merged data file:
+#>Mon May 14 10:39:25 2018 Imported from file pkclk00.log.201805
 50844.72917 -0.000000749068
 50845.77083 -0.000000747637
 50846.81250 -0.000000746650
@@ -43684,16 +43696,13 @@
 57801.36631 -0.000000945955
 57802.36978 -0.000000943234
 57803.37325 -0.000000944191
-57804.01214 -0.000000939864
 57804.37672 -0.000000939299
 57805.37846 -0.000000936514
 57806.42881 -0.000000935554
-57807.03992 -0.000000934105
 57807.43228 -0.000000936914
 57808.43575 -0.000000936918
 57809.43922 -0.000000935726
 57810.44270 -0.000000936347
-57810.98436 -0.000000939561
 57811.44617 -0.000000940624
 57812.37846 -0.000000942796
 57813.31075 -0.000000942872
@@ -43720,7 +43729,6 @@
 57834.38021 -0.000000921079
 57835.38368 -0.000000922622
 57836.38715 -0.000000922860
-57837.08160 -0.000000920188
 57837.39062 -0.000000919405
 57838.39410 -0.000000917891
 57839.39757 -0.000000919517
@@ -43739,7 +43747,6 @@
 57852.33854 -0.000000925925
 57853.34201 -0.000000929195
 57854.34549 -0.000000930839
-57854.93576 -0.000000936403
 57855.34896 -0.000000930529
 57856.35243 -0.000000920955
 57857.35590 -0.000000918460
@@ -44062,3 +44069,64 @@
 58175.39757 0.000000316902
 58176.40104 0.000000329337
 58177.35590 0.000000339559
+58178.31076 0.000000349502
+58179.31424 0.000000356667
+58180.31771 0.000000362495
+58181.32118 0.000000367690
+58182.32465 0.000000372732
+58183.32812 0.000000377185
+58184.33160 0.000000382773
+58185.33507 0.000000389596
+58186.33854 0.000000393280
+58187.34201 0.000000396459
+58188.34549 0.000000404008
+58189.34896 0.000000408328
+58190.35243 0.000000413329
+58191.35590 0.000000418172
+58192.35938 0.000000420813
+58193.36285 0.000000424499
+58194.36632 0.000000430795
+58195.36979 0.000000435447
+58196.37326 0.000000439780
+58197.37674 0.000000441277
+58198.38021 0.000000446160
+58199.38368 0.000000448073
+58200.38715 0.000000449741
+58201.39062 0.000000452103
+58202.39410 0.000000455301
+58203.39757 0.000000459234
+58204.40104 0.000000460355
+58205.40451 0.000000463982
+58206.40799 0.000000467503
+58207.41146 0.000000467661
+58208.38194 0.000000468920
+58209.35243 0.000000469110
+58210.35590 0.000000470868
+58211.35938 0.000000473549
+58212.36285 0.000000473347
+58213.36632 0.000000476024
+58214.36979 0.000000475942
+58215.37326 0.000000476815
+58216.37674 0.000000478771
+58217.38021 0.000000479129
+58218.38368 0.000000479207
+58219.38715 0.000000479875
+58220.39062 0.000000481890
+58221.39410 0.000000479499
+58222.39757 0.000000479910
+58223.40104 0.000000479133
+58224.40451 0.000000480682
+58225.40799 0.000000480390
+58226.41146 0.000000475311
+58227.41493 0.000000476098
+58228.41840 0.000000475534
+58229.42188 0.000000478112
+58230.42535 0.000000474295
+58231.42882 0.000000473113
+58232.43229 0.000000471351
+58233.43576 0.000000469220
+58234.43924 0.000000468689
+58235.44271 0.000000467000
+58236.44618 0.000000463686
+58237.44965 0.000000463656
+58238.40104 0.000000460324
