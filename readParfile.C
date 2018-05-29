@@ -867,6 +867,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
             psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
         }
+        if((strcasecmp(cname,"DMMODEL_CMX")==0)){
+            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
+        }
+
         if((strcasecmp(cname,"DMMODEL_DM1")==0)){
             psr->constraints[psr->nconstraints++] = constraint_dmmodel_dm1;
         }
@@ -904,6 +908,18 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         if(strcasecmp(cname,"IFUNC_ONLYPHI0")==0){
             psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
         }
+
+        if(strcasecmp(cname,"IFUNC_NOF0F1")==0){
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xsin;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xcos;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin2;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos2;
+
+        }
+
 
         if(strcasecmp(cname,"IFUNC")==0){
             psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
