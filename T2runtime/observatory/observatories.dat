@@ -115,12 +115,15 @@
  3822626.04    -154105.65       5086486.04       JBOAFB              jbafb
 # 42ft telescope
  3822294.825   -153862.275      5085987.071      JB_42ft             jb42
+
+# MkII Position from VLBI (MJK 2018)
+# X=  3822846.7600  Y=  -153802.2800  Z=  5086285.9000
 # MkII telescope Analogue Filterbank
- 3822473.365   -153692.318      5085851.303      JB_MKII             jbmk2
+ 3822846.7600  -153802.2800      5086285.9000    JB_MKII             jbmk2
 # MkII ROACH coherent dedisperser
- 3822473.365   -153692.318      5085851.303      JB_MKII_RCH         jbmk2roach
+ 3822846.7600  -153802.2800      5086285.9000    JB_MKII_RCH         jbmk2roach
 # MkII Digital Filterbank
- 3822473.365   -153692.318      5085851.303      JB_MKII_DFB         jbmk2dfb
+ 3822846.7600  -153802.2800      5086285.9000    JB_MKII_DFB         jbmk2dfb
 
 #
 # New telescopes

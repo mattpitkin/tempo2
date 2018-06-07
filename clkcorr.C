@@ -529,6 +529,7 @@ DynamicArray *getClockCorrectionSequence(const char *clockFrom, const char *cloc
             return seq;
         }
     }
+    logdbg("Making clock sequence from %s to %s",clockFrom,clockTo);
 
     /* no pre-defined sequence found. Search for one using Dijkstra's
        shortest-path algorithm. */
