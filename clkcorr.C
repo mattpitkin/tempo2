@@ -492,6 +492,7 @@ DynamicArray *getClockCorrectionSequence(const char *clockFrom, const char *cloc
     DynamicArray *seq;
     ClockCorrectionFunction *firstFunc, *lastFunc;
 
+
     //  return makeClockCorrectionSequence(clockFrom, clockTo, mjd,warnings);
 
     if  ( clockCorrections_initialized != 1 )
@@ -504,20 +505,29 @@ DynamicArray *getClockCorrectionSequence(const char *clockFrom, const char *cloc
         firstFunc = ((ClockCorrectionFunction **)seq->data)[0];
         lastFunc  = ((ClockCorrectionFunction **)seq->data)[seq->nelem - 1];
 
-        if ( 
-                // from clock matches first function (backwards or forwards)
-                (!strcasecmp(firstFunc->clockFrom, clockFrom)
-                 || !strcasecmp(firstFunc->clockTo, clockFrom))
-                &&
-                // to clock matches last function (backwards or forwards)
-                (!strcasecmp(lastFunc->clockFrom, clockTo)
-                 || !strcasecmp(lastFunc->clockTo, clockTo))
-                &&
+
+
+        if (
+                (
+                // we can go from From to To in one direction
+                (
+                 !strcasecmp(firstFunc->clockFrom, clockFrom)
+                 && 
+                 !strcasecmp(lastFunc->clockTo, clockTo)
+                ) || (
+                    // or we can to from To to From in the other direction
+                    !strcasecmp(firstFunc->clockTo, clockFrom) 
+                    &&
+                    !strcasecmp(lastFunc->clockFrom, clockTo)
+                    )
+                ) && (
                 // date is within possible range
                 ClockCorrectionSequence_getStartMJD(seq) <= mjd
                 && ClockCorrectionSequence_getEndMJD(seq) >= mjd
-           )
+                )
+           ){
             return seq;
+        }
     }
 
     /* no pre-defined sequence found. Search for one using Dijkstra's
@@ -566,7 +576,7 @@ getClockCorrections(observation *obs, const char *clockFrom_const,
     strcpy(clockFrom,clockFrom_const);
 
     char clockFromOrig[128]; 
-    //  logdbg("In getClockCorrections");
+      //  logdbg("In getClockCorrections");
 
     //logdbg("Getting clockFrom >%s<",obs->telID);
     if (clockFrom[0]=='\0') // get from observatory instead
@@ -579,7 +589,7 @@ getClockCorrections(observation *obs, const char *clockFrom_const,
         obs->nclock_correction = 0;
         return;
     }
-    //  logdbg("In getClockCorrections calling sequence 1");
+    //logdbg("In getClockCorrections calling sequence 1");
     // Memory leak here
     sequence = getClockCorrectionSequence(clockFrom, clockTo, obs->sat,warnings);
 
@@ -648,7 +658,7 @@ getClockCorrections(observation *obs, const char *clockFrom_const,
         bool backwards = strcasecmp(currClock, func->clockFrom);
         if (backwards && strcasecmp(currClock, func->clockTo))
         {
-            printf("Programming error! Broken clock correction chain!!\n");
+            logerr("Broken clock correction chain: %s %s",currClock,func->clockTo);
             exit(1);
         }
         /* add correction using sign based on direction of correction */
