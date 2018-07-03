@@ -92,7 +92,7 @@ void t2UpdateFunc_nestlike_jitter(pulsar *psr, int ipsr ,param_label label,int k
 
 
 double t2FitFunc_nestlike_band(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
-	int totalBandNoiseCoeff=0;
+	//int totalBandNoiseCoeff=0; // unused
 
     int iband = 0;
     int ichan = k;
@@ -108,8 +108,8 @@ double t2FitFunc_nestlike_band(pulsar *psr, int ipsr ,double x ,int ipos ,param_
 
     double BandLF = psr[ipsr].TNBandNoiseLF[iband];
     double BandHF = psr[ipsr].TNBandNoiseHF[iband];
-    double BandAmp=pow(10.0, psr[ipsr].TNBandNoiseAmp[iband]);
-    double BandSpec=psr[ipsr].TNBandNoiseGam[iband];
+    //double BandAmp=pow(10.0, psr[ipsr].TNBandNoiseAmp[iband]);
+    //double BandSpec=psr[ipsr].TNBandNoiseGam[iband];
 
 
     double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
@@ -135,7 +135,7 @@ double t2FitFunc_nestlike_band(pulsar *psr, int ipsr ,double x ,int ipos ,param_
 
 double t2FitFunc_nestlike_group(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
 
-    int totalGroupCoeff=0;
+    //int totalGroupCoeff=0;
 
     int igroup = 0;
     int ichan = k;
@@ -149,9 +149,9 @@ double t2FitFunc_nestlike_group(pulsar *psr, int ipsr ,double x ,int ipos ,param
 
     double ret=0.0;
 
-    double GroupAmp=pow(10.0, psr[ipsr].TNGroupNoiseAmp[igroup]);
-    double GroupSpec=psr[ipsr].TNGroupNoiseGam[igroup];
-    int GroupC=psr[ipsr].TNGroupNoiseC[igroup];
+    //double GroupAmp=pow(10.0, psr[ipsr].TNGroupNoiseAmp[igroup]);
+    //double GroupSpec=psr[ipsr].TNGroupNoiseGam[igroup];
+    //int GroupC=psr[ipsr].TNGroupNoiseC[igroup];
 
     double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
     double freq = ((double)(ichan+1.0))/(maxtspan);

@@ -149,6 +149,8 @@ double t2FitFunc_binaryModels(pulsar *psr, int ipsr ,double x ,int ipos ,param_l
         afunc = DDHmodel(psr,0,ipos,label);
     else if (strcmp(psr->binaryModel,"ELL1H")==0)
         afunc = ELL1Hmodel(psr,0,ipos,label);
+    else if (strcmp(psr->binaryModel,"ELL1k")==0)
+        afunc = ELL1kmodel(psr,0,ipos,label);
 
     logdbg("%s(%d) %s %d %s(%d) %g",psr->name,ipsr,psr->binaryModel,ipos,label_str[label],k,afunc);
     return afunc;
@@ -182,6 +184,8 @@ void t2UpdateFunc_binaryModels(pulsar *psr, int ipsr ,param_label label,int k, d
         updateDDH(&psr[ipsr],val,error,label);
     else if (strcmp(psr[ipsr].binaryModel,"ELL1H")==0)
         updateELL1H(&psr[ipsr],val,error,label);
+    else if (strcmp(psr[ipsr].binaryModel,"ELL1k")==0)
+        updateELL1k(&psr[ipsr],val,error,label);
 }
 
 
