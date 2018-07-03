@@ -658,8 +658,6 @@ void allocateMemory(pulsar *psr, int realloc)
 
 void destroyOne (pulsar *psr)
 {
-    int i = 0;
-
     if (psr->obsn)
         free (psr->obsn);
 
