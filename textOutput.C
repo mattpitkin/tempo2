@@ -1369,6 +1369,16 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNRedC %i\n", psr[p].TNRedC);
                 }
 
+		if (psr[p].TNRedFLow !=0 )
+		  {
+		    fprintf(fout2, "TNRedFLow %g\n", psr[p].TNRedFLow);
+		  }
+		//	if (psr[p].TNRedFMid !=0)
+		// {
+		//   fprintf(fout2, "TNRedFMid %g\n", psr[p].TNRedFMid);
+		// }
+		
+		
                 for(i =0; i < psr[p].nTNGroupNoise; i++){
 
                     fprintf(fout2,"TNGroupNoise %s %s %g %g %i\n", psr[p].TNGroupNoiseFlagID[i], psr[p].TNGroupNoiseFlagVal[i], psr[p].TNGroupNoiseAmp[i], psr[p].TNGroupNoiseGam[i], psr[p].TNGroupNoiseC[i]);
