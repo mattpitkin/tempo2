@@ -743,6 +743,11 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     case param_pmdec:
                         factor=180.0/M_PI*60.0*60.0*1000.0* SECDAY*365.25/24.0/3600.0;
                         break;
+                    case param_om:
+                    case param_kom:
+                    case param_kin:
+                        factor=180.0/M_PI;
+                        break;
                     case param_f:
                         sign=-1.0;
                         if (info->param_k == 0){
