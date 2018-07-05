@@ -3,6 +3,7 @@
 #include "t2fit_nestlike.h"
 #include "constraints.h"
 #include "constraints_nestlike.h"
+#include "constraints_param.h"
 #include <TKfit.h>
 #include <stdlib.h>
 #include <string.h>
@@ -90,6 +91,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
     //    double* gX[MAX_PSR]; // "x" values for each pulsar
     double* gY[MAX_PSR]; // "y" values for each pulsar
+    double* gCv[MAX_PSR]; // Constraint "y" values for each pulsar
     double* gW[MAX_PSR]; // whitened "y" values for each pulsar
     double** gDM[MAX_PSR]; // design matrix for each pulsar
     double** gWDM[MAX_PSR]; // whitened design matrix for each pulsar
@@ -108,6 +110,9 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         double *psr_white_y   = (double*)malloc(sizeof(double)*psr[ipsr].nobs);
         double *psr_e   = (double*)malloc(sizeof(double)*psr[ipsr].nobs);
         int *psr_toaidx = (int*)malloc(sizeof(int)*psr[ipsr].nobs); // mapping from fit data to observation number
+
+        double *psr_const_vals  = (double*)malloc(sizeof(double)*psr[ipsr].nconstraints);
+
         double** uinv; // the whitening matrix.
 
         /**
@@ -228,6 +233,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
                 // similar to t2Fit_buildDesignMatrix, t2Fit_buildConstraintsMatrix
                 // creates one row of the constraints matrix.
                 t2Fit_buildConstraintsMatrix(psr, ipsr, iconstraint, constraintsMatrix[iconstraint]);
+                psr_const_vals[iconstraint] = psr[ipsr].fitinfo.constraintValue[iconstraint];
             }
         }
 
@@ -263,6 +269,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             // we are going to do a global fit, so need to store the values for later
             //gX[ipsr] = psr_x;
             gY[ipsr] = psr_y;
+            gCv[ipsr] = psr_const_vals;
             gW[ipsr] = psr_white_y;
             gDM[ipsr] = designMatrix;
             gWDM[ipsr] = white_designMatrix;
@@ -285,14 +292,15 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
              * The arguments here are explained in TKfit.C
              *
              */
-            chisq = TKrobustConstrainedLeastSquares(psr_y,psr_white_y,
+            chisq = TKrobustDefConstrainedLeastSquares(psr_y,psr_white_y,
                     designMatrix,white_designMatrix,constraintsMatrix,
                     psr_ndata,nParams,nConstraints,
                     T2_SVD_TOL,1,
                     psr[ipsr].fitinfo.output.parameterEstimates,
                     psr[ipsr].fitinfo.output.errorEstimates,
                     psr[ipsr].covar,
-                    psr[ipsr].robust);
+                    psr[ipsr].robust,
+                    psr_const_vals);
 
             // update the pulsar struct as appropriate
             psr[ipsr].fitChisq = chisq;
@@ -329,6 +337,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             if (constraintsMatrix) free_blas(constraintsMatrix);
             free(psr_x);
             free(psr_y);
+            free(psr_const_vals);
             free(psr_white_y);
         }
     }
@@ -347,6 +356,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         }
 
         double *y   = (double*)malloc(sizeof(double)*nobs);
+        double *constraint_vals = (double*)malloc(sizeof(double)*totalGlobalConstraints);
         double *white_y   = (double*)malloc(sizeof(double)*nobs);
 
         unsigned int off_f = gParams; // leave space for globals
@@ -409,6 +419,9 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             }
 
             for(unsigned int i=0; i < psr[ipsr].fitinfo.nConstraints; i++){
+
+                constraint_vals[i+off_c]  = gCv[ipsr][i];
+
                 assert(constraintsMatrix);
                 for(unsigned int j=0; j < nLocal; j++){
                     constraintsMatrix[i+off_c][j+off_f] = gCM[ipsr][i][j];
@@ -428,6 +441,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
             free(gY[ipsr]);
             free(gW[ipsr]);
+            free(gCv[ipsr]);
             free_blas(gDM[ipsr]);
             if (gCM[ipsr]) free_blas(gCM[ipsr]);
             free_blas(gWDM[ipsr]);
@@ -435,14 +449,15 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
         double chisq; // the post-fit chi-squared
 
-        chisq = TKrobustConstrainedLeastSquares(y,white_y,
+        chisq = TKrobustDefConstrainedLeastSquares(y,white_y,
                 designMatrix,white_designMatrix,constraintsMatrix,
                 nobs,totalGlobalParams,totalGlobalConstraints,
                 T2_SVD_TOL,1,
                 psr[0].fitinfo.output.parameterEstimates,
                 psr[0].fitinfo.output.errorEstimates,
                 psr[0].covar,
-                psr[0].robust);
+                psr[0].robust,
+                constraint_vals);
         // for now the CVM ends up in psr[0].covar.
 
         int off_p = gParams;
@@ -647,7 +662,7 @@ void t2Fit_buildConstraintsMatrix(pulsar* psr,int ipsr, int iconstraint, double*
     for (unsigned int ifit = 0; ifit < fitinfo->nParams; ifit++){
         param_label p_label= fitinfo->paramIndex[ifit];
         // call the function allocated to this constraint
-        afunc[ifit] = func(psr,ipsr,c_label,p_label,fitinfo->constraintCounters[iconstraint],fitinfo->paramCounters[ifit]);
+        afunc[ifit] = func(psr,ipsr,c_label,p_label,fitinfo->constraintCounters[iconstraint],fitinfo->paramCounters[ifit],fitinfo->constraintSpecial[iconstraint]);
     }
 }
 
@@ -704,9 +719,66 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
         OUT.constraintCounters[OUT.nConstraints]=0;
         switch(psr->constraints[i]){
+            case constraint_param:
+                {
+                struct constraint_param_info *info = (struct constraint_param_info*) malloc(sizeof(struct constraint_param_info));
+                char pname[128];
+                sscanf(psr->constraint_special[i],"%s %lg %lg",pname,&info->val,&info->err);
+                for (int iparam=0; iparam < param_LAST ; ++iparam) {
+                    for (int pk=0; pk < psr->param[iparam].aSize; ++pk) {
+                        if (strcasecmp(psr->param[iparam].shortlabel[pk],pname)==0){
+                            info->param=iparam;
+                            info->param_k = pk;
+                            info->val -= psr->param[iparam].val[pk];
+                            break;
+                        }
+                    }
+                }
+                double factor=1.0;
+                double sign=1.0;
+                switch(info->param){
+                    case param_pmra:
+                        factor = 180.0/M_PI*60.0*60.0* 1000.0*SECDAY*365.25/24.0/3600.0*cos(psr->param[param_decj].val[0]);
+                        break;
+                    case param_pmdec:
+                        factor=180.0/M_PI*60.0*60.0*1000.0* SECDAY*365.25/24.0/3600.0;
+                        break;
+                    case param_f:
+                        sign=-1.0;
+                        if (info->param_k == 0){
+                            factor = 1.0;
+                        } else {
+                            double scale=1.0;
+                            if (info->param_k == 2) {
+                                scale=1e9;
+                            } else if (info->param_k >2 && info->param_k < 10) {
+                                scale=1e18;
+                            }
+                            factor = psr->param[param_f].val[0]/pow(24.0*3600.0,info->param_k+1)/scale;
+                        }
+                        break;
+                }
+
+                logmsg("'%s'",psr->constraint_special[i]);
+                logmsg("%lg %lg factor: %lg %lg",info->val,info->err,factor);
+                info->val /= factor;
+                info->err /= factor;
+
+                info->val /= info->err;
+
+                logmsg("%lg %lg",info->val,info->err);
+                OUT.constraintValue[OUT.nConstraints] = sign*info->val;
+                OUT.constraintSpecial[OUT.nConstraints] = (void*)info;
+
+                OUT.constraintDerivs[OUT.nConstraints] = constraint_param_function;
+                OUT.constraintCounters[OUT.nConstraints]=i;
+                ++OUT.nConstraints;
+                break;
+                }
             default:
                 // this is a quick fix to avoid re-writing code.
                 OUT.constraintDerivs[OUT.nConstraints] = standardConstraintFunctions;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                 ++OUT.nConstraints;
                 break;
         }
@@ -735,10 +807,12 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 OUT.constraintIndex[OUT.nConstraints]=constraint_red_sin;
                 OUT.constraintCounters[OUT.nConstraints]=i;
                 OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                 ++OUT.nConstraints;
                 OUT.constraintIndex[OUT.nConstraints]=constraint_red_cos;
                 OUT.constraintCounters[OUT.nConstraints]=i;
                 OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                 ++OUT.nConstraints;
             }
         }
@@ -761,10 +835,12 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     OUT.constraintIndex[OUT.nConstraints]=constraint_band_red_sin;
                     OUT.constraintCounters[OUT.nConstraints]=counter;
                     OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_band;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                     ++OUT.nConstraints;
                     OUT.constraintIndex[OUT.nConstraints]=constraint_band_red_cos;
                     OUT.constraintCounters[OUT.nConstraints]=counter;
                     OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_band;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                     ++OUT.nConstraints;
                     ++counter;
                 }
@@ -790,10 +866,12 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     OUT.constraintIndex[OUT.nConstraints]=constraint_group_red_sin;
                     OUT.constraintCounters[OUT.nConstraints]=counter;
                     OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_group;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                     ++OUT.nConstraints;
                     OUT.constraintIndex[OUT.nConstraints]=constraint_group_red_cos;
                     OUT.constraintCounters[OUT.nConstraints]=counter;
                     OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_group;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                     ++OUT.nConstraints;
                     ++counter;
                 }
@@ -817,10 +895,12 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 OUT.constraintIndex[OUT.nConstraints]=constraint_red_dm_sin;
                 OUT.constraintCounters[OUT.nConstraints]=i;
                 OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_dm;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                 ++OUT.nConstraints;
                 OUT.constraintIndex[OUT.nConstraints]=constraint_red_dm_cos;
                 OUT.constraintCounters[OUT.nConstraints]=i;
                 OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_dm;
+                OUT.constraintValue[OUT.nConstraints] = 0;
                 ++OUT.nConstraints;
             }
         }

@@ -587,7 +587,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"SXER_%04d",k+1);
         strcpy(psr->param[param_sxer].shortlabel[k],temp);
       }
-        
+        for (k=0; k < MAX_PARAMS; ++k){
+            psr->constraint_special[k]=0;
+        }
+
 
 }
 
@@ -662,6 +665,13 @@ void destroyOne (pulsar *psr)
         free (psr->obsn);
 
     free_blas(psr->covar);
+
+     for (int k=0; k < MAX_PARAMS; ++k){
+        if(psr->constraint_special[k]){
+            free(psr->constraint_special[k]);
+        }
+    }
+
 
     destroyMemory(psr);
 }

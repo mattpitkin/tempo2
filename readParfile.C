@@ -856,6 +856,15 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         char cname[1024];
         fscanf(fin, "%s",cname);
 
+        // constraint on a parameter
+        if((strcasecmp(cname,"PARAM")==0)){
+            char* txt = fgets(cname, 1024,fin);
+            psr->constraints[psr->nconstraints] = constraint_param;
+            psr->constraint_special[psr->nconstraints] = (char*)malloc(strlen(txt)+2);
+            strcpy(psr->constraint_special[psr->nconstraints],txt);
+            psr->nconstraints++;
+        }
+
         if((strcasecmp(cname,"AUTO")==0)){
             psr->auto_constraints=1;
         }

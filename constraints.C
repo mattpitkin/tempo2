@@ -808,10 +808,10 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
  *
  */
 double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
-    return standardConstraintFunctions(psr,0,iconstraint,i,0,k);
+    return standardConstraintFunctions(psr,0,iconstraint,i,0,k,NULL);
 }
 
-double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     const int i = iparam;
     int order=0;
     const double EFACTOR=psr[ipsr].constraint_efactor;
