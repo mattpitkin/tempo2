@@ -1446,6 +1446,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                             fprintf(fout2,"CONSTRAIN DMMODEL\n");
                         }
                     }
+                    for (int i = 0; i < psr[p].nconstraints; i++){
+                        if (psr[p].constraints[i]==constraint_param){
+                            fprintf(fout2,"CONSTRAIN PARAM %s\n",psr[p].constraint_special[i]);
+                        }
+                    }
                 }
 
 

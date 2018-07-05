@@ -106,6 +106,8 @@ void t2UpdateFunc_stdFreq(pulsar *psr, int ipsr ,param_label label,int k, double
         else if (k>2 && k<10)  scale=1.0e18L;
         else if (k>9) scale=1.0e23L;
 
+        logmsg("%lg",(double)(1.0/(pow(24.0*3600.0,k+1))/scale* psr[ipsr].param[param_f].val[0]));
+
         psr[ipsr].param[param_f].val[k] = psr[ipsr].param[param_f].val[k] -
             (psr[ipsr].param[param_f].val[0]*(val/pow(24.0*3600.0,k+1))/scale);
         psr[ipsr].param[param_f].err[k] = error/(pow(24.0*3600.0,k+1))/scale*
