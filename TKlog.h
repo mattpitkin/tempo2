@@ -1,7 +1,7 @@
 #ifndef _TKlog_h
 #define _TKlog_h
 #define TK_MAX_ERRORS 16
-#define TK_MAX_ERROR_LEN 128
+#define TK_MAX_ERROR_LEN 200
 
 #ifdef __cplusplus
 #include <cstdio>

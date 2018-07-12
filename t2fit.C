@@ -453,7 +453,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
             if(ipsr!=0){
                 memcpy(&psr[ipsr].fitinfo.output, &psr[0].fitinfo.output, sizeof(FitOutput));
-                for (int i=0; i < totalGlobalParams; ++i) {
+                for (unsigned int i=0; i < totalGlobalParams; ++i) {
                     memcpy(psr[ipsr].covar[i],psr[0].covar[i],MAX_FIT*sizeof(double));
                 }
             }
@@ -1270,7 +1270,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             break;
 
         case param_quad_om:
-            for (unsigned i = 0; i < 4*psr->nQuad; ++i){
+            for (int i = 0; i < 4*psr->nQuad; ++i){
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_quad_om;
                 OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_quad_om;
                 OUT.paramCounters[OUT.nParams]=i;
@@ -1332,7 +1332,7 @@ double t2Fit_getParamDeriv(pulsar* psr, const int i, const double x, const param
 int t2Fit_getParamMatrixRow(const FitInfo &fitinfo, const int ipsr, const param_label fit_param, const int k){
     int ret=-1;
 
-    for (unsigned i = 0; i < fitinfo.output.totalNfit; ++i) {
+    for (int i = 0; i < fitinfo.output.totalNfit; ++i) {
         // note that ipsr -1 represents global paramters, so applies to all pulsars
         if (((fitinfo.output.indexPsr[i] == ipsr) || (fitinfo.output.indexPsr[i] == -1))
                 && fitinfo.output.indexParam[i] == fit_param

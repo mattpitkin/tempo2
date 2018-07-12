@@ -549,7 +549,7 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useB
 
     double delta=1.0/365.25;
     double N=(double)npts;
-    int noTF=0;
+    //int noTF=0;
 //    FILE* tf = fopen("testf","w");
 //    if (!tf) {logwarn("Warning: unable to open output file: testf\n"); noTF=1;}
 
