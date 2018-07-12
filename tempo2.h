@@ -965,6 +965,9 @@ extern "C" {
     void updateDDH( pulsar *psr, double val, double err, int pos );
     double ELL1Hmodel( pulsar *psr, int p, int obs, int param );
     void updateELL1H( pulsar *psr, double val, double err, int pos );
+    double ELL1kmodel( pulsar *psr, int p, int obs, int param );
+    void updateELL1k( pulsar *psr, double val, double err, int pos );
+
 
     void displayMsg(int type,const char *key,const char *searchStr,const char *variableStr,int noWarnings);
     void CVSdisplayVersion(const char *file,const char *func,const char *verNum);

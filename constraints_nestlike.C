@@ -114,8 +114,8 @@ double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int ipara
 
 
 
-        double BandLF = psr[ipsr].TNBandNoiseLF[iband];
-        double BandHF = psr[ipsr].TNBandNoiseHF[iband];
+        //double BandLF = psr[ipsr].TNBandNoiseLF[iband];
+        //double BandHF = psr[ipsr].TNBandNoiseHF[iband];
         double BandAmp=pow(10.0, psr[ipsr].TNBandNoiseAmp[iband]);
         double BandSpec=psr[ipsr].TNBandNoiseGam[iband];
 
@@ -148,7 +148,7 @@ double constraints_nestlike_group(pulsar *psr,int ipsr, int iconstraint,int ipar
              ((iconstraint == constraint_group_red_sin) && (iparam == param_group_red_sin)) ||
              ((iconstraint == constraint_group_red_cos) && (iparam == param_group_red_cos)) )
        ) {
-        int totalGroupCoeff=0;
+        //int totalGroupCoeff=0;
 
         int igroup = 0;
         int ichan = k;
@@ -160,11 +160,11 @@ double constraints_nestlike_group(pulsar *psr,int ipsr, int iconstraint,int ipar
         // we are in channel ichan, group igroup.
 
 
-        double ret=0.0;
+        //double ret=0.0;
 
         double GroupAmp=pow(10.0, psr[ipsr].TNGroupNoiseAmp[igroup]);
         double GroupSpec=psr[ipsr].TNGroupNoiseGam[igroup];
-        int GroupC=psr[ipsr].TNGroupNoiseC[igroup];
+        //int GroupC=psr[ipsr].TNGroupNoiseC[igroup];
 
         double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
         double freq = ((double)(ichan+1.0))/(maxtspan);
