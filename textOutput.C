@@ -1606,8 +1606,8 @@ void printGlitch(pulsar psr)
 
             printf("MJD for zero glitch  %d phase = %.6f or %.6f, error = %g\n",iglitch,glep1z,glep2z,glepe);
 
-            dfof = (double)(psr.param[param_glf0].val[iglitch]/psr.param[param_f].val[iglitch]);
-            edfof = (double)(psr.param[param_glf0].err[iglitch]/psr.param[param_f].val[iglitch]);
+            dfof = (double)(psr.param[param_glf0].val[iglitch]/psr.param[param_f].val[0]);
+            edfof = (double)(psr.param[param_glf0].err[iglitch]/psr.param[param_f].val[0]);
             printf("Delta f/f = %g +/- %g\n",dfof,edfof);
 
             df1of1 = (double)(psr.param[param_glf1].val[iglitch]/psr.param[param_f].val[1]);
