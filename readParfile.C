@@ -914,6 +914,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
         }
 
+        if(strcasecmp(cname,"IFUNC_XZERO")==0){
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_x0;
+        }
+
         if(strcasecmp(cname,"IFUNC_ONLYPHI0")==0){
             psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
         }

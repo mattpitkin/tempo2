@@ -72,8 +72,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double startSample,endSample,spacingSample;
   double modelA,modelFc,modelAlpha,x;
   int    setModelA,setModelFc,setModelAlpha;
-  double covFunc[MAX_SAMPLES];
-  sample samples[MAX_SAMPLES];
+
+  double* covFunc = new double[MAX_SAMPLES];
+  sample* samples = new sample[MAX_SAMPLES];
+
   int nSampleTimes=0;
   int nCovFunc;
   double **covMatrix,t,det;
@@ -466,8 +468,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   free(mat);
   free(imat);
   free(vec);
-  return 0;
 
+
+  delete[] covFunc;
+  delete[] samples;
+
+  return 0;
 }
 
 void getPowerSpectra(pulsar *psr,double modelA,double modelFc,double modelAlpha,double startSample,double endSample,double *covFunc,int *nCovFunc,sample *samples,int nSampleTimes,int gw,int drawFig)
