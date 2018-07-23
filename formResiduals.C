@@ -305,7 +305,8 @@ void averageResiduals(pulsar *psr, int npsr){
 void formResiduals(pulsar *psr,int npsr,int removeMean)
 {
     longdouble residual;  /* Residual in phase */
-    longdouble nphase,phase5[MAX_OBSN],phase2,phase3,phase4,phase2state,lastResidual=0,priorResidual=0;
+    longdouble nphase,phase2,phase3,phase4,phase2state,lastResidual=0,priorResidual=0;
+    longdouble *phase5 = new longdouble[MAX_OBSN];
     longdouble lastBat=0.0,priorBat=0.0;
     longdouble phaseJ,phaseW;
     longdouble ftpd,fct,ff0,phaseint;
@@ -2097,6 +2098,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
     }
 
+    delete[] phase5;
     logtchk("Leave formresiduals()");
 }
 

@@ -111,7 +111,6 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         double *psr_e   = (double*)malloc(sizeof(double)*psr[ipsr].nobs);
         int *psr_toaidx = (int*)malloc(sizeof(int)*psr[ipsr].nobs); // mapping from fit data to observation number
 
-        double *psr_const_vals  = (double*)malloc(sizeof(double)*psr[ipsr].nconstraints);
 
         double** uinv; // the whitening matrix.
 
@@ -179,6 +178,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             }
         }
         assert(uinv!=NULL);
+        assert(uinv[0]!=NULL);
 
         /**
          * Now we form the whitening matrix, uinv.
@@ -195,6 +195,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         const unsigned nParams=psr[ipsr].fitinfo.nParams;
         const unsigned nConstraints=psr[ipsr].fitinfo.nConstraints;
 
+        // now we know how many actual constraints there are, we can make the constraint vals array
+        double *psr_const_vals  = (double*)malloc(sizeof(double)*nConstraints);
 
         /**
          * The design matrix is the matrix of gradients for the least-squares.
@@ -224,7 +226,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          * no constraints anyway.
          */
         double** constraintsMatrix =NULL;
-        if(psr[ipsr].fitinfo.nConstraints > 0){
+        if(nConstraints > 0){
 
             computeConstraintWeights(psr+ipsr);
             logdbg("Allocate constraints matrix");
@@ -719,17 +721,37 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         OUT.constraintIndex[OUT.nConstraints]=psr->constraints[i];
         OUT.constraintCounters[OUT.nConstraints]=0;
         switch(psr->constraints[i]){
+            case constraint_ifunc_cov:
+                {
+                }
+                break
             case constraint_param:
                 {
                 struct constraint_param_info *info = (struct constraint_param_info*) malloc(sizeof(struct constraint_param_info));
                 char pname[128];
-                sscanf(psr->constraint_special[i],"%s %lg %lg",pname,&info->val,&info->err);
+                char pval[128];
+                sscanf(psr->constraint_special[i],"%s %s %lg",pname,pval,&info->err);
                 for (int iparam=0; iparam < param_LAST ; ++iparam) {
                     for (int pk=0; pk < psr->param[iparam].aSize; ++pk) {
                         if (strcasecmp(psr->param[iparam].shortlabel[pk],pname)==0){
                             info->param=iparam;
                             info->param_k = pk;
-                            info->val -= psr->param[iparam].val[pk];
+                            switch(info->param) {
+                                case param_raj:
+                                    info->val = turn_deg(hms_turn(pval))*M_PI/180.0 - psr->param[iparam].val[pk];
+                                    info->err *= M_PI/12.0/3600.;
+                                    //logmsg("RAJ: %lg %lg",info->val,info->err);
+                                    break;
+                                case param_decj:
+                                    info->val = turn_deg(dms_turn(pval))*M_PI/180.0 - psr->param[iparam].val[pk];
+                                    info->err *= M_PI/180.0/3600.;
+                                    //logmsg("DECJ: %lg %lg",info->val,info->err);
+                                    break;
+
+                                default:
+                                    info->val  = parse_longdouble(pval) - psr->param[iparam].val[pk];
+                                    break;
+                            }
                             break;
                         }
                     }
