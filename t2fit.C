@@ -4,11 +4,13 @@
 #include "constraints.h"
 #include "constraints_nestlike.h"
 #include "constraints_param.h"
+#include "constraints_covar.h"
 #include <TKfit.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <enum_str.h>
+#include <vector>
 
 
 
@@ -723,8 +725,19 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         switch(psr->constraints[i]){
             case constraint_ifunc_cov:
                 {
+                    double** Binv = malloc_uinv(psr->ifuncN);
+                    std::vector<double> etmp(psr->ifuncN,1e-5);
+                    getCholeskyMatrix(Binv,psr->constraint_special[i],psr, psr->ifuncT,psr->ifuncV,&etmp[0], psr->ifuncN,0,NULL);
+                    for (int ii=0; ii < psr->ifuncN; ++ii) {
+                        OUT.constraintIndex[OUT.nConstraints]=psr->constraints[ii];
+                        OUT.constraintCounters[OUT.nConstraints]=ii;
+                        OUT.constraintSpecial[OUT.nConstraints] = (void*)Binv[ii];
+                        OUT.constraintValue[OUT.nConstraints] = 0;
+                        OUT.constraintDerivs[OUT.nConstraints] = constraints_covar_ifunc;
+                        ++OUT.nConstraints;
+                    }
                 }
-                break
+                break;
             case constraint_param:
                 {
                 struct constraint_param_info *info = (struct constraint_param_info*) malloc(sizeof(struct constraint_param_info));
