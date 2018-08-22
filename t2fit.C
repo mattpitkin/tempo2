@@ -1015,11 +1015,23 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
     for (int i=1;i<=psr->nJumps;i++) {
         if (psr->fitJump[i]==1)
         {
-            OUT.paramIndex[OUT.nParams]=param_JUMP;
-            OUT.paramCounters[OUT.nParams]=i;
-            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_jump;
-            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_jump;
-            ++OUT.nParams;
+            bool goodjump=false;
+            for (int iobs = 0; iobs < psr_ndata; ++iobs) {
+                if(t2FitFunc_jump(psr,0,psr_x[iobs],psr_toaidx[iobs],param_JUMP,i)!=0){
+                    goodjump=true;
+                    break;
+                }
+            }
+            if (goodjump) {
+
+                OUT.paramIndex[OUT.nParams]=param_JUMP;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_jump;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_jump;
+                ++OUT.nParams;
+            } else {
+                logwarn("Refusing to fit for bad JUMP '%s' which had no data points in range",psr->jumpStr[i]);
+            }
         }
     }
     t2Fit_fillFitInfo_INNER(psr,OUT,1);
