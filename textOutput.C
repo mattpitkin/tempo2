@@ -271,6 +271,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         printf("---------------------------------------------------------------------------------------------------\n");
         if (psr[p].rescaleErrChisq == 1 && psr[p].fitMode==1)
             logmsg("Notice: Parameter uncertainties multiplied by sqrt(red. chisq)\n");
+        
+        if (psr[p].rescaleErrChisq == 0 && psr[p].fitMode==1)
+            logmsg("Notice: Parameter uncertainties NOT multiplied by sqrt(red. chisq)\n");
 
         if (psr[p].nconstraints>0){
             printf("\nCONSTRAINTS:\n");
@@ -1621,8 +1624,8 @@ void printGlitch(pulsar psr)
 
             printf("MJD for zero glitch  %d phase = %.6f or %.6f, error = %g\n",iglitch,glep1z,glep2z,glepe);
 
-            dfof = (double)(psr.param[param_glf0].val[iglitch]/psr.param[param_f].val[iglitch]);
-            edfof = (double)(psr.param[param_glf0].err[iglitch]/psr.param[param_f].val[iglitch]);
+            dfof = (double)(psr.param[param_glf0].val[iglitch]/psr.param[param_f].val[0]);
+            edfof = (double)(psr.param[param_glf0].err[iglitch]/psr.param[param_f].val[0]);
             printf("Delta f/f = %g +/- %g\n",dfof,edfof);
 
             df1of1 = (double)(psr.param[param_glf1].val[iglitch]/psr.param[param_f].val[1]);
