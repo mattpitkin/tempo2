@@ -289,6 +289,8 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             double chisq; // the post-fit chi-squared
 
 
+            bool rescale_by_chisq = (psr[ipsr].fitMode==0 || (psr[ipsr].fitMode==1 && psr[ipsr].rescaleErrChisq==1));
+
             /*
              * Call TKleastSquares, or in fact, TKrobustConstrainedLeastSquares,
              * since we might want robust fitting and/or constraints/
@@ -299,7 +301,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             chisq = TKrobustDefConstrainedLeastSquares(psr_y,psr_white_y,
                     designMatrix,white_designMatrix,constraintsMatrix,
                     psr_ndata,nParams,nConstraints,
-                    T2_SVD_TOL,1,
+                    T2_SVD_TOL,rescale_by_chisq,
                     psr[ipsr].fitinfo.output.parameterEstimates,
                     psr[ipsr].fitinfo.output.errorEstimates,
                     psr[ipsr].covar,
@@ -453,10 +455,12 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
         double chisq; // the post-fit chi-squared
 
+        bool rescale_by_chisq = (psr[0].fitMode==0 || (psr[0].fitMode==1 && psr[0].rescaleErrChisq==1));
+
         chisq = TKrobustDefConstrainedLeastSquares(y,white_y,
                 designMatrix,white_designMatrix,constraintsMatrix,
                 nobs,totalGlobalParams,totalGlobalConstraints,
-                T2_SVD_TOL,1,
+                T2_SVD_TOL,rescale_by_chisq,
                 psr[0].fitinfo.output.parameterEstimates,
                 psr[0].fitinfo.output.errorEstimates,
                 psr[0].covar,
