@@ -304,7 +304,7 @@ double TKrobustDefConstrainedLeastSquares(double* data, double* white_data,
         }
 
 
-        chisq = accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm);
+        chisq = accel_lsq_qr(augmented_DM,augmented_white_data,outP,ndata+nconstraints,nparams,cvm,rescale_errors);
         rescale_errors=false;
         free_blas(augmented_DM);
 
