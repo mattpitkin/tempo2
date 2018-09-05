@@ -803,14 +803,14 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                         break;
                 }
 
-                logmsg("'%s'",psr->constraint_special[i]);
-                logmsg("%lg %lg factor: %lg %lg",info->val,info->err,factor);
+                logdbg("Constraining Param '%s'",psr->constraint_special[i]);
+                logdbg("Initial values: %lg %lg factor: %lg %lg",info->val,info->err,factor);
                 info->val /= factor;
                 info->err /= factor;
 
                 info->val /= info->err;
 
-                logmsg("%lg %lg",info->val,info->err);
+                logdbg("Final values: %lg %lg",info->val,info->err);
                 OUT.constraintValue[OUT.nConstraints] = sign*info->val;
                 OUT.constraintSpecial[OUT.nConstraints] = (void*)info;
 

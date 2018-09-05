@@ -12,10 +12,10 @@
 
 double constraint_param_function(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* extra) {
     struct constraint_param_info *nfo = static_cast<struct constraint_param_info*>(extra);
-    logmsg("__: %s %s %s %d %d",psr[ipsr].name,label_str[nfo->param],label_str[iparam],k,nfo->param_k);
+    logdbg("__: %s %s %s %d %d",psr[ipsr].name,label_str[nfo->param],label_str[iparam],k,nfo->param_k);
 
     if(iparam == nfo->param && k==nfo->param_k){
-        logmsg("!!: %s %s %d",psr[ipsr].name,label_str[iparam],k);
+        logdbg("!!: %s %s %d",psr[ipsr].name,label_str[iparam],k);
         return 1.0/nfo->err;
     } else {
         return 0;
