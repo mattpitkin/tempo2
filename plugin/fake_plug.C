@@ -41,8 +41,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   longdouble imjd=-1.0,fmjd=-1.0,ra,grms=0.0;
   longdouble toa,ha0,almst,amjd,hnobs,mjd,trmjd,tstep=0.0;
-  longdouble times[MAX_OBSN];
-  longdouble out[MAX_OBSN];
+  longdouble* times = new longdouble[MAX_OBSN];
+  longdouble* out = new longdouble[MAX_OBSN];
   longdouble lowFreq,highFreq,alpha=-3.0,ampPL=1.0e-16;
   int setref=0;
   int nshots,npts;
@@ -478,6 +478,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Output TOA file written to %s\n",str);
       writeTim(str,psr,formstr);      
   }
+
+  delete[] out;
+  delete[] times;
+
   return 0;
 }
 
