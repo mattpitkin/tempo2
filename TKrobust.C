@@ -21,7 +21,7 @@ void TKrobust_reweight_welsch(double* resid, double* data, double** M, double sc
 double TKrobust(double* data, double* white_data,
         double** designMatrix, double** white_designMatrix,
         double** constraintsMatrix, int ndata,int nparams, int nconstraints, double tol, char rescale_errors,
-        double* outP, double* e, double** Ocvm, char robust) {
+        double* outP, double* e, double** Ocvm, char robust, double* constraint_vals) {
     logmsg("Doing robust fit!");
 
     double **cvm_ls = malloc_blas(nparams,nparams);//store the covariance matrix of LS
@@ -58,11 +58,11 @@ double TKrobust(double* data, double* white_data,
             TKrobust_reweight_huber(resid, modified_data, Mw, sigma, ndata, nparams, sum_phi_sq, sum_dphi);
         }
 
-        TKrobustConstrainedLeastSquares(data, modified_data,
+        TKrobustDefConstrainedLeastSquares(data, modified_data,
                 designMatrix, Mw,
                 constraintsMatrix,
                 ndata, nparams, nconstraints,
-                tol, rescale_errors, outP, e, cvm,0);
+                tol, rescale_errors, outP, e, cvm,0,constraint_vals);
         if (first) {
             memcpy(*cvm_ls, *cvm, sizeof(double)*nparams*nparams); // save this for later.
             writeResiduals &= 0x4; // disable writing the prefit residuals for the rest of this routine.
@@ -108,11 +108,11 @@ double TKrobust(double* data, double* white_data,
             break;
 
     }
-    TKrobustConstrainedLeastSquares(data, modified_data,
+    TKrobustDefConstrainedLeastSquares(data, modified_data,
             designMatrix, Mw,
             constraintsMatrix,
             ndata, nparams, nconstraints,
-            tol, rescale_errors, outP, e, Ocvm,0);
+            tol, rescale_errors, outP, e, Ocvm,0,constraint_vals);
 
     double robust_chisq = sigma*sigma * ndata*ndata * sum_phi_sq / (sum_dphi*sum_dphi);
 

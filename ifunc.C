@@ -30,7 +30,6 @@ double sinfunc(const double *T, const double bat, const int k){
     }
 }
 
-
 double ifunc(const double* mjd, const double* yoffs, const double t,const int N){
     if (t < mjd[0]){
         // we are before the first jump

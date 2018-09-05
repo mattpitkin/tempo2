@@ -390,6 +390,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                tspan=-tspan;
            }
 
+           logmsg("Tspan = %lf",tspan);
            if (autoNspec){
                nSpec = 128;
                while (nSpec > psr->nFit && nSpec > 8){

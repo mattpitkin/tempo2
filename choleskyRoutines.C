@@ -534,7 +534,7 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useB
 
     ndays=ceil((resx[np-1])-(resx[0])+1e-10);
     npts=128;
-    while(npts<(ndays+1)*2)npts*=2;
+    while(npts<(ndays+1)*2 || npts < (2*365.25/modelFc)) npts*=2;
 
     p_r=(double*)malloc(sizeof(double)*npts);
     p_i=(double*)malloc(sizeof(double)*npts);
