@@ -397,6 +397,20 @@ double consFunc_tel_dz(pulsar *psr_array,int ipsr,int i,int k,int order){
     else return 0;
 }
 
+double consFunc_ifunc_X0(pulsar *psr_array,int ipsr,int i,int k,int order){
+    pulsar* psr=psr_array+ipsr;
+    /*
+     * Only operate on param=ifunc and when fit parameter is 
+     * one of the frequency independant parts (i.e. last ifuncN).
+     */
+    if(i==param_ifunc){
+        if(k==0)return 1;
+
+    }
+    else return 0;
+}
+
+
 double consFunc_ifunc(pulsar *psr_array,int ipsr,int i,int k,int order){
     pulsar* psr=psr_array+ipsr;
     /*
@@ -808,10 +822,10 @@ void autosetDMCM(pulsar* psr, double dmstep,double cmstep, double start, double 
  *
  */
 double getConstraintDeriv(pulsar *psr,int iconstraint,int i,int k){
-    return standardConstraintFunctions(psr,0,iconstraint,i,0,k);
+    return standardConstraintFunctions(psr,0,iconstraint,i,0,k,NULL);
 }
 
-double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     const int i = iparam;
     int order=0;
     const double EFACTOR=psr[ipsr].constraint_efactor;
@@ -837,6 +851,8 @@ double standardConstraintFunctions(pulsar *psr,int ipsr, int iconstraint,int ipa
             order++;
         case constraint_ifunc_0:
             return EFACTOR*consFunc_ifunc(psr,ipsr,i,k,order);
+        case constraint_ifunc_x0:
+            return EFACTOR*consFunc_ifunc_X0(psr,ipsr,i,k,order);
         case constraint_tel_dx_2:
             order++;
         case constraint_tel_dx_1:

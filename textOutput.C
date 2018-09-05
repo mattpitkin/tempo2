@@ -271,6 +271,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         printf("---------------------------------------------------------------------------------------------------\n");
         if (psr[p].rescaleErrChisq == 1 && psr[p].fitMode==1)
             logmsg("Notice: Parameter uncertainties multiplied by sqrt(red. chisq)\n");
+        
+        if (psr[p].rescaleErrChisq == 0 && psr[p].fitMode==1)
+            logmsg("Notice: Parameter uncertainties NOT multiplied by sqrt(red. chisq)\n");
 
         if (psr[p].nconstraints>0){
             printf("\nCONSTRAINTS:\n");
@@ -1454,6 +1457,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     for (int i = 0; i < psr[p].nconstraints; i++){
                         if (psr[p].constraints[i]==constraint_dmmodel_mean){
                             fprintf(fout2,"CONSTRAIN DMMODEL\n");
+                        }
+                    }
+                    for (int i = 0; i < psr[p].nconstraints; i++){
+                        if (psr[p].constraints[i]==constraint_param){
+                            fprintf(fout2,"CONSTRAIN PARAM %s\n",psr[p].constraint_special[i]);
                         }
                     }
                 }

@@ -202,6 +202,8 @@ enum constraint {
     constraint_dmmodel_cw_1,
     constraint_dmmodel_cw_2,
     constraint_dmmodel_cw_3,
+    constraint_ifunc_cov,
+    constraint_ifunc_x0,
     constraint_ifunc_0,
     constraint_ifunc_1,
     constraint_ifunc_2,
@@ -254,6 +256,7 @@ enum constraint {
     constraint_group_red_sin,
     constraint_group_red_cos,
     constraint_jitter,
+    constraint_param,
     constraint_LAST /*!< marker for the last constraint */
 };
 
@@ -295,7 +298,7 @@ typedef double (*paramDerivFunc)(struct pulsar*, int,double,int,param_label,int)
  * Used to build the derivative matrix for the least squares solvers.
  *
  */
-typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param_label,int,int);
+typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param_label,int,int,void*);
 
 /*!
  * @brief a function used to update the parameters after a fit.
@@ -329,6 +332,8 @@ typedef struct FitInfo {
     int constraintCounters[MAX_FIT];
     paramDerivFunc paramDerivs[MAX_FIT];
     constraintDerivFunc constraintDerivs[MAX_FIT];
+    void* constraintSpecial[MAX_FIT];
+    double constraintValue[MAX_FIT];
     paramUpdateFunc updateFunctions[MAX_FIT];
     FitOutput output;
 } FitInfo;
@@ -809,6 +814,7 @@ typedef struct pulsar {
     double constraint_efactor;
     enum constraint constraints[MAX_PARAMS];/*!< Which constraints are specified */
     char auto_constraints;
+    char *constraint_special[MAX_PARAMS]; /* Special constraint parameters */
 
     FitInfo fitinfo;
 
