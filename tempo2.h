@@ -50,9 +50,9 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2016.11.3"
-#define TEMPO2_h_MAJOR_VER 2016.11
-#define TEMPO2_h_MINOR_VER 3
+#define TEMPO2_h_VER "2018.09.1"
+#define TEMPO2_h_MAJOR_VER 2018.09
+#define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /*!< DM0 -> DMn where n=10                            */

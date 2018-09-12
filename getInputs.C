@@ -97,6 +97,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
             printf("-displayVersion   Display detailed CVS version number of every file used.\n");
             printf("-noaccel          Disable LAPACK/BLAS acceleration.\n");
             printf("-qrfit            Use QR decomposition instead of SVD (faster, more reliable)\n");
+            printf("-svdfit           Use SVD decomposition instead of QR (tried and true)\n");
             printf("-writeres         Write out prefit/postfit and design matrix in fit.\n");
             printf("-debug            Print debuging information and files (very verbose!).\n");
             printf("-clkdir {dir}     Add {dir} to the start of the clock search path.\n");

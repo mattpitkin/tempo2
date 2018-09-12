@@ -25,4 +25,4 @@ export CFLAGS
 export CXXFLAGS
 export LDFLAGS
 
-./configure --prefix=$PREFIX $2 $3 $4 $5 $6
+./configure --prefix=$PREFIX --enable-default-qrfit $2 $3 $4 $5 $6

@@ -116,6 +116,9 @@ int main(int argc, char *argv[])
             useT2accel=0;
         else if (strcasecmp(argv[i],"-qrfit")==0)
             useT2accel=2;
+        else if (strcasecmp(argv[i],"-svdfit")==0){
+            if(useT2accel) useT2accel=1;
+        }
         else if (strcasecmp(argv[i],"-oldfit")==0)
             NEWFIT=0;
         else if (strcasecmp(argv[i],"-newfit")==0)
