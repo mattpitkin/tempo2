@@ -1,3 +1,4 @@
+#include "config.h"
 #include "T2accel.h"
 #include "tempo2.h"
 #include "TKmatrix.h"
@@ -6,7 +7,11 @@
 #include <string.h>
 #include <assert.h>
 
+#ifdef QR_DEFAULT
+char useT2accel=2;
+#else
 char useT2accel=1;
+#endif
 
 #ifdef HAVE_LAPACK
 #define F77_dpotf2 F77_FUNC (dpotf2, DPOTF2)

@@ -1,6 +1,7 @@
 #include <tempo2.h>
 #include <math.h>
 #include <assert.h>
+#include "enum_str.h"
 
 double t2FitFunc_stdGlitch(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
 
@@ -78,6 +79,7 @@ double t2FitFunc_stdGlitch(pulsar *psr, int ipsr ,double x ,int ipos ,param_labe
             return  0.0;
     }
 
+    logerr("Unknown glitch parameter: label=%d str=%s k=%d",(int)label,label_str[label],k);
     assert(false);
 }
 
