@@ -727,6 +727,22 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     }
     else if (strcasecmp(str,"WAVE_SCALE")==0)
         fscanf(fin,"%lf",&psr->waveScale);
+    else if (strstr(str,"WAVE_SIN")!=NULL || strstr(str,"wave")!=NULL)
+    {
+        int number;
+        /* Obtain parameter number */
+        sscanf(str+8,"%d",&number);
+        fscanf(fin,"%lf",&psr->wave_sine[number-1]);
+        if (psr->nWhite < number) psr->nWhite = number;
+    } else if (strstr(str,"WAVE_COS")!=NULL || strstr(str,"wave")!=NULL)
+    {
+        int number;
+        /* Obtain parameter number */
+        sscanf(str+8,"%d",&number);
+        fscanf(fin,"%lf",&psr->wave_cos[number-1]);
+        if (psr->nWhite < number) psr->nWhite = number;
+        logmsg("READ WAVE_COS %d %g",number,psr->wave_cos[number-1]);
+    }
     else if (strstr(str,"WAVE")!=NULL || strstr(str,"wave")!=NULL)
     {
         int number;
@@ -735,6 +751,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf %lf",&psr->wave_sine[number-1],&psr->wave_cos[number-1]);
         if (psr->nWhite < number) psr->nWhite = number;
     }
+
+
     else if (strcasecmp(str,"WAVDM_OM")==0) /* Fundamental frequency */
     {
         readValue(psr,str,fin,&(psr->param[param_wave_dm]),0);
