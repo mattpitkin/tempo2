@@ -70,7 +70,7 @@
 #define MAX_SITE             100   /*!< Maximum number of observatory sites              */
 #define MAX_PARAMS           2000   /*!< Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /*!< Maximum number of phase jumps                    */
-#define MAX_WHITE            100   /*!< Maximum number of parameters for whitening       */
+#define MAX_WHITE            300   /*!< Maximum number of parameters for whitening       */
 #define MAX_IFUNC            1000   /*!< Maximum number of parameters for interpolation function  */
 #define MAX_TEL_CLK_OFFS     500   /*!< Maximum number of parameters for telescope clock offset */
 #define MAX_TEL_DX           500   /*!< Maximum number of parameters for interpolation function  */
