@@ -51,9 +51,9 @@ void t2UpdateFunc_nestlike_red(pulsar *psr, int ipsr ,param_label label,int k, d
         double RedFLow = pow(10., psr[ipsr].TNRedFLow);
         double freq = RedFLow*((double)(k+1.0))/(maxtspan);
         //printf("WAVE_FREQ %.18lg\n",freq*365.25);
-        printf("Temponest equivilent fitwaves parameters\n")
-        printf("========================================\n")
-        printf("\n")
+        printf("Temponest equivilent fitwaves parameters\n");
+        printf("========================================\n");
+        printf("\n");
         printf("WAVE_OM %.18lg\n",freq*2.0*M_PI);
         printf("WAVEEPOCH %.18lg\n",(double)psr[ipsr].param[param_pepoch].val[0]);
     }
@@ -63,7 +63,7 @@ void t2UpdateFunc_nestlike_red(pulsar *psr, int ipsr ,param_label label,int k, d
     if (label==param_red_cos){
         printf("WAVE_COS%d %.18lg\n",k+1,-val);
     }
-    printf("\n")
+    printf("\n");
 
     //    logmsg("%d %s %d %lg %lg",ipsr,label_str[label],k,val,err);
     for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
