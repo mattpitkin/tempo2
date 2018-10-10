@@ -517,6 +517,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         readValue(psr,str,fin,&(psr->param[param_tzrmjd]),0);
     else if (strcasecmp(str,"TZRSITE")==0)      /* TZRMJD */
         fscanf(fin,"%s",psr->tzrsite);
+    else if (strcasecmp(str,"REFPHS")==0) {     /* REFPHS */
+        fscanf(fin,"%s",str);
+        if(strcasecmp(str,"MEAN")==0){
+            psr->refphs=REFPHS_MEAN;
+        } else if (strcasecmp(str,"TZR")==0) {
+            psr->refphs=REFPHS_TZR;
+        } else {
+            logwarn("Unknown REFPHS '%s'",str);
+        }
+    }
     else if (strcasecmp(str,"NSPAN")==0 || strcasecmp(str,"TSPAN")==0)      /* TSPAN */
         readValue(psr,str,fin,&(psr->param[param_tspan]),0);
     else if (strcasecmp(str,"TZRFRQ")==0 || strcasecmp(str,"TZRFREQ")==0)      /* TZRFRQ */

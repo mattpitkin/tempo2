@@ -140,6 +140,9 @@
 #define T2C_TEMPO   2
 
 
+#define REFPHS_MEAN 0
+#define REFPHS_TZR  1
+
 /*! TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
 
@@ -820,6 +823,9 @@ typedef struct pulsar {
 
     int brace;
 
+    observation tzrobs;
+    char refphs;
+
 } pulsar;
 
 
@@ -1033,6 +1039,8 @@ extern "C" {
     /* ... and tropospheric delays ... */
     void compute_tropospheric_delays(pulsar *psr,int npsr);
 
+void refphs_init(pulsar* psr, int nps);
+void refphs_clean(pulsar* psr, int nps);
 
 #ifdef __cplusplus
 }
