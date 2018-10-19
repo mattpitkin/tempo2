@@ -13,6 +13,7 @@ void refphs_init(pulsar* psr, int npsr){
             }
             psr[p].nobs++;
             observation* obs = &(psr[p].obsn[psr[p].nobs-1]); // convinience pointer
+            memset(obs,0,sizeof(observation));
             obs->sat = psr[p].param[param_tzrmjd].val[0];
             obs->freq = psr[p].param[param_tzrfrq].val[0];
             strcpy(obs->telID,psr[p].tzrsite);
