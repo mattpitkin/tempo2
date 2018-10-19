@@ -44,6 +44,9 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
         if ( psr[0].param[param_finish].paramSet[0]){
             if(psr[0].obsn[iobs].sat > fin)continue;
         }
+        if ( psr[0].obsn[iobs].deleted ){
+            continue;
+        }
 
         unsigned long long pn = psr[0].obsn[iobs].pulseN-psr[0].obsn[0].pulseN;
         ld_fprintf(out,"%.15Lf %lf %lf %lld %s %lg %lg %.15Lf\n", psr[0].obsn[iobs].sat,
