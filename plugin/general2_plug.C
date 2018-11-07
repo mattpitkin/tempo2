@@ -621,6 +621,13 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
+
+                        else if (strcasecmp(var,"clock_corr")==0)
+                        {
+                            sprintf(disp,dformat,getCorrectionTT(psr[0].obsn+varN));
+                            fprintf(fout,"%s",disp);
+
+                        }
                         else if (strcasecmp(var,"clock")==0)
                         {
                             sprintf(disp,format,getCorrectionTT(psr[0].obsn+varN)+psr[0].obsn[varN].correctionTT_TB-psr[0].obsn[varN].correctionsTT[0].correction-psr[0].obsn[varN].correctionsTT[1].correction-psr[0].obsn[varN].correctionsTT[2].correction); 
