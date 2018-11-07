@@ -2077,7 +2077,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             memcpy(&(psr[p].tzrobs),&(psr[p].obsn[psr[p].nobs-1]),sizeof(observation));
             psr[p].nobs--;
 
-            logwarn("SHIFT RESIDUALS BY %g %g %g\n",(double)psr[p].tzrobs.residual,(double)psr[p].tzrobs.bbat,(double)psr[p].tzrobs.sat);
+            logmsg("SHIFT RESIDUALS BY %g (%g %g)\n",(double)psr[p].tzrobs.residual,(double)psr[p].tzrobs.bbat,(double)psr[p].tzrobs.sat);
             for (i=0;i<psr[p].nobs;i++){
                 psr[p].obsn[i].residual -= psr[p].tzrobs.residual;
             }
