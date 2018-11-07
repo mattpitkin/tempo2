@@ -1,6 +1,7 @@
 #include <cmath>
 #include <assert.h>
 #include <string.h>
+#include <cstdio>
 #include "t2fit_nestlike.h"
 #include "enum_str.h"
 
@@ -56,6 +57,16 @@ void t2UpdateFunc_nestlike_red(pulsar *psr, int ipsr ,param_label label,int k, d
         printf("\n");
         printf("WAVE_OM %.18lg\n",freq*2.0*M_PI);
         printf("WAVEEPOCH %.18lg\n",(double)psr[ipsr].param[param_pepoch].val[0]);
+        if (writeResiduals&4){
+            FILE *fout;
+            fout = fopen("tnred.meta","w");
+            if (!fout){
+                printf("Unable to open file tnred.meta for writing\n");
+            }
+            fprintf(fout,"RED_OMEGA %lg\n",freq*2.0*M_PI);
+            fprintf(fout,"RED_EPOCH %lg\n",(double)psr[ipsr].param[param_pepoch].val[0]);
+            fclose(fout);
+        }
     }
     if (label==param_red_sin){
         printf("WAVE_SIN%d %.18lg\n",k+1,-val);
@@ -70,7 +81,7 @@ void t2UpdateFunc_nestlike_red(pulsar *psr, int ipsr ,param_label label,int k, d
         double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
         double y = t2FitFunc_nestlike_red(psr,ipsr,x,iobs,label,k);
         psr[ipsr].obsn[iobs].TNRedSignal  += y *val;
-        psr[ipsr].obsn[iobs].TNRedErr     = pow(y*err,2);
+        psr[ipsr].obsn[iobs].TNRedErr     += pow(y*err,2);
         //fprintf(stderr, "are we here????\n");
 
     }
