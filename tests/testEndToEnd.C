@@ -2,6 +2,7 @@
 #include <src/gtest_main.cc>
 #include "tempo2.h"
 #include "t2fit.h"
+#include "T2accel.h"
 
 TEST(testEndToEnd,checkIdeal){
     pulsar _psr;
@@ -165,6 +166,7 @@ ASSERT_EQ(1,1);
 
 
 TEST(testEndToEnd,checkGlobalQIfunc){
+    if(useT2accel) useT2accel=1;
     int npsr=3;
     MAX_PSR=3;
     pulsar *psr = (pulsar*)calloc(MAX_PSR, sizeof(pulsar));
