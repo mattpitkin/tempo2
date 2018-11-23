@@ -1826,16 +1826,26 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
              */
             if (psr[p].param[param_iperharm].paramSet[0]==1)
             {  /* This code has been added for observations taken at the wrong rotational period */
-                phase5[i] = fortran_mod(phase5[i],1.0/psr[p].param[param_iperharm].val[0]);
-                if (phase5[i] >= 1.0/2.0/psr[p].param[param_iperharm].val[0])
+                /* M. Keith Nov 2018 - I have changed this code a bit so that pulse numbers can 
+                 * still be written when using IPERHARM. The old code threw away the integar
+                 * part of the phase here. Now I keep it and just fix the fractional part to
+                 * lie in the correct range. To be honest, it behaves strangely with PN still
+                 * since the PN refers to a real pulse, not a iperharm pulse  */
+                double phaseTMP = fortran_mod(phase5[i],1.0);
+                if (phaseTMP >= 1.0/2.0/psr[p].param[param_iperharm].val[0])
                 {
-                    while (phase5[i] >= 1.0/2.0/psr[p].param[param_iperharm].val[0])
+                    while (phaseTMP >= 1.0/2.0/psr[p].param[param_iperharm].val[0]){
                         phase5[i] -= 1.0/psr[p].param[param_iperharm].val[0];
+                        phaseTMP -= 1.0/psr[p].param[param_iperharm].val[0];
+                    }
                 }
-                else if (phase5[i] < -1.0/2.0/psr[p].param[param_iperharm].val[0])
+                else if (phaseTMP < -1.0/2.0/psr[p].param[param_iperharm].val[0])
                 {
-                    while (phase5[i] < -1.0/2.0/psr[p].param[param_iperharm].val[0])
+                    while (phaseTMP < -1.0/2.0/psr[p].param[param_iperharm].val[0]){
                         phase5[i] += 1.0/psr[p].param[param_iperharm].val[0];
+                        phaseTMP += 1.0/psr[p].param[param_iperharm].val[0];
+
+                    }
                 }
                 //	       if (i==0) phas1  = phase5[i];
                 phase5[i] = phase5[i]; // -phas1; 	       
@@ -1846,6 +1856,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 //	       if (i==0) phas1  = fortran_mod((phase5[i]),longdouble(1.0)); 
                 phase5[i] = phase5[i]; //-phas1; 
             }
+
         }
         // Now calculate phas1 to set the first residual equal to zero
         for (i=0;i<psr[p].nobs;i++)
@@ -1856,16 +1867,8 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     (psr[0].param[param_finish].fitFlag[0]==0 
                      || psr[0].obsn[i].sat < psr[0].param[param_finish].val[0]))
             {
-                if (psr[p].param[param_iperharm].paramSet[0]==1)
-                    phas1 = phase5[i];
-                else
-                    phas1 = fortran_mod((phase5[i]),longdouble(1.0)); 
-                //		 phas1 = phase5[i];
-                //
+                phas1 = fortran_mod((phase5[i]),longdouble(1.0));
 
-                //		 phas1 = fortran_mod((phase5[i]),longdouble(1.0)); 
-
-                //
                 //	       printf("phas1 set to observation number %d\n",i);
                 break;
             }
