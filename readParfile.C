@@ -517,6 +517,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         readValue(psr,str,fin,&(psr->param[param_tzrmjd]),0);
     else if (strcasecmp(str,"TZRSITE")==0)      /* TZRMJD */
         fscanf(fin,"%s",psr->tzrsite);
+    else if (strcasecmp(str,"REFPHS")==0) {     /* REFPHS */
+        fscanf(fin,"%s",str);
+        if(strcasecmp(str,"MEAN")==0){
+            psr->refphs=REFPHS_MEAN;
+        } else if (strcasecmp(str,"TZR")==0) {
+            psr->refphs=REFPHS_TZR;
+        } else {
+            logwarn("Unknown REFPHS '%s'",str);
+        }
+    }
     else if (strcasecmp(str,"NSPAN")==0 || strcasecmp(str,"TSPAN")==0)      /* TSPAN */
         readValue(psr,str,fin,&(psr->param[param_tspan]),0);
     else if (strcasecmp(str,"TZRFRQ")==0 || strcasecmp(str,"TZRFREQ")==0)      /* TZRFRQ */
@@ -727,6 +737,22 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     }
     else if (strcasecmp(str,"WAVE_SCALE")==0)
         fscanf(fin,"%lf",&psr->waveScale);
+    else if (strstr(str,"WAVE_SIN")!=NULL || strstr(str,"wave")!=NULL)
+    {
+        int number;
+        /* Obtain parameter number */
+        sscanf(str+8,"%d",&number);
+        fscanf(fin,"%lf",&psr->wave_sine[number-1]);
+        if (psr->nWhite < number) psr->nWhite = number;
+    } else if (strstr(str,"WAVE_COS")!=NULL || strstr(str,"wave")!=NULL)
+    {
+        int number;
+        /* Obtain parameter number */
+        sscanf(str+8,"%d",&number);
+        fscanf(fin,"%lf",&psr->wave_cos[number-1]);
+        if (psr->nWhite < number) psr->nWhite = number;
+        logmsg("READ WAVE_COS %d %g",number,psr->wave_cos[number-1]);
+    }
     else if (strstr(str,"WAVE")!=NULL || strstr(str,"wave")!=NULL)
     {
         int number;
@@ -735,6 +761,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf %lf",&psr->wave_sine[number-1],&psr->wave_cos[number-1]);
         if (psr->nWhite < number) psr->nWhite = number;
     }
+
+
     else if (strcasecmp(str,"WAVDM_OM")==0) /* Fundamental frequency */
     {
         readValue(psr,str,fin,&(psr->param[param_wave_dm]),0);

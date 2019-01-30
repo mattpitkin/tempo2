@@ -483,6 +483,17 @@ double TKrobustDefConstrainedLeastSquares(double* data, double* white_data,
                 fclose(wFile);
             }
         }
+        if (computeParam) {
+            FILE *fout;
+            fout = fopen("param.vals","w");
+            if (!fout){
+                printf("Unable to open file param.vals for writing\n");
+            }
+            for (i=0;i<nparams;i++){
+                fprintf(fout,"%g\n",outP[i]);
+            }
+            fclose(fout);
+        }
         if (computeCVM) {
             FILE *fout;
             fout = fopen("cov.matrix","w");
