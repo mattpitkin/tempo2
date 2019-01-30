@@ -1303,6 +1303,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"%-15.15s%s\n","EPH_FILE",psr[p].ephemeris);
                 }
 
+                if (psr[p].refphs == REFPHS_TZR) {
+                    fprintf(fout2,"%-15.15s%s\n","REFPHS","TZR");
+                }
+
                 fprintf(fout2,"%-15.15s%s\n","NITS","1");
                 fprintf(fout2,"%-15.15s%d\n","NTOA",psr[p].nFit);
                 fprintf(fout2,"%-15.15s%.4f %d\n","CHI2R",chisqr/(double)psr[p].fitNfree,psr[p].fitNfree);

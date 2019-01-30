@@ -70,7 +70,7 @@
 #define MAX_SITE             100   /*!< Maximum number of observatory sites              */
 #define MAX_PARAMS           2000   /*!< Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /*!< Maximum number of phase jumps                    */
-#define MAX_WHITE            100   /*!< Maximum number of parameters for whitening       */
+#define MAX_WHITE            300   /*!< Maximum number of parameters for whitening       */
 #define MAX_IFUNC            1000   /*!< Maximum number of parameters for interpolation function  */
 #define MAX_TEL_CLK_OFFS     500   /*!< Maximum number of parameters for telescope clock offset */
 #define MAX_TEL_DX           500   /*!< Maximum number of parameters for interpolation function  */
@@ -139,6 +139,9 @@
 #define T2C_IAU2000B 1
 #define T2C_TEMPO   2
 
+
+#define REFPHS_MEAN 0
+#define REFPHS_TZR  1
 
 /*! TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
@@ -820,6 +823,9 @@ typedef struct pulsar {
 
     int brace;
 
+    observation tzrobs;
+    char refphs;
+
 } pulsar;
 
 
@@ -1033,6 +1039,8 @@ extern "C" {
     /* ... and tropospheric delays ... */
     void compute_tropospheric_delays(pulsar *psr,int npsr);
 
+void refphs_init(pulsar* psr, int nps);
+void refphs_clean(pulsar* psr, int nps);
 
 #ifdef __cplusplus
 }

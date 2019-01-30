@@ -140,6 +140,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->fjumpID,"");
     strcpy(psr->deleteFileName,"NONE");
     strcpy(psr->tzrsite,"NULL");
+    psr->refphs=REFPHS_MEAN;
     psr->ToAextraCovar=NULL;
     psr->dmoffsDMnum=0;
     psr->dmoffsCMnum = 0;

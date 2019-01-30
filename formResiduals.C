@@ -349,6 +349,15 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
     {
         mean = longdouble(0.0);
         nmean = 0;
+        if(psr[p].refphs==REFPHS_TZR){
+            // reinstate the extra TZR observation so we can compute the reference phase
+            if (psr[p].nobs==MAX_OBSN){
+                logerr("Error, need at least 1 spare observation to reference to REFPHS TZR");
+                exit(1);
+            }
+            psr[p].nobs++;
+            memcpy(&(psr[p].obsn[psr[p].nobs-1]),&(psr[p].tzrobs),sizeof(observation));
+        }
 
         for (i=0;i<psr[p].nobs;i++)
         {
@@ -2065,6 +2074,17 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         }
         newmean = newmean/psr[p].nobs;
 
+        // deal with the REFPHS option before we look at red noise etc.
+        if(psr->refphs==REFPHS_TZR){
+            // remove our TZR observation and store it in tzrobs for later use.
+            memcpy(&(psr[p].tzrobs),&(psr[p].obsn[psr[p].nobs-1]),sizeof(observation));
+            psr[p].nobs--;
+
+            logmsg("SHIFT RESIDUALS BY %g (%g %g)\n",(double)psr[p].tzrobs.residual,(double)psr[p].tzrobs.bbat,(double)psr[p].tzrobs.sat);
+            for (i=0;i<psr[p].nobs;i++){
+                psr[p].obsn[i].residual -= psr[p].tzrobs.residual;
+            }
+        }
 
 
         if((psr[p].TNsubtractRed==1) && (psr[p].TNsubtractDM ==0)){
@@ -2098,7 +2118,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             averageDMResiduals(psr,1);
 
         }
-
+        
     }
 
     delete[] phase5;
