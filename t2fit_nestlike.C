@@ -89,6 +89,25 @@ void t2UpdateFunc_nestlike_red(pulsar *psr, int ipsr ,param_label label,int k, d
 
 
 void t2UpdateFunc_nestlike_red_dm(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
+
+    if (k==0 && label==param_red_dm_sin){
+        if (writeResiduals&4){
+            double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+            double freq = ((double)(k+1.0))/(maxtspan);
+            FILE *fout;
+            fout = fopen("tnreddm.meta","w");
+            if (!fout){
+                printf("Unable to open file tnred.meta for writing\n");
+            }
+            fprintf(fout,"REDDM_OMEGA %lg\n",freq*2.0*M_PI);
+            fprintf(fout,"REDDM_EPOCH %lg\n",(double)psr[ipsr].param[param_pepoch].val[0]);
+            fprintf(fout,"REDDM_DMEPOCH %lg\n",(double)psr[ipsr].param[param_dmepoch].val[0]);
+            fprintf(fout,"REDDM_DM %lg\n",(double)psr[ipsr].param[param_dm].val[0]);
+            fprintf(fout,"REDDM_DM1 %lg\n",(double)psr[ipsr].param[param_dm].val[1]);
+            fprintf(fout,"REDDM_DM2 %lg\n",(double)psr[ipsr].param[param_dm].val[2]);
+            fclose(fout);
+        }
+    }
     logmsg("%d %s %d %lg %lg",ipsr,label_str[label],k,val,err);
     for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
         double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
