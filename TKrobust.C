@@ -47,6 +47,7 @@ double TKrobust(double* data, double* white_data,
 
     double resid[ndata];
     double abs_resid[ndata];
+    int count=0;
 
 
     while(fabs(sigma_old-sigma) > 1e-5){
@@ -84,6 +85,11 @@ double TKrobust(double* data, double* white_data,
         sigma_old = sigma;
         sigma = median_abs_deviation/0.6745;
         logdbg("Sigma = %lg",sigma);
+        count += 1;
+        if (count > 16){
+            logwarn("Warning, robust fit did not converge after 16 iterations, aborting...");
+            break;
+        }
     }
 
 
