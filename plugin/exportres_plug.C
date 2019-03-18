@@ -49,14 +49,15 @@ extern "C" int tempoOutput(int argc,char *argv[],pulsar *psr,int npsr)
         }
 
         unsigned long long pn = psr[0].obsn[iobs].pulseN-psr[0].obsn[0].pulseN;
-        ld_fprintf(out,"%.15Lf %lf %lf %lld %s %lg %lg %.15Lf\n", psr[0].obsn[iobs].sat,
+        ld_fprintf(out,"%.15Lf %lf %lf %lld %s %lg %lg %.15Lf %8.3f\n", psr[0].obsn[iobs].sat,
                 (double)psr[0].obsn[iobs].residual*f0,
                 psr[0].obsn[iobs].toaErr*f0*1e-6,
                 pn,
                 psr[0].obsn[iobs].fname,
                 (double)psr[0].obsn[iobs].residual,
                 psr[0].obsn[iobs].toaErr*1e-6,
-                psr[0].obsn[iobs].bat);
+                psr[0].obsn[iobs].bat,
+                psr[0].obsn[iobs].freqSSB*1e-6);
     }
     fclose(out);
 }
