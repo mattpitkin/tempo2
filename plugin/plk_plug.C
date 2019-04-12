@@ -2072,7 +2072,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                         {
                             printf("%12.5f %12.5f %12.5f %12.5f\n",x[i],y[i]*1000.0,psr[0].obsn[id[i]].toaErr/1000.0,
                                     (double)psr[0].obsn[id[i]].bat);
-                            fprintf(outfile,"%12.5f %13.6f %12.5f %20.15f %20.15f %12.5f %s",x[i],y[i]*1000.0,
+                            fprintf(outfile,"%12.5f %13.6f %12.5f %20.15f %20.15f %12.6f %s",x[i],y[i]*1000.0,
                                     psr[0].obsn[id[i]].toaErr/1000.0, 
                                     (double)psr[0].obsn[id[i]].bat,(double)(psr[0].obsn[id[i]].bat-
                                         psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[id[i]].freq,psr[0].obsn[id[i]].fname); 
