@@ -826,6 +826,7 @@ typedef struct pulsar {
     observation tzrobs;
     char refphs;
 
+    double posPulsarEquatorial[3];            /*!< 3-vector pointing at pulsar, in equatorial coordinates (even if using ecliptic)*/
 } pulsar;
 
 
@@ -938,6 +939,7 @@ extern "C" {
     int fortran_nint(double x);
     long fortran_nlong(longdouble x);
     void equ2ecl(double *x);
+    void ecl2equ(double *x);
     void copyParam(parameter p1,parameter *p2);
     void copyPSR(pulsar *p,int p1,int p2);
 
