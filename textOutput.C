@@ -96,7 +96,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         calcRMS(psr,p);
 
         // Update TZRMJD
-        {
+        if (psr[p].nobs > 0) {
             longdouble centrePos;
             longdouble closestV,check;
             int closestI=-1;
@@ -1288,7 +1288,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 else
                     fprintf(fout2, "%-15.15s%s\n", "T2CMETHOD", "IAU2000B");
 
-                fprintf(fout2, "%-15.15s%.3f\n", "NE_SW", psr[p].ne_sw);
+                if (psr[p].param[param_ne_sw].paramSet[0] == 0) {
+                    // We don't have NE_SW set as a fit parameter
+                    fprintf(fout2, "%-15.15s%.3f\n", "NE_SW", psr[p].ne_sw);
+                }
+
                 if (!psr[p].correctTroposphere)
                     fprintf(fout2, "%-21.21s%s\n", "CORRECT_TROPOSPHERE", "N");
                 else
