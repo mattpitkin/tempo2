@@ -1153,9 +1153,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 {
                     for (k=0;k<psr[p].param[i].aSize;k++)
                     {
+                                // Old code would not write DMEPOCH when in tempo1 mode, but tempo now understands DMEPOCH
+                                //(psr[p].tempo1==0 || (i!=param_dmepoch)))
+                                //
                         if (psr[p].param[i].paramSet[k]==1 && i!=param_wave_om &&  i!= param_wave_dm 
-                                && i!=param_waveepoch && i!=param_ifunc && i!=param_dmmodel &&
-                                (psr[p].tempo1==0 || (i!=param_dmepoch)))
+                                && i!=param_waveepoch && i!=param_ifunc && i!=param_dmmodel)
                         {
                             if (strcmp(psr[p].param[i].shortlabel[k],"PB")==0 || strcmp(psr[p].param[i].shortlabel[k],"FB0")==0)
                                 fprintf(fout2,"%-15.15s%s\n","BINARY",psr[p].binaryModel);
