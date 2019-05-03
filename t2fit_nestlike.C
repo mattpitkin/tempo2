@@ -104,9 +104,9 @@ void t2UpdateFunc_nestlike_red_dm(pulsar *psr, int ipsr ,param_label label,int k
             fprintf(fout,"REDDM_OMEGA %lg\n",freq*2.0*M_PI);
             fprintf(fout,"REDDM_EPOCH %lg\n",(double)psr[ipsr].param[param_pepoch].val[0]);
             fprintf(fout,"REDDM_DMEPOCH %lg\n",(double)psr[ipsr].param[param_dmepoch].val[0]);
-            fprintf(fout,"REDDM_DM %lg\n",(double)psr[ipsr].param[param_dm].val[0]);
-            fprintf(fout,"REDDM_DM1 %lg\n",(double)psr[ipsr].param[param_dm].val[1]);
-            fprintf(fout,"REDDM_DM2 %lg\n",(double)psr[ipsr].param[param_dm].val[2]);
+            fprintf(fout,"REDDM_DM %lg\n",(double)psr[ipsr].param[param_dm].prefit[0]);
+            fprintf(fout,"REDDM_DM1 %lg\n",(double)psr[ipsr].param[param_dm].prefit[1]);
+            fprintf(fout,"REDDM_DM2 %lg\n",(double)psr[ipsr].param[param_dm].prefit[2]);
             fclose(fout);
         }
     }

@@ -217,6 +217,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"F%d",j);
         strcpy(psr->param[param_f].shortlabel[j],temp);
     }
+//    strcpy(psr->param[param_ZERO].label[0],"Zero Offset");
+//    strcpy(psr->param[param_ZERO].shortlabel[0],"Zero Offset");
     strcpy(psr->param[param_raj].label[0],"RAJ (rad)");
     strcpy(psr->param[param_raj].shortlabel[0],"RAJ");
     strcpy(psr->param[param_decj].label[0],"DECJ (rad)");

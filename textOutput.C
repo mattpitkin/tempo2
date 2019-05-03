@@ -1493,6 +1493,37 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
            ld_printf("%s\t%Lg\t%s\n",psr[p].storePrec[i].routine,psr[p].storePrec[i].minPrec,
            psr[p].storePrec[i].comment);
            } */
+
+        bool notwarned=true;
+        for (int i=0; i < psr[p].fitinfo.nParams;++i) {
+            for (int j=0; j < i;++j) {
+                double corr = psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]);
+                if (fabs(corr) > 0.99){
+                    if (notwarned){
+                        printf("\n");
+                        logwarn("There are output parameters with very high covariance");
+                        notwarned=false;
+                    }
+                    param_label p1 = psr[p].fitinfo.paramIndex[i];
+                    param_label p2 = psr[p].fitinfo.paramIndex[j];
+                    int c1= psr[p].fitinfo.paramCounters[i];
+                    int c2= psr[p].fitinfo.paramCounters[j];
+                    char n1[80];
+                    char n2[80];
+                    if (c1 < psr[p].param[p1].aSize && strlen(psr[p].param[p1].shortlabel[c1])>0) {
+                        strncpy(n1,psr[p].param[p1].shortlabel[c1],80);
+                    } else {
+                        snprintf(n1,80,"%s(%d)",label_str[p1],c1);
+                    }
+                    if (c2 < psr[p].param[p2].aSize && strlen(psr[p].param[p2].shortlabel[c2])>0) {
+                        strncpy(n2,psr[p].param[p2].shortlabel[c2],80);
+                    } else {
+                        snprintf(n2,80,"%s(%d)",label_str[p2],c2);
+                    }
+                    printf("% 20s % 20s %+.5f\n",n1,n2,corr);
+                }
+            }
+        }
     }
 
     if (nGlobal > 0)
