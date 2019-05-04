@@ -21,3 +21,4 @@ angle_plug.C
 tnmaxlike_fitFunc_plug.C
 stridefit2_plug.C
 exportres_plug.C
+fitStability_plug.C
