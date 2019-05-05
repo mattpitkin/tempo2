@@ -25,9 +25,11 @@ cdef extern from "tempo2pred.h":
 
 cdef class pyT2Predictor:
     cdef T2Predictor *thisptr
-    def __init__(self):
+    def __init__(self,filename=None):
         self.thisptr = <T2Predictor*> malloc(sizeof(T2Predictor));
         T2Predictor_Init(self.thisptr)
+        if not filename is None:
+            self.read(filename)
 
     def __dealloc___(self):
         free(self.thisptr)
