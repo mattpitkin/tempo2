@@ -1,4 +1,6 @@
 from libc.stdlib cimport malloc, free
+cimport numpy as np
+import numpy as np
 
 
 cdef extern from "tempo2pred.h":
@@ -23,9 +25,15 @@ cdef extern from "tempo2pred.h":
     long double T2Predictor_GetPhase(const T2Predictor *t2p, long double mjd, long double freq)
     long double T2Predictor_GetFrequency(const T2Predictor *t2p, long double mjd, long double freq)
 
-cdef class pyT2Predictor:
+cdef extern from "t2pred_loops.h":
+    void T2Predictor_GetPhase_array(const T2Predictor *t2p, long double *mjd, int nmjd, long double freq, double* out)
+    void T2Predictor_GetFrequency_array(const T2Predictor *t2p, long double *mjd, int nmjd, long double freq, double* out)
+
+cdef class phase_predictor:
     cdef T2Predictor *thisptr
+    cdef int count
     def __init__(self,filename=None):
+        self.count=0
         self.thisptr = <T2Predictor*> malloc(sizeof(T2Predictor));
         T2Predictor_Init(self.thisptr)
         if not filename is None:
@@ -40,6 +48,14 @@ cdef class pyT2Predictor:
         cdef char* c_string = bytestring
         return T2Predictor_Read(self.thisptr,c_string)
 
+    def getPhase_array(self, mjd,freq):
+        cdef int n = np.product(mjd.shape)
+        phase=np.zeros(n)
+        times=mjd.flatten(order='C')
+        cdef long double[::1] times_view = times
+        cdef double[::1] phase_view = phase
+        T2Predictor_GetPhase_array(self.thisptr,&times_view[0],n,freq,&phase_view[0])
+        return phase.reshape(mjd.shape)
 
     def getPhase(self,mjd,freq):
         return T2Predictor_GetPhase(self.thisptr,mjd,freq)
