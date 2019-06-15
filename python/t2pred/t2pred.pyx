@@ -26,8 +26,11 @@ cdef extern from "tempo2pred.h":
     long double T2Predictor_GetFrequency(const T2Predictor *t2p, long double mjd, long double freq)
 
 cdef extern from "t2pred_loops.h":
-    void T2Predictor_GetPhase_array(const T2Predictor *t2p, long double *mjd, int nmjd, long double freq, double* out)
-    void T2Predictor_GetFrequency_array(const T2Predictor *t2p, long double *mjd, int nmjd, long double freq, double* out)
+    void T2Predictor_GetPhase_array_ld(const T2Predictor *t2p, long double *mjd, int nmjd, long double freq, double* out)
+    void T2Predictor_GetFrequency_array_ld(const T2Predictor *t2p, long double *mjd, int nmjd, long double freq, double* out)
+
+    void T2Predictor_GetPhase_array(const T2Predictor *t2p, double refmjd, double *mjd, const int nmjd, double freq, double* out)
+    void T2Predictor_GetFrequency_array(const T2Predictor *t2p, double refmjd, double *mjd, const int nmjd, double freq, double* out)
 
 cdef class phase_predictor:
     cdef T2Predictor *thisptr
@@ -54,7 +57,8 @@ cdef class phase_predictor:
         times=mjd.flatten(order='C')
         cdef long double[::1] times_view = times
         cdef double[::1] phase_view = phase
-        T2Predictor_GetPhase_array(self.thisptr,&times_view[0],n,freq,&phase_view[0])
+        T2Predictor_GetPhase_array_ld(self.thisptr,&times_view[0],n,freq,&phase_view[0])
+        
         return phase.reshape(mjd.shape)
 
     def getPhase(self,mjd,freq):

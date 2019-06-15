@@ -119,9 +119,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    const int nparam = psr[0].fitinfo.nParams;
    double **parameter_cvm = malloc_uinv(nparam); // allocate parameter_cvm
    double **parameter_uinv = malloc_uinv(nparam); // allocate parameter_uinv
-//   double **parameter_uinv2= malloc_uinv(nparam); // allocate parameter_uinv
-//   double **parameter_Cinv= malloc_uinv(nparam); // allocate parameter_uinv
-//   double **parameter_out= malloc_uinv(nparam); // allocate parameter_uinv
 
    for (int iparam =0; iparam < nparam ; ++iparam) {
        memcpy(parameter_cvm[iparam],psr[0].covar[iparam],nparam*sizeof(double));
@@ -203,40 +200,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
        for (int iparam =0; iparam < nparam ; ++iparam) {
            double abs_deviation = psr[0].fitinfo.output.parameterEstimates[iparam] - orig_fitinfo.output.parameterEstimates[iparam] + param_noise[iparam];
            deviations[iparam] = abs_deviation;
-           //double sig_deviation = abs_deviation / orig_fitinfo.output.errorEstimates[iparam];
            double sig_deviation = abs_deviation / sqrt(parameter_cvm[iparam][iparam]);
+
            sumsq += sig_deviation*sig_deviation;
            ssq_deviations[iparam] += sig_deviation*sig_deviation;
        }
        total_ssq += sumsq;
 
-
-//       for (int iparam =0; iparam < nparam ; ++iparam) {
-//           for (int jparam =0; jparam < nparam ; ++jparam) {
-//               parameter_uinv2[jparam][iparam]=parameter_uinv[iparam][jparam];
-//           }
-//       }
-
-//       TKmultMatrix_sq(parameter_uinv2,parameter_uinv,nparam,nparam,parameter_Cinv);
-//       TKmultMatrix_sq(parameter_cvm,parameter_Cinv,nparam,nparam,parameter_out);
-
-//       double emax=0;
-//       for (int iparam =0; iparam < nparam ; ++iparam) {
-//           for (int jparam =0; jparam < nparam ; ++jparam) {
-//               if ((iparam!=jparam) && fabs(parameter_out[iparam][jparam])>fabs(emax)){
-//                   emax=parameter_out[iparam][jparam];
-//               }
-//               printf("% 8.3lg ",parameter_out[iparam][jparam]);
-//           }
-//           printf("\n");
-//       }
-//       logmsg("emax = %lg",emax);
-
-//       for (int iparam =0; iparam < nparam ; ++iparam) {
-//           logmsg("%lg %lg",parameter_Cinv[iparam][iparam],1.0/parameter_cvm[iparam][iparam]);
-//       }
-
-//       exit(1);
 
 
 
@@ -254,6 +224,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
    }
 
+
+
+
+
+
    logmsg("RMS Deviations per parameter");
    for (int iparam =0; iparam < nparam ; ++iparam) {
        param_label p1 = psr[0].fitinfo.paramIndex[iparam];
@@ -264,7 +239,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
        } else {
            snprintf(n1,80,"%s(%d)",label_str[p1],c1);
        }
-       logmsg("%20s %.4f",n1,sqrt(ssq_deviations[iparam]/(double)nloop));
+       logmsg("% 2d %20s %.4f",iparam,n1,sqrt(ssq_deviations[iparam]/(double)nloop));
    }
    logmsg("");
    logmsg("Total RMS Deviation: %lg",sqrt(total_ssq/(double)(nloop*nparam)));
