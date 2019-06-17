@@ -61,6 +61,17 @@ cdef class phase_predictor:
         
         return phase.reshape(mjd.shape)
 
+    def getFrequency_array(self, mjd,freq):
+        cdef int n = np.product(mjd.shape)
+        out=np.zeros(n)
+        times=mjd.flatten(order='C')
+        cdef long double[::1] times_view = times
+        cdef double[::1] out_view = out
+        T2Predictor_GetFrequency_array_ld(self.thisptr,&times_view[0],n,freq,&out_view[0])
+        return out.reshape(mjd.shape)
+
+
+
     def getPhase(self,mjd,freq):
         return T2Predictor_GetPhase(self.thisptr,mjd,freq)
 
