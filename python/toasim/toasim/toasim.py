@@ -40,11 +40,11 @@ class correction:
         self.header=header
     def write(self,stream):
         s=stream
-        s.write("CORR")
+        s.write("CORR".encode('UTF-8'))
         s.write(struct.pack("=ddd",self.a0,self.a1,self.a2))
         a=array('d',self.offsets)
         a.tofile(s)
-        s.write(struct.pack("=%ds"%self.header.rparam_len,self.params))
+        s.write(struct.pack("=%ds"%self.header.rparam_len,self.params.encode('UTF-8')))
 
 class header:
     VERSION=2
@@ -124,7 +124,7 @@ class header:
     def write(self,stream):
         self.version=header.VERSION
         s=stream
-        s.write("TOASIM")
+        s.write("TOASIM".encode('UTF-8'))
         write_uint32(s,"VERS",self.version)
         writestr(s,"WRTR","toasim.py")
         writestr(s,"T_NM",self.timfile_name)
@@ -148,18 +148,18 @@ class header:
 
 
 def write_int64(stream,str,int):
-    stream.write(str)
+    stream.write(str.encode('UTF-8'))
     stream.write(struct.pack("=Iq",8,int))
 def write_int32(stream,str,int):
-    stream.write(str)
+    stream.write(str.encode('UTF-8'))
     stream.write(struct.pack("=Ii",4,int))
 def write_uint32(stream,str,int):
-    stream.write(str)
+    stream.write(str.encode('UTF-8'))
     stream.write(struct.pack("=II",4,int))
 def write_double(stream,str,double):
-    stream.write(str)
+    stream.write(str.encode('UTF-8'))
     stream.write(struct.pack("=Id",8,double))
 def writestr(stream,str,val):
-    stream.write(str)
+    stream.write(str.encode('UTF-8'))
     stream.write(struct.pack("=I",len(val)))
-    stream.write(val)
+    stream.write(val.encode('UTF-8'))
