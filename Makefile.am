@@ -177,8 +177,12 @@ CLEANFILES=$(BUILT_SOURCES) documentation/doxygen
    unsupported unsupported-install unsupported-clean \
    complete complete-install complete-clean \
    temponest temponest-install \
-   core core-install core-clean test doc
+   core core-install core-clean test doc python
 
+
+python:
+	cd $(srcdir)/python/t2pred && python setup.py install
+	cd $(srcdir)/python/toasim && python setup.py install
 
 install-data-hook:
 	@echo ""
