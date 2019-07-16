@@ -63,39 +63,41 @@ a1 = np.power(Mr*const.G/Omega_b**2,1.0/3.0).to(u.m)
 
 asini = a1 * np.sin(inc)
 
-
-
-def ecc_anom(E,e,M):
-    return (E-e*np.sin(E))-M
-
-mean_anom = coord.Angle((Omega_b * (toas*u.day - t0)).decompose().value*u.rad)
-mean_anom.wrap_at(2*np.pi*u.rad,inplace=True)
-mean_anom = mean_anom.rad
-
-E=np.zeros_like(mean_anom)
-
-
-print(toas*u.day - t0)
-print(Omega_b)
-
-for i in range(len(E)):
-    v1=ecc_anom(0,e,mean_anom[i])
-    E1=0
-    for trial in np.linspace(0,2*np.pi,8)[1:]:
-        E2=trial
-        v2 = ecc_anom(trial,e,mean_anom[i])
-        if v1*v2 < 0:
-            break
-        v1=v2
-        E1=E2
-
-    sol = optimize.root_scalar(ecc_anom,args=(e,mean_anom[i]),bracket=[E1,E2])
-    E[i] = sol.root
-
-
 om=coord.Angle(args.omega*u.deg)
-roemer = (asini*(np.cos(E)-e)*np.sin(om) + asini*np.sin(E)*np.sqrt(1.0-e**2)*np.cos(om))/const.c
 
+
+def get_roemer(t):
+
+    def ecc_anom(E,e,M):
+        return (E-e*np.sin(E))-M
+
+    mean_anom = coord.Angle((Omega_b * (t*u.day - t0)).decompose().value*u.rad)
+    mean_anom.wrap_at(2*np.pi*u.rad,inplace=True)
+    mean_anom = mean_anom.rad
+
+    E=np.zeros_like(mean_anom)
+
+
+    for i in range(len(E)):
+        v1=ecc_anom(0,e,mean_anom[i])
+        E1=0
+        for trial in np.linspace(0,2*np.pi,8)[1:]:
+            E2=trial
+            v2 = ecc_anom(trial,e,mean_anom[i])
+            if v1*v2 < 0:
+                break
+            v1=v2
+            E1=E2
+
+        sol = optimize.root_scalar(ecc_anom,args=(e,mean_anom[i]),bracket=[E1,E2])
+        E[i] = sol.root
+
+
+    roemer = (asini*(np.cos(E)-e)*np.sin(om) + asini*np.sin(E)*np.sqrt(1.0-e**2)*np.cos(om))/const.c
+    return roemer
+
+
+roemer = get_roemer(toas)
 
 header.ntoa=len(roemer)
 header.nrealisations=nreal
@@ -103,6 +105,13 @@ real = toasim.correction(header,roemer.to(u.s).value,0,0,0,"")
 with open(header.timfile_name+".addPlanet","wb") as f:
     header.write(f)
     real.write(f)
+
+
+t=np.linspace(np.amin(toas),np.amax(toas),int(np.amax(toas)-np.min(toas))+1)
+roemer2 = get_roemer(t)
+with open(header.timfile_name[:-4]+".asc","w") as f:
+    for i in range(len(t)):
+        f.write("{:9.1f} {:g}\n".format(t[i],roemer2[i].value))
 
 
 
