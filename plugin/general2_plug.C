@@ -235,7 +235,12 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
-
+                        if (strcasecmp(var,"torb")==0) /* orbital phase */
+                        {
+                            sprintf(disp,format,psr[0].obsn[varN].torb);
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+                        }
                         if (strcasecmp(var,"clock4")==0) /* 4th clock correction */
                         {
                             sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[4].correction); 
