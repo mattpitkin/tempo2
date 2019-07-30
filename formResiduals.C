@@ -284,7 +284,7 @@ void averageResiduals(pulsar *psr, int npsr){
     FILE *avgfile;
     avgfile=fopen("avg.dat", "w");
     for(int o=0;o<psr[0].nobs;o++){
-        fprintf(avgfile,  "%.5f %.3e %3e \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
+        fprintf(avgfile,  "%.9lf %.3e %3e \n", psr[0].obsn[o].averagebat, psr[0].obsn[o].averageres, psr[0].obsn[o].averageerr);
     }
     fclose(avgfile);
 
