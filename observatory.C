@@ -115,7 +115,7 @@ readObservatoryFile(char *fname)
                     exit(1);
                 }
                 if (nread == 5)
-                    sprintf(newObs.clock_name, "UTC(%s)", newObs.code);
+                    snprintf(newObs.clock_name,16, "UTC(%s)", newObs.code);
                 ITRF_to_GRS80(&newObs);
                 DynamicArray_push_back(&observatories, &newObs);
 #if 0

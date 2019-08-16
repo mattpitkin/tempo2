@@ -22,3 +22,4 @@ planet_plug.C
 glast_plug.C
 compareDsets_plug.C
 efacEquad_plug.C
+averageData_plug.C

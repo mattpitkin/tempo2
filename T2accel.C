@@ -1,3 +1,4 @@
+#include "config.h"
 #include "T2accel.h"
 #include "tempo2.h"
 #include "TKmatrix.h"
@@ -6,7 +7,11 @@
 #include <string.h>
 #include <assert.h>
 
+#ifdef QR_DEFAULT
+char useT2accel=2;
+#else
 char useT2accel=1;
+#endif
 
 #ifdef HAVE_LAPACK
 #define F77_dpotf2 F77_FUNC (dpotf2, DPOTF2)
@@ -97,7 +102,7 @@ int accel_uinv(double* _m, int n){
 /**
  * Do the least squares using QR decomposition
  */
-double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam, double** Ocvm){
+double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int nparam, double** Ocvm, char rescale_errors){
     int nhrs=1;
     int nwork = -1;
     int info=0;
@@ -206,7 +211,10 @@ double accel_lsq_qr(double** A, double* data, double* oparam, int ndata, int npa
 
         free(_t);
 
-        double a=chisq/(double)(ndata-nparam);
+        double a=1.0;
+        if (rescale_errors) {
+            a=chisq/(double)(ndata-nparam);
+        }
         // (X^T X)^-1 = Rinv.Rinv^T gives parameter covariance matrix
         // Note that Ocvm is input and output
         // and that covar matrix will be transposed, but it is

@@ -76,6 +76,13 @@ void vectorPulsar(pulsar *psr,int npsr)
         psr[p].posPulsar[1] = sa*cd;
         psr[p].posPulsar[2] = sd;
 
+        psr[p].posPulsarEquatorial[0] = psr[p].posPulsar[0];
+        psr[p].posPulsarEquatorial[1] = psr[p].posPulsar[1];
+        psr[p].posPulsarEquatorial[2] = psr[p].posPulsar[2];
+        if (psr[p].eclCoord){
+            ecl2equ(psr[p].posPulsarEquatorial);
+        }
+
         /* Conversion from mas/yr to radians of arc per century */
         convert = 1.0/1000.0/60.0/60.0*M_PI/180.0*100.0;
         dec = (double)psr[p].param[param_decj].val[0];

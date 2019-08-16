@@ -1,4 +1,4 @@
-plugindir=@TEMPO2_PLUG_INSTALL@
+plugindir=$(DESTDIR)@TEMPO2_PLUG_INSTALL@
 
 plugin_LTLIBRARIES=ppta_dr1_@T2ARCH@_splug.la jbo_@T2ARCH@_splug.la
 

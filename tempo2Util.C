@@ -253,6 +253,32 @@ void equ2ecl(double *x)
     x[2] = -se*tmpy+ce*tmpz;
 }
 
+/** 
+ * Reverse the above rotation
+ */
+void ecl2equ(double *x)
+{
+    longdouble tmpy,tmpz;
+    longdouble ce,se;
+    //longdouble arcsec2rad = 1.0/60.0/60.0*LD_PI/180.0;
+    longdouble arcsec2rad = longdouble(1.0)*LD_PI/longdouble(648000.0);
+
+    /*  ce = 0.91748213149438;
+        se = 0.39777699580108;  */
+    ce = cosl(ECLIPTIC_OBLIQUITY*arcsec2rad);
+    se = sinl(ECLIPTIC_OBLIQUITY*arcsec2rad); 
+
+    /* x[0] remains unchanged */
+
+    tmpy = x[1];
+    tmpz = x[2];
+
+    x[1] = ce*tmpy-se*tmpz;
+    x[2] = se*tmpy+ce*tmpz;
+}
+
+
+
 /* Function to copy one pulsar to another */
 void copyPSR(pulsar *p,int p1,int p2)
 {

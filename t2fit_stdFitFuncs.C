@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <assert.h>
 #include <cstring>
+#include "ifunc.h"
 
 /**
  *
@@ -105,6 +106,8 @@ void t2UpdateFunc_stdFreq(pulsar *psr, int ipsr ,param_label label,int k, double
         else if (k>2 && k<10)  scale=1.0e18L;
         else if (k>9) scale=1.0e23L;
 
+        //logmsg("%lg",(double)(1.0/(pow(24.0*3600.0,k+1))/scale* psr[ipsr].param[param_f].val[0]));
+
         psr[ipsr].param[param_f].val[k] = psr[ipsr].param[param_f].val[k] -
             (psr[ipsr].param[param_f].val[0]*(val/pow(24.0*3600.0,k+1))/scale);
         psr[ipsr].param[param_f].err[k] = error/(pow(24.0*3600.0,k+1))/scale*
@@ -148,6 +151,8 @@ double t2FitFunc_binaryModels(pulsar *psr, int ipsr ,double x ,int ipos ,param_l
         afunc = DDHmodel(psr,0,ipos,label);
     else if (strcmp(psr->binaryModel,"ELL1H")==0)
         afunc = ELL1Hmodel(psr,0,ipos,label);
+    else if (strcmp(psr->binaryModel,"ELL1k")==0)
+        afunc = ELL1kmodel(psr,0,ipos,label);
 
     logdbg("%s(%d) %s %d %s(%d) %g",psr->name,ipsr,psr->binaryModel,ipos,label_str[label],k,afunc);
     return afunc;
@@ -181,6 +186,8 @@ void t2UpdateFunc_binaryModels(pulsar *psr, int ipsr ,param_label label,int k, d
         updateDDH(&psr[ipsr],val,error,label);
     else if (strcmp(psr[ipsr].binaryModel,"ELL1H")==0)
         updateELL1H(&psr[ipsr],val,error,label);
+    else if (strcmp(psr[ipsr].binaryModel,"ELL1k")==0)
+        updateELL1k(&psr[ipsr],val,error,label);
 }
 
 
@@ -188,7 +195,6 @@ double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
     assert(label==param_dmassplanet);
     return dotproduct(psr->posPulsar,psr->obsn[ipos].planet_ssb[k]);
 }
-void t2UpdateFunc_planet(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
 
 double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     assert(label==param_dm);
@@ -216,14 +222,108 @@ void t2UpdateFunc_simpleMinus(pulsar *psr, int ipsr ,param_label label,int k, do
 
 
 
-double t2FitFunc_stdGravWav(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_stdGravWav(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
+
+double t2FitFunc_telPos_delta(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    double ret=0;
+
+    int xyz;
+    double* T;
+    int N;
+    switch(label) {
+        case param_tel_dx:
+            xyz=0;
+            N=psr[ipsr].nTelDX;
+            T=psr[ipsr].telDX_t;
+            break;
+        case param_tel_dy:
+            xyz=1;
+            N=psr[ipsr].nTelDY;
+            T=psr[ipsr].telDY_t;
+            break;
+            break;
+        case param_tel_dz:
+            xyz=2;
+            N=psr[ipsr].nTelDZ;
+            T=psr[ipsr].telDZ_t;
+            break;
+            break;
+        default:
+            assert(0);
+    }
+
+    switch((int)(psr[ipsr].param[label].val[0])){
+        case -1:
+            if (strcmp(psr[ipsr].obsn[ipos].telID,"STL_FBAT")==0)
+                ret= psr[ipsr].posPulsar[xyz]/SPEED_LIGHT*1000.0;
+            break;
+        case 2:
+            if (T[k] <=  psr[ipsr].obsn[ipos].sat &&
+                    T[k+1] > psr[ipsr].obsn[ipos].sat){
+                ret= psr[ipsr].posPulsar[xyz];
+            }
+            break;
+        default:
+            ret = psr[ipsr].posPulsar[xyz] *
+                ifunc(T,static_cast<double>(psr[ipsr].obsn[ipos].sat),N,k);
+            break;
+    }
+    return ret;
+}
 
 
-double t2FitFunc_telPos(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){return 0;}
-void t2UpdateFunc_telPos(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){}
+
+void t2UpdateFunc_telPos_delta(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
+    switch(label) {
+        case param_tel_dx:
+            psr[ipsr].telDX_v[k] -= val;
+            psr[ipsr].telDX_e[k]  = err;
+            break;
+        case param_tel_dy:
+            psr[ipsr].telDY_v[k] -= val;
+            psr[ipsr].telDY_e[k]  = err;
+            break;
+        case param_tel_dz:
+            psr[ipsr].telDZ_v[k] -= val;
+            psr[ipsr].telDZ_e[k]  = err;
+            break;
+        default:
+            assert(0);
+    }
+}
 
 
+double t2FitFunc_telPos(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+
+    double maclaurin_scale_factor=1.0;
+    if(k==2) maclaurin_scale_factor=0.5;
+    if(k==3) maclaurin_scale_factor=1.0/6.0;
+    assert(k<=3);
+
+    longdouble dt = (x + psr[ipsr].param[param_pepoch].val[0]) - psr[ipsr].param[param_telEpoch].val[0];
+    longdouble arg=dt;
+    for (int i=0; i< k;++i){
+        arg*=dt;
+    }
+
+    arg*=maclaurin_scale_factor;
+
+    if (strcmp(psr[ipsr].obsn[ipos].telID,"STL_FBAT")==0) {
+        switch(label){
+
+            case param_telx:
+                return  psr[ipsr].posPulsar[0]*arg;
+            case param_tely:
+                return  psr[ipsr].posPulsar[1]*arg;
+            case param_telz:
+                return  psr[ipsr].posPulsar[2]*arg;
+            default:
+                assert(0);
+        }
+
+    } else {
+        return 0;
+    }
+}
 
 double t2FitFunc_jump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     for (int l=0;l<psr[ipsr].obsn[ipos].obsNjump;l++){

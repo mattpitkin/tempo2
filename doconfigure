@@ -20,4 +20,9 @@ echo "CXXFLAGS = '$CXXFLAGS'"
 echo "LDFLAGS  = '$LDFLAGS'"
 echo "PREFIX = '$PREFIX'"
 
-./configure --prefix=$PREFIX $2 $3 $4 $5 $6
+export PREFIX
+export CFLAGS
+export CXXFLAGS
+export LDFLAGS
+
+./configure --prefix=$PREFIX --enable-default-qrfit $2 $3 $4 $5 $6

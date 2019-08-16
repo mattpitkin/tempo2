@@ -133,23 +133,28 @@ void ephemeris_routines(pulsar *psr,int npsr)
 void formBatsAll(pulsar *psr,int npsr)
 {
 	const char *CVS_verNum = "$Id$";
-	if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"formBatsAll()",CVS_verNum);
 
-	logtchk("enter formBatsAll()");
-	logdbg("Calling clock corrections");
-	logtchk("call clock_corrections()");
-	clock_corrections(psr,npsr);          /* Clock corrections  ... */  
-	logdbg("Reading ephemeris routines");
-	logtchk("call ephemeris_routines()");
-	ephemeris_routines(psr,npsr);         /* Ephemeris routines ... */
-	logdbg("Reading extra delays");
-	logtchk("call extra_delays()");
-	extra_delays(psr,npsr);               /* Other time delays  ... */
-	logtchk("call formBats()");
-	formBats(psr,npsr);                   /* Form Barycentric arrival times */
-	logtchk("call secularMotion()");
-	secularMotion(psr,npsr); 
-	logtchk("exit formBatsAll()");
+    logtchk("enter formBatsAll()");
+    refphs_init(psr,npsr); // initialise reference phase observation as required.
+    logdbg("Calling clock corrections");
+    logtchk("call clock_corrections()");
+    clock_corrections(psr,npsr);          /* Clock corrections  ... */  
+    logdbg("Reading ephemeris routines");
+    logtchk("call ephemeris_routines()");
+    ephemeris_routines(psr,npsr);         /* Ephemeris routines ... */
+    logdbg("Reading extra delays");
+    logtchk("call extra_delays()");
+    extra_delays(psr,npsr);               /* Other time delays  ... */
+    logtchk("call formBats()");
+    formBats(psr,npsr);                   /* Form Barycentric arrival times */
+    logtchk("call secularMotion()");
+    secularMotion(psr,npsr);
+    logtchk("exit formBatsAll()");
+
+    refphs_clean(psr,npsr); // remove reference phase observation if required.
+
+    if (displayCVSversion == 1) CVSdisplayVersion((char *)"global.C",(char *)"formBatsAll()",CVS_verNum);
+
 }
 
 // Only recalculate that which is likely

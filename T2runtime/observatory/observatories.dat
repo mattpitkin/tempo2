@@ -11,11 +11,7 @@
  -4460892.6     2682358.9       -3674756.0       DSS_43              tid43
  -4554231.5     2816759.1       -3454036.3       PARKES              pks
  4865182.7660  791922.6890      4035137.1740     SRT                 srt
- 3822626.04    -154105.65       5086486.04       JODRELL             jb
- 3822626.04    -154105.65       5086486.04       JBODFB              jbdfb
- 3822626.04    -154105.65       5086486.04       JBOROACH            jbroach
- 3822626.04    -154105.65       5086486.04       JBOAFB              jbafb
- -1601192.     -5041981.4       3554871.4        VLA                 vla
+  -1601192.     -5041981.4       3554871.4        VLA                 vla
  4324165.81     165927.11       4670132.83       NANCAY              ncy
  4324165.81     165927.11       4670132.83       NUPPI               ncyobs
  4324165.81     165927.11       4670132.83       OP                  obspm
@@ -77,15 +73,19 @@
  -2353621.22   -4641341.52      3677052.352      GOLDSTONE           gs
  -4483311.64    2648815.92      -3671909.31      MOST                mo
 
+# FAST
+-1666460.00    5499910.00       2759950.00       FAST                fast
+#
+
 # Murchison Widefield Array (MWA)
 -2559454.08    5095372.14      -2849057.18       MWA                 mwa
 
 # MeerKAT
 #
 5109943.1050   2003650.7359   -3239908.3195   KAT-7           k7
-5109318.8410   2006836.3673   -3238921.7749   MEERKAT   meerkat
+5109360.133    2006852.586    -3238948.127       MEERKAT             meerkat
 
-#
+# eMerlin telescopes
 ####### From Jodrell obsys.dat file
 #
  383395.727    -173759.585      5077751.313      MKIII               jbmk3
@@ -93,23 +93,52 @@
  3828714.504   -169458.987      5080647.749      DARNHALL            l
  3859711.492   -201995.082      5056134.285      KNOCKIN             m  
  3923069.135   -146804.404      5009320.570      DEFFORD             n  
+ 3919982.752    2651.9820       5013849.826      CAMBRIDGE           cam
        0.0           1.0              0.0        COE                 coe  
+
 # MJK Approximate location for Princeton observatory
  1288748.38 -4694221.77 4107418.80              PRINCETON           princeton
-3788815.62 1131748.336 5035101.190 HAMBURG hamburg
+ 3788815.62 1131748.336 5035101.190             HAMBURG             hamburg
 #
 ###### Telescope ID changed from the Jodrell obsys.dat file
-#
+# Don't use this site code
  3822252.643   -153995.683      5086051.443      JODRELL2            q
-# 3822252.643   -153995.683      5086051.443      JODRELL3            jbdfb
-# 3822252.643   -153995.683      5086051.443      JODRELL4            jbroach
- 3822473.365   -153692.318      5085851.303      JB_MKII             jbmk2
+
+# Jodrell Bank Telescopes and Backends
+# JBO generic... use only for clock corrections
+ 3822626.04    -154105.65       5086486.04       JODRELL             jb
+# Lovell Digital Filterbank
+ 3822626.04    -154105.65       5086486.04       JBODFB              jbdfb
+# Lovell ROACH coherent dedisperser
+ 3822626.04    -154105.65       5086486.04       JBOROACH            jbroach
+# Lovell Analogue Filterbank
+ 3822626.04    -154105.65       5086486.04       JBOAFB              jbafb
+# 42ft telescope
  3822294.825   -153862.275      5085987.071      JB_42ft             jb42
+
+# MkII Position from VLBI (MJK 2018)
+# X=  3822846.7600  Y=  -153802.2800  Z=  5086285.9000
+# MkII telescope Analogue Filterbank
+ 3822846.7600  -153802.2800      5086285.9000    JB_MKII             jbmk2
+# MkII ROACH coherent dedisperser
+ 3822846.7600  -153802.2800      5086285.9000    JB_MKII_RCH         jbmk2roach
+# MkII Digital Filterbank
+ 3822846.7600  -153802.2800      5086285.9000    JB_MKII_DFB         jbmk2dfb
+
 #
 # New telescopes
-# 284543.5      -175324.040      2400.            LA_PALMA            p
  1719555.576   5327021.651      3051967.932      LA_PALMA            p
- -1602196.60   -5042313.47      3553971.51       LWA1                lwa1       
+ -1602196.60   -5042313.47      3553971.51       LWA1                lwa1
+
+ 6346273.5310  -33779.7127      634844.9454      GRAO                grao
+
+# groud-based gravitational wave observatories
+  4546374.0990    842989.6976    4378576.9624     VIRGO               virgo
+ -2161414.9264  -3834695.1789    4600350.2266     HANFORD             lho
+   -74276.0447  -5496283.7197    3224257.0174     LIVINGSTON          llo
+  3856309.9493    666598.9563    5019641.4172     GEO600              geo600
+ -3777336.0240   3484898.411     3765313.6970     KAGRA               kagra
+
 # Fake telescope for IPTA data challenge
    6378138.00    0.0     0.0                      AXIS                axi  
 

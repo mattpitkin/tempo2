@@ -116,6 +116,9 @@ int main(int argc, char *argv[])
             useT2accel=0;
         else if (strcasecmp(argv[i],"-qrfit")==0)
             useT2accel=2;
+        else if (strcasecmp(argv[i],"-svdfit")==0){
+            if(useT2accel) useT2accel=1;
+        }
         else if (strcasecmp(argv[i],"-oldfit")==0)
             NEWFIT=0;
         else if (strcasecmp(argv[i],"-newfit")==0)
@@ -268,9 +271,14 @@ int main(int argc, char *argv[])
         printf("\n");
 #ifdef HAVE_LAPACK
         printf("* Using LAPACK acceleration for Cholesky decomposition\n");
+#else
+
+        printf("* Using slow linear algebra code (compile with LAPACK for speed improvements)\n");
 #endif
 #ifdef HAVE_BLAS
         printf("* Using BLAS acceleration for matrix mulitplication\n");
+#else
+        printf("* Using slow matrix code (compile with BLAS for speed improvements)\n");
 #endif
         printf("\nFor more help, use %s -h\n",argv[0]);
         exit(1);

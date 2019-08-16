@@ -534,7 +534,7 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useB
 
     ndays=ceil((resx[np-1])-(resx[0])+1e-10);
     npts=128;
-    while(npts<(ndays+1)*2)npts*=2;
+    while(npts<(ndays+1)*2 || npts < (2*365.25/modelFc)) npts*=2;
 
     p_r=(double*)malloc(sizeof(double)*npts);
     p_i=(double*)malloc(sizeof(double)*npts);
@@ -549,29 +549,29 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useB
 
     double delta=1.0/365.25;
     double N=(double)npts;
-    int noTF=0;
-    FILE* tf = fopen("testf","w");
-    if (!tf) {printf("Warning: unable to open output file: testf\n"); noTF=1;}
+    //int noTF=0;
+//    FILE* tf = fopen("testf","w");
+//    if (!tf) {logwarn("Warning: unable to open output file: testf\n"); noTF=1;}
 
     if (useBeta==0)
         p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
     else
         p_r[0]=modelA*pow(fabs(0)/modelFc,betaVal)/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
 
-    if (noTF==0) fprintf(tf,"%g %g\n",0.0,p_r[0]);
+//    if (noTF==0) fprintf(tf,"%g %g\n",0.0,p_r[0]);
     for (i=1;i<=npts/2;i++){
         freq=double(i)/(N*delta);
         if (useBeta==0)
             P=modelA/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
         else
             P=modelA*pow(fabs(freq)/modelFc,betaVal)/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
-        if (noTF==0) fprintf(tf,"%g %g\n",freq,P);
+//        if (noTF==0) fprintf(tf,"%g %g\n",freq,P);
         p_r[i]=P;
         p_r[npts-i]=P;
         p_i[i]=0;
         p_i[npts-i]=0;
     }
-    if (noTF == 0) fclose(tf);
+//    if (noTF == 0) fclose(tf);
 
     TK_fft(1,npts,p_r,p_i);
 

@@ -338,6 +338,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%s",psr->ephemeris);
         strcpy(psr->JPL_EPHEMERIS, psr->ephemeris);
     }
+    else if (strcasecmp(str,"AVERAGERES") ==0)
+      {
+	psr->AverageResiduals=1;
+	fscanf(fin,"%s %f", &psr->AverageFlag, &psr->AverageEpochWidth);
+      }
     else if (strcasecmp(str,"EPH_FILE")==0)
     {
         char temp[1024];
@@ -408,20 +413,25 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         psr->setTelVelZ=1;
         readValue(psr,str,fin,&(psr->param[param_tel_dz]),0);
-    }
-    else if (strcasecmp(str,"TEL_VX")==0)  /* Set telescope velocity in X */
+    } else if (strcasecmp(str,"TEL_VX")==0)  /* Set telescope velocity in X */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_vx]),0);
-    else if (strcasecmp(str,"TEL_VY")==0)  /* Set telescope velocity in Y */
+    } else if (strcasecmp(str,"TEL_VY")==0)  /* Set telescope velocity in Y */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_vy]),0);
-    else if (strcasecmp(str,"TEL_VZ")==0)  /* Set telescope velocity in Z */
+    } else if (strcasecmp(str,"TEL_VZ")==0)  /* Set telescope velocity in Z */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_vz]),0);
-    else if (strcasecmp(str,"TEL_X0")==0)  /* Set telescope position in X */
+    } else if (strcasecmp(str,"TEL_X0")==0)  /* Set telescope position in X */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_x0]),0);
-    else if (strcasecmp(str,"TEL_Y0")==0)  /* Set telescope position in Y */
+    } else if (strcasecmp(str,"TEL_Y0")==0)  /* Set telescope position in Y */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_y0]),0);
-    else if (strcasecmp(str,"TEL_Z0")==0)  /* Set telescope position in Z */
+    } else if (strcasecmp(str,"TEL_Z0")==0)  /* Set telescope position in Z */ {
+        logerr("parameter '%s' not used",str);
         readValue(psr,str,fin,&(psr->param[param_tel_z0]),0);
-    else if (strcasecmp(str,"SQIFUNC_p")==0)  /* Set quad interpolation function for plus*/
+    } else if (strcasecmp(str,"SQIFUNC_p")==0)  /* Set quad interpolation function for plus*/
         readValue(psr,str,fin,&(psr->param[param_quad_ifunc_p]),0);
     else if (strcasecmp(str,"SQIFUNC_c")==0)  /* Set quad interpolation function for cross*/
         readValue(psr,str,fin,&(psr->param[param_quad_ifunc_c]),0);
@@ -507,6 +517,16 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         readValue(psr,str,fin,&(psr->param[param_tzrmjd]),0);
     else if (strcasecmp(str,"TZRSITE")==0)      /* TZRMJD */
         fscanf(fin,"%s",psr->tzrsite);
+    else if (strcasecmp(str,"REFPHS")==0) {     /* REFPHS */
+        fscanf(fin,"%s",str);
+        if(strcasecmp(str,"MEAN")==0){
+            psr->refphs=REFPHS_MEAN;
+        } else if (strcasecmp(str,"TZR")==0) {
+            psr->refphs=REFPHS_TZR;
+        } else {
+            logwarn("Unknown REFPHS '%s'",str);
+        }
+    }
     else if (strcasecmp(str,"NSPAN")==0 || strcasecmp(str,"TSPAN")==0)      /* TSPAN */
         readValue(psr,str,fin,&(psr->param[param_tspan]),0);
     else if (strcasecmp(str,"TZRFRQ")==0 || strcasecmp(str,"TZRFREQ")==0)      /* TZRFRQ */
@@ -717,6 +737,22 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     }
     else if (strcasecmp(str,"WAVE_SCALE")==0)
         fscanf(fin,"%lf",&psr->waveScale);
+    else if (strstr(str,"WAVE_SIN")!=NULL || strstr(str,"wave")!=NULL)
+    {
+        int number;
+        /* Obtain parameter number */
+        sscanf(str+8,"%d",&number);
+        fscanf(fin,"%lf",&psr->wave_sine[number-1]);
+        if (psr->nWhite < number) psr->nWhite = number;
+    } else if (strstr(str,"WAVE_COS")!=NULL || strstr(str,"wave")!=NULL)
+    {
+        int number;
+        /* Obtain parameter number */
+        sscanf(str+8,"%d",&number);
+        fscanf(fin,"%lf",&psr->wave_cos[number-1]);
+        if (psr->nWhite < number) psr->nWhite = number;
+        logmsg("READ WAVE_COS %d %g",number,psr->wave_cos[number-1]);
+    }
     else if (strstr(str,"WAVE")!=NULL || strstr(str,"wave")!=NULL)
     {
         int number;
@@ -725,6 +761,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf %lf",&psr->wave_sine[number-1],&psr->wave_cos[number-1]);
         if (psr->nWhite < number) psr->nWhite = number;
     }
+
+
     else if (strcasecmp(str,"WAVDM_OM")==0) /* Fundamental frequency */
     {
         readValue(psr,str,fin,&(psr->param[param_wave_dm]),0);
@@ -846,6 +884,24 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         char cname[1024];
         fscanf(fin, "%s",cname);
 
+        // constraint on a parameter
+        if((strcasecmp(cname,"PARAM")==0)){
+            char* txt = fgets(cname, 1024,fin);
+            psr->constraints[psr->nconstraints] = constraint_param;
+            psr->constraint_special[psr->nconstraints] = (char*)malloc(strlen(txt)+2);
+            strcpy(psr->constraint_special[psr->nconstraints],txt);
+            psr->nconstraints++;
+        }
+        if((strcasecmp(cname,"IFUNC_COV")==0)){
+            // read the line into the special constraint
+            char* txt = fgets(cname, 1024,fin);
+            psr->constraints[psr->nconstraints] = constraint_ifunc_cov;
+            psr->constraint_special[psr->nconstraints] = (char*)malloc(strlen(txt)+2);
+            strcpy(psr->constraint_special[psr->nconstraints],txt);
+            psr->constraint_special[psr->nconstraints][strlen(txt)]='\n';
+            psr->nconstraints++;
+        }
+
         if((strcasecmp(cname,"AUTO")==0)){
             psr->auto_constraints=1;
         }
@@ -857,6 +913,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
             psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
         }
+        if((strcasecmp(cname,"DMMODEL_CMX")==0)){
+            psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
+        }
+
         if((strcasecmp(cname,"DMMODEL_DM1")==0)){
             psr->constraints[psr->nconstraints++] = constraint_dmmodel_dm1;
         }
@@ -891,9 +951,25 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             psr->constraints[psr->nconstraints++] = constraint_ifunc_2;
         }
 
+        if(strcasecmp(cname,"IFUNC_XZERO")==0){
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_x0;
+        }
+
         if(strcasecmp(cname,"IFUNC_ONLYPHI0")==0){
             psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
         }
+
+        if(strcasecmp(cname,"IFUNC_NOF0F1")==0){
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xsin;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_xcos;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_sin2;
+            psr->constraints[psr->nconstraints++] = constraint_ifunc_year_cos2;
+
+        }
+
 
         if(strcasecmp(cname,"IFUNC")==0){
             psr->constraints[psr->nconstraints++] = constraint_ifunc_0;
@@ -1034,6 +1110,18 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf",&psr->gwm_phi);
     else if (strcasecmp(str,"GWM_DPHASE")==0)
         fscanf(fin,"%lf",&psr->gwm_dphase);
+    // Single cosmic string source creating gravitational waves
+    else if (strcasecmp(str,"GWCS_A1")==0)
+      readValue(psr,str,fin,&(psr->param[param_gwcs_amp]),0);
+    else if (strcasecmp(str,"GWCS_A2")==0)
+      readValue(psr,str,fin,&(psr->param[param_gwcs_amp]),1);
+    else if (strcasecmp(str,"GWCS_POSITION")==0)
+        fscanf(fin,"%lf %lf",&psr->gwcs_raj,&psr->gwcs_decj);
+    else if (strcasecmp(str,"GWCS_EPOCH")==0)
+        fscanf(fin,"%lf",&psr->gwcs_epoch);
+    else if (strcasecmp(str,"GWCS_WIDTH")==0)
+        fscanf(fin,"%lf",&psr->gwcs_width);
+
     // Ryan's gw bursts
     else if (strcasecmp(str,"GWB_AMP")==0)
         readValue(psr,str,fin,&(psr->param[param_gwb_amp]),0);

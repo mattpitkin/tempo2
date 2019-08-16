@@ -249,7 +249,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     char parFile[MAX_PSR][MAX_FILELEN];
     char timFile[MAX_PSR][MAX_FILELEN];
     char newParFile[MAX_FILELEN];
-    char gr[100]="/xs";
+    char gr[100];
+    strcpy(gr,"/xs");
     double unitFlag=1.0;  /* plot in seconds */
     float lockx1=0,lockx2=0;
     float locky1=0,locky2=0;
@@ -546,6 +547,7 @@ void callFit(pulsar *psr,int npsr)
         printf("No timing residuals to plot.  Please check your TOA file and filter commands\n");
         exit(1);
     }
+
 }
 
 
@@ -556,13 +558,24 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 	    int showChisq,int nohead,char* flagColour,char *bandsFile,int displayPP,
 	    int recordStrokes,FILE *recordFile)
 {
+
+
+
     int i,fitFlag=1,exitFlag=0,scale1=0,scale2=psr[0].nobs,count,ncount,j,k;
     longdouble centreEpoch;
+
+
     char xstr[1000],ystr[1000],title[1000];
     float lx1[100],lx2[100],ly1[100],ly2[100];
     int overN;
     int   nline=0;
-    int id[MAX_OBSN];
+
+
+    int* id = new int[MAX_OBSN];
+
+
+
+
     float minx,maxx,miny,maxy,plotx1,plotx2,ploty1,ploty2,mean;
     float mouseX,mouseY,mouseX2,mouseY2;
     char bkgrdColour[100],lineColour[100];
@@ -615,6 +628,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     int jumpOffset=0;
     int okay;
 
+
+
+
     int  freqColourNum=0;
     float minFreqCol[100], maxFreqCol[100];
     int   freqCol[100],freqStyle[100];
@@ -639,6 +655,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     for (i=0;i<100;i++)
         flagCol[i]= 1;
 
+
     if (strlen(bandsFile)>0)
     {
         FILE *fin;
@@ -653,6 +670,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 nbands++;
         }
     }
+
 
     overX = (float *)malloc(sizeof(float)*MAX_OBSN);
     overY = (float *)malloc(sizeof(float)*MAX_OBSN);
@@ -669,6 +687,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     yerr1_2 = (float *)malloc(sizeof(float)*MAX_OBSN);
     yerr2_2 = (float *)malloc(sizeof(float)*MAX_OBSN);
     freq = (float *)malloc(sizeof(float)*MAX_OBSN);
+
+
 
     // Setup colour scheme
     char fname[1000];
@@ -752,6 +772,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     }
 
 
+
     if (psr[0].param[param_start].fitFlag[0]==1) 
         origStart = psr[0].param[param_start].val[0];
     if (psr[0].param[param_finish].fitFlag[0]==1) 
@@ -816,9 +837,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             }	
         }
     }
-
-
     do {
+        float* x2 = new float[MAX_OBSN];
+        float* y2 = new float[MAX_OBSN];
+        float* yerr1_2 = new float[MAX_OBSN];
+        float* yerr2_2 = new float[MAX_OBSN];
+
         if(debugFlag) 
             printf("Fitflag = %d\n",fitFlag);
         if (centre==-1)     centreEpoch = psr[0].param[param_pepoch].val[0];
@@ -1002,7 +1026,18 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 else strcpy(rmsStr,"rms");
             }
 
-            if (yplot==2) sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPost,fitType);
+            if (yplot==2)
+	      {
+		if ((psr[0].TNsubtractDM==1) || (psr[0].TNsubtractRed ==1))
+		  {
+		    sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmstn,fitType);
+		  }
+		else
+		  {
+		  sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPost,fitType);
+		  }
+	      }
+	      
             else sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmsPre,fitType);
 
             if (showChisq == 1)
@@ -1123,7 +1158,6 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             }
         }
         noreplot=0;
-        float x2[MAX_OBSN],y2[MAX_OBSN],yerr1_2[MAX_OBSN],yerr2_2[MAX_OBSN];
         if(plotPoints==1)
         {
             for (j=0;j<freqColourNum;j++)
@@ -1376,11 +1410,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 if(psr[0].TNsubtractDM==0){
                     printf("will substract PL DM Variations on next Fit \n");
                     psr[0].TNsubtractDM=1;
-                }
+		    formResiduals(psr,npsr,1);
+		     textOutput(psr,npsr,0,0,0,0,"");
+		}
                 else if(psr[0].TNsubtractDM==1){
                     printf("will Re-add PL DM Variations on next Fit \n");
                     psr[0].TNsubtractDM=0;
-                }
+		    formResiduals(psr,npsr,1);
+		     textOutput(psr,npsr,0,0,0,0,"");
+		}
 
             }
             else if(key=='K'){
@@ -1389,13 +1427,13 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     printf("Subtract red noise from fit\n");
                     psr[0].TNsubtractRed=1;
                     formResiduals(psr,npsr,1); // iteration);
-                    //textOutput(psr,npsr,0,0,0,0,"");
+                    textOutput(psr,npsr,0,0,0,0,"");
                 }
                 else if(psr[0].TNsubtractRed==1){
                     printf("Do Not Subtract Red Noise on next Fit \n");
                     psr[0].TNsubtractRed=0;
                     formResiduals(psr,npsr,1); // iteration);
-                    //textOutput(psr,npsr,0,0,0,0,"");
+                    textOutput(psr,npsr,0,0,0,0,"");
                 }
 
             }
@@ -1626,7 +1664,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 else if (key=='C') /* Run UNIX command */
                 {
                     char str[1000];
-                    printf("Command: "); gets(str);
+                    printf("Command: ");
+           fgets(str,1000,stdin);
                     for (j=0;j<highlightNum;j++)
                     {	
                         ncount=0;
@@ -1949,10 +1988,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 else if (key==15) {  /* Simple output listing */
                     char fname[1000];
                     FILE *outfile;
-                    float recX[MAX_OBSN];
+                    float* recx = new float[MAX_OBSN];
                     int smooth=0;
                     int  nrec=0,used;
-                    float meanX[MAX_OBSN],meanY[MAX_OBSN];
+                    float* meanX = new float[MAX_OBSN];
+                    float* meanY = new float[MAX_OBSN];
                     int nMean=0;
 
                     printf("Enter filename ");
@@ -2011,6 +2051,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     }
                     fclose(outfile); 
 
+                    delete[] meanX;
+                    delete[] meanY;
+                    delete[] recx;
                 }
                 else if (key==10) { /* List all in Jodrell format */
                     char fname[1000];
@@ -2029,7 +2072,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                         {
                             printf("%12.5f %12.5f %12.5f %12.5f\n",x[i],y[i]*1000.0,psr[0].obsn[id[i]].toaErr/1000.0,
                                     (double)psr[0].obsn[id[i]].bat);
-                            fprintf(outfile,"%12.5f %13.6f %12.5f %20.15f %20.15f %12.5f %s",x[i],y[i]*1000.0,
+                            fprintf(outfile,"%12.5f %13.6f %12.5f %20.15f %20.15f %12.6f %s",x[i],y[i]*1000.0,
                                     psr[0].obsn[id[i]].toaErr/1000.0, 
                                     (double)psr[0].obsn[id[i]].bat,(double)(psr[0].obsn[id[i]].bat-
                                         psr[0].param[param_pepoch].val[0]),(double)psr[0].obsn[id[i]].freq,psr[0].obsn[id[i]].fname); 
@@ -2206,7 +2249,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     else
                         deletePoint(psr,x,y,id,count,mouseX,mouseY,recordStrokes,recordFile); /* Delete closest point */
                 }
-                else if (key=='p') changeParameters(psr);   /* Change parameter values */
+                else if (key=='p'){
+                    changeParameters(psr);   /* Change parameter values */
+                    formResiduals(psr,npsr,1);
+                    textOutput(psr,npsr,0,0,0,0,"");
+                }
                 else if (key==12) /* Add line to plot */
                 {
                     printf("Enter x1 y2 x2 y2 ");
@@ -2506,10 +2553,17 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             cpgask(0);
             graphics=0;
         }
+        delete[] x2;
+        delete[] y2;
+        delete[] yerr1_2;
+        delete[] yerr2_2;
+
     } while (exitFlag==0);
 
     cpgend();
+    delete[] id;
 }
+
 
 void changeParameters(pulsar *psr)
 {
@@ -2519,7 +2573,8 @@ void changeParameters(pulsar *psr)
     printf("Setting parameters\n\n");
 
     printf("Enter name of parameter to change, or hit enter for a full list.\n");
-    gets(yesno);
+    fgets(yesno,100,stdin);
+    yesno[strlen(yesno)-1]='\0';
     if(strcmp(yesno,"")!=0){
         /* Determine the parameter */
         for(i=0;i<MAX_PARAMS;i++){
@@ -2543,7 +2598,7 @@ void changeParameters(pulsar *psr)
         printf("Enter desired value for parameter:\n");
         printf("%s = %.14lg : change to (don't change: n)\t",yesno,
                 (double)psr[0].param[k].val[deriv]);
-        gets(yesno);
+   fgets(yesno,100,stdin);
         if(!(yesno[0]=='n'))
             psr[0].param[k].val[deriv] = parse_longdouble(yesno);
     }
@@ -2556,7 +2611,7 @@ void changeParameters(pulsar *psr)
                 if (psr[0].param[i].paramSet[k]==1) /* If parameter set */
                 {
                     printf("%s = %.14f : change [(n = default)]\t",psr[0].param[i].label[k],(double)psr[0].param[i].val[k]);
-                    gets(yesno);
+           fgets(yesno,100,stdin);
                     if (!(yesno[0]=='n' || yesno[0]=='N' || strlen(yesno)==0))
                         psr[0].param[i].val[k] = parse_longdouble(yesno);
 
@@ -2564,7 +2619,7 @@ void changeParameters(pulsar *psr)
             }
         }
     }
-    callFit(psr,1);
+    //callFit(psr,1);
 }
 
 void binResiduals(pulsar *psr,int npsr,float *x,float *y,int count,int *id,int *overN,
@@ -2684,7 +2739,7 @@ void changeFitParameters(pulsar *psr)
     printf("Setting fitting parameters\n\n");
 
     printf("Enter name of parameter to switch fitting for, or hit enter for a full list.\n");
-    gets(yesno);
+    fgets(yesno,100,stdin);
     if(strcmp(yesno,"")!=0){
         /* Determine the parameter */
         for(i=0;i<MAX_PARAMS;i++){
@@ -2723,14 +2778,14 @@ void changeFitParameters(pulsar *psr)
                     if (psr[0].param[i].fitFlag[k]==1)
                     {
                         printf("%s fitting (turn off fitting 'y', otherwise hit enter)\t",psr[0].param[i].label[k]);
-                        gets(yesno);
+           fgets(yesno,100,stdin);
                         if (yesno[0]=='y' || yesno[0]=='Y')
                             psr[0].param[i].fitFlag[k]=0;
                     }
                     else if (psr[0].param[i].fitFlag[k]==0)
                     {
                         printf("%s not fitting (turn on fitting 'y', otherwise hit enter)\t",psr[0].param[i].label[k]);
-                        gets(yesno);
+           fgets(yesno,100,stdin);
                         if (yesno[0]=='y' || yesno[0]=='Y')
                             psr[0].param[i].fitFlag[k]=1;
                     }
@@ -2961,7 +3016,8 @@ void overPlotN(int overN,float overX[], float overY[],float overYe[]){
 
 void overPlotShapiro(pulsar *psr,float offset,longdouble centreEpoch)
 {
-    float x[MAX_OBSN],y[MAX_OBSN];
+    float* x = new float[MAX_OBSN];
+    float* y = new float[MAX_OBSN];
     int i;
     char temp[100];
 
@@ -2974,6 +3030,8 @@ void overPlotShapiro(pulsar *psr,float offset,longdouble centreEpoch)
     cpgsls(2);
     cpgline(psr[0].nobs,x,y); 
     cpgsls(1);
+    delete[] x;
+    delete[] y;
 }
 
 void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,
@@ -3984,7 +4042,6 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,
     timer_clk=clock();
     doFitAll(psr,npsr,covarFuncFile);
     formBatsAll(psr,npsr);	  
-    /* Form residuals */
     formResiduals(psr,npsr,1); // iteration);
     textOutput(psr,npsr,0,0,0,0,"");
 
@@ -4000,7 +4057,8 @@ void displayStatistics(float *x,float *y,int count,float plotx1,float plotx2,
         float ploty1,float ploty2)
 {
     int i;
-    float px[MAX_OBSN],py[MAX_OBSN];
+    float* px = new float[count];
+    float* py = new float[count];
     double sum=0.0,sumsq=0.0,mean,sdev;
     int n=0;
 
@@ -4030,6 +4088,8 @@ void displayStatistics(float *x,float *y,int count,float plotx1,float plotx2,
     printf("Mean y             = %g\n",mean);
     printf("Standard deviation = %g\n",sdev);
     printf("\n\n");
+    delete[] px;
+    delete[] py;
 }
 
 int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhase,int plot,int *userValChange,char *userCMD,char *userValStr,float *userX,longdouble centreEpoch,int log,char *flagStr)
@@ -4049,6 +4109,8 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
             x[count] = (float)(double)psr[0].obsn[iobs].residual/unitFlag;
             if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averageres);}
             else if (psr[0].AverageDMResiduals ==1){x[count] = (float)(psr[0].obsn[iobs].averagedmres);}
+	    else if (psr[0].TNsubtractRed ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
+	    else if  (psr[0].TNsubtractDM ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
 
         }
         else

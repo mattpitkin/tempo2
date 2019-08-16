@@ -41,8 +41,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 {
   longdouble imjd=-1.0,fmjd=-1.0,ra,grms=0.0;
   longdouble toa,ha0,almst,amjd,hnobs,mjd,trmjd,tstep=0.0;
-  longdouble times[MAX_OBSN];
-  longdouble out[MAX_OBSN];
+  longdouble* times = new longdouble[MAX_OBSN];
+  longdouble* out = new longdouble[MAX_OBSN];
   longdouble lowFreq,highFreq,alpha=-3.0,ampPL=1.0e-16;
   int setref=0;
   int nshots,npts;
@@ -74,6 +74,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   char outfile[100];
   char timesfname[100];
   char telID[128];
+  bool withpn=false;
   int bunching=0; // flag on whether or not observations occur in groups
   // size of gap between observing runs, and length of observing runs.
   // These defaults give 7 observations every 28 days.
@@ -151,6 +152,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       read_f=1;
       printf("Read name,freq,mjd\n");
     }
+
+    if (strcmp(argv[i],"-withpn")==0){
+      withpn=true;
+      printf("write with pulse numbers\n");
+    }
+
 
 
     if(strcmp(argv[i],"-group")==0){
@@ -454,15 +461,27 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       /* Add Gaussian noise */
       if (giveRMS!=1) grms = psr[0].param[param_tres].val[0]/1e3;
       if (grms>0.0)
-	{
-	  printf("Adding Gaussian noise with rms = %f\n",(float)grms);
-	  for (i=0;i<psr[0].nobs;i++)
-	    psr[0].obsn[i].sat += TKgaussDev(&idum)*grms/1000.0/SECDAY;
-	}
-      
+      {
+          printf("Adding Gaussian noise with rms = %f\n",(float)grms);
+          for (i=0;i<psr[0].nobs;i++)
+              psr[0].obsn[i].sat += TKgaussDev(&idum)*grms/1000.0/SECDAY;
+
+      }
+      if(withpn){
+          for (i=0;i<psr[0].nobs;i++){
+              strcpy(psr[0].obsn[i].flagID[psr[0].obsn[i].nFlags],"-pn");
+              sprintf(psr[0].obsn[i].flagVal[psr[0].obsn[i].nFlags],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
+              psr[0].obsn[i].nFlags++;
+          }
+      }
+
       printf("Output TOA file written to %s\n",str);
       writeTim(str,psr,formstr);      
   }
+
+  delete[] out;
+  delete[] times;
+
   return 0;
 }
 
@@ -471,19 +490,19 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 /* residuals and the second time for the post-fit residuals     */
 
 void callFit(pulsar *psr,int npsr){
-  int iteration;
-  double globalParameter = 0.0;
+    int iteration;
+    double globalParameter = 0.0;
 
-  for (iteration=0;iteration<2;iteration++)
+    for (iteration=0;iteration<2;iteration++)
     {
-      formBatsAll(psr,npsr);
-            
-      /* Form residuals */
-      formResiduals(psr,npsr,0);
-      
-      /* Do the fitting */
-      if (iteration==0) doFitAll(psr,npsr,0);
-      else textOutput(psr,npsr,globalParameter,0,0,0,"");
+        formBatsAll(psr,npsr);
+
+        /* Form residuals */
+        formResiduals(psr,npsr,0);
+
+        /* Do the fitting */
+        if (iteration==0) doFitAll(psr,npsr,0);
+        else textOutput(psr,npsr,globalParameter,0,0,0,"");
     }
 }
 

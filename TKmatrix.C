@@ -135,13 +135,14 @@ double **malloc_blas(int rows,int cols){
     double** uinv;
     int i;
 
+    logdbg("Allocate %d x %d double array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(double)/1024.0));
+
     assert(rows*cols!=0);
 
     if (sizeof(int) > sizeof(double)){
         logerr("Error, somehow you have a system with sizeof(int) > sizeof(double)");
         exit(1);
     }
-    logdbg("Allocate %d x %d double array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(double)/1024.0));
     memory=(double*)calloc((rows*cols+2),sizeof(double)); // we add 2 to store dimensions
     uinv=(double**)malloc(sizeof(double*)*rows);
     if(memory==NULL || uinv==NULL){

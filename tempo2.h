@@ -50,9 +50,9 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2016.11.3"
-#define TEMPO2_h_MAJOR_VER 2016.11
-#define TEMPO2_h_MINOR_VER 3
+#define TEMPO2_h_VER "2019.01.1"
+#define TEMPO2_h_MAJOR_VER 2019.01
+#define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
 #define MAX_DM_DERIVATIVES   10    /*!< DM0 -> DMn where n=10                            */
@@ -70,7 +70,7 @@
 #define MAX_SITE             100   /*!< Maximum number of observatory sites              */
 #define MAX_PARAMS           2000   /*!< Maximum number of parameters                     */
 #define MAX_JUMPS            2000  /*!< Maximum number of phase jumps                    */
-#define MAX_WHITE            100   /*!< Maximum number of parameters for whitening       */
+#define MAX_WHITE            300   /*!< Maximum number of parameters for whitening       */
 #define MAX_IFUNC            1000   /*!< Maximum number of parameters for interpolation function  */
 #define MAX_TEL_CLK_OFFS     500   /*!< Maximum number of parameters for telescope clock offset */
 #define MAX_TEL_DX           500   /*!< Maximum number of parameters for interpolation function  */
@@ -140,6 +140,9 @@
 #define T2C_TEMPO   2
 
 
+#define REFPHS_MEAN 0
+#define REFPHS_TZR  1
+
 /*! TEMPO2 environment variable */
 extern char TEMPO2_ENVIRON[];
 
@@ -170,14 +173,14 @@ enum label {
     param_tzrmjd,param_tzrfrq,param_fddc,param_fddi,param_fd,param_dr,param_dtheta,param_tspan,
     param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
     param_wave_om,param_kom,param_kin,param_shapmax,param_dth,param_a0,
-    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,
+    param_b0,param_xomdot,param_afac,param_eps1dot,param_eps2dot,param_tres,param_trestn,
     param_wave_dm, param_waveepoch_dm,
     param_dshk,param_ephver,param_daop,param_iperharm,param_dmassplanet, param_dphaseplanet, param_waveepoch,param_ifunc,param_clk_offs,
     param_dmx,param_dmxr1,param_dmxr2,param_dmmodel,param_gwsingle,param_cgw,param_quad_om,
     param_h3,param_h4,param_nharm,param_stig,
     param_telx,param_tely,param_telz,param_telEpoch,param_quad_ifunc_p,
     param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
-    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwecc,param_gwb_amp,
+    param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwcs_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
     param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos,
     param_band_red_sin, param_band_red_cos,param_sx, param_sxr1, param_sxr2, param_sxer,
@@ -202,6 +205,8 @@ enum constraint {
     constraint_dmmodel_cw_1,
     constraint_dmmodel_cw_2,
     constraint_dmmodel_cw_3,
+    constraint_ifunc_cov,
+    constraint_ifunc_x0,
     constraint_ifunc_0,
     constraint_ifunc_1,
     constraint_ifunc_2,
@@ -254,6 +259,7 @@ enum constraint {
     constraint_group_red_sin,
     constraint_group_red_cos,
     constraint_jitter,
+    constraint_param,
     constraint_LAST /*!< marker for the last constraint */
 };
 
@@ -295,12 +301,23 @@ typedef double (*paramDerivFunc)(struct pulsar*, int,double,int,param_label,int)
  * Used to build the derivative matrix for the least squares solvers.
  *
  */
-typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param_label,int,int);
+typedef double (*constraintDerivFunc)(struct pulsar*, int,constraint_label,param_label,int,int,void*);
 
 /*!
  * @brief a function used to update the parameters after a fit.
  */
 typedef void (*paramUpdateFunc)(struct pulsar*, int,param_label,int,double,double);
+
+
+typedef struct FitOutput {
+    double parameterEstimates[MAX_FIT];
+    double errorEstimates[MAX_FIT];
+    int indexPsr[MAX_FIT];
+    param_label indexParam[MAX_FIT];
+    int indexCounter[MAX_FIT];
+    int totalNfit;
+} FitOutput;
+
 
 /*!
  * @brief contains details of the fit
@@ -318,8 +335,12 @@ typedef struct FitInfo {
     int constraintCounters[MAX_FIT];
     paramDerivFunc paramDerivs[MAX_FIT];
     constraintDerivFunc constraintDerivs[MAX_FIT];
+    void* constraintSpecial[MAX_FIT];
+    double constraintValue[MAX_FIT];
     paramUpdateFunc updateFunctions[MAX_FIT];
+    FitOutput output;
 } FitInfo;
+
 
 
 typedef struct storePrecision {
@@ -375,8 +396,9 @@ typedef struct observation {
     int delayCorr;                  /*!< = 1 for time delay corrections to be applied, = 0 for BAT  */
     int deleted;                    /*!< = 1 if observation has been deleted, = -1 if not included in fit*/
     longdouble prefitResidual;      /*!< Pre-fit residual                                           */
-    longdouble residual;            /*!< residual                                                   */
-    double      addedNoise;
+    longdouble residual;            /*!< residual                        */
+  longdouble residualtn;
+  double      addedNoise;
     double      TNRedSignal;	  /*!< Model red noise signal from temponest fit */
     double      TNRedErr;		  /*!< Error on Model red noise signal from temponest fit */
     double      TNDMSignal;         /*!< Model DM signal from temponest fit */
@@ -513,6 +535,15 @@ typedef struct pulsar {
     double gwm_phi; // Polarisation angle
     double gwm_dphase; // Phase offset (similar to GLPH)
 
+  
+  // Gravitational wave single cosmic string parameters
+  double gwcs_raj;
+  double gwcs_decj;
+  double gwcs_epoch;
+  double gwcs_width;
+  double gwcs_geom_p;
+  double gwcs_geom_c;
+
     // Ryan's gw burst parameters
     double gwb_epoch;
     double gwb_width;
@@ -577,10 +608,10 @@ typedef struct pulsar {
     int    nFit;                    /*!< Number of points in the fit */
     int    nParam;                  /*!< Number of parameters in the fit */
     int    nGlobal;                 /*!< Number of global parameters in the fit */
-    int fitParamGlobalI[MAX_FIT];   // number of global parameters in fit
-    int fitParamGlobalK[MAX_FIT];    // number of global parameters in fit
-    int    fitParamI[MAX_FIT];
-    int    fitParamK[MAX_FIT];
+//    int fitParamGlobalI[MAX_FIT];   // number of global parameters in fit
+//    int fitParamGlobalK[MAX_FIT];    // number of global parameters in fit
+//    int    fitParamI[MAX_FIT];
+//    int    fitParamK[MAX_FIT];
     int    fitMode;                 /*!< = 0 not fitting with errors, = 1 fitting with errors (MODE 1) */
     char    robust;
     int    rescaleErrChisq;         /*!< = 1 to rescale errors based on the reduced chisq, = 0 not to do this */
@@ -616,7 +647,7 @@ typedef struct pulsar {
     int  nStorePrecision;
     int  bootStrap;           /*!< > 0 if calculating errors using bootstrap Monte-Carlo method */
     char tzrsite[100];        /*!< Site-code for polyco                                         */
-    double rmsPre,rmsPost;
+  double rmsPre,rmsPost, rmstn;
     char deleteFileName[100]; /*!< File name containing deleted points                          */
     int  nits;                /*!< Number of iterations for the fit                             */
     int  ipm;                 /*!< = 1 if use interplanetary medium DM correction, = 0 otherwise*/
@@ -723,6 +754,8 @@ typedef struct pulsar {
     char AverageFlag[MAX_FLAG_LEN];
     float AverageEpochWidth; 
 
+    double detUinv;
+
 
     int outputTMatrix;
     int useTNOrth;
@@ -784,11 +817,16 @@ typedef struct pulsar {
     double constraint_efactor;
     enum constraint constraints[MAX_PARAMS];/*!< Which constraints are specified */
     char auto_constraints;
+    char *constraint_special[MAX_PARAMS]; /* Special constraint parameters */
 
     FitInfo fitinfo;
 
     int brace;
 
+    observation tzrobs;
+    char refphs;
+
+    double posPulsarEquatorial[3];            /*!< 3-vector pointing at pulsar, in equatorial coordinates (even if using ecliptic)*/
 } pulsar;
 
 
@@ -901,6 +939,7 @@ extern "C" {
     int fortran_nint(double x);
     long fortran_nlong(longdouble x);
     void equ2ecl(double *x);
+    void ecl2equ(double *x);
     void copyParam(parameter p1,parameter *p2);
     void copyPSR(pulsar *p,int p1,int p2);
 
@@ -940,6 +979,9 @@ extern "C" {
     void updateDDH( pulsar *psr, double val, double err, int pos );
     double ELL1Hmodel( pulsar *psr, int p, int obs, int param );
     void updateELL1H( pulsar *psr, double val, double err, int pos );
+    double ELL1kmodel( pulsar *psr, int p, int obs, int param );
+    void updateELL1k( pulsar *psr, double val, double err, int pos );
+
 
     void displayMsg(int type,const char *key,const char *searchStr,const char *variableStr,int noWarnings);
     void CVSdisplayVersion(const char *file,const char *func,const char *verNum);
@@ -999,6 +1041,8 @@ extern "C" {
     /* ... and tropospheric delays ... */
     void compute_tropospheric_delays(pulsar *psr,int npsr);
 
+void refphs_init(pulsar* psr, int nps);
+void refphs_clean(pulsar* psr, int nps);
 
 #ifdef __cplusplus
 }

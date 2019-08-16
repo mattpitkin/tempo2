@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tempo2.h"
+#include "TKmatrix.h"
 
 void initialise(pulsar *psr,int noWarnings)
 {
@@ -61,7 +62,6 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
 
     psr->nobs = 0;
     //  psr->obsn = NULL;
-    psr->covar = NULL;
 
     //  if (psr->obsn == NULL)
     psr->obsn = (observation *)malloc(sizeof(observation)*MAX_OBSN);
@@ -69,20 +69,6 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     if (psr->obsn == NULL)
         fail = 1;
 
-    if (fullSetup && !fail) {
-
-        psr->covar = (double **)malloc(sizeof(double *)*MAX_PARAMS);
-
-        if (psr->covar != NULL) {
-            for(i=0;i<MAX_PARAMS;i++) {
-                psr->covar[i] = (double *)malloc(sizeof(double)*MAX_PARAMS);
-                if (psr->covar[i] == NULL) {
-                    fail = 1;
-                    break;
-                }
-            }
-        }
-    }
     // Initialise the barycentre vectors:
     //
     // To the best of my knowledge, this only ever happens in
@@ -114,6 +100,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         exit(1);
     }  /* This memory gets deallocated by destroyOne */
 
+
+    psr->covar = malloc_blas(MAX_FIT,MAX_FIT);
 
     strcpy(psr->eopc04_file,"/earth/eopc04_IAU2000.62-now");
     strcpy(psr->filterStr,"");
@@ -152,6 +140,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->fjumpID,"");
     strcpy(psr->deleteFileName,"NONE");
     strcpy(psr->tzrsite,"NULL");
+    psr->refphs=REFPHS_MEAN;
     psr->ToAextraCovar=NULL;
     psr->dmoffsDMnum=0;
     psr->dmoffsCMnum = 0;
@@ -213,6 +202,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nDMEvents=0;
     psr->nTNShapeletEvents=0;
     psr->sorted=0;
+    psr->detUinv=0;
     allocateMemory(psr,0);
     /*  psr->param[param_track].paramSet[0]=1;
         psr->param[param_track].val[0]=0.0;
@@ -227,6 +217,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"F%d",j);
         strcpy(psr->param[param_f].shortlabel[j],temp);
     }
+//    strcpy(psr->param[param_ZERO].label[0],"Zero Offset");
+//    strcpy(psr->param[param_ZERO].shortlabel[0],"Zero Offset");
     strcpy(psr->param[param_raj].label[0],"RAJ (rad)");
     strcpy(psr->param[param_raj].shortlabel[0],"RAJ");
     strcpy(psr->param[param_decj].label[0],"DECJ (rad)");
@@ -291,10 +283,17 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_waveepoch].shortlabel[0],"WAVEEPOCH");
     strcpy(psr->param[param_waveepoch_dm].label[0],"WAVEEPOCHD (MJD)");
     strcpy(psr->param[param_waveepoch_dm].shortlabel[0],"WAVEEPOCHD");
+
     strcpy(psr->param[param_gwm_amp].label[0],"GWM_AMP");
     strcpy(psr->param[param_gwm_amp].shortlabel[0],"GWM_AMP");
     strcpy(psr->param[param_gwm_amp].label[1],"GWM_AMP_2");
     strcpy(psr->param[param_gwm_amp].shortlabel[1],"GWM_AMP_2");
+
+    strcpy(psr->param[param_gwcs_amp].label[0],"GWCS_AMP1");
+    strcpy(psr->param[param_gwcs_amp].shortlabel[0],"GWCS_AMP1");
+    strcpy(psr->param[param_gwcs_amp].label[1],"GWCS_AMP2");
+    strcpy(psr->param[param_gwcs_amp].shortlabel[1],"GWCS_AMP2");
+
     strcpy(psr->param[param_gwb_amp].label[0],"GWB_AMP");
     strcpy(psr->param[param_gwb_amp].shortlabel[0],"GWB_AMP");
     strcpy(psr->param[param_gwb_amp].label[1],"GWB_AMP_2");
@@ -591,7 +590,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"SXER_%04d",k+1);
         strcpy(psr->param[param_sxer].shortlabel[k],temp);
       }
-        
+        for (k=0; k < MAX_PARAMS; ++k){
+            psr->constraint_special[k]=0;
+        }
+
 
 }
 
@@ -613,7 +615,7 @@ void allocateMemory(pulsar *psr, int realloc)
         else if (i==param_bpjep || i==param_bpjph || i==param_bpja1 || i==param_bpjec || i==param_bpjom
                 || i==param_bpjpb)  psr->param[i].aSize = MAX_BPJ_JUMPS;
         else if (i==param_glep || i==param_glph || i==param_glf0 || i==param_glf1 || i==param_stateSwitchT || i==param_glf2 || 
-                i==param_glf0d || i==param_gltd) psr->param[i].aSize = 20;
+                i==param_glf0d || i==param_gltd) psr->param[i].aSize = 40;
         else if (i==param_dmassplanet)
             psr->param[i].aSize = 9;
         else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
@@ -629,8 +631,10 @@ void allocateMemory(pulsar *psr, int realloc)
         else if (i==param_tel_dy) psr->param[i].aSize = MAX_TEL_DY;
         else if (i==param_tel_dz) psr->param[i].aSize = MAX_TEL_DZ;
         else if (i==param_raj || i==param_decj) psr->param[i].aSize = 2; // Use second for gravitational wave work
-        else if (i==param_gwm_amp) psr->param[i].aSize = 2; 
+        else if (i==param_gwm_amp) psr->param[i].aSize = 2;
+	else if (i==param_gwcs_amp) psr->param[i].aSize = 2; 
         else if (i==param_gwb_amp) psr->param[i].aSize =2;
+	else if (i==param_gwecc) psr->param[i].aSize =2;
         else psr->param[i].aSize = 1;
 
         psr->param[i].val       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));
@@ -660,16 +664,17 @@ void allocateMemory(pulsar *psr, int realloc)
 
 void destroyOne (pulsar *psr)
 {
-    int i = 0;
-
     if (psr->obsn)
         free (psr->obsn);
 
-    if (psr->covar) {
-        for(i=0;i<MAX_PARAMS;i++)
-            free (psr->covar[i]);
-        free (psr->covar);
+    free_blas(psr->covar);
+
+     for (int k=0; k < MAX_PARAMS; ++k){
+        if(psr->constraint_special[k]){
+            free(psr->constraint_special[k]);
+        }
     }
+
 
     destroyMemory(psr);
 }
