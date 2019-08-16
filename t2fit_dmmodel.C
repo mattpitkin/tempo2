@@ -1,5 +1,5 @@
 #include "t2fit_dmmodel.h"
-#include "t2fit_ifunc.h"
+#include "ifunc.h"
 #include "TKlog.h"
 #include <cmath>
 #include <assert.h>
@@ -8,7 +8,7 @@
 
 double t2FitFunc_dmmodelDM(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     assert(k < psr[ipsr].dmoffsDMnum);
-    const double dmf = 1.0/(DM_CONST*pow(psr->obsn[ipos].freqSSB/1.0e6,2));
+    const double dmf = 1.0/(DM_CONST*pow(psr[ipsr].obsn[ipos].freqSSB/1.0e6,2));
     return dmf * ifunc(psr[ipsr].dmoffsDM_mjd,static_cast<double>(psr[ipsr].obsn[ipos].sat),psr[ipsr].dmoffsDMnum,k);
 }
 void t2UpdateFunc_dmmodelDM(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){

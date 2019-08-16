@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2017.03.1],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/psrsoft/tempo2])
+AC_INIT([Tempo2],[2019.01.1],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/psrsoft/tempo2])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -199,7 +199,13 @@ AC_SUBST(T2ARCH)
 AC_CHECK_PROG(have_doxygen,[doxygen], [yes],[no])
 AM_CONDITIONAL(HAVE_DOXYGEN, [test x"$have_doxygen" = xyes])
 
-
+AC_ARG_ENABLE([default-qrfit],AS_HELP_STRING([--enable-default-qrfit],[Use QR fit by default]))
+AS_IF([test "x$enable_default_qrfit" = "xyes"], [
+       AC_MSG_NOTICE([Use QR fitter by default if avaliable])
+       AC_DEFINE([QR_DEFAULT],[],[Use QR fitting by default])
+       ],[
+       AC_MSG_NOTICE([Use SVD fitter by default])
+       ])
 
 
 AM_INIT_AUTOMAKE([foreign subdir-objects])

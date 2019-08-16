@@ -424,7 +424,7 @@ compute_tropospheric_delays(pulsar *psr,int npsr)
                 {
                     // get source elevation neglecting proper motion
                     source_elevation = asin(dotproduct(psr[p].obsn[i].zenith,
-                                psr[p].posPulsar)
+                                psr[p].posPulsarEquatorial)
                             / obs->height_grs80);
                     // get surface atmospheric pressure
                     pressure = 

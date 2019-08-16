@@ -145,7 +145,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   fout = fopen(fname,"w");
   fprintf(fout,"1\n");
   for (i=0;i<=ndays;i++)
-    fprintf(fout,"%.15g\n",covFunc[i]);
+    fprintf(fout,"%.18g\n",covFunc[i]);
   fclose(fout);
 
   sprintf(fname,"%s.model",psr[0].name);

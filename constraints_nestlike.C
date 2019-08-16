@@ -4,7 +4,7 @@
 #include <string.h>
 #define f1yr (1.0/3.16e7)
 
-double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_red_sin || iconstraint == constraint_red_cos);
 
     /* Constrain if
@@ -34,7 +34,7 @@ double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam
 
 }
 
-double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_red_dm_sin || iconstraint == constraint_red_dm_cos);
 
     /* Constrain if
@@ -63,7 +63,7 @@ double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int ipa
 }
 
 
-double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert (iconstraint == constraint_jitter);
 
     if (iparam == param_jitter && constraintk == k) {
@@ -90,7 +90,7 @@ double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int ipa
     }
 }
 
-double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_band_red_sin || iconstraint == constraint_band_red_cos);
 
     /* Constrain if
@@ -114,8 +114,8 @@ double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int ipara
 
 
 
-        double BandLF = psr[ipsr].TNBandNoiseLF[iband];
-        double BandHF = psr[ipsr].TNBandNoiseHF[iband];
+        //double BandLF = psr[ipsr].TNBandNoiseLF[iband];
+        //double BandHF = psr[ipsr].TNBandNoiseHF[iband];
         double BandAmp=pow(10.0, psr[ipsr].TNBandNoiseAmp[iband]);
         double BandSpec=psr[ipsr].TNBandNoiseGam[iband];
 
@@ -135,7 +135,7 @@ double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int ipara
 }
 
 
-double constraints_nestlike_group(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k){
+double constraints_nestlike_group(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_group_red_sin || iconstraint == constraint_group_red_cos);
 
     /* Constrain if
@@ -148,7 +148,7 @@ double constraints_nestlike_group(pulsar *psr,int ipsr, int iconstraint,int ipar
              ((iconstraint == constraint_group_red_sin) && (iparam == param_group_red_sin)) ||
              ((iconstraint == constraint_group_red_cos) && (iparam == param_group_red_cos)) )
        ) {
-        int totalGroupCoeff=0;
+        //int totalGroupCoeff=0;
 
         int igroup = 0;
         int ichan = k;
@@ -160,11 +160,11 @@ double constraints_nestlike_group(pulsar *psr,int ipsr, int iconstraint,int ipar
         // we are in channel ichan, group igroup.
 
 
-        double ret=0.0;
+        //double ret=0.0;
 
         double GroupAmp=pow(10.0, psr[ipsr].TNGroupNoiseAmp[igroup]);
         double GroupSpec=psr[ipsr].TNGroupNoiseGam[igroup];
-        int GroupC=psr[ipsr].TNGroupNoiseC[igroup];
+        //int GroupC=psr[ipsr].TNGroupNoiseC[igroup];
 
         double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
         double freq = ((double)(ichan+1.0))/(maxtspan);

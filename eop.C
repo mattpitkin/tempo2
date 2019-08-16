@@ -118,7 +118,13 @@ load_EOP(DynamicArray *EOPsamples,char *eopcFile)
                 format=0;
                 printf("Warning: using old format for $TEMPO2/eopc04_IAU2000.62-now - should update\n");
             }
-            else if (strstr(line,"FORMAT(3(I4),I7,2(F11.6),2(F12.7),2(F11.6),2(F11.6),2(F11.7),2F12.6)")!=NULL)
+	    else if (strstr(line,"FORMAT(3(I4),I7,2(F11.6),2(F12.7),2(F11.6),2(F11.6),2(F11.7),2F12.6)")!=NULL)
+	      {
+		format=1;
+		logdbg("Using new format for $TEMPO2/eopc04_IAU2000.62-now");
+	      }
+	      
+            else if (strstr(line,"FORMAT(3(I4),I7,2(F11.6),2(F12.7),2(F11.6),2(F11.6),2(F11.7),2(F12.6))")!=NULL)
             {
                 format=1;
                 logdbg("Using new format for $TEMPO2/eopc04_IAU2000.62-now");
@@ -174,6 +180,7 @@ get_EOP(double mjd, double *xp, double *yp, double *dut1,
             isamp++)
         ;
 
+    
     // cope with leap second ... take it off second point as jump happens
     // right AT second point
     if (samp[isamp].dut1 - samp[isamp-1].dut1 > 0.5)

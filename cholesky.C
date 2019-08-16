@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <sstream>
+#include <fstream>
 #include <ctype.h>
 #include <math.h>
 #include "TKlongdouble.h"
@@ -10,6 +13,14 @@
 #include "cholesky.h"
 
 #define LINE_LENGTH 2048
+
+void cholesky_readT2Model2(double **m, std::stringstream &ss ,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
+void cholesky_readT2Model1(double **m, std::stringstream &ss,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr);
+
+void cholesky_sqexp_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc);
+void cholesky_matern15_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc);
+void cholesky_matern25_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc);
+void cholesky_cov2dm(double **mm, pulsar *psr, int *ip,int np,int nc);
 
 /*
  * Derive a covariance matrix from the given filename.
@@ -90,12 +101,14 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
         }
     }
     logdbg("mbefore = ");
+    if(debugFlag){
     for (i=0;i<5;i++)
     { 
         for (j=0;j<5;j++) fprintf(LOG_OUTFILE,"%10g ",m[i][j]); 
         fprintf(LOG_OUTFILE,"\n");
     }
     fprintf(LOG_OUTFILE,"\n");
+    }
 
     // make sure constraints are not covariant with anything.
     logdbg("Ensuring constraints have zero co-variance, np = %d, nc = %d",np,nc);
@@ -131,11 +144,28 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
 
 
     logdbg("Form uinv from cholesky matrix 'm'");
+
     int ret = cholesky_formUinv(uinv,m,np);
     if (ret!=0) {
-        logerr("Error with formUinv");
-        exit(ret);
+        logwarn("Error with formUinv... adding 0.001%% to diagonal (%.1lg + %.1lg)",m[0][0],m[0][0]*0.00001);
+        for(i=0;i<np;i++){
+            m[i][i] *= 1.00001;
+        }
+        ret = cholesky_formUinv(uinv,m,np);
+        if (ret!=0) {
+            logerr("Error with formUinv");
+            exit(ret);
+        }
     }
+    logdbg("compute determinant of uinv");
+    double det = 1;
+    for (i=0;i<np;i++){
+        det += log(uinv[i][i]);
+    }
+    psr->detUinv=det;
+    logdbg("det(uinv)=%lg",det);
+
+
     for(i=0;i<np+1;i++)free(m[i]);
     free(m);
 }
@@ -146,114 +176,185 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
     char val[LINE_LENGTH];
     char dmy[LINE_LENGTH];
     char key[LINE_LENGTH];
-    char line[LINE_LENGTH];
     char psrJ[LINE_LENGTH];
     double mjd_start=_mjd_start;
     double mjd_end=_mjd_end;
 
 
+    std::stringstream content;
+
     bool first=true;
 
-    FILE* infile=fopen(fname,"r");
+    while(fname[0]==' ' || fname[0]=='\t')fname++;
+
+    if (strncmp(fname,"MODEL",5)==0){
+        content << std::string(fname);
+    } else {
+        std::ifstream file(fname);
+        content << file.rdbuf();
+        file.close();
+    }
 
     recursion+=1;
 
 
     strcpy(psrJ,_psrJ);
 
-    while(!feof(infile)){
-        char* tmp=fgets(line,LINE_LENGTH,infile);
+    std::string line;
+    while(std::getline(content,line)){
+        const char* tmp = line.c_str();
         if (first){
             //if the first character in the file is a numeric digit, assume that we have a DCF file.
             if(isdigit(tmp[0])){
                 // assume that we have 
-                fclose(infile);
                 cholesky_readFromCovarianceFunction(m,fname,resx,resy,rese,np,nc);
                 return;
             } else{
-                logmsg("Reading a Tempo2 MODEL file: %s",fname);
+                logmsg("Reading a Tempo2 MODEL file: '%s'",fname);
             }
             first=false;
         }
-        if (tmp==line){
-            while(tmp[0]==' ' || tmp[0]=='\t')tmp++;
-            if (tmp[0]=='#') continue;
-            int ok=sscanf(tmp,"%s",key);
-            if (ok==-1)continue;
-            logdbg("key[%d]: %s ('%s' '%s')\n",recursion,key,psrJ,psr->name);
+        while(tmp[0]==' ' || tmp[0]=='\t')tmp++;
+        if (tmp[0]=='#') continue;
+        int ok=sscanf(tmp,"%s",key);
+        if (ok==-1)continue;
+        logdbg("key[%d]: %s ('%s' '%s')\n",recursion,key,psrJ,psr->name);
 
-            // now test what the keyword is...
-            //
-            if (strcmp(key,"CLEAR")==0 || strcmp(key,"END")==0){
-                psrJ[0]='\0';
-                mjd_start=0.0;
-                mjd_end=99999.0;
+        // now test what the keyword is...
+        //
+        if (strcmp(key,"CLEAR")==0 || strcmp(key,"END")==0){
+            psrJ[0]='\0';
+            mjd_start=0.0;
+            mjd_end=99999.0;
+            continue;
+        }
+
+        if (strcmp(key,"PSR")==0){
+            sscanf(tmp,"%s %s",dmy,psrJ);
+        }
+
+        if(psrJ[0]!='\0' && strcmp(psrJ,psr->name))continue;
+        if (strcmp(key,"MJD")==0){
+            sscanf(tmp,"%s %lf %lf",dmy,&mjd_start,&mjd_end);
+        }
+        if (strcmp(key,"INCLUDE")==0){
+            sscanf(tmp,"%s %s",dmy,val);
+            cholesky_readT2CholModel_R(m,mm,val,resx,resy,rese,np,nc,ip,psr,psrJ,mjd_start,mjd_end,recursion);
+        }
+        if (strcmp(key,"DCF")==0){
+            sscanf(tmp,"%s %s",dmy,val);
+            cholesky_readFromCovarianceFunction(mm,val,resx,resy,rese,np,nc);
+            addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+        }
+        else if (strcmp(key,"ECM")==0){ // Extra covariance matrix
+            sscanf(tmp,"%s %s",dmy,val);
+            cholesky_ecm(mm,val,resx,resy,rese,np,nc);
+            addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+        }
+
+        if (strcmp(key,"MODEL")==0){
+            sscanf(tmp,"%s %s",dmy,val);
+            if (strcmp(val,"T2PowerLaw")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
+                cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2YrPowerLaw_X")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&alpha,&amp);
+                fc=0.05;
+                cholesky_powerlawModel(mm,alpha,fc,amp*pow(fc,-alpha), resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+           } else if (strcmp(val,"T2YrPowerLaw")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
+                cholesky_powerlawModel(mm,alpha,fc,amp*pow(fc,-alpha), resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2YrPowerLawDM")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
+                cholesky_powerlawModel(mm,alpha,fc,amp*pow(fc,-alpha), resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2PowerLawDM")==0){
+                double alpha,amp,fc;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
+                cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2SqExpDM")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_sqexp_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2SqExp")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_sqexp_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2Matern1.5")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_matern15_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2Matern1.5DM")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_matern15_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2Matern2.5")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_matern25_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2Matern2.5DM")==0){
+                double amp,sigma;
+                sscanf(tmp,"%s %s %lf %lf",dmy,val,&amp,&sigma);
+                cholesky_matern25_kernel(mm,amp,sigma, resx, resy,rese,np, nc);
+                cholesky_cov2dm(mm,psr,ip,np,nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if(strcmp(val,"DM")==0){
+
+                double D,d,ref_freq;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&D,&d,&ref_freq);
+                cholesky_dmModel(mm,D,d,ref_freq,resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if(strcmp(val,"DMCovarParam")==0){ // Added by Daniel Reardon and George Hobbs
+                double alpha,a,b;
+                sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&a,&b);
+                cholesky_dmModelCovarParam(mm,alpha,a,b,resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"1")==0){
+                cholesky_readT2Model1(mm,content,resx,resy,rese,np,nc,ip,psr);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"2")==0){
+                cholesky_readT2Model2(mm,content,resx,resy,rese,np,nc,ip,psr);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2")==0){
                 continue;
             }
-
-            if (strcmp(key,"PSR")==0){
-                sscanf(tmp,"%s %s",dmy,psrJ);
-            }
-
-            if(psrJ[0]!='\0' && strcmp(psrJ,psr->name))continue;
-            if (strcmp(key,"MJD")==0){
-                sscanf(tmp,"%s %lf %lf",dmy,&mjd_start,&mjd_end);
-            }
-            if (strcmp(key,"INCLUDE")==0){
-                sscanf(tmp,"%s %s",dmy,val);
-                cholesky_readT2CholModel_R(m,mm,val,resx,resy,rese,np,nc,ip,psr,psrJ,mjd_start,mjd_end,recursion);
-            }
-            if (strcmp(key,"DCF")==0){
-                sscanf(tmp,"%s %s",dmy,val);
-                cholesky_readFromCovarianceFunction(mm,val,resx,resy,rese,np,nc);
-                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-            }
-            else if (strcmp(key,"ECM")==0){ // Extra covariance matrix
-                sscanf(tmp,"%s %s",dmy,val);
-                cholesky_ecm(mm,val,resx,resy,rese,np,nc);
-                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-            }
-
-            if (strcmp(key,"MODEL")==0){
-                sscanf(tmp,"%s %s",dmy,val);
-                if (strcmp(val,"T2PowerLaw")==0){
-                    double alpha,amp,fc;
-                    sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
-                    cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if(strcmp(val,"DM")==0){
-                    double D,d,ref_freq;
-                    sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&D,&d,&ref_freq);
-                    cholesky_dmModel(mm,D,d,ref_freq,resx, resy,rese,np, nc);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if(strcmp(val,"DMCovarParam")==0){ // Added by Daniel Reardon and George Hobbs
-                    double alpha,a,b;
-                    sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&a,&b);
-                    cholesky_dmModelCovarParam(mm,alpha,a,b,resx, resy,rese,np, nc);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if (strcmp(val,"1")==0){
-                    cholesky_readT2Model1(mm,infile,resx,resy,rese,np,nc,ip,psr);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if (strcmp(val,"2")==0){
-                    cholesky_readT2Model2(mm,infile,resx,resy,rese,np,nc,ip,psr);
-                    addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
-                    continue;
-                } else if (strcmp(val,"T2")==0){
-                    continue;
-                }
-                logerr("Model type '%s' not understood",val);
-                exit(1);
-            }
-        } else {
-            break;
+            logerr("Model type '%s' not understood",val);
+            exit(1);
         }
 
     }
-    fclose(infile);
 
 }
 
@@ -367,9 +468,14 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
 
 void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
     int i;
+    double det = 0;
     for(i=0;i<np;i++){
         uinv[0][i]=1.0/rese[i];
+        det += log(uinv[0][i]);
     }
+    psr->detUinv=det;
+    logdbg("det(uinv)=%lg (C diagonal)",det);
+
 }
 
 
@@ -458,27 +564,37 @@ int cholesky_formUinv(double **uinv,double** m,int np){
 
 
 
-void cholesky_readT2Model1(double **m, FILE* file,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
+void cholesky_readT2Model1(double **m, std::stringstream &ss,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
     char dmy[LINE_LENGTH];
     double alpha;
     double fc;
     double amp;
-    fscanf(file,"%s %lg\n",dmy,&alpha);
-    fscanf(file,"%s %lg\n",dmy,&fc);
-    fscanf(file,"%s %lg\n",dmy,&amp);
+    std::string s;
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&alpha);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&fc);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&amp);
     cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
 }
 
-void cholesky_readT2Model2(double **m, FILE* file,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
+void cholesky_readT2Model2(double **m, std::stringstream &ss ,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){
     char dmy[LINE_LENGTH];
     double alpha;
     double beta;
     double fc;
     double amp;
-    fscanf(file,"%s %lg\n",dmy,&alpha);
-    fscanf(file,"%s %lg\n",dmy,&beta);
-    fscanf(file,"%s %lg\n",dmy,&fc);
-    fscanf(file,"%s %lg\n",dmy,&amp);
+
+    std::string s;
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&alpha);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&beta);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&fc);
+    std::getline(ss,s);
+    sscanf(s.c_str(),"%s %lg\n",dmy,&amp);
     cholesky_powerlawModel_withBeta(m,alpha,beta,fc,amp, resx, resy,rese,np, nc);
 }
 
@@ -495,21 +611,21 @@ void cholesky_ecm(double **m, char* fileName,double *resx,double *resy,double *r
     }
 
     //   cholesky_powerlawModel(m,alpha,fc,amp, resx, resy,rese,np, nc);
-    printf("Using extra covariance matrix from: %s\n",fileName);
+    logmsg("Using extra covariance matrix from: %s\n",fileName);
     for (i=0;i<np+nc;i++)
     {
         for (j=0;j<np+nc;j++)
         {
             if (fscanf(fin,"%lf",&m[i][j])!=1)
             {
-                printf("Error reading element (%d,%d) from %s\n",i,j,fileName);
+                logwarn("Error reading element (%d,%d) from %s\n",i,j,fileName);
                 exit(1);
             }
         }
     }
     if (fscanf(fin,"%lf",&dummy)==1)
     {
-        printf("WARNING: %s seems to have too many elements\n",fileName);
+        logwarn("WARNING: %s seems to have too many elements\n",fileName);
     }
     fclose(fin);
 }
@@ -540,7 +656,7 @@ void cholesky_readT2CholModel(double **m, const char* fname,double *resx,double 
 
 
     cholesky_readT2CholModel_R(m,mm,fname,resx,resy,rese,np,nc,ip,psr,psrJ,0.0,99999.0,0);
-    for(i=0;i<np;i++)free(mm[i]);
+    for(i=0;i<np+1;i++)free(mm[i]);
     free(mm);
 
 
@@ -554,6 +670,18 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
 
     int istart=0;
     int iend=0;
+
+    // if we aren't really doing a pulsar, e.g. model for ifunc or dmmodel
+    // Then we don't have ip, and don't deal with start and end
+    // Maybe we can fix this better in future, but for now this should be fine.
+    if (ip==NULL){
+    logdbg("Adding matrix m to mm (MJD range disabled as ip=NULL)");
+        for(i=0;i<np-nc;i++){
+            for(j=0;j<np-nc;j++){
+                m[i][j]+=mm[i][j];
+            }
+         }
+    } else {
 
     logdbg("Adding matrix m to mm (MJD range: %lf -> %lf) %lf %lf",mjd_start,mjd_end,(double)psr->obsn[ip[0]].sat,(double)psr->obsn[ip[np-nc-1]].sat);
     for(i=0;i<np-nc;i++){
@@ -570,6 +698,7 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
     }
 
     logdbg("istart=%d iend=%d (%d)",istart,iend,np-nc);
+
 
     /****
      *
@@ -606,6 +735,7 @@ void addCovar(double **m,double **mm,double *resx,double *resy,double *rese,int 
 
         }
     }
+    }
 }
 
 
@@ -621,11 +751,11 @@ void cholesky_dmModelCovarParam(double **m, double alpha, double a, double b,dou
     int ndays=ceil((resx[np-1])-(resx[0])+1e-10);
     covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
 
-    printf("In DMCovarParam function\n");
+    logmsg("In DMCovarParam function\n");
     for (i=0; i <= ndays; i++){
         x = (i+1e-10);
         covarFunc[i]=a*exp(-pow(x/b,alpha));
-        printf("DMCovarParam: %g\n",covarFunc[i]);
+        logmsg("DMCovarParam: %g\n",covarFunc[i]);
     }
     cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
 
@@ -664,11 +794,96 @@ void cholesky_dmModel(double **m, double D_d, double d, double ref_freq,double *
 
 }
 
+void cholesky_matern15_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc){
+
+    int ndays;
+    double *covarFunc;
+    logmsg("Generate covar matrix from Matern Kernel model (A=%lg sigma=%lf nu=1.5) (np=%d, nc=%d)",modelA,modelSigma,np,nc);
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+
+    double x;
+    double k1 = sqrt(3.0)/modelSigma;
+    for (int i=0; i <= ndays ; ++i){
+        x=i;
+        covarFunc[i] = modelA*(1.0 + k1*x) * exp(-x*k1);
+    }
+
+    if(debugFlag){
+        FILE* outFile = fopen("newDCF","w");
+        for(int i=0;i<ndays;i++){
+            fprintf(outFile,"%lg\n",covarFunc[i]);
+        }
+        fclose(outFile);
+    }
+
+    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+    free(covarFunc);
+}
+void cholesky_matern25_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc){
+
+    int ndays;
+    double *covarFunc;
+    logmsg("Generate covar matrix from Matern Kernel model (A=%lg sigma=%lf nu=2.5) (np=%d, nc=%d)",modelA,modelSigma,np,nc);
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+
+    double x;
+    double k1 = sqrt(5.0)/modelSigma;
+    double k2 = 5.0/modelSigma/modelSigma/3.0;
+    for (int i=0; i <= ndays ; ++i){
+        x=i;
+        covarFunc[i] = modelA*(1.0 + k1*x + k2*x*x) * exp(-x*k1);
+    }
+
+    if(debugFlag){
+        FILE* outFile = fopen("newDCF","w");
+        for(int i=0;i<ndays;i++){
+            fprintf(outFile,"%lg\n",covarFunc[i]);
+        }
+        fclose(outFile);
+    }
+
+    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+    free(covarFunc);
+}
+
+
+
+void cholesky_sqexp_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc){
+
+    int ndays;
+    double *covarFunc;
+    logmsg("Generate covar matrix from Square Exponential model (A=%lg sigma=%lf) (np=%d, nc=%d)",modelA,modelSigma,np,nc);
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+
+    double x;
+    double K = 1.0/(2.*modelSigma*modelSigma);
+    for (int i=0; i <= ndays ; ++i){
+        x=i;
+        covarFunc[i] = modelA*exp(-x*x*K);
+    }
+
+    if(debugFlag){
+        FILE* outFile = fopen("newDCF","w");
+        for(int i=0;i<ndays;i++){
+            fprintf(outFile,"%lg\n",covarFunc[i]);
+        }
+        fclose(outFile);
+    }
+
+    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+    free(covarFunc);
+}
+
+
+
 void cholesky_powerlawModel(double **m, double modelAlpha, double modelFc, double modelA,double *resx,double *resy,double *rese,int np, int nc){
 
     int ndays,i;
     double *covarFunc;
-    logmsg("Generate covar matrix from powerlaw model (a=%lf fc=%lf A=%lg)",modelAlpha,modelFc,modelA);
+    logmsg("Generate covar matrix from powerlaw model (a=%lf fc=%lf A=%lg) (np=%d, nc=%d)",modelAlpha,modelFc,modelA,np,nc);
     ndays=ceil((resx[np-1])-(resx[0])+1e-10);
     covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
     int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,0,0,covarFunc,resx,resy,rese,np);
@@ -708,4 +923,18 @@ void cholesky_powerlawModel_withBeta(double **m, double modelAlpha, double model
 
     cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
     free(covarFunc);
+}
+
+
+// this could be made more efficient!
+void cholesky_cov2dm(double **mm, pulsar *psr, int *ip,int np,int nc){
+    for (int i = 0; i < np; ++i){
+        double f1 = psr->obsn[ip[i]].freq;
+        double g1 = 1.0/(DM_CONST*f1*f1);
+        for (int j = 0; j < np; ++j){
+            double f2 = psr->obsn[ip[j]].freq;
+            double g2 = 1.0/(DM_CONST*f2*f2);
+            mm[i][j] *= g1*g2;
+        }
+    }
 }

@@ -47,3 +47,6 @@ enum_str.h
 mpack_lite.double.inc
 mpack_lite.__float128.inc
 ltmain.sh
+*.pyc
+python/*/build
+python/t2pred/t2pred.c

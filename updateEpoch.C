@@ -4,7 +4,7 @@
 void updateEpoch_str(pulsar* psr, int p, const char* newEpoch)
 {
     int i;
-    longdouble nMJD,dt;
+    longdouble nMJD;
     longdouble earliest=-1;
     longdouble latest=-1;
     int okay=1;
