@@ -3606,34 +3606,38 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
         ypos=0.45;
         for (i=jumpOffset+1;i<=psr[0].nJumps;i++)
         {
-            sscanf(psr[0].jumpStr[i],"%s %s",dummy,jumps);
-            if (iFlagColour == 1)
-            {
-                for (j=0;j<nFlags; j++)
-                    if (strcmp(jumps,flagStore[j])==0)
-                    {
-                        cpgsci(j+1);
-                        if (j>=14)
-                            cpgsci(j-12);
-                        break;
-                    }
-                cpgmove(xpos,ypos-0.03);
-                cpgdraw(xpos+0.18,ypos-0.03);
-                cpgdraw(xpos+0.18,ypos+0.15);
-                cpgdraw(xpos,ypos+0.15);
-                cpgdraw(xpos,ypos-0.03);
-            }
-            if (psr[0].fitJump[i]==1) cpgsci(3);
-            else cpgsci(2);
+	    sscanf(psr[0].jumpStr[i],"%s %s",dummy,jumps);
+	    // if jump name is -1 don't plot
+            if (strcmp(jumps, "-1") != 0)	
+	    {         
+		if (iFlagColour == 1)
+           	 {	
+                	for (j=0;j<nFlags; j++)
+                    	if (strcmp(jumps,flagStore[j])==0)
+                    	{
+                        	cpgsci(j+1);
+                       	 	if (j>=14)
+                            	cpgsci(j-12);
+                        	break;
+                   	 }
+                	cpgmove(xpos,ypos-0.03);
+                	cpgdraw(xpos+0.18,ypos-0.03);
+                	cpgdraw(xpos+0.18,ypos+0.15);
+                	cpgdraw(xpos,ypos+0.15);
+               	 	cpgdraw(xpos,ypos-0.03);
+           	 }
+            	if (psr[0].fitJump[i]==1) cpgsci(3);
+            	else cpgsci(2);
 
-            cpgtext(xpos,ypos,jumps);
-            xpos+=0.2;
-            if (xpos==1)
-            {
-                xpos=0.0;
-                ypos-=0.2;
+            	cpgtext(xpos,ypos,jumps);
+            	xpos+=0.2;
+            	if (xpos==1)
+            	 {
+                	xpos=0.0;
+                	ypos-=0.2;
+            	 }
             }
-        }
+	}	
         cpgsci(1);
         //if ctrl-i was pressed, add the zeroth backend (the one we're using as reference for jumps)
         //WARNING: if the psr[0].nJumps happens to be multiple of 15, this won't be displayed (FIX IT!)
