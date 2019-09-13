@@ -1111,7 +1111,6 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             char fname2[1000];
             char str1[100],str2[100],str3[100],str4[100],str5[100];
             // UNUSED VARIABLE //             int nread;
-            printf("here?\n");
             printf("In here writing a new parameter file: %s\n",fname);
             if (strlen(fname)==0)
             {
