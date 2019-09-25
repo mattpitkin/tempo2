@@ -393,7 +393,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         strcpy(psr->param[param_glf2].shortlabel[k],temp);
         sprintf(temp,"GLF0D_%d",k+1);
         strcpy(psr->param[param_glf0d].label[k],temp);
-        strcpy(psr->param[param_glf0d].shortlabel[k],temp);
+	strcpy(psr->param[param_glf0d].shortlabel[k],temp);
         sprintf(temp,"GLTD_%d",k+1);
         strcpy(psr->param[param_gltd].label[k],temp);
         strcpy(psr->param[param_gltd].shortlabel[k],temp);
@@ -402,6 +402,29 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         strcpy(psr->param[param_stateSwitchT].shortlabel[k],temp);
 
     }
+    for(k=0;k<psr->param[param_expep].aSize;k++)
+      {
+	
+	sprintf(temp, "EXPEP_%d", k+1);
+	strcpy(psr->param[param_expep].label[k],temp);
+      	strcpy(psr->param[param_expep].shortlabel[k],temp);
+	
+	sprintf(temp, "EXPPH_%d", k+1);
+	strcpy(psr->param[param_expph].label[k],temp);
+      	strcpy(psr->param[param_expph].shortlabel[k],temp);
+	
+	sprintf(temp, "EXPTAU_%d", k+1);
+	strcpy(psr->param[param_exptau].label[k],temp);
+      	strcpy(psr->param[param_exptau].shortlabel[k],temp);
+
+	sprintf(temp, "EXPINDEX_%d", k+1);
+	strcpy(psr->param[param_expindex].label[k],temp);
+      	strcpy(psr->param[param_expindex].shortlabel[k],temp);
+
+      }
+
+
+
     /* Binary parameters */
     strcpy(psr->param[param_t0].label[0],"T0 (MJD)");
     strcpy(psr->param[param_t0].shortlabel[0],"T0");
@@ -616,6 +639,7 @@ void allocateMemory(pulsar *psr, int realloc)
                 || i==param_bpjpb)  psr->param[i].aSize = MAX_BPJ_JUMPS;
         else if (i==param_glep || i==param_glph || i==param_glf0 || i==param_glf1 || i==param_stateSwitchT || i==param_glf2 || 
                 i==param_glf0d || i==param_gltd) psr->param[i].aSize = 40;
+	 else if (i==param_expep || i==param_expph || i==param_exptau || i==param_expindex) psr->param[i].aSize = 40;
         else if (i==param_dmassplanet)
             psr->param[i].aSize = 9;
         else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)

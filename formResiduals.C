@@ -503,6 +503,41 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     }
                 }
             }
+	    
+
+    for (k=0;k<psr[p].param[param_expep].aSize;k++)
+            {
+                if (psr[p].param[param_expep].paramSet[k]==1)
+		  {
+		    long double freq, dt, dm, tau, gamma;
+		    if (psr[p].param[param_expindex].paramSet[k] ==1)
+		      {
+			gamma=psr[p].param[param_expindex].val[k];
+		      }
+		    else
+		      {
+			gamma=-2;
+		      }
+		    freq=psr[p].obsn[i].freqSSB/1.4e9;
+		    dt=(psr[p].obsn[i].bbat - psr[p].param[param_expep].val[k]);
+		    dm=psr[p].param[param_expph].val[k];
+		    tau=psr[p].param[param_exptau].val[k];
+		    
+		    fprintf(stderr, "DT %.3Le TAU %.3Le\n", dt, tau);
+
+		    if (dt  >0)
+		      {
+			phase4 +=  dm*powl(freq, gamma)*exp(-dt/tau)*psr[p].param[param_f].val[0];   
+			fprintf(stderr, "%.3Le\n", phase4);
+		      }
+		  
+		      
+		  }
+	    }
+    
+		    
+
+	    
 
 
             if(psr[p].param[param_glep].aSize>0){
@@ -518,6 +553,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         phaseJ+=psr[p].jumpVal[k]*psr[p].param[param_f].val[0];
                 }
             }
+
+	    
+
 
             /* Add in extra phase due to whitening procedures */
             phaseW = 0.0;
