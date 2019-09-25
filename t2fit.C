@@ -948,6 +948,8 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 ++OUT.nConstraints;
             }
         }
+	// add in TN shapelet parameters
+
 
         // ECORR parameters
         // Fits for a constrained jump for each "epoch" (i.e. observation)
@@ -1138,6 +1140,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_e2dot:
         case param_xpbdot:
         case param_pbdot:
+	case param_pb2dot:
         case param_a1dot:
         case param_a2dot:
         case param_omdot:
@@ -1249,6 +1252,21 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
                 logwarn("Refusing to fit for glitch %d which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_glep].val[k]);
             }
             break;
+
+    case param_expph:
+    case param_exptau:
+    case param_expindex:
+    case param_expep:
+      if ((psr->param[param_expep].val[k] > psr->param[param_start].val[0]) && (psr->param[param_expep].val[k]< psr->param[param_finish].val[0]))
+	{
+	  OUT.paramDerivs[OUT.nParams] = t2FitFunc_expdip;
+	  OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_simpleMinus;
+	  ++ OUT.nParams;
+	}
+      else{
+	logwarn("Refusing to fit for exponential dip which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_expep].val[k]);
+      }
+
 
         case param_telx:
         case param_tely:
@@ -1382,6 +1400,27 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
 
             }
             break;
+
+	    /*
+    case param_shapevent:
+      {
+	int l;
+	l=0;
+	for (int i=0;i < psr->nTNShapeletEvents;i++)
+		  {
+		    for (int k=0;k<psr->TNShapeletEvN[i];k++)
+		      {
+			OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_shapeevent;
+			OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_shapevent;
+			OUT.paramCounters[OUT.nParams]=l;
+			OUT.paramIndex[OUT.nParams]=fit_param;
+			l++;
+			++OUT.nParams;
+		      }
+		  }
+		  }*/
+	   
+
 
         case param_ne_sw:
             // solar wind
