@@ -1140,6 +1140,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_e2dot:
         case param_xpbdot:
         case param_pbdot:
+	case param_pb2dot:
         case param_a1dot:
         case param_a2dot:
         case param_omdot:
