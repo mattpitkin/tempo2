@@ -1623,7 +1623,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             if (psr->nCompanion==0) psr->nCompanion=1;
         }
         else if ((strcasecmp(str,"PBDOT")!=0) && (str[0]=='P' || str[0]=='p') &&  /* Higher Pb derivatives */
-                (str[1]=='B' || str[1]=='b'))
+		 (str[1]=='B' || str[1]=='b') && (strcasecmp(str,"PB2DOT")!=0))
         {
             int pbval;
             if (sscanf(str+3,"%d",&pbval)==1)
@@ -1669,6 +1669,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 psr->param[param_pbdot].val[0]*=1.0e-12;
             psr->param[param_pbdot].prefit[0] = psr->param[param_pbdot].val[0];
         }
+	else if (strcasecmp(str,"PB2DOT")==0)
+        {
+            readValue(psr,str,fin,&(psr->param[param_pb2dot]),0);
+	}
         else if (strcasecmp(str,"XPBDOT")==0)
         {
             readValue(psr,str,fin,&(psr->param[param_xpbdot]),0);
