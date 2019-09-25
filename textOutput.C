@@ -1105,8 +1105,6 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }
             }
         }  
-
-
         if (newpar==1)  /* Write a new .par file */
         {
             FILE *fout2;
@@ -1266,6 +1264,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }
                 else	   
                     fprintf(fout2,"%-15.15s%s\n","CLK",psr[p].clock);
+        
+            
 
                 if (psr[p].fitMode==1) fprintf(fout2,"MODE 1\n");
                 if (psr[p].units != SI_UNITS)fprintf(fout2, "%-15.15s%s\n", "UNITS", "TDB");
@@ -1348,6 +1348,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 if(psr[p].TNGlobalEQ != 0){
                     fprintf(fout2,"TNGlobalEQ %g\n", psr[p].TNGlobalEQ);
                 }
+            
 
 
                 for (i=0;i<psr[p].nTNEF;i++)
@@ -1393,6 +1394,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 for(i =0; i < psr[p].nTNBandNoise; i++){
 
                     fprintf(fout2,"TNBandNoise %g %g %g %g %i\n", psr[p].TNBandNoiseLF[i], psr[p].TNBandNoiseHF[i], psr[p].TNBandNoiseAmp[i], psr[p].TNBandNoiseGam[i], psr[p].TNBandNoiseC[i]);
+
+                }
+
+                if (psr[p].TNsubtractRed ==1){
+                    fprintf(fout2,"TNsubtractRed 1\n");
+
+                }
+
+
+                if (psr[p].TNsubtractDM == 1){
+                    fprintf(fout2,"TNsubtractDM 1\n");
 
                 }
 

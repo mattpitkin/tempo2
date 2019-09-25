@@ -451,7 +451,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         readValue(psr,(char *)"ELONG",fin,elong,0);
     else if (strcasecmp(str,"ELAT")==0 || strcasecmp(str,"BETA")==0)
         readValue(psr,(char *)"ELAT",fin,elat,0);
-    else if (strstr(str,"GLEP_")!=NULL || strstr(str,"glep_")!=NULL)
+  
+
+
+  else if (strstr(str,"GLEP_")!=NULL || strstr(str,"glep_")!=NULL)
     {
         if (sscanf(str+5,"%d",&gval)==1)
         {
@@ -513,6 +516,48 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 readValue(psr,str,fin,&(psr->param[param_gltd]),gval-1);
         }
     }
+
+    else if  (strstr(str,"EXPEP_")!=NULL || strstr(str,"expep_")!=NULL)
+    {
+      //fprintf(stderr, "here\n");
+      //exit(0);
+        if (sscanf(str+6,"%d",&gval)==1)
+        {
+	  
+	  //fprintf(stderr, gval);
+            if (gval<psr->param[param_expep].aSize)
+                readValue(psr,str,fin,&(psr->param[param_expep]),gval-1);
+        }
+    }
+
+
+    else if  (strstr(str,"EXPPH_")!=NULL || strstr(str,"expph_")!=NULL)
+    {
+        if (sscanf(str+6,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_expph].aSize)
+                readValue(psr,str,fin,&(psr->param[param_expph]),gval-1);
+        }
+    }
+     else if  (strstr(str,"EXPTAU_")!=NULL || strstr(str,"exptau_")!=NULL)
+    {
+        if (sscanf(str+7,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_exptau].aSize)
+                readValue(psr,str,fin,&(psr->param[param_exptau]),gval-1);
+        }
+    }
+         else if  (strstr(str,"EXPINDEX_")!=NULL || strstr(str,"expindex_")!=NULL)
+    {
+        if (sscanf(str+9,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_expindex].aSize)
+                readValue(psr,str,fin,&(psr->param[param_expindex]),gval-1);
+        }
+    }
+    
+
+
     else if (strcasecmp(str,"TZRMJD")==0)      /* TZRMJD */
         readValue(psr,str,fin,&(psr->param[param_tzrmjd]),0);
     else if (strcasecmp(str,"TZRSITE")==0)      /* TZRMJD */
@@ -1578,7 +1623,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             if (psr->nCompanion==0) psr->nCompanion=1;
         }
         else if ((strcasecmp(str,"PBDOT")!=0) && (str[0]=='P' || str[0]=='p') &&  /* Higher Pb derivatives */
-                (str[1]=='B' || str[1]=='b'))
+		 (str[1]=='B' || str[1]=='b') && (strcasecmp(str,"PB2DOT")!=0))
         {
             int pbval;
             if (sscanf(str+3,"%d",&pbval)==1)
@@ -1624,6 +1669,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 psr->param[param_pbdot].val[0]*=1.0e-12;
             psr->param[param_pbdot].prefit[0] = psr->param[param_pbdot].val[0];
         }
+	else if (strcasecmp(str,"PB2DOT")==0)
+        {
+            readValue(psr,str,fin,&(psr->param[param_pb2dot]),0);
+	}
         else if (strcasecmp(str,"XPBDOT")==0)
         {
             readValue(psr,str,fin,&(psr->param[param_xpbdot]),0);

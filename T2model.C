@@ -61,7 +61,7 @@ void addKeplerianJumps(pulsar *psr,int ipos,double *torb,double *x,double *ecc,
         double *omz,double *pb);
 void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
         double *mtot,double *omdot, double *gamma,double *xdot,
-        double *xpbdot, double *pbdot, double *edot,double *pmra,
+		      double *xpbdot, double *pbdot, double *pb2dot, double *edot,double *pmra,
         double *pmdec,double *dpara, double *dr,double *dth,
         double *a0,double *b0,double *xomdot,double *afac,
         double *eps1dot,double *eps2dot,double *daop);
@@ -90,7 +90,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
     double SUNMASS = 4.925490947e-6;
     longdouble tt0,t0,ct,t0asc;
     double m2,x,ecc,er,xdot,edot,dr,dth,eth;
-    double pbdot,xpbdot,phase,u,gamma;
+    double pbdot,pb2dot,xpbdot,phase,u,gamma;
     double orbits;
     int    norbits;
     double cu,onemecu=0,cae,sae,ae,omega,omz,sw,cw,alpha,beta,bg,dre,drep,drepp,
@@ -150,7 +150,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
         deriveKeplerian(pb,kom,&an,&sin_omega,&cos_omega);
         /* Obtain post-Keplerian parameters */
         getPostKeplerian(&psr[p],com,an,&si,&m2,&mtot,&omdot,&gamma,&xdot,&xpbdot,
-                &pbdot,&edot,&pmra,&pmdec,&dpara,&dr,&dth,&a0,&b0,
+			 &pbdot, &pb2dot,&edot,&pmra,&pmdec,&dpara,&dr,&dth,&a0,&b0,
                 &xomdot,&afac,&eps1dot,&eps2dot,&daop);
 
         /* If the beta-prime parameters are set then omdot, gamma, si, dr, er, 
@@ -202,7 +202,11 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
         }
 
         /* Obtain number of orbits in tt0 */
-        orbits  = tt0/pb - 0.5*(pbdot+xpbdot)*pow(tt0/pb,2);
+        orbits  = tt0/pb - 0.5*(pbdot+xpbdot)*pow(tt0/pb,2) - 1./6.*1e-33*pb2dot*pow(tt0,3);
+
+	//fprintf(stderr, "PB %.3e  TT0 %.3Le\n", pb,tt0);
+
+
         norbits = (int)orbits;
         if (orbits<0.0) norbits--;
 
@@ -503,6 +507,11 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
                 }
                 else  return 0.5*tt0*(-csigma*an*SECDAY*tt0/(pb*SECDAY));
             }
+	    else if (param==param_pb2dot)
+	      {
+		return  -1./6.*1e-33*csigma*an*tt0*tt0*tt0*pb;
+	      }
+
             else if (param==param_sini)    return csi;
             else if (param==param_gamma)   return cgamma;
             else if (param==param_m2)      return cm2*SUNMASS;
@@ -586,6 +595,11 @@ void updateT2(pulsar *psr,double val,double err,int pos,int arr){
         psr->param[pos].err[arr]  = err*180.0/M_PI;
     }
     else if (pos==param_pbdot)
+    {
+        psr->param[pos].val[arr] += val;
+        psr->param[pos].err[arr]  = err;
+    }
+     else if (pos==param_pb2dot)
     {
         psr->param[pos].val[arr] += val;
         psr->param[pos].err[arr]  = err;
@@ -736,6 +750,7 @@ void addKeplerianJumps(pulsar *psr,int ipos,double *torb,double *x,double *ecc,
  * gamma = gamma term
  * xdot  = rate of change of projected semi-major axis of orbit
  * pbdot = rate of change of orbital period
+ * pb2dot  = rate of change of pbdot
  * edot  = rate of change of eccentricity
  * xpbdot= rate of change of orbital period minus GR prediction
  *
@@ -745,7 +760,7 @@ void addKeplerianJumps(pulsar *psr,int ipos,double *torb,double *x,double *ecc,
 
 void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
         double *mtot,double *omdot, double *gamma,double *xdot,
-        double *xpbdot,double *pbdot, double *edot,double *pmra,
+		      double *xpbdot,double *pbdot, double *pb2dot, double *edot,double *pmra,
         double *pmdec,double *dpara, double *dr,double *dth,
         double *a0,double *b0,double *xomdot,double *afac,
         double *eps1dot,double *eps2dot, double *daop){
@@ -776,6 +791,7 @@ void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
     *xdot    = getParameter(psr,param_a1dot,com);
     *xpbdot  = getParameter(psr,param_xpbdot,com);
     *pbdot   = getParameter(psr,param_pbdot,com);
+    *pb2dot  = getParameter(psr,param_pb2dot,com);
     *edot    = getParameter(psr,param_edot,com);
     *pmra    = getParameter(psr,param_pmra,com)
         * M_PI/(180.0*3600.0e3)/(365.25*86400.0);
