@@ -497,6 +497,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_gamma].shortlabel[0],"GAMMA");
     strcpy(psr->param[param_pbdot].label[0],"PBDOT");
     strcpy(psr->param[param_pbdot].shortlabel[0],"PBDOT");
+    strcpy(psr->param[param_pb2dot].label[0],"PB2DOT (1e-33 s^-1)");
+    strcpy(psr->param[param_pb2dot].shortlabel[0],"PB2DOT");
     strcpy(psr->param[param_xpbdot].label[0],"XPBDOT");
     strcpy(psr->param[param_xpbdot].shortlabel[0],"XPBDOT");
     strcpy(psr->param[param_a1dot].label[0],"XDOT");
