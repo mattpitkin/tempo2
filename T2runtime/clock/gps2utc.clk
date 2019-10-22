@@ -1,4 +1,4 @@
-# UTC(GPS) UTC
+# UTC(GPS) UTC 
 # RTE 29 Sep 2004 generated from cirt.100-200 
 #    using update_clkcorr -t gpsutc cirt.[12]*
 #Comments from merged data file:
@@ -3432,35 +3432,395 @@
 #Comments from merged data file:
 #>Fri Mar  9 13:39:19 2018 Imported from file CircularT/cirt.361
 #Comments from merged data file:
-#>Thu Sep 13 11:09:57 2018 Imported from file cirt.362
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.326
 #Comments from merged data file:
-#>Thu Sep 13 11:09:57 2018 Imported from file cirt.363
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.327
 #Comments from merged data file:
-#>Thu Sep 13 11:09:57 2018 Imported from file cirt.364
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.328
 #Comments from merged data file:
-#>Thu Sep 13 11:09:57 2018 Imported from file cirt.365
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.329
 #Comments from merged data file:
-#>Thu Sep 13 11:09:57 2018 Imported from file cirt.366
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.330
 #Comments from merged data file:
-#>Thu Sep 13 11:09:57 2018 Imported from file cirt.367
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.331
 #Comments from merged data file:
-#>Thu Sep 13 11:09:57 2018 Imported from file cirt.368
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.332
 #Comments from merged data file:
-#>Wed Nov  7 10:32:14 2018 Imported from file cirt.369
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.333
 #Comments from merged data file:
-#>Tue May 14 19:14:45 2019 Imported from file cirt.370
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.334
 #Comments from merged data file:
-#>Tue May 14 19:14:45 2019 Imported from file cirt.371
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.335
 #Comments from merged data file:
-#>Tue May 14 19:14:45 2019 Imported from file cirt.372
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.336
 #Comments from merged data file:
-#>Tue May 14 19:14:45 2019 Imported from file cirt.373
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.337
 #Comments from merged data file:
-#>Tue May 14 19:14:45 2019 Imported from file cirt.374
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.338
 #Comments from merged data file:
-#>Tue May 14 19:14:45 2019 Imported from file cirt.375
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.339
 #Comments from merged data file:
-#>Tue May 14 19:14:45 2019 Imported from file cirt.376
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.340
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.341
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.342
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.343
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.344
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.345
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.346
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.347
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.348
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.349
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.350
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.351
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.352
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.353
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.354
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.355
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.356
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.357
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.358
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.359
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.360
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.361
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.362
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.363
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.364
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.365
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.366
+#Comments from merged data file:
+#>Thu Aug 16 14:33:40 2018 Imported from file CircularT/cirt.367
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.300
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.301
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.302
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.303
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.304
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.305
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.306
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.307
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.308
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.309
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.310
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.311
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.312
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.313
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.314
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.315
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.316
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.317
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.318
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.319
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.320
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.321
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.322
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.323
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.324
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.325
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.326
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.327
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.328
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.329
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.330
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.331
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.332
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.333
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.334
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.335
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.336
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.337
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.338
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.339
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.340
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.341
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.342
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.343
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.344
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.345
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.346
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.347
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.348
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.349
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.350
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.351
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.352
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.353
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.354
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.355
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.356
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.357
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.358
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.359
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.360
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.361
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.362
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.363
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.364
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.365
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.366
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.367
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.368
+#Comments from merged data file:
+#>Fri Feb  8 11:27:44 2019 Imported from file CircularT/cirt.369
+#Comments from merged data file:
+#>Fri Feb  8 11:27:45 2019 Imported from file CircularT/cirt.370
+#Comments from merged data file:
+#>Fri Feb  8 11:27:45 2019 Imported from file CircularT/cirt.371
+#Comments from merged data file:
+#>Fri Feb  8 11:27:45 2019 Imported from file CircularT/cirt.372
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.300
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.301
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.302
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.303
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.304
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.305
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.306
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.307
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.308
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.309
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.310
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.311
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.312
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.313
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.314
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.315
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.316
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.317
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.318
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.319
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.320
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.321
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.322
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.323
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.324
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.325
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.326
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.327
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.328
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.329
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.330
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.331
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.332
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.333
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.334
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.335
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.336
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.337
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.338
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.339
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.340
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.341
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.342
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.343
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.344
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.345
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.346
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.347
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.348
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.349
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.350
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.351
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.352
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.353
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.354
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.355
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.356
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.357
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.358
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.359
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.360
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.361
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.362
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.363
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.364
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.365
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.366
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.367
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.368
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.369
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.370
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.371
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.372
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.373
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.374
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.375
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.376
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.377
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.378
+#Comments from merged data file:
+#>Fri Aug 30 14:28:27 2019 Imported from file CircularT/cirt.379
 50169.00000 0.000000038000
 50170.00000 0.000000039000
 50171.00000 0.000000037000
@@ -11891,4 +12251,99 @@
 58597.00000 0.000000004400
 58598.00000 0.000000002500
 58599.00000 0.000000001900
+58600.00000 0.000000002200
+58601.00000 0.000000003400
+58602.00000 0.000000004000
+58603.00000 0.000000003700
+58604.00000 0.000000003100
+58605.00000 0.000000004200
+58606.00000 0.000000003700
+58607.00000 0.000000003300
+58608.00000 0.000000003700
+58609.00000 0.000000005200
+58610.00000 0.000000006300
+58611.00000 0.000000005800
+58612.00000 0.000000005400
+58613.00000 0.000000003500
+58614.00000 0.000000005000
+58615.00000 0.000000006300
+58616.00000 0.000000004300
+58617.00000 0.000000002900
+58618.00000 0.000000004900
+58619.00000 0.000000004900
+58620.00000 0.000000006000
+58621.00000 0.000000005200
+58622.00000 0.000000002100
+58623.00000 0.000000003100
+58624.00000 0.000000005000
+58625.00000 0.000000004500
+58626.00000 0.000000006200
+58627.00000 0.000000005200
+58628.00000 0.000000004000
+58629.00000 0.000000004600
+58630.00000 0.000000004100
+58631.00000 0.000000003500
+58632.00000 0.000000004000
+58633.00000 0.000000005100
+58634.00000 0.000000004900
+58635.00000 0.000000005400
+58636.00000 0.000000005800
+58637.00000 0.000000005100
+58638.00000 0.000000003900
+58639.00000 0.000000006300
+58640.00000 0.000000005300
+58641.00000 0.000000001000
+58642.00000 0.000000001600
+58643.00000 0.000000003300
+58644.00000 0.000000004300
+58645.00000 0.000000003900
+58646.00000 0.000000002800
+58647.00000 0.000000004700
+58648.00000 0.000000007400
+58649.00000 0.000000009300
+58650.00000 0.000000007400
+58651.00000 0.000000003300
+58652.00000 0.000000002700
+58653.00000 0.000000002400
+58654.00000 0.000000002200
+58655.00000 0.000000001800
+58656.00000 0.000000003500
+58657.00000 0.000000003700
+58658.00000 0.000000001200
+58659.00000 0.000000002000
+58660.00000 0.000000003600
+58661.00000 0.000000002100
+58662.00000 0.000000001700
+58663.00000 0.000000000400
+58664.00000 0.000000001400
+58665.00000 0.000000004300
+58666.00000 0.000000003700
+58667.00000 0.000000004400
+58668.00000 0.000000003200
+58669.00000 0.000000000100
+58670.00000 -0.000000000300
+58671.00000 -0.000000001200
+58672.00000 -0.000000001100
+58673.00000 0.000000000000
+58674.00000 0.000000000500
+58675.00000 0.000000000900
+58676.00000 0.000000003000
+58677.00000 0.000000002400
+58678.00000 0.000000000800
+58679.00000 0.000000001000
+58680.00000 0.000000002200
+58681.00000 0.000000002400
+58682.00000 0.000000001400
+58683.00000 0.000000000900
+58684.00000 0.000000001100
+58685.00000 0.000000002300
+58686.00000 0.000000002100
+58687.00000 0.000000001500
+58688.00000 0.000000004200
+58689.00000 0.000000003100
+58690.00000 0.000000001000
+58691.00000 0.000000003400
+58692.00000 0.000000003700
+58693.00000 0.000000005100
+58694.00000 0.000000004100
 99999.00000 0.000000000000
