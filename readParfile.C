@@ -1189,6 +1189,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         int number;
         /* Obtain parameter number */
         sscanf(str+5,"%d",&number);
+        if (number > MAX_IFUNC)
+        {
+          fprintf(stderr, "IFUNC number exceeded MAX_IFUNC(=%d)! Aborting.\n",MAX_IFUNC);
+          exit(1);
+        }
 
         fscanf(fin,"%lf %lf %lf",&psr->ifuncT[number-1],&psr->ifuncV[number-1],&psr->ifuncE[number-1]);
         psr->ifunc_weights[number-1]=1.0;
