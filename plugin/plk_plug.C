@@ -885,10 +885,38 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     errBar[count] = psr[0].obsn[i].origErr;
                 else 
                     errBar[count] = psr[0].obsn[i].toaDMErr;
-                if(yplot==2 && psr[0].AverageResiduals == 1){errBar[count] = psr[0].obsn[i].averageerr/1e-6;}
+                if(yplot==2 && psr[0].AverageResiduals == 1){
+		  
+		  errBar[count] = psr[0].obsn[i].averageerr/1e-6;
+
+		  
+		}
                 if(yplot==2 && psr[0].AverageDMResiduals == 1){errBar[count] = psr[0].obsn[i].averagedmerr/1e-6;}
                 if(yplot==16){errBar[count] = (float) psr[0].obsn[i].TNRedErr/1e-6;}
-                if(yplot==17){errBar[count] = (float) psr[0].obsn[i].TNDMErr/1e-6;}
+                if(yplot==17){
+		  double DMKappa=2.410*pow(10.0,-16);
+		  double freq=(double)psr[0].obsn[i].freqSSB;
+		  longdouble yrs = (psr[0].obsn[i].sat - psr[0].param[param_dmepoch].val[0])/365.25;
+		  longdouble arg = 1.0;
+		  double dmDot=0;
+		  double dmDotErr=0;
+		  for (int d=1;d<9;d++)
+		    {
+		      arg *= yrs;
+		      if (psr[0].param[param_dm].paramSet[d]==1)
+			{
+			  dmDotErr +=powf((double)(psr[0].param[param_dm].val[d]*arg),2);
+			}
+		    }
+		
+		  // *(DMKappa*pow(freq,2)) + dmDot)
+
+		  dmDotErr =sqrt(dmDotErr);
+		  errBar[count] = (float) psr[0].obsn[i].TNDMErr*(DMKappa*pow(freq,2))/1e-6 + dmDotErr/1e-6 ;
+		  //fprintf(stderr, "DM err %.3e\n", errBar[count]);
+
+
+		}
                 if (bad==0) count++;	    
             }
         }
@@ -2344,9 +2372,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     fclose(fout);
                 }
                 else if (key=='r') {  /* RESET */
-                    readParfile(psr,parFile,timFile,1); /* Load the parameters       */
+		  initialise(psr,1);
+		  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
                     readTimfile(psr,timFile,1); /* Load the arrival times    */
-                    preProcess(psr,1,argc,argv);
+		    
+               preProcess(psr,1,argc,argv);
                     callFit(psr,npsr);
                 }
                 else if (key=='I') /* indicate individual observations */
@@ -4111,7 +4141,7 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
     {
         if (plotPhase==-1){
             x[count] = (float)(double)psr[0].obsn[iobs].residual/unitFlag;
-            if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averageres);}
+            if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averageres/unitFlag);}
             else if (psr[0].AverageDMResiduals ==1){x[count] = (float)(psr[0].obsn[iobs].averagedmres);}
 	    else if (psr[0].TNsubtractRed ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
 	    else if  (psr[0].TNsubtractDM ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
@@ -4316,15 +4346,20 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
         longdouble yrs = (psr[0].obsn[iobs].sat - psr[0].param[param_dmepoch].val[0])/365.25;
         longdouble arg = 1.0;
         double dmDot=0;
-        double dmDotErr=0;
+       
         for (int d=1;d<9;d++){
             arg *= yrs;
             if (psr[0].param[param_dm].paramSet[d]==1){
-                dmDot+=(double)(psr[0].param[param_dm].val[d]*arg);
+	      // quadrature sum
+	      dmDot += (double)(psr[0].param[param_dm].val[d]*arg);
             }
         }
 
+       
+
         x[count]=(float)(psr[0].obsn[iobs].TNDMSignal*(DMKappa*pow(freq,2)) + dmDot);
+	
+	
     }
     else if (plot==18) // Plot on flag value
     {
