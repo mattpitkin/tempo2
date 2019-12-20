@@ -381,7 +381,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                                         }
                                     }		
                                 }
-                                double TNSquad = pow(10.0,psr[p].TNSQVal[k]+6)*pow(10.0,psr[p].TNSQVal[k]+6)*tobsval;
+                                double TNSquad = pow(10.0,psr[p].TNSQVal[k]+6)*pow(10.0,psr[p].TNSQVal[k]+6)/tobsval;
                                 err = sqrt(err*err + TNSquad);
                             }
                         }
