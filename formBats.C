@@ -72,6 +72,8 @@ void formBats(pulsar *psr,int npsr)
 
                 psr[p].obsn[i].batCorr = batcorr;
 
+                //fprintf(stderr, "SAT = %.15Lf, TT-TB = %.15Lf, corr = %.15lf, tropo = %.15lf\n", psr[p].obsn[i].sat, psr[p].obsn[i].correctionTT_TB, getCorrectionTT(psr[p].obsn+i), psr[p].obsn[i].troposphericDelay);
+
                 psr[p].obsn[i].bat = psr[p].obsn[i].sat + 
                     getCorrectionTT(psr[p].obsn+i)/SECDAY 
                     + (psr[p].obsn[i].correctionTT_TB

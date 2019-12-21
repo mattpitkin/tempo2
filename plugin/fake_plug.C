@@ -359,6 +359,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			psr[0].obsn[count].clockCorr=1;
 			psr[0].obsn[count].delayCorr=1;
 			psr[0].obsn[count].efac=1;
+      //fprintf(stderr, "SAT = %.14Lf, MJD = %.14Lf\n", psr[0].obsn[count].sat, mjd);
 			count++;
 		      }
 		    psr[0].obsn[count].sat    = mjd;
@@ -374,6 +375,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 		    psr[0].obsn[count].clockCorr=1;
 		    psr[0].obsn[count].delayCorr=1;
 		    psr[0].obsn[count].efac=1;
+        //fprintf(stderr, "SAT = %.14Lf, MJD = %.14Lf\n", psr[0].obsn[count].sat, mjd);
 		    count++;
 		    if (count>MAX_OBSN)
 		      {
