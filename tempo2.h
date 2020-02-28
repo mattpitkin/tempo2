@@ -166,9 +166,10 @@ enum label {
     param_raj,param_decj,param_f,param_pepoch,param_posepoch,
     param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
     param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
-    param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_a1dot,
+    param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_pb2dot,param_a1dot,
     param_a2dot,param_omdot,param_om2dot,param_orbpx,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
     param_mtot,param_glep,param_glph,param_glf0,param_glf1,param_glf2,
+    param_expep, param_expph,param_exptau,param_expindex,
     param_glf0d,param_gltd,param_start,param_finish,param_track,param_bp,param_bpp,
     param_tzrmjd,param_tzrfrq,param_fddc,param_fddi,param_fd,param_dr,param_dtheta,param_tspan,
     param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
@@ -186,6 +187,7 @@ enum label {
     param_band_red_sin, param_band_red_cos,param_sx, param_sxr1, param_sxr2, param_sxer,
     param_group_red_sin, param_group_red_cos,
     param_ne_sw,
+    param_shapevent,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -780,8 +782,10 @@ typedef struct pulsar {
 
 
 
-    //DMEvent Parameters
+    //DMEvent Power Spectrum Parameters
     int nDMEvents;
+  // number of DM event coefficients
+  int nDMEventC;
     double TNDMEvStart[MAX_TNDMEv];
     double TNDMEvLength[MAX_TNDMEv];
     double TNDMEvAmp[MAX_TNDMEv];
@@ -790,13 +794,21 @@ typedef struct pulsar {
     int TNDMEvLin[MAX_TNDMEv];
     int TNDMEvQuad[MAX_TNDMEv];
 
+
+
     //ShapeletEvent Parameters
-    int nTNShapeletEvents;
+  
+  int nTNShapeletEvents;
     int TNShapeletEvN[MAX_TNDMEv];  //Numbers of terms in the event
     double TNShapeletEvPos[MAX_TNDMEv];  //central position
     double TNShapeletEvWidth[MAX_TNDMEv];  //Overall Width 
     double TNShapeletEvFScale[MAX_TNDMEv];  //Scaling dependence with observational frequency
 
+
+  
+
+
+  
 
 
 
