@@ -3,6 +3,11 @@
 #include <assert.h>
 #include "enum_str.h"
 
+
+
+
+
+
 double t2FitFunc_stdGlitch(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
 
     if (label==param_glph) {
@@ -88,4 +93,98 @@ void t2UpdateFunc_stdGlitch(pulsar *psr, int ipsr ,param_label label,int k, doub
     if(label==param_glf2)F=1e-27;
     psr[ipsr].param[label].val[k] -= val*F;
     psr[ipsr].param[label].err[k]  = error*F;
+}
+
+
+// function for fitting exponential dips (profile events and scattering events)
+
+double t2FitFunc_expdip(pulsar *psr, int ipsr, double x, int ipos, param_label label, int k)
+{
+  
+  
+  long double val;
+
+  long double dt;
+  long double dm;
+  long double tau;
+  long double freq;
+  long double gamma;
+  
+
+  
+  // reference to 1.4 GHz  to agree with Enterprise
+  freq= psr[ipsr].obsn[ipos].freqSSB/1.4e9;
+  
+  dt=(psr[ipsr].obsn[ipos].bbat - psr[ipsr].param[param_expep].val[k]);
+  dm=psr[ipsr].param[param_expph].val[k];
+
+  tau=psr[ipsr].param[param_exptau].val[k];
+
+  if (psr[ipsr].param[param_expindex].paramSet[k] ==1)
+    {
+      gamma=psr[ipsr].param[param_expindex].val[k];
+    }
+  else{
+    gamma=-2;
+    
+  }
+  
+
+  if (label ==param_expph)
+    {
+      if (dt> 0)
+	{	   
+	  
+	  return val =  powl(freq,gamma)*exp(-dt/tau);
+	}
+      else
+	{
+	  return 0.0;
+	}
+    }
+  if( label ==param_exptau)
+    {
+      if (dt > 0)
+	{
+	  return val = dm*powl(freq,gamma)*expl(-dt/tau)*dt/tau/tau;
+	}
+      else
+	{
+	  return 0.0;
+	}
+      
+    }
+  if (label == param_expindex)
+    {
+      if (dt  > 0)
+	{
+	  return val = dm*log(freq)*powl(freq,gamma)*expl(-dt/tau);
+	}
+      else{
+	return 0.0;
+      }
+    }
+  if (label == param_expep)
+    {
+      if (dt  > 0)
+	{
+	  return val = dm*powl(freq,gamma)*expl(-dt/tau)/tau;
+	}
+      else
+	{
+	  return 0.0;
+	}
+    }
+      
+    
+      
+
+	
+	    
+
+  
+
+
+
+  return 0;
 }
