@@ -1034,6 +1034,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             {
                 psr[0].obsn[i].observatory_earth[k] = obs_earth[i][k];
             }
+            if (psr[0].eclCoord==1) equ2ecl(psr[0].obsn[i].observatory_earth); // added by dasmith 2 April 2020.                                                                                             
         }
 
 
