@@ -27,6 +27,7 @@
 #ifndef DYNARR_H
 #define DYNARR_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
 /* redwards dynamic array code, to help relieve C++ withdrawl symptoms */
