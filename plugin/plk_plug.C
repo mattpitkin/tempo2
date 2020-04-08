@@ -138,6 +138,7 @@ void help() /* Display help */
     printf("BACKSPACE  remove all phase jumps\n");
     printf("ctrl-=     add period to residuals above cursor\n");
     printf("/          re-read .par file\n");
+    printf("Ctrl-g     add an amount to each jump being fit.\n");
 
     printf("\nPlot Selection\n"); /* Determines WHAT (X and Y axes) will be displayed */
     printf("==============\n");
@@ -145,7 +146,7 @@ void help() /* Display help */
     printf("s          start of zoom section\n");
     printf("f          finish of zoom section\n"); 
     printf("Ctrl-u     Overplot Shapiro delay\n");
-    printf("u          unzoom\n");
+    printf("u          unzoom and clear START/FINISH flags\n");
     printf("v          view profiles for highlighted points\n");
     printf("V          define the user parameter\n");
     printf("Ctrl-v     for pre-fit plotting, decompose the timing model fits\n");
@@ -218,6 +219,8 @@ void help() /* Display help */
     printf("U          unhighlight selected points\n");
     printf("[          toggle plotting x-axis on log scale\n");	     
     printf("]          toggle plotting y-axis on log scale\n");	     
+    printf("{          scroll left\n");	     
+    printf("}          scroll right\n");	     
 
     printf("\nOutput Options\n");
     printf("==============\n");
@@ -951,7 +954,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
             // MJK April 2020
             // Removing this might break some use cases with command line options.
-            // If so, we an add it back in, but otherwise it will cause unexpected behaviour.
+            // If so, we an add it back in, but otherwise it will cause unexpected behaviour when
+            // scrolling around the plot
             /*
             if (psr[0].param[param_start].paramSet[0]==1 && psr[0].param[param_start].fitFlag[0]==1 &&
                     (psr[0].param[param_start].val[0] > psr[0].obsn[i].sat))
@@ -1519,16 +1523,30 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 if(psr[0].TNsubtractRed==0){
                     printf("Subtract red noise from fit\n");
                     psr[0].TNsubtractRed=1;
-                    formResiduals(psr,npsr,1); // iteration);
+                    formResiduals(psr,npsr,1);
                     textOutput(psr,npsr,0,0,0,0,"");
                 }
                 else if(psr[0].TNsubtractRed==1){
                     printf("Do Not Subtract Red Noise on next Fit \n");
                     psr[0].TNsubtractRed=0;
-                    formResiduals(psr,npsr,1); // iteration);
+                    formResiduals(psr,npsr,1);
                     textOutput(psr,npsr,0,0,0,0,"");
                 }
 
+            } else if (key == 7) {
+                double jfac;
+                printf("Jump offset (s):"); scanf("%lf",&jfac);
+                getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
+                int njmp=0;
+                for (int ijmp=1;ijmp<=psr[0].nJumps;ijmp++) {
+                    if (psr[0].fitJump[ijmp]==1) {
+                        logmsg("Adding %lg to jump %d",njmp*jfac,ijmp);
+                        psr[0].jumpVal[ijmp]+=njmp*jfac;
+                        ++njmp;
+                    }
+                }
+                formResiduals(psr,npsr,1);
+                textOutput(psr,npsr,0,0,0,0,"");
             }
             else if(key == 'R'){
                 if(psr[0].AverageResiduals==0){
@@ -2032,12 +2050,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     double errMult;
                     printf("Enter error multiplication factor "); scanf("%lf",&errMult);
                     getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
-                    for (i=0;i<psr[0].nobs;i++){
-                        psr[0].obsn[i].efac *= errMult;
-                        psr[0].obsn[i].toaErr*=errMult;
+                    if (errMult > 0) {
+                        for (i=0;i<psr[0].nobs;i++){
+                            psr[0].obsn[i].efac *= errMult;
+                            psr[0].obsn[i].toaErr*=errMult;
+                        }
+                        for (i=0;i<count;i++)
+                            errBar[i]*=errMult;
                     }
-                    for (i=0;i<count;i++)
-                        errBar[i]*=errMult;
                 }
                 else if (key=='w')  /* Toggle fitting with weights */
                 {
@@ -2059,6 +2079,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     logx*=-1;
                 else if (key==']')
                     logy*=-1;
+                else if (key=='{') {/* Scroll in X-axis*/
+                    double zwidth = zoomX2-zoomX1;
+                    zoomX2-=zwidth/2.0;
+                    zoomX1-=zwidth/2.0;
+                } else if (key=='}'){
+                    double zwidth = zoomX2-zoomX1;
+                    zoomX2+=zwidth/2.0;
+                    zoomX1+=zwidth/2.0;
+                }
                 else if (key=='l') { /* List all */
                     for (i=0;i<count;i++)
                     {
@@ -2577,8 +2606,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 = 0;
 //                    psr[0].param[param_start].val[0] = origStart;
 //                    psr[0].param[param_finish].val[0] = origFinish;
-//                    psr[0].param[param_start].fitFlag[0] = 0;
-//                    psr[0].param[param_finish].fitFlag[0] = 0;
+                    if (psr[0].param[param_start].fitFlag[0] || psr[0].param[param_finish].fitFlag[0]){
+                        psr[0].param[param_start].fitFlag[0] = 0;
+                        psr[0].param[param_finish].fitFlag[0] = 0;
+                        logmsg("Un-set START/FINISH flags");
+                    }
                     if (recordStrokes==1)
                     {
                         char tStr[1024];
