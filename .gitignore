@@ -1,3 +1,4 @@
+.vscode
 *.o
 *.la
 *.lo
@@ -50,3 +51,4 @@ ltmain.sh
 *.pyc
 python/*/build
 python/t2pred/t2pred.c
+*~
