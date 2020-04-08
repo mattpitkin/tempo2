@@ -31,9 +31,9 @@
 /*-*-C-*- */
 
 #include "dynarr.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 
 void DynamicArray_init(DynamicArray *a, size_t elemSize)
