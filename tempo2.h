@@ -116,6 +116,8 @@
 #define MASYR2RADS  1.53628185e-16       /*!< Converts from mas/yr to rad/s              */
 #define MAX_MSG     50                   /*!< Maximum number of different warnings       */
 
+#define START_FINISH_DELTA longdouble(1e-11)
+
 /*! Path for the file containing dates when leap seconds should be added */
 #define LEAPSECOND_FILE "/clock/leap.sec"
 

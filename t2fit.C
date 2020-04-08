@@ -585,6 +585,7 @@ void t2fit_postfit(pulsar* psr, int npsr){
 unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
         double* e, int* ip){
 
+
     int iobs;
     unsigned int ndata=0;
 
@@ -608,7 +609,6 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
      */
     longdouble start = 1e10;
     longdouble finish = 0;
-    longdouble start_finish_delta=1e-11;
 
     // if we are fixing start/finish then use the specified values.
     if (startSet) start = psr->param[param_start].val[0];
@@ -623,8 +623,8 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
         if (o->deleted) continue;
 
         // if start/finish is set, skip points outside of the range
-        if (startSet && o->sat < (start-start_finish_delta)) continue;
-        if (finishSet && o->sat > (finish+start_finish_delta)) continue;
+        if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
+        if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
 
         // update start/finish if it isn't set.
         if (!startSet && o->sat < start) start=o->sat;
