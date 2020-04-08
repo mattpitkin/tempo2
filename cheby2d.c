@@ -55,9 +55,9 @@
 //
 //  where the relationship is exact for x=xa , y=ya and pretty good elsewhere
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
 #include <string.h>
 
 #ifdef sun
