@@ -60,8 +60,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     printf("------------------------------------------\n");
     printf("Output interface:    fermi\n");
     printf("Author:              Lucas Guillemot\n");
-    printf("Updated:             10 April 2017\n");
-    printf("Version:             6.0\n");
+	printf("Updated:             6 April 2020\n");
+	printf("Version:             6.3\n");
     printf("------------------------------------------\n");
     printf("\n");
 
@@ -97,6 +97,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     
     char error_buffer[128];
     char history[128+MAX_FILELEN];
+    char value[80];
+    char comment[80];
     int  par_file        = 0;
     int  FT1_file         = 0;
     int  FT2_file         = 0;
@@ -385,9 +387,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     {
         // Check that the input file has not been barycentered.
         int kw_status;
-        char value[80];
-        char comment[80];
-        
         kw_status = 0;
         fits_read_key(ft1, TSTRING, "TIMESYS",(void*)value, comment, &kw_status);
         
@@ -741,7 +740,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     
     
     /* ------------------------------------------------- //
-    // Barycentric TZRMJD
+	// Barycentric TZRMJD & some basic tests
     // ------------------------------------------------- */
     
     // A temporary file is created. It is first used to get the barycentered TZR
@@ -755,6 +754,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     psr[0].nobs = 0;
     readTimfile(psr,timFile,*npsr);
     
+	if (psr->correctTroposphere)
+	{
+		printf("Warning: disabling troposhere correction (CORRECT_TROPOSPHERE parameter).\n\n");
+		psr->correctTroposphere = 0;
+	}
+	
+	if (psr->param[param_track].paramSet[0])
+	{
+		printf("Warning: disabling tracking mode (TRACK parameter).\n\n");
+		psr->param[param_track].paramSet[0] = 0;
+	}
+	
     if (ophase && (strcmp(psr[0].binaryModel,"NONE")==0))
     {
         printf("Error: no binary parameters found in %s !\n",parFile[0]);
@@ -783,14 +794,13 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     }
     
     
-
     /* ------------------------------------------------- //
     // Main loop
     // ------------------------------------------------- */    
 
     while (rows_left > 0)
     {
-        printf("Treating events # %d to %d... \n",rows_status,rows_status + nrows2 - 1);
+		printf("Treating events # %d to %d (out of %d)... \n",rows_status,rows_status + nrows2 - 1,nrows_FT1);
 
         // Acquisition of the non-barycentered TOAs in MET TT
         nrows3 = nrows2;
@@ -851,6 +861,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         // Load the arrival times
         readParfile(psr,parFile,timFile,*npsr); 
+		
+		if (psr->correctTroposphere) psr->correctTroposphere = 0;
+		
+		if (psr->param[param_track].paramSet[0]) psr->param[param_track].paramSet[0] = 0;
+		
         psr[0].nobs = 0;
         readTimfile(psr,timFile,*npsr);
         
@@ -1034,6 +1049,15 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             {
                 psr[0].obsn[i].observatory_earth[k] = obs_earth[i][k];
             }
+		}
+		
+		if (psr[0].eclCoord == 1)
+		{
+			for (i=0;i<nrows2;i++)
+			{
+				equ2ecl(psr[0].obsn[i].observatory_earth);
+				// equ2ecl(psr[p].obsn[i].siteVel);
+			}
         }
 
 
@@ -1049,6 +1073,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         for (i=psr[0].nobs-1;i>0;i--)
         {
             psr->obsn[i].sat = psr->obsn[i-1].sat;
+			
             for (k=0;k<3;k++) psr[0].obsn[i].observatory_earth[k] = psr[0].obsn[i-1].observatory_earth[k];
         }
         
@@ -1075,7 +1100,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         formResiduals(psr,*npsr,0.0);
 
-        for (i=1;i<nrows2;i++) {
+		for (i=1;i<nrows2;i++)
+		{
             if ((time_MET_TT[i-1] < minFT2time) || (time_MET_TT[i-1] > maxFT2time))
             {
                 phase[event] = -1.;
@@ -1337,6 +1363,41 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                 printf( "fits_insert_col: %s\n", error_buffer);
                 exit(-1);
             }
+			
+			// par file START & FINISH parameters
+			status = 0;
+			
+			if (psr->param[param_start].paramSet[0] == 1)
+			{
+				sprintf(value,"%Lf",psr->param[param_start].val[0]);
+			}
+			else
+			{
+				sprintf(value,"%d",-1);
+			}
+			
+			strcpy(comment,"Ephemeris START parameter");
+			fits_write_key(ft1,TSTRING,"EPHSTART",value,comment,&status);
+			
+			if (psr->param[param_finish].paramSet[0] == 1)
+			{
+				sprintf(value,"%Lf",psr->param[param_finish].val[0]);
+			}
+			else
+			{
+				sprintf(value,"%d",-1);
+			}
+			
+			strcpy(comment,"Ephemeris FINISH parameter");
+			fits_write_key(ft1,TSTRING,"EPHEND",value,comment,&status);
+			
+			strcpy(value,parFile[0]);
+			strcpy(comment,"Ephemeris file name");
+			fits_write_key(ft1,TSTRING,"EPHNAME",value,comment,&status);
+			
+			strcpy(value,phasecol);
+			strcpy(comment,"Name of corresponding phase column");
+			fits_write_key(ft1,TSTRING,"EPHPCOL",value,comment,&status);
         }
 
         fits_close_file(ft1, &status);
@@ -1345,13 +1406,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     if (bary_replace) 
     {
         sprintf(history,"Barycenter arrival times calculated with the TEMPO2 Fermi plugin using ephemeris %s",parFile[0]);
+		
         if (!fits_open_file(&ft1,FT1, READWRITE, &open_status))
         {
             // change TIMESYS and TIMEREF if we have clobbered the TIME column
             if (strcasecmp(barycol,"TIME")==0)
             {
-                char value[80];
-                char comment[80];
                 for(int hdr_ct=1;hdr_ct<3;hdr_ct++) {
                     fits_movabs_hdu(ft1,hdr_ct,NULL,&status);
                     status = 0;
@@ -1572,7 +1632,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         cpgend();
     }
 
-    printf("Done with %s\n",psr[0].name);
+	printf("\nDone with %s\n",psr[0].name);
 
     // ------------------------------------------------- //
     // Clean temporary tim file
