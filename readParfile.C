@@ -379,15 +379,37 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     }
     else if (strcasecmp(str,"PMRA")==0 || strcasecmp(str,"PMLAMBDA")==0 || strcasecmp(str,"PMELONG")==0)      /* Proper motion in RA */
     {
-        readValue(psr,str,fin,&(psr->param[param_pmra]),0);
-        if (strcasecmp(str,"PMLAMBDA")==0 || strcasecmp(str,"PMELONG")==0)
+        if (strcasecmp(str,"PMLAMBDA")==0 || strcasecmp(str,"PMELONG")==0) {
+            if ( (psr->param[param_raj].paramSet[0] || psr->param[param_decj].paramSet[0] ) 
+                    || (psr->eclCoord==0 && (psr->param[param_pmra].paramSet[0] || psr->param[param_pmdec].paramSet[0])) ) {
+                logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+                exit(1);
+            }
             psr->eclCoord = 1;
+        } else {
+            if (psr->eclCoord || elat->paramSet[0] || elong->paramSet[0]) {
+                logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+                exit(1);
+            }
+        }
+        readValue(psr,str,fin,&(psr->param[param_pmra]),0);
     }
     else if (strcasecmp(str,"PMDEC")==0 || strcasecmp(str,"PMBETA")==0 || strcasecmp(str,"PMELAT")==0)     /* Proper motion in DECJ */
     {
-        readValue(psr,str,fin,&(psr->param[param_pmdec]),0);
-        if (strcasecmp(str,"PMBETA")==0 || strcasecmp(str,"PMELAT")==0)
+        if (strcasecmp(str,"PMBETA")==0 || strcasecmp(str,"PMELAT")==0) {
+            if ( (psr->param[param_raj].paramSet[0] || psr->param[param_decj].paramSet[0] ) 
+                    || (psr->eclCoord==0 && (psr->param[param_pmra].paramSet[0] || psr->param[param_pmdec].paramSet[0])) ) {
+                logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+                exit(1);
+            }
             psr->eclCoord = 1;
+        } else {
+            if (psr->eclCoord || elat->paramSet[0] || elong->paramSet[0]) {
+                logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+                exit(1);
+            }
+        }
+        readValue(psr,str,fin,&(psr->param[param_pmdec]),0);
     }
     else if (strcasecmp(str,"PMRV")==0)     /* Radial velocity */
         readValue(psr,str,fin,&(psr->param[param_pmrv]),0);
@@ -1919,6 +1941,11 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
         {
             psr->param[param_raj].fitFlag[0]=1;
             psr->param[param_decj].fitFlag[0]=1;
+        }
+    } else {
+        if (elat.paramSet[0]==1 || elong.paramSet[0]==1) {
+            logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+            exit(1);
         }
     }
     /* correct CLK parameter if necessary */
