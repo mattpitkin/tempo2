@@ -101,8 +101,18 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
             printf("-writeres         Write out prefit/postfit and design matrix in fit.\n");
             printf("-debug            Print debuging information and files (very verbose!).\n");
             printf("-clkdir {dir}     Add {dir} to the start of the clock search path.\n");
+            printf("-newpar           Write post-fit par file to 'new.par'\n");
+            printf("-outpar {name}    Write post-fit par file to '{name}'\n");
             printf("-v                Print verson number.\n");
             printf("-H                Print more help, including list of plugins \n");
+
+            printf("                    \n");
+            printf("Environment Variables\n");
+            printf("$TEMPO2            Path to search for clocks, observatories, EOPs etc.\n");
+            printf("$TEMPO2_CLOCK_DIR  Path to search for extra clock files\n");
+            printf("$TEMPO2_PLUG_PATH  Path to search for extra plugins\n");
+            printf("$TEMPO2_ALIAS      Set to 'tempo' to use tempo1 aliases for observatories.\n");
+
             printf("\n");
             if (strcmp(argv[1],"-H")==0){
                 printf("\n\n");

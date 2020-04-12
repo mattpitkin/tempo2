@@ -585,6 +585,7 @@ void t2fit_postfit(pulsar* psr, int npsr){
 unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
         double* e, int* ip){
 
+
     int iobs;
     unsigned int ndata=0;
 
@@ -612,7 +613,6 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
     // if we are fixing start/finish then use the specified values.
     if (startSet) start = psr->param[param_start].val[0];
     if (finishSet) finish = psr->param[param_finish].val[0];
-
     for (iobs=0; iobs < psr->nobs; ++iobs){
         // a convinience pointer for the current observation.
         observation *o = psr->obsn+iobs;
@@ -623,8 +623,8 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
         if (o->deleted) continue;
 
         // if start/finish is set, skip points outside of the range
-        if (startSet && o->sat < start) continue;
-        if (finishSet && o->sat > finish) continue;
+        if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
+        if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
 
         // update start/finish if it isn't set.
         if (!startSet && o->sat < start) start=o->sat;
@@ -638,8 +638,9 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
     }
 
     // save the start/finish values.
-    psr->param[param_start].val[0] = start-0.001;
-    psr->param[param_finish].val[0] = finish+0.001;
+    logdbg("START=%lg FINISH = %lg",(double)start,(double)finish);
+    psr->param[param_start].val[0] = start;
+    psr->param[param_finish].val[0] = finish;
     psr->param[param_start].paramSet[0] = 1;
     psr->param[param_finish].paramSet[0] = 1;
 
