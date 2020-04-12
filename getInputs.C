@@ -108,9 +108,10 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
 
             printf("                    \n");
             printf("Environment Variables\n");
-            printf("$TEMPO2            Path to search for clocks, observatories, EOPs etc.");
+            printf("$TEMPO2            Path to search for clocks, observatories, EOPs etc.\n");
             printf("$TEMPO2_CLOCK_DIR  Path to search for extra clock files\n");
             printf("$TEMPO2_PLUG_PATH  Path to search for extra plugins\n");
+            printf("$TEMPO2_ALIAS      Set to 'tempo' to use tempo1 aliases for observatories.\n");
 
             printf("\n");
             if (strcmp(argv[1],"-H")==0){
