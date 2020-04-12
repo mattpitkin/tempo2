@@ -73,6 +73,8 @@
   1656342.30    5797947.77      2073243.16       GMRT                gmrt
  -2353621.22   -4641341.52      3677052.352      GOLDSTONE           gs
  -4483311.64    2648815.92      -3671909.31      MOST                mo
+-2826711.951    4679231.627     3274665.675      SHAO                shao
+ 5088964.00    301689.80        3825017.0        PICO_VELETA         pv
 
 # IAR
  2765357.08    -4449628.98      -3625726.47      IAR1                iar1
@@ -95,10 +97,10 @@
 ####### From Jodrell obsys.dat file
 #
  383395.727    -173759.585      5077751.313      MKIII               jbmk3
- 3817176.557   -162921.170      5089462.046      TABLEY              k  
- 3828714.504   -169458.987      5080647.749      DARNHALL            l
- 3859711.492   -201995.082      5056134.285      KNOCKIN             m  
- 3923069.135   -146804.404      5009320.570      DEFFORD             n  
+ 3817176.557   -162921.170      5089462.046      TABLEY              tabley
+ 3828714.504   -169458.987      5080647.749      DARNHALL            darnhall
+ 3859711.492   -201995.082      5056134.285      KNOCKIN             knockin
+ 3923069.135   -146804.404      5009320.570      DEFFORD             defford
  3919982.752    2651.9820       5013849.826      CAMBRIDGE           cam
        0.0           1.0              0.0        COE                 coe  
 
@@ -107,9 +109,6 @@
  3788815.62 1131748.336 5035101.190             HAMBURG             hamburg
 #
 ###### Telescope ID changed from the Jodrell obsys.dat file
-# Don't use this site code
- 3822252.643   -153995.683      5086051.443      JODRELL2            q
-
 # Jodrell Bank Telescopes and Backends
 # JBO generic... use only for clock corrections
  3822626.04    -154105.65       5086486.04       JODRELL             jb
@@ -133,8 +132,9 @@
 
 #
 # New telescopes
- 1719555.576   5327021.651      3051967.932      LA_PALMA            p
+ 1719555.576   5327021.651      3051967.932      LA_PALMA            lapalma
  -1602196.60   -5042313.47      3553971.51       LWA1                lwa1
+-1531155.54418 -5045324.30517   3579583.89450    LWA_SV              lwasv
 
  6346273.5310  -33779.7127      634844.9454      GRAO                grao
 
