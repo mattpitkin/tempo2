@@ -97,10 +97,10 @@ int bootstrap(pulsar *psr,int p,int npsr)
             okay=1;
         /* Check for START and FINISH flags */
         if (psr[p].param[param_start].paramSet[0]==1 && psr[p].param[param_start].fitFlag[0]==1 &&
-                psr[p].param[param_start].val[0] > psr[p].obsn[i].bat)
+                (psr[p].param[param_start].val[0]-START_FINISH_DELTA) > psr[p].obsn[i].sat)
             okay=0;
         if (psr[p].param[param_finish].paramSet[0]==1 && psr[p].param[param_finish].fitFlag[0]==1 &&
-                psr[p].param[param_finish].val[0] < psr[p].obsn[i].bat)
+                (psr[p].param[param_finish].val[0]+START_FINISH_DELTA) < psr[p].obsn[i].sat)
             okay=0;
 
         if (okay==1)

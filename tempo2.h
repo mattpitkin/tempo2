@@ -50,8 +50,8 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2019.01.1"
-#define TEMPO2_h_MAJOR_VER 2019.01
+#define TEMPO2_h_VER "2020.04.1"
+#define TEMPO2_h_MAJOR_VER 2020.04
 #define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
@@ -115,6 +115,8 @@
 #define PCM         3.08568025e16        /*!< one parsec in meters                       */
 #define MASYR2RADS  1.53628185e-16       /*!< Converts from mas/yr to rad/s              */
 #define MAX_MSG     50                   /*!< Maximum number of different warnings       */
+
+#define START_FINISH_DELTA longdouble(1e-11)
 
 /*! Path for the file containing dates when leap seconds should be added */
 #define LEAPSECOND_FILE "/clock/leap.sec"
