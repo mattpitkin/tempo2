@@ -917,6 +917,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
 
 		}
+
+		if (yplot==19)
+		  {
+		    double freq=psr[0].obsn[i].freqSSB;
+		    double index=psr[0].TNChromIdx;
+		    errBar[count] = psr[0].obsn[i].TNChromErr*powf(freq/1.4e9,index)*unitFlag/1e-6;
+		    //fprintf(stderr, "%.3e\n", errBar[count]);
+                  }
+
                 if (bad==0) count++;	    
             }
         }
@@ -1206,7 +1215,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 //if (plotPoints==1)
                 //  {
                 cpgpt(ncount,x2,y2,freqStyle[j]);
-                if (plotErr==1 && (yplot==1 || yplot==2 || yplot==16 || yplot==17)) cpgerry(ncount,x2,yerr1_2,yerr2_2,1);
+                if (plotErr==1 && (yplot==1 || yplot==2 || yplot==16 || yplot==17 || yplot ==19 )) cpgerry(ncount,x2,yerr1_2,yerr2_2,1);
                 if (plotErr==2 && (yplot==1 || yplot==2)) cpgerry(ncount,x2,yerr1_2,yerr2_2,0);
                 //  }
                 if (join==1)
@@ -3279,6 +3288,7 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
         else if (mouseY==13) *xplot=15;
         else if (mouseY==14) *xplot=16;
         else if (mouseY==15) *xplot=17;
+	else if (mouseY==16) *xplot=19;
 
     }
     else if (mouseX==1)
@@ -3299,6 +3309,7 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
         else if (mouseY==13) *yplot=15;
         else if (mouseY==14 &&  psr[0].TNRedAmp != 0 && psr[0].TNRedGam != 0) *yplot=16;
         else if (mouseY==15 && psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0) *yplot=17;
+	else if (mouseY==16 && psr[0].TNChromAmp != 0 && psr[0].TNChromGam != 0 && psr[0].TNChromIdx !=0) *yplot=19;
 
     }
 
@@ -3608,6 +3619,10 @@ void drawMenu3(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,
     if(psr[0].TNDMAmp != 0 && psr[0].TNDMGam != 0){
         drawAxisSel(0,0.10,"DM Var",xplot==17,yplot==17);
     }
+    if(psr[0].TNChromAmp != 0 && psr[0].TNChromGam != 0 && psr[0].TNChromIdx !=0 ){
+        drawAxisSel(0,0.06,"Chrom. Noise",xplot==19,yplot==19);
+    }
+    
 
 }
 
@@ -4361,6 +4376,15 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
 	
 	
     }
+    else if (plot==19)
+      {
+	double freq=(double) psr[0].obsn[iobs].freqSSB;
+	//fprintf(stderr, "%.3e\n", psr[0].obsn[iobs].TNChromErr*powf(freq/1e9,2));
+	double index=psr[0].TNChromIdx;
+	x[count]=(float)psr[0].obsn[iobs].TNChromSignal*powf(freq/1.4e9,index);
+      }
+
+
     else if (plot==18) // Plot on flag value
     {
         int i;
@@ -4428,6 +4452,7 @@ void setLabel(char *str,int plot,int plotPhase,double unitFlag,longdouble centre
     else if (plot==15)  sprintf(str,"Parallactic angle (deg)");
     else if (plot==16) sprintf(str,"Red Noise (sec)");
     else if (plot==17) sprintf(str,"DM Variations (cm^-3 pc)");
+    else if (plot==19) sprintf(str, "Chromatic noise at 1 GHz (sec)");
     else if (plot==18) sprintf(str,"%s",flagStr);
 }
 

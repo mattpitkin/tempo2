@@ -24,6 +24,7 @@ double t2FitFunc_planet(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
 double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
 // dm is "simple"
 
+double t2FitFunc_stdCm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
 
 double t2FitFunc_telPos_delta(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
 void t2UpdateFunc_telPos_delta(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
@@ -38,6 +39,12 @@ void t2UpdateFunc_ifunc(pulsar *psr, int ipsr ,param_label label,int k, double v
 double t2FitFunc_jump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
 void t2UpdateFunc_jump(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
 
+double t2FitFunc_fdjump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
+
+void t2UpdateFunc_fdjump(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
+
 double t2FitFunc_notImplemented(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
 void t2UpdateFunc_notImplemented(pulsar *psr, int ipsr ,param_label label,int k, double val, double err);
+
+
 

@@ -736,14 +736,54 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
+		   	if (strcasecmp(var, "tndmerr") ==0) /*temponest dm max-like signal*/
+			{
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNDMErr)); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+			}
 		   
-			if (strcasecmp(var, "tnrn") ==0) /*temponest red noise make-like signal*/
+			if (strcasecmp(var, "tnrn") ==0) /*temponest red noise max-like signal*/
 			{
 			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNRedSignal)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
+			if (strcasecmp(var, "tnrnerr") ==0) /*temponest red noise make-like signal*/
+			{
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNRedErr)); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+			}
+			
+			if (strcasecmp(var, "tnchrom") ==0) /*temponest chromatic noise max-like signal*/
+			{
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNChromSignal)); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+			}
+			if (strcasecmp(var, "tnchromerr") ==0) /*temponest red noise make-like signal*/
+			{
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNChromErr)); 
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+			}
 
+			if  (strcasecmp(var, "avgres") ==0)
+			  {
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].averageres));
+			    fprintf(fout,"%s",disp);
+							
+			    //fprintf(stderr, "here\n");
+			  }
+
+			if  (strcasecmp(var, "avgerr") ==0)
+			  {
+			    
+			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].averageerr));
+			    fprintf(fout,"%s",disp);
+			   
+			  }
                         if (strcasecmp(var,"pre_phase")==0) /* prefit residual in phase */
                         {
                             sprintf(disp,format,(longdouble)(psr[0].obsn[varN].prefitResidual-sub1*psr[0].obsn[first].prefitResidual)*psr[0].param[param_f].val[0]); 
@@ -770,7 +810,9 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                         }
                         if (strcasecmp(var,"binphase")==0) /* binary phase */
                         {
-                            double pbdot=0.0;
+                            
+			  double omdot=0.0;  
+			  double pbdot=0.0;
                             double tpb;
 
                             // copied from plk_plug.C so that phases printed here match!
@@ -789,7 +831,17 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             if (psr[0].param[param_pbdot].paramSet[0] == 1)
                                 pbdot = psr[0].param[param_pbdot].val[0];
 
-                            phase = fortranMod(tpb-0.5*pbdot*tpb*tpb+1000000.0,1.0);
+			    if (psr[0].param[param_omdot].paramSet[0] == 1)
+			      {
+				// need to convert omegadot to radians per orbit from degrees per year
+				
+				omdot = psr[0].param[param_omdot].val[0]*M_PI/180.*365.25/ ( psr[0].param[param_pb].val[0] );
+			      }
+			    
+
+			    fprintf(stderr, "%.3le\n", omdot);
+
+                            phase = fortranMod(tpb-0.5*pbdot*tpb*tpb + 0.5*omdot*tpb  +1000000.0 ,1.0);
                             if (phase < 0.0) phase+=1.0; 
 
                             sprintf(disp,format,(longdouble)phase); 

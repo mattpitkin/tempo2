@@ -296,6 +296,18 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             }
         }
 
+
+        /* FDJUMPS */
+        for (i=1;i<=psr[p].nfdJumps;i++){
+            {
+                printf("fdJump %d (%s): %.14g %.14g ",i,psr[p].fdjumpStr[i],psr[p].fdjumpVal[i],psr[p].fdjumpValErr[i]);
+                
+                if (psr[p].fitfdJump[i]==1) printf("Y\n");
+                else printf("N\n");
+            }
+        }
+
+
         /* Whitening */
         if (psr[p].param[param_wave_om].paramSet[0]==1)
         {
@@ -955,6 +967,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         // Glitch parameters
         if (psr[p].param[param_glep].paramSet[0]==1)
             printGlitch(psr[p]);
+
+
+
+
         if (psr[p].param[param_dmassplanet].paramSet[4]==1)
         {
             longdouble diff,err;
@@ -1329,6 +1345,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         fprintf(fout2,"JUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
                     else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
                         fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
+                }	
+                for (i=1;i<=psr[p].nfdJumps;i++)
+                {
+                    sscanf(psr[p].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
+                    if (strcasecmp(str1,"FREQ")==0 || strcasecmp(str1,"MJD")==0)
+                        fprintf(fout2,"FDJUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
+                    else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
+                        fprintf(fout2,"FDJUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
                 }	  
                 /* Add T2EFAC / T2EQUAD */
                 for (i=0;i<psr[p].nT2efac;i++)
@@ -1365,11 +1389,26 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNECORR %s %s %g\n", psr[p].TNECORRFlagID[i], psr[p].TNECORRFlagVal[i], psr[p].TNECORRVal[i]);
 
                 }
+		for (i=0;i<psr[p].nTNSECORR; i++){
+
+                    fprintf(fout2,"TNSECORR %s %s %g\n", psr[p].TNSECORRFlagID[i], psr[p].TNSECORRFlagVal[i], psr[p].TNSECORRVal[i]);
+
+                }
+			
+
                 if(psr[p].TNDMAmp != 0 && psr[p].TNDMGam != 0){
                     fprintf(fout2,"TNDMAmp %g\n", psr[p].TNDMAmp);	
                     fprintf(fout2,"TNDMGam %g\n", psr[p].TNDMGam);
                     fprintf(fout2,"TNDMC %i\n", psr[p].TNDMC);
                 }
+		if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
+                    (fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);	
+                    fprintf(fout2,"TNChromGam %g\n", psr[p].TNChromGam);
+		    fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
+                    fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
+                }
+
+		
                 if(psr[p].TNRedAmp != 0 && psr[p].TNRedGam != 0){
                     fprintf(fout2,"TNRedAmp %g\n", psr[p].TNRedAmp);
                     fprintf(fout2,"TNRedGam %g\n", psr[p].TNRedGam);

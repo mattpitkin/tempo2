@@ -305,6 +305,15 @@ void copyPSR(pulsar *p,int p1,int p2)
         p[p2].jumpValErr[i] = p[p1].jumpValErr[i];
         strcpy(p[p2].jumpStr[i], p[p1].jumpStr[i]);
     }
+    
+    for (i=0; i<=p[p2].nfdJumps; i++) 
+    {
+        p[p2].fdjumpVal[i] = p[p1].fdjumpVal[i];
+        p[p2].fitfdJump[i] = p[p1].fitfdJump[i];
+        p[p2].fdjumpValErr[i] = p[p1].fdjumpValErr[i];
+        strcpy(p[p2].fdjumpStr[i], p[p1].fdjumpStr[i]);
+    }
+    
     p[p2].nFit = p[p1].nFit;
     p[p2].fitMode = p[p1].fitMode;
     p[p2].offset = p[p1].offset;
