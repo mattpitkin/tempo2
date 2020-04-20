@@ -54,7 +54,9 @@ double t2FitFunc_nestlike_red_chrom(pulsar *psr, int ipsr ,double x ,int ipos ,p
     
     //double kappa = DM_CONST*powf(1e-6,index);
 
-    double prefac=1./sqrt(12.*M_PI*M_PI);
+    //fprintf(stderr, "%.8le\n", psr[ipsr].obsn[ipos].freqSSB);
+
+    double prefac=1.;
 
     switch (label){
         case param_red_chrom_cos:

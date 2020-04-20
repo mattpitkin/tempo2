@@ -552,6 +552,13 @@ void t2fit_prefit(pulsar* psr, int npsr){
 		    psr[ipsr].obsn[iobs].TNDMErr = 0;
             }
         }
+	if (psr[ipsr].TNChromAmp && psr[ipsr].TNChromGam && psr[ipsr].TNChromIdx) {
+            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+             	    psr[ipsr].obsn[iobs].TNChromSignal =0;
+		    psr[ipsr].obsn[iobs].TNChromErr = 0;
+            }
+        }
+
     }
 
 
@@ -574,6 +581,11 @@ void t2fit_postfit(pulsar* psr, int npsr){
         if (psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNDMErr = sqrt(psr[ipsr].obsn[iobs].TNDMErr);
+            }
+        }
+	if (psr[ipsr].TNChromAmp && psr[ipsr].TNChromGam && psr[ipsr].TNChromIdx) {
+            for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+                psr[ipsr].obsn[iobs].TNChromErr = sqrt(psr[ipsr].obsn[iobs].TNChromErr);
             }
         }
     }
@@ -922,7 +934,39 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
             }
         }
 
-        if (psr->TNDMAmp && psr->TNDMGam) {
+	//fprintf(stderr, "%.3le %.3le %.3le\n", psr->TNChromAmp, psr->TNChromGam, psr->TNChromIdx);
+	//exit(0);
+
+        if (psr->TNChromAmp && psr->TNChromGam && psr->TNChromIdx) {
+	 
+            for (int i=0;i<psr->TNChromC;++i) {
+                /**
+                 * Temporary fix here!
+                 * Enable the TN parameters.
+                 */
+                psr->param[param_red_chrom_sin].fitFlag[0]=1;
+                psr->param[param_red_chrom_cos].fitFlag[0]=1;
+
+                psr->param[param_red_chrom_sin].paramSet[0]=1;
+                psr->param[param_red_chrom_cos].paramSet[0]=1;
+
+                // End of temporary fix.
+
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_chrom_sin;
+                OUT.constraintCounters[OUT.nConstraints]=i;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_chrom;
+                OUT.constraintValue[OUT.nConstraints] = 0;
+                ++OUT.nConstraints;
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_chrom_cos;
+                OUT.constraintCounters[OUT.nConstraints]=i;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_chrom;
+                OUT.constraintValue[OUT.nConstraints] = 0;
+                ++OUT.nConstraints;
+            }
+        }
+
+
+	   if (psr->TNDMAmp && psr->TNDMGam) {
             for (int i=0;i<psr->TNDMC;++i) {
                 /**
                  * Temporary fix here!
@@ -948,6 +992,10 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 ++OUT.nConstraints;
             }
         }
+
+
+
+
 	// add in TN shapelet parameters
 
 
@@ -956,7 +1004,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         int nepochs=0;
         if (psr->nTNECORR > 0) {
 
-            const double dt = 10.0/SECDAY;
+	  const double dt = 1./SECDAY;
             double xmin=0;
             double xmax=0;
             // flag observations that have been matched to an epoch already.
@@ -1015,7 +1063,78 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
             }
             logmsg("Generated %d TNepochs from %d TNECORRs",nepochs,psr->nTNECORR);
         }
+
+
+        nepochs=0;
+        if (psr->nTNSECORR > 0) {
+
+	  
+
+            const double dt = 1./SECDAY;
+            double xmin=0;
+            double xmax=0;
+            // flag observations that have been matched to an epoch already.
+            bool flag[psr_ndata];
+            for (int idata = 0; idata < psr_ndata; ++idata){
+                flag[idata]= false;
+            }
+
+            for (int idata = 0; idata < psr_ndata; ++idata){
+                int iobs = psr_toaidx[idata];
+                // if this observation was in a previous epoch, then skip it.
+                if(flag[idata])continue;
+                // Here we check over all flags and ecorr params to see if it matches.
+                for (int iecorr=0; iecorr < psr->nTNSECORR; iecorr++){
+                    for (int iflag=0;iflag < psr->obsn[iobs].nFlags; iflag++){
+                        if (
+                                (strcmp(psr->obsn[iobs].flagID[iflag],
+                                        psr->TNSECORRFlagID[iecorr])==0)
+                                && (strcmp(psr->obsn[iobs].flagVal[iflag],
+                                        psr->TNSECORRFlagVal[iecorr])==0)
+
+                           ) {
+                            xmin=psr_x[idata] - dt;
+                            xmax=psr_x[idata] + dt;
+                            // don't need to search any more on this epoch.
+                            flag[idata]=true;
+
+                            OUT.constraintIndex[OUT.nConstraints]=constraint_jitter;
+                            // we use the constraint counter to specify specific toa that represents this epoch
+                            OUT.constraintCounters[OUT.nConstraints]=iobs;
+                            OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_jitter;
+                            ++OUT.nConstraints;
+
+                            OUT.paramIndex[OUT.nParams]=param_jitter;
+                            // we use the constraint counter to specify specific toa that represents this epoch
+                            OUT.paramCounters[OUT.nParams]=iobs;
+                            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_jitter;
+                            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_jitter;
+                            ++OUT.nParams;
+
+                            ++nepochs;
+                            break;
+                        }
+                        if(flag[idata])break;
+                    }
+                    if(flag[idata])break;
+                }
+                if (flag[idata]){
+                    for (int idata2 = idata; idata2 < psr_ndata; ++idata2){
+                        if(flag[idata2])continue;
+                        if(psr_x[idata2] > xmin && psr_x[idata2] < xmax){
+                            flag[idata2]=true;
+                        }
+                    }
+                }
+            }
+            logmsg("Generated %d TNepochs from %d TNSECORRs",nepochs,psr->nTNSECORR);
+        }
+
+
     }
+
+
+
 
 
     for (int i=1;i<=psr->nJumps;i++) {
@@ -1040,6 +1159,32 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
             }
         }
     }
+    
+    for (int i=1;i<=psr->nfdJumps;i++) {
+        if (psr->fitfdJump[i]==1)
+        {
+            bool goodjump=false;
+            for (int iobs = 0; iobs < psr_ndata; ++iobs) {
+                if(t2FitFunc_fdjump(psr,0,psr_x[iobs],psr_toaidx[iobs],param_FDJUMP,i)!=0){
+                    goodjump=true;
+                    break;
+                }
+            }
+            if (goodjump) {
+
+                OUT.paramIndex[OUT.nParams]=param_FDJUMP;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fdjump;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_fdjump;
+                ++OUT.nParams;
+            } else {
+                logwarn("Refusing to fit for bad FDJUMP '%s' which had no data points in range",psr->fdjumpStr[i]);
+            }
+        }
+    }
+    
+    
+    
     t2Fit_fillFitInfo_INNER(psr,OUT,1);
 
     // copy over global parameters.
@@ -1092,7 +1237,16 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         psr->param[param_red_dm_sin].paramSet[0]=0;
         psr->param[param_red_dm_cos].paramSet[0]=0;
     }
-
+    if (psr->TNChromAmp && psr->TNChromGam && psr->TNChromIdx) {
+        /**
+         * Temporary fix here!
+         * Disable the TN parameters.
+         */
+        psr->param[param_red_chrom_sin].fitFlag[0]=0;
+        psr->param[param_red_chrom_cos].fitFlag[0]=0;
+        psr->param[param_red_chrom_sin].paramSet[0]=0;
+        psr->param[param_red_chrom_cos].paramSet[0]=0;
+    }
 }
 
 
@@ -1180,6 +1334,12 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
             ++OUT.nParams;
             break;
+        case param_cm:
+            // chromatic noise and derivatives
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdCm;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+            ++OUT.nParams;
+            break;    
         case param_fddc:
             OUT.paramDerivs[OUT.nParams]     =t2FitFunc_fddc;
             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
@@ -1241,8 +1401,8 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_glf0d:
         case param_gltd:
         case param_glf2:
-            if (psr->param[param_glep].val[k] > psr->param[param_start].val[0]
-                    && psr->param[param_glep].val[k] < psr->param[param_finish].val[0]){
+            if (psr->param[param_glep].val[k] >  0
+                    && psr->param[param_glep].val[k] <80000) {
                 // glitches
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGlitch;
                 OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
@@ -1252,6 +1412,17 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
                 logwarn("Refusing to fit for glitch %d which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_glep].val[k]);
             }
             break;
+            /* if (psr->param[param_glep].val[k] > psr->param[param_start].val[0]
+                    && psr->param[param_glep].val[k] < psr->param[param_finish].val[0]){
+                // glitches
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGlitch;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
+                if(fit_param==param_glf2)OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGlitch;
+                ++OUT.nParams;
+            } else {
+                logwarn("Refusing to fit for glitch %d which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_glep].val[k]);
+            }
+            break;*/
 
     case param_expph:
     case param_exptau:
@@ -1266,7 +1437,16 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
       else{
 	logwarn("Refusing to fit for exponential dip which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_expep].val[k]);
       }
+    break;
 
+    case param_gausep:
+    case param_gausamp:
+    case param_gaussig:
+    case param_gausindex:
+      	  OUT.paramDerivs[OUT.nParams] = t2FitFunc_gausdip;
+	  OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_simpleMinus;
+	  ++ OUT.nParams;
+          break;
 
         case param_telx:
         case param_tely:
@@ -1400,6 +1580,20 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
 
             }
             break;
+
+         case param_red_chrom_sin:
+         case param_red_chrom_cos:
+	   {
+	        for (int i=0; i < psr->TNChromC ; ++i){
+                    OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red_chrom;
+                    OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red_chrom;
+                    OUT.paramCounters[OUT.nParams]=i;
+                    OUT.paramIndex[OUT.nParams]=fit_param;
+                    ++OUT.nParams;
+                }
+
+	   }
+	   break;
 
 	    /*
     case param_shapevent:
