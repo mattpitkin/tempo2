@@ -1573,7 +1573,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 	//exit(0);
       }
     else if (strcasecmp(str,"TNChromIdx")==0) /* TempoNest chromatic Red noise chromatic index */
-        fscanf(fin,"%lf",&(psr->TChromIdx));
+        fscanf(fin,"%lf",&(psr->TNChromIdx));
     else if(strcasecmp(str,"TNsubtractChrom")==0)
     {
            fscanf(fin,"%d",&(psr->TNsubtractChrom));
