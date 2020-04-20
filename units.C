@@ -106,6 +106,12 @@ transform_units(struct pulsar *psr, int from, int to)
                 scale_param(&psr->param[param_dm],k, one/(f*f*f*f*f*f));
                 scale_param(&psr->param[param_dm],k, one/(f*f*f*f*f*f*f)); */
     }
+    val=f*f*f;
+    for (k=0;k<psr->param[param_cm].aSize;k++)
+      {
+        scale_param(&psr->param[param_cm],k,  val);
+        val/=f; 
+    }
     // Parallax is quoted as mas but actually it enters the timing model
     // with units seconds of delay per square distance / time/distance , 
     // ie length^-1 , which makes sense as it is 1/distance to source

@@ -320,7 +320,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 		
 
         // Check TNEF and TNEQ
-        if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0 || psr[p].nTNSQ > 0 || psr[p].TNGlobalEF > 0 || psr[p].TNGlobalEQ != 0)
+        if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0 || psr[p].nTNSQ > 0  || psr[p].TNGlobalEF > 0 || psr[p].TNGlobalEQ != 0)
         {
             double err;
             printf("Updating TOA errors using TN parameters.\n");
@@ -388,11 +388,37 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                     }
 
 
+
                 }
                 psr[p].obsn[i].toaErr = err;
             }
         }
 
+	
+	// populate TOBS if using TNSECORR
+
+
+	if (psr[p].nTNSECORR > 0)
+	  {
+	    for(i=0;i<psr[p].nobs;i++)
+	      {
+		double tobsval;
+		
+		for (int tf=0;tf<psr[p].obsn[i].nFlags;tf++){
+		  if(strcasecmp(psr[p].obsn[i].flagID[tf],"-tobs")==0){
+		    if(strcasecmp(psr[p].obsn[i].flagVal[tf],"UNKNOWN")==0){
+		      tobsval=1;
+		    }
+		    else{
+		      double tobs=atof(psr[p].obsn[i].flagVal[tf]);
+		      tobsval=tobs;
+		    }
+		  }	
+		}
+		psr[p].obsn[i].tobs = tobsval;
+	      }
+	  }
+	
 
         // Modify TOA flags if required
         if (modify==1)

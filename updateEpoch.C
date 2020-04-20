@@ -116,14 +116,16 @@ void updateEpoch(pulsar* psr, int p, longdouble nMJD) {
     /* Update binary parameters if necessary */
     if (psr[p].param[param_pb].paramSet[0]==1 && 0 == 1)  /* Binary pulsar */
     {
-        longdouble orbits,pb,tt0,pbdot,xpbdot,t0p,t0m=0.0;
+      longdouble orbits,pb,tt0,pbdot,xpbdot,t0p,t0m,pb2dot=0.0;
         int        norbits;
 
         if (psr[p].param[param_pbdot].paramSet[0]==1) pbdot = psr[p].param[param_pbdot].val[0];
         else pbdot = 0.0;
 
+
         if (psr[p].param[param_xpbdot].paramSet[0] == 1) xpbdot = psr[p].param[param_xpbdot].val[0];
         else xpbdot = 0.0;
+
 
         pb = psr[p].param[param_pb].val[0]*SECDAY;
 
