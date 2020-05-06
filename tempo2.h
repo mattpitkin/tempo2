@@ -190,6 +190,7 @@ enum label {
     param_group_red_sin, param_group_red_cos,
     param_ne_sw,
     param_shapevent,
+    param_orbifunc,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -681,6 +682,8 @@ typedef struct pulsar {
 
     double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC],ifunc_weights[MAX_IFUNC];
     int    ifuncN;
+    double orbifuncT[MAX_IFUNC], orbifuncV[MAX_IFUNC],orbifuncE[MAX_IFUNC];
+    int    orbifuncN;
 
     double clk_offsT[MAX_TEL_CLK_OFFS], clk_offsV[MAX_TEL_CLK_OFFS];
     double clk_offsE[MAX_TEL_CLK_OFFS];

@@ -419,6 +419,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         readValue(psr,str,fin,&(psr->param[param_waveepoch]),0);
     else if (strcasecmp(str,"SIFUNC")==0)  /* Set interpolation function */
         readValue(psr,str,fin,&(psr->param[param_ifunc]),0);
+    else if (strcasecmp(str,"SORBIFUNC")==0)  /* Set OPV interpolation function */
+        readValue(psr,str,fin,&(psr->param[param_orbifunc]),0);
     else if (strcasecmp(str,"STEL_CLK_OFFS")==0)  /* Set clock offsets */
         readValue(psr,str,fin,&(psr->param[param_clk_offs]),0);
     else if (strcasecmp(str,"STEL_DX")==0)  /* Set interpolation function for telescope position offset*/
@@ -1204,7 +1206,20 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf",&psr->gwb_width);
 
 
+    else if (strstr(str,"ORBIFUNC")!=NULL)
+    {
+        int number;
+        /* Obtain parameter number */
+        sscanf(str+8,"%d",&number);
+        if (number > MAX_IFUNC)
+        {
+                fprintf(stderr, "ORBIFUNC number (%d) exceeded MAX_IFUNC(=%d)! Aborting. %s\n",number,MAX_IFUNC,str);
+          exit(1);
+        }
 
+        fscanf(fin,"%lf %lf %lf",&psr->orbifuncT[number-1],&psr->orbifuncV[number-1],&psr->orbifuncE[number-1]);
+        if (psr->orbifuncN < number) psr->orbifuncN = number;
+    }
     else if ((strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
             && strstr(str,"QIFUNC")==NULL)
     {
