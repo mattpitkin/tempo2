@@ -464,6 +464,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     if (debugFlag==1) printf("plk: calling callFit %d\n",psr[0].nobs);
     callFit(psr,*npsr);             /* Do all the fitting routines */
 
+
+    
     for(int i = 0; i < psr->nobs; i++){
         psr->obsn[i].averagebat = (double)psr->obsn[i].bat;
         psr->obsn[i].averageres = (double)psr->obsn[i].residual;
@@ -475,7 +477,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         psr->obsn[i].averagedmres = (double)psr->obsn[i].residual;
         psr->obsn[i].averagedmerr = (double)psr->obsn[i].toaErr*pow(10.0, -6);
     }
-
+    
 
     if (newpar==1)
         textOutput(psr,*npsr,0,0,0,1,newParFile);
@@ -912,7 +914,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 		  // *(DMKappa*pow(freq,2)) + dmDot)
 
 		  dmDotErr =sqrt(dmDotErr);
-		  errBar[count] = (float) psr[0].obsn[i].TNDMErr*(DMKappa*pow(freq,2))/1e-6 + dmDotErr/1e-6 ;
+		  errBar[count] = (float) psr[0].obsn[i].TNDMErr*(DMKappa*pow(freq,2))/1e-6;// + dmDotErr/1e-6 ;
 		  //fprintf(stderr, "DM err %.3e\n", errBar[count]);
 
 
