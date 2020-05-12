@@ -4,6 +4,7 @@
 #include <math.h>
 #include <errno.h>
 #include "../tempo2.h"
+#include "../ifunc.h"
 #include <cpgplot.h>
 #include <fitsio.h>
 #include <time.h>
@@ -1147,6 +1148,56 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                         {
                             fac = fac/(double)(j+1);
                             if (psr[0].param[param_fb].paramSet[j]==1) tpb += fac*psr[0].param[param_fb].val[j]*powl(tt0,j+1);
+                        }
+
+                        if (psr[0].param[param_orbifunc].paramSet[0] == 1)
+                        {
+                            longdouble wi,t1;
+                            longdouble dt,speriod,tt;
+
+                            if (psr[0].param[param_ifunc].val[0] == 1) // Sinc interpolation
+                            {
+                                t1=longdouble(0.0);
+                                speriod = (longdouble)(psr[0].orbifuncT[1]-psr[0].orbifuncT[0]);
+                                //	       printf("ifuncN = %d\n",psr[0].ifuncN);
+                                for (k=0;k<psr[0].orbifuncN;k++)
+                                //	       for (k=3;k<4;k++)
+                                {
+                                //		   printf("Have %g %g\n",psr[0].ifuncT[k],psr[0].ifuncV[k]);
+                                    dt = psr[0].obsn[i].bbat - (longdouble)psr[0].orbifuncT[k];
+                                    wi=1;
+                                    if (dt==0)
+                                    {
+                                        t1 += wi*(longdouble)psr[0].orbifuncV[k];
+                                    }
+                                    else
+                                    {
+                                        tt = M_PI/speriod*(dt);
+                                        t1 += wi*(longdouble)psr[0].orbifuncV[k]*sinl(tt)/(tt);
+                                        //		       t2 += wi*sinl(tt)/(tt);
+                                    }
+                                }
+                                tpb += t1;
+                            }
+                            else if (psr[0].param[param_orbifunc].val[0] == 2) // Linear interpolation
+                            {
+                                double ival = ifunc(psr[0].orbifuncT,psr[0].orbifuncV,(double)psr[0].obsn[i].sat,psr[0].orbifuncN);
+                                tpb += ival;
+                            }
+                            else if (psr[0].param[param_orbifunc].val[0] == 0) // No interpolation
+                            {
+                                int k;
+                                double ival;
+                                for (k=0;k<psr[0].ifuncN-1;k++)
+                                {
+                                    if ((double)psr[0].obsn[i].sat >= psr[0].orbifuncT[k])
+                                    {
+                                        ival = psr[0].orbifuncV[k];
+                                        break;
+                                    }
+                                }
+                                tpb += ival;
+                            }
                         }
                     }
                     // If PB and TASC are set (note that PBDOT is used in the calculation)

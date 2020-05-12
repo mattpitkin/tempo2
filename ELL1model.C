@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "tempo2.h"
+#include "ifunc.h"
 
 /* ------------------------------------------------------------------------- */
 /*  Timing model for small-eccentricity binary pulsars, e<<1 (Wex 1998)      */
@@ -129,6 +130,56 @@ double ELL1model(pulsar *psr,int p,int ipos,int param,int k)
         orbits -= 0.5*(pbdot+xpbdot)*pow(tt0/pb,2);
       }
       // --- End of changes to handle higher orbital-frequency derivatives ---                                                        
+
+    if (psr[p].param[param_orbifunc].paramSet[0] == 1)
+    {
+        longdouble wi,t1;
+        longdouble dt,speriod,tt;
+
+        if (psr[p].param[param_ifunc].val[0] == 1) // Sinc interpolation
+        {
+            t1=longdouble(0.0);
+            speriod = (longdouble)(psr[p].orbifuncT[1]-psr[p].orbifuncT[0]);
+            //	       printf("ifuncN = %d\n",psr[p].ifuncN);
+            for (k=0;k<psr[p].orbifuncN;k++)
+            //	       for (k=3;k<4;k++)
+            {
+            //		   printf("Have %g %g\n",psr[p].ifuncT[k],psr[p].ifuncV[k]);
+                dt = psr[p].obsn[ipos].bbat - (longdouble)psr[p].orbifuncT[k];
+                wi=1;
+                if (dt==0)
+                {
+                    t1 += wi*(longdouble)psr[p].orbifuncV[k];
+                }
+                else
+                {
+                    tt = M_PI/speriod*(dt);
+                    t1 += wi*(longdouble)psr[p].orbifuncV[k]*sinl(tt)/(tt);
+                    //		       t2 += wi*sinl(tt)/(tt);
+                }
+            }
+            orbits += t1;
+        }
+        else if (psr[p].param[param_orbifunc].val[0] == 2) // Linear interpolation
+        {
+            double ival = ifunc(psr[p].orbifuncT,psr[p].orbifuncV,(double)psr[p].obsn[ipos].sat,psr[p].orbifuncN);
+            orbits += ival;
+        }
+        else if (psr[p].param[param_orbifunc].val[0] == 0) // No interpolation
+        {
+            int k;
+            double ival;
+            for (k=0;k<psr[p].ifuncN-1;k++)
+            {
+                if ((double)psr[p].obsn[ipos].sat >= psr[p].orbifuncT[k])
+                {
+                    ival = psr[p].orbifuncV[k];
+                    break;
+                }
+            }
+            orbits += ival;
+        }
+    }
 
     norbits = (int)orbits;
     if (orbits<0.0) norbits = norbits-1;
