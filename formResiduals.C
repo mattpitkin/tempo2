@@ -392,9 +392,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
     longdouble phaseJ,phaseW;
     longdouble ftpd,fct,ff0,phaseint;
     longdouble torb,deltaT,dt00=0.0,phas1=0.0;
-    longdouble mean,ct00=0.0;
+    longdouble mean,tnmean, ct00=0.0;
     int dtm1s=0;
-    int nmean;
+    int nmean,ntnmean;
     int ntpd,nf0;
     int i,p,k,l;
     int time=0;
@@ -430,6 +430,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
     {
         mean = longdouble(0.0);
         nmean = 0;
+
+        tnmean=longdouble(0.0);
+        ntnmean=0;
+
         if(psr[p].refphs==REFPHS_TZR){
             // reinstate the extra TZR observation so we can compute the reference phase
             if (psr[p].nobs==MAX_OBSN){
@@ -2213,12 +2217,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 if (psr[p].obsn[i].sat > psr[p].obsn[psr[p].phaseJumpID[k]].sat)
                     psr[p].obsn[i].pulseN -= psr[p].phaseJumpDir[k];
 
-
+        
 
             if (psr[p].obsn[i].deleted!=1)
             {
                 mean+=psr[p].obsn[i].residual;
                 nmean++;
+
             }
         }
 
@@ -2227,8 +2232,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         if (removeMean==1)
         {
             mean/=(longdouble)nmean;
+            //tnmean/=(longdouble) ntnmean;
             for (i=0;i<psr[p].nobs;i++)
+            {
                 psr[p].obsn[i].residual-=mean;
+                //psr[p].obsn[i].residualtn-=tnmean;
+            }
             // psr[p].obsn[i].residual-=0;
         }
 
@@ -2301,9 +2310,25 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNChromSignal;
 		  }
 
-		  
-
+                		  
+                if (psr[p].obsn[i].deleted!=1)
+                {   
+                    tnmean += psr[p].obsn[i].residualtn;
+                    ntnmean++;
+                }
 	      }
+            
+            if (removeMean ==1)
+            {
+                tnmean /= (long double) ntnmean;
+                for(i=0;i<=psr[p].nobs;i++)
+                {
+                    psr[p].obsn[i].residualtn -= tnmean;
+                }        
+
+            }
+
+
 	  }
 	  
         if(psr[p].AverageResiduals == 1){
