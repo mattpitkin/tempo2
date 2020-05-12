@@ -1394,6 +1394,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNSECORR %s %s %g\n", psr[p].TNSECORRFlagID[i], psr[p].TNSECORRFlagVal[i], psr[p].TNSECORRVal[i]);
 
                 }
+
+
 			
 
                 if(psr[p].TNDMAmp != 0 && psr[p].TNDMGam != 0){
@@ -1413,6 +1415,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNRedAmp %g\n", psr[p].TNRedAmp);
                     fprintf(fout2,"TNRedGam %g\n", psr[p].TNRedGam);
                     fprintf(fout2,"TNRedC %i\n", psr[p].TNRedC);
+                }
+
+
+                if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
+                    fprintf(fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);
+                    fprintf(fout2,"TNChromGam %g\n", psr[p].TNChromGam);
+                   fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
+                    fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
                 }
 
 		if (psr[p].TNRedFLow !=0 )
@@ -1446,6 +1456,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNsubtractDM 1\n");
 
                 }
+
+
+                if (psr[p].TNsubtractChrom == 1){
+                    fprintf(fout2,"TNsubtractChrom 1\n");
+
+                }
+
 
                 /* Add whitening flags */
                 if (psr[p].param[param_wave_om].paramSet[0]==1)
