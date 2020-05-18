@@ -1,4 +1,4 @@
-# UTC(PKS) UTC(GPS) 
+# UTC(PKS) UTC(GPS) 1 
 #
 # Daniel Reardon merged an old pks2gps.clk, covering dates prior to MJD 53040, with Matthew Kerr's new high time resolution pks2gps.clk created for PPTA dr2, after MJD 53040
 #
