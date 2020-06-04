@@ -121,11 +121,16 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         longdouble arg = 1.0;
         // redwards changed to avoid using slow calls to pow
         // Note this is not a Taylor Series - the Edwards paper says that it is!
+        // 2020-06 MJK: Added support for having a Taylor series!
+        double series_fac=1.0;
         for (k=1;k<9;k++)
         {
             arg *= yrs;
+            if (psr->dm_series_type == series_taylor_pn) {
+                series_fac *= k;
+            }
             if (psr[p].param[param_dm].paramSet[k]==1)
-                dmDot+=(double)(psr[p].param[param_dm].val[k]*arg); 
+                dmDot+=(double)(psr[p].param[param_dm].val[k]*arg/series_fac); 
         }
         //      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
         dmval = psr[p].param[param_dm].val[0]; //+dmDot;

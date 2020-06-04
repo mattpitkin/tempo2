@@ -268,6 +268,20 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }
             }
         }      
+
+        if (psr[p].param[param_dm].aSize > 2) {
+            // explain what DM series is used.
+            switch (psr[p].dm_series_type) {
+                        case series_simple_pn:
+                            printf("%-15.15s %-25.25s\n","DM_SERIES","POLY");
+                            break;
+                        default:
+                        case series_taylor_pn:
+                            printf("%-15.15s %-25.25s\n","DM_SERIES","TAYLOR");
+                            break;
+                    }
+
+        }
         printf("---------------------------------------------------------------------------------------------------\n");
         if (psr[p].rescaleErrChisq == 1 && psr[p].fitMode==1)
             logmsg("Notice: Parameter uncertainties multiplied by sqrt(red. chisq)\n");
@@ -1441,6 +1455,19 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 {
                     if (psr[p].phaseJumpDir[i]!=0)
                         fprintf(fout2,"PHASE %+d %.14g\n",psr[p].phaseJumpDir[i],(double)(psr[p].obsn[psr[p].phaseJumpID[i]].sat+1.0/SECDAY));
+                }
+
+                // write out DM_SERIES flag
+                if (psr[p].param[param_dm].aSize > 2) {
+                    switch (psr[p].dm_series_type) {
+                        case series_simple_pn:
+                            fprintf(fout2,"DM_SERIES POLY\n");
+                            break;
+                        default:
+                        case series_taylor_pn:
+                            fprintf(fout2,"DM_SERIES TAYLOR\n");
+                            break;
+                    }
                 }
                 // Add DM value parameters
                 if (psr[p].param[param_dmmodel].paramSet[0]==1)
