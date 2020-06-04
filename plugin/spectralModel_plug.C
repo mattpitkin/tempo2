@@ -1664,6 +1664,7 @@ void calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,int
   double dt;
   double wt[nd];
   double nzerolag=0.0;
+  printf("nd=%d\n",nd);
 
   for (i=0;i<nd;i++)
     {

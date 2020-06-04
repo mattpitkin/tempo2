@@ -268,7 +268,9 @@ enum constraint {
     constraint_LAST /*!< marker for the last constraint */
 };
 
-
+enum series_type {
+    series_undefined, series_simple_pn, series_taylor_pn
+};
 
 extern char NEWFIT; /*!< global boolean used to enable new fit. @warning this will be removed in future. */
 
@@ -844,6 +846,8 @@ typedef struct pulsar {
     char refphs;
 
     double posPulsarEquatorial[3];            /*!< 3-vector pointing at pulsar, in equatorial coordinates (even if using ecliptic)*/
+
+    enum series_type dm_series_type;
 } pulsar;
 
 
