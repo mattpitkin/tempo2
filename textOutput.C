@@ -1457,16 +1457,20 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         fprintf(fout2,"PHASE %+d %.14g\n",psr[p].phaseJumpDir[i],(double)(psr[p].obsn[psr[p].phaseJumpID[i]].sat+1.0/SECDAY));
                 }
 
-                // write out DM_SERIES flag
-                if (psr[p].param[param_dm].aSize > 2) {
-                    switch (psr[p].dm_series_type) {
-                        case series_simple_pn:
-                            fprintf(fout2,"DM_SERIES POLY\n");
-                            break;
-                        default:
-                        case series_taylor_pn:
-                            fprintf(fout2,"DM_SERIES TAYLOR\n");
-                            break;
+                // see if we need to write out DM_SERIES flag
+                for (int k=2; k < psr[p].param[param_dm].aSize ; ++k){
+                    // we write the flag IF we had DM2 or greater in the par file.
+                    if (psr[p].param[param_dm].paramSet[k]) {
+                        switch (psr[p].dm_series_type) {
+                            case series_simple_pn:
+                                fprintf(fout2,"DM_SERIES POLY\n");
+                                break;
+                            default:
+                            case series_taylor_pn:
+                                fprintf(fout2,"DM_SERIES TAYLOR\n");
+                                break;
+                        }
+                        break; // we only need to write it once. Break out once we've done it
                     }
                 }
                 // Add DM value parameters
