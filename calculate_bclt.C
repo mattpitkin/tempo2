@@ -123,6 +123,13 @@ void calculate_bclt(pulsar *psr,int npsr)
                     double pmtrans       = sqrt(dotproduct(psr[p].velPulsar,psr[p].velPulsar));
                     double dt_pm         = (delt)*pmtrans_rcos2;
                     double dt_pmtt       = -0.5*pmtrans*pmtrans*(delt)*(delt)*rcos1;
+    
+                    // higher order proper motion
+                    double acctrans_rcos2 = dotproduct(psr[p].accPulsar,rca);
+                    //double acctrans = sqrt(dotproduct,psr[o].accPulasr,psr[p].accPulsar);
+                    // only include this second order term
+                    double dt_acctrans = 0.5*delt*delt*acctrans_rcos2;
+                    
 
                     /* Parallax */
                     double dt_px = -0.5*psr[p].param[param_px].val[0]*pxConv*(rr-rcos1*rcos1)/AULTSC;
@@ -130,7 +137,7 @@ void calculate_bclt(pulsar *psr,int npsr)
                     double dt_pmtr = -pow((delt),2)*pmrvrad*pmtrans_rcos2;
 
                     logdbg("Calculating roemer using %g %g %g %g %g (delt = %g; dt_SSB = %g) loop=%d sat=%lg",(double)rcos1,(double)dt_pm, (double)dt_pmtt,(double)dt_px,(double)dt_pmtr,(double)delt,(double)dt_SSB,loop,(double)psr[p].obsn[i].sat);		
-                    psr[p].obsn[i].roemer = rcos1 + dt_pm + dt_pmtt + dt_px + dt_pmtr;		
+                    psr[p].obsn[i].roemer = rcos1 + dt_pm + dt_pmtt + dt_px + dt_pmtr + dt_acctrans;		
                     shapiro_delay(psr,npsr,p,i,delt,dt_SSB); /* Now calculate the Shapiro delay */
                     logdbg("In tdis2 calculate_bclt with observation %d %d calling dmdelays",i,psr[p].obsn[i].delayCorr);
                     dm_delays(psr,npsr,p,i,delt,dt_SSB);     /* Now calculate the dispersion measure delays */

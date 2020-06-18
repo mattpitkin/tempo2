@@ -165,7 +165,7 @@ typedef int constraint_label;
  */
 enum label {
     param_raj,param_decj,param_f,param_pepoch,param_posepoch,
-    param_dmepoch,param_dm,param_cm,param_pmra,param_pmdec,param_px,
+    param_dmepoch,param_dm,param_cm,param_pmra,param_pmdec,param_pmra2, param_pmdec2,param_px,
     param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
     param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_pb2dot,param_a1dot,
     param_a2dot,param_omdot,param_om2dot,param_orbpx,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
@@ -587,6 +587,7 @@ typedef struct pulsar {
     // General pulsar information
     double posPulsar[3];            /*!< 3-vector pointing at pulsar                                */
     double velPulsar[3];            /*!< 3-vector giving pulsar's velocity                          */  
+    double accPulsar[3];
     longdouble phaseJump[MAX_JUMPS];    /*!< Time of phase jump                                         */
     int    phaseJumpDir[MAX_JUMPS]; /*!< Size and direction of phase jump                           */
     int    phaseJumpID[MAX_JUMPS];  /*!< ID of closest point to the phase jump */

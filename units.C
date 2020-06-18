@@ -128,6 +128,10 @@ transform_units(struct pulsar *psr, int from, int to)
     scale_param(&psr->param[param_pmra],0, one/f);
     scale_param(&psr->param[param_pmdec],0, one/f);
 
+
+    scale_param(&psr->param[param_pmra2],0, one/f/f);
+    scale_param(&psr->param[param_pmdec2],0, one/f/f);
+
     // Epoch transformations ... these have to be translated to the common
     // origin before scaling
     xform_mjd(&psr->param[param_posepoch],0, f);

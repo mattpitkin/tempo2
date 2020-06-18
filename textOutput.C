@@ -190,6 +190,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         printf("%-15.15s ","PMELONG");
                     else if (i == param_pmdec && psr[p].eclCoord==1)
                         printf("%-15.15s ","PMELAT");
+                    else if (i == param_pmra2 && psr[p].eclCoord==1)
+                        printf("%-15.15s ","PMELONG2");
+                    else if (i == param_pmdec2 && psr[p].eclCoord==1)
+                        printf("%-15.15s ","PMELAT2");
                     else
                         printf("%-15.15s ",psr[p].param[i].label[k]);
 
@@ -215,6 +219,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         printf("%-25.15g ",(double)psr[p].param[i].val[k]);
                     /* *180.0/M_PI*60.0*60.0* 1000.0*SECDAY*365.25/24.0/3600.0*cos(psr[p].param[param_decj].val)); */
                     else if (i==param_pmdec) /* Convert from radian/sec to mas/yr */
+                        printf("%-25.15g ",(double)psr[p].param[i].val[k]);
+                    else if (i==param_pmra2) /* Convert from radian/sec to mas/yr */
+                        printf("%-25.15g ",(double)psr[p].param[i].val[k]);
+                    /* *180.0/M_PI*60.0*60.0* 1000.0*SECDAY*365.25/24.0/3600.0*cos(psr[p].param[param_decj].val)); */
+                    else if (i==param_pmdec2) /* Convert from radian/sec to mas/yr */
                         printf("%-25.15g ",(double)psr[p].param[i].val[k]);
                     /* *180.0/M_PI*60.0*60.0*1000.0*SECDAY*365.25/24.0/3600.0);*/
                     else if ((i == param_raj || i == param_decj) && psr[p].eclCoord==1)
