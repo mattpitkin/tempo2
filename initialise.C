@@ -306,6 +306,12 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_pmra].shortlabel[0],"PMRA");
     strcpy(psr->param[param_pmdec].label[0],"PMDEC (mas/yr)");
     strcpy(psr->param[param_pmdec].shortlabel[0],"PMDEC");
+    strcpy(psr->param[param_pmra2].label[0],"PMRA2 (mas/yr^2)");
+    strcpy(psr->param[param_pmra2].shortlabel[0],"PMRA2");
+    strcpy(psr->param[param_pmdec2].label[0],"PMDEC2 (mas/yr^2)");
+    strcpy(psr->param[param_pmdec2].shortlabel[0],"PMDEC2");
+
+
     strcpy(psr->param[param_posepoch].label[0],"POSEPOCH (MJD)");
     strcpy(psr->param[param_posepoch].shortlabel[0],"POSEPOCH");
     strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");

@@ -794,6 +794,13 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     case param_pmdec:
                         factor=180.0/M_PI*60.0*60.0*1000.0* SECDAY*365.25/24.0/3600.0;
                         break;
+                    case param_pmra2:
+                        factor = 180.0/M_PI*60*60*1000*powl(SECDAY*365.25/24./3600.0, 2)*cos(psr->param[param_decj].val[0]);
+                        break;
+                    case param_pmdec2:
+                        factor = 180.0/M_PI*60*60*1000*powl(SECDAY*365.25/24./3600.0,2);
+                        break;
+
                     case param_om:
                     case param_kom:
                     case param_kin:
@@ -1261,6 +1268,8 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_decj:
         case param_pmra:
         case param_pmdec:
+        case param_pmra2:
+        case param_pmdec2:
         case param_px:
         case param_pmrv:
         case param_dshk:

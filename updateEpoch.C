@@ -91,6 +91,30 @@ void updateEpoch(pulsar* psr, int p, longdouble nMJD) {
         strcpy(psr[p].decjStrPre,retstr);
     }
 
+    if (psr[p].param[param_pmra2].paramSet[0]==1)
+    {
+        char retstr[1000];
+        printf("Updating RAJ\n");
+        psr[p].param[param_raj].val[0] = psr[p].param[param_raj].val[0]+psr[p].param[param_pmra2].val[0]
+            /cos(psr[p].param[param_decj].val[0])/1000.0*(M_PI/180.0)/60.0/60.0*dt*dt/2.; 
+        psr[p].param[param_raj].prefit[0] = psr[p].param[param_raj].val[0];
+        /* Must obtain this in hms form */
+        turn_hms(psr[p].param[param_raj].val[0]/(2.0*M_PI), retstr);
+        strcpy(psr[p].rajStrPost,retstr);
+        strcpy(psr[p].rajStrPre,retstr);
+    }
+
+    if (psr[p].param[param_pmdec2].paramSet[0]==1)
+    {
+        char retstr[1000];
+        psr[p].param[param_decj].val[0] = psr[p].param[param_decj].val[0]+psr[p].param[param_pmdec2].val[0]/1000.0*(M_PI/180.0)/60.0/60.0*dt*dt/2.; 
+        psr[p].param[param_decj].prefit[0] = psr[p].param[param_decj].val[0];
+        turn_dms(psr[p].param[param_decj].val[0]/(2.0*M_PI), retstr);
+        strcpy(psr[p].decjStrPost,retstr);
+        strcpy(psr[p].decjStrPre,retstr);
+    }
+
+
     psr[p].param[param_posepoch].val[0] = nMJD;
     psr[p].param[param_posepoch].prefit[0] = nMJD;
 

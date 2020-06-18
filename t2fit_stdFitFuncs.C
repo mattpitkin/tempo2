@@ -213,7 +213,7 @@ double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label la
 double t2FitFunc_stdCm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     assert(label==param_cm);
     double gam=psr[ipsr].TNChromIdx;
-    fprintf(stderr, "gam=%.3e\n",gam);
+    //fprintf(stderr, "gam=%.3e\n",gam);
     // freq=0 is infinite frequency, so no effect.
     if(psr[ipsr].obsn[ipos].freq==0) return 0;
     else if (k==0)

@@ -445,6 +445,18 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         if (strcasecmp(str,"PMBETA")==0 || strcasecmp(str,"PMELAT")==0)
             psr->eclCoord = 1;
     }
+    else if (strcasecmp(str,"PMRA2")==0 || strcasecmp(str,"PMLAMBDA2")==0 || strcasecmp(str,"PMELONG2")==0)      /* Proper motion in RA */
+    {
+        readValue(psr,str,fin,&(psr->param[param_pmra2]),0);
+        if (strcasecmp(str,"PMLAMBDA2")==0 || strcasecmp(str,"PMELONG2")==0)
+            psr->eclCoord = 1;
+    }
+    else if (strcasecmp(str,"PMDEC2")==0 || strcasecmp(str,"PMBETA2")==0 || strcasecmp(str,"PMELAT2")==0)     /* Proper motion in DECJ */
+    {
+        readValue(psr,str,fin,&(psr->param[param_pmdec2]),0);
+        if (strcasecmp(str,"PMBETA2")==0 || strcasecmp(str,"PMELAT2")==0)
+            psr->eclCoord = 1;
+    }
     else if (strcasecmp(str,"PMRV")==0)     /* Radial velocity */
         readValue(psr,str,fin,&(psr->param[param_pmrv]),0);
     else if (strcasecmp(str,"POSEPOCH")==0)  /* Position Epoch */
