@@ -4236,20 +4236,58 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
     else if (plot==4)       /* Orbital phase */
     {
         double pbdot=0.0;
+	double pb;
+	double t0;
         double tpb;
-        if( psr[0].param[param_t0].paramSet[0] ){
-            tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] )
-                / ( psr[0].param[param_pb].val[0] );
+	/* RES: Some fixes dealing with FB0 and TASC */
+	if (psr[0].param[param_pb].paramSet[0]==0 && psr[0].param[param_fb].paramSet[0]==1) {
+	    pb = 1/(psr[0].param[param_fb].val[0]*86400);
+	}
+	else if (psr[0].param[param_pb].paramSet[0]==1) {
+	    pb = psr[0].param[param_pb].val[0];
+	}
+	else {
+	    printf("WARNING: This is not a binary pulsar\n");
+	    x[count]=0.0;
+	}
+
+	if (psr[0].param[param_t0].paramSet[0]==1) {
+	    tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] ) / pb;
+	}
+	else if (psr[0].param[param_tasc].paramSet[0]==1) {
+	    if (psr[0].param[param_om].paramSet[0]==1) {
+	        t0 = psr[0].param[param_tasc].val[0] + pb*psr[0].param[param_om].val[0]/(2*M_PI);
+	    }
+	    else if (psr[0].param[param_eps1].paramSet[0]==1 && psr[0].param[param_eps2].paramSet[0]==1) {
+	        t0 = psr[0].param[param_tasc].val[0] + pb*atan2(psr[0].param[param_eps1].val[0], psr[0].param[param_eps2].val[0])/(2*M_PI);
+	    }
+	    else {
+	        t0 = psr[0].param[param_tasc].val[0];
+	    }
+	    tpb = ( psr[0].obsn[iobs].bat - t0 ) / pb;
+	}
+	else {
+	    printf( "ERROR: Neither T0 nor tasc set...\n" );
+            x[count]=0.0;
+	}
+
+	// RES: replaced the below with the more accurate calculations above
+	/* 
+	if( psr[0].param[param_t0].paramSet[0] ){
+	    tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] ) / pb; 
+	         / ( psr[0].param[param_pb].val[0] );
         }else if( psr[0].param[param_tasc].paramSet[0] ){
-            tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_tasc].val[0] )
-                / ( psr[0].param[param_pb].val[0] );
+	    tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_tasc].val[0] ) / pb;
+	        / ( psr[0].param[param_pb].val[0] );
         }else{
             printf( "ERROR: Neither T0 nor tasc set...\n" );
-            tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] )
-                / ( psr[0].param[param_pb].val[0] );
-        }
+	    x[count]=0.0;
+            tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] ) / pb;
+	      / ( psr[0].param[param_pb].val[0] );
+        }*/
+
         double phase;
-        if (psr[0].param[param_pb].paramSet[0]==0)
+        if (psr[0].param[param_pb].paramSet[0]==0 && psr[0].param[param_fb].paramSet[0]==0)
         {
             printf("WARNING: This is not a binary pulsar\n");
             x[count]=0.0;
