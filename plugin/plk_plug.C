@@ -1443,8 +1443,25 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 xplot=3; yplot=2;fitFlag=2;setZoomY1 = 0; setZoomY2 =0;
                 if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 2");
             }
-            else if (key=='3' && psr[0].param[param_pb].paramSet[0]==1) {xplot=4;yplot=1;fitFlag=3;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
-            else if (key=='4' && psr[0].param[param_pb].paramSet[0]==1) {xplot=4;yplot=2;fitFlag=4;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
+	    // RES: Making these next two conditions more accurate
+            else if (key=='3' && (psr[0].param[param_pb].paramSet[0]==1 || psr[0].param[param_fb].paramSet[0]==1)) {
+	        xplot=4;
+	        yplot=1;
+	        fitFlag=3;
+		setZoomX1 = 0;
+		setZoomX2 = 0;
+		setZoomY1 = 0;
+		setZoomY2 = 0;
+	    }
+            else if (key=='4' && (psr[0].param[param_pb].paramSet[0]==1 || psr[0].param[param_fb].paramSet[0]==1)) {
+	        xplot=4;
+		yplot=2;
+		fitFlag=4;
+		setZoomX1 = 0;
+		setZoomX2 = 0;
+		setZoomY1 = 0;
+		setZoomY2 = 0;
+	    }
             else if (key=='5') {xplot=5; yplot=1;fitFlag=5;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
             else if (key=='6') {xplot=5; yplot=2;fitFlag=6;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
             else if (key=='7') {xplot=6; yplot=1;fitFlag=7;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
@@ -4239,7 +4256,7 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
 	double pb;
 	double t0;
         double tpb;
-	/* RES: Some fixes dealing with FB0 and TASC */
+	// RES: Some fixes dealing with FB0 and TASC
 	if (psr[0].param[param_pb].paramSet[0]==0 && psr[0].param[param_fb].paramSet[0]==1) {
 	    pb = 1/(psr[0].param[param_fb].val[0]*86400);
 	}
