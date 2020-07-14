@@ -91,6 +91,21 @@ void vectorPulsar(pulsar *psr,int npsr)
         psr[p].velPulsar[1] = convert*(psr[p].param[param_pmra].val[0]/cos(dec)*ca*cd 
                 - psr[p].param[param_pmdec].val[0]*sa*sd);
         psr[p].velPulsar[2] = convert*(psr[p].param[param_pmdec].val[0]*cd);
+    
+
+        /* Conversion from mas/yr^2 to radians of arc per century^2 */
+ 
+        convert = 1.0/1000.0/60.0/60.0*M_PI/180.0*100.0*100.0;
+
+
+        psr[p].accPulsar[0] = convert*(-psr[p].param[param_pmra2].val[0]/cos(dec)*sa*cd - 
+        psr[p].param[param_pmdec2].val[0]*ca*sd);
+        psr[p].accPulsar[1] = convert*(psr[p].param[param_pmra2].val[0]/cos(dec)*ca*cd 
+                - psr[p].param[param_pmdec2].val[0]*sa*sd);
+        psr[p].accPulsar[2] = convert*(psr[p].param[param_pmdec2].val[0]*cd);
+
+
+    
     }
 }
 

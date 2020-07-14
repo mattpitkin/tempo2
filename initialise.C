@@ -158,6 +158,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->name,"NOT SET");
     strcpy(psr->binaryModel,"NONE"); 
     psr->nJumps=0;
+     psr->nfdJumps=0;
     psr->nToffset = 0;
     psr->ndmx = 0;
     psr->nconstraints = 0;
@@ -172,6 +173,13 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         psr->jumpSAT[i] = 0;
         psr->jumpValErr[i] = 0.0;
     }
+    for (i=0;i<MAX_JUMPS;i++)
+    {
+        psr->fdjumpVal[i] = 0.0;
+        psr->fdjumpIdx[i] = 0;
+        psr->fdjumpValErr[i] = 0.0;
+    }
+
     psr->nT2efac  = 0; // Number of T2EFACs
     psr->nT2equad = 0; // Number of T2EQUADs
     psr->T2globalEfac = 1; // A global multiplying factor
@@ -180,6 +188,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nTNEF  = 0; // Number of TNEFACs
     psr->nTNEQ = 0; // Number of TNEQUADs
     psr->nTNECORR = 0; // Number of TNECORRs
+    psr->nTNSECORR = 0; // Number of TNECORRs
     psr->TNGlobalEF=0;
     psr->TNGlobalEQ=0;
     psr->nTNSQ = 0; // Number of TNEQUADs
@@ -191,6 +200,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->TNDMAmp = 0;
     psr->TNDMGam = 0;
     psr->TNDMC = 0;
+     psr->TNChromAmp = 0;
+    psr->TNChromGam = 0;
+    psr->TNChromC = 0;
+    psr->TNChromIdx =0;
     psr->TNBandDMAmp = 0;
     psr->TNBandDMGam = 0;
     psr->TNBandDMC = 0;
@@ -198,6 +211,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nTNGroupNoise = 0; // Number of TN Group Noise parameters
     psr->TNsubtractDM=0;
     psr->TNsubtractRed=0;
+    psr->TNsubtractChrom=0;
     psr->AverageResiduals=0;
     psr->useTNOrth = 0;
     psr->nDMEvents=0;
@@ -249,6 +263,21 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
             strcpy(psr->param[param_dm].shortlabel[0],"DM");
         }
     }
+        for (k=0;k<psr->param[param_cm].aSize;k++)
+    {
+        if (k>0){
+            sprintf(temp,"CM%d (arb yr^-%d)",k,k);
+            strcpy(psr->param[param_cm].label[k],temp);
+            sprintf(temp,"CM%d",k);
+            strcpy(psr->param[param_cm].shortlabel[k],temp);
+        }
+        else
+        {
+            strcpy(psr->param[param_cm].label[0],"CM (arb)");
+            strcpy(psr->param[param_cm].shortlabel[0],"CM");
+        }
+    }
+
 
 
 
@@ -279,6 +308,12 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_pmra].shortlabel[0],"PMRA");
     strcpy(psr->param[param_pmdec].label[0],"PMDEC (mas/yr)");
     strcpy(psr->param[param_pmdec].shortlabel[0],"PMDEC");
+    strcpy(psr->param[param_pmra2].label[0],"PMRA2 (mas/yr^2)");
+    strcpy(psr->param[param_pmra2].shortlabel[0],"PMRA2");
+    strcpy(psr->param[param_pmdec2].label[0],"PMDEC2 (mas/yr^2)");
+    strcpy(psr->param[param_pmdec2].shortlabel[0],"PMDEC2");
+
+
     strcpy(psr->param[param_posepoch].label[0],"POSEPOCH (MJD)");
     strcpy(psr->param[param_posepoch].shortlabel[0],"POSEPOCH");
     strcpy(psr->param[param_waveepoch].label[0],"WAVEEPOCH (MJD)");
@@ -428,6 +463,26 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
       }
 
 
+    for(k=0;k<psr->param[param_gausep].aSize;k++)
+      {
+	
+	sprintf(temp, "GAUSEP_%d", k+1);
+	strcpy(psr->param[param_gausep].label[k],temp);
+      	strcpy(psr->param[param_gausep].shortlabel[k],temp);
+	
+	sprintf(temp, "GAUSAMP_%d", k+1);
+	strcpy(psr->param[param_gausamp].label[k],temp);
+      	strcpy(psr->param[param_gausamp].shortlabel[k],temp);
+	
+	sprintf(temp, "GAUSSIG_%d", k+1);
+	strcpy(psr->param[param_gaussig].label[k],temp);
+      	strcpy(psr->param[param_gaussig].shortlabel[k],temp);
+
+	sprintf(temp, "GAUSINDEX_%d", k+1);
+	strcpy(psr->param[param_gausindex].label[k],temp);
+      	strcpy(psr->param[param_gausindex].shortlabel[k],temp);
+
+      }
 
     /* Binary parameters */
     strcpy(psr->param[param_t0].label[0],"T0 (MJD)");
@@ -501,7 +556,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_gamma].shortlabel[0],"GAMMA");
     strcpy(psr->param[param_pbdot].label[0],"PBDOT");
     strcpy(psr->param[param_pbdot].shortlabel[0],"PBDOT");
-    strcpy(psr->param[param_pb2dot].label[0],"PB2DOT (1e-33 s^-1)");
+    strcpy(psr->param[param_pb2dot].label[0],"PB2DOT (s^-1)");
     strcpy(psr->param[param_pb2dot].shortlabel[0],"PB2DOT");
     strcpy(psr->param[param_xpbdot].label[0],"XPBDOT");
     strcpy(psr->param[param_xpbdot].shortlabel[0],"XPBDOT");
@@ -636,6 +691,7 @@ void allocateMemory(pulsar *psr, int realloc)
         psr->param[i].nLinkFrom = 0;      
 
         if (i==param_dm)      psr->param[i].aSize = MAX_DM_DERIVATIVES;
+	else if (i==param_cm)  psr->param[i].aSize = MAX_DM_DERIVATIVES;
         else if (i==param_f)  psr->param[i].aSize = MAX_FREQ_DERIVATIVES;
         else if (i==param_pb || i==param_ecc || i==param_om || i==param_t0 || i==param_a1) 
             psr->param[i].aSize = MAX_COMPANIONS;
@@ -646,6 +702,7 @@ void allocateMemory(pulsar *psr, int realloc)
         else if (i==param_glep || i==param_glph || i==param_glf0 || i==param_glf1 || i==param_stateSwitchT || i==param_glf2 || 
                 i==param_glf0d || i==param_gltd) psr->param[i].aSize = 40;
 	 else if (i==param_expep || i==param_expph || i==param_exptau || i==param_expindex) psr->param[i].aSize = 40;
+        else if (i==param_gausep || i==param_gausamp || i==param_gaussig || i==param_gausindex) psr->param[i].aSize = 40;
         else if (i==param_dmassplanet)
             psr->param[i].aSize = 9;
         else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)

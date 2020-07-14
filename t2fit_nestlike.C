@@ -32,7 +32,7 @@ double t2FitFunc_nestlike_red_dm(pulsar *psr, int ipsr ,double x ,int ipos ,para
     double ret=0;
     switch (label){
         case param_red_dm_cos:
-            ret = cos(2.0*M_PI*freq*x)/(kappa*(pow((double)psr[ipsr].obsn[ipos].freqSSB,2)));
+	    ret = cos(2.0*M_PI*freq*x)/(kappa*(pow((double)psr[ipsr].obsn[ipos].freqSSB,2)));
             break;
         case param_red_dm_sin:
             ret = sin(2.0*M_PI*freq*x)/(kappa*(pow((double)psr[ipsr].obsn[ipos].freqSSB,2)));
@@ -43,6 +43,36 @@ double t2FitFunc_nestlike_red_dm(pulsar *psr, int ipsr ,double x ,int ipos ,para
     }
     return ret;
 }
+
+double t2FitFunc_nestlike_red_chrom(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
+    double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+    double freq = ((double)(k+1.0))/(maxtspan);
+
+    double ret=0;
+   
+    double index=psr[ipsr].TNChromIdx;
+    
+    //double kappa = DM_CONST*powf(1e-6,index);
+
+    //fprintf(stderr, "%.8le\n", psr[ipsr].obsn[ipos].freqSSB);
+
+    double prefac=1.;
+
+    switch (label){
+        case param_red_chrom_cos:
+	    ret = prefac*cos(2.0*M_PI*freq*x)/((pow((double)psr[ipsr].obsn[ipos].freqSSB/1.4e9,index)));
+            break;
+        case param_red_chrom_sin:
+            ret = prefac*sin(2.0*M_PI*freq*x)/((pow((double)psr[ipsr].obsn[ipos].freqSSB/1.4e9,index)));
+            break;
+        default:
+            assert(0);
+            break;
+    }
+    return ret;
+}
+
+
 
 
 
@@ -122,8 +152,41 @@ void t2UpdateFunc_nestlike_red_dm(pulsar *psr, int ipsr ,param_label label,int k
 
 
 
+void t2UpdateFunc_nestlike_red_chrom(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
+
+    if (k==0 && label==param_red_chrom_sin){
+        if (writeResiduals&4){
+            double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+            double freq = ((double)(k+1.0))/(maxtspan);
+            FILE *fout; 
+            fout = fopen("tnreddm.meta","w");
+            if (!fout){
+                printf("Unable to open file tnred.meta for writing\n");
+            }
+            fprintf(fout,"REDDM_OMEGA %lg\n",freq*2.0*M_PI);
+            fprintf(fout,"REDDM_EPOCH %lg\n",(double)psr[ipsr].param[param_pepoch].val[0]);
+            fprintf(fout,"REDDM_DMEPOCH %lg\n",(double)psr[ipsr].param[param_dmepoch].val[0]);
+            fprintf(fout,"REDDM_DM %lg\n",(double)psr[ipsr].param[param_dm].prefit[0]);
+            fprintf(fout,"REDDM_DM1 %lg\n",(double)psr[ipsr].param[param_dm].prefit[1]);
+            fprintf(fout,"REDDM_DM2 %lg\n",(double)psr[ipsr].param[param_dm].prefit[2]);
+            fclose(fout);
+        }
+    }
+    logmsg("%d %s %d %lg %lg",ipsr,label_str[label],k,val,err);
+    for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
+        double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
+        double y = t2FitFunc_nestlike_red_chrom(psr,ipsr,x,iobs,label,k);
+        psr[ipsr].obsn[iobs].TNChromSignal  += y *val;
+        psr[ipsr].obsn[iobs].TNChromErr     += pow(y*err,2);
+
+    }
+}
+
+
+
+
 double t2FitFunc_nestlike_jitter(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
-    const double dt=10.0/SECDAY;
+    const double dt=1./SECDAY;
     const double epoch = psr[ipsr].obsn[k].bat;
     const double batmin = epoch-dt;
     const double batmax = epoch+dt;
@@ -252,7 +315,7 @@ void t2UpdateFunc_nestlike_band(pulsar *psr, int ipsr ,param_label label,int k, 
         ichan -= psr[ipsr].TNBandNoiseC[iband];
         ++iband;
     }
-
+    
     // we are in channel ichan, band iband.
     logmsg("%d %s %d %d %d %lg %lg",ipsr,label_str[label],k,iband,ichan,val,err);
     for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
@@ -282,16 +345,6 @@ void t2UpdateFunc_nestlike_group(pulsar *psr, int ipsr ,param_label label,int k,
 
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
