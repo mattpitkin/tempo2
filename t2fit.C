@@ -1411,8 +1411,9 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_glf0d:
         case param_gltd:
         case param_glf2:
-            if (psr->param[param_glep].val[k] >  0
-                    && psr->param[param_glep].val[k] <80000) {
+            if (forceAlwaysFitForGlitches ||
+                    (psr->param[param_glep].val[k] > psr->param[param_start].val[0]
+                    && psr->param[param_glep].val[k] < psr->param[param_finish].val[0]) ){
                 // glitches
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGlitch;
                 OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
@@ -1422,17 +1423,6 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
                 logwarn("Refusing to fit for glitch %d which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_glep].val[k]);
             }
             break;
-            /* if (psr->param[param_glep].val[k] > psr->param[param_start].val[0]
-                    && psr->param[param_glep].val[k] < psr->param[param_finish].val[0]){
-                // glitches
-                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGlitch;
-                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
-                if(fit_param==param_glf2)OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_stdGlitch;
-                ++OUT.nParams;
-            } else {
-                logwarn("Refusing to fit for glitch %d which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_glep].val[k]);
-            }
-            break;*/
 
     case param_expph:
     case param_exptau:

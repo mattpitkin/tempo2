@@ -129,6 +129,8 @@ int main(int argc, char *argv[])
             writeTimFile=1;
         else if (strcasecmp(argv[i],"-veryfast")==0)
             veryFast=1;
+        else if (strcasecmp(argv[i],"-allglitch")==0)
+            forceAlwaysFitForGlitches=1;
         strcpy(commandLine[i],argv[i]);
     }
     if (displayCVSversion == 1) CVSdisplayVersion("tempo2.C","main()",CVS_verNum);
