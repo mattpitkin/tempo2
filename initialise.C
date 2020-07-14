@@ -234,6 +234,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(psr->param[param_fd].label[j],"FD%d",j+1);
     }
     /* Dispersion measure and its derivative */
+    psr->dm_series_type=series_undefined; // undefined until it is...
     for (k=0;k<psr->param[param_dm].aSize;k++)
     {
         if (k>0){

@@ -4425,10 +4425,14 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
         longdouble arg = 1.0;
         double dmDot=0;
         double dmDotErr=0;
+        double series_fac=1.0;
         for (int d=1;d<9;d++){
             arg *= yrs;
+            if (psr[0].dm_series_type == series_taylor_pn) {
+                series_fac *= d;
+            }
             if (psr[0].param[param_dm].paramSet[d]==1){
-                dmDot+=(double)(psr[0].param[param_dm].val[d]*arg);
+                dmDot+=(double)(psr[0].param[param_dm].val[d]*arg/series_fac);
             }
         }
 
