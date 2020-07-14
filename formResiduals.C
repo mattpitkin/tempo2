@@ -2263,62 +2263,37 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         }
 
 
-	
-	/*
-        if((psr[p].TNsubtractRed==1) && (psr[p].TNsubtractDM ==0)){
-            for (i=0;i<psr[p].nobs;i++){
-	      //psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
-	      psr[p].obsn[i].residualtn = psr[p].obsn[i].residual - psr[p].obsn[i].TNRedSignal;
-	    }
-        }
-	if((psr[p].TNsubtractDM==1 ) && (psr[p].TNsubtractRed==0)) {
-            for (i=0;i<psr[p].nobs;i++){
-// UNUSED VARIABLE //                 double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
-	      //psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
-	      psr[p].obsn[i].residualtn = psr[p].obsn[i].residual - psr[p].obsn[i].TNDMSignal;
-	    }
-	}
-    
-	if((psr[p].TNsubtractDM==1 ) && (psr[p].TNsubtractRed==1)) {
-	    for (i=0;i<psr[p].nobs;i++){
-	      // UNUSED VARIABLE //                 double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
-	      //psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
-	      psr[p].obsn[i].residualtn = psr[p].obsn[i].residual - psr[p].obsn[i].TNDMSignal - psr[p].obsn[i].TNRedSignal ;
-	    } 
-	    
-	 }
-	*/
-	
-	if ((psr[p].TNsubtractDM ==1) || ( psr[p].TNsubtractRed ==1) || (psr[p].TNsubtractChrom ==1))
-	  {
-	    for(i=0;i<=psr[p].nobs; i++)
-	      {
-		psr[p].obsn[i].residualtn = psr[p].obsn[i].residual;
 
-		if (psr[p].TNsubtractRed ==1)
-		  {
-		    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNRedSignal;
-		  }
-		
-		if (psr[p].TNsubtractDM ==1)
-		  {
-		    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNDMSignal;
-		  }
-		
+        if ((psr[p].TNsubtractDM ==1) || ( psr[p].TNsubtractRed ==1) || (psr[p].TNsubtractChrom ==1))
+        {
+            for(i=0;i<=psr[p].nobs; i++)
+            {
+                psr[p].obsn[i].residualtn = psr[p].obsn[i].residual;
 
-		if (psr[p].TNsubtractChrom ==1)
-		  {
-		    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNChromSignal;
-		  }
+                if (psr[p].TNsubtractRed ==1)
+                {
+                    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNRedSignal;
+                }
 
-                		  
+                if (psr[p].TNsubtractDM ==1)
+                {
+                    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNDMSignal;
+                }
+
+
+                if (psr[p].TNsubtractChrom ==1)
+                {
+                    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNChromSignal;
+                }
+
+
                 if (psr[p].obsn[i].deleted!=1)
                 {   
                     tnmean += psr[p].obsn[i].residualtn;
                     ntnmean++;
                 }
-	      }
-            
+            }
+
             if (removeMean ==1)
             {
                 tnmean /= (long double) ntnmean;
