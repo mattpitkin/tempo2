@@ -172,12 +172,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"MODE")==0 || strcasecmp(str,"WEIGHT")==0) /* Fitting mode */
         fscanf(fin,"%d",&(psr->fitMode));
     else if (strcasecmp(str,"ROBUST")==0){ /* Robust Fitting mode */
-        char str[80];
+        char str2[80];
         int i;
-        fgets(str,80,fin);
+        fgets(str2,80,fin);
         for(i=0; i < 80; i++){
-            if(str[i] > 47){
-                psr->robust=str[i];
+            if(str2[i] > 47){
+                psr->robust=str2[i];
                 break;
             }
         }
@@ -1864,6 +1864,26 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             fgets(str,1000,fin);
             //      parameter dummy[10];
             //      readValue(psr,str,fin,&dummy,0);
+        }
+        else if (strcasecmp(str,"DM_SERIES")==0) {
+            char buf[80];
+            char sname[80];
+            fgets(buf, 80,fin);
+            sscanf(buf,"%s", &sname);
+            switch (sname[0]) {
+                case 'P':
+                case 'p':
+                    psr->dm_series_type=series_simple_pn;
+                    break;
+                case 'T':
+                case 't':
+                    psr->dm_series_type=series_taylor_pn;
+                    break;
+                default:
+                    logwarn("Not sure how to interpret '%s' as a DM_SERIES... Assume Taylor.",sname);
+                    psr->dm_series_type=series_taylor_pn;
+                    break; 
+            }
         }
         /* Other allowed parameters that are unused */
         else if (str[0]=='C') /* Comment line */
