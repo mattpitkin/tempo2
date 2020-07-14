@@ -35,7 +35,6 @@
 #include "tempo2.h"
 #include "ifunc.h"
 
-longdouble solarWindModel(pulsar psr);
 
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 {
@@ -294,7 +293,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         {
             //	  if(acos(ctheta)*180/3.14159265>120)
             //	  printf("SW: calling observation %d\n",i);
-            psr[p].obsn[i].tdis2 = (double)solarWindModel(psr[p],i)/DM_CONST/1.0e-12/freqf/freqf;
+            psr[p].obsn[i].tdis2 = (double)solarWindModel(psr+p,i)/DM_CONST/1.0e-12/freqf/freqf;
             //	    printf("Returning: %g\n",(double)psr[p].obsn[i].tdis2);
             //	  else
             //	    psr[p].obsn[i].tdis2 = 1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr[p].ne_sw*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/freqf/freqf; 	    
