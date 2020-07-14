@@ -1038,7 +1038,7 @@ int TK_fft(short int dir,long n,double *x,double *y)
 //void calcSigmaz(pulsar *psr,int npsr,int time,int psrfile,double mintau,
 //		int nSel,int *selPsr,int weights,int style,int average,
 //		float *avX,float *avY,int *nav)
-void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
+void TKcalcSigmaz(const pulsar &psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
         double *ret_e2,int *ret_nval,double mintau)
 {
     int nfit,niter,nuncor,ntot;
@@ -1454,7 +1454,7 @@ void getweights(int n, double *wt)
     if (nusewt == -3) *wt = 1.0/addvar/addvar;
 }
 
-void readin(pulsar psr)
+void readin(const pulsar &psr)
 {
     int nalv,nread,n;
 // UNUSED VARIABLE //     static int idiag = 0;

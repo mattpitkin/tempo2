@@ -73,6 +73,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     double errors[MAX_E][MAX_P];
     double starts[MAX_E];
     double ends[MAX_E];
+    double times[MAX_E];
 
     double ovalues[MAX_P];
     bool delta=false;
@@ -201,8 +202,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         int ndata=0;
         for (int i=0; i < psr->nobs; ++i) {
-            if( psr->obsn[i].bat > psr->param[param_start].val[0] 
-                    && psr->obsn[i].bat < psr->param[param_finish].val[0]
+            if( psr->obsn[i].sat > psr->param[param_start].val[0] 
+                    && psr->obsn[i].sat < psr->param[param_finish].val[0]
                     ) ndata++;
         }
 
@@ -214,6 +215,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         starts[iepoch] = t-width/2.0;
         ends[iepoch] = t+width/2.0;
+        times[iepoch] = t;
 
         t2Fit(psr,*npsr,covarFuncFile);
         formBatsAll(psr,*npsr);                /* Form Barycentric arrival times */
@@ -253,13 +255,12 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     fprintf(out,"\n");
     for(iepoch =0; iepoch < nepoch; ++iepoch){
-        fprintf(out,"%.1f",t);
+        fprintf(out,"%.1f",times[iepoch]);
         for (int ip=0; ip < nparam; ++ip){
             fprintf(out,"\t%.20g\t%g",values[iepoch][ip], errors[iepoch][ip]);
         }
 
         fprintf(out,"\t%.20g\t%g",starts[iepoch], ends[iepoch]);
-        t+=dt;
         fprintf(out,"\n");
     }
     fclose(out);

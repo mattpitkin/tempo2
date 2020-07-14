@@ -103,6 +103,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
             printf("-clkdir {dir}     Add {dir} to the start of the clock search path.\n");
             printf("-newpar           Write post-fit par file to 'new.par'\n");
             printf("-outpar {name}    Write post-fit par file to '{name}'\n");
+            printf("-allglitch        Fit for glitches even outside of START/FINISH.\n");
             printf("-v                Print verson number.\n");
             printf("-H                Print more help, including list of plugins \n");
 

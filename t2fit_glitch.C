@@ -188,3 +188,63 @@ double t2FitFunc_expdip(pulsar *psr, int ipsr, double x, int ipos, param_label l
 
   return 0;
 }
+
+
+
+
+double t2FitFunc_gausdip(pulsar *psr, int ipsr, double x, int ipos, param_label label, int k)
+{
+  
+  
+  long double val;
+
+  long double dt;
+  long double amp;
+  long double sig;
+  long double freq;
+  long double gamma;
+  
+
+  
+  // reference to 1.4 GHz  to agree with Enterprise
+  freq= psr[ipsr].obsn[ipos].freqSSB/1.4e9;
+  
+  dt=(psr[ipsr].obsn[ipos].bbat - psr[ipsr].param[param_gausep].val[k]);
+  amp=psr[ipsr].param[param_gausamp].val[k];
+  sig=psr[ipsr].param[param_gaussig].val[k];
+
+
+ // if index is not set assume the Gaussian is achromatic
+  if (psr[ipsr].param[param_gausindex].paramSet[k] ==1)
+    {
+      gamma=psr[ipsr].param[param_gausindex].val[k];
+    }
+  else{
+    gamma=0;
+    
+  }
+  
+// model  is
+// amp*powl(freq, gamma)*exp(-dt*dt/2./sig/sig);
+
+    val= amp*powl(freq, gamma)*exp(-dt*dt/2./sig/sig);     
+
+  if (label ==param_gausamp)
+    {
+        return val/amp;
+    }
+  if( label ==param_gausep)
+    {
+        return val*(-dt/sig/sig); 
+    }
+    if (label=param_gaussig)
+    {
+        return val*(dt*dt/6./sig/sig/sig);    
+    }
+    if (label=param_gausindex)
+    {
+        return val*log(freq);
+    }
+  return 0;
+}
+

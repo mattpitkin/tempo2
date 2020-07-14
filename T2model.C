@@ -202,7 +202,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
         }
 
         /* Obtain number of orbits in tt0 */
-        orbits  = tt0/pb - 0.5*(pbdot+xpbdot)*pow(tt0/pb,2) - 1./6.*1e-33*pb2dot*pow(tt0,3);
+        orbits  = tt0/pb - 0.5*(pbdot+xpbdot)*pow(tt0/pb,2) - 1./6.*pb2dot*pow(tt0/pb,3);
 
 	//fprintf(stderr, "PB %.3e  TT0 %.3Le\n", pb,tt0);
 
@@ -488,7 +488,9 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
                 csi    = 2*m2*sin(phase)/brace;
             }
 
-            if (param==param_pb)	         return -csigma*an*SECDAY*tt0/pb; 
+	    //fprintf(stderr, "CSIGMA %.8le AN  %.8le TT0  %.8Le PB %.8le\n", csigma, an, tt0, pb);
+
+            if (param==param_pb)	return -csigma*an*SECDAY*tt0/(pb); 
             else if (param==param_a1)      return cx;
             else if (param==param_ecc)     return ce;
             else if (param==param_edot)     return ce*tt0;
@@ -498,7 +500,8 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
             else if (param==param_t0)      return -csigma*an*SECDAY;
             else if (param==param_pbdot){
                 if(psr[p].param[param_pbdot].nLinkFrom>0){
-                    return 0.5*tt0*(-csigma*an*SECDAY*tt0/(pb*SECDAY));
+		  return 0.5*tt0*(-csigma*an*SECDAY*tt0/(pb*SECDAY));
+		  //return 0.5*tt0*(-csigma*an*SECDAY*tt0/(pb*SECDAY));
                     /*- SPEED_LIGHT/(getParameterValue(&psr[p],param_pb,0)*SECDAY*
                       (pow(getParameterValue(&psr[p],param_pmra,0)*MASYR2RADS,2)+
                       pow(getParameterValue(&psr[p],param_pmdec,0)*MASYR2RADS,2))*
@@ -509,7 +512,7 @@ double T2model(pulsar *psr,int p,int ipos,int param,int arr)
             }
 	    else if (param==param_pb2dot)
 	      {
-		return  -1./6.*1e-33*csigma*an*tt0*tt0*tt0*pb;
+		return  1./6.*tt0*tt0*(-csigma*an*tt0/(pb));
 	      }
 
             else if (param==param_sini)    return csi;
@@ -944,7 +947,7 @@ void computeU(double phase,double ecc,double *u)
 /* Based on the DDT model and the equations in Damour & Taylor (1992) */
 /* DDT model includes a loop around d2bar --- MUST INCLUDE */
 
-/* void useBeta(pulsar psr,int iteration)
+/* void useBeta(pulsar *psr,int iteration)
    {
    int i;
 //  double TSUN=4.925490947e-6; // should be defined in tempo2.h
