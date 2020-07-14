@@ -40,8 +40,8 @@
 //#define TSUN (4.925490947e-6L) (Should be tempo2.h now).
 
 double m2(longdouble mf, longdouble sini, longdouble m1);
-void printGlitch(pulsar psr);
-double dglep(pulsar psr,int gn,double fph);
+void printGlitch(const pulsar &psr);
+double dglep(const pulsar &psr,int gn,double fph);
 
 /* ******************************************** */
 /* textOutput                                   */
@@ -1740,7 +1740,7 @@ double m2(longdouble mf, longdouble sini, longdouble m1)
     return -1.0;
 }
 
-void printGlitch(pulsar psr)
+void printGlitch(const pulsar &psr)
 {
     double glep1z,glep2z,glepe;
     int iph;
@@ -1784,7 +1784,7 @@ void printGlitch(pulsar psr)
     }
 }
 
-double dglep(pulsar psr,int gn,double fph)
+double dglep(const pulsar &psr,int gn,double fph)
 {
     double tds,plim,dph,t1;
     int niter;
