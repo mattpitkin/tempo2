@@ -41,7 +41,7 @@
 using namespace std;
 
 void doPlugin(pulsar *psr,int npsr,double amp,double alpha,double fc,int removeQuad);
-void getRedNoiseRealisation(pulsar psr,double amp,double alpha,double fc,long *seed,double *redNoise,int *nRedNoise,double *minx,double *delta);
+void getRedNoiseRealisation(const pulsar &psr,double amp,double alpha,double fc,long *seed,double *redNoise,int *nRedNoise,double *minx,double *delta);
 
 void help() /* Display help */
 {
@@ -182,7 +182,7 @@ void doPlugin(pulsar *psr,int npsr,double amp,double alpha,double fc,int removeQ
 
 }
 
-void getRedNoiseRealisation(pulsar psr,double amp,double alpha,double fc,long *seed,double *redNoise,int *nRedNoise,double *minx,double *delta)
+void getRedNoiseRealisation(const pulsar &psr,double amp,double alpha,double fc,long *seed,double *redNoise,int *nRedNoise,double *minx,double *delta)
 {
   double dspan;
   double re[MAX_OBSN],im[MAX_OBSN];

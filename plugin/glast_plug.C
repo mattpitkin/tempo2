@@ -12,7 +12,7 @@ void sla_CALDJ(int IY, int IM, int ID, double *DJM, int *J);
 void sla_CLDJ (int IY, int IM, int ID, double *DJM, int *J);
 void slaClyd ( int iy, int im, int id, int *ny, int *nd, int *jstat );
 void slaCalyd ( int iy, int im, int id, int *ny, int *nd, int *j );
-int getParameter(pulsar psr,const char *param, double *value);
+int getParameter(const pulsar &psr,const char *param, double *value);
 float fitwave_function(pulsar *psr, float x, float fitwaves_omega, float fitwaves_epoch);
 void indexx_patrick(unsigned long n, float arr[], unsigned long indx[]);
 
@@ -806,7 +806,7 @@ void sla_CLDJ (int IY, int IM, int ID, double *DJM, int *J)
   }  /* End else year */
 }
 
-int getParameter(pulsar psr,const char *param, double *value)
+int getParameter(const pulsar &psr,const char *param, double *value)
 {
   int i;
   int gotit=-1;

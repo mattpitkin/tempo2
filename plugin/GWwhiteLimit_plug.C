@@ -65,7 +65,7 @@ void cumulativeHistogram(double val[MAX_ITERATION][MAX_FREQ],int nval,double *fr
 void cumulativeHistogram2(double *val,int nval,double limit,double *threshold);
 void sortit(int n, double array[], double rasort[]);
 void shuffle(longdouble *R, double *toaE, longdouble *R2, double *toaE2, int N,long *idum);
-void checkReal(pulsar psr,double *freqVal,int *nFreq,double *threshold,double alpha);
+void checkReal(const pulsar &psr,double *freqVal,int *nFreq,double *threshold,double alpha);
 void getLimits(pulsar *psr,double *freqVal,int *nFreq,double *threshold,long *idum,int checkBackground,double alpha,double *dist,int distNum,double maxAmp,int fast,int npsr,int numberGW,longdouble alpha,longdouble **Func);
 void setupPulsar(longdouble ra_p,longdouble dec_p,longdouble *kp);
 //void GramSchmidt(longdouble x[], longdouble y[], longdouble err[], int ObsAmt, int Npoly, longdouble CoeffArray[],int wtyn,longdouble **Func);
@@ -839,7 +839,7 @@ if (checkBackground==0)
 
 }
 
-void checkReal(pulsar psr,double *freqVal,int *nFreq,double *threshold,double alpha)
+void checkReal(const pulsar &psr,double *freqVal,int *nFreq,double *threshold,double alpha)
 {
   double xval[MAX_OBSN],yval[MAX_OBSN],py[MAX_FREQ],var[MAX_OBSN];
   int i;
