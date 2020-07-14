@@ -50,8 +50,8 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2020.04.1"
-#define TEMPO2_h_MAJOR_VER 2020.04
+#define TEMPO2_h_VER "2020.07.1"
+#define TEMPO2_h_MAJOR_VER 2020.07
 #define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
@@ -84,6 +84,7 @@
 #define MAX_TNGN	50 /*!< maximum number of TNGroupNoise parameters allowed*/
 #define MAX_TNBN        50 /*maximum number of TNBandNoise parameters allowd*/
 #define MAX_TNECORR       50    /*!< Maximum number of TNECORRss allowed               */
+#define MAX_TNSECORR       50    /*!< Maximum number of TNECORRss allowed               */
 #define MAX_TNDMEv		   10    /*Maximum number of TNDMEvents allowed */
 #define MAX_TNSQ          50    /*!< Maximum number of TNEQUADs allowed               */
 #define MAX_BPJ_JUMPS        5     /*!< Maximum number of jumps in binary params - for BPJ model */
@@ -166,12 +167,13 @@ typedef int constraint_label;
  */
 enum label {
     param_raj,param_decj,param_f,param_pepoch,param_posepoch,
-    param_dmepoch,param_dm,param_pmra,param_pmdec,param_px,
+    param_dmepoch,param_dm,param_cm,param_pmra,param_pmdec,param_pmra2, param_pmdec2,param_px,
     param_sini,param_pb,param_fb,param_t0,param_a1,param_om,param_pmrv,
     param_ecc,param_edot,param_e2dot,param_xpbdot,param_pbdot,param_pb2dot,param_a1dot,
     param_a2dot,param_omdot,param_om2dot,param_orbpx,param_tasc,param_eps1,param_eps2,param_m2,param_gamma,
     param_mtot,param_glep,param_glph,param_glf0,param_glf1,param_glf2,
     param_expep, param_expph,param_exptau,param_expindex,
+    param_gausep, param_gausamp, param_gaussig,param_gausindex,
     param_glf0d,param_gltd,param_start,param_finish,param_track,param_bp,param_bpp,
     param_tzrmjd,param_tzrfrq,param_fddc,param_fddi,param_fd,param_dr,param_dtheta,param_tspan,
     param_bpjep,param_bpjph,param_bpja1,param_bpjec,param_bpjom,param_bpjpb,
@@ -185,7 +187,7 @@ enum label {
     param_quad_ifunc_c,param_tel_dx,param_tel_dy,param_tel_dz,
     param_tel_vx,param_tel_vy,param_tel_vz,param_tel_x0,param_tel_y0,param_tel_z0,param_gwm_amp,param_gwcs_amp,param_gwecc,param_gwb_amp,
     param_dm_sin1yr,param_dm_cos1yr,param_brake,param_stateSwitchT,param_df1,
-    param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos,
+    param_red_sin, param_red_cos,param_jitter,param_red_dm_sin, param_red_dm_cos, param_red_chrom_sin, param_red_chrom_cos,
     param_band_red_sin, param_band_red_cos,param_sx, param_sxr1, param_sxr2, param_sxer,
     param_group_red_sin, param_group_red_cos,
     param_ne_sw,
@@ -195,7 +197,8 @@ enum label {
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
     param_ZERO, /*!< virtual parameter for DC offset*/
-    param_JUMP  /*!< virtual parameter for jumps */
+    param_JUMP,  /*!< virtual parameter for jumps */
+    param_FDJUMP /*!< virtual parameter for jumps */
 };
 
 
@@ -261,6 +264,8 @@ enum constraint {
     constraint_band_red_cos,
     constraint_red_dm_sin,
     constraint_red_dm_cos,
+    constraint_red_chrom_sin,
+    constraint_red_chrom_cos,
     constraint_group_red_sin,
     constraint_group_red_cos,
     constraint_jitter,
@@ -412,6 +417,8 @@ typedef struct observation {
     double      TNDMErr;            /*!< Error on Model DM signal from temponest fit */
     double      TNGroupSignal;      /*!< Model Group Noise signal from temponest fit */
     double      TNGroupErr;         /*!< Error on Model Group Noise signal from temponest fit */
+  double TNChromSignal; // Model of Chromatic noise from temponest
+  double TNChromErr; // Error on Chromatic noise from temponest
     double      freq;               /*!< Frequency of observation (in MHz)                          */
     double      freqSSB;            /*!< Frequency of observation in barycentric frame (in Hz)      */
     double      toaErr;             /*!< Error on TOA (in us)                                       */
@@ -479,6 +486,8 @@ typedef struct observation {
     int  nFlags;                   
     int  jump[MAX_FLAGS];           /*!< Jump region */
     int  obsNjump;                  /*!< Number of jumps for this observation */
+    int fdjump[MAX_FLAGS];
+    int obsNfdjump;
     double efac;                    /*!< Error multiplication factor                                */
     double equad;                   /*!< Value to add in quadrature                                 */
     double snr;
@@ -583,6 +592,7 @@ typedef struct pulsar {
     // General pulsar information
     double posPulsar[3];            /*!< 3-vector pointing at pulsar                                */
     double velPulsar[3];            /*!< 3-vector giving pulsar's velocity                          */  
+    double accPulsar[3];
     longdouble phaseJump[MAX_JUMPS];    /*!< Time of phase jump                                         */
     int    phaseJumpDir[MAX_JUMPS]; /*!< Size and direction of phase jump                           */
     int    phaseJumpID[MAX_JUMPS];  /*!< ID of closest point to the phase jump */
@@ -592,13 +602,27 @@ typedef struct pulsar {
     int    nCompanion;              /*!< Number of binary companions                                */
     int    eclCoord;                /*!< = 1 for ecliptic coords otherwise celestial coords         */
 
-    int    nJumps;                  /*!< Number of jumps                                            */
+    int    nJumps;                  /*!< Number of jumps                                        */
     char fjumpID[16];
     double jumpVal[MAX_JUMPS];      /*!< Value of jump                                              */
     char   jumpSAT[MAX_JUMPS];      /*!< This jump is in SAT rather than phase */
     int    fitJump[MAX_JUMPS];      /*!< = 1 if fit for jump                                        */
     double jumpValErr[MAX_JUMPS];   /*!< Error on jump                                              */
     char   jumpStr[MAX_JUMPS][MAX_STRLEN]; /*!< String describing jump                              */
+    
+
+    // new parameters for fdjumps
+    int    nfdJumps;                  /*!< Number of jumps                                        */
+    char ffdjumpID[16];
+    double fdjumpVal[MAX_JUMPS];      /*!< Value of jump                                              */
+    int    fdjumpIdx[MAX_JUMPS];
+    //char   jumpSAT[MAX_JUMPS];      /*!< This jump is in SAT rather than phase */
+    int    fitfdJump[MAX_JUMPS];      /*!< = 1 if fit for jump                                        */
+    double fdjumpValErr[MAX_JUMPS];   /*!< Error on jump                                              */
+    char   fdjumpStr[MAX_JUMPS][MAX_STRLEN]; /*!< String describing jump                              */
+    
+    
+    
     char   filterStr[MAX_STRLEN];   /*!< String describing filters */
     char   passStr[MAX_STRLEN];   /*!< String describing filters */
     double tOffset[MAX_TOFFSET];    /*!< Offsets in TOAs in seconds                                 */ 
@@ -731,7 +755,7 @@ typedef struct pulsar {
     double T2globalEfac;
 
     //TNEF/TNEQ/TNECORR
-    int    nTNEF,nTNEQ, nTNSQ, nTNECORR;
+    int    nTNEF,nTNEQ, nTNSQ, nTNECORR,nTNSECORR;
     char   TNEFFlagID[MAX_TNEF][MAX_FLAG_LEN],TNEFFlagVal[MAX_TNEF][MAX_FLAG_LEN];
     double TNEFVal[MAX_TNEF];
     double TNGlobalEF;
@@ -743,7 +767,8 @@ typedef struct pulsar {
     double TNSQVal[MAX_TNSQ];
     char   TNECORRFlagID[MAX_TNECORR][MAX_FLAG_LEN],TNECORRFlagVal[MAX_TNECORR][MAX_FLAG_LEN];
     double TNECORRVal[MAX_TNECORR];
-
+    char   TNSECORRFlagID[MAX_TNSECORR][MAX_FLAG_LEN],TNSECORRFlagVal[MAX_TNSECORR][MAX_FLAG_LEN];
+    double TNSECORRVal[MAX_TNSECORR];
 
     //Stochastic Parameters
     double TNRedAmp;
@@ -755,9 +780,18 @@ typedef struct pulsar {
     double TNDMAmp;
     double TNDMGam;
     int TNDMC;
-    double TNDMCoeffs[200];
+  double TNDMCoeffs[200];
+  double TNChromAmp;
+  double TNChromGam;
+  double TNChromIdx;
+  
+  int TNChromC;
+  double TNChromCoeffs[200];
+
+ 
     int TNsubtractDM;
     int TNsubtractRed;
+  int TNsubtractChrom;
     int AverageResiduals; 
     int AverageDMResiduals;
     char AverageFlag[MAX_FLAG_LEN];
@@ -968,7 +1002,7 @@ extern "C" {
     void updateEpoch(pulsar* psr, int p, longdouble nMJD);
     longdouble getParameterValue(pulsar *psr,int param,int arr);
     void simplePlot(pulsar *psr, double unitFlag);
-    double solarWindModel(pulsar psr,int iobs);
+    double solarWindModel(pulsar *psr,int iobs);
 
     /* BINARY MODELS */
     double MSSmodel(pulsar *psr,int p,int obs,int param);

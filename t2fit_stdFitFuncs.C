@@ -213,6 +213,28 @@ double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label la
     }
 
 }
+
+double t2FitFunc_stdCm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    assert(label==param_cm);
+    double gam=psr[ipsr].TNChromIdx;
+    //fprintf(stderr, "gam=%.3e\n",gam);
+    // freq=0 is infinite frequency, so no effect.
+    if(psr[ipsr].obsn[ipos].freq==0) return 0;
+    else if (k==0)
+    {
+        // shouldn't fit for CM only its derivatives
+        return 0;
+        //return 1.0/(DM_CONST*powl(psr[ipsr].obsn[ipos].freqSSB/1.0e6,gam));
+    }
+    else
+    {
+        double yrs = (psr[ipsr].obsn[ipos].sat - psr[ipsr].param[param_dmepoch].val[0])/365.25;
+        return 1.0/(DM_CONST*powl(psr[ipsr].obsn[ipos].freqSSB/1.0e6,gam))*pow(yrs,k);
+    }
+
+}
+
+
 void t2UpdateFunc_simpleAdd(pulsar *psr, int ipsr ,param_label label,int k, double val, double error){
     psr[ipsr].param[label].val[k] += val;
     psr[ipsr].param[label].err[k]  = error;
@@ -345,6 +367,27 @@ double t2FitFunc_jump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label lab
 void t2UpdateFunc_jump(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
     psr[ipsr].jumpVal[k] += val;
     psr[ipsr].jumpValErr[k] = err;
+}
+
+
+
+double t2FitFunc_fdjump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    for (int l=0;l<psr[ipsr].obsn[ipos].obsNfdjump;l++){
+        //fprintf(stderr, "%d %d\n", psr[ipsr].obsn[ipos].fdjump[l],k);
+        if (psr[ipsr].obsn[ipos].fdjump[l]==k) {
+            int idx=psr[ipsr].fdjumpIdx[k];    
+            
+            return pow(psr[ipsr].obsn[ipos].freqSSB/1e9,idx);
+            //return pow(log(psr[ipsr].obsn[ipos].freqSSB/1e9),idx);
+             }
+    }
+    return 0;
+}
+
+
+void t2UpdateFunc_fdjump(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
+    psr[ipsr].fdjumpVal[k] += val;
+    psr[ipsr].fdjumpValErr[k] = err;
 }
 
 

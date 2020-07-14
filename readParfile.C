@@ -323,6 +323,62 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         }
 
     }
+
+    else if (strncasecmp(str, "FDJUMP",6)==0)
+    {
+
+        int idx=0;
+        if( sscanf(str+6,"%d", &idx) ==1)
+        {
+                   
+
+            char rest[1024];
+            char str1[100],str2[100],str3[100],str4[100],str5[100];
+            int v5,nread;
+
+            fgets(rest, 1024, fin);
+            removeCR(rest);
+            psr->nfdJumps++;
+            strcpy(psr->fdjumpStr[psr->nfdJumps],rest);
+            // get the index of the FD parameter
+            psr->fdjumpIdx[psr->nfdJumps]=idx;
+
+
+        
+
+            psr->fitfdJump[psr->nfdJumps]=1; /* Default: fit for fdjump */
+            v5 = -1;
+            nread = sscanf(psr->fdjumpStr[psr->nfdJumps],"%s %s %s %s %s",str1,str2,str3,str4,str5);
+
+            if (strcasecmp(str1,"MJD")==0 || strcasecmp(str1,"FREQ")==0)
+            {
+                if (nread>3)
+                {
+                    sscanf(str4,"%lf",&(psr->fdjumpVal[psr->nfdJumps]));
+                    if (sscanf(str5,"%d",&v5)==1)
+                    {
+                     if (v5!=1) psr->fitfdJump[psr->nfdJumps]=0;
+                    }   
+                    else
+                        psr->fitfdJump[psr->nfdJumps]=0;
+                }
+            }
+            else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
+            {
+                if (nread>2)
+                {
+                    sscanf(str3,"%lf",&(psr->fdjumpVal[psr->nfdJumps]));
+                    if (sscanf(str4,"%d",&v5)==1)
+                    {
+                        if (v5!=1) psr->fitfdJump[psr->nfdJumps]=0;
+                    }
+                    else
+                        psr->fitfdJump[psr->nfdJumps]=0;
+                }
+            }
+
+        }
+    }
     else if (strcasecmp(str,"EPHEM")==0)
     {
         fscanf(fin,"%s",psr->ephemeris);
@@ -410,6 +466,18 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             }
         }
         readValue(psr,str,fin,&(psr->param[param_pmdec]),0);
+    }
+    else if (strcasecmp(str,"PMRA2")==0 || strcasecmp(str,"PMLAMBDA2")==0 || strcasecmp(str,"PMELONG2")==0)      /* Proper motion in RA */
+    {
+        readValue(psr,str,fin,&(psr->param[param_pmra2]),0);
+        if (strcasecmp(str,"PMLAMBDA2")==0 || strcasecmp(str,"PMELONG2")==0)
+            psr->eclCoord = 1;
+    }
+    else if (strcasecmp(str,"PMDEC2")==0 || strcasecmp(str,"PMBETA2")==0 || strcasecmp(str,"PMELAT2")==0)     /* Proper motion in DECJ */
+    {
+        readValue(psr,str,fin,&(psr->param[param_pmdec2]),0);
+        if (strcasecmp(str,"PMBETA2")==0 || strcasecmp(str,"PMELAT2")==0)
+            psr->eclCoord = 1;
     }
     else if (strcasecmp(str,"PMRV")==0)     /* Radial velocity */
         readValue(psr,str,fin,&(psr->param[param_pmrv]),0);
@@ -543,12 +611,9 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 
     else if  (strstr(str,"EXPEP_")!=NULL || strstr(str,"expep_")!=NULL)
     {
-      //fprintf(stderr, "here\n");
-      //exit(0);
         if (sscanf(str+6,"%d",&gval)==1)
         {
 	  
-	  //fprintf(stderr, gval);
             if (gval<psr->param[param_expep].aSize)
                 readValue(psr,str,fin,&(psr->param[param_expep]),gval-1);
         }
@@ -580,6 +645,49 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         }
     }
     
+
+    else if  (strstr(str,"GAUSEP_")!=NULL || strstr(str,"gausep_")!=NULL)
+    {
+        if (sscanf(str+7,"%d",&gval)==1)
+        {
+	  
+            if (gval<psr->param[param_gausep].aSize)
+                readValue(psr,str,fin,&(psr->param[param_gausep]),gval-1);
+        }
+    }
+
+
+    else if  (strstr(str,"GAUSAMP_")!=NULL || strstr(str,"gausamp_")!=NULL)
+    {
+        if (sscanf(str+8,"%d",&gval)==1)
+        {
+	  
+            if (gval<psr->param[param_gausamp].aSize)
+                readValue(psr,str,fin,&(psr->param[param_gausamp]),gval-1);
+        }
+    }
+
+
+    else if  (strstr(str,"GAUSSIG_")!=NULL || strstr(str,"gaussig_")!=NULL)
+    {
+        if (sscanf(str+8,"%d",&gval)==1)
+        {
+	  
+            if (gval<psr->param[param_gaussig].aSize)
+                readValue(psr,str,fin,&(psr->param[param_gaussig]),gval-1);
+        }
+    }
+
+
+    else if  (strstr(str,"GAUSINDEX_")!=NULL || strstr(str,"gausindex_")!=NULL)
+    {
+        if (sscanf(str+10,"%d",&gval)==1)
+        {
+	  
+            if (gval<psr->param[param_gausindex].aSize)
+                readValue(psr,str,fin,&(psr->param[param_gausindex]),gval-1);
+        }
+    }
 
 
     else if (strcasecmp(str,"TZRMJD")==0)      /* TZRMJD */
@@ -724,6 +832,20 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 readValue(psr,str,fin,&(psr->param[param_dm]),dval);
         }
     }
+    else if (strcasecmp(str,"CM")==0) /* Chromatic noise measure */
+        readValue(psr,str,fin,&(psr->param[param_cm]),0);
+    else if ((str[0]=='C' || str[0]=='c') &&  /* Higher DM derivatives */
+            (str[1]=='M' || str[1]=='m') && isdigit(str[2]))
+    {
+        int dval;
+        if (sscanf(str+2,"%d",&dval)==1)
+        {
+            if (dval<psr->param[param_cm].aSize)
+                readValue(psr,str,fin,&(psr->param[param_cm]),dval);
+        }
+    }
+
+
     else if (strcasecmp(str,"TELX")==0)
         readValue(psr,str,fin,&(psr->param[param_telx]),0);
     else if ((str[0]=='T' || str[0]=='t') &&  /* Higher DM derivatives */
@@ -974,10 +1096,20 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         if((strcasecmp(cname,"AUTO")==0)){
             psr->auto_constraints=1;
         }
+
+	if((strcasecmp(cname,"DMMODEL_MEAN")==0)){
+	     psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
+	     psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
+			 
+	}
+
         /*
          * Constraints for DMMODEL.
          * The DMMODEL constraint affects 4 constraints.
          */
+	
+
+
         if((strcasecmp(cname,"DMMODEL_X")==0)){
             psr->constraints[psr->nconstraints++] = constraint_dmmodel_mean;
             psr->constraints[psr->nconstraints++] = constraint_dmmodel_cw_0;
@@ -1439,6 +1571,20 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         ( psr->nTNECORR )++;
     }
 
+    
+    // correlated jitter noise
+
+    else if( strcasecmp( str, "ESCORR") == 0 || strcasecmp( str, "TNSECORR") == 0)
+        // ECORR for given flag
+    {
+        int necorrFlag = psr->nTNSECORR;
+        fscanf( fin, "%s %s %lf", psr->TNSECORRFlagID[necorrFlag],
+                psr->TNSECORRFlagVal[necorrFlag],
+                &psr->TNSECORRVal[necorrFlag] );
+        ( psr->nTNSECORR )++;
+    }
+
+
     /* /---------\
        | TN Noise |
        \---------/ */
@@ -1463,6 +1609,32 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%d",&(psr->TNDMC));
     else if(strcasecmp(str,"TNsubtractDM")==0)
         fscanf(fin,"%d",&(psr->TNsubtractDM));
+    else if (strcasecmp(str,"TNChromAmp")==0) /* TempoNest Red noise power law amplitude */
+      {
+	fscanf(fin,"%lf",&(psr->TNChromAmp));
+	//	fprintf(stderr, "here\n");
+      }
+   
+    else if (strcasecmp(str,"TNChromGam")==0) /* TempoNest chromatic Red noise spectral index */
+      {  
+	fscanf(fin,"%lf",&(psr->TNChromGam));
+
+      }
+    else if (strcasecmp(str,"TNChromC")==0) /* TempoNest chromatic Red noise spectral index */
+      {
+      fscanf(fin,"%d",&(psr->TNChromC));
+      //fprintf(stderr, "here\n");
+	//exit(0);
+      }
+    else if (strcasecmp(str,"TNChromIdx")==0) /* TempoNest chromatic Red noise chromatic index */
+        fscanf(fin,"%lf",&(psr->TNChromIdx));
+    else if(strcasecmp(str,"TNsubtractChrom")==0)
+    {
+           fscanf(fin,"%d",&(psr->TNsubtractChrom));
+            //fprintf(stderr, "here\n");
+        //exit(0);
+    }
+
     else if(strcasecmp(str,"RNAMP")==0){ /* compatibility with tempo RN notation */
         printf("\nWARNING: Using tempo RNAMP parameter: setting TNRedC to 100!\n");
 
