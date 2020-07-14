@@ -47,12 +47,13 @@ typedef struct
 {
     char code[100];
     DynamicArray aliases;
+    bool warned;
 } ObservatoryAliasList;
+
 
 static DynamicArray observatoryAliasLists;
 
 static int observatories_initialised = 0;
-
 
 
 //void convertGeocentric(observatory newObs);
@@ -156,6 +157,7 @@ readAliases(char *fname)
     {
         fprintf(stderr, "Unable to open observatory aliases file %s : %s\n",
                 fname, strerror(errno));
+        logerr("Cannot read '%s'. Possibly $TEMPO2 is not set, or you have not updated the contents.",fname);
         exit(1);
     }
 
@@ -173,6 +175,7 @@ readAliases(char *fname)
                     DynamicArray_push_back(&list.aliases, alias);
                     ichar += nread;
                 }
+                list.warned=false;
                 DynamicArray_push_back(&observatoryAliasLists, &list);
             }
         }
@@ -220,7 +223,12 @@ initObservatories()
     globfree(&g);
     logdbg("Reading aliases file");
     /* and load aliases list */
-    sprintf(fname, "%s/observatory/aliases", getenv(TEMPO2_ENVIRON));
+    if (getenv("TEMPO2_ALIAS")!=NULL){
+        logmsg("Note: using alias file %s.aliases",getenv("TEMPO2_ALIAS"));
+        sprintf(fname, "%s/observatory/%s.aliases", getenv(TEMPO2_ENVIRON),getenv("TEMPO2_ALIAS"));
+    } else {
+        sprintf(fname, "%s/observatory/aliases", getenv(TEMPO2_ENVIRON));
+    }
     readAliases(fname);
 
     observatories_initialised = 1;
@@ -244,8 +252,9 @@ void lookup_observatory_alias(char *incode, char *outcode)
         for (ialias=0; ialias < list->aliases.nelem; ialias++)
         {
             alias = (char *)list->aliases.data + ialias*128;
-            if (!strcasecmp(alias, incode))
+            if (!strcasecmp(alias, incode)) {
                 break;
+            }
         }
         if (ialias < list->aliases.nelem)
             break;
@@ -254,6 +263,10 @@ void lookup_observatory_alias(char *incode, char *outcode)
     {
         //    if (debugFlag)
         //      fprintf (stderr, "Copying alias = '%s' into outcode\n", list->code);
+        if (! list->warned){
+            logwarn("Assuming site '%s' means '%s'",incode,list->code);
+            list->warned=true;
+        }
         strcpy(outcode, list->code);
     }
     else if (outcode!=incode) {

@@ -140,7 +140,7 @@ void t2UpdateFunc_nestlike_red_dm(pulsar *psr, int ipsr ,param_label label,int k
             fclose(fout);
         }
     }
-    logmsg("%d %s %d %lg %lg",ipsr,label_str[label],k,val,err);
+    logdbg("%d %s %d %lg %lg",ipsr,label_str[label],k,val,err);
     for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
         double x = (double)(psr[ipsr].obsn[iobs].bbat - psr[ipsr].param[param_pepoch].val[0]);
         double y = t2FitFunc_nestlike_red_dm(psr,ipsr,x,iobs,label,k);

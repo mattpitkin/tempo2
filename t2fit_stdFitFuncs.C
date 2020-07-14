@@ -205,7 +205,11 @@ double t2FitFunc_stdDm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label la
     else
     {
         double yrs = (psr[ipsr].obsn[ipos].sat - psr[ipsr].param[param_dmepoch].val[0])/365.25;
-        return 1.0/(DM_CONST*pow(psr[ipsr].obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k);
+        double series_factor=1.0;
+        if (psr[ipsr].dm_series_type == series_taylor_pn) {
+            for (int i =1; i <= k; ++i) series_factor *= i;
+        }
+        return 1.0/(DM_CONST*pow(psr[ipsr].obsn[ipos].freqSSB/1.0e6,2))*pow(yrs,k)/series_factor;
     }
 
 }

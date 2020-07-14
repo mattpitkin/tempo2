@@ -27,9 +27,9 @@
  *    timing model.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
 #include <string.h>
 #include "TKlongdouble.h"
 #include "TKlog.h"
@@ -300,6 +300,7 @@ double TKrobustDefConstrainedLeastSquares(double* data, double* white_data,
                     fprintf(wFile,"\n");
                 }
                 fclose(wFile);
+                fclose(yFile);
             }
         }
 
