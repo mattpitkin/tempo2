@@ -328,6 +328,7 @@ void copyPSR(pulsar *p,int p1,int p2)
     strcpy(p[p2].clockFromOverride,p[p1].clockFromOverride);
     strcpy(p[p2].JPL_EPHEMERIS,p[p1].JPL_EPHEMERIS);
     strcpy(p[p2].ephemeris,p[p1].ephemeris);
+    p[p2].dm_series_type = p[p1].dm_series_type;
 
     // Note, this causes memory leaks.  Tempo2 always allocates memory for
     // MAX_PSR pulsars to start.

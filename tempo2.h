@@ -50,8 +50,8 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2019.01.1"
-#define TEMPO2_h_MAJOR_VER 2019.01
+#define TEMPO2_h_VER "2020.04.1"
+#define TEMPO2_h_MAJOR_VER 2020.04
 #define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
@@ -116,6 +116,8 @@
 #define PCM         3.08568025e16        /*!< one parsec in meters                       */
 #define MASYR2RADS  1.53628185e-16       /*!< Converts from mas/yr to rad/s              */
 #define MAX_MSG     50                   /*!< Maximum number of different warnings       */
+
+#define START_FINISH_DELTA longdouble(1e-11)
 
 /*! Path for the file containing dates when leap seconds should be added */
 #define LEAPSECOND_FILE "/clock/leap.sec"
@@ -190,6 +192,7 @@ enum label {
     param_group_red_sin, param_group_red_cos,
     param_ne_sw,
     param_shapevent,
+    param_orbifunc,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -270,7 +273,9 @@ enum constraint {
     constraint_LAST /*!< marker for the last constraint */
 };
 
-
+enum series_type {
+    series_undefined, series_simple_pn, series_taylor_pn
+};
 
 extern char NEWFIT; /*!< global boolean used to enable new fit. @warning this will be removed in future. */
 
@@ -703,6 +708,8 @@ typedef struct pulsar {
 
     double ifuncT[MAX_IFUNC], ifuncV[MAX_IFUNC],ifuncE[MAX_IFUNC],ifunc_weights[MAX_IFUNC];
     int    ifuncN;
+    double orbifuncT[MAX_IFUNC], orbifuncV[MAX_IFUNC],orbifuncE[MAX_IFUNC];
+    int    orbifuncN;
 
     double clk_offsT[MAX_TEL_CLK_OFFS], clk_offsV[MAX_TEL_CLK_OFFS];
     double clk_offsE[MAX_TEL_CLK_OFFS];
@@ -873,6 +880,8 @@ typedef struct pulsar {
     char refphs;
 
     double posPulsarEquatorial[3];            /*!< 3-vector pointing at pulsar, in equatorial coordinates (even if using ecliptic)*/
+
+    enum series_type dm_series_type;
 } pulsar;
 
 

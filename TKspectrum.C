@@ -29,8 +29,8 @@
  * and W. Coles
  */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "tempo2.h"
 #include "T2toolkit.h"

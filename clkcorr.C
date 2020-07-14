@@ -167,7 +167,7 @@ void initialize_ClockCorrections(int dispWarnings)
 #ifdef GLOB_NOMATCH
         else if (globRet == GLOB_NOMATCH)
         {
-            logwarn("No clock correction files in '%s'\n",tempo2_clock_path);
+            logerr("No clock correction files in '%s'\n",tempo2_clock_path);
         }
 #endif
         else {
@@ -175,7 +175,7 @@ void initialize_ClockCorrections(int dispWarnings)
             {
                 ClockCorrectionFunction_load(&func, *pfname);
                 DynamicArray_push_back(&clockCorrectionFunctions, &func);
-                    logdbg("Loaded clock correction %s : %s -> %s badness %.3g",
+                    logmsg("Loaded extra clock correction %s : %s -> %s badness %.3g",
                             func.table.fileName, func.clockFrom, func.clockTo, func.badness);
             }
             clockCorrections_initialized = 1;

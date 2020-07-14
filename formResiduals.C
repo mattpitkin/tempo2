@@ -385,6 +385,7 @@ void averageResiduals(pulsar *psr, int npsr){
 
 void formResiduals(pulsar *psr,int npsr,int removeMean)
 {
+
     longdouble residual;  /* Residual in phase */
     longdouble nphase,phase2,phase3,phase4,phase2state,lastResidual=0,priorResidual=0;
     longdouble *phase5 = new longdouble[MAX_OBSN];
@@ -2042,9 +2043,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         {
             if (psr[p].obsn[i].deleted==0 && 
                     (psr[0].param[param_start].fitFlag[0]==0 
-                     || psr[0].obsn[i].sat > psr[0].param[param_start].val[0]) &&
+                     || psr[0].obsn[i].sat > psr[0].param[param_start].val[0]-START_FINISH_DELTA) &&
                     (psr[0].param[param_finish].fitFlag[0]==0 
-                     || psr[0].obsn[i].sat < psr[0].param[param_finish].val[0]))
+                     || psr[0].obsn[i].sat < psr[0].param[param_finish].val[0]+START_FINISH_DELTA))
             {
                 phas1 = fortran_mod((phase5[i]),longdouble(1.0));
 

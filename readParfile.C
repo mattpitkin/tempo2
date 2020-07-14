@@ -172,12 +172,12 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"MODE")==0 || strcasecmp(str,"WEIGHT")==0) /* Fitting mode */
         fscanf(fin,"%d",&(psr->fitMode));
     else if (strcasecmp(str,"ROBUST")==0){ /* Robust Fitting mode */
-        char str[80];
+        char str2[80];
         int i;
-        fgets(str,80,fin);
+        fgets(str2,80,fin);
         for(i=0; i < 80; i++){
-            if(str[i] > 47){
-                psr->robust=str[i];
+            if(str2[i] > 47){
+                psr->robust=str2[i];
                 break;
             }
         }
@@ -435,15 +435,37 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     }
     else if (strcasecmp(str,"PMRA")==0 || strcasecmp(str,"PMLAMBDA")==0 || strcasecmp(str,"PMELONG")==0)      /* Proper motion in RA */
     {
-        readValue(psr,str,fin,&(psr->param[param_pmra]),0);
-        if (strcasecmp(str,"PMLAMBDA")==0 || strcasecmp(str,"PMELONG")==0)
+        if (strcasecmp(str,"PMLAMBDA")==0 || strcasecmp(str,"PMELONG")==0) {
+            if ( (psr->param[param_raj].paramSet[0] || psr->param[param_decj].paramSet[0] ) 
+                    || (psr->eclCoord==0 && (psr->param[param_pmra].paramSet[0] || psr->param[param_pmdec].paramSet[0])) ) {
+                logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+                exit(1);
+            }
             psr->eclCoord = 1;
+        } else {
+            if (psr->eclCoord || elat->paramSet[0] || elong->paramSet[0]) {
+                logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+                exit(1);
+            }
+        }
+        readValue(psr,str,fin,&(psr->param[param_pmra]),0);
     }
     else if (strcasecmp(str,"PMDEC")==0 || strcasecmp(str,"PMBETA")==0 || strcasecmp(str,"PMELAT")==0)     /* Proper motion in DECJ */
     {
-        readValue(psr,str,fin,&(psr->param[param_pmdec]),0);
-        if (strcasecmp(str,"PMBETA")==0 || strcasecmp(str,"PMELAT")==0)
+        if (strcasecmp(str,"PMBETA")==0 || strcasecmp(str,"PMELAT")==0) {
+            if ( (psr->param[param_raj].paramSet[0] || psr->param[param_decj].paramSet[0] ) 
+                    || (psr->eclCoord==0 && (psr->param[param_pmra].paramSet[0] || psr->param[param_pmdec].paramSet[0])) ) {
+                logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+                exit(1);
+            }
             psr->eclCoord = 1;
+        } else {
+            if (psr->eclCoord || elat->paramSet[0] || elong->paramSet[0]) {
+                logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+                exit(1);
+            }
+        }
+        readValue(psr,str,fin,&(psr->param[param_pmdec]),0);
     }
     else if (strcasecmp(str,"PMRA2")==0 || strcasecmp(str,"PMLAMBDA2")==0 || strcasecmp(str,"PMELONG2")==0)      /* Proper motion in RA */
     {
@@ -465,6 +487,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         readValue(psr,str,fin,&(psr->param[param_waveepoch]),0);
     else if (strcasecmp(str,"SIFUNC")==0)  /* Set interpolation function */
         readValue(psr,str,fin,&(psr->param[param_ifunc]),0);
+    else if (strcasecmp(str,"SORBIFUNC")==0)  /* Set OPV interpolation function */
+        readValue(psr,str,fin,&(psr->param[param_orbifunc]),0);
     else if (strcasecmp(str,"STEL_CLK_OFFS")==0)  /* Set clock offsets */
         readValue(psr,str,fin,&(psr->param[param_clk_offs]),0);
     else if (strcasecmp(str,"STEL_DX")==0)  /* Set interpolation function for telescope position offset*/
@@ -1314,13 +1338,31 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf",&psr->gwb_width);
 
 
+    else if (strstr(str,"ORBIFUNC")!=NULL)
+    {
+        int number;
+        /* Obtain parameter number */
+        sscanf(str+8,"%d",&number);
+        if (number > MAX_IFUNC)
+        {
+                fprintf(stderr, "ORBIFUNC number (%d) exceeded MAX_IFUNC(=%d)! Aborting. %s\n",number,MAX_IFUNC,str);
+          exit(1);
+        }
 
+        fscanf(fin,"%lf %lf %lf",&psr->orbifuncT[number-1],&psr->orbifuncV[number-1],&psr->orbifuncE[number-1]);
+        if (psr->orbifuncN < number) psr->orbifuncN = number;
+    }
     else if ((strstr(str,"IFUNC")!=NULL || strstr(str,"ifunc")!=NULL)
             && strstr(str,"QIFUNC")==NULL)
     {
         int number;
         /* Obtain parameter number */
         sscanf(str+5,"%d",&number);
+        if (number > MAX_IFUNC)
+        {
+          fprintf(stderr, "IFUNC number exceeded MAX_IFUNC(=%d)! Aborting.\n",MAX_IFUNC);
+          exit(1);
+        }
 
         fscanf(fin,"%lf %lf %lf",&psr->ifuncT[number-1],&psr->ifuncV[number-1],&psr->ifuncE[number-1]);
         psr->ifunc_weights[number-1]=1.0;
@@ -1995,6 +2037,26 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             //      parameter dummy[10];
             //      readValue(psr,str,fin,&dummy,0);
         }
+        else if (strcasecmp(str,"DM_SERIES")==0) {
+            char buf[80];
+            char sname[80];
+            fgets(buf, 80,fin);
+            sscanf(buf,"%s", &sname);
+            switch (sname[0]) {
+                case 'P':
+                case 'p':
+                    psr->dm_series_type=series_simple_pn;
+                    break;
+                case 'T':
+                case 't':
+                    psr->dm_series_type=series_taylor_pn;
+                    break;
+                default:
+                    logwarn("Not sure how to interpret '%s' as a DM_SERIES... Assume Taylor.",sname);
+                    psr->dm_series_type=series_taylor_pn;
+                    break; 
+            }
+        }
         /* Other allowed parameters that are unused */
         else if (str[0]=='C') /* Comment line */
             fgets(str,1000,fin);
@@ -2086,6 +2148,11 @@ void checkAllSet(pulsar *psr,parameter elong,parameter elat,char *filename)
         {
             psr->param[param_raj].fitFlag[0]=1;
             psr->param[param_decj].fitFlag[0]=1;
+        }
+    } else {
+        if (elat.paramSet[0]==1 || elong.paramSet[0]==1) {
+            logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+            exit(1);
         }
     }
     /* correct CLK parameter if necessary */

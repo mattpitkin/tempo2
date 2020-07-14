@@ -119,6 +119,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->nWhite = 0;  /* No whitening by default */
     psr->nQuad  = 0;  /* No quadrupolar function */
     psr->ifuncN = 0;  /* No interpolation functions by default */
+    psr->orbifuncN = 0;  /* No interpolation functions by default */
     psr->clkOffsN = 0;/* No clock offsets by default */
     psr->nTelDX = 0;
     psr->nTelDY = 0;
@@ -247,6 +248,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(psr->param[param_fd].label[j],"FD%d",j+1);
     }
     /* Dispersion measure and its derivative */
+    psr->dm_series_type=series_undefined; // undefined until it is...
     for (k=0;k<psr->param[param_dm].aSize;k++)
     {
         if (k>0){
@@ -355,6 +357,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_tel_z0].shortlabel[0],"TEL_Z0");
     strcpy(psr->param[param_ifunc].label[0],"IFUNC");
     strcpy(psr->param[param_ifunc].shortlabel[0],"IFUNC");
+    strcpy(psr->param[param_orbifunc].label[0],"ORBIFUNC");
+    strcpy(psr->param[param_orbifunc].shortlabel[0],"ORBIFUNC");
     strcpy(psr->param[param_df1].label[0],"DF1");
     strcpy(psr->param[param_df1].shortlabel[0],"DF1");
     strcpy(psr->param[param_clk_offs].label[0],"CLK_OFFS");

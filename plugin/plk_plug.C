@@ -138,6 +138,7 @@ void help() /* Display help */
     printf("BACKSPACE  remove all phase jumps\n");
     printf("ctrl-=     add period to residuals above cursor\n");
     printf("/          re-read .par file\n");
+    printf("Ctrl-g     add an amount to each jump being fit.\n");
 
     printf("\nPlot Selection\n"); /* Determines WHAT (X and Y axes) will be displayed */
     printf("==============\n");
@@ -145,7 +146,7 @@ void help() /* Display help */
     printf("s          start of zoom section\n");
     printf("f          finish of zoom section\n"); 
     printf("Ctrl-u     Overplot Shapiro delay\n");
-    printf("u          unzoom\n");
+    printf("u          unzoom and clear START/FINISH flags\n");
     printf("v          view profiles for highlighted points\n");
     printf("V          define the user parameter\n");
     printf("Ctrl-v     for pre-fit plotting, decompose the timing model fits\n");
@@ -218,6 +219,8 @@ void help() /* Display help */
     printf("U          unhighlight selected points\n");
     printf("[          toggle plotting x-axis on log scale\n");	     
     printf("]          toggle plotting y-axis on log scale\n");	     
+    printf("{          scroll left\n");	     
+    printf("}          scroll right\n");	     
 
     printf("\nOutput Options\n");
     printf("==============\n");
@@ -775,9 +778,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
 
 
-    if (psr[0].param[param_start].fitFlag[0]==1) 
+    if (psr[0].param[param_start].paramSet[0]==1) 
         origStart = psr[0].param[param_start].val[0];
-    if (psr[0].param[param_finish].fitFlag[0]==1) 
+    if (psr[0].param[param_finish].paramSet[0]==1) 
         origFinish = psr[0].param[param_finish].val[0];
 
     /* Obtain a graphical PGPLOT window */
@@ -839,17 +842,107 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             }	
         }
     }
+    // Get initial zoom position from start/finish flags.
+    if (centre==-1)     centreEpoch = psr[0].param[param_pepoch].val[0];
+    else if (centre==1)	centreEpoch = (min1+max1)/2.0;
+    if (psr[0].param[param_start].paramSet[0]==1 && psr[0].param[param_start].fitFlag[0]==1) {
+        setZoomX1=1;
+        zoomX1=psr[0].param[param_start].val[0]-centreEpoch;
+    }
+    if (psr[0].param[param_finish].paramSet[0]==1 && psr[0].param[param_finish].fitFlag[0]==1) {
+        setZoomX2=1;
+        zoomX2=psr[0].param[param_finish].val[0]-centreEpoch;
+    }
+
+    int old_xplot = xplot;
+    int old_yplot = yplot;
+
+
     do {
         float* x2 = new float[MAX_OBSN];
         float* y2 = new float[MAX_OBSN];
         float* yerr1_2 = new float[MAX_OBSN];
         float* yerr2_2 = new float[MAX_OBSN];
 
+
         if(debugFlag) 
             printf("Fitflag = %d\n",fitFlag);
         if (centre==-1)     centreEpoch = psr[0].param[param_pepoch].val[0];
         else if (centre==1)	centreEpoch = (min1+max1)/2.0;
 
+
+        if (xplot != old_xplot){
+            // We changed x-axis... check the zooms!
+            if (setZoomX1 || setZoomX2) {
+                bool reset = false;
+                switch(old_xplot){
+                    case 3:
+                        break;
+                    case 12:
+                        // Changing from rounded mjd
+                        zoomX1 -= centreEpoch;
+                        zoomX2 -= centreEpoch;
+                        break;
+                    case 10:
+                        zoomX1 -= 1970.0;
+                        zoomX1 *= 365.25;
+                        zoomX1 += 40587.0-centreEpoch;
+                        zoomX2 -= 1970.0;
+                        zoomX2 *= 365.25;
+                        zoomX2 += 40587.0-centreEpoch;
+                        break;
+
+                    default:
+                        setZoomX1=0;
+                        setZoomX2=0;
+                        reset=true;
+                        break;
+                }
+
+
+                switch (xplot) {
+                    case 3:
+                        break;
+                    case 12:
+                        // change to rounded mjd
+                        zoomX1 += centreEpoch;
+                        zoomX2 += centreEpoch;
+                        break;
+                    case 10:
+                        // change to year (note this is approx...)
+                        zoomX1 -= 40587.0 - centreEpoch;
+                        zoomX1 /= 365.25;
+                        zoomX1 += 1970.0;
+                        zoomX2 -= 40587.0 - centreEpoch;
+                        zoomX2 /= 365.25;
+                        zoomX2 += 1970.0;
+                        break;
+                    default:
+                        // Otherwise best to re-set the zoom...
+                        setZoomX1=0;
+                        setZoomX2=0;
+                        reset=true;
+                        break;
+                }
+                if(reset)logmsg("Note, changing plots has re-set the x-zoom");
+            }
+
+
+
+            old_xplot=xplot;
+        }
+
+        if (yplot != old_yplot){
+            // We changed y-axis... check the zooms!
+            if((yplot==2 && old_yplot==1) || (yplot==1 && old_yplot==2)){
+                // if we just changed from prefit to postfit, makes sense to keep zoom.
+            } else {
+                if((setZoomY1 || setZoomY2))logmsg("Note, changing plots has re-set the y-zoom");
+                setZoomY1=0;
+                setZoomY2=0;
+            }
+            old_yplot=yplot;
+        }
         setLabel(xstr,xplot,plotPhase,unitFlag,centreEpoch,userValStr,flagStrX);
         setLabel(ystr,yplot,plotPhase,unitFlag,centreEpoch,userValStr,flagStrY);
 
@@ -860,12 +953,19 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
             if (psr[0].obsn[i].deleted!=0)
                 okay=0;
+
+            // MJK April 2020
+            // Removing this might break some use cases with command line options.
+            // If so, we an add it back in, but otherwise it will cause unexpected behaviour when
+            // scrolling around the plot
+            /*
             if (psr[0].param[param_start].paramSet[0]==1 && psr[0].param[param_start].fitFlag[0]==1 &&
                     (psr[0].param[param_start].val[0] > psr[0].obsn[i].sat))
                 okay=0;
             if (psr[0].param[param_finish].paramSet[0]==1 && psr[0].param[param_finish].fitFlag[0]==1 &&
                     psr[0].param[param_finish].val[0] < psr[0].obsn[i].sat)
                 okay=0;
+                */
 
             if (okay==1)
             { 
@@ -954,14 +1054,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
         /* Sort into ascending x order */
         sort(x,y,yerr1,yerr2,freq,id,count);  
-        if (origStart==-1)
-            origStart = x[0] + centreEpoch - 1;
-        if (origFinish==-1)
-            origFinish = x[count-1] + 1 + centreEpoch;
 
         /* Get scaling for graph */
         minx = x[0];
         maxx = x[count-1];
+
 
         if (setZoomX1==0) plotx1 = minx-fabs(maxx-minx)*0.1;
         else plotx1 = zoomX1;
@@ -1376,12 +1473,12 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             /* Check key press */
             if (key=='q') exitFlag=1;
             else if (key=='1') {
-                if ((xplot!=3 && yplot!=1)){setZoomX1 = 0; setZoomX2 = 0;} 
+                //if ((xplot!=3 && yplot!=1)){setZoomX1 = 0; setZoomX2 = 0;} 
                 xplot=3; yplot=1;fitFlag=1; setZoomY1 = 0; setZoomY2 =0;
                 if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 1");
             }
             else if (key=='2') {
-                if ((xplot!=3 && yplot!=2)){setZoomX1 = 0; setZoomX2 = 0;} 
+                //if ((xplot!=3 && yplot!=2)){setZoomX1 = 0; setZoomX2 = 0;} 
                 xplot=3; yplot=2;fitFlag=2;setZoomY1 = 0; setZoomY2 =0;
                 if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 2");
             }
@@ -1465,16 +1562,30 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 if(psr[0].TNsubtractRed==0){
                     printf("Subtract red noise from fit\n");
                     psr[0].TNsubtractRed=1;
-                    formResiduals(psr,npsr,1); // iteration);
+                    formResiduals(psr,npsr,1);
                     textOutput(psr,npsr,0,0,0,0,"");
                 }
                 else if(psr[0].TNsubtractRed==1){
                     printf("Do Not Subtract Red Noise on next Fit \n");
                     psr[0].TNsubtractRed=0;
-                    formResiduals(psr,npsr,1); // iteration);
+                    formResiduals(psr,npsr,1);
                     textOutput(psr,npsr,0,0,0,0,"");
                 }
 
+            } else if (key == 7) {
+                double jfac;
+                printf("Jump offset (s):"); scanf("%lf",&jfac);
+                getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
+                int njmp=0;
+                for (int ijmp=1;ijmp<=psr[0].nJumps;ijmp++) {
+                    if (psr[0].fitJump[ijmp]==1) {
+                        logmsg("Adding %lg to jump %d",njmp*jfac,ijmp);
+                        psr[0].jumpVal[ijmp]+=njmp*jfac;
+                        ++njmp;
+                    }
+                }
+                formResiduals(psr,npsr,1);
+                textOutput(psr,npsr,0,0,0,0,"");
             }
             else if(key == 'R'){
                 if(psr[0].AverageResiduals==0){
@@ -1978,12 +2089,14 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     double errMult;
                     printf("Enter error multiplication factor "); scanf("%lf",&errMult);
                     getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
-                    for (i=0;i<psr[0].nobs;i++){
-                        psr[0].obsn[i].efac *= errMult;
-                        psr[0].obsn[i].toaErr*=errMult;
+                    if (errMult > 0) {
+                        for (i=0;i<psr[0].nobs;i++){
+                            psr[0].obsn[i].efac *= errMult;
+                            psr[0].obsn[i].toaErr*=errMult;
+                        }
+                        for (i=0;i<count;i++)
+                            errBar[i]*=errMult;
                     }
-                    for (i=0;i<count;i++)
-                        errBar[i]*=errMult;
                 }
                 else if (key=='w')  /* Toggle fitting with weights */
                 {
@@ -2005,6 +2118,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     logx*=-1;
                 else if (key==']')
                     logy*=-1;
+                else if (key=='{') {/* Scroll in X-axis*/
+                    double zwidth = zoomX2-zoomX1;
+                    zoomX2-=zwidth/2.0;
+                    zoomX1-=zwidth/2.0;
+                } else if (key=='}'){
+                    double zwidth = zoomX2-zoomX1;
+                    zoomX2+=zwidth/2.0;
+                    zoomX1+=zwidth/2.0;
+                }
                 else if (key=='l') { /* List all */
                     for (i=0;i<count;i++)
                     {
@@ -2523,10 +2645,13 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 {
                     zoom=0;
                     setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 = 0;
-                    psr[0].param[param_start].val[0] = origStart;
-                    psr[0].param[param_finish].val[0] = origFinish;
-                    psr[0].param[param_start].fitFlag[0] = 0;
-                    psr[0].param[param_finish].fitFlag[0] = 0;
+//                    psr[0].param[param_start].val[0] = origStart;
+//                    psr[0].param[param_finish].val[0] = origFinish;
+                    if (psr[0].param[param_start].fitFlag[0] || psr[0].param[param_finish].fitFlag[0]){
+                        psr[0].param[param_start].fitFlag[0] = 0;
+                        psr[0].param[param_finish].fitFlag[0] = 0;
+                        logmsg("Un-set START/FINISH flags");
+                    }
                     if (recordStrokes==1)
                     {
                         char tStr[1024];
@@ -3996,53 +4121,36 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,
 
     if (fitFlag==1 || fitFlag==2)
     {
-        if (setZoomX1 == 0) {
-            if (origStart==-1)
-            {
+        if (plotX==3 || plotX==12) {
+            if (setZoomX1 == 1) {
+                psr[0].param[param_start].paramSet[0]=1;
+                psr[0].param[param_start].fitFlag[0]=1;
+                if (plotX==12)
+                    psr[0].param[param_start].val[0] = zoomX1;
+                else
+                    psr[0].param[param_start].val[0] = zoomX1+centreEpoch;
+                psr[0].param[param_start].prefit[0] = psr[0].param[param_start].val[0];
+            } else {
                 psr[0].param[param_start].fitFlag[0]=0;
             }
-            else
-            {
-                psr[0].param[param_start].paramSet[0]=1;
-                psr[0].param[param_start].val[0] = origStart;
-                psr[0].param[param_start].fitFlag[0]=1;
-            }
+        } else {
+            logwarn("Zoom/unzoom ignored on this plot - keeping START as previous fit.");
         }
 
-        if (setZoomX2 == 0) {
-            if (origFinish==-1)
-            {
+        if (plotX==3 || plotX==12) {
+            if (setZoomX2 == 1) {
+                psr[0].param[param_finish].paramSet[0]=1; 
+                psr[0].param[param_finish].fitFlag[0]=1;
+                if (plotX==12)
+                    psr[0].param[param_finish].val[0] = zoomX2;
+                else
+                    psr[0].param[param_finish].val[0] = zoomX2+centreEpoch;
+                psr[0].param[param_finish].prefit[0] = psr[0].param[param_finish].val[0];
+            } else {
                 psr[0].param[param_finish].fitFlag[0]=0;
             }
-            else
-            {
-                psr[0].param[param_finish].paramSet[0]=1;
-                psr[0].param[param_finish].val[0] = origFinish;
-                psr[0].param[param_finish].fitFlag[0]=1;
-            }
-        }
-        if (setZoomX1 == 1) {
-            psr[0].param[param_start].paramSet[0]=1;
-            psr[0].param[param_start].fitFlag[0]=1;
-            if (plotX==12)
-                psr[0].param[param_start].val[0] = zoomX1;
-            else
-                psr[0].param[param_start].val[0] = zoomX1+centreEpoch;
-            psr[0].param[param_start].prefit[0] = psr[0].param[param_start].val[0];
-        }
-        if (setZoomX2 == 1) {
-            psr[0].param[param_finish].paramSet[0]=1; 
-            psr[0].param[param_finish].fitFlag[0]=1;
-            if (plotX==12)
-                psr[0].param[param_finish].val[0] = zoomX2;
-            else
-                psr[0].param[param_finish].val[0] = zoomX2+centreEpoch;
-            psr[0].param[param_finish].prefit[0] = psr[0].param[param_finish].val[0];
-        }
-        if (zoom==0)
-        {
-            psr[0].param[param_start].fitFlag[0]=0;
-            psr[0].param[param_finish].fitFlag[0]=0;
+        } else {
+            logwarn("Zoom/unzoom ignored on this plot - keeping FINISH as previous fit.");
         }
 
     }
@@ -4363,12 +4471,15 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
         longdouble yrs = (psr[0].obsn[iobs].sat - psr[0].param[param_dmepoch].val[0])/365.25;
         longdouble arg = 1.0;
         double dmDot=0;
-       
+        double dmDotErr=0;
+        double series_fac=1.0;
         for (int d=1;d<9;d++){
             arg *= yrs;
+            if (psr[0].dm_series_type == series_taylor_pn) {
+                series_fac *= d;
+            }
             if (psr[0].param[param_dm].paramSet[d]==1){
-	      // quadrature sum
-	      dmDot += (double)(psr[0].param[param_dm].val[d]*arg);
+                dmDot+=(double)(psr[0].param[param_dm].val[d]*arg/series_fac);
             }
         }
 

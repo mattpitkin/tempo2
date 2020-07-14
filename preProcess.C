@@ -150,6 +150,17 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
             readWhiteNoiseModelFile(psr,p);
         }
 
+        // check if dm_series mode is undefined
+        if (psr[p].dm_series_type == series_undefined ){
+            psr[p].dm_series_type = series_taylor_pn;
+            for (int k=2; k < psr[p].param[param_dm].aSize ; ++k){
+                if (psr[p].param[param_dm].paramSet[k]) {
+                    logwarn("PSR %s uses DM2+ but does not define DM_SERIES. Assume Taylor. This has behaviour has changed since June 2020!\nSee https://bitbucket.org/psrsoft/tempo2/issues/27/tempo2-dm-polynomial-is-not-a-taylor\n", psr[p].name);
+                    break;
+                }
+            }
+        }
+
         if (nofit==1)
         {
             for (i=0;i<MAX_PARAMS;i++)
