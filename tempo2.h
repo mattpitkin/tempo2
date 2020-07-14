@@ -50,8 +50,8 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2020.04.1"
-#define TEMPO2_h_MAJOR_VER 2020.04
+#define TEMPO2_h_VER "2020.07.1"
+#define TEMPO2_h_MAJOR_VER 2020.07
 #define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
@@ -1002,7 +1002,7 @@ extern "C" {
     void updateEpoch(pulsar* psr, int p, longdouble nMJD);
     longdouble getParameterValue(pulsar *psr,int param,int arr);
     void simplePlot(pulsar *psr, double unitFlag);
-    double solarWindModel(pulsar psr,int iobs);
+    double solarWindModel(pulsar *psr,int iobs);
 
     /* BINARY MODELS */
     double MSSmodel(pulsar *psr,int p,int obs,int param);

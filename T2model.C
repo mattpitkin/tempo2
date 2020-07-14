@@ -947,7 +947,7 @@ void computeU(double phase,double ecc,double *u)
 /* Based on the DDT model and the equations in Damour & Taylor (1992) */
 /* DDT model includes a loop around d2bar --- MUST INCLUDE */
 
-/* void useBeta(pulsar psr,int iteration)
+/* void useBeta(pulsar *psr,int iteration)
    {
    int i;
 //  double TSUN=4.925490947e-6; // should be defined in tempo2.h

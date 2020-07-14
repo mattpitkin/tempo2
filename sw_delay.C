@@ -59,7 +59,7 @@ void convertEcliptic(double raj,double decj,double *elong,double *elat);
 using namespace std;
 
 
-double solarWindModel(pulsar psr,int iobs)
+double solarWindModel(pulsar *psr,int iobs)
 {
     const char *CVS_verNum = "$Id$";
     int i,j;
@@ -111,16 +111,15 @@ double solarWindModel(pulsar psr,int iobs)
 
     if (displayCVSversion == 1) CVSdisplayVersion("sw_delay.C","solarWindModel()",CVS_verNum);
 
-    if(psr.eclCoord==1)
+    if(psr->eclCoord==1)
     {
-        eclat=psr.param[param_decj].val[0];
-        eclon=psr.param[param_raj].val[0];
+        eclat=psr->param[param_decj].val[0];
+        eclon=psr->param[param_raj].val[0];
     }
-    else if(psr.eclCoord==0)
-        convertEcliptic(psr.param[param_raj].val[0],psr.param[param_decj].val[0],&eclon,&eclat);
+    else if(psr->eclCoord==0)
+        convertEcliptic(psr->param[param_raj].val[0],psr->param[param_decj].val[0],&eclon,&eclat);
 
-    //  ld_printf("%d, %30.20Lf\n",iobs, psr.obsn[iobs].sat);
-    mjd=psr.obsn[iobs].sat;
+    mjd=psr->obsn[iobs].sat;
 
     //  convertMJD(mjd,&iyr,&iday,&secs);
     mjd2date((int)mjd,&iyr,&yy, &mm, &dd, &iday); /*MJD to date, to iyr=year-1900, to iday (number of the day in a year) */
@@ -129,8 +128,6 @@ double solarWindModel(pulsar psr,int iobs)
 
     mcl2(eclon,eclat,iyr,iday,secs,vel,
             helat,crlon,rots,&helate,&crlne,&rote,&elong,&beta,&dlon,&delng,&nLineOfSight);
-    //  for (i=0;i<36;i++)
-    //    printf("%d %g %g %g %g %g %g %g %g %g %g\n",i,crlon[i],rots[i],helat[i],helate,crlne,rote,elong,beta,dlon,delng);
 
     // Now into Xiaopeng's code ...
     // calculate elsun

@@ -245,7 +245,7 @@ int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,d
 
 
 #ifdef __Tempo2_h
-void readin(pulsar psr);
+void readin(const pulsar &psr);
 void fitMeanSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
 void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival,int ipsr);
 
@@ -266,7 +266,7 @@ int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *spec
 int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char useCM,pulsar* psr);
 
 
-void TKcalcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
+void TKcalcSigmaz(const pulsar &psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
         double *ret_e2,int *ret_nval,double mintau);
 
 extern double GLOBAL_OMEGA;
