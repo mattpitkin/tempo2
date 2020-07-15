@@ -687,7 +687,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
                 if (c1 >= 0 && c2 >= 0) {
                     /* use covariance matrix to determine error */
-		    // RES: TODO: This will currently give the wrong error when using FB0
+		    // RES: TODO: Check if the error is correct when FB0 is used
                     err = fn * sqrt(9.0*pow(sqrt(psr[p].covar[c1][c1])*SPEED_LIGHT/a1,2) 
                             +  4.0*pow(sqrt(psr[p].covar[c2][c2])/pb,2) 
                             - 12.0*psr[p].covar[c1][c2]*SPEED_LIGHT/(a1*pb));
