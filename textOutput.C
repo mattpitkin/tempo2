@@ -40,8 +40,8 @@
 //#define TSUN (4.925490947e-6L) (Should be tempo2.h now).
 
 double m2(longdouble mf, longdouble sini, longdouble m1);
-void printGlitch(pulsar psr);
-double dglep(pulsar psr,int gn,double fph);
+void printGlitch(const pulsar &psr);
+double dglep(const pulsar &psr,int gn,double fph);
 
 /* ******************************************** */
 /* textOutput                                   */
@@ -190,6 +190,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         printf("%-15.15s ","PMELONG");
                     else if (i == param_pmdec && psr[p].eclCoord==1)
                         printf("%-15.15s ","PMELAT");
+                    else if (i == param_pmra2 && psr[p].eclCoord==1)
+                        printf("%-15.15s ","PMELONG2");
+                    else if (i == param_pmdec2 && psr[p].eclCoord==1)
+                        printf("%-15.15s ","PMELAT2");
                     else
                         printf("%-15.15s ",psr[p].param[i].label[k]);
 
@@ -215,6 +219,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         printf("%-25.15g ",(double)psr[p].param[i].val[k]);
                     /* *180.0/M_PI*60.0*60.0* 1000.0*SECDAY*365.25/24.0/3600.0*cos(psr[p].param[param_decj].val)); */
                     else if (i==param_pmdec) /* Convert from radian/sec to mas/yr */
+                        printf("%-25.15g ",(double)psr[p].param[i].val[k]);
+                    else if (i==param_pmra2) /* Convert from radian/sec to mas/yr */
+                        printf("%-25.15g ",(double)psr[p].param[i].val[k]);
+                    /* *180.0/M_PI*60.0*60.0* 1000.0*SECDAY*365.25/24.0/3600.0*cos(psr[p].param[param_decj].val)); */
+                    else if (i==param_pmdec2) /* Convert from radian/sec to mas/yr */
                         printf("%-25.15g ",(double)psr[p].param[i].val[k]);
                     /* *180.0/M_PI*60.0*60.0*1000.0*SECDAY*365.25/24.0/3600.0);*/
                     else if ((i == param_raj || i == param_decj) && psr[p].eclCoord==1)
@@ -268,6 +277,20 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }
             }
         }      
+
+        if (psr[p].param[param_dm].aSize > 2) {
+            // explain what DM series is used.
+            switch (psr[p].dm_series_type) {
+                        case series_simple_pn:
+                            printf("%-15.15s %-25.25s\n","DM_SERIES","POLY");
+                            break;
+                        default:
+                        case series_taylor_pn:
+                            printf("%-15.15s %-25.25s\n","DM_SERIES","TAYLOR");
+                            break;
+                    }
+
+        }
         printf("---------------------------------------------------------------------------------------------------\n");
         if (psr[p].rescaleErrChisq == 1 && psr[p].fitMode==1)
             logmsg("Notice: Parameter uncertainties multiplied by sqrt(red. chisq)\n");
@@ -295,6 +318,18 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 else printf("N\n");
             }
         }
+
+
+        /* FDJUMPS */
+        for (i=1;i<=psr[p].nfdJumps;i++){
+            {
+                printf("fdJump %d (%s): %.14g %.14g ",i,psr[p].fdjumpStr[i],psr[p].fdjumpVal[i],psr[p].fdjumpValErr[i]);
+                
+                if (psr[p].fitfdJump[i]==1) printf("Y\n");
+                else printf("N\n");
+            }
+        }
+
 
         /* Whitening */
         if (psr[p].param[param_wave_om].paramSet[0]==1)
@@ -967,6 +1002,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
         // Glitch parameters
         if (psr[p].param[param_glep].paramSet[0]==1)
             printGlitch(psr[p]);
+
+
+
+
         if (psr[p].param[param_dmassplanet].paramSet[4]==1)
         {
             longdouble diff,err;
@@ -1341,6 +1380,14 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         fprintf(fout2,"JUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
                     else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
                         fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
+                }	
+                for (i=1;i<=psr[p].nfdJumps;i++)
+                {
+                    sscanf(psr[p].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
+                    if (strcasecmp(str1,"FREQ")==0 || strcasecmp(str1,"MJD")==0)
+                        fprintf(fout2,"FDJUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
+                    else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
+                        fprintf(fout2,"FDJUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
                 }	  
                 /* Add T2EFAC / T2EQUAD */
                 for (i=0;i<psr[p].nT2efac;i++)
@@ -1377,15 +1424,40 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNECORR %s %s %g\n", psr[p].TNECORRFlagID[i], psr[p].TNECORRFlagVal[i], psr[p].TNECORRVal[i]);
 
                 }
+		for (i=0;i<psr[p].nTNSECORR; i++){
+
+                    fprintf(fout2,"TNSECORR %s %s %g\n", psr[p].TNSECORRFlagID[i], psr[p].TNSECORRFlagVal[i], psr[p].TNSECORRVal[i]);
+
+                }
+
+
+			
+
                 if(psr[p].TNDMAmp != 0 && psr[p].TNDMGam != 0){
                     fprintf(fout2,"TNDMAmp %g\n", psr[p].TNDMAmp);	
                     fprintf(fout2,"TNDMGam %g\n", psr[p].TNDMGam);
                     fprintf(fout2,"TNDMC %i\n", psr[p].TNDMC);
                 }
+		if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
+                    (fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);	
+                    fprintf(fout2,"TNChromGam %g\n", psr[p].TNChromGam);
+		    fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
+                    fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
+                }
+
+		
                 if(psr[p].TNRedAmp != 0 && psr[p].TNRedGam != 0){
                     fprintf(fout2,"TNRedAmp %g\n", psr[p].TNRedAmp);
                     fprintf(fout2,"TNRedGam %g\n", psr[p].TNRedGam);
                     fprintf(fout2,"TNRedC %i\n", psr[p].TNRedC);
+                }
+
+
+                if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
+                    fprintf(fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);
+                    fprintf(fout2,"TNChromGam %g\n", psr[p].TNChromGam);
+                   fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
+                    fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
                 }
 
 		if (psr[p].TNRedFLow !=0 )
@@ -1420,6 +1492,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 
                 }
 
+
+                if (psr[p].TNsubtractChrom == 1){
+                    fprintf(fout2,"TNsubtractChrom 1\n");
+
+                }
+
+
                 /* Add whitening flags */
                 if (psr[p].param[param_wave_om].paramSet[0]==1)
                 {
@@ -1453,6 +1532,23 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 {
                     if (psr[p].phaseJumpDir[i]!=0)
                         fprintf(fout2,"PHASE %+d %.14g\n",psr[p].phaseJumpDir[i],(double)(psr[p].obsn[psr[p].phaseJumpID[i]].sat+1.0/SECDAY));
+                }
+
+                // see if we need to write out DM_SERIES flag
+                for (int k=2; k < psr[p].param[param_dm].aSize ; ++k){
+                    // we write the flag IF we had DM2 or greater in the par file.
+                    if (psr[p].param[param_dm].paramSet[k]) {
+                        switch (psr[p].dm_series_type) {
+                            case series_simple_pn:
+                                fprintf(fout2,"DM_SERIES POLY\n");
+                                break;
+                            default:
+                            case series_taylor_pn:
+                                fprintf(fout2,"DM_SERIES TAYLOR\n");
+                                break;
+                        }
+                        break; // we only need to write it once. Break out once we've done it
+                    }
                 }
                 // Add DM value parameters
                 if (psr[p].param[param_dmmodel].paramSet[0]==1)
@@ -1656,7 +1752,7 @@ double m2(longdouble mf, longdouble sini, longdouble m1)
     return -1.0;
 }
 
-void printGlitch(pulsar psr)
+void printGlitch(const pulsar &psr)
 {
     double glep1z,glep2z,glepe;
     int iph;
@@ -1700,7 +1796,7 @@ void printGlitch(pulsar psr)
     }
 }
 
-double dglep(pulsar psr,int gn,double fph)
+double dglep(const pulsar &psr,int gn,double fph)
 {
     double tds,plim,dph,t1;
     int niter;

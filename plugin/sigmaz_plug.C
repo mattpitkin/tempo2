@@ -28,7 +28,7 @@ double utjd1,utjd2,tmin,tmax,xmin,xmax,utjdlast,tausec,taumax,tauday;
 double prtl[5],utmean,secyear,taulog,addvar,tauyear,tauensure,tdiffmin;
 double utfirst,utlast;
 
-void readin(pulsar psr);
+void readin(const pulsar &psr);
 void getprtj(int n);
 void indexx8(int n,double *arrin,int *indx);
 void getweights(int n, double *wt);
@@ -36,7 +36,7 @@ void fit4(int *nfit,double *p4,double *cov4,int ndostats,double *chidf,double *a
 void mat20(double sam[21][21],double a[21][21],int n,double *determ,int *nbad);
 void simWhiteFunc(pulsar *psr,long *idum,char parFile[MAX_PSR_VAL][MAX_FILELEN],char timFile[MAX_PSR_VAL][MAX_FILELEN],int weights,double mintau);
 
-void calcSigmaz(pulsar psr,int weights,double *tau,double *szbias, double *e1,
+void calcSigmaz(const pulsar &psr,int weights,double *tau,double *szbias, double *e1,
 		double *e2,int *nval, double mintau);
 void doplot(pulsar *psr,int npsr,char *grDev,float mint,float maxt,float minsz,float maxsz,
 	    int style,int average,double tau[MAX_PSR_VAL][100],double szbias[MAX_PSR_VAL][100],
@@ -47,7 +47,7 @@ void doplot(pulsar *psr,int npsr,char *grDev,float mint,float maxt,float minsz,f
 //void calcSigmaz(pulsar *psr,int npsr,int time,int psrfile,double mintau,
 //		int nSel,int *selPsr,int weights,int style,int average,
 //		float *avX,float *avY,int *nav);
-void sortTimes(pulsar psr,int *nobs,double *times,double *resid,double *error);
+void sortTimes(const pulsar &psr,int *nobs,double *times,double *resid,double *error);
 void fitv(double x,double afunc[],int ma,pulsar *psr,int ipos);
 void plotOmega_g(double omega,float *px,float *py);
 void plotA_g(double a,double alpha,float *px,float *py);
@@ -1174,7 +1174,7 @@ void doplot(pulsar *psr,int npsr,char *grDev,float mint,float maxt,float minsz,f
 //void calcSigmaz(pulsar *psr,int npsr,int time,int psrfile,double mintau,
 //		int nSel,int *selPsr,int weights,int style,int average,
 //		float *avX,float *avY,int *nav)
-void calcSigmaz(pulsar psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
+void calcSigmaz(const pulsar &psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,
 		double *ret_e2,int *ret_nval,double mintau)
 {
   int n,nbad,nfit,nread,idiag,niter,ntable,ios,nsigs,nuncor,ntot;
@@ -1592,7 +1592,7 @@ void getweights(int n, double *wt)
   if (nusewt == -3) *wt = 1.0/addvar/addvar;
 }
 
-void readin(pulsar psr)
+void readin(const pulsar &psr)
 {
   int nalv,nread,n;
   static int idiag = 0;
@@ -1784,7 +1784,7 @@ void indexx8(int n,double *arrin,int *indx)
 
 
 
-void sortTimes(pulsar psr,int *nobs,double *times,double *resid,double *error)
+void sortTimes(const pulsar &psr,int *nobs,double *times,double *resid,double *error)
 {
   int i,changed,tot=0;
   double t1,t2,t3;

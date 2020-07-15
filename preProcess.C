@@ -150,6 +150,17 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
             readWhiteNoiseModelFile(psr,p);
         }
 
+        // check if dm_series mode is undefined
+        if (psr[p].dm_series_type == series_undefined ){
+            psr[p].dm_series_type = series_taylor_pn;
+            for (int k=2; k < psr[p].param[param_dm].aSize ; ++k){
+                if (psr[p].param[param_dm].paramSet[k]) {
+                    logwarn("PSR %s uses DM2+ but does not define DM_SERIES. Assume Taylor. This has behaviour has changed since June 2020!\nSee https://bitbucket.org/psrsoft/tempo2/issues/27/tempo2-dm-polynomial-is-not-a-taylor\n", psr[p].name);
+                    break;
+                }
+            }
+        }
+
         if (nofit==1)
         {
             for (i=0;i<MAX_PARAMS;i++)
@@ -320,7 +331,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
 		
 
         // Check TNEF and TNEQ
-        if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0 || psr[p].nTNSQ > 0 || psr[p].TNGlobalEF > 0 || psr[p].TNGlobalEQ != 0)
+        if (psr[p].nTNEF > 0 || psr[p].nTNEQ > 0 || psr[p].nTNSQ > 0  || psr[p].TNGlobalEF > 0 || psr[p].TNGlobalEQ != 0)
         {
             double err;
             printf("Updating TOA errors using TN parameters.\n");
@@ -381,11 +392,12 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                                         }
                                     }		
                                 }
-                                double TNSquad = pow(10.0,psr[p].TNSQVal[k]+6)*pow(10.0,psr[p].TNSQVal[k]+6)*tobsval;
+                                double TNSquad = pow(10.0,psr[p].TNSQVal[k]+6)*pow(10.0,psr[p].TNSQVal[k]+6)/tobsval;
                                 err = sqrt(err*err + TNSquad);
                             }
                         }
                     }
+
 
 
                 }
@@ -393,6 +405,31 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
             }
         }
 
+	
+	// populate TOBS if using TNSECORR
+
+
+	if (psr[p].nTNSECORR > 0)
+	  {
+	    for(i=0;i<psr[p].nobs;i++)
+	      {
+		double tobsval;
+		
+		for (int tf=0;tf<psr[p].obsn[i].nFlags;tf++){
+		  if(strcasecmp(psr[p].obsn[i].flagID[tf],"-tobs")==0){
+		    if(strcasecmp(psr[p].obsn[i].flagVal[tf],"UNKNOWN")==0){
+		      tobsval=1;
+		    }
+		    else{
+		      double tobs=atof(psr[p].obsn[i].flagVal[tf]);
+		      tobsval=tobs;
+		    }
+		  }	
+		}
+		psr[p].obsn[i].tobs = tobsval;
+	      }
+	  }
+	
 
         // Modify TOA flags if required
         if (modify==1)

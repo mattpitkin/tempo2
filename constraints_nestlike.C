@@ -63,6 +63,38 @@ double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int ipa
 }
 
 
+double constraints_nestlike_red_chrom(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
+    assert(iconstraint == constraint_red_chrom_sin || iconstraint == constraint_red_chrom_cos);
+
+    /* Constrain if
+     *   This frequency matches the constraint frequency
+     * and
+     *   Sin/cos matches
+     */
+    if (constraintk==k &&
+            (
+             ((iconstraint == constraint_red_chrom_sin) && (iparam == param_red_chrom_sin)) ||
+             ((iconstraint == constraint_red_chrom_cos) && (iparam == param_red_chrom_cos)) )
+            ) {
+        double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+        double ChromAmp = pow(10.,psr[ipsr].TNChromAmp);
+        double freq = ((double)(k+1.0))/(maxtspan);
+        double ChromIndex = psr[ipsr].TNChromGam;
+	
+
+        /***
+         * Still no idea what this equation represents! Copied from LL's code MJK2016
+         */
+
+
+        double rho = (ChromAmp*ChromAmp)/12./M_PI/M_PI*pow(f1yr,(-3)) * pow(freq*365.25,(-ChromIndex))/(maxtspan*24*60*60);
+
+        return 1.0/sqrt(rho);
+    } else return 0;
+
+}
+
+
 double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert (iconstraint == constraint_jitter);
 
@@ -84,10 +116,50 @@ double constraints_nestlike_jitter(pulsar *psr,int ipsr, int iconstraint,int ipa
                 if (ecorrval > 0)break;
             }
         }
-        return 1e6/ecorrval;
-    } else {
-        return 0;
-    }
+
+	
+
+	for (int iecorr=0; iecorr < psr[ipsr].nTNSECORR; iecorr++)
+	  {
+	    
+	    for (int iflag=0;iflag < psr[ipsr].obsn[iobs].nFlags; iflag++){
+	      if (
+		  (strcmp(psr[ipsr].obsn[iobs].flagID[iflag],
+			  psr[ipsr].TNSECORRFlagID[iecorr])==0)
+		  && (strcmp(psr[ipsr].obsn[iobs].flagVal[iflag],
+			     psr[ipsr].TNSECORRFlagVal[iecorr])==0)
+		  
+		  ) 
+		{
+		// need to add in correction here to scale with tobs
+		
+		
+		
+		double tobsval=psr[ipsr].obsn[iobs].tobs;
+		
+	 
+	 
+		ecorrval = psr[ipsr].TNSECORRVal[iecorr]/sqrt(tobsval/3600.);
+		
+		fprintf(stderr, "TOBS ERR TNSECORR  %.3e %.3e %.3e\n", tobsval, ecorrval,  psr[ipsr].TNSECORRVal[iecorr]); 
+		break;
+	      }
+	      if (ecorrval > 0)break;
+	    }
+	  }
+	    
+	return 1e6/ecorrval;
+	    
+	
+    } 
+    else 
+      {
+	return 0;
+      }
+    
+
+
+
 }
 
 double constraints_nestlike_band(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){

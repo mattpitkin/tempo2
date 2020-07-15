@@ -42,6 +42,15 @@ double t2FitFunc_stdPosition(pulsar *psr, int ipsr ,double x ,int ipos ,param_la
         longdouble t0 = x + conv_epoch;
         return re*(cos(deltae)*sin(psrdec)*cos(psrra - alphae) - sin(deltae)*cos(psrdec))*t0;
     }
+    else if (i==param_pmra2) {
+        longdouble t0 = x + conv_epoch;
+        return re*cos(deltae)*cos(psrdec)*sin(psrra - alphae) * t0*t0/2.;
+    }
+    else if (i==param_pmdec2) { /* pmdec */
+        longdouble t0 = x + conv_epoch;
+        return re*(cos(deltae)*sin(psrdec)*cos(psrra - alphae) - sin(deltae)*cos(psrdec))*t0*t0/2.;
+    }
+    
     else if (i==param_px)
     {
         int l;
@@ -129,6 +138,18 @@ void t2UpdateFunc_stdPosition(pulsar *psr, int ipsr ,param_label label,int k, do
                 SECDAY*365.25/24.0/3600.0;
             psr[ipsr].param[param_pmdec].err[k] = err*180.0/M_PI*60.0*60.0*1000.0*
                 SECDAY*365.25/24.0/3600.0;
+            break;
+        case param_pmra2:
+            psr[ipsr].param[param_pmra2].val[k] += val*180.0/M_PI*60.0*60.0*
+                1000.0*powl(SECDAY*365.25/24.0/3600.0,2.)*cos(psr[ipsr].param[param_decj].val[0]);
+            psr[ipsr].param[param_pmra2].err[k] = err*180.0/M_PI*60.0*60.0*
+                1000.0*powl(SECDAY*365.25/24.0/3600.0,2.)*cos(psr[ipsr].param[param_decj].val[0]);
+            break;
+        case param_pmdec2:
+            psr[ipsr].param[param_pmdec2].val[k] += val*180.0/M_PI*60.0*60.0*1000.0*
+                powl(SECDAY*365.25/24.0/3600.0,2.);
+            psr[ipsr].param[param_pmdec2].err[k] = err*180.0/M_PI*60.0*60.0*1000.0*
+                powl(SECDAY*365.25/24.0/3600.0,2.);
             break;
         case param_pmrv:
             psr[ipsr].param[label].val[k] += 10.0*val*360.0*60.0*60.0/(2.0*M_PI);

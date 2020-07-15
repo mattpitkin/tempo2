@@ -35,7 +35,6 @@
 #include "tempo2.h"
 #include "ifunc.h"
 
-longdouble solarWindModel(pulsar psr);
 
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 {
@@ -121,14 +120,30 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         longdouble arg = 1.0;
         // redwards changed to avoid using slow calls to pow
         // Note this is not a Taylor Series - the Edwards paper says that it is!
+        // 2020-06 MJK: Added support for having a Taylor series!
+        double series_fac=1.0;
         for (k=1;k<9;k++)
         {
             arg *= yrs;
+            if (psr->dm_series_type == series_taylor_pn) {
+                series_fac *= k;
+            }
             if (psr[p].param[param_dm].paramSet[k]==1)
-                dmDot+=(double)(psr[p].param[param_dm].val[k]*arg); 
+                dmDot+=(double)(psr[p].param[param_dm].val[k]*arg/series_fac); 
         }
         //      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
         dmval = psr[p].param[param_dm].val[0]; //+dmDot;
+	
+	long double cmval=0;
+	//long double cmDot;
+	arg=1.0;
+	for (k=1;k<9;k++)
+        {
+            arg *= yrs;
+            if (psr[p].param[param_cm].paramSet[k]==1)
+                cmval+=(double)(psr[p].param[param_cm].val[k]*arg); 
+        }
+	
 
         //      logdbg("calculating dmval");      
         // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
@@ -233,6 +248,25 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
             //	psr[p].obsn[i].tdis1 = psr[p].param[param_dm].val[0]/DM_CONST/1.0e-12/freqf/freqf; 
             //	psr[p].obsn[i].tdis1 += dmval/pow(freqf/1e6,4.4); 
         }
+	// add in chromatic noise derivatives
+	
+	double gam;
+
+	if (psr[p].TNChromIdx != 0)
+	  {
+	    if (freqf>=1)
+	      {
+	    
+		
+		gam=-psr[p].TNChromIdx;
+		//fprintf(stderr, "TNChrom %.3e\n", psr[p].TNChromIdx);
+		//exit(0);
+
+		//psr[p].obsn[i].tdis1 += cmval/DM_CONST/1e-12/freqf/freqf;//*powl(freqf/1e6,gam);
+		psr[p].obsn[i].tdis1 += cmval/DM_CONST*powl(freqf/1e6,gam);
+		
+	      }
+	  }
 
         //      logdbg("calculate tdis1");      
         /* Add frequency dependent delay term */
@@ -259,7 +293,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         {
             //	  if(acos(ctheta)*180/3.14159265>120)
             //	  printf("SW: calling observation %d\n",i);
-            psr[p].obsn[i].tdis2 = (double)solarWindModel(psr[p],i)/DM_CONST/1.0e-12/freqf/freqf;
+            psr[p].obsn[i].tdis2 = (double)solarWindModel(psr+p,i)/DM_CONST/1.0e-12/freqf/freqf;
             //	    printf("Returning: %g\n",(double)psr[p].obsn[i].tdis2);
             //	  else
             //	    psr[p].obsn[i].tdis2 = 1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr[p].ne_sw*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/freqf/freqf; 	    

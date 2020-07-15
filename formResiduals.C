@@ -60,7 +60,7 @@ void averageDMResiduals(pulsar *psr, int npsr){
         for (int f=0;f<psr[0].obsn[o].nFlags;f++){
             if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
 
-                fprintf(stderr, "found flag\n");                
+	      //fprintf(stderr, "found flag\n");                
                 if(std::find(systemnames.begin(), systemnames.end(), psr[0].obsn[o].flagVal[f]) != systemnames.end()) {
                 } else {
 
@@ -81,6 +81,7 @@ void averageDMResiduals(pulsar *psr, int npsr){
 
 
     int numbins=ceil((maxtime-mintime)/timestep);
+    double **AverageFreq = new double*[systemcount];
     double **AverageRes = new double*[systemcount];
     double **AverageWeight = new double*[systemcount];
     double **AverageBat = new double*[systemcount];
@@ -88,10 +89,12 @@ void averageDMResiduals(pulsar *psr, int npsr){
         AverageRes[i] = new double[numbins];
         AverageWeight[i] = new double[numbins];
         AverageBat[i] = new double[numbins];
+	AverageFreq[i] = new double[numbins];
         for(int j = 0; j < numbins; j++){
             AverageRes[i][j] = 0;
             AverageWeight[i][j] = 0;
             AverageBat[i][j] = 0;
+	    AverageFreq[i][j]= 0;
         }
     }
 
@@ -110,16 +113,38 @@ void averageDMResiduals(pulsar *psr, int npsr){
                     }
                 }
 
-                double freq=psr[0].obsn[o].freq/1400.;
+                double freq=psr[0].obsn[o].freq;
+		
+		double resid=(double)psr[0].obsn[o].residual;
+		//double residDM=0;
+		//double residTN=0;
+
+		if (psr[0].TNsubtractRed ==1)
+		  {
+		    resid  -= psr[0].obsn[o].TNRedSignal;
+		  }
+		
+		if (psr[0].TNsubtractDM ==1)
+		  {
+		    resid -= psr[0].obsn[o].TNDMSignal;
+		  }
+		if (psr[0].TNsubtractChrom ==1)
+		  {
+		    resid -= psr[0].obsn[o].TNChromSignal;
+		  }
+			
+
 
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
-                double adjustedErr = pow(psr[0].obsn[o].toaErr*pow(10.0, -6), 2)*pow(freq,4.);
+                double adjustedErr = pow(psr[0].obsn[o].toaErr*pow(10.0, -6), 2);
                 AverageWeight[flagindex][bin] += 1.0/adjustedErr;
-                AverageRes[flagindex][bin] += (double)psr[0].obsn[o].residual*freq*freq/adjustedErr;
+                AverageRes[flagindex][bin] += (double)resid*powf(freq/1400.,2.)/adjustedErr;
                 AverageBat[flagindex][bin] += (double)psr[0].obsn[o].bat/adjustedErr;
-            }
+		AverageFreq[flagindex][bin] += freq/adjustedErr;
+	    }
         }
-    }
+
+        }
 
     for(int o=0;o<psr[0].nobs;o++){
 
@@ -136,6 +161,23 @@ void averageDMResiduals(pulsar *psr, int npsr){
                 }
             }
         }
+
+        // SECORR
+        double SEcorrVal=0;
+        for (int j=0;j<psr->obsn[o].nFlags;j++){
+            for (int k=0;k<psr->nTNSECORR;k++){
+                if (strcmp(psr->obsn[o].flagID[j], psr->TNSECORRFlagID[k])==0){
+                    if (strcmp(psr->obsn[o].flagVal[j],psr->TNSECORRFlagVal[k])==0){
+		      SEcorrVal=psr->TNSECORRVal[k]*pow(10.0, -6)/sqrt(psr->obsn[o].tobs/3600.);
+		      //printf("SEcorr: %i %g \n", o, SEcorrVal);
+		      //	exit(0);
+                    }
+                }
+            }
+        }
+
+
+
         for (int f=0;f<psr[0].obsn[o].nFlags;f++){
             if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
                 int flagindex=-1;
@@ -145,9 +187,12 @@ void averageDMResiduals(pulsar *psr, int npsr){
                     }
                 }
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
+		double freq = AverageFreq[flagindex][bin]/AverageWeight[flagindex][bin];
+		
+		fprintf(stderr, "freq: %.3lf\n", freq);
                 psr[0].obsn[o].averagedmbat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
                 psr[0].obsn[o].averagedmres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
-                psr[0].obsn[o].averagedmerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
+                psr[0].obsn[o].averagedmerr = powf(freq/1400,2.)*sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2) + pow(SEcorrVal,2));
             }
         }
     }
@@ -189,7 +234,7 @@ void averageResiduals(pulsar *psr, int npsr){
         for (int f=0;f<psr[0].obsn[o].nFlags;f++){
             if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
 
-                fprintf(stderr, "found flag\n");                
+	      //fprintf(stderr, "found flag\n");                
                 if(std::find(systemnames.begin(), systemnames.end(), psr[0].obsn[o].flagVal[f]) != systemnames.end()) {
                 } else {
 
@@ -201,7 +246,7 @@ void averageResiduals(pulsar *psr, int npsr){
         }
 
         if(found==0){
-            printf("Observation %i is missing the -f flag, please check before continuing\n",o);return;
+            printf("Observation %i is missing the -f flag, please check before continuing\n",o);
         }
     }
 
@@ -242,9 +287,28 @@ void averageResiduals(pulsar *psr, int npsr){
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
                 double adjustedErr = pow(psr[0].obsn[o].toaErr*pow(10.0, -6), 2);
                 AverageWeight[flagindex][bin] += 1.0/adjustedErr;
-                AverageRes[flagindex][bin] += (double)psr[0].obsn[o].residual/adjustedErr;
+                
+		double resid=psr[0].obsn[o].residual;
+		//
+		if (psr[0].TNsubtractRed == 1)
+		  {
+		    resid -= (double) psr[0].obsn[o].TNRedSignal;
+		  }
+
+		if (psr[0].TNsubtractDM ==1)
+		  {
+		    resid -= (double) psr[0].obsn[o].TNDMSignal;
+		  }
+		if (psr[0].TNsubtractChrom ==1)
+		  {
+		    resid -= (double) psr[0].obsn[o].TNChromSignal;
+		  }
+
+		AverageRes[flagindex][bin] += resid/adjustedErr;
                 AverageBat[flagindex][bin] += (double)psr[0].obsn[o].bat/adjustedErr;
-            }
+		
+
+	    }
         }
     }
 
@@ -263,6 +327,23 @@ void averageResiduals(pulsar *psr, int npsr){
                 }
             }
         }
+    
+        // SECORR
+        
+
+        double SEcorrVal=0;
+
+        for (int j=0;j<psr->obsn[o].nFlags;j++){
+            for (int k=0;k<psr->nTNSECORR;k++){
+                if (strcmp(psr->obsn[o].flagID[j], psr->TNSECORRFlagID[k])==0){
+                    if (strcmp(psr->obsn[o].flagVal[j],psr->TNSECORRFlagVal[k])==0){
+		      SEcorrVal=psr->TNSECORRVal[k]*pow(10.0, -6)/sqrt(psr->obsn[o].tobs/3600.);
+		      //printf("SEcorr: %i %g \n", o, SEcorrVal);
+                    }
+                }
+            }
+        }
+
         for (int f=0;f<psr[0].obsn[o].nFlags;f++){
             if(strcasecmp(psr[0].obsn[o].flagID[f],flagName)==0){
                 int flagindex=-1;
@@ -276,7 +357,7 @@ void averageResiduals(pulsar *psr, int npsr){
 
                 psr[0].obsn[o].averagebat = AverageBat[flagindex][bin]/AverageWeight[flagindex][bin];; 
                 psr[0].obsn[o].averageres  = AverageRes[flagindex][bin]/AverageWeight[flagindex][bin];
-                psr[0].obsn[o].averageerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2));
+                psr[0].obsn[o].averageerr = sqrt(1.0/AverageWeight[flagindex][bin]  + pow(EcorrVal, 2)+pow(SEcorrVal,2));
             }
         }
     }
@@ -312,9 +393,9 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
     longdouble phaseJ,phaseW;
     longdouble ftpd,fct,ff0,phaseint;
     longdouble torb,deltaT,dt00=0.0,phas1=0.0;
-    longdouble mean,ct00=0.0;
+    longdouble mean,tnmean, ct00=0.0;
     int dtm1s=0;
-    int nmean;
+    int nmean,ntnmean;
     int ntpd,nf0;
     int i,p,k,l;
     int time=0;
@@ -350,6 +431,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
     {
         mean = longdouble(0.0);
         nmean = 0;
+
+        tnmean=longdouble(0.0);
+        ntnmean=0;
+
         if(psr[p].refphs==REFPHS_TZR){
             // reinstate the extra TZR observation so we can compute the reference phase
             if (psr[p].nobs==MAX_OBSN){
@@ -524,19 +609,51 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 		    dm=psr[p].param[param_expph].val[k];
 		    tau=psr[p].param[param_exptau].val[k];
 		    
-		    fprintf(stderr, "DT %.3Le TAU %.3Le\n", dt, tau);
+		    //fprintf(stderr, "DT %.3Le TAU %.3Le\n", dt, tau);
 
 		    if (dt  >0)
 		      {
 			phase4 +=  dm*powl(freq, gamma)*exp(-dt/tau)*psr[p].param[param_f].val[0];   
-			fprintf(stderr, "%.3Le\n", phase4);
+			//fprintf(stderr, "%.3Le\n", phase4);
 		      }
 		  
 		      
 		  }
 	    }
     
-		    
+    for(k=0;k<psr[p].param[param_gausep].aSize;k++)
+    {
+        if(psr[p].param[param_gausep].paramSet[k] ==1)
+            {
+                long double freq, dt, amp, sig, gamma,val;            
+                // reference to 1.4 GHz  to agree with Enterprise   
+                freq= psr[p].obsn[i].freqSSB/1.4e9; 
+  
+                dt=(psr[p].obsn[i].bbat - psr[p].param[param_gausep].val[k]);
+                amp=psr[p].param[param_gausamp].val[k];
+                sig=psr[p].param[param_gaussig].val[k];
+
+
+                // if index is not set assume the Gaussian is achromatic
+                 if (psr[p].param[param_gausindex].paramSet[k] ==1)
+                    {
+                        gamma=psr[p].param[param_gausindex].val[k];
+                    }
+                else{
+                    gamma=0;
+    
+                    }
+  
+                    // model  is
+                    // amp*powl(freq, gamma)*exp(-dt*dt/2./sig/sig);
+
+                val= amp*powl(freq, gamma)*exp(-dt*dt/2./sig/sig);     
+                phase4 += val*psr[p].param[param_f].val[0];            
+            }
+
+    }           
+
+
 
 	    
 
@@ -554,8 +671,23 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         phaseJ+=psr[p].jumpVal[k]*psr[p].param[param_f].val[0];
                 }
             }
-
-	    
+    
+            // add in the newfdjumps	    
+            for (k=1;k<=psr[p].nfdJumps;k++)	    
+            {
+                for (l=0;l<psr[p].obsn[i].obsNfdjump;l++)
+                {		
+                    if (psr[p].obsn[i].fdjump[l]==k)
+                    {
+                        int idx;
+                        idx=psr[p].fdjumpIdx[k];
+                        //fprintf(stderr, "%d %d %.5le  %.5le  %.5le\n",idx,k, psr[p].fdjumpVal[k],pow(psr[p].obsn[i].freqSSB/1e9,idx),psr[p].param[param_f].val[0]);
+                        //phaseJ-=psr[p].fdjumpVal[k]*pow(log( psr[p].obsn[i].freqSSB/1e9),idx)*psr[p].param[param_f].val[0];
+                   
+                        phaseJ-=psr[p].fdjumpVal[k]*pow( psr[p].obsn[i].freqSSB/1e9,idx)*psr[p].param[param_f].val[0];
+                    }
+                }
+            }
 
 
             /* Add in extra phase due to whitening procedures */
@@ -2086,12 +2218,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 if (psr[p].obsn[i].sat > psr[p].obsn[psr[p].phaseJumpID[k]].sat)
                     psr[p].obsn[i].pulseN -= psr[p].phaseJumpDir[k];
 
-
+        
 
             if (psr[p].obsn[i].deleted!=1)
             {
                 mean+=psr[p].obsn[i].residual;
                 nmean++;
+
             }
         }
 
@@ -2100,8 +2233,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         if (removeMean==1)
         {
             mean/=(longdouble)nmean;
+            //tnmean/=(longdouble) ntnmean;
             for (i=0;i<psr[p].nobs;i++)
+            {
                 psr[p].obsn[i].residual-=mean;
+                //psr[p].obsn[i].residualtn-=tnmean;
+            }
             // psr[p].obsn[i].residual-=0;
         }
 
@@ -2126,33 +2263,57 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         }
 
 
-        if((psr[p].TNsubtractRed==1) && (psr[p].TNsubtractDM ==0)){
-            for (i=0;i<psr[p].nobs;i++){
-	      //psr[p].obsn[i].residual -= psr[p].obsn[i].TNRedSignal;
-	      psr[p].obsn[i].residualtn = psr[p].obsn[i].residual - psr[p].obsn[i].TNRedSignal;
-	    }
-        }
-	if((psr[p].TNsubtractDM==1 ) && (psr[p].TNsubtractRed==0)) {
-            for (i=0;i<psr[p].nobs;i++){
-// UNUSED VARIABLE //                 double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
-	      //psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
-	      psr[p].obsn[i].residualtn = psr[p].obsn[i].residual - psr[p].obsn[i].TNDMSignal;
-	    }
-	}
-    
-	if((psr[p].TNsubtractDM==1 ) && (psr[p].TNsubtractRed==1)) {
-	    for (i=0;i<psr[p].nobs;i++){
-	      // UNUSED VARIABLE //                 double dmkap = 2.410*pow(10.0,-16)*pow((double)psr[p].obsn[i].freqSSB,2);
-	      //psr[p].obsn[i].residual -= psr[p].obsn[i].TNDMSignal;
-	      psr[p].obsn[i].residualtn = psr[p].obsn[i].residual - psr[p].obsn[i].TNDMSignal - psr[p].obsn[i].TNRedSignal ;
-	    } 
-	    
+
+        if ((psr[p].TNsubtractDM ==1) || ( psr[p].TNsubtractRed ==1) || (psr[p].TNsubtractChrom ==1))
+        {
+            for(i=0;i<=psr[p].nobs; i++)
+            {
+                psr[p].obsn[i].residualtn = psr[p].obsn[i].residual;
+
+                if (psr[p].TNsubtractRed ==1)
+                {
+                    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNRedSignal;
+                }
+
+                if (psr[p].TNsubtractDM ==1)
+                {
+                    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNDMSignal;
+                }
+
+
+                if (psr[p].TNsubtractChrom ==1)
+                {
+                    psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNChromSignal;
+                }
+
+
+                if (psr[p].obsn[i].deleted!=1)
+                {   
+                    tnmean += psr[p].obsn[i].residualtn;
+                    ntnmean++;
+                }
+            }
+
+            if (removeMean ==1)
+            {
+                tnmean /= (long double) ntnmean;
+                for(i=0;i<=psr[p].nobs;i++)
+                {
+                    psr[p].obsn[i].residualtn -= tnmean;
+                }        
+
+            }
+
+
 	  }
 	  
         if(psr[p].AverageResiduals == 1){
-            averageResiduals(psr, 1);
-        }
-
+          
+	  
+	  averageResiduals(psr, 1);
+	    
+	}
+	
         if(psr[p].AverageDMResiduals == 1){
             averageDMResiduals(psr,1);
 
