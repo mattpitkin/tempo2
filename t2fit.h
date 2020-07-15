@@ -1,5 +1,7 @@
 #include <tempo2.h>
 
+extern char forceAlwaysFitForGlitches;
+
 void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile);
 
 unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
@@ -18,3 +20,5 @@ double t2Fit_getParamDeriv(pulsar* psr, const param_label fit_param, const doubl
 
 
 int t2Fit_getParamMatrixRow(const FitInfo &fitinfo, const int ipsr, const param_label fit_param, const int k);
+
+

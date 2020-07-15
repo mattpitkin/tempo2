@@ -283,6 +283,7 @@ void preProcessSimple2 (pulsar *psr,
                     }
                 }
             }
+
             if (strcasecmp(str1,"NAME")==0 && strstr(psr->obsn[i].fname,str2)!=NULL)
                 yes=1;	
             if (strcasecmp(str1,"TEL")==0)
@@ -307,6 +308,59 @@ void preProcessSimple2 (pulsar *psr,
 
             if (yes==1) {psr->obsn[i].jump[psr->obsn[i].obsNjump]=k; (psr->obsn[i].obsNjump)++;}
         }
+        // check for fdjumps
+        for (k=1;k<=psr->nfdJumps;k++)
+        {
+            int yes=0;
+
+            char str1[100],str2[100],str3[100];
+            double val1, val2;
+
+            /* Must parse jump string to determine whether this observation should jump or not */	      
+            sscanf(psr->fdjumpStr[k],"%s %s %s",str1,str2,str3);
+            if (strcasecmp(str1,"MJD")==0 || strcasecmp(str1,"FREQ")==0)
+            {
+                sscanf(str2,"%lf",&val1);
+                sscanf(str3,"%lf",&val2);
+
+                if (strcasecmp(str1,"MJD")==0) {
+                    if (psr->obsn[i].sat >= val1 && psr->obsn[i].sat < val2) {
+                        yes=1;
+                    }
+                }
+                else if (strcasecmp(str1,"FREQ")==0) {
+                    if (psr->obsn[i].freq >= val1 && psr->obsn[i].freq < val2) {
+                        yes=1;
+                    }
+                }
+            }
+
+            if (strcasecmp(str1,"NAME")==0 && strstr(psr->obsn[i].fname,str2)!=NULL)
+                yes=1;	
+            if (strcasecmp(str1,"TEL")==0)
+            {
+                char selectedSite[256], obsSite[256];
+
+                lookup_observatory_alias(str2, selectedSite);
+                lookup_observatory_alias(psr->obsn[i].telID, obsSite);
+                if (strcasecmp(selectedSite, obsSite)!=0)
+                    yes=1;	    
+            }
+            else if (str1[0]=='-')
+            {
+                int jj;
+                for (jj=0;jj<psr->obsn[i].nFlags;jj++)
+                {
+                    if (strcmp(psr->obsn[i].flagID[jj],str1)==0 &&
+                            strcmp(psr->obsn[i].flagVal[jj],str2)==0)
+                        yes=1;
+                }
+            }
+
+            if (yes==1) {psr->obsn[i].fdjump[psr->obsn[i].obsNfdjump]=k; (psr->obsn[i].obsNfdjump)++;}
+        }
+
+
         // Check for time offset flags
         for (k=0;k<psr->obsn[i].nFlags;k++)
         {
@@ -409,6 +463,23 @@ void preProcessSimple3 (pulsar *psr)
             }
             psr->fitJump[psr->nJumps]=1;
         }
+ 
+        // Now create fdjumps
+        for (l=1;l<nf;l++)
+        {
+            psr->nfdJumps++;
+            sprintf(psr->fdjumpStr[psr->nfdJumps],"%s %s",psr->fjumpID,val[l]);
+            for (i=0;i<psr->nobs;i++)
+            {
+                for (k=0;k<psr->obsn[i].nFlags;k++)
+                {
+                    if (strcmp(psr->obsn[i].flagVal[k],val[l])==0)
+                        psr->obsn[i].fdjump[(psr->obsn[i].obsNfdjump)++]=psr->nfdJumps;
+                }
+            }
+            psr->fitfdJump[psr->nfdJumps]=1;
+        }
+ 
     }
 
     // Now link phase jumps to a particular site-arrival-time

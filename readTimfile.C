@@ -50,13 +50,14 @@
 /*                                              */
 /* Changes:                                     */
 /* ******************************************** */
-void readTim(char *timname,pulsar *psr,int *jumpVal);
+void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal);
 void removeCR2(char *str);
 
 void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
 {
     int p,i;
     int jumpVal=0;
+    int fdjumpVal=0;
     FILE *fin;
     const char *CVS_verNum = "$Id$";
 
@@ -77,13 +78,14 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
                 for (i=0;i<jumpVal;i++)
                 psr[p].jumpVal[i]=0.0; */
         jumpVal=0;
+        fdjumpVal=0;
 
         if (psr[0].jboFormat!=0){
             logmsg("Reading JBO format!?");
             readJBO_bat(timFile[p],&psr[p],p);
         }
         else
-            readTim(timFile[p],&psr[p],&jumpVal);
+            readTim(timFile[p],&psr[p],&jumpVal,&fdjumpVal);
         logdbg("Checking for deleted points >%s<",psr[0].deleteFileName);
 
         /* Check for deleted points in separate file */
@@ -114,7 +116,7 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
     logdbg("Leaving readTimfile");  
 }
 
-void readTim(char *timname,pulsar *psr,int *jumpVal)
+void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
 {
     FILE *fin;
     char profileDir[MAX_STRLEN]="";
@@ -469,6 +471,10 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
             psr->obsn[nObs].jump[0] = *jumpVal; // GH: Added jump[0]. Mar 2011
             psr->obsn[nObs].obsNjump = 1;
 
+
+            psr->obsn[nObs].fdjump[0] = *jumpVal; // RMS: Added fdjump[0]. Apr 2020
+            psr->obsn[nObs].obsNfdjump = 1;
+
             if (time!=0.0) 
             {
                 psr->obsn[nObs].sat += time/60.0/60.0/24.0;
@@ -599,7 +605,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal)
                         strcat(relPath,newtim);
                         printf("Rel path = %s\n",relPath);
                         //		      readTim(newtim,psr,jumpVal);
-                        readTim(relPath,psr,jumpVal);
+                        readTim(relPath,psr,jumpVal,fdjumpVal);
 #ifndef PATH_MAX
                         free(relPath);
 #endif

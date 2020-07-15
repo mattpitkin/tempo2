@@ -300,6 +300,7 @@ double TKrobustDefConstrainedLeastSquares(double* data, double* white_data,
                     fprintf(wFile,"\n");
                 }
                 fclose(wFile);
+                fclose(yFile);
             }
         }
 

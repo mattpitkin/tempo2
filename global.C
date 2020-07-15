@@ -50,6 +50,7 @@ char dcmFile[MAX_FILELEN]="NULL";
 char covarFuncFile[MAX_FILELEN]="NULL";
 char tempo2_plug_path[32][MAX_STRLEN];
 int tempo2_plug_path_len=0;
+char forceAlwaysFitForGlitches=0;
 
 char tempo2_clock_path[MAX_STRLEN]="";
 
