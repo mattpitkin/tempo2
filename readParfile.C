@@ -981,7 +981,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"QUAD_EPOCH")==0) // Epoch for quad function
         fscanf(fin,"%lf",&psr->quadEpoch);
     else if ((strstr(str,"QUAD")!=NULL || strstr(str,"quad")!=NULL)
-            && (strcasecmp(str,"T2EQUAD")!=0)) // Avoid misinterpreting T2EQUAD
+            && (strcasecmp(str,"T2EQUAD")!=0) // Avoid misinterpreting T2EQUAD
+            && (strcasecmp(str,"DMEQUAD")!=0)) // Avoid misinterpreting DMEQUAD
     {
         int number;
         /* Obtain parameter number */
