@@ -272,6 +272,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         char rest[1024];
         fgets(rest, 1024, fin);
+        psr->useclkchain = 1;
+        strcpy(psr->clkchainlist,rest);    
         defineClockCorrectionSequence(rest,psr->noWarnings);
     }
     else if (strcasecmp(str, "FJUMP")==0)

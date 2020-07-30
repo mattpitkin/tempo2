@@ -514,6 +514,8 @@ typedef struct pulsar {
     char rajStrPost[100],decjStrPost[100]; /*!< String containing RAJ and DECJ  (postfit)           */
     char binaryModel[100];                 /*!< Binary model e.g. BT/ELL1/BT2P etc.                        */
 
+    int useclkchain;  
+    char clkchainlist[1024];
 
     double **ToAextraCovar;
 

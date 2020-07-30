@@ -1317,6 +1317,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"%-15.15s%s\n","CLK",psr[p].clock);
         
             
+                // clkchainlist apparently includes an endof line in the string so don't need to have a \n in fprintf statement 
+                if (psr[p].useclkchain ==1) fprintf(fout2, "CLK_CORR_CHAIN %s", psr[p].clkchainlist);
 
                 if (psr[p].fitMode==1) fprintf(fout2,"MODE 1\n");
                 if (psr[p].units != SI_UNITS)fprintf(fout2, "%-15.15s%s\n", "UNITS", "TDB");
