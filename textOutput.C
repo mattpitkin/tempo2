@@ -690,7 +690,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             double err;
             longdouble pb,a1,si=-2,si_lo=-2,si_hi=-2;
 
-            pb  = psr[p].param[param_pb].val[0]*SECDAY;
+	    // RES: Fixes to allow use of FB0 instead of PB
+	    if (psr[p].param[param_pb].paramSet[0]==1) {
+	      pb = psr[p].param[param_pb].val[0]*SECDAY;
+	    }
+	    else {
+	      pb = 1/psr[p].param[param_fb].val[0];
+	    }
             //pbe = psr[p].param[param_pb].err[0]*SECDAY;
             a1  = psr[p].param[param_a1].val[0]*SPEED_LIGHT;
             //a1e = psr[p].param[param_a1].err[0]*SPEED_LIGHT;
@@ -707,10 +713,16 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 printf("Mass function                  = %.12f ",(double)fn);
 
                 c1 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_a1, 0);
-                c2 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_pb, 0);
-                if (c1 >= 0 && c2 >= 0){
+		if (psr[p].param[param_pb].paramSet[0]==1) {
+		  c2 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_pb, 0);
+		}
+		else {
+		  c2 = t2Fit_getParamMatrixRow(psr[p].fitinfo, p, param_fb, 0);
+		}
 
+                if (c1 >= 0 && c2 >= 0) {
                     /* use covariance matrix to determine error */
+		    // RES: TODO: Check if the error is correct when FB0 is used
                     err = fn * sqrt(9.0*pow(sqrt(psr[p].covar[c1][c1])*SPEED_LIGHT/a1,2) 
                             +  4.0*pow(sqrt(psr[p].covar[c2][c2])/pb,2) 
                             - 12.0*psr[p].covar[c1][c2]*SPEED_LIGHT/(a1*pb));
