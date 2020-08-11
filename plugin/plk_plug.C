@@ -1482,8 +1482,25 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 xplot=3; yplot=2;fitFlag=2;setZoomY1 = 0; setZoomY2 =0;
                 if (recordStrokes==1) recordStrokesFunc(recordFile,"xyplot","3 2");
             }
-            else if (key=='3' && psr[0].param[param_pb].paramSet[0]==1) {xplot=4;yplot=1;fitFlag=3;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
-            else if (key=='4' && psr[0].param[param_pb].paramSet[0]==1) {xplot=4;yplot=2;fitFlag=4;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
+	    // RES: Making these next two conditions more accurate
+            else if (key=='3' && (psr[0].param[param_pb].paramSet[0]==1 || psr[0].param[param_fb].paramSet[0]==1)) {
+	        xplot=4;
+	        yplot=1;
+	        fitFlag=3;
+		setZoomX1 = 0;
+		setZoomX2 = 0;
+		setZoomY1 = 0;
+		setZoomY2 = 0;
+	    }
+            else if (key=='4' && (psr[0].param[param_pb].paramSet[0]==1 || psr[0].param[param_fb].paramSet[0]==1)) {
+	        xplot=4;
+		yplot=2;
+		fitFlag=4;
+		setZoomX1 = 0;
+		setZoomX2 = 0;
+		setZoomY1 = 0;
+		setZoomY2 = 0;
+	    }
             else if (key=='5') {xplot=5; yplot=1;fitFlag=5;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
             else if (key=='6') {xplot=5; yplot=2;fitFlag=6;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
             else if (key=='7') {xplot=6; yplot=1;fitFlag=7;setZoomX1 = 0; setZoomX2 = 0; setZoomY1 = 0; setZoomY2 =0;}
@@ -4283,20 +4300,58 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
     else if (plot==4)       /* Orbital phase */
     {
         double pbdot=0.0;
+	double pb;
+	double t0;
         double tpb;
-        if( psr[0].param[param_t0].paramSet[0] ){
-            tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] )
-                / ( psr[0].param[param_pb].val[0] );
+	// RES: Some fixes dealing with FB0 and TASC
+	if (psr[0].param[param_pb].paramSet[0]==0 && psr[0].param[param_fb].paramSet[0]==1) {
+	    pb = 1/(psr[0].param[param_fb].val[0]*86400);
+	}
+	else if (psr[0].param[param_pb].paramSet[0]==1) {
+	    pb = psr[0].param[param_pb].val[0];
+	}
+	else {
+	    printf("WARNING: This is not a binary pulsar\n");
+	    x[count]=0.0;
+	}
+
+	if (psr[0].param[param_t0].paramSet[0]==1) {
+	    tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] ) / pb;
+	}
+	else if (psr[0].param[param_tasc].paramSet[0]==1) {
+	    if (psr[0].param[param_om].paramSet[0]==1) {
+	        t0 = psr[0].param[param_tasc].val[0] + pb*psr[0].param[param_om].val[0]/(2*M_PI);
+	    }
+	    else if (psr[0].param[param_eps1].paramSet[0]==1 && psr[0].param[param_eps2].paramSet[0]==1) {
+	        t0 = psr[0].param[param_tasc].val[0] + pb*atan2(psr[0].param[param_eps1].val[0], psr[0].param[param_eps2].val[0])/(2*M_PI);
+	    }
+	    else {
+	        t0 = psr[0].param[param_tasc].val[0];
+	    }
+	    tpb = ( psr[0].obsn[iobs].bat - t0 ) / pb;
+	}
+	else {
+	    printf( "ERROR: Neither T0 nor tasc set...\n" );
+            x[count]=0.0;
+	}
+
+	// RES: replaced the below with the more accurate calculations above
+	/* 
+	if( psr[0].param[param_t0].paramSet[0] ){
+	    tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] ) / pb; 
+	         / ( psr[0].param[param_pb].val[0] );
         }else if( psr[0].param[param_tasc].paramSet[0] ){
-            tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_tasc].val[0] )
-                / ( psr[0].param[param_pb].val[0] );
+	    tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_tasc].val[0] ) / pb;
+	        / ( psr[0].param[param_pb].val[0] );
         }else{
             printf( "ERROR: Neither T0 nor tasc set...\n" );
-            tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] )
-                / ( psr[0].param[param_pb].val[0] );
-        }
+	    x[count]=0.0;
+            tpb = ( psr[0].obsn[iobs].bat - psr[0].param[param_t0].val[0] ) / pb;
+	      / ( psr[0].param[param_pb].val[0] );
+        }*/
+
         double phase;
-        if (psr[0].param[param_pb].paramSet[0]==0)
+        if (psr[0].param[param_pb].paramSet[0]==0 && psr[0].param[param_fb].paramSet[0]==0)
         {
             printf("WARNING: This is not a binary pulsar\n");
             x[count]=0.0;
