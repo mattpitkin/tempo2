@@ -57,7 +57,7 @@ void formBats(pulsar *psr,int npsr)
                 if (psr[p].calcShapiro==-1)
                     shapiroDelay = 0.0;
                 else
-                    shapiroDelay = psr[p].obsn[i].shapiroDelaySun + psr[p].planetShapiro*
+                    shapiroDelay = psr[p].obsn[i].shapiroDelaySun +
                         (psr[p].obsn[i].shapiroDelayVenus+
                          psr[p].obsn[i].shapiroDelayJupiter+psr[p].obsn[i].shapiroDelaySaturn
                          +psr[p].obsn[i].shapiroDelayUranus + psr[p].obsn[i].shapiroDelayNeptune);
