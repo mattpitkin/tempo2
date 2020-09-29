@@ -761,6 +761,54 @@ void addKeplerianJumps(pulsar *psr,int ipos,double *torb,double *x,double *ecc,
  * eps2dot
  */
 
+void convert_pmecl(double elong, double elat, double  *pmra, double *pmdec)
+{
+
+    double eps;
+    double pmelong = *pmra;
+    double pmelat = *pmdec;
+    
+    double dec;
+    double ra;
+
+
+    eps=ECLIPTIC_OBLIQUITY*M_PI/(3600.*180.);
+
+    ra=atan2( sin(elong)*cos(eps)-tan(elat)*sin(eps),cos(elong));
+
+    if (ra < 0)
+    {
+        ra += 2*M_PI;
+    }
+
+    dec=asin(sin(elat)*cos(eps)+cos(elat)*sin(elong)*sin(eps));
+
+
+
+    *pmdec = (1/cos(dec))*((cos(eps)*cos(elat) - sin(eps)*sin(elat)*sin(elong))*pmelat + sin(eps)*cos(elat)*cos(elong)*(pmelong/cos(elat)));
+ 
+    //*pmra=  pow( cos(ra),2) * ( ( (sin(elong)/ pow( cos(elong),2))*(cos(eps)*sin(elong) - sin(eps)*tan(elat)) + cos(eps)) * (pmelong / cos(elat)) - sin(eps)*pmelat/(cos(elong)* powf(cos(elat),2))) * cos(dec);
+    *pmra =  powf(   cos(ra),2)       * ( ( (sin(elong)/  pow(  cos(elong),2)      )*(cos(eps)*sin(elong) - sin(eps)*tan(elat)) + cos(eps)) * (pmelong / cos(elat)) - sin(eps)*pmelat/(cos(elong)*powf(  cos(elat),2)     )) * cos(dec);
+    
+    
+    
+    double convfac;
+
+    convfac=180/M_PI*3600*1e3*86400*365.25;
+    
+
+    double pmraout, pmdecout;
+
+    pmraout=convfac*(*pmra);
+    pmdecout=convfac*(*pmdec);    
+
+    //fprintf(stderr, "%g %g %g %g\n",180./M_PI*ra, 180./M_PI*dec, pmraout, pmdecout);  
+    
+    
+
+    return;
+}    
+
 void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
         double *mtot,double *omdot, double *gamma,double *xdot,
 		      double *xpbdot,double *pbdot, double *pb2dot, double *edot,double *pmra,
@@ -800,6 +848,14 @@ void getPostKeplerian(pulsar *psr,int com,double an,double *si,double *m2,
         * M_PI/(180.0*3600.0e3)/(365.25*86400.0);
     *pmdec   = getParameter(psr,param_pmdec,com)
         * M_PI/(180.0*3600.0e3)/(365.25*86400.0);
+    
+    // convert from ecliptic to equatorial
+    if (psr[0].eclCoord ==1)
+    {   
+        convert_pmecl((double) psr[0].param[param_raj].val[0], (double) psr[0].param[param_decj].val[0], pmra,pmdec);    
+    }
+        
+    
     *dpara   = getParameter(psr,param_px,com)*pxConv;
     *dr      = getParameter(psr,param_dr,com);
     *dth     = getParameter(psr,param_dth,com);
