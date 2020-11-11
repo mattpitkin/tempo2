@@ -85,7 +85,7 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         {
             /* Now calculate the Shapiro delay due to Jupiter */
             for (j=0;j<3;j++)
-                rsa[j] = psr[p].obsn[i].jupiter_earth[j] + psr[p].obsn[i].observatory_earth[j];
+                rsa[j] = -psr[p].obsn[i].jupiter_earth[j] + psr[p].obsn[i].observatory_earth[j];
             r = sqrt(dotproduct(rsa,rsa));
             ctheta = dotproduct(psr[p].obsn[i].psrPos,rsa)/r;  
             delay = -2.0*GMJ_C3 * log(r/AULTSC*(1.0+ctheta));  
@@ -93,7 +93,7 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
             //	  printf("ctheta = %g\n",ctheta);
             /* Now calculate the Shapiro delay due to Saturn */
             for (j=0;j<3;j++)
-                rsa[j] = psr[p].obsn[i].saturn_earth[j] + psr[p].obsn[i].observatory_earth[j];
+                rsa[j] = -psr[p].obsn[i].saturn_earth[j] + psr[p].obsn[i].observatory_earth[j];
             r = sqrt(dotproduct(rsa,rsa));
             ctheta = dotproduct(psr[p].obsn[i].psrPos,rsa)/r;  
             delay = -2.0*GMS_C3 * log(r/AULTSC*(1.0+ctheta));  
@@ -101,7 +101,7 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 
             /* Now calculate the Shapiro delay due to Venus */
             for (j=0;j<3;j++)
-                rsa[j] = psr[p].obsn[i].venus_earth[j] + psr[p].obsn[i].observatory_earth[j];
+                rsa[j] = -psr[p].obsn[i].venus_earth[j] + psr[p].obsn[i].observatory_earth[j];
             r = sqrt(dotproduct(rsa,rsa));
             ctheta = dotproduct(psr[p].obsn[i].psrPos,rsa)/r;  
             delay = -2.0*GMV_C3 * log(r/AULTSC*(1.0+ctheta));  
@@ -109,7 +109,7 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 
             /* Now calculate the Shapiro delay due to Uranus */
             for (j=0;j<3;j++)
-                rsa[j] = psr[p].obsn[i].uranus_earth[j] + psr[p].obsn[i].observatory_earth[j];
+                rsa[j] = -psr[p].obsn[i].uranus_earth[j] + psr[p].obsn[i].observatory_earth[j];
             r = sqrt(dotproduct(rsa,rsa));
             ctheta = dotproduct(psr[p].obsn[i].psrPos,rsa)/r;  
             delay = -2.0*GMU_C3 * log(r/AULTSC*(1.0+ctheta));  
@@ -117,7 +117,7 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 
             /* Now calculate the Shapiro delay due to Neptune */
             for (j=0;j<3;j++)
-                rsa[j] = psr[p].obsn[i].neptune_earth[j] + psr[p].obsn[i].observatory_earth[j];
+                rsa[j] = -psr[p].obsn[i].neptune_earth[j] + psr[p].obsn[i].observatory_earth[j];
             r = sqrt(dotproduct(rsa,rsa));
             ctheta = dotproduct(psr[p].obsn[i].psrPos,rsa)/r;  
             delay = -2.0*GMN_C3 * log(r/AULTSC*(1.0+ctheta));  
