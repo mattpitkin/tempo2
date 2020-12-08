@@ -25,6 +25,8 @@ stamp-h1
 tempo2
 unsupported_plugins/toasim/read_toasim
 T2runtime/plugins
+MultiNest/*
+build.log
 *..t2
 .*.swp
 getPeriod
