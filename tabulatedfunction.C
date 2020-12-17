@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <TKlog.h>
 
     void
 TabulatedFunction_load(TabulatedFunction *func,
@@ -65,13 +66,21 @@ TabulatedFunction_load(TabulatedFunction *func,
     for (c=line; *c=='#'; c++)
         ;
 
+    double lastx;
+    int iline=0;
     /* parse table lines */
     while (fgets(line, 1024, f)!=NULL)
     {
         if (line[0]!='#')
         {
-            if (sscanf(line, "%lf %lf", &sample.x, &sample.y)==2)
+            if (sscanf(line, "%lf %lf", &sample.x, &sample.y)==2){
+                if (iline > 0 && sample.x < lastx) {
+                    logwarn("Error parsing file %s: Entry %d out of order %lf < %lf",fileName,iline,sample.x,lastx);
+                }
+                lastx=sample.x;
                 DynamicArray_push_back(&func->samples, &sample);
+                iline+=1;
+            }
         }
     }
 
