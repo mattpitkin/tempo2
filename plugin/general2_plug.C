@@ -651,6 +651,20 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
+                        else if (strcasecmp(var,"clk_corrA")==0)
+                        {
+                            int l;
+                            char tmpstr[64];
+                            strcpy(disp,"");
+                            for (l=0;l<psr[0].obsn[varN].nclock_correction;l++) {
+
+                                if (l!=0)strcat(disp,",");
+                                sprintf(tmpstr,dformat,psr[0].obsn[varN].correctionsTT[l].correction);
+                                strcat(disp,tmpstr);
+                            }
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);			
+                        }
                         else if (strcasecmp(var,"clk2")==0)
                         {
                             sprintf(disp,dformat,(psr[0].obsn[varN].correctionsTT[0].correction+psr[0].obsn[varN].correctionsTT[1].correction+psr[0].obsn[varN].correctionsTT[2].correction)/SECDAY); 
