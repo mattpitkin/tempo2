@@ -278,9 +278,16 @@ int T1PolycoSet_Read(T1PolycoSet *t1ps, FILE *f)
         return -1;
 }
 
-void T1PolycoSet_Destroy(T1PolycoSet *t1ps)
+void T1PolycoSet_Init(T1PolycoSet *t1ps)
 {
-    free(t1ps->segments);
+  t1ps->segments = NULL;
+  t1ps->nsegments = 0;
 }
 
+void T1PolycoSet_Destroy(T1PolycoSet *t1ps)
+{
+  if (t1ps->segments)
+    free(t1ps->segments);
+  T1PolycoSet_Init(t1ps);
+}
 

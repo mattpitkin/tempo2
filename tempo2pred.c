@@ -50,7 +50,6 @@ T2Predictor_Read(T2Predictor *t2p, char *fname)
     int
 T2Predictor_FRead(T2Predictor *t2p, FILE *f)
 {
-
     // determine the kind of file we're dealing with by trial and error
     long fpos = ftell(f);
     if (ChebyModelSet_Read(&t2p->modelset.cheby, f)==0)
@@ -173,7 +172,7 @@ T2Predictor_Destroy(T2Predictor *t2p)
             T1PolycoSet_Destroy(&t2p->modelset.t1);
             break;
     }
-    t2p->kind = NonePredType;
+    T2Predictor_Init(t2p);
 }
 
 /* Information */
