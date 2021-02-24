@@ -59,6 +59,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <assert.h>
 
 #ifdef sun
 #include <sunmath.h>
@@ -71,6 +72,7 @@
 #define M_PIl 3.14159265358979323846264338327950288L
 #endif
 
+// #define _DEBUG 1
 
 long double parse_ld_cheby(const char* str){
     long double ld;
@@ -86,12 +88,26 @@ void Cheby2D_Init(Cheby2D *cheby, int nx, int ny)
     if (nx && ny)
         cheby->coeff = (long double*)malloc(nx*ny*sizeof(long double));
     else
-        cheby->coeff = 0;
+        cheby->coeff = NULL;
+
+#if _DEBUG
+  fprintf (stderr, "Cheby2D_Init this=%p coeff=%p\n",
+           (void*)cheby, (void*)(cheby->coeff));
+#endif
 }
 
 void Cheby2D_Destroy(Cheby2D *cheby)
 {
+#if _DEBUG
+  fprintf (stderr, "Cheby2D_Destroy this=%p coeff=%p\n", 
+           (void*)cheby, (void*)(cheby->coeff));
+#endif
+
+  if (cheby->coeff)
     free(cheby->coeff);
+
+  cheby->coeff = NULL;
+  cheby->nx = cheby->ny = 0;
 }
 
 void Cheby2D_Copy(Cheby2D *cheby, const Cheby2D* from)
@@ -181,12 +197,8 @@ Cheby2D_Construct_x_Derivative(Cheby2D *dcheby, const Cheby2D *cheby)
 {
     int ix, iy, i=0, nx=cheby->nx;
 
-    if (dcheby->nx != cheby->nx || dcheby->ny != cheby->ny)
-    {
-        // if this happens, the derivative cheby hasn't been initialized properly
-        fprintf(stderr, "Programming error, %s:%d\n", __FILE__, __LINE__);
-        exit(1);
-    }
+    assert (dcheby->nx == cheby->nx);
+    assert (dcheby->ny == cheby->ny);
 
     for (iy=0; iy < cheby->ny; iy++)
     {
@@ -367,6 +379,14 @@ ChebyModel_Copy(ChebyModel *cm, ChebyModel *from)
     void
 ChebyModel_Destroy(ChebyModel *cm)
 {
+    if (cm == NULL)
+        return;
+
+#if _DEBUG
+    fprintf (stderr, "ChebyModel_Destroy this=%p cheby=%p fcheby=%p\n",
+             (void*)cm, (void*)&(cm->cheby), (void*)&(cm->frequency_cheby));
+#endif
+
     Cheby2D_Destroy(&cm->cheby);
     Cheby2D_Destroy(&cm->frequency_cheby);
 }
@@ -400,11 +420,10 @@ ChebyModel_GetFrequency(const ChebyModel *cm, long double mjd, long double freq)
         / 86400.0;
 }
 
-
-
 void ChebyModel_Write(const ChebyModel *cm, FILE *f)
 {
     int ix, iy;
+
     fprintf(f, "ChebyModel BEGIN\n");
     fprintf(f, "PSRNAME %s\n", cm->psrname);
     fprintf(f, "SITENAME %s\n", cm->sitename);
@@ -421,6 +440,8 @@ void ChebyModel_Write(const ChebyModel *cm, FILE *f)
         {
             //	fprintf(f, " %.34Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
             ld_fprintf(f, " %.25Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
+
+            
             if ((iy+1)%3==0) fprintf(f, "\n");  // Every 3 coefficients put a new line
         }
         fprintf(f, "\n");
@@ -433,10 +454,11 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
     int done = 0;
     int first = 1;
     char line[1024], keyword[64], arg[64], junk[1024];
-    int nx=-1, ny=-1, ix=0, iy;
-    int ichar, nread;
+    int nx=-1, ny=-1, ix=0, iy=0;
+    int ichar=0, nread=0;
 
-    cm->cheby.coeff=NULL;
+    ChebyModel_Destroy (cm);
+
     char str1[128];
     char str2[128];
 
@@ -444,6 +466,7 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
     {
         if (fgets(line, 1024, f)!=line)
             return -1;
+
         if (sscanf(line, "%s", keyword)!=1)
             continue; // skip blank lines
         if (sscanf(line, "%s %s", keyword, arg)!=2)
@@ -507,6 +530,7 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
                     if (sscanf(line+ichar, "%s %n",str1, &nread)!=1)
                         return -10;
                     cm->cheby.coeff[iy*cm->cheby.nx+ix] = (long double)parse_ld_cheby(str1);
+
                     ichar += nread;
                 }
             }
@@ -517,6 +541,7 @@ int ChebyModel_Read(ChebyModel *cm, FILE *f)
                     if (sscanf(line+ichar, "%s %n",str1, &nread)!=1)
                         return -10;
                     cm->cheby.coeff[iy*cm->cheby.nx+ix] = (long double)parse_ld_cheby(str1);
+
                     ichar += nread;
                     if ((iy+1)%3==0)
                     {
@@ -625,6 +650,13 @@ void ChebyModelSet_Write(const ChebyModelSet *cms, FILE *f)
 
 int ChebyModelSet_Read(ChebyModelSet *cms, FILE *f)
 {
+#if _DEBUG
+    fprintf (stderr, "ChebyModelSet_Read this=%p FILE*=%p\n",
+             (void*)cms, (void*)f);
+#endif
+
+    ChebyModelSet_Destroy (cms);
+
     char line[1024], keyword[64];
     int iseg;
     int ret;
@@ -634,17 +666,27 @@ int ChebyModelSet_Read(ChebyModelSet *cms, FILE *f)
         return -1;
     if (strcasecmp(keyword, "ChebyModelSet"))
         return -1;
+
     cms->segments = (ChebyModel *)malloc(cms->nsegments*sizeof(ChebyModel));
 
+#if _DEBUG
+    fprintf (stderr, "ChebyModelSet_Read this=%p segments=%p\n",
+             (void*)cms, (void*)cms->segments);
+#endif
+
     for (iseg=0; iseg < cms->nsegments ; iseg++)
-        if ((ret=ChebyModel_Read(&cms->segments[iseg], f)) != 0)
-            return ret;
+    {
+      ChebyModel_Init(&cms->segments[iseg], 0, 0);
+      ret = ChebyModel_Read(&cms->segments[iseg], f);
+      if (ret != 0)
+        return ret;
+    }
     return 0;
 }
 
 void ChebyModelSet_Init(ChebyModelSet *cms)
 {
-    cms->segments = 0;
+    cms->segments = NULL;
     cms->nsegments = 0;
 }
 
@@ -712,11 +754,20 @@ ChebyModelSet_Keep(ChebyModelSet *cms, unsigned nmjd, const long double* mjd)
 
 void ChebyModelSet_Destroy(ChebyModelSet *cms)
 {
+#if _DEBUG
+    fprintf (stderr, "ChebyModelSet_Destroy this=%p segments=%p\n",
+             (void*)cms, (void*)(cms->segments));
+#endif
+
     int iseg;
     for (iseg=0; iseg < cms->nsegments ; iseg++)
         ChebyModel_Destroy(&cms->segments[iseg]);
 
-    free(cms->segments);
+    if (cms->segments)
+      free(cms->segments);
+
+    cms->segments = NULL;
+    cms->nsegments = 0;
 }
 
 
@@ -730,3 +781,4 @@ main(int argc, char *argv[])
     return 0;
 }
 #endif
+
