@@ -2251,7 +2251,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
         newmean = newmean/psr[p].nobs;
 
         // deal with the REFPHS option before we look at red noise etc.
-        if(psr->refphs==REFPHS_TZR){
+        if(psr[p].refphs==REFPHS_TZR){
             // remove our TZR observation and store it in tzrobs for later use.
             memcpy(&(psr[p].tzrobs),&(psr[p].obsn[psr[p].nobs-1]),sizeof(observation));
             psr[p].nobs--;
