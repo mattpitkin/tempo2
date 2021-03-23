@@ -881,6 +881,8 @@ typedef struct pulsar {
 
     double posPulsarEquatorial[3];            /*!< 3-vector pointing at pulsar, in equatorial coordinates (even if using ecliptic)*/
 
+    longdouble phase0;  /*!< phase offset between the period epoch and initial TOA */
+
     enum series_type dm_series_type;
 } pulsar;
 

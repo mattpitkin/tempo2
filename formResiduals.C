@@ -2048,6 +2048,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                      || psr[0].obsn[i].sat < psr[0].param[param_finish].val[0]+START_FINISH_DELTA))
             {
                 phas1 = fortran_mod((phase5[i]),longdouble(1.0));
+                psr[p].phase0 = phas1;  // store this phase offset
 
                 //	       printf("phas1 set to observation number %d\n",i);
                 break;
