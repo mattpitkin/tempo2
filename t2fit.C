@@ -193,7 +193,11 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
                 psr_x,psr_y,psr_e,
                 psr_ndata,0,psr_toaidx);
 
+#ifdef NO_UINV
+        logtchk("got U (actually L)");
+#else
         logtchk("got Uinv");
+#endif
 
         // define some convinience variables
         const unsigned nParams=psr[ipsr].fitinfo.nParams;
@@ -253,8 +257,11 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         if(haveCovar){
 #ifdef NO_UINV
             logdbg("NO_UINV");
+
+            logtchk("fwdSub U (L)");
             TKforwardSubVec(uinv,psr_y,psr_ndata,psr_white_y);
             TKforwardSub(uinv,designMatrix,psr_ndata,nParams,white_designMatrix);
+            logtchk("done fwdSub U (L)");
 #else
             TKmultMatrixVec(uinv,psr_y,psr_ndata,psr_ndata,psr_white_y);
             TKmultMatrix_sq(uinv,designMatrix,psr_ndata,nParams,white_designMatrix);

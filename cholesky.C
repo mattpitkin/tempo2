@@ -497,12 +497,12 @@ int cholesky_formUinv(double **uinv,double** m,int np){
 #ifdef NO_UINV
         logdbg("NO_UINV!! (M.Keith/LAPACK method)");
         int ret = accel_u(uinv[0],np);
+        logtchk("forming Cholesky matrix ... complete calculate U");
 #else
         int ret = accel_uinv(uinv[0],np);
+        logtchk("forming Cholesky matrix ... complete calculate Uinv");
 #endif
         if (ret != 0) return ret;
-
-        logtchk("forming Cholesky matrix ... complete calculate uinv");
     } else {
 #endif
 
