@@ -54,6 +54,6 @@ extern "C" {
 
 #ifdef TKlongdouble_h
 void free_2dLL(longdouble** m);
-longdouble** malloc_2dLL(int rows,int cols);
+longdouble** malloc_2dLL(size_t rows,size_t cols);
 #endif
 #endif
