@@ -6,6 +6,7 @@
 #include <fstream>
 #include <ctype.h>
 #include <math.h>
+#include "config.h"
 #include "TKlongdouble.h"
 #include "TKmatrix.h"
 #include "choleskyRoutines.h"
@@ -493,7 +494,12 @@ int cholesky_formUinv(double **uinv,double** m,int np){
         for(i =0;i<np;i++){
             memcpy(uinv[i],m[i],np*sizeof(double));
         }
+#ifdef NO_UINV
+        logdbg("NO_UINV!! (M.Keith/LAPACK method)");
+        int ret = accel_u(uinv[0],np);
+#else
         int ret = accel_uinv(uinv[0],np);
+#endif
         if (ret != 0) return ret;
 
         logtchk("forming Cholesky matrix ... complete calculate uinv");
