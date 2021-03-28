@@ -39,6 +39,23 @@ extern "C" {
 
 
 /**
+ * Note that this really forms the lower triangular matrix
+ * because fortran transposes by default.
+ * But that's ok! because tempo2 calls the lower triangular matrix "U"
+ */
+int accel_u(double* _m, int n){
+    int i;
+
+    F77_dpotf2("U",&n,_m,&n,&i);
+    if(i!=0){
+        logerr("Error in Cholesky Decomp i=%d",i);
+        return i;
+    }
+    logdbg("formed 'U' matrix");
+    return 0;
+}
+
+/**
  * An accelerated cholesky decomposion to form uinv in plac.
  * uinv is a lower triangular, row-major, matrix.
  */

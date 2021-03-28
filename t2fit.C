@@ -1,3 +1,4 @@
+#include "config.h"
 #include "t2fit.h"
 #include "t2fit_stdFitFuncs.h"
 #include "t2fit_nestlike.h"
@@ -5,7 +6,8 @@
 #include "constraints_nestlike.h"
 #include "constraints_param.h"
 #include "constraints_covar.h"
-#include <TKfit.h>
+
+#include "TKfit.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -249,8 +251,14 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
          * we use TKmultMatrix as this is usually backed by LAPACK and so is fast :)
          */
         if(haveCovar){
+#ifdef NO_UINV
+            logdbg("NO_UINV");
+            TKforwardSubVec(uinv,psr_y,psr_ndata,psr_white_y);
+            TKforwardSub(uinv,designMatrix,psr_ndata,nParams,white_designMatrix);
+#else
             TKmultMatrixVec(uinv,psr_y,psr_ndata,psr_ndata,psr_white_y);
             TKmultMatrix_sq(uinv,designMatrix,psr_ndata,nParams,white_designMatrix);
+#endif
         } else {
             for(unsigned i=0;i<psr_ndata;++i){
                 psr_white_y[i]=psr_y[i]*uinv[0][i];

@@ -27,6 +27,7 @@
  *    pp. 1549-1574 (bibtex: 2006MNRAS.372.1549E) when discussing the
  *    timing model.
  */
+#include <stdlib.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,13 +36,16 @@ extern "C" {
     void TKmultMatrix( double **idcm, double **u,int ndata,int ndata2,int npol,double **uout);
     void TKmultMatrixVec( double **idcm, double *b,int ndata,int ndata2,double *bout);
 
-    double** malloc_uinv(int n);
-    double **malloc_blas(int n,int m);
+    void TKforwardSubVec( double **A, double *b,int ndata,double *x);
+    void TKforwardSub( double **L, double **M,int ndata,int np,double **X);
+
+    double** malloc_uinv(size_t n);
+    double **malloc_blas(size_t n,size_t m);
     void free_blas(double** matrix);
     void free_uinv(double** uinv);
-    int get_blas_rows(double** uinv);
-    int get_blas_cols(double** uinv);
-    float** malloc_2df(int rows,int cols);
+    size_t get_blas_rows(double** uinv);
+    size_t get_blas_cols(double** uinv);
+    float** malloc_2df(size_t rows,size_t cols);
     void free_2df(float** uinv);
 #ifdef __cplusplus
 }
