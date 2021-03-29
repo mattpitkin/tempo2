@@ -1919,8 +1919,18 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
             }
         }
     } else {
-        TKmultMatrix_sq(uinv,designMatrix,n,nf,white_designMatrix);  
+#ifdef NO_UINV
+            logdbg("NO_UINV");
+
+            logtchk("fwdSub U (L)");
+            TKforwardSubVec(uinv,b,n,white_b);
+            TKforwardSub(uinv,designMatrix,n,nf,white_designMatrix);
+            logtchk("done fwdSub U (L)");
+#else
         TKmultMatrixVec_sq(uinv,b,n,white_b);
+        TKmultMatrix_sq(uinv,designMatrix,n,nf,white_designMatrix);  
+#endif
+
     }
 
     *OUT_designMatrix=designMatrix;
