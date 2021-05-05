@@ -55,7 +55,13 @@ TabulatedFunction_load(TabulatedFunction *func,
         exit(1);
     }
 
-    fgets(func->header_line, 1024, f); // first line is a header line
+    if (fgets(func->header_line, 1024, f)==NULL) // first line is a header line
+    {
+        fprintf(stderr,
+                "Error parsing file %s: file appears empty or corrupted.\n",
+                fileName);
+        exit(1);
+    }
     if (func->header_line[0]!='#')
     {
         fprintf(stderr, 
