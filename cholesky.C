@@ -37,36 +37,36 @@ void cholesky_cov2dm(double **mm, pulsar *psr, int *ip,int np,int nc);
  * nc		(int)			Number of constraints in fit
  * ip		(int)			Mapping from fit point to observation number in pulsar struct.
  */
-void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
+void getCholeskyMatrix(double **cholesky_L, const char* fname, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
 // UNUSED VARIABLE //     FILE* modelDescriptionFile;
     char modelFileName[1024];
 // UNUSED VARIABLE //     char tmp[1024];
     double **m;
     int i,j;
 
-    int nrows=get_blas_rows(uinv);
-    int ncols=get_blas_cols(uinv);
+    int nrows=get_blas_rows(cholesky_L);
+    int ncols=get_blas_cols(cholesky_L);
 
     if (ncols!=np){
         logmsg("np=%d ncols=%d",ncols,np);
-        logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=ncols");
+        logerr("cholesky_L error. Either you did not use malloc_uinv() to create cholesky_L or np!=ncols");
         exit(1);
     }
 
     if (nrows==1){
         // we are just adding the errors to a diagonal matrix.
-        getCholeskyDiagonals(uinv,psr,resx,resy, rese, np, nc,ip);
+        getCholeskyDiagonals(cholesky_L,psr,resx,resy, rese, np, nc,ip);
         return;
     }
     if (nrows!=np){
         logmsg("np=%d nrows=%d",ncols,np);
-        logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=nrows");
+        logerr("cholesky_L error. Either you did not use malloc_cholesky_L() to create cholesky_L or np!=nrows");
         exit(1);
     }
 
-    if(uinv[np-1] != uinv[0]+(np-1)*np){
-        logerr("uinv matrix not declared as consecutive memory.");
-        logmsg("Please use malloc_uinv() and free_uinv() from cholesky.C");
+    if(cholesky_L[np-1] != cholesky_L[0]+(np-1)*np){
+        logerr("cholesky_L matrix not declared as consecutive memory.");
+        logmsg("Please use malloc_cholesky_L() and free_cholesky_L() from cholesky.C");
 #ifdef ACCEL_UINV
         // if we are using the accelerated code then it will crash... otherwise it's just a warning
         exit(1);
@@ -144,27 +144,27 @@ void getCholeskyMatrix(double **uinv, const char* fname, pulsar *psr, double *re
 
 
 
-    logdbg("Form uinv from cholesky matrix 'm'");
+    logdbg("Form cholesky_L from cholesky matrix 'm'");
 
-    int ret = cholesky_formUinv(uinv,m,np);
+    int ret = cholesky_formL(cholesky_L,m,np);
     if (ret!=0) {
-        logwarn("Error with formUinv... adding 0.001%% to diagonal (%.1lg + %.1lg)",m[0][0],m[0][0]*0.00001);
+        logwarn("Error with formL... adding 0.001%% to diagonal (%.1lg + %.1lg)",m[0][0],m[0][0]*0.00001);
         for(i=0;i<np;i++){
             m[i][i] *= 1.00001;
         }
-        ret = cholesky_formUinv(uinv,m,np);
+        ret = cholesky_formL(cholesky_L,m,np);
         if (ret!=0) {
-            logerr("Error with formUinv");
+            logerr("Error with formL");
             exit(ret);
         }
     }
-    logdbg("compute determinant of uinv");
+    logdbg("compute determinant of cholesky_L");
     double det = 1;
     for (i=0;i<np;i++){
-        det += log(uinv[i][i]);
+        det += log(cholesky_L[i][i]);
     }
-    psr->detUinv=det;
-    logdbg("det(uinv)=%lg",det);
+    psr->detL=det;
+    logdbg("det(cholesky_L)=%lg",det);
 
 
     for(i=0;i<np+1;i++)free(m[i]);
@@ -467,46 +467,47 @@ void cholesky_covarFunc2matrix(double** m, double* covarFunc, int ndays,double *
 
 
 
-void getCholeskyDiagonals(double **uinv, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
+void getCholeskyDiagonals(double **L, pulsar *psr, double *resx,double *resy,double *rese, int np, int nc,int* ip){
     int i;
     double det = 0;
     for(i=0;i<np;i++){
-        uinv[0][i]=1.0/rese[i];
-        det += log(uinv[0][i]);
+        L[0][i]=rese[i];
+        det += log(L[0][i]);
     }
-    psr->detUinv=det;
-    logdbg("det(uinv)=%lg (C diagonal)",det);
+    psr->detL=det;
+    logdbg("det(L)=%lg (C diagonal)",det);
 
 }
 
 
 /**
- * UINV is a lower triangluar matrix.
- * Matricies are row-major order, i.e. uinv[r][c].
+ * L is a lower triangluar matrix.
+ * Matricies are row-major order, i.e. cholesky_L[r][c].
  * returns 0 if ok.
+ *
+ * Note that this matrix used to be called "uinv", and was
+ * the inverse of the lower-triangular matrix.
+ * 
+ * Since 2021 we no longer invert the matrix and instead use it
+ * with forward substitution as this is much faster. Rather than call
+ * the non-inverted lower triangular matrix "uinv" I (MJK) decided to
+ * re-name it "L" everywhere!. Hope this is not too confusing.
  */
-int cholesky_formUinv(double **uinv,double** m,int np){
+int cholesky_formL(double **cholesky_L,double** m,int np){
     int i,j,k;
     logtchk("forming Cholesky matrix ... do Cholesky decomposition");
 #ifdef ACCEL_UINV
     if(useT2accel){
         logdbg("Doing ACCELERATED Chol Decomp (M.Keith/LAPACK method)");
         for(i =0;i<np;i++){
-            memcpy(uinv[i],m[i],np*sizeof(double));
+            memcpy(cholesky_L[i],m[i],np*sizeof(double));
         }
-#ifdef NO_UINV
         logdbg("NO_UINV!! (M.Keith/LAPACK method)");
-        int ret = accel_u(uinv[0],np);
+        int ret = accel_cholfac(cholesky_L[0],np);
         logtchk("forming Cholesky matrix ... complete calculate U");
-#else
-        int ret = accel_uinv(uinv[0],np);
-        logtchk("forming Cholesky matrix ... complete calculate Uinv");
-#endif
         if (ret != 0) return ret;
     } else {
 #endif
-
-
         double sum;
 
         double *cholp  = (double *)malloc(sizeof(double)*(np+1));
@@ -515,30 +516,21 @@ int cholesky_formUinv(double **uinv,double** m,int np){
 
         T2cholDecomposition(m,np,cholp);
         logtchk("forming Cholesky matrix ... complete do Cholesky decomposition");
-        // Now calculate uinv
-        logtchk("forming Cholesky matrix ... calculate uinv");
+        // We have to construct L from the output of the above.
         for (i=0;i<np;i++)
         {
-            m[i][i] = 1.0/cholp[i];
-            uinv[i][i] = m[i][i];
-            for (j=0;j<i;j++)
-                uinv[j][i] = 0.0;
-            for (j=i+1;j<np;j++)
-            {
-                sum=0.0;
-                for (k=i;k<j;k++) sum-=m[j][k]*m[k][i];
-                m[j][i]=sum/cholp[j];
-                uinv[j][i] = m[j][i];
+            for (j=i;j>=0;j--) { // just get the lower triangular part...
+                cholesky_L[i][j] = m[i][j];
             }
+            cholesky_L[i][i]=cholp[i]; // and the diagonal terms
         }
-
-        logtchk("forming Cholesky matrix ... complete calculate uinv");
+        logtchk("forming Cholesky matrix ... complete calculate cholesky L");
         if (debugFlag)
         {
-            logdbg("uinv = ");
+            logdbg("L = ");
             for (i=0;i<5;i++)
             { 
-                for (j=0;j<5;j++) fprintf(LOG_OUTFILE,"%10g ",uinv[i][j]); 
+                for (j=0;j<5;j++) fprintf(LOG_OUTFILE,"%10g ",cholesky_L[i][j]); 
                 fprintf(LOG_OUTFILE,"\n");
             }
             fprintf(LOG_OUTFILE,"\n");
@@ -554,11 +546,11 @@ int cholesky_formUinv(double **uinv,double** m,int np){
 #endif
 
     if(debugFlag){
-        logdbg("Write uinv");
-        FILE* file=fopen("chol.uinv","w");
+        logdbg("Write cholesky_L");
+        FILE* file=fopen("chol.L","w");
         for(i =0;i<np;i++){
             for(j =0;j<np;j++){
-                fprintf(file,"%d %d %lg\n",i,j,uinv[i][j]);
+                fprintf(file,"%d %d %lg\n",i,j,cholesky_L[i][j]);
             }
             fprintf(file,"\n");
         }
@@ -568,6 +560,36 @@ int cholesky_formUinv(double **uinv,double** m,int np){
 
 }
 
+
+int cholesky_formLinv(double **Linv,double** m,int np){
+    int i,j,k;
+    double sum;
+    double **L = malloc_uinv(np);
+    double *cholp = (double*)malloc(sizeof(double)*np);
+    cholesky_formL(L,m,np);
+    for (i=0;i<np;i++){
+        cholp[i]=L[i][i];
+        L[i][i]=0;
+    }
+    logtchk("forming Cholesky matrix ... calculate uinv");
+    for (i=0;i<np;i++)
+    {
+        L[i][i] = 1.0/cholp[i];
+        Linv[i][i] = L[i][i];
+        for (j=0;j<i;j++)
+            Linv[j][i] = 0.0;
+        for (j=i+1;j<np;j++)
+        {
+            sum=0.0;
+            for (k=i;k<j;k++) sum-=L[j][k]*L[k][i];
+            L[j][i]=sum/cholp[j];
+            Linv[j][i] = L[j][i];
+        }
+    }
+    free(cholp);
+    free_uinv(L);
+    return 0;
+}
 
 
 void cholesky_readT2Model1(double **m, std::stringstream &ss,double *resx,double *resy,double *rese,int np, int nc,int *ip, pulsar *psr){

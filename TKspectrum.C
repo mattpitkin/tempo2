@@ -451,12 +451,12 @@ void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *
     // Here the whitening matrix is just a diagonal
     //             // weighting matrix. Store diagonal matrix as 1xN
     //                         // so that types match later.
-    double** uinv=malloc_blas(1,n);
+    double** weights=malloc_blas(1,n);
         for(int k=0; k < n; k++){
-            uinv[0][k] = 1.0 / sig[k];
+            weights[0][k] = 1.0 / sig[k];
         }
 
-    calcSpectraErr(uinv,x,y,n,outX,outY,outE,*outN);
+    calcSpectraErr(weights,x,y,n,outX,outY,outE,*outN);
 
 }
 
@@ -1663,12 +1663,12 @@ void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, doubl
     TKspline_interpolate(inN, inX, inY, yd, tempX, interpY, nTemp);
 } //interpolateSplineSmoothFixedXPts
 
-int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit) {
+int calcSpectraErr(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit) {
     if (nfit < 0)
         nfit=nres/2-1;
     double specI[nfit];
     double specR[nfit];
-    int ret=calcSpectraErr_complex(uinv,resx,resy,nres,specX,specR,specI,specE,nfit);
+    int ret=calcSpectraErr_complex(cholesky_L,resx,resy,nres,specX,specR,specI,specE,nfit);
     for (int k=0;k<nfit;k++){
         specY[k] = pow(specR[k],2)+pow(specI[k],2);
     }
@@ -1682,7 +1682,7 @@ int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *spec
  *
  */
 
-int calcSpectraErr_complex(double **uinv,double *resx,double *resy,int nres,double *specX,double *specR, double* specI,double* specE,int nfit)
+int calcSpectraErr_complex(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specR, double* specI,double* specE,int nfit)
 {
 
     if (nfit < 0)
@@ -1707,10 +1707,10 @@ int calcSpectraErr_complex(double **uinv,double *resx,double *resy,int nres,doub
             designMatrix[idat][1] = sin(omega*resx[idat]);
             designMatrix[idat][0] = cos(omega*resx[idat]);
         }
-        TKmultMatrix_sq(uinv,designMatrix,nres,2,whiteDesignMatrix);
-        TKmultMatrixVec(uinv,resy,nres,nres,white_data);
+        // Compute whitened DM/residuals
+        TKforwardSub(cholesky_L,designMatrix,nres,2,whiteDesignMatrix);
+        TKforwardSubVec(cholesky_L,resy,nres,white_data);
 
-        //TKleastSquares_svd_psr_dcm(resx,resy,sig,nres,param,error,2,cvm,&chisq,fitCosSineFunc,0,psr,1.0e-40,ip,uinv);
 
         TKleastSquares(data,white_data, designMatrix, whiteDesignMatrix, nres,2,1e-40,1,param,error, NULL);
 
@@ -1736,6 +1736,6 @@ int calcSpectraErr_complex(double **uinv,double *resx,double *resy,int nres,doub
 }
 
 
-int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit) {
-    return calcSpectraErr(uinv,resx,resy,nres,specX,specY,NULL,nfit);
+int calcSpectra(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specY,int nfit) {
+    return calcSpectraErr(cholesky_L,resx,resy,nres,specX,specY,NULL,nfit);
 }

@@ -45,7 +45,7 @@ extern "C" {
  * because fortran transposes by default.
  * But that's ok! because tempo2 calls the lower triangular matrix "U"
  */
-int accel_u(double* _m, int n){
+int accel_cholfac(double* _m, int n){
     int i;
 
     F77_dpotrf("U",&n,_m,&n,&i);
@@ -60,6 +60,8 @@ int accel_u(double* _m, int n){
 /**
  * An accelerated cholesky decomposion to form uinv in plac.
  * uinv is a lower triangular, row-major, matrix.
+ * NOTE - 2021-05-01 - We no longer use this. As Bill Coles says,
+ * it is much much faster to just use forward substitution.
  */
 int accel_uinv(double* _m, int n){
     int i,j;

@@ -116,7 +116,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
         int *psr_toaidx = (int*)malloc(sizeof(int)*psr[ipsr].nobs); // mapping from fit data to observation number
 
 
-        double** uinv; // the whitening matrix.
+        double** cholesky_L; // the whitening matrix.
 
         /**
          * Working out which data contributes to the fit is done in this routine.
@@ -152,7 +152,7 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
         /**
          * The whitening matrix behaves diferently if we have a covariance matrix.
-         * If we have a covariance matrix, uinv is an ndata x ndata triangular matrix.
+         * If we have a covariance matrix, cholesky_L is an ndata x ndata triangular matrix.
          * Otherwise, it only has diagonal elements, so we efficiently store it as 
          * a 1-d ndata array.
          */
@@ -161,15 +161,15 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
             sortToAs(psr+ipsr);
 
             // malloc_uinv does a blas-compatible allocation of a 2-d array.
-            logdbg("Create uinv array");
-            uinv = malloc_uinv(psr_ndata);
+            logdbg("Create cholesky_L array");
+            cholesky_L = malloc_uinv(psr_ndata);
             psr[ipsr].fitMode=1; // Note: forcing this to 1 as the Cholesky fit is a weighted fit
             logmsg("Doing a FULL COVARIANCE MATRIX fit");
         } else {
             // Here the whitening matrix is just a diagonal
             // weighting matrix. Store diagonal matrix as 1xN
             // so that types match later.
-            uinv=malloc_blas(1,psr_ndata); 
+            cholesky_L=malloc_blas(1,psr_ndata); 
             if(psr[ipsr].fitMode == 0){
                 // if we are doing an unweighted fit then we should set the errors to 1.0
                 // to give uniform weighting.
@@ -181,23 +181,19 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
                 logdbg("Doing a WEIGHTED fit");
             }
         }
-        assert(uinv!=NULL);
-        assert(uinv[0]!=NULL);
+        assert(cholesky_L!=NULL);
+        assert(cholesky_L[0]!=NULL);
 
         /**
-         * Now we form the whitening matrix, uinv.
+         * Now we form the whitening matrix, cholesky_L.
          * Note that getCholeskyMatrix() is clever enough to see that we 
          * have created a 1 x ndata matrix if we have only diagonal elements.
          */
-        getCholeskyMatrix(uinv,covarFuncFile,psr+ipsr,
+        getCholeskyMatrix(cholesky_L,covarFuncFile,psr+ipsr,
                 psr_x,psr_y,psr_e,
                 psr_ndata,0,psr_toaidx);
 
-#ifdef NO_UINV
-        logtchk("got U (actually L)");
-#else
-        logtchk("got Uinv");
-#endif
+        logtchk("got cholesky_L");
 
         // define some convinience variables
         const unsigned nParams=psr[ipsr].fitinfo.nParams;
@@ -251,31 +247,24 @@ void t2Fit(pulsar *psr,unsigned int npsr, const char *covarFuncFile){
 
         /**
          * Now we multiply the design matrix and the data vector by the whitening matrix.
-         * If we just have variances (uinv is diagonal) then we do it traditionally, otherwise
+         * If we just have variances (cholesky_L is diagonal) then we do it traditionally, otherwise
          * we use TKmultMatrix as this is usually backed by LAPACK and so is fast :)
          */
         if(haveCovar){
-#ifdef NO_UINV
-            logdbg("NO_UINV");
-
-            logtchk("fwdSub U (L)");
-            TKforwardSubVec(uinv,psr_y,psr_ndata,psr_white_y);
-            TKforwardSub(uinv,designMatrix,psr_ndata,nParams,white_designMatrix);
-            logtchk("done fwdSub U (L)");
-#else
-            TKmultMatrixVec(uinv,psr_y,psr_ndata,psr_ndata,psr_white_y);
-            TKmultMatrix_sq(uinv,designMatrix,psr_ndata,nParams,white_designMatrix);
-#endif
+            logtchk("fwdSub L");
+            TKforwardSubVec(cholesky_L,psr_y,psr_ndata,psr_white_y);
+            TKforwardSub(cholesky_L,designMatrix,psr_ndata,nParams,white_designMatrix);
+            logtchk("done fwdSub L");
         } else {
             for(unsigned i=0;i<psr_ndata;++i){
-                psr_white_y[i]=psr_y[i]*uinv[0][i];
+                psr_white_y[i]=psr_y[i]/cholesky_L[0][i];
                 for(unsigned j=0;j<nParams;++j){
-                    white_designMatrix[i][j] = designMatrix[i][j]*uinv[0][i];
+                    white_designMatrix[i][j] = designMatrix[i][j]/cholesky_L[0][i];
                 }
             }
         }
 
-        free_blas(uinv);
+        free_blas(cholesky_L);
         free(psr_e);
         free(psr_toaidx);
 
@@ -1868,24 +1857,24 @@ void TKleastSquares_global_pulsar(double **x,double **y,int *n,
 
 
 
-void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFuncs)(double, double [], int,pulsar *,int,int), pulsar *psr, int* ip, double **uinv,int ipsr,double ***OUT_designMatrix,double ***OUT_white_designMatrix,double** OUT_b, double** OUT_wb){
+void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFuncs)(double, double [], int,pulsar *,int,int), pulsar *psr, int* ip, double **cholesky_L,int ipsr,double ***OUT_designMatrix,double ***OUT_white_designMatrix,double** OUT_b, double** OUT_wb){
 
     //double precision arrays for matrix algebra.
     double **designMatrix, **white_designMatrix;
     double basisFunc[nf];
     double *b,*white_b;
     int    i,j;
-    int nrows=get_blas_rows(uinv);
-    int ncols=get_blas_cols(uinv);
+    int nrows=get_blas_rows(cholesky_L);
+    int ncols=get_blas_cols(cholesky_L);
     if (ncols!=n){
         logmsg("n=%d ncols=%d",n,ncols);
-        logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=ncols");
+        logerr("cholesky_L error. Either you did not use malloc_uinv() to create cholesky_L/uinv or np!=ncols");
         exit(1);
     }
 
     if (nrows!=n && nrows != 1){
         logmsg("n=%d nrows=%d",n,nrows);
-        logerr("uinv error. Either you did not use malloc_uinv() to create uinv or np!=nrows");
+        logerr("cholesky_L error. Either you did not use malloc_uinv() to create cholesky_L/uinv or np!=nrows");
         exit(1);
     }
 
@@ -1913,23 +1902,18 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
     if(nrows==1){
         // we have only diagonal elements
         for (i=0;i<n;i++){
-            white_b[i]=b[i]*uinv[0][i];
+            white_b[i]=b[i]*cholesky_L[0][i];
             for (j=0;j<nf;j++){
-                white_designMatrix[i][j] = designMatrix[i][j]*uinv[0][i];
+                white_designMatrix[i][j] = designMatrix[i][j]*cholesky_L[0][i];
             }
         }
     } else {
-#ifdef NO_UINV
             logdbg("NO_UINV");
 
-            logtchk("fwdSub U (L)");
-            TKforwardSubVec(uinv,b,n,white_b);
-            TKforwardSub(uinv,designMatrix,n,nf,white_designMatrix);
-            logtchk("done fwdSub U (L)");
-#else
-        TKmultMatrixVec_sq(uinv,b,n,white_b);
-        TKmultMatrix_sq(uinv,designMatrix,n,nf,white_designMatrix);  
-#endif
+            logtchk("fwdSub L");
+            TKforwardSubVec(cholesky_L,b,n,white_b);
+            TKforwardSub(cholesky_L,designMatrix,n,nf,white_designMatrix);
+            logtchk("done fwdSub L");
 
     }
 
@@ -1954,7 +1938,7 @@ void TKleastSquares_svd_psr(double *x,double *y,double *sig,int n,double *p,doub
     double ** uinv=malloc_blas(1,n);
     if (weight==1){
         for (i=0; i<n;i++){
-            uinv[0][i]=1.0/sig[i];
+            uinv[0][i]=sig[i];
         }
     } else{
         for (i=0; i<n;i++){
