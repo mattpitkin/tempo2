@@ -221,24 +221,13 @@ void T2getWhiteNoiseLevel(int n, double *y, int nlast, double *av)
     *av /=(double) nlast;
 }
 
-void T2getWhiteRes(double *resx,double *resy,double *rese,int nres,double **uinv,double *cholWhiteY)
+void T2getWhiteRes(double *resx,double *resy,double *rese,int nres,double **cholesky_L,double *cholWhiteY)
 {
-    int i,j;
-    double sum;
+
     logmsg("Getting white residuals\n");
-    logmsg("Updated version after transposing uinv\n");
-    for (i=0;i<nres;i++)
-    {
-        sum=0.0;
-        for (j=0;j<nres;j++)
-        {
-            //	  sum+=uinv[j][i]*resy[j];
-            sum+=uinv[i][j]*resy[j];
-            //	  if (i==0) printf("uinv = %g\n",uinv[j+1][i+1]);
-        }
-        cholWhiteY[i]=sum;
-    }
-    //  exit(1);
+    // Solve by forward substitution
+    TKforwardSubVec(cholesky_L,resy,nres,cholWhiteY);
+
 }
 
 // NOTE: Bill does an unweighted fit
@@ -659,7 +648,7 @@ return ceil((resx[np-1])-(resx[0]));
 }*/
 
 void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
-        double fitVar,double **uinv,double *covarFunc,double *resx,double *resy,
+        double fitVar,double **cholesky_L,double *covarFunc,double *resx,double *resy,
         double *rese,int np,double *highFreqRes,double *errorScaleFactor, 
         int dcmflag,int useBeta,double betaVal)
 {
@@ -678,7 +667,7 @@ void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
         m[i][i]+=rese[i]*rese[i];
     }
 
-    cholesky_formUinv(uinv,m,np);
+    cholesky_formL(cholesky_L,m,np);
 
     free_uinv(m);
     printf("Complete calculateCholesky\n");
@@ -687,7 +676,7 @@ void T2calculateCholesky(double modelAlpha,double modelFc,double modelA,
 void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,int *in,double *zl,int usewt)
 {
     int i,j;
-    int nd = (int)(x[n-1]-x[0]+0.5);
+    int nd = (int)(x[n-1]-x[0]+0.5)+1;
 // UNUSED VARIABLE //     int nc=0;
     int nzl=0;
 // UNUSED VARIABLE //     int npts[nd];
@@ -706,6 +695,7 @@ void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,i
     // Bin in 1 day intervals
     for (i=0;i<n;i++)
     {
+
         for (j=i;j<n;j++)
         {
             dt = fabs(x[i]-x[j]);
@@ -720,6 +710,7 @@ void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,i
                     cv[(int)(dt+0.5)]+=(y[i]*y[j]);
                 else
                     cv[(int)(dt+0.5)]+=(y[i]*y[j])/(e[i]*e[j]);
+
                 in[(int)(dt+0.5)]++;
                 wt[(int)(dt+0.5)]+=1.0/(e[i]*e[j]);
             }

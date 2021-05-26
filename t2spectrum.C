@@ -6,20 +6,20 @@
 double GLOBAL_OMEGA;
 
 // Spectral analysis using covariance matrix
-// note: uinv array must start from 0, not 1
+// note: cholesky_L array must start from 0, not 1
 // NEW FEATURE:
 // set nfit < 0 to automatically set it to nres/2-1
-int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar* psr) {
+int calcSpectra_ri(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar* psr) {
 
     //  pulsar *psr=NULL;
-//    return calcSpectra_ri_T(uinv,resx,resy,nres,specX,specY_R,specY_I,nfit,(resx[nres-1]-resx[0]),'N',psr);
-    return calcSpectraErr_complex(uinv,resx,resy,nres,specX,specY_R,specY_I,NULL,nfit);
+//    return calcSpectra_ri_T(cholesky_L,resx,resy,nres,specX,specY_R,specY_I,nfit,(resx[nres-1]-resx[0]),'N',psr);
+    return calcSpectraErr_complex(cholesky_L,resx,resy,nres,specX,specY_R,specY_I,NULL,nfit);
 }
 
 
 
 
-int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr) {
+int calcSpectra_ri_T(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr) {
     int i,k;
 // UNUSED VARIABLE //     int nSpec;
 
@@ -56,7 +56,7 @@ int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *sp
     {
         GLOBAL_OMEGA = 2.0*M_PI/(T*binfactor)*(k+1);
         logdbg("In here k = %d\n",k);
-        TKleastSquares_single_pulsar(resx,resy,nres,param,NULL,3,NULL,&chisq,FIT_FUNC,psr,1.0e-40,ip,1,uinv);
+        TKleastSquares_single_pulsar(resx,resy,nres,param,NULL,3,NULL,&chisq,FIT_FUNC,psr,1.0e-40,ip,1,cholesky_L);
         logdbg("Out here k = %d\n",k);
         v[k] = (resx[nres-1]-resx[0])/365.25/2.0/pow(365.25*86400.0,2); 
         specX[k] = GLOBAL_OMEGA/2.0/M_PI;

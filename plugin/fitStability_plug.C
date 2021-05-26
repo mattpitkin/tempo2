@@ -123,7 +123,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
    for (int iparam =0; iparam < nparam ; ++iparam) {
        memcpy(parameter_cvm[iparam],psr[0].covar[iparam],nparam*sizeof(double));
    }
-   cholesky_formUinv(parameter_uinv,parameter_cvm,nparam);
+   cholesky_formLinv(parameter_uinv,parameter_cvm,nparam);
 
    double *ssq_deviations = new double[nparam];
    for (int iparam =0; iparam < nparam ; ++iparam) {

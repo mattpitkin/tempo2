@@ -50,8 +50,8 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2020.11.1"
-#define TEMPO2_h_MAJOR_VER 2020.11
+#define TEMPO2_h_VER "2021.05.1"
+#define TEMPO2_h_MAJOR_VER 2021.05
 #define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
@@ -797,7 +797,7 @@ typedef struct pulsar {
     char AverageFlag[MAX_FLAG_LEN];
     float AverageEpochWidth; 
 
-    double detUinv;
+    double detL;
 
 
     int outputTMatrix;
