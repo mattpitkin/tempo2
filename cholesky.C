@@ -23,6 +23,10 @@ void cholesky_matern15_kernel(double **m, double modelA, double modelSigma, doub
 void cholesky_matern25_kernel(double **m, double modelA, double modelSigma, double *resx,double *resy,double *rese,int np, int nc);
 void cholesky_cov2dm(double **mm, pulsar *psr, int *ip,int np,int nc);
 
+void cholesky_powerlawQPModel(double **m, double modelAlpha, double modelFc, double modelA,double log_qp_ratio, double qp_f0, double sig, double lam, double *resx,double *resy,double *rese,int np, int nc);
+
+void cholesky_powerlawRedPinkModel(double **m, double modelAlpha, double modelFc, double modelA,double alpha2, double fknee, double *resx,double *resy,double *rese,int np, int nc);
+
 /*
  * Derive a covariance matrix from the given filename.
  *
@@ -136,7 +140,7 @@ void getCholeskyMatrix(double **cholesky_L, const char* fname, pulsar *psr, doub
         FILE* mFile = fopen("chol.covarMatrix","w");
         for (i=0;i<np;i++)
         { 
-            for (j=0;j<np;j++) fprintf(mFile,"%d %d %g\n",i,j,m[i][j]); 
+            for (j=0;j<np;j++) fprintf(mFile,"%d %d %.28lg\n",i,j,m[i][j]); 
             fprintf(mFile,"\n");
         }
         fclose(mFile);
@@ -148,9 +152,9 @@ void getCholeskyMatrix(double **cholesky_L, const char* fname, pulsar *psr, doub
 
     int ret = cholesky_formL(cholesky_L,m,np);
     if (ret!=0) {
-        logwarn("Error with formL... adding 0.001%% to diagonal (%.1lg + %.1lg)",m[0][0],m[0][0]*0.00001);
+        logwarn("Error with formL... adding 0.0001%% to diagonal (%.1lg + %.1lg)",m[0][0],m[0][0]*0.000001);
         for(i=0;i<np;i++){
-            m[i][i] *= 1.00001;
+            m[i][i] *= 1.000001;
         }
         ret = cholesky_formL(cholesky_L,m,np);
         if (ret!=0) {
@@ -259,6 +263,18 @@ void cholesky_readT2CholModel_R(double **m, double **mm, const char* fname,doubl
                 double alpha,amp,fc;
                 sscanf(tmp,"%s %s %lf %lf %lf",dmy,val,&alpha,&amp,&fc);
                 cholesky_powerlawModel(mm,alpha,fc,amp, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2PowerLaw_QPc")==0){
+                double alpha,amp,fc,log_qp_ratio,qp_f0,sig,lam;
+                sscanf(tmp,"%s %s %lf %lf %lf %lf %lf %lf %lf",dmy,val,&alpha,&amp,&fc,&log_qp_ratio,&qp_f0,&sig,&lam);
+                cholesky_powerlawQPModel(mm,alpha,fc,amp, log_qp_ratio,qp_f0,sig,lam, resx, resy,rese,np, nc);
+                addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
+                continue;
+            } else if (strcmp(val,"T2PowerLaw_RedPink")==0){
+                double alpha,amp,fc,alpha2,fknee;
+                sscanf(tmp,"%s %s %lf %lf %lf %lf %lf",dmy,val,&alpha,&amp,&fc,&alpha2,&fknee);
+                cholesky_powerlawRedPinkModel(mm,alpha,fc,amp, alpha2,fknee, resx, resy,rese,np, nc);
                 addCovar(m,mm,resx,resy,rese,np,nc,ip,psr,mjd_start,mjd_end);
                 continue;
             } else if (strcmp(val,"T2YrPowerLaw_X")==0){
@@ -915,6 +931,51 @@ void cholesky_powerlawModel(double **m, double modelAlpha, double modelFc, doubl
     ndays=ceil((resx[np-1])-(resx[0])+1e-10);
     covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
     int ndays_out = T2calculateCovarFunc(modelAlpha,modelFc,modelA,0,0,covarFunc,resx,resy,rese,np);
+    if(ndays!=ndays_out){
+        logerr("Ndays in != Ndays out!");
+    }
+    if(debugFlag){
+        FILE* outFile = fopen("newDCF","w");
+        for(i=0;i<ndays;i++){
+            fprintf(outFile,"%lg\n",covarFunc[i]);
+        }
+        fclose(outFile);
+    }
+
+    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+    free(covarFunc);
+}
+
+void cholesky_powerlawRedPinkModel(double **m, double modelAlpha, double modelFc, double modelA,double alpha2, double fknee, double *resx,double *resy,double *rese,int np, int nc){
+
+    int ndays,i;
+    double *covarFunc;
+    logmsg("Generate covar matrix from 'RedPink' powerlaw model (a=%lf fc=%lf A=%lg a2=%lg, fknee=%lg) (np=%d, nc=%d)",modelAlpha,modelFc,modelA,alpha2,fknee,np,nc);
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+    int ndays_out = T2calculateCovarFunc_redpink(modelAlpha,modelFc,modelA,alpha2,fknee,covarFunc,resx,resy,rese,np);
+    if(ndays!=ndays_out){
+        logerr("Ndays in != Ndays out!");
+    }
+    if(debugFlag){
+        FILE* outFile = fopen("newDCF","w");
+        for(i=0;i<ndays;i++){
+            fprintf(outFile,"%lg\n",covarFunc[i]);
+        }
+        fclose(outFile);
+    }
+
+    cholesky_covarFunc2matrix(m,covarFunc,ndays,resx,resy,rese,np,nc);
+    free(covarFunc);
+}
+void cholesky_powerlawQPModel(double **m, double modelAlpha, double modelFc, double modelA,double log_qp_ratio, double qp_f0, double sig, double lam, double *resx,double *resy,double *rese,int np, int nc){
+
+    int ndays,i;
+    double *covarFunc;
+    logmsg("Generate covar matrix from QP + powerlaw model (a=%lf fc=%lf A=%lg qpr=%lg, f0=%lg sig=%lg lam=%lg) (np=%d, nc=%d)",modelAlpha,modelFc,modelA,log_qp_ratio,qp_f0,sig,lam,np,nc);
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    covarFunc=(double*)malloc(sizeof(double)*(ndays+1));
+    int ndays_out = T2calculateCovarFunc_with_QP(modelAlpha,modelFc,modelA,log_qp_ratio,qp_f0,sig,lam,covarFunc,resx,resy,rese,np);
     if(ndays!=ndays_out){
         logerr("Ndays in != Ndays out!");
     }

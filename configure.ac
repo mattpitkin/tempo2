@@ -193,11 +193,6 @@ T2ARCH=$t2arch
 
 AC_SUBST(T2ARCH)
 
-AC_ARG_ENABLE([no-uinv],AS_HELP_STRING([--enable-no-uinv],[Avoid computing UINV where possible]))
-AS_IF([test "x$enable_no_uinv" = "xyes"], [
-       AC_MSG_NOTICE([Avoiding UINV computation])
-       AC_DEFINE(NO_UINV,1,[Defined if you want to disable UINV computation.])
-])
 
 #doxygen
 AC_CHECK_PROG(have_doxygen,[doxygen], [yes],[no])
