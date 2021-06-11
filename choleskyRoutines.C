@@ -506,6 +506,148 @@ int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,d
 }
 
 
+/**
+ * Yes copy-pasted... sorry :(
+ */
+int T2calculateCovarFunc_redpink(double alpha1,double modelFc,double modelA,double alpha2, double freq_knee,double *covFunc,double *resx,double *resy,double *rese,int np){
+    int ndays;
+    int npts,i;
+    double *p_r,*p_i;
+    double freq;
+    double P;
+    double varScaleFactor=0.6;
+    varScaleFactor=1.0; // test mjk 2013
+
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    npts=128;
+    while(npts<(ndays+1)*2 || npts < (2*365.25/modelFc)) npts*=2;
+
+    p_r=(double*)malloc(sizeof(double)*npts);
+    p_i=(double*)malloc(sizeof(double)*npts);
+
+    logmsg("Generating powerlaw model covariance function. nday=%d npts=%d",ndays,npts);
+
+
+    for (i=1;i<npts;i++){
+        p_r[i]=0;
+        p_i[i]=0;
+    }
+
+    double delta=1.0/365.25;
+    double N=(double)npts;
+
+
+    p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),alpha1/2.0)
+    + modelA * pow(1.0+pow(freq_knee/modelFc,2),-alpha1/2.0)*
+            pow(1.0+pow(fabs(0)/freq_knee,2),-alpha2/2.0);
+
+
+    for (i=1;i<=npts/2;i++){
+        freq=double(i)/(N*delta);
+
+        P = modelA * pow(1.0+pow(fabs(freq)/modelFc,2),-alpha1/2.0)
+            + modelA * pow(1.0+pow(freq_knee/modelFc,2),-alpha1/2.0)*
+            pow(1.0+pow(fabs(freq)/freq_knee,2),-alpha2/2.0);
+
+        p_r[i]=P;
+        p_r[npts-i]=P;
+        p_i[i]=0;
+        p_i[npts-i]=0;
+//        printf("%lg %lg %lg ZZZ\n",freq,freq/365.25,P);
+    }
+
+    TK_fft(1,npts,p_r,p_i);
+
+    for (i=0; i <= ndays; i++){
+        covFunc[i]=p_r[i]*pow(86400.0*365.25,2)*365.25*varScaleFactor;
+    }
+
+    free(p_r);
+    free(p_i);
+    return ndays;
+
+
+}
+
+
+
+/**
+ * This is based on the spectral model code from psrainbow/run_enterprise MJK2021
+ */
+double qp_term(double freq_days, double logP, double f0, double sig, double lam, double df) {
+    double A = pow(10.0,logP);
+    double sigf0 = fmax(f0*sig, 0.5*df);
+    double ret=0;
+    if (freq_days > 0.5*(f0-sqrt(f0*f0 - 16*sigf0*sigf0))) {
+       // cut off low freq_daysuencies as they come back up in an unpleasent way.
+        for (int ih = 1 ; ih <=10 ; ++ih) {
+            ret += A * exp(-(ih-1)/lam)*exp(-pow(freq_days-f0*ih,2)/(2*pow(ih*sigf0,2)))/ih;
+        }
+    }
+    //printf("%lg %lg ZZZ %lg %lg %lg %lg %lg\n",freq_days,ret,f0,sigf0,lam,-pow(freq_days-f0*1,2),(2*pow(1*sigf0,2)));
+    return ret;
+}
+/**
+ * Yes copy-pasted... sorry :(
+ */
+int T2calculateCovarFunc_with_QP(double modelAlpha,double modelFc,double modelA,double log_qp_ratio,double f0, double sig, double lam,double *covFunc,double *resx,double *resy,double *rese,int np){
+    int ndays;
+    int npts,i;
+    double *p_r,*p_i;
+    double freq;
+    double P;
+    double varScaleFactor=0.6;
+    varScaleFactor=1.0; // test mjk 2013
+
+    ndays=ceil((resx[np-1])-(resx[0])+1e-10);
+    npts=128;
+    while(npts<(ndays+1)*2 || npts < (2*365.25/modelFc)) npts*=2;
+
+    p_r=(double*)malloc(sizeof(double)*npts);
+    p_i=(double*)malloc(sizeof(double)*npts);
+
+    logmsg("Generating powerlaw model covariance function. nday=%d npts=%d",ndays,npts);
+
+
+    for (i=1;i<npts;i++){
+        p_r[i]=0;
+        p_i[i]=0;
+    }
+
+    double delta=1.0/365.25;
+    double N=(double)npts;
+
+    // set the QP amplitude...
+    double log_QP = log_qp_ratio + log10(modelA/pow(1.0+pow(fabs(f0*365.25)/modelFc,2),modelAlpha/2.0));
+
+    p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
+
+    for (i=1;i<=npts/2;i++){
+        freq=double(i)/(N*delta);
+        double freq_per_day = freq/365.25;
+        P = modelA/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0); // red part
+        P += pow(freq_per_day/f0,-4)*qp_term(freq_per_day,log_QP,f0,sig,lam,1.0/(double)ndays); // QP part
+        p_r[i]=P;
+        p_r[npts-i]=P;
+        p_i[i]=0;
+        p_i[npts-i]=0;
+
+//        printf("%lg %lg ZZZ\n",freq,P);
+    }
+
+    TK_fft(1,npts,p_r,p_i);
+
+    for (i=0; i <= ndays; i++){
+        covFunc[i]=p_r[i]*pow(86400.0*365.25,2)*365.25*varScaleFactor;
+//        printf("%lg %.20lg ZZZ\n",(float)i,covFunc[i]);
+    }
+
+    free(p_r);
+    free(p_i);
+    return ndays;
+
+
+}
 
 /*
  * New algorithm for computing the 

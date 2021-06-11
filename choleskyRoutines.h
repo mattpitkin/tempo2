@@ -20,6 +20,10 @@ int T2fitSpectra(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,d
 
 void T2calculateCholesky(double modelAlpha,double modelFc,double modelScale,double fitVar,double **uinv,double *covFunc, double *resx,double *resy,double *rese,int np,double *highFreqRes,double *errorScaleFactor, int dcmflag,int useBeta,double betaVal);
 int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useBeta,double betaVal,double *covFunc,double *resx,double *resy,double *rese,int np);
+int T2calculateCovarFunc_with_QP(double modelAlpha,double modelFc,double modelA,double log_qp_ratio,double f0, double sig, double lam,double *covFunc,double *resx,double *resy,double *rese,int np);
+int T2calculateCovarFunc_redpink(double alpha1,double modelFc,double modelA,double alpha2, double freq_knee_days,double *covFunc,double *resx,double *resy,double *rese,int np);
+
+
 
 void T2getWhiteRes(double *resx,double *resy,double *rese,int nres,double **uinv,double *cholWhiteY);
 void T2calculateDailyCovariance(double *x,double *y,double *e,int n,double *cv,int *in,double *zl,int usewt);
