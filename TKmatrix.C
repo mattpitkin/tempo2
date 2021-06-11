@@ -6,6 +6,36 @@
 #include "TKmatrix.h"
 #include <assert.h>
 
+/*
+ * Solves L.x=b by forward substitusion for triangular L.
+ */
+void TKforwardSubVec( double **L, double *b,int ndata,double *x) {
+
+    for (int i=0; i < ndata; ++i){
+        double s=0;
+        for (int j = 0; j < i; ++j) {
+            s+=L[i][j]*x[j];
+        }
+        x[i] = (b[i]-s)/L[i][i];
+    }
+}
+
+/*
+ * Solves L.X=M by forward substitusion for triangular L.
+ */
+void TKforwardSub( double **L, double **M,int ndata,int np,double **X) {
+    for (int ip=0; ip < np; ++ip){
+        for (int i=0; i < ndata; ++i){
+            double s=0;
+            for (int j = 0; j < i; ++j) {
+                s+=L[i][j]*X[j][ip];
+            }
+            X[i][ip] = (M[i][ip]-s)/L[i][i];
+        }
+    }
+}
+
+
 
 void TKmultMatrix( double **idcm, double **u,int ndata,int ndata2,int npol,double **uout)
 {
@@ -76,8 +106,8 @@ void TKmultMatrixVec_sq( double **idcm, double *b,int ndata,double *bout)
 
 
 
-longdouble** malloc_2dLL(int rows,int cols){
-    int i;
+longdouble** malloc_2dLL(size_t rows,size_t cols){
+    size_t i;
     longdouble* memory;
     longdouble** m;
     logdbg("Allocate %d x %d longdouble array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(longdouble)/1024.0));
@@ -110,17 +140,17 @@ void free_2dLL(longdouble** m){
 /**
  * Allocate uinv in a "BLAS/LAPACK" compatile way
  */
-double **malloc_uinv(int n){
+double **malloc_uinv(size_t n){
     return malloc_blas(n,n);
 }
 
-int get_blas_rows(double** uinv){
-    int* dim=(int*)(uinv[0]-2);
+size_t get_blas_rows(double** uinv){
+    size_t* dim=(size_t*)(uinv[0]-2);
     return *dim;
 }
 
-int get_blas_cols(double** uinv){
-    int* dim=(int*)(uinv[0]-1);
+size_t get_blas_cols(double** uinv){
+    size_t* dim=(size_t*)(uinv[0]-1);
     return *dim;
 }
 /**
@@ -129,12 +159,12 @@ int get_blas_cols(double** uinv){
  * the main memory allocation. Useful for checks.
  * WARNING: assumes that sizeof(int) <= sizeof(double)
  */
-double **malloc_blas(int rows,int cols){
+double **malloc_blas(size_t rows,size_t cols){
     double *memory;
-    int *dimN;
-    int *dimM;
+    size_t *dimN;
+    size_t *dimM;
     double** uinv;
-    int i;
+    size_t i;
 
     logdbg("Allocate %d x %d double array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(double)/1024.0));
 
@@ -153,8 +183,8 @@ double **malloc_blas(int rows,int cols){
     }
     logdbg("Allocated mem=0x%016llx uinv=0x%016llx",reinterpret_cast<uint64_t>(memory),reinterpret_cast<uint64_t>(uinv));
     memory+=2; // the first two bytes are for the dimensions.
-    dimN=(int*)(memory-2);
-    dimM=(int*)(memory-1);
+    dimN=(size_t*)(memory-2);
+    dimM=(size_t*)(memory-1);
 
     *dimN = rows;
     *dimM = cols;
@@ -189,8 +219,8 @@ void free_uinv(double** uinv){
 
 
 
-float** malloc_2df(int rows,int cols){
-    int i;
+float** malloc_2df(size_t rows,size_t cols){
+    size_t i;
     float* memory;
     float** m;
     logdbg("Allocate %d x %d float array (%.3f kb)",rows,cols, (double)(rows*cols*sizeof(float)/1024.0));

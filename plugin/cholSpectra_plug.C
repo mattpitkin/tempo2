@@ -424,7 +424,7 @@ const char * plugVersionCheck = TEMPO2_h_VER;
 
 void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_r, double *py_i,int outWhite,int outUinv) {
     int i;
-    double **uinv;
+    double **cholesky_L;
     FILE *fin;
     int ndays=0;
     double resx[psr->nobs],resy[psr->nobs],rese[psr->nobs];
@@ -448,7 +448,7 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
 
     logmsg("Total obs = %d, Good obs = %d",psr->nobs,nobs);
     //  printf("Calculating the spectrum\n");
-    uinv = malloc_uinv(nobs);
+    cholesky_L = malloc_uinv(nobs);
 
     int ir=0;
     for (i=0;i<psr->nobs;i++)
@@ -477,31 +477,28 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
         logmsg("Warning: Assuming -dcf %s",covarFuncFile);
     }
 
-    logmsg("Get Cholesky 'uinv' matrix from '%s'",covarFuncFile);
-    getCholeskyMatrix(uinv,covarFuncFile,psr,resx,resy,rese,nobs,0,ip);
-    logdbg("Got uinv, now compute spectrum.");
+    // Must calculate L for the pulsar
+    logmsg("Get Cholesky 'L' matrix from '%s'",covarFuncFile);
+    getCholeskyMatrix(cholesky_L,covarFuncFile,psr,resx,resy,rese,nobs,0,ip);
+    logdbg("Got L, now compute spectrum.");
 
-    // Must calculate uinv for the pulsar
-    //
-    //   int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char fitfuncMode, pulsar* psr)
     char mde = 'N';
     if (T < 0){
         mde='T';
         T=-T;
     }
-    calcSpectra_ri_T(uinv,resx,resy,nobs,px,py_r,py_i,nSpec,T,mde,psr);
+    calcSpectra_ri_T(cholesky_L,resx,resy,nobs,px,py_r,py_i,nSpec,T,mde,psr);
 
     if (outUinv==1)
     {
         FILE *fout;
         int i,j;
 
-        fout = fopen("cholSpectra.uinv","w");
+        fout = fopen("cholSpectra.L","w");
         for (i=0;i<nobs;i++){
             for (j=0;j<nobs;j++)
             {
-                //	     printf("%d %d %g\n",i,j,uinv[i][j]);
-                fprintf(fout,"%d %d %g\n",i,j,uinv[i][j]);
+                fprintf(fout,"%d %d %g\n",i,j,cholesky_L[i][j]);
             }
         }
         fclose(fout);
@@ -512,7 +509,7 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
         FILE *fout;
 
         printf("Outputting whitened residuals\n");
-        T2getWhiteRes(resx,resy,rese,nobs,uinv,outRes);
+        T2getWhiteRes(resx,resy,rese,nobs,cholesky_L,outRes);
         if (!(fout = fopen("whiteRes.dat","w"))){
             printf("Unable to open file whiteRes.dat\n");
             exit(1);
@@ -525,8 +522,8 @@ void calculateSpectrum(pulsar *psr, double T, int nSpec, double *px, double *py_
         fclose(fout);
     }
 
-    // Free uinv
-    free_uinv(uinv);
+    // Free cholesky_L
+    free_uinv(cholesky_L);
 
 }
 

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2020.11.1],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/psrsoft/tempo2])
+AC_INIT([Tempo2],[2021.05.1],[george.hobbs@csiro.au],[],[http://www.bitbucket.org/psrsoft/tempo2])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
@@ -192,7 +192,6 @@ AC_DEFINE_UNQUOTED([TEMPO2_ARCH], "$t2arch",["Tempo2 ARCH variable"])
 T2ARCH=$t2arch
 
 AC_SUBST(T2ARCH)
-
 
 
 #doxygen
