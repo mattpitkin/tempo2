@@ -15,6 +15,7 @@ char useT2accel=1;
 
 #ifdef HAVE_LAPACK
 #define F77_dpotf2 F77_FUNC (dpotf2, DPOTF2)
+#define F77_dpotrf F77_FUNC (dpotrf, DPOTRF)
 #define F77_dtptri F77_FUNC (dtptri, DTPTRI)
 #define F77_dgels F77_FUNC (dgels, DGELS)
 #define F77_dtrmm F77_FUNC (dtrmm, DTRMM)
@@ -32,6 +33,7 @@ extern "C" {
 
 extern "C" {
     extern void F77_dpotf2(const char* uplo, int* n, double* a, int* lda, int* info);
+    extern void F77_dpotrf(const char* uplo, int* n, double* a, int* lda, int* info);
     extern void F77_dtptri(const char* uplo,const char* diag, int* n, double* a, int* info);
     extern void F77_dgels(const char *trans, int *m, int *n, int *nhrs, double* A, int *lda, double* B, int *ldb, double* work, int *lwork, int *info);
     extern void F77_dtrmm(const char* lr,const char* uplo, const char* tr, const char* diag, int* n, int*m, double* alp, double* a, int* lda, double* b, int* ldb);
@@ -39,8 +41,27 @@ extern "C" {
 
 
 /**
+ * Note that this really forms the lower triangular matrix
+ * because fortran transposes by default.
+ * But that's ok! because tempo2 calls the lower triangular matrix "U"
+ */
+int accel_cholfac(double* _m, int n){
+    int i;
+
+    F77_dpotrf("U",&n,_m,&n,&i);
+    if(i!=0){
+        logerr("Error in Cholesky Decomp i=%d",i);
+        return i;
+    }
+    logdbg("formed 'U' matrix");
+    return 0;
+}
+
+/**
  * An accelerated cholesky decomposion to form uinv in plac.
  * uinv is a lower triangular, row-major, matrix.
+ * NOTE - 2021-05-01 - We no longer use this. As Bill Coles says,
+ * it is much much faster to just use forward substitution.
  */
 int accel_uinv(double* _m, int n){
     int i,j;

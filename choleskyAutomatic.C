@@ -41,11 +41,11 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
     nres = T2obtainTimingResiduals(psr,resx,resy,rese);
 
     int i,j;
-    double **uinv;
+    double **cholesky_L;
     double *covFunc;
     int dspan=ceil(resx[nres-1]-resx[0]);
 
-    uinv=malloc_uinv(nres);
+    cholesky_L=malloc_uinv(nres);
     covFunc = (double *)malloc(sizeof(double)*((int)(resx[nres-1]-resx[0])+5));
 
     int nHighFreqSpec;
@@ -55,7 +55,7 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
 
 
 
-    // start with residuals, calculate Cholesky matrix uinv and covariance function
+    // start with residuals, calculate Cholesky matrix cholesky_L and covariance function
 
     // fit cubic to residuals (no interaction required)
 
@@ -152,23 +152,23 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
         fprintf(stderr, "high frequency residuals\n");
         T2getHighFreqRes(resy,smoothModel,nres,highFreqRes);
 
-        // cput errors into univ matrix
+        // cput errors into L matrix
 
         for (i=0;i<nres;i++)
         {
             for (j=0;j<nres;j++)	
             {
                 if (i==j)
-                    uinv[i][j]=1.0/(rese[i]);
+                    cholesky_L[i][j]=rese[i];
                 else
-                    uinv[i][j]=0.0;
+                    cholesky_L[i][j]=0.0;
             }
         }
 
 
         //double highFreqSpecX[MAX_OBSN], highFreqSpecY[MAX_OBSN];
         fprintf(stderr, "calculating spectra\n");
-        nHighFreqSpec = calcSpectra(uinv,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
+        nHighFreqSpec = calcSpectra(cholesky_L,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
 
 
         // interpolate the smooth curve
@@ -327,7 +327,7 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
     double errorScaleFactor=1;
 
     fprintf(stderr, "calculating Cholesky\n");
-    T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor, 0,0,0);
+    T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,cholesky_L,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor, 0,0,0);
 
 
 
@@ -341,7 +341,7 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
 
 
     fprintf(stderr, "get white residuals 2\n");
-    T2getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY);
+    T2getWhiteRes(resx,resy,rese,nres,cholesky_L,cholWhiteY);
 
     // get spectrum of whitened data
     int nCholWspec;
@@ -407,7 +407,7 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
     FCALPHA=modelAlpha;
     WNLEVEL=*whiteNoiseLevel;
 
-    nCholSpec = calcSpectra(uinv,resx,resy,nres,cholSpecX,cholSpecY,-1);
+    nCholSpec = calcSpectra(cholesky_L,resx,resy,nres,cholSpecX,cholSpecY,-1);
 
 
 
@@ -470,9 +470,9 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
     // does this need to be one beforehand?
     errorScaleFactor=1;
 
-    T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
-    nSpec =  calcSpectra(uinv,resx,resy, nres,specX,specY, -1);
-    //  nSpec = calcSpectra_with_err(uinv,resx,resy, nres,specX,specY,specY_err,-1);  
+    T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,cholesky_L,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
+    nSpec =  calcSpectra(cholesky_L,resx,resy, nres,specX,specY, -1);
+    //  nSpec = calcSpectra_with_err(cholesky_L,resx,resy, nres,specX,specY,specY_err,-1);  
 
 
 
@@ -532,7 +532,7 @@ void T2get_covFunc_automatic(pulsar *psr, double expSmooth, char *outname, doubl
     free(smoothModel);
     free(highFreqRes);
 
-    free_uinv(uinv);
+    free_uinv(cholesky_L);
 
     free(covFunc);
 

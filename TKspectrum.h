@@ -57,9 +57,9 @@ void TK_dft(double *x,double *y,int n,double *outX,double *outY,int *outN, doubl
 void TK_weightLS(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN, double *outY_re, double *outY_im);
 void TK_fitSinusoids(double *x,double *y,double *sig,int n,double *outX,double *outY,int *outN);
 
-int calcSpectraErr(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit);
+int calcSpectraErr(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specY,double* specE,int nfit);
 
-int calcSpectraErr_complex(double **uinv,double *resx,double *resy,int nres,double *specX,double *specR, double* specI,double* specE,int nfit);
+int calcSpectraErr_complex(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specR, double* specI,double* specE,int nfit);
 
 typedef struct complexVal {
     double real;
@@ -241,7 +241,7 @@ void indexx8(int n,double *arrin,int *indx);
 void TKinterpolateSplineSmoothFixedXPts(double *inX, double *inY, int inN, double *interpX, double *interpY, int nInterp);
 
 
-int calcSpectra(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY,int nfit);
+int calcSpectra(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specY,int nfit);
 
 
 #ifdef __Tempo2_h
@@ -259,11 +259,11 @@ void fitMeanSineFunc_IFUNC(double x,double *v,int nfit,pulsar *psr,int ival,int 
 void fitCosSineFunc(double x,double *v,int nfit,pulsar *psr,int ival);
 
 // Spectral analysis using covariance matrix
-// note: uinv array must start from 0, not 1
+// note: L array must start from 0, not 1
 // NEW FEATURE:
 // set nfit < 0 to automatically set it to nres/2-1
-int calcSpectra_ri(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar *psr);
-int calcSpectra_ri_T(double **uinv,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char useCM,pulsar* psr);
+int calcSpectra_ri(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,pulsar *psr);
+int calcSpectra_ri_T(double **cholesky_L,double *resx,double *resy,int nres,double *specX,double *specY_R,double *specY_I,int nfit,double T,char useCM,pulsar* psr);
 
 
 void TKcalcSigmaz(const pulsar &psr,int weights,double *ret_tau,double *ret_szbias,double *ret_e1,

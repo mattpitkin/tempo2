@@ -78,9 +78,9 @@ void plot5(double *preWhiteSpecX,double *preWhiteSpecY,int nPreWhiteSpec,
 	   double modelAlpha,double modelFc,int modelNfit,double modelScale,
 	   double nmodelScale,double *cholSpecX,double *cholSpecY,int nCholSpec,
 	   double *cholWspecX,double *cholWspecY,int nCholWspec,int makeps, double wn, double pb);
-void outputMatrix(double **uinv,int nres);
+void outputMatrix(double **cholesky_L,int nres);
 void fitExponential(double *resx,int nres,double *rawCovar,int *rawCovarNpts,double *ampFit,double *chisqFit,double *bestAmp,double *bestLag,double *bestChisq,int *nGridFit);
-void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,double **uinv,double *resx,
+void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,double **cholesky_L,double *resx,
 				double *resy,double *rese,int nres,double *covarFunc);
 void outputCovarianceFunction(double *covFunc,int n,double errorScaleFactor,pulsar *psr);
 
@@ -317,8 +317,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
   double modelAlpha,modelFc,modelScale,nmodelScale;    // Model parameters
   double wn;
   int modelNfit=-1;
-  double **uinv;                                       // Whitening matrix
-  double **uinvI;
+  double **cholesky_L;                                       // Whitening matrix
+  double **cholesky_LI;
   double cholWhiteY[MAX_OBSN];                         // Cholesky white residuals
   double cholWspecX[MAX_OBSN],cholWspecY[MAX_OBSN];    // Cholesky whitened spectrum
   int    nCholWspec;
@@ -360,7 +360,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	   
 	   if (tempTime==1)
 		 {
-	   uinv=malloc_uinv(nres);
+	   cholesky_L=malloc_uinv(nres);
 	   covFunc = (double *)malloc(sizeof(double)*((int)(resx[nres-1]-resx[0])+5));
 	   tempTime=2;
 		 }
@@ -393,15 +393,15 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	 if(!skipstep2){
 	 // Step 2:
 
-	 // Put errors into uinv matrix
+	 // Put errors into cholesky_L matrix
 	 for (i=0;i<nres;i++)
 	   {
 		 for (j=0;j<nres;j++)	
 	   {
 		 if (i==j)
-		   uinv[i][j]=1.0/(rese[i]);
+		   cholesky_L[i][j]=rese[i];
 		 else
-		   uinv[i][j]=0.0;
+		   cholesky_L[i][j]=0.0;
 	   }
 	   }
 
@@ -409,7 +409,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	 //  nOrigSpec = calculateSpectra(resx,resy,rese,nres,1,0,1,origSpecX,origSpecY);
 	 if (skipprocess==0)
 	   {
-		 nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY,-1);
+		 nOrigSpec = calcSpectra(cholesky_L,resx,resy,nres,origSpecX,origSpecY,-1);
 		 if(writeFiles)fileOutput2("origSpectra.dat",origSpecX,origSpecY,nOrigSpec);
 
 		 // Step 2b: interpolate the smooth curve
@@ -420,13 +420,13 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	 // Errors are ignored
 	 //  nSmoothSpec0 = calculateSpectra(interpX,interpY,rese,nInterp,0,0,2,
 	 //  				  smoothSpecX0,smoothSpecY0);
-/*	 uinvI = malloc_uinv(nInterp);
+/*	 cholesky_LI = malloc_uinv(nInterp);
 	 for (i=0;i<nInterp;i++)
 	   {
 		 for (j=0;j<nInterp;j++)
 	   {
-		 if (i==j) uinvI[i][j]=1.0;
-		 else	    uinvI[i][j]=0.0;
+		 if (i==j) cholesky_LI[i][j]=1.0;
+		 else	    cholesky_LI[i][j]=0.0;
 	   }
 	   }*/
 	 if (skipprocess==0)
@@ -436,12 +436,12 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 						 smoothSpecX0,smoothSpecY0);
 		 if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
 
-		 //  nSmoothSpec0 = calcSpectra(uinvI,interpX,interpY,nInterp,smoothSpecX0,smoothSpecY0,-1);
+		 //  nSmoothSpec0 = calcSpectra(cholesky_LI,interpX,interpY,nInterp,smoothSpecX0,smoothSpecY0,-1);
 		 printf("Done calculating spectra\n");
 	   }
 		 if(writeFiles)fileOutput2("zeroprewhite.dat",smoothSpecX0,smoothSpecY0,nSmoothSpec0);
 	 // TESTING
-	 //  nSmoothSpec0 = calcSpectra(uinv,resx,resy,rese,nres,
+	 //  nSmoothSpec0 = calcSpectra(cholesky_L,resx,resy,rese,nres,
 	 //			     smoothSpecX0,smoothSpecY0);
 
 	 // Step 2d: Obtain spectra of smooth interpolated model with 1st order prewhitening
@@ -471,7 +471,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	 //				   highFreqSpecY);
 	 if (skipprocess==0)
 	   {
-		 nHighFreqSpec = calcSpectra(uinv,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
+		 nHighFreqSpec = calcSpectra(cholesky_L,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
 		 if(writeFiles)fileOutput2("highfreqspec.dat",highFreqSpecX,highFreqSpecY,nHighFreqSpec);
 		 
 		 // Step 2g: make the plot
@@ -518,8 +518,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	   //	  modelScale = amp;
 	   //	}
 
-		 // Step 4a: calculate the Cholesky whitening matrix (uinv)
-		 T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
+		 // Step 4a: calculate the Cholesky whitening matrix (cholesky_L)
+		 T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,cholesky_L,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
 		 for (i=0;i<100;i++)
 	   printf("cov: %lg %g %g %g %d %g %g\n",covFunc[i],resx[i],resy[i],rese[i],nres,highFreqRes[i],errorScaleFactor);
 	   }
@@ -544,7 +544,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 		 bestChisq = chisqFit[(int)(tt+0.5)];
 	   }
 		 } while (tt!=-1);
-		 calculateCholeskyCovarFunc(bestAmp,bestLag,nGridFit,uinv,resx,resy,rese,nres,covFunc);
+		 calculateCholeskyCovarFunc(bestAmp,bestLag,nGridFit,cholesky_L,resx,resy,rese,nres,covFunc);
 		 //      exit(1);
 	   }
 
@@ -552,12 +552,12 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	// Alternaitve to first steps - use a DCF to get the spectrum.
 	
 		 float mx,my;
-	  uinv=malloc_uinv(psr->nobs);
-	  getCholeskyMatrix(uinv,covarFuncFile,psr,resx,resy,rese,psr->nobs,0,ip);
-		 nOrigSpec = calcSpectra(uinv,resx,resy,nres,origSpecX,origSpecY,-1);
+	  cholesky_L=malloc_uinv(psr->nobs);
+	  getCholeskyMatrix(cholesky_L,covarFuncFile,psr,resx,resy,rese,psr->nobs,0,ip);
+		 nOrigSpec = calcSpectra(cholesky_L,resx,resy,nres,origSpecX,origSpecY,-1);
 		 usePreWhitening=4;
 
-		 nHighFreqSpec = calcSpectra(uinv,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
+		 nHighFreqSpec = calcSpectra(cholesky_L,resx,highFreqRes,nres,highFreqSpecX,highFreqSpecY,-1);
 		 if(writeFiles)fileOutput2("highfreqspec.dat",highFreqSpecX,highFreqSpecY,nHighFreqSpec);
 
 	   memcpy(preWhiteSpecX,origSpecX,nOrigSpec*sizeof(double));
@@ -571,8 +571,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 		 printf("modelScale = %g\n",modelScale);
 	   } while (cont==1);
 
-		 // Step 4a: calculate the Cholesky whitening matrix (uinv)
-	   T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
+		 // Step 4a: calculate the Cholesky whitening matrix (cholesky_L)
+	   T2calculateCholesky(modelAlpha,modelFc,modelScale,fitVar,cholesky_L,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
 
    }
 
@@ -590,18 +590,18 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
   /*  {
     FILE *fin;
-    fin = fopen("/u/hob044/uinv1.dat","r");
+    fin = fopen("/u/hob044/cholesky_L1.dat","r");
     for (i=0;i<nres;i++)
       {
 	for (j=0;j<nres;j++)
-	  fscanf(fin,"%lf",&uinv[i][j]);
+	  fscanf(fin,"%lf",&cholesky_L[i][j]);
       }
     
     fclose(fin);
     
     }*/
 
-  nCholSpec = calcSpectraErr(uinv,resx,resy,nres,cholSpecX,cholSpecY,cholSpecE,-1);
+  nCholSpec = calcSpectraErr(cholesky_L,resx,resy,nres,cholSpecX,cholSpecY,cholSpecE,-1);
   fileOutput3("cholSpectra.dat",cholSpecX,cholSpecY,cholSpecE,nCholSpec);
 
   // Step 5b: refit the model
@@ -624,15 +624,15 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
       */
 
       // Step 5c: recalculate the Cholesky matrix
-      T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,uinv,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
+      T2calculateCholesky(modelAlpha,modelFc,nmodelScale,fitVar,cholesky_L,covFunc,resx,resy,rese,nres,highFreqRes,&errorScaleFactor,0,0,0);
     }
   else
   // Step 6: output the covariance function
   outputCovarianceFunction(covFunc,(int)(resx[nres-1]-resx[0])+2,errorScaleFactor,psr);
-  //    outputMatrix(uinv,nres);
+  //    outputMatrix(cholesky_L,nres);
   
   
-  T2getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY);
+  T2getWhiteRes(resx,resy,rese,nres,cholesky_L,cholWhiteY);
   if(writeFiles)fileOutput3("cholWhiteRes.dat",resx,cholWhiteY,rese,nres);
 
 
@@ -786,7 +786,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 	      
 	      //if (inpt==-1) {printf("Continue (press '1') "); scanf("%s",dummy);}
 	      
-	      nCholSpec = calcSpectraErr(uinv,resx,resy,nres,cholSpecXp,cholSpecYp,cholSpecEp,-1);
+	      nCholSpec = calcSpectraErr(cholesky_L,resx,resy,nres,cholSpecXp,cholSpecYp,cholSpecEp,-1);
 	      
 	  
 	  
@@ -804,7 +804,7 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 		}
 	      
 
-	      T2getWhiteRes(resx,resy,rese,nres,uinv,cholWhiteY);
+	      T2getWhiteRes(resx,resy,rese,nres,cholesky_L,cholWhiteY);
 	      
 	  
 	      plot4(resx,resy,rese,nres,cholWhiteY,whiteCovar,whiteCovarNpts,zerolagWhiteCovar);
@@ -863,8 +863,8 @@ void doPlugin(pulsar *psr,double idt,int ipw,double ifc,double iexp,int inpt,int
 
 
   // Deallocate memory 
-  free_uinv(uinv);
-  //  free_uinv(uinvI);
+  free_uinv(cholesky_L);
+  //  free_uinv(cholesky_LI);
   free(covFunc);
 }
 
@@ -947,7 +947,7 @@ void fileOutput2(const char *fname,double *x,double *y,int n)
   fclose(fout);
 }
 
-void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,double **uinv,double *resx,
+void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,double **cholesky_L,double *resx,
 				double *resy,double *rese,int nres,double *covarFunc)
 {
   int ndays = (int)(ceil(resx[nres-1])-floor(resx[0])+1)+2; // Add two extra days for interpolation  
@@ -974,7 +974,7 @@ void calculateCholeskyCovarFunc(double bestAmp,double bestLag,int nGridFit,doubl
 	 m[i][i]+=rese[i]*rese[i];
   }
 
-  cholesky_formUinv(uinv,m,nres);
+  cholesky_formL(cholesky_L,m,nres);
   free_uinv(m);
 
 }
@@ -1195,7 +1195,7 @@ void plot3a(double *resx,double *resy,int nres,double *rawCovar,int *rawCovarNpt
   cpgend();
 }
 
-void outputMatrix(double **uinv,int nres)
+void outputMatrix(double **cholesky_L,int nres)
 {
   int i,j;
   FILE *fout;
@@ -1204,7 +1204,7 @@ void outputMatrix(double **uinv,int nres)
   for (i=0;i<nres;i++)
     {
       for (j=0;j<nres;j++)
-	fprintf(fout,"%.15g ",uinv[i][j]);
+	fprintf(fout,"%.15g ",cholesky_L[i][j]);
     }
   fclose(fout);
 
