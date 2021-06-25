@@ -697,6 +697,8 @@ int T2calculateCovarFunc(double modelAlpha,double modelFc,double modelA,int useB
         else
             P=modelA*pow(fabs(freq)/modelFc,betaVal)/pow(1.0+pow(fabs(freq)/modelFc,2),modelAlpha/2.0);
 //        if (noTF==0) fprintf(tf,"%g %g\n",freq,P);
+//
+// The tempo2 PSD is a two-sided PSD
         p_r[i]=P;
         p_r[npts-i]=P;
         p_i[i]=0;
