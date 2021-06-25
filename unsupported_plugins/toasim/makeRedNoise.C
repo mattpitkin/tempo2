@@ -82,7 +82,11 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
     //
     // I am now 99% sure this is correct. George looked at it too!
     // M. Keith 2013.
-    A=model->pwr_1yr /(4*t_span*model->nreal);
+    //A=model->pwr_1yr /(4*t_span*model->nreal);
+
+    // The above is right, but I think we probably are inputting a 2-sided PSD
+    // M. Keith 2021
+    A=model->pwr_1yr /(t_span*model->nreal);
 
 
     // we are forming "amplitudes" not powers
