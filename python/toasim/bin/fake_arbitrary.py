@@ -44,7 +44,7 @@ for line in header.idealised_toas.split("\n"):
 real = toasim.correction(header,offsets,0,0,0,"")
 header.ntoa=ntoa
 header.nrealisations=nreal
-print "\nWriting...."
+print("\nWriting....")
 
 header.orig_parfile=""
 header.idealised_toas=""

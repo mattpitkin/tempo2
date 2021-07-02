@@ -55,7 +55,7 @@ errs.sort()
 
 errlim=errs[nbad]
 
-print errlim
+print(errlim)
 
 fff=open("bad.tim","w")
 
@@ -71,19 +71,19 @@ while r < nreal:
             off=0
             if error <= errlim:
                 off+=error*sig*random.uniform(-1,1)
-                print toa,error,off
+                print(toa,error,off)
                 fff.write("%s -bad bad\n"%line)
 
             offsets.append(off)
             
             ntoa+=1
     r+=1
-    print "\b\b\b\b\b\b\b\b",
-    print "%d"%r,
+    print("\b\b\b\b\b\b\b\b", end=' ')
+    print("%d"%r, end=' ')
     reals.append(toasim.correction(header,offsets,0,0,0,""))
 header.ntoa=ntoa
 header.nrealisations=nreal
-print "\nWriting...."
+print("\nWriting....")
 
 fff.close()
 

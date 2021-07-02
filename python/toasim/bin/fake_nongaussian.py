@@ -84,15 +84,15 @@ while real < nreal:
         vals = r(**distribution_args)
         if distribution['scale']:
             vals *= errs*distribution['scale']
-        print distribution['name'],distribution['args']
-        print "mean: %.3g"%np.mean(vals)
-        print "sig : %.3g"%np.sqrt(np.var(vals))
+        print(distribution['name'],distribution['args'])
+        print("mean: %.3g"%np.mean(vals))
+        print("sig : %.3g"%np.sqrt(np.var(vals)))
         corn+=vals
 
-    print ""
-    print "==========="
-    print "mean: %.3g"%np.mean(corn)
-    print "sig : {0:.3g}   ({1:.3f} us)".format(np.sqrt(np.var(corn)),np.sqrt(np.var(corn))*1e6)
+    print("")
+    print("===========")
+    print("mean: %.3g"%np.mean(corn))
+    print("sig : {0:.3g}   ({1:.3f} us)".format(np.sqrt(np.var(corn)),np.sqrt(np.var(corn))*1e6))
 
 
     if global_rescale:
@@ -103,11 +103,11 @@ while real < nreal:
         corn /= np.sqrt(s)
         corn+=m
 
-        print ""
-        print "Scale by ",(1.0/s)
-        print "==========="
-        print "mean: %.3g"%np.mean(corn)
-        print "sig : {0:.3g}   ({1:.3f} us)".format(np.sqrt(np.var(corn)),np.sqrt(np.var(corn))*1e6)
+        print("")
+        print("Scale by ",(1.0/s))
+        print("===========")
+        print("mean: %.3g"%np.mean(corn))
+        print("sig : {0:.3g}   ({1:.3f} us)".format(np.sqrt(np.var(corn)),np.sqrt(np.var(corn))*1e6))
 
 
     outdata.append(toasim.correction(header,corn,0,0,0,""))
@@ -118,7 +118,7 @@ while real < nreal:
 
 header.ntoa=len(errs)
 header.nrealisations=nreal
-print "\nWriting...."
+print("\nWriting....")
 
 with open(header.timfile_name+".addNonGauss","w") as f:
     header.write(f)

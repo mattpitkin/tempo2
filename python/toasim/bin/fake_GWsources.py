@@ -20,12 +20,12 @@ def fakeGWsources(args):
 
 
     # Just a debug print the content
-    print toas[0]
-    print par['coord']
+    print(toas[0])
+    print(par['coord'])
 
     # Where is the source?
     source_pos = coord.SkyCoord(args.source_ra,args.source_dec,unit=(u.hourangle,u.degree))
-    print source_pos
+    print(source_pos)
 
     # Extract the GW signal parameters from the program arguments
     gwfreq = float(args.frequency)*u.hertz
@@ -42,7 +42,7 @@ def fakeGWsources(args):
         time = (toa.toa - epoch).to(u.second)
         perturbation = gwamp * np.cos((time * gwfreq).decompose()*2*np.pi*u.radian) * polterm * posterm
         offsets.append(perturbation) # CHECK units
-        print perturbation # Print this out to check
+        print(perturbation) # Print this out to check
 
     # Output the simulation
     realisation = toasim.correction(header, offsets,0,0,0,"")
