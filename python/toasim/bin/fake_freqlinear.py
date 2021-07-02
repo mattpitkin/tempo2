@@ -50,12 +50,12 @@ while r < nreal:
             offsets.append(v)
             ntoa+=1
     r+=1
-    print "\b\b\b\b\b\b\b\b",
-    print "%d"%r,
+    print("\b\b\b\b\b\b\b\b", end=' ')
+    print("%d"%r, end=' ')
     reals.append(toasim.correction(header,offsets,0,0,0,""))
 header.ntoa=ntoa
 header.nrealisations=nreal
-print "\nWriting...."
+print("\nWriting....")
 
 
 header.orig_parfile=""

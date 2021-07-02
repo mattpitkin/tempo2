@@ -8,21 +8,21 @@ import ephem
 
 
 def printhelp():
-    print "TOA_characterise [options] tempo2.tim"
-    print ""
-    print "Characterises the given TOAs (tempo2 format tim file)."
-    print "Can simulate future observations based on the existing data"
-    print ""
-    print "--simulate [ndays]    simulate ndays future TOAs."
-    print "--shuffle             shuffle observations inside observing blocks."
-    print "--seed [seed]         set the random seed for simulating"
-    print "--select \"[flags]\"  only passes through given '-f' flags"
-    print "--psr [psrname]       give the pulsar name for HA calculations"
-    print "--plot                show some plots of the loaded TOAs"
-    print ""
-    print "e.g. typical usage:"
-    print "TOA_characterise.py 0437-4715.tim --simulate 365 --shuffle --select '20CM_DFB3 20CM_APSR' --psr J0437-4715"
-    print ""
+    print("TOA_characterise [options] tempo2.tim")
+    print("")
+    print("Characterises the given TOAs (tempo2 format tim file).")
+    print("Can simulate future observations based on the existing data")
+    print("")
+    print("--simulate [ndays]    simulate ndays future TOAs.")
+    print("--shuffle             shuffle observations inside observing blocks.")
+    print("--seed [seed]         set the random seed for simulating")
+    print("--select \"[flags]\"  only passes through given '-f' flags")
+    print("--psr [psrname]       give the pulsar name for HA calculations")
+    print("--plot                show some plots of the loaded TOAs")
+    print("")
+    print("e.g. typical usage:")
+    print("TOA_characterise.py 0437-4715.tim --simulate 365 --shuffle --select '20CM_DFB3 20CM_APSR' --psr J0437-4715")
+    print("")
     sys.exit(0)
 
 
@@ -124,8 +124,8 @@ if len(psrn) > 6:
     ra=s[0:2]+":"+s[2:4]
     dec=s[4:7]+":"+s[7:9]
     target=ephem.Equatorial(ra,dec,epoch='2000')
-    print ra,target.ra,float(target.ra)
-    print dec,target.dec,float(target.dec)
+    print(ra,target.ra,float(target.ra))
+    print(dec,target.dec,float(target.dec))
 
 flags=dict()
 
@@ -159,7 +159,7 @@ for line in file:
     if not flag in flags:
         flags[flag] = list()
     if len(elems) < 4:
-        print >> sys.stderr, "ERROR: ",line
+        print("ERROR: ",line, file=sys.stderr)
 
     #WARNING: This truncates the TOA! No use for timing
     #         but ok for simulations
@@ -178,8 +178,8 @@ for line in file:
         prev_toa.siml.append(toa)
     if prev_toa!=None and abs(approx_time-prev_toa.t) > 5:
         if approx_time-prev_toa.t < 0:
-            print "ERR",total
-            print approx_time,error,freq,flag,obs,xtraf
+            print("ERR",total)
+            print(approx_time,error,freq,flag,obs,xtraf)
         sess_seps.append(approx_time - cur_ses[0].t)
         cur_ses=list()
         sessions.append(cur_ses)
@@ -191,9 +191,9 @@ for line in file:
 
 file.close()
 
-print "There are %d TOAs in %d sessions"%(total,len(sessions))
+print("There are %d TOAs in %d sessions"%(total,len(sessions)))
 
-keys=flags.keys()
+keys=list(flags.keys())
 
 fig = plt.figure()
 if plot == "sepn" or plot == "errs":
@@ -203,7 +203,7 @@ if plot == "sepn" or plot == "errs":
     for flag in keys:
         if len(flags[flag]) < 5:
             continue
-        print flag, len(flags[flag])
+        print(flag, len(flags[flag]))
         toas=flags[flag]
         sepns=list()
         errs=list()
@@ -228,12 +228,12 @@ if plot == "sepn" or plot == "errs":
         else:
             ax=fig.add_subplot(nx,ny,p)#, sharex=ax1)
         if plot=="sepn":
-            print len(sepns)
+            print(len(sepns))
             ax.hist(sepns,50)
         if plot=="errs":
             ax.hist(errs,50)
         ax.set_title(flag)
-    print plot
+    print(plot)
 
 if plot == "sessep":
     ax= fig.add_subplot(111)
@@ -242,11 +242,11 @@ if(plot!=0):
     plt.show()
 
 
-print simulate
+print(simulate)
 if simulate > 0:
     simtoas=list()
     start = sessions[-1][0].t
-    print start
+    print(start)
     last = start
     while last-start < simulate:
     #    next=random.choice(sessions)
@@ -310,9 +310,9 @@ if simulate > 0:
                 newtoa.ha = getHA(target,observatories[toa.o],t)
             simtoas.append(newtoa)
         last=next_st
-        print "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",
-        print "%d"%(last-start),
-    print "Done"
+        print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", end=' ')
+        print("%d"%(last-start), end=' ')
+    print("Done")
     i=0
     file = open("sim.tim","w")
     file.write("FORMAT 1\n")

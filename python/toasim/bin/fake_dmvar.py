@@ -82,7 +82,7 @@ nsamp = int(2.0*ndays/isc)
 xscale = float(ndays)/float(nsamp)
 nsamp+=2
 
-print "nsamp=%d xscale=%f"%(nsamp,xscale)
+print("nsamp=%d xscale=%f"%(nsamp,xscale))
 
 v=osc/xscale
 minf=1.0/float(v*2)
@@ -92,13 +92,13 @@ sf_cal_scale = int(sf_cal_scale/xscale + 0.5)
 
 cut_f=minf*2
 
-print sf_cal_scale
+print(sf_cal_scale)
 
 ofile=open(header.timfile_name+".addDMvar","w")
 
 header.write(ofile)
 
-print mjd0,ndays,xscale
+print(mjd0,ndays,xscale)
 
 dmfile=open("dmvar.asc","w")
 dmrawf=open("dmraw.asc","w")
@@ -149,12 +149,12 @@ while r < nreal:
             data[i] += a*math.sin(2*math.pi*(i*freq + phase))
             i+=1
         if n%100 == 0:
-            print "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",
-            print "%07d/%07d"%(n,niter),
+            print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", end=' ')
+            print("%07d/%07d"%(n,niter), end=' ')
             sys.stdout.flush()
 
-    print "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b",
-    print "%07d/%07d\n"%(n,niter),
+    print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", end=' ')
+    print("%07d/%07d\n"%(n,niter), end=' ')
     sys.stdout.flush()
 
 
@@ -183,7 +183,7 @@ while r < nreal:
         i+=1
     sf/=n
     scale=math.sqrt(sf_cal_value/sf)
-    print sf,scale
+    print(sf,scale)
 
     i=0
     sum=0

@@ -38,12 +38,12 @@ while r < nreal:
             offsets.append(random.lognormvariate(-6,3)*error) # *random.uniform(-1,1))
             ntoa+=1
     r+=1
-    print "\b\b\b\b\b\b\b\b",
-    print "%d"%r,
+    print("\b\b\b\b\b\b\b\b", end=' ')
+    print("%d"%r, end=' ')
     reals.append(toasim.correction(header,offsets,0,0,0,""))
 header.ntoa=ntoa
 header.nrealisations=nreal
-print "\nWriting...."
+print("\nWriting....")
 
 
 header.orig_parfile=""
