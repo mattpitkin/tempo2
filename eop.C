@@ -37,7 +37,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
-#include "dynarr.h"
+
+
+#include <vector>
+
 #include "tempo2.h"
 
 typedef struct
@@ -49,8 +52,7 @@ typedef struct
 } EOPSample;
 
 
-    void
-load_EOP(DynamicArray *EOPsamples,char *eopcFile)
+void load_EOP(std::vector<EOPSample> &EOPsamples,char *eopcFile)
 {
     char fname[1024], line[1024], mjd_s[1024], xp_s[1024], yp_s[1024], dut1_s[1024];
     int year;
@@ -61,9 +63,6 @@ load_EOP(DynamicArray *EOPsamples,char *eopcFile)
     const char *CVS_verNum = "$Id$";
 
     if (displayCVSversion == 1) CVSdisplayVersion("eop.C","load_EOP()",CVS_verNum);
-
-    // init array
-    DynamicArray_init(EOPsamples, sizeof(EOPSample));
 
     // open file
     //  sprintf(fname, "%s/%s", getenv("TEMPO2"), EOPC04_FILE);
@@ -110,7 +109,8 @@ load_EOP(DynamicArray *EOPsamples,char *eopcFile)
             }
             newSample.xp *= M_PI/(180.0*60.0*60.0);
             newSample.yp *= M_PI/(180.0*60.0*60.0);
-            DynamicArray_push_back(EOPsamples, &newSample);
+            //DynamicArray_push_back(EOPsamples, &newSample);
+            EOPsamples.push_back(newSample);
         }
         else {  // Check which format we are using
             if (strstr(line,"FORMAT(2X,I4,2X,A4,I3,2X,I5,2F9.6,F10.7,2X,F10.7,2X,2F9.6)")!=NULL)
@@ -140,7 +140,7 @@ get_EOP(double mjd, double *xp, double *yp, double *dut1,
         int dispWarnings,char *eopcFile)
 {
     static int first = 1;
-    static DynamicArray EOPsamples;
+    static std::vector<EOPSample> EOPsamples;
     EOPSample *samp;
     int proxy = -1, isamp;
     double f;
@@ -148,16 +148,16 @@ get_EOP(double mjd, double *xp, double *yp, double *dut1,
     // load EOP series first
     if (first)
     {
-        load_EOP(&EOPsamples,eopcFile);
+        load_EOP(EOPsamples,eopcFile);
         first = 0;
     }
-    samp =  (EOPSample *)EOPsamples.data;
+    samp =  EOPsamples.data(); // this is old code that uses array access
 
     // check for out of bounds
     if (samp[0].mjd > mjd)
         proxy = 0;
-    else if (samp[EOPsamples.nelem-1].mjd <= mjd)
-        proxy = EOPsamples.nelem-1;
+    else if (samp[EOPsamples.size()-1].mjd <= mjd)
+        proxy = EOPsamples.size()-1;
     if (proxy >=0)
     {
         *xp = samp[proxy].xp;
@@ -176,7 +176,7 @@ get_EOP(double mjd, double *xp, double *yp, double *dut1,
 
     /* find first sample to fall after requested time */
     for (isamp = 0; 
-            isamp < (int)EOPsamples.nelem  && samp[isamp].mjd <= mjd; 
+            isamp < (int)EOPsamples.size()  && samp[isamp].mjd <= mjd; 
             isamp++)
         ;
 
