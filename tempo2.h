@@ -435,7 +435,7 @@ typedef struct observation {
   double averagedmerr;
 
   
-  char        fname[MAX_FILELEN]; /*!< Name of data file giving TOA                               */
+  char        fname[MAX_FILELEN+1]; /*!< Name of data file giving TOA                               */
     char        telID[100];         /*!< Telescope ID                                               */
     clock_correction correctionsTT[MAX_CLK_CORR]; /*!< chain of corrections from site TOA to chosen realisation of TT */
     int nclock_correction;
