@@ -295,6 +295,11 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy(psr->param[param_daop].label[0],"IPERHARM");
     strcpy(psr->param[param_daop].shortlabel[0],"IPERHARM");
     strcpy(psr->param[param_pmrv].label[0],"PMRV (mas/yr)"); strcpy(psr->param[param_pmrv].shortlabel[0],"PMRV");
+    for (k=0;k<psr->param[param_dphaseplanet].aSize;k++)
+    {
+        sprintf(psr->param[param_dphaseplanet].label[k], "DPHASEPLANET%d ", k+1);
+        sprintf(psr->param[param_dphaseplanet].shortlabel[k], "DPHASEPLANET%d", k+1);
+    }
     for (k=0;k<psr->param[param_dmassplanet].aSize;k++)
     {
         sprintf(psr->param[param_dmassplanet].label[k], "DMASSPLANET%d (Msun)", k+1);
@@ -704,6 +709,8 @@ void allocateMemory(pulsar *psr, int realloc)
 	 else if (i==param_expep || i==param_expph || i==param_exptau || i==param_expindex) psr->param[i].aSize = 40;
         else if (i==param_gausep || i==param_gausamp || i==param_gaussig || i==param_gausindex) psr->param[i].aSize = 40;
         else if (i==param_dmassplanet)
+            psr->param[i].aSize = 9;
+        else if (i==param_dphaseplanet)
             psr->param[i].aSize = 9;
         else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
             psr->param[i].aSize = MAX_DMX;
