@@ -50,8 +50,8 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2021.06.1"
-#define TEMPO2_h_MAJOR_VER 2021.06
+#define TEMPO2_h_VER "2021.07.1"
+#define TEMPO2_h_MAJOR_VER 2021.07
 #define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
@@ -286,14 +286,14 @@ extern double ECLIPTIC_OBLIQUITY;
 
 extern int forceGlobalFit;   /*!< Global = 1 if we are forcing a global fit */
 extern int veryFast;    /*!< Global to run the code fast */
-extern char tempo2MachineType[MAX_FILELEN];
+extern char tempo2MachineType[100];
 extern int displayCVSversion; /*!< Display CVS version */
 
 extern char dcmFile[MAX_FILELEN];
 extern char covarFuncFile[MAX_FILELEN];
 
-extern char tempo2_clock_path[MAX_STRLEN]; /*!< paths to search for clock files */
-extern char tempo2_plug_path[32][MAX_STRLEN]; /*!< paths to search for plugins */
+extern char tempo2_clock_path[MAX_FILELEN]; /*!< paths to search for clock files */
+extern char tempo2_plug_path[32][MAX_FILELEN]; /*!< paths to search for plugins */
 extern int tempo2_plug_path_len;
 
 
@@ -435,7 +435,7 @@ typedef struct observation {
   double averagedmerr;
 
   
-  char        fname[MAX_FILELEN]; /*!< Name of data file giving TOA                               */
+  char        fname[MAX_FILELEN+1]; /*!< Name of data file giving TOA                               */
     char        telID[100];         /*!< Telescope ID                                               */
     clock_correction correctionsTT[MAX_CLK_CORR]; /*!< chain of corrections from site TOA to chosen realisation of TT */
     int nclock_correction;

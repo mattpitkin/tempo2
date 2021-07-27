@@ -237,11 +237,11 @@ double t2FitFunc_gausdip(pulsar *psr, int ipsr, double x, int ipos, param_label 
     {
         return val*(-dt/sig/sig); 
     }
-    if (label=param_gaussig)
+    if (label==param_gaussig)
     {
         return val*(dt*dt/6./sig/sig/sig);    
     }
-    if (label=param_gausindex)
+    if (label==param_gausindex)
     {
         return val*log(freq);
     }

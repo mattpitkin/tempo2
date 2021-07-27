@@ -100,7 +100,7 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
                 while (!feof(fin))
                 {
                     char inputstr[1024];
-                    if (fscanf(fin,"%s",inputstr)==1)
+                    if (fscanf(fin,"%1023s",inputstr)==1)
                     {
                         input = parse_longdouble(inputstr);
                         for (i=0;i<psr[p].nobs;i++)
@@ -119,10 +119,16 @@ void readTimfile(pulsar *psr,char timFile[][MAX_FILELEN],int npsr)
 void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
 {
     FILE *fin;
-    char profileDir[MAX_STRLEN]="";
-    char tt[MAX_STRLEN];
+    char *profileDir = new char[MAX_STRLEN];
+    char *tt = new char[2*MAX_STRLEN+16];
     int nread=0,nread2,nObs=0,i;
-    char firstWord[1000],line[1000]="",dummy[1000];
+    char *firstWord = new char[1000];
+    char *line = new char[1000];
+    char *dummy = new char[1000];
+
+    strncpy(profileDir,"",1000);
+    strncpy(line,"",1000);
+
     char param1[100];//,param2[100],param3[100],param4[100],param5[100];
     //char param6[100],param7[100],param8[100];
     //  int val1;
@@ -166,7 +172,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
         format=1;
         while (!feof(fin))
         {
-            fscanf(fin,"%s",firstWord);
+            fscanf(fin,"%999s",firstWord);
             if (strcmp(firstWord,"FORMAT")==0) /* Tempo2 format */
                 format = 0;
             else if (strcmp(firstWord,"HEAD")==0) /* .tpo format */
@@ -205,110 +211,124 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                 /* Read default columns */
                 if (strlen(line)>0)
                 {
-                    char sat_str[1024];
+                    char* sat_str = new char[1024];
                     psr->obsn[nObs].deleted=0;
 
                     if (line[0]=='I')
                     {
-                        nread = sscanf(line,"%s %s %lf %s %lf %s",dummy,psr->obsn[nObs].fname,
+                        nread = sscanf(line,"%999s %1024s %lf %1023s %lf %99s",dummy,psr->obsn[nObs].fname,
                                 &(psr->obsn[nObs].freq),sat_str,
                                 &(psr->obsn[nObs].toaErr),psr->obsn[nObs].telID);	      
                         psr->obsn[nObs].deleted=1;
                     }		  
                     else
                     {
-                        nread = sscanf(line,"%s %lf %s %lf %s",psr->obsn[nObs].fname,
+                        nread = sscanf(line,"%1024s %lf %1023s %lf %99s",psr->obsn[nObs].fname,
                                 &(psr->obsn[nObs].freq),sat_str,
                                 &(psr->obsn[nObs].toaErr),psr->obsn[nObs].telID);
                         if (strlen(profileDir)>0)
                         {
                             sprintf(tt,"%s/%s",profileDir,psr->obsn[nObs].fname);
-                            strcpy(psr->obsn[nObs].fname,tt);
+                            strncpy(psr->obsn[nObs].fname,tt,500);
                         }
                     }
 
-                    char sat_day_str[5];
-                    char sat_sec_str[1024];
+                    if (nread >=5) {
+                        // try to parse SAT etc only if there are enough columns... otherwise it is junk
 
-                    sat_sec_str[0] = '0';
-                    //sat_sec_str[1] = '.';
-                    for(int sindex = 0; sindex < 1024; sindex++){
-                        if(sindex < 5){
-                            sat_day_str[sindex] = sat_str[sindex];
+                        char sat_day_str[8]; // This must be >= 6 because  it needs a null terminator
+                        char sat_sec_str[1024];
+
+                        sat_sec_str[0] = '0';
+
+
+                        /*
+                         * This string copy is problematic as it doesn't terminate the strings properly
+                         * Better to just use strncpy
+                          for(int sindex = 0; sindex < 1024; sindex++){
+                            if(sindex < 5){
+                                sat_day_str[sindex] = sat_str[sindex];
+                            }
+                            if(sindex>=5){
+                                sat_sec_str[sindex-4] = sat_str[sindex];
+                            }
                         }
-                        if(sindex>=5){
-                            sat_sec_str[sindex-4] = sat_str[sindex];
-                        }
-                    }
+                        */
+                        strncpy(sat_day_str,sat_str,5);
+                        sat_day_str[5]='\0'; // we expect sat_str to be longer than 5, so we have to null terminate
+                        // see definition of strncpy
+                        strncpy(sat_sec_str+1,sat_str+5,1000);
 
-                    psr->obsn[nObs].sat_day = parse_longdouble(sat_day_str);
-                    psr->obsn[nObs].sat_sec = parse_longdouble(sat_sec_str);
+                        psr->obsn[nObs].sat_day = parse_longdouble(sat_day_str);
+                        psr->obsn[nObs].sat_sec = parse_longdouble(sat_sec_str);
 
-                    psr->obsn[nObs].sat = parse_longdouble(sat_str);
-                    psr->obsn[nObs].phaseOffset = 0.0;
-                    /* Read the rest of the line */		  
-                    psr->obsn[nObs].nFlags = 0;
-                    psr->obsn[nObs].toaDMErr = 0;
+                        psr->obsn[nObs].sat = parse_longdouble(sat_str);
+                        psr->obsn[nObs].phaseOffset = 0.0;
+                        /* Read the rest of the line */		  
+                        psr->obsn[nObs].nFlags = 0;
+                        psr->obsn[nObs].toaDMErr = 0;
 
-                    /*		  strcpy(psr->obsn[nObs].flagID[0],"FLAGID");
-                              strcpy(psr->obsn[nObs].flagVal[0],"FLAGVAL"); */
+                        /*		  strcpy(psr->obsn[nObs].flagID[0],"FLAGID");
+                                  strcpy(psr->obsn[nObs].flagVal[0],"FLAGVAL"); */
 
-                    for (i=0;i<(int)strlen(line)-1;i++)
-                    {
-                        if (line[i]=='-' && (line[i+1] < 48 || line[i+1] > 57))
+                        for (i=0;i<(int)strlen(line)-1;i++)
                         {
-                            strcpy(oldLine,line);
-                            if (strchr(line+i,' ')!=NULL)
+                            if (line[i]=='-' && (line[i+1] < 48 || line[i+1] > 57))
                             {
-                                strcpy(strchr(line+i,' '),"");
-                                strcpy(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],line+i);
-                                i+=strlen(line+i)+1;
-                                strcpy(line,oldLine);
+                                strcpy(oldLine,line);
                                 if (strchr(line+i,' ')!=NULL)
                                 {
-                                    int j;
-                                    for (j=i;j<(int)strlen(line);j++)
-                                    {
-                                        if (line[j]!=' ')
-                                        {
-                                            i+=(j-i);
-                                            break;
-                                        }
-                                    }
                                     strcpy(strchr(line+i,' '),"");
-                                }
-                                strcpy(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],line+i);
-                                // Check for offset to site arrival time
-                                if (strcmp(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-addsat")==0)
-                                {
-                                    double offVal;
-                                    sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%lf",&offVal);
-                                    psr->obsn[nObs].sat += (offVal/longdouble(86400.0));
-                                }
+                                    strcpy(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],line+i);
+                                    i+=strlen(line+i)+1;
+                                    strcpy(line,oldLine);
+                                    if (strchr(line+i,' ')!=NULL)
+                                    {
+                                        int j;
+                                        for (j=i;j<(int)strlen(line);j++)
+                                        {
+                                            if (line[j]!=' ')
+                                            {
+                                                i+=(j-i);
+                                                break;
+                                            }
+                                        }
+                                        strcpy(strchr(line+i,' '),"");
+                                    }
+                                    strcpy(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],line+i);
+                                    // Check for offset to site arrival time
+                                    if (strcmp(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-addsat")==0)
+                                    {
+                                        double offVal;
+                                        sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%lf",&offVal);
+                                        psr->obsn[nObs].sat += (offVal/longdouble(86400.0));
+                                    }
 
-                                // Check for DM changes
-                                if (strcmp(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-dme")==0)
-                                {
-                                    double dme,dm,freq,toaCorr;
-                                    sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%lf",&dme);
-                                    sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags-1],"%lf",&dm);
-                                    freq = psr->obsn[nObs].freq*1e6;
+                                    // Check for DM changes
+                                    if (strcmp(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-dme")==0)
+                                    {
+                                        double dme,dm,freq,toaCorr;
+                                        sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags],"%lf",&dme);
+                                        sscanf(psr->obsn[nObs].flagVal[psr->obsn[nObs].nFlags-1],"%lf",&dm);
+                                        freq = psr->obsn[nObs].freq*1e6;
 
-                                    toaCorr = dme/DM_CONST/1.0e-12/freq/freq;
-                                    //				  printf("Have DM error %g %g %.5g %.5g %g\n",dm,dme,toaErr,freq,toaCorr);
-                                    psr->obsn[nObs].toaDMErr = toaCorr*1e6;
-                                    //				  psr->obsn[nObs].toaErr = sqrt(pow(psr->obsn[nObs].toaErr,2)+pow(toaCorr*1e6,2));
-                                }
-                                i+=strlen(line+i);
-                                strcpy(line,oldLine); 
-                                psr->obsn[nObs].nFlags++;
-                                if (psr->obsn[nObs].nFlags >= MAX_FLAGS)
-                                {
-                                    printf("Number of different flags in the .tim file > MAX_FLAGS (%d)\n",MAX_FLAGS);
-                                    exit(1);
+                                        toaCorr = dme/DM_CONST/1.0e-12/freq/freq;
+                                        //				  printf("Have DM error %g %g %.5g %.5g %g\n",dm,dme,toaErr,freq,toaCorr);
+                                        psr->obsn[nObs].toaDMErr = toaCorr*1e6;
+                                        //				  psr->obsn[nObs].toaErr = sqrt(pow(psr->obsn[nObs].toaErr,2)+pow(toaCorr*1e6,2));
+                                    }
+                                    i+=strlen(line+i);
+                                    strcpy(line,oldLine); 
+                                    psr->obsn[nObs].nFlags++;
+                                    if (psr->obsn[nObs].nFlags >= MAX_FLAGS)
+                                    {
+                                        printf("Number of different flags in the .tim file > MAX_FLAGS (%d)\n",MAX_FLAGS);
+                                        exit(1);
+                                    }
                                 }
                             }
                         }
+                        delete[] sat_str;
                     }
                 }
                 else
@@ -330,7 +350,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                 if (line[strlen(line)-1]=='\n') line[strlen(line)-1]='\0';
                 nObs = psr->nobs;
                 psr->obsn[nObs].nFlags = 0;
-                nread = sscanf(line,"%s",param1);
+                nread = sscanf(line,"%999s",param1);
                 add=0;
 
                 if (strcmp(param1,"C")==0 || strcmp(param1,"c")==0) /* Comment line */
@@ -351,32 +371,32 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                             if (strlen(line)+add < 79) valid=-2;
                             else
                             {
-                                strcpy(psr->obsn[nObs].fname,line+1+add); psr->obsn[nObs].fname[25]='\0';
-                                strcpy(param1,line+25+add); param1[9]='\0'; if (strlen(param1)<2) valid=-2; 
+                                strncpy(psr->obsn[nObs].fname,line+1+add,500); psr->obsn[nObs].fname[25]='\0';
+                                strncpy(param1,line+25+add,99); param1[9]='\0'; if (strlen(param1)<2) valid=-2; 
 
                                 if (sscanf(param1,"%lf",&(psr->obsn[nObs].freq))!=1) valid=-2;
-                                strcpy(param1,line+34+add); param1[21]='\0';
+                                strncpy(param1,line+34+add,99); param1[21]='\0';
                                 psr->obsn[nObs].sat = parse_longdouble(param1);
-                                strcpy(param1,line+55+add); param1[8]='\0';
+                                strncpy(param1,line+55+add,99); param1[8]='\0';
                                 if (sscanf(param1,"%lf",&(psr->obsn[nObs].phaseOffset))!=1) valid=-2;
-                                strcpy(param1,line+63+add); param1[8]='\0';
+                                strncpy(param1,line+63+add,99); param1[8]='\0';
                                 if (sscanf(param1,"%lf",&(psr->obsn[nObs].toaErr))!=1) valid=-2;
-                                sscanf(line+79+add,"%s",psr->obsn[nObs].telID); psr->obsn[nObs].telID[1]='\0';
+                                sscanf(line+79+add,"%99s",psr->obsn[nObs].telID); psr->obsn[nObs].telID[1]='\0';
                             }
                         }
                         else if (line[1+add]==' ') /* Princeton format */
                         {
                             double dmoffset;
                             valid=1;
-                            sscanf(line+add,"%s",psr->obsn[nObs].telID); psr->obsn[nObs].telID[1]='\0';	
+                            sscanf(line+add,"%99s",psr->obsn[nObs].telID); psr->obsn[nObs].telID[1]='\0';	
                             strcpy(psr->obsn[nObs].fname,"NOT SET");
-                            strcpy(param1,line+15+add); param1[9]='\0';
+                            strncpy(param1,line+15+add,99); param1[9]='\0';
                             if (sscanf(param1,"%lf",&(psr->obsn[nObs].freq))!=1) valid=-2;
-                            strcpy(param1,line+25+add); param1[20]='\0';
+                            strncpy(param1,line+25+add,99); param1[20]='\0';
                             psr->obsn[nObs].sat = parse_longdouble(param1);
-                            strcpy(param1,line+45+add); param1[9]='\0';
+                            strncpy(param1,line+45+add,99); param1[9]='\0';
                             if (sscanf(param1,"%lf",&(psr->obsn[nObs].toaErr))!=1) valid=-2;
-                            strcpy(param1,line+68+add); param1[10]='\0'; /* SHOULD BE DM OFFSET */
+                            strncpy(param1,line+68+add,99); param1[10]='\0'; /* SHOULD BE DM OFFSET */
                             if (sscanf(param1,"%lf",&dmoffset)==1)
                             {
                                 strcpy(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-dmo");
@@ -397,7 +417,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                             if (sscanf(param1,"%lf",&(psr->obsn[nObs].freq))!=1) valid=-2;
                             strcpy(param1,line+45+add); param1[10]='\0'; /* SHOULD BE DM OFFSET */
                             if (sscanf(param1,"%lf",&(psr->obsn[nObs].phaseOffset))!=1) valid=-2;
-                            sscanf(line+57+add,"%s",psr->obsn[nObs].telID); psr->obsn[nObs].telID[2]='\0';
+                            sscanf(line+57+add,"%99s",psr->obsn[nObs].telID); psr->obsn[nObs].telID[2]='\0';
                         }
                     }
                 }
@@ -509,81 +529,81 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
         }
         else if (valid!=-2) // This means: if the line does contain information, but not an observation
         {
-            nread2 = sscanf(line,"%s",param1);
+            nread2 = sscanf(line,"%99s",param1);
             if (skip==0 && nread2 > 0)
             {
                 if (strcasecmp(param1,"END")==0)
                     endit=1;	
                 /* Global error multiplying factor */
                 else if (strcasecmp(param1,"PROFILE_DIR")==0)
-                    sscanf(line,"%s %s",param1,profileDir);
+                    sscanf(line,"%99s %999s",param1,profileDir);
                 else if (strcasecmp(param1,"GLOBAL_EFAC")==0)
-                    sscanf(line,"%s %lf",param1,&psr->T2globalEfac);
+                    sscanf(line,"%99s %lf",param1,&psr->T2globalEfac);
                 else if (strcasecmp(param1,"EFAC")==0)  /* Error multiplying factor */    
-                    sscanf(line,"%s %lf",param1,&efac);
+                    sscanf(line,"%99s %lf",param1,&efac);
                 else if (strcasecmp(param1,"EFLOOR")==0)  /* Minimum error                        */    
-                    sscanf(line,"%s %lf",param1,&efloor);
+                    sscanf(line,"%99s %lf",param1,&efloor);
                 else if (strcasecmp(param1,"T2EFAC")==0) /* EFAC for given flag                    */
                 {
                     int nefacFlag = psr->nT2efac;
-                    sscanf(line,"%s %s %s %lf",param1,psr->T2efacFlagID[nefacFlag],psr->T2efacFlagVal[nefacFlag],
+                    sscanf(line,"%99s %31s %31s %lf",param1,psr->T2efacFlagID[nefacFlag],psr->T2efacFlagVal[nefacFlag],
                             &psr->T2efacVal[nefacFlag]);
                     (psr->nT2efac)++;
                 }
                 else if (strcasecmp(param1,"T2EQUAD")==0) /* EQUAD for given flag                  */
                 {
                     int nequadFlag = psr->nT2equad;
-                    sscanf(line,"%s %s %s %lf",param1,psr->T2equadFlagID[nequadFlag],psr->T2equadFlagVal[nequadFlag],
+                    sscanf(line,"%99s %31s %31s %lf",param1,psr->T2equadFlagID[nequadFlag],psr->T2equadFlagVal[nequadFlag],
                             &psr->T2equadVal[nequadFlag]);
                     (psr->nT2equad)++;
                 }
                 else if (strcasecmp(param1,"EMAX")==0)  /* Maximum error                           */
-                    sscanf(line,"%s %lf",param1,&emax);
+                    sscanf(line,"%99s %lf",param1,&emax);
                 else if (strcasecmp(param1,"EMIN")==0)  /* Minimum error                           */
-                    sscanf(line,"%s %lf",param1,&emin);
+                    sscanf(line,"%99s %lf",param1,&emin);
                 else if (strcasecmp(param1,"ESET")==0)  /* Set all errors to given amount          */
-                    sscanf(line,"%s %lf",param1,&eset);
+                    sscanf(line,"%99s %lf",param1,&eset);
                 else if (strcasecmp(param1,"FMAX")==0)  /* Maximum observing frequency             */
-                    sscanf(line,"%s %lf",param1,&fmax);
+                    sscanf(line,"%99s %lf",param1,&fmax);
                 else if (strcasecmp(param1,"FMIN")==0)  /* Minimum observing frequency             */
-                    sscanf(line,"%s %lf",param1,&fmin);
+                    sscanf(line,"%99s %lf",param1,&fmin);
                 else if (strcasecmp(param1,"INFO")==0)  /* Highlighting flag                       */
                 {
-                    sscanf(line,"%s %d",param1,&infoNum);
+                    sscanf(line,"%99s %d",param1,&infoNum);
                 }
                 else if (strcasecmp(param1,"PHASE")==0) /* Add phase jump                          */
                 {
                     psr->phaseJump[psr->nPhaseJump] = psr->obsn[nObs-1].sat+1.0/SECDAY;		  
                     psr->phaseJumpID[psr->nPhaseJump] = nObs-1;
-                    sscanf(line,"%s %d",param1,&psr->phaseJumpDir[psr->nPhaseJump]);
+                    sscanf(line,"%99s %d",param1,&psr->phaseJumpDir[psr->nPhaseJump]);
                     psr->nPhaseJump++;		  
                 }
                 else if (strcasecmp(param1,"EQUAD")==0) /* Error to add in quadrature               */
-                    sscanf(line,"%s %lf",param1,&equad);
+                    sscanf(line,"%99s %lf",param1,&equad);
                 else if (strcasecmp(param1,"SIGMA")==0) /* Set all errors to constant value         */
-                    sscanf(line,"%s %lf",param1,&sigma);
+                    sscanf(line,"%99s %lf",param1,&sigma);
                 else if (strcasecmp(param1,"TIME")==0)  /* Add a constant time to all arrival times */
                 {
                     double dtime;
-                    sscanf(line,"%s %lf",param1,&dtime);
+                    sscanf(line,"%99s %lf",param1,&dtime);
                     time+=dtime;
                     logdbg("Updating time: %g %g",dtime,time);
 
                 }
                 else if (strcasecmp(param1,"MODE")==0) /* Fit with errors */
                 {
-                    sscanf(line,"%s %d",param1,&(psr->fitMode));
+                    sscanf(line,"%99s %d",param1,&(psr->fitMode));
                     displayMsg(1,"TIM1","Please place MODE flags in the parameter file","",psr->noWarnings);
                 }
                 else if (strcasecmp(param1,"INCLUDE")==0) /* Include another .tim file */
                 {
-                    char newtim[MAX_FILELEN];
+                    char *newtim = new char[MAX_FILELEN];
 #ifdef PATH_MAX
-                    char relPath[PATH_MAX];
+                    char *relPath = new char[PATH_MAX];
 #else
                     char *relPath;
 #endif
-                    if (sscanf(line,"%s %s",param1,newtim)==2)
+                    if (sscanf(line,"%99s %1023s",param1,newtim)==2)
                     {
                         int ii;
                         // Relative file path
@@ -613,6 +633,10 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                     else
                         printf("Unable to parse INCLUDE line >%s<\n",line);
                     strcpy(param1,"");
+#ifdef PATH_MAX
+                    delete[] relPath;
+#endif
+                    delete[] newtim;
                 }
                 else if (strcasecmp(param1,"SKIP")==0) /* Skip data */
                     skip=1;
@@ -629,6 +653,12 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
         } // end of "else if (valid != -2)"
     } // end of "while (!feof(fin) && endit == 0)"
     fclose(fin);
+
+    delete[] profileDir;
+    delete[] tt;
+    delete[] firstWord;
+    delete[] line;
+    delete[] dummy;
 }
 
 
@@ -748,7 +778,7 @@ void writeTim(const char *timname,pulsar *psr,const char *fileFormat)
             ///////////////////////////////////////////////////////////////////
 
 
-            sscanf(psr->obsn[i].fname,"%s",name);
+            sscanf(psr->obsn[i].fname,"%999s",name);
             interim_error = psr->obsn[i].origErr/current_efac;
             interim_error = sqrt(pow(interim_error,2.0)-(pow(current_equad,2.0)));
 

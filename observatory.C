@@ -37,21 +37,23 @@
 #include <glob.h>
 #include <math.h>
 
+#include <vector>
+
 #include "tempo2.h"
-#include "dynarr.h"
+
 
 /* static database of observatories */
 
-static DynamicArray observatories;
+static std::vector<observatory> observatories;
 typedef struct
 {
     char code[100];
-    DynamicArray aliases;
+    std::vector<std::string> aliases;
     bool warned;
 } ObservatoryAliasList;
 
 
-static DynamicArray observatoryAliasLists;
+static std::vector<ObservatoryAliasList> observatoryAliasLists;
 
 static int observatories_initialised = 0;
 
@@ -118,7 +120,8 @@ readObservatoryFile(char *fname)
                 if (nread == 5)
                     snprintf(newObs.clock_name,16, "UTC(%s)", newObs.code);
                 ITRF_to_GRS80(&newObs);
-                DynamicArray_push_back(&observatories, &newObs);
+                //DynamicArray_push_back(&observatories, &newObs);
+                observatories.push_back(newObs);
 #if 0
                 {
                     // test geodetic<->geocentric
@@ -138,7 +141,7 @@ readObservatoryFile(char *fname)
         }
     }
 
-    logdbg( "readObservatoryFile: %d entries\n", static_cast<int>(observatories.nelem));
+    logdbg( "readObservatoryFile: %d entries\n", static_cast<int>(observatories.size()));
 
     fclose(f);  /* Added by GH */
 }
@@ -161,7 +164,7 @@ readAliases(char *fname)
         exit(1);
     }
 
-    DynamicArray_init(&observatoryAliasLists, sizeof(ObservatoryAliasList));
+    //DynamicArray_init(&observatoryAliasLists, sizeof(ObservatoryAliasList));
 
     while (fgets(line, 1024, f))
     {
@@ -169,14 +172,16 @@ readAliases(char *fname)
         {
             if (sscanf(line, "%s %n", list.code, &ichar)==1)
             {
-                DynamicArray_init(&list.aliases, 128);      
+                //DynamicArray_init(&list.aliases, 128);      
                 while (sscanf(line+ichar, "%s %n", alias, &nread)==1)
                 {
-                    DynamicArray_push_back(&list.aliases, alias);
+                    //DynamicArray_push_back(&list.aliases, alias);
+                    list.aliases.push_back(alias);
                     ichar += nread;
                 }
                 list.warned=false;
-                DynamicArray_push_back(&observatoryAliasLists, &list);
+                //DynamicArray_push_back(&observatoryAliasLists, &list);
+                observatoryAliasLists.push_back(list);
             }
         }
     }
@@ -197,7 +202,7 @@ initObservatories()
     int ret;
 
     logdbg("In initObservatories");
-    DynamicArray_init(&observatories, sizeof(observatory));
+    //DynamicArray_init(&observatories, sizeof(observatory));
 
     /* load observatories.dat first */
     sprintf(fname, "%s/observatory/observatories.dat", getenv(TEMPO2_ENVIRON));
@@ -239,27 +244,26 @@ initObservatories()
 void lookup_observatory_alias(char *incode, char *outcode)
 {
     unsigned ilist, ialias;
-    char *alias;
-    ObservatoryAliasList *list;
+    ObservatoryAliasList* list;
 
     //  logdbg("In lookup_observatory_alias with >%s< >%d<",incode,observatories_initialised);
     if (observatories_initialised != 1)
         initObservatories();
     //  logdbg("Initialised observatories ",incode);
-    for (ilist=0; ilist < observatoryAliasLists.nelem; ilist++)
+    for (ilist=0; ilist < observatoryAliasLists.size(); ilist++)
     {
-        list = ((ObservatoryAliasList*)observatoryAliasLists.data)+ilist;
-        for (ialias=0; ialias < list->aliases.nelem; ialias++)
+        list = &(observatoryAliasLists[ilist]);
+        for (ialias=0; ialias < list->aliases.size(); ialias++)
         {
-            alias = (char *)list->aliases.data + ialias*128;
+            const char* alias = list->aliases[ialias].c_str();
             if (!strcasecmp(alias, incode)) {
                 break;
             }
         }
-        if (ialias < list->aliases.nelem)
+        if (ialias < list->aliases.size())
             break;
     }
-    if (ilist < observatoryAliasLists.nelem && ialias < list->aliases.nelem)
+    if (ilist < observatoryAliasLists.size() && ialias < list->aliases.size())
     {
         //    if (debugFlag)
         //      fprintf (stderr, "Copying alias = '%s' into outcode\n", list->code);
@@ -292,9 +296,9 @@ getObservatory(char *code)
         initObservatories();
     //  logdbg("Initialised observatory");
 
-    for (io=0; io < (int)observatories.nelem; io++)
+    for (io=0; io < (int)observatories.size(); io++)
     {
-        obs = ((observatory*)observatories.data)+io;
+        obs = &(observatories[io]); // pointer to member of static vector. is 'ok' I think, as long as the vector is not resized...
 
         //    if (debugFlag)
         //      fprintf (stderr, "getObservatory: compare alias"
