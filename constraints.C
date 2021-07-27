@@ -398,16 +398,13 @@ double consFunc_tel_dz(pulsar *psr_array,int ipsr,int i,int k,int order){
 }
 
 double consFunc_ifunc_X0(pulsar *psr_array,int ipsr,int i,int k,int order){
-    pulsar* psr=psr_array+ipsr;
     /*
      * Only operate on param=ifunc and when fit parameter is 
      * one of the frequency independant parts (i.e. last ifuncN).
      */
-    if(i==param_ifunc){
-        if(k==0)return 1;
-
-    }
-    else return 0;
+    if(i==param_ifunc && k==0) {
+        return 1;
+    } else return 0;
 }
 
 

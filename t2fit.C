@@ -1308,7 +1308,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_e2dot:
         case param_xpbdot:
         case param_pbdot:
-	case param_pb2dot:
+        case param_pb2dot:
         case param_a1dot:
         case param_a2dot:
         case param_omdot:
@@ -1417,7 +1417,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_glf2:
             if (forceAlwaysFitForGlitches ||
                     (psr->param[param_glep].val[k] > psr->param[param_start].val[0]
-                    && psr->param[param_glep].val[k] < psr->param[param_finish].val[0]) ){
+                     && psr->param[param_glep].val[k] < psr->param[param_finish].val[0]) ){
                 // glitches
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_stdGlitch;
                 OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleMinus;
@@ -1428,29 +1428,29 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             }
             break;
 
-    case param_expph:
-    case param_exptau:
-    case param_expindex:
-    case param_expep:
-      if ((psr->param[param_expep].val[k] > psr->param[param_start].val[0]) && (psr->param[param_expep].val[k]< psr->param[param_finish].val[0]))
-	{
-	  OUT.paramDerivs[OUT.nParams] = t2FitFunc_expdip;
-	  OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_simpleMinus;
-	  ++ OUT.nParams;
-	}
-      else{
-	logwarn("Refusing to fit for exponential dip which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_expep].val[k]);
-      }
-    break;
+        case param_expph:
+        case param_exptau:
+        case param_expindex:
+        case param_expep:
+            if ((psr->param[param_expep].val[k] > psr->param[param_start].val[0]) && (psr->param[param_expep].val[k]< psr->param[param_finish].val[0]))
+            {
+                OUT.paramDerivs[OUT.nParams] = t2FitFunc_expdip;
+                OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_simpleMinus;
+                ++ OUT.nParams;
+            }
+            else{
+                logwarn("Refusing to fit for exponential dip %d which is outside of start/finish range (%.2lf)",k+1,(double)psr->param[param_expep].val[k]);
+            }
+            break;
 
-    case param_gausep:
-    case param_gausamp:
-    case param_gaussig:
-    case param_gausindex:
-      	  OUT.paramDerivs[OUT.nParams] = t2FitFunc_gausdip;
-	  OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_simpleMinus;
-	  ++ OUT.nParams;
-          break;
+        case param_gausep:
+        case param_gausamp:
+        case param_gaussig:
+        case param_gausindex:
+            OUT.paramDerivs[OUT.nParams] = t2FitFunc_gausdip;
+            OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_simpleMinus;
+            ++ OUT.nParams;
+            break;
 
         case param_telx:
         case param_tely:
@@ -1585,10 +1585,10 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             }
             break;
 
-         case param_red_chrom_sin:
-         case param_red_chrom_cos:
-	   {
-	        for (int i=0; i < psr->TNChromC ; ++i){
+        case param_red_chrom_sin:
+        case param_red_chrom_cos:
+            {
+                for (int i=0; i < psr->TNChromC ; ++i){
                     OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red_chrom;
                     OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red_chrom;
                     OUT.paramCounters[OUT.nParams]=i;
@@ -1596,28 +1596,28 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
                     ++OUT.nParams;
                 }
 
-	   }
-	   break;
+            }
+            break;
 
-	    /*
-    case param_shapevent:
-      {
-	int l;
-	l=0;
-	for (int i=0;i < psr->nTNShapeletEvents;i++)
-		  {
-		    for (int k=0;k<psr->TNShapeletEvN[i];k++)
-		      {
-			OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_shapeevent;
-			OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_shapevent;
-			OUT.paramCounters[OUT.nParams]=l;
-			OUT.paramIndex[OUT.nParams]=fit_param;
-			l++;
-			++OUT.nParams;
-		      }
-		  }
-		  }*/
-	   
+            /*
+               case param_shapevent:
+               {
+               int l;
+               l=0;
+               for (int i=0;i < psr->nTNShapeletEvents;i++)
+               {
+               for (int k=0;k<psr->TNShapeletEvN[i];k++)
+               {
+               OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_shapeevent;
+               OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_shapevent;
+               OUT.paramCounters[OUT.nParams]=l;
+               OUT.paramIndex[OUT.nParams]=fit_param;
+               l++;
+               ++OUT.nParams;
+               }
+               }
+               }*/
+
 
 
         case param_ne_sw:
@@ -1688,9 +1688,9 @@ paramDerivFunc getDerivFunction(pulsar* psr, param_label fit_param, const int k)
 
 void t2Fit_fillFitInfo_INNER(pulsar* psr, FitInfo &OUT, const int globalflag){
     for (param_label fit_param=0; fit_param < param_LAST; ++fit_param){
-/*        if (fit_param == param_ifunc){
-            logmsg("if: %d %d %d",psr->param[fit_param].paramSet[0],psr->param[fit_param].fitFlag[0],psr->param[fit_param].aSize);
-        }*/
+        /*        if (fit_param == param_ifunc){
+                  logmsg("if: %d %d %d",psr->param[fit_param].paramSet[0],psr->param[fit_param].fitFlag[0],psr->param[fit_param].aSize);
+                  }*/
         for(int k=0; k < psr->param[fit_param].aSize;k++){
             if (psr->param[fit_param].paramSet[k]>0 && psr->param[fit_param].fitFlag[k]==globalflag) {
                 t2fit_fillOneParameterFitInfo(psr,fit_param,k,OUT);
@@ -1908,12 +1908,12 @@ void TKfit_getPulsarDesignMatrix(double *x,double *y,int n,int nf,void (*fitFunc
             }
         }
     } else {
-            logdbg("NO_UINV");
+        logdbg("NO_UINV");
 
-            logtchk("fwdSub L");
-            TKforwardSubVec(cholesky_L,b,n,white_b);
-            TKforwardSub(cholesky_L,designMatrix,n,nf,white_designMatrix);
-            logtchk("done fwdSub L");
+        logtchk("fwdSub L");
+        TKforwardSubVec(cholesky_L,b,n,white_b);
+        TKforwardSub(cholesky_L,designMatrix,n,nf,white_designMatrix);
+        logtchk("done fwdSub L");
 
     }
 
