@@ -1439,9 +1439,9 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNDMC %i\n", psr[p].TNDMC);
                 }
 		if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
-                    (fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);	
+                    fprintf(fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);	
                     fprintf(fout2,"TNChromGam %g\n", psr[p].TNChromGam);
-		    fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
+                    fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
                     fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
                 }
 
@@ -1615,8 +1615,8 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
            } */
 
         bool notwarned=true;
-        for (int i=0; i < psr[p].fitinfo.nParams;++i) {
-            for (int j=0; j < i;++j) {
+        for (unsigned int i=0; i < psr[p].fitinfo.nParams;++i) {
+            for (unsigned int j=0; j < i;++j) {
                 double corr = psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]);
                 if (fabs(corr) > 0.99){
                     if (notwarned){

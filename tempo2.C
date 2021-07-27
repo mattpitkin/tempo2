@@ -48,7 +48,6 @@ void ephemeris_routines(pulsar *psr,int npsr);
 void clock_corrections(pulsar *psr,int npsr);
 void extra_delays(pulsar *psr,int npsr);
 
-
 int main(int argc, char *argv[])
 {
     int iteration; 
@@ -57,8 +56,8 @@ int main(int argc, char *argv[])
     int writeModel=0;
     int writeTimFile=0;
     char timFile[MAX_PSR][MAX_FILELEN],parFile[MAX_PSR][MAX_FILELEN];
-    char outputSO[MAX_FILELEN];
-    char str[MAX_FILELEN];
+    char outputSO[100];
+    char str[MAX_STRLEN];
     char newparname[MAX_FILELEN];
     longdouble coeff[MAX_COEFF]; /* For polynomial coefficients in polyco */
     int npsr;      /* The number of pulsars */
@@ -70,7 +69,6 @@ int main(int argc, char *argv[])
     char polyco_file[128]; /* buffer for optional polyco filenames */
     int newpar=0;
     int onlypre=0;
-    //  char tempo2MachineType[MAX_FILELEN]="";
     FILE *alias;
     char **commandLine;
     clock_t startClock,endClock;
@@ -147,7 +145,7 @@ int main(int argc, char *argv[])
     for (i=1;i<argc;i++)
     {
         if (strcmp(commandLine[i],"-machine")==0)
-            strcpy(tempo2MachineType,commandLine[++i]);
+            strncpy(tempo2MachineType,commandLine[++i],99);
         else if (strcasecmp(commandLine[i],"-noWarnings")==0)
             noWarnings=2;
         else if (strcasecmp(commandLine[i],"-allInfo")==0)
@@ -167,7 +165,7 @@ int main(int argc, char *argv[])
             for (k=i;k<argc;k++)
                 strcpy(oldCommandLine[k-i],commandLine[k]);
 
-            sprintf(str,"%s/alias.dat",getenv(TEMPO2_ENVIRON));	  
+            snprintf(str,MAX_FILELEN,"%s/alias.dat",getenv(TEMPO2_ENVIRON));	  
             if ((alias = fopen(str,"r")))
             {
                 while (!feof(alias))
@@ -240,7 +238,7 @@ int main(int argc, char *argv[])
     if (strlen(tempo2MachineType)==0)
     {
 #ifdef  TEMPO2_ARCH 
-        strcpy(tempo2MachineType, TEMPO2_ARCH);
+        strncpy(tempo2MachineType, TEMPO2_ARCH,99);
 #else
         if (getenv("LOGIN_ARCH")==NULL)
         {
@@ -250,7 +248,7 @@ int main(int argc, char *argv[])
                     "Use -machine on the command line\n");
             exit(1);
         }
-        strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
+        strncpy(tempo2MachineType, getenv("LOGIN_ARCH"),99);
 #endif
     }
 
@@ -309,12 +307,12 @@ int main(int argc, char *argv[])
             void * module;
 
             if (strcmp(commandLine[i],"-gr2")==0){
-                sprintf(str,"./%s_%s_plug.t2",commandLine[i+1],tempo2MachineType);
+                snprintf(str,MAX_FILELEN,"./%s_%s_plug.t2",commandLine[i+1],tempo2MachineType);
                 printf("Looking for %s\n",str);
                 module = dlopen(str, RTLD_NOW|RTLD_GLOBAL);
             } else{
                 for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
-                    sprintf(str,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
+                    snprintf(str,MAX_STRLEN,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
                             commandLine[i+1],tempo2MachineType);
                     printf("Looking for %s\n",str);
                     module = dlopen(str, RTLD_NOW|RTLD_GLOBAL); 
@@ -577,7 +575,7 @@ int main(int argc, char *argv[])
                     char *(*entry)(int,char **,pulsar *,int);
                     void * module;
                     for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
-                        sprintf(str,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
+                        snprintf(str,MAX_STRLEN,"%s/%s_%s_plug.t2",tempo2_plug_path[iplug],
                                 outputSO,tempo2MachineType);
                         printf("Looking for %s\n",str);
                         module = dlopen(str, RTLD_NOW|RTLD_GLOBAL); 

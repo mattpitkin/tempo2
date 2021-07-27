@@ -229,7 +229,7 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                         if (strlen(profileDir)>0)
                         {
                             sprintf(tt,"%s/%s",profileDir,psr->obsn[nObs].fname);
-                            strncpy(psr->obsn[nObs].fname,tt,1024);
+                            strncpy(psr->obsn[nObs].fname,tt,500);
                         }
                     }
 
@@ -240,8 +240,12 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                         char sat_sec_str[1024];
 
                         sat_sec_str[0] = '0';
-                        //sat_sec_str[1] = '.';
-                        for(int sindex = 0; sindex < 1024; sindex++){
+
+
+                        /*
+                         * This string copy is problematic as it doesn't terminate the strings properly
+                         * Better to just use strncpy
+                          for(int sindex = 0; sindex < 1024; sindex++){
                             if(sindex < 5){
                                 sat_day_str[sindex] = sat_str[sindex];
                             }
@@ -249,6 +253,11 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                                 sat_sec_str[sindex-4] = sat_str[sindex];
                             }
                         }
+                        */
+                        strncpy(sat_day_str,sat_str,5);
+                        sat_day_str[5]='\0'; // we expect sat_str to be longer than 5, so we have to null terminate
+                        // see definition of strncpy
+                        strncpy(sat_sec_str+1,sat_str+5,1000);
 
                         psr->obsn[nObs].sat_day = parse_longdouble(sat_day_str);
                         psr->obsn[nObs].sat_sec = parse_longdouble(sat_sec_str);
@@ -362,15 +371,15 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                             if (strlen(line)+add < 79) valid=-2;
                             else
                             {
-                                strcpy(psr->obsn[nObs].fname,line+1+add); psr->obsn[nObs].fname[25]='\0';
-                                strcpy(param1,line+25+add); param1[9]='\0'; if (strlen(param1)<2) valid=-2; 
+                                strncpy(psr->obsn[nObs].fname,line+1+add,500); psr->obsn[nObs].fname[25]='\0';
+                                strncpy(param1,line+25+add,99); param1[9]='\0'; if (strlen(param1)<2) valid=-2; 
 
                                 if (sscanf(param1,"%lf",&(psr->obsn[nObs].freq))!=1) valid=-2;
-                                strcpy(param1,line+34+add); param1[21]='\0';
+                                strncpy(param1,line+34+add,99); param1[21]='\0';
                                 psr->obsn[nObs].sat = parse_longdouble(param1);
-                                strcpy(param1,line+55+add); param1[8]='\0';
+                                strncpy(param1,line+55+add,99); param1[8]='\0';
                                 if (sscanf(param1,"%lf",&(psr->obsn[nObs].phaseOffset))!=1) valid=-2;
-                                strcpy(param1,line+63+add); param1[8]='\0';
+                                strncpy(param1,line+63+add,99); param1[8]='\0';
                                 if (sscanf(param1,"%lf",&(psr->obsn[nObs].toaErr))!=1) valid=-2;
                                 sscanf(line+79+add,"%99s",psr->obsn[nObs].telID); psr->obsn[nObs].telID[1]='\0';
                             }
@@ -381,13 +390,13 @@ void readTim(char *timname,pulsar *psr,int *jumpVal, int *fdjumpVal)
                             valid=1;
                             sscanf(line+add,"%99s",psr->obsn[nObs].telID); psr->obsn[nObs].telID[1]='\0';	
                             strcpy(psr->obsn[nObs].fname,"NOT SET");
-                            strcpy(param1,line+15+add); param1[9]='\0';
+                            strncpy(param1,line+15+add,99); param1[9]='\0';
                             if (sscanf(param1,"%lf",&(psr->obsn[nObs].freq))!=1) valid=-2;
-                            strcpy(param1,line+25+add); param1[20]='\0';
+                            strncpy(param1,line+25+add,99); param1[20]='\0';
                             psr->obsn[nObs].sat = parse_longdouble(param1);
-                            strcpy(param1,line+45+add); param1[9]='\0';
+                            strncpy(param1,line+45+add,99); param1[9]='\0';
                             if (sscanf(param1,"%lf",&(psr->obsn[nObs].toaErr))!=1) valid=-2;
-                            strcpy(param1,line+68+add); param1[10]='\0'; /* SHOULD BE DM OFFSET */
+                            strncpy(param1,line+68+add,99); param1[10]='\0'; /* SHOULD BE DM OFFSET */
                             if (sscanf(param1,"%lf",&dmoffset)==1)
                             {
                                 strcpy(psr->obsn[nObs].flagID[psr->obsn[nObs].nFlags],"-dmo");

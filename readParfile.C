@@ -397,7 +397,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     else if (strcasecmp(str,"AVERAGERES") ==0)
       {
 	psr->AverageResiduals=1;
-	fscanf(fin,"%s %f", &psr->AverageFlag, &psr->AverageEpochWidth);
+	fscanf(fin,"%s %f", psr->AverageFlag, &psr->AverageEpochWidth);
       }
     else if (strcasecmp(str,"EPH_FILE")==0)
     {
@@ -2042,7 +2042,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             char buf[80];
             char sname[80];
             fgets(buf, 80,fin);
-            sscanf(buf,"%s", &sname);
+            sscanf(buf,"%s", sname);
             switch (sname[0]) {
                 case 'P':
                 case 'p':
@@ -2615,7 +2615,7 @@ void getValue(char *str,int v1,int v2,pulsar *psr,int label,int arr)
         strcpy(t1,str+v1);   t1[2]='\0';
         strcpy(t2,str+v1+2); t2[2]='\0';
         strcpy(t3,str+v1+4); t3[v2-v1-4]='\0';
-        sprintf(temp,"%s:%s:%s",t1,t2,t3);
+        snprintf(temp,1000,"%s:%s:%s",t1,t2,t3);
         temp[v2-v1+1+2]='\0';
         strcpy(psr->rajStrPre,temp);
         psr->param[label].val[arr] = turn_deg(hms_turn(temp))*M_PI/180.0;
@@ -2633,7 +2633,7 @@ void getValue(char *str,int v1,int v2,pulsar *psr,int label,int arr)
         strcpy(t2,str+v1+2); t2[2]='\0';
         strcpy(t3,str+v1+4); t3[v2-v1-4]='\0';
         psr->param[label].paramSet[arr] = 1;
-        sprintf(temp,"%s:%s:%s",t1,t2,t3);
+        snprintf(temp,1000,"%s:%s:%s",t1,t2,t3);
         temp[v2-v1+1+2]='\0';
         strcpy(psr->decjStrPre,temp);
         psr->param[label].val[arr] = turn_deg(dms_turn(temp))*M_PI/180.0;

@@ -11,6 +11,7 @@ parser.add_argument("--alt-nudot-factor", default=0.1, type=float)
 parser.add_argument("--alt-time-N", nargs=2, type=float, help="Timescale of 'alt' mode given by a normal distribition given by mu/sigma in days")
 parser.add_argument("--std-time-N", nargs=2, type=float, help="Timescale of 'std' mode given by a normal distribition given by mu/sigma in days")
 parser.add_argument("--plot",action='store_true')
+parser.add_argument("--subtract-quad","-s",action='store_true')
 parser.add_argument("--nreal",default=1,type=int)
 parser.add_argument("parfile")
 parser.add_argument("timfile")
@@ -136,20 +137,27 @@ with open(header.timfile_name+".addNudot","wb") as outfile:
             other_state_lag   += toas[i]-t
             t = toas[i]
             phases[i] = accumulated_phase
+        if args.subtract_quad:
+            ## fit and remove quadratic
+            pp = np.poly1d(np.polyfit(toas,phases,2))
+            phases -= pp(toas)
+
 
 
 
         if args.plot:
             plt.subplot(311)
-            plt.plot(toas,phases,ls=':',marker='x')
+            plt.plot(toas[itoas],phases[itoas],ls=':',marker='x')
             plt.subplot(312)
-            plt.plot(toas[:-1],np.diff(phases),ls=':',marker='x')
+            d1 = np.diff(phases[itoas]) / np.diff(toas[itoas])
+            plt.plot(toas[itoas][:-1],d1,ls=':',marker='x')
             plt.subplot(313)
-            plt.plot(toas[:-2],np.diff(np.diff(phases)),ls=':',marker='x')
+            d2 = np.diff(d1) / np.diff(toas[itoas])[:-1]
+            plt.plot(toas[itoas][:-2],d2,ls=':',marker='x')
             plt.show()
 
-
         offsets=phases/f0
+        
 
         real = toasim.correction(header,offsets,0,0,0,"")
         real.write(outfile)

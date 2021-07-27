@@ -577,6 +577,7 @@ int T2calculateCovarFunc_redpink(double alpha1,double modelFc,double modelA,doub
 double qp_term(double freq_days, double logP, double f0, double sig, double lam, double df) {
     double A = pow(10.0,logP);
     double sigf0 = fmax(f0*sig, 0.5*df);
+    logmsg("sigf0 %lg %lg %lg",sigf0,sigf0/f0,df);
     double ret=0;
     if (freq_days > 0.5*(f0-sqrt(f0*f0 - 16*sigf0*sigf0))) {
        // cut off low freq_daysuencies as they come back up in an unpleasent way.
@@ -617,10 +618,14 @@ int T2calculateCovarFunc_with_QP(double modelAlpha,double modelFc,double modelA,
     double delta=1.0/365.25;
     double N=(double)npts;
 
+    logmsg("sig=%lg",sig);
+    logmsg("lam=%lg",lam);
     // set the QP amplitude...
     double log_QP = log_qp_ratio + log10(modelA/pow(1.0+pow(fabs(f0*365.25)/modelFc,2),modelAlpha/2.0));
 
     p_r[0]=modelA/pow(1.0+pow(fabs(0)/modelFc,2),modelAlpha/2.0);
+
+    //printf("%lg %lg ZZZ\n",0.0,p_r[0]);
 
     for (i=1;i<=npts/2;i++){
         freq=double(i)/(N*delta);
@@ -632,14 +637,14 @@ int T2calculateCovarFunc_with_QP(double modelAlpha,double modelFc,double modelA,
         p_i[i]=0;
         p_i[npts-i]=0;
 
-//        printf("%lg %lg ZZZ\n",freq,P);
+        //printf("%lg %lg ZZZ\n",freq,P);
     }
 
     TK_fft(1,npts,p_r,p_i);
 
     for (i=0; i <= ndays; i++){
         covFunc[i]=p_r[i]*pow(86400.0*365.25,2)*365.25*varScaleFactor;
-//        printf("%lg %.20lg ZZZ\n",(float)i,covFunc[i]);
+        //printf("%lg %.20lg QQQ\n",(float)i,covFunc[i]);
     }
 
     free(p_r);

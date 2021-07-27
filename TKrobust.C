@@ -180,7 +180,7 @@ void TKrobust_reweight_huber(double* resid, double* data, double** M, double sca
 void TKrobust_reweight_welsch(double* resid, double* data, double** M, double scale, int ndata, int nparams,
         double &sum_phi_sq, double &sum_dphi){
 
-    const double c0 = 1.345;
+    //const double c0 = 1.345;
     const double aWelsch = 2.11;
 
     double weight;
