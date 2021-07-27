@@ -467,10 +467,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
         {
             char *(*entry)(int,char **,pulsar *,int *);
             void * module;
-            char str[1000];
             logdbg("Dealing with the select plugin"); 
 
 
+            char *str = new char[2600];
             for (int iplug=0; iplug < tempo2_plug_path_len; iplug++){
                 sprintf(str,"%s/%s_%s_splug.t2",tempo2_plug_path[iplug],
                         selectPlugName,tempo2MachineType);
@@ -480,6 +480,7 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
                     printf("dlerror() = %s\n",dlerror());
                 } else break;
             }
+            delete[] str;
 
             //	  strcpy(tempo2MachineType, getenv("LOGIN_ARCH"));
             //	  sprintf(str,"%s/plugins/%s_%s_splugt2",getenv(TEMPO2_ENVIRON),

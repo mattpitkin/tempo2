@@ -198,7 +198,7 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
             else if (strcmp(argv[i],"-list")==0)
                 *list = 1;	  
             else if (strcmp(argv[i],"-output")==0)
-                strcpy(outputSO,argv[++i]);
+                strncpy(outputSO,argv[++i],100);
             else if (strcmp(argv[i],"-residuals")==0)
                 *outRes = 1;
             else if (strcmp(argv[i],"-del")==0)

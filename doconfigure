@@ -5,8 +5,12 @@ mode="$1"
 if [[ "$mode" == "O" ]] ; then
 	# optimised
 	ADDFLAGS="-O3 -g0 -march=native -pipe -fomit-frame-pointer"
+elif [[ "$mode" == "S" ]] ; then
+    ADDFLAGS="-fsanitize=address -g -O0 -Wall -Wfatal-errors -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=deprecated-declarations -Wformat-truncation=1 -fdiagnostics-color=auto"
+    LDFLAGS="-fsanitize=address $LDFLAGS"
+    xtra_flags="--disable-shared"
 elif [[ "$mode" == "D" ]] ; then
-    ADDFLAGS="-O0 -g3 -Wall -Wfatal-errors -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=deprecated-declarations -fdiagnostics-color=auto"
+    ADDFLAGS="-O0 -g3 -Wall -Wfatal-errors -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=deprecated-declarations -Wformat-truncation=1 -fdiagnostics-color=auto"
 else
 	ADDFLAGS="-O2 -g  -fdiagnostics-color=auto -march=core2 -mtune=generic -pipe"
 fi
@@ -25,4 +29,4 @@ export CFLAGS
 export CXXFLAGS
 export LDFLAGS
 
-./configure --prefix=$PREFIX --enable-default-qrfit $2 $3 $4 $5 $6
+./configure $xtra_flags --prefix=$PREFIX --enable-default-qrfit $2 $3 $4 $5 $6

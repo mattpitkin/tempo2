@@ -44,15 +44,15 @@ double ECLIPTIC_OBLIQUITY = ECLIPTIC_OBLIQUITY_VAL;
 int forceGlobalFit = 0;
 int veryFast = 0;
 int displayCVSversion = 0;
-char tempo2MachineType[MAX_FILELEN];
+char tempo2MachineType[100];
 
 char dcmFile[MAX_FILELEN]="NULL";
 char covarFuncFile[MAX_FILELEN]="NULL";
-char tempo2_plug_path[32][MAX_STRLEN];
+char tempo2_plug_path[32][MAX_FILELEN];
 int tempo2_plug_path_len=0;
 char forceAlwaysFitForGlitches=0;
 
-char tempo2_clock_path[MAX_STRLEN]="";
+char tempo2_clock_path[MAX_FILELEN]="";
 
 // From choleskyRoutines.h ... "some global variables that Ryan is still using for diagnostic purposes"
 double FCALPHA, WNLEVEL, EXPSMOOTH, UPW, NFIT, FCFINAL;
