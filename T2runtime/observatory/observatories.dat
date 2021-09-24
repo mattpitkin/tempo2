@@ -3,9 +3,9 @@
 # Values are x,y,z geocentric coordinates
 # The last column contains the old-style telescope ID code
 #
-   882589.65    -4924872.32     3943729.348      GBT                 gbt  
+   882589.289   -4924872.368    3943729.418      GBT                 gbt
 -4752329.7000  2790505.9340     -3200483.7470    NARRABRI            atca
-  2390490.0     -5564764.0      1994727.0        ARECIBO             ao
+  2390487.080   -5564731.357    1994720.633      ARECIBO             ao
  228310.702   4631922.905      4367064.059      NANSHAN             NS
  228310.702   4631922.905      4367064.059      UAO	  	    NS
  -4460892.6     2682358.9       -3674756.0       DSS_43              tid43
