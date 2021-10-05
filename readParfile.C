@@ -600,6 +600,25 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         }
 
     }
+    else if (strstr(str,"GLF0D2_")!=NULL || strstr(str,"glf0d_")!=NULL)
+    {
+        if (sscanf(str+7,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_glf0d2].aSize)
+                readValue(psr,str,fin,&(psr->param[param_glf0d2]),gval-1);
+        }
+
+    }
+    else if (strstr(str,"GLF0D3_")!=NULL || strstr(str,"glf0d_")!=NULL)
+    {
+        if (sscanf(str+7,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_glf0d3].aSize)
+                readValue(psr,str,fin,&(psr->param[param_glf0d3]),gval-1);
+        }
+
+    }
+
     else if (strstr(str,"GLTD_")!=NULL || strstr(str,"gltd_")!=NULL)
     {
         if (sscanf(str+5,"%d",&gval)==1)
@@ -608,12 +627,27 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 readValue(psr,str,fin,&(psr->param[param_gltd]),gval-1);
         }
     }
+    else if (strstr(str,"GLTD2_")!=NULL || strstr(str,"gltd_")!=NULL)
+    {
+        if (sscanf(str+5,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_gltd2].aSize)
+                readValue(psr,str,fin,&(psr->param[param_gltd2]),gval-1);
+        }
+    }
+    else if (strstr(str,"GLTD3_")!=NULL || strstr(str,"gltd_")!=NULL)
+    {
+        if (sscanf(str+5,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_gltd3].aSize)
+                readValue(psr,str,fin,&(psr->param[param_gltd3]),gval-1);
+        }
+    }
 
     else if  (strstr(str,"EXPEP_")!=NULL || strstr(str,"expep_")!=NULL)
     {
         if (sscanf(str+6,"%d",&gval)==1)
         {
-	  
             if (gval<psr->param[param_expep].aSize)
                 readValue(psr,str,fin,&(psr->param[param_expep]),gval-1);
         }
