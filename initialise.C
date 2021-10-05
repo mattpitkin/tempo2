@@ -717,7 +717,7 @@ void allocateMemory(pulsar *psr, int realloc)
         else if (i==param_bpjep || i==param_bpjph || i==param_bpja1 || i==param_bpjec || i==param_bpjom
                 || i==param_bpjpb)  psr->param[i].aSize = MAX_BPJ_JUMPS;
         else if (i==param_glep || i==param_glph || i==param_glf0 || i==param_glf1 || i==param_stateSwitchT || i==param_glf2 || 
-                i==param_glf0d || i==param_gltd) psr->param[i].aSize = 40;
+                i==param_glf0d || i==param_gltd || i==param_glf0d2 || i==param_glf0d3 || i==param_gltd2 || i==param_gltd3) psr->param[i].aSize = 40;
 	 else if (i==param_expep || i==param_expph || i==param_exptau || i==param_expindex) psr->param[i].aSize = 40;
         else if (i==param_gausep || i==param_gausamp || i==param_gaussig || i==param_gausindex) psr->param[i].aSize = 40;
         else if (i==param_dmassplanet)
