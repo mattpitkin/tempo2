@@ -629,7 +629,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     }
     else if (strstr(str,"GLTD2_")!=NULL || strstr(str,"gltd_")!=NULL)
     {
-        if (sscanf(str+5,"%d",&gval)==1)
+        if (sscanf(str+6,"%d",&gval)==1)
         {
             if (gval<psr->param[param_gltd2].aSize)
                 readValue(psr,str,fin,&(psr->param[param_gltd2]),gval-1);
@@ -637,7 +637,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     }
     else if (strstr(str,"GLTD3_")!=NULL || strstr(str,"gltd_")!=NULL)
     {
-        if (sscanf(str+5,"%d",&gval)==1)
+        if (sscanf(str+6,"%d",&gval)==1)
         {
             if (gval<psr->param[param_gltd3].aSize)
                 readValue(psr,str,fin,&(psr->param[param_gltd3]),gval-1);
