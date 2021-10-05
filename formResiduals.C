@@ -578,8 +578,12 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                             psr[p].param[param_glf0].val[k]*dt1 + 
                             0.5*psr[p].param[param_glf1].val[k]*dt1*dt1 +
                             1.0/6.0*psr[p].param[param_glf2].val[k]*dt1*dt1*dt1 +
-                            psr[p].param[param_glf0d].val[k]*
-                            psr[p].param[param_gltd].val[k]*86400.0*(1.0-expf);
+                            psr[p].param[param_glf0d].val[k]*  // first exponential
+                            psr[p].param[param_gltd].val[k]*86400.0*(1.0-expf) + 
+                            psr[p].param[param_glf0d2].val[k]*  // second exponential
+                            psr[p].param[param_gltd2].val[k]*86400.0*(1.0-expf)+
+                            psr[p].param[param_glf0d3].val[k]* // third exponential
+                            psr[p].param[param_gltd3].val[k]*86400.0*(1.0-expf);
                         //		       printf("Glitch phase = %10f\n",(double)(psr[p].param[param_glph].val[k]+
                         //			 psr[p].param[param_glf0].val[k]*dt1 + 
                         //			 0.5*psr[p].param[param_glf1].val[k]*dt1*dt1 +

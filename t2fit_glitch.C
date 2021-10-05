@@ -16,46 +16,55 @@ double t2FitFunc_stdGlitch(pulsar *psr, int ipsr ,double x ,int ipos ,param_labe
         else
             return  0.0;
     }
-    else if (label==param_glf0d)
+    else if (label==param_glf0d || label==param_glf0d2 || label==param_glf0d3)
     {
         longdouble dt1,expf,tp,tgl;
+        param_label our_gltd;
+        if (label==param_glf0d) our_gltd = param_gltd;
+        if (label==param_glf0d2) our_gltd = param_gltd2;
+        if (label==param_glf0d3) our_gltd = param_gltd3;
 
         tp = (psr[ipsr].obsn[ipos].bbat-psr[ipsr].param[param_pepoch].val[0])*86400.0;
         tgl = (psr[ipsr].param[param_glep].val[k] - psr[ipsr].param[param_pepoch].val[0])*86400.0;
 
         dt1 = tp-tgl;
 
-        if (psr[ipsr].param[param_gltd].val[k]!=0.0)
-            expf = exp(-dt1/86400.0/psr[ipsr].param[param_gltd].val[k]);
+        if (psr[ipsr].param[our_gltd].val[k]!=0.0)
+            expf = exp(-dt1/86400.0/psr[ipsr].param[our_gltd].val[k]);
         else
             expf = 1.0;
 
         if (psr[ipsr].obsn[ipos].bbat >= psr[ipsr].param[param_glep].val[k])
         {
-            return  psr[ipsr].param[param_gltd].val[k]*SECDAY*(1.0-expf)/psr[ipsr].param[param_f].val[0]; ///psr[ipsr].param[param_f].val[0];
+            return  psr[ipsr].param[our_gltd].val[k]*SECDAY*(1.0-expf)/psr[ipsr].param[param_f].val[0]; ///psr[ipsr].param[param_f].val[0];
             //	  printf("Glitch diff = %d %.10f %.10f %.10f\n",k+1,afunc,(double)tp,(double)tgl,(double)psr[ipsr].param[param_gltd].val[0]);
 
         }
         else
             return  0.0;
     }
-    else if (label==param_gltd)
+    else if (label==param_gltd || label == param_gltd2 || label == param_gltd3 )
     {
         longdouble dt1,expf,tp,tgl;
+        param_label our_glf0d;
+        if (label==param_gltd) our_glf0d=param_glf0d;
+        if (label==param_gltd2) our_glf0d=param_glf0d2;
+        if (label==param_gltd3) our_glf0d=param_glf0d3;
+        param_label our_gltd = label;
 
         tp = (psr[ipsr].obsn[ipos].bbat-psr[ipsr].param[param_pepoch].val[0])*86400.0L;
         tgl = (psr[ipsr].param[param_glep].val[k] - psr[ipsr].param[param_pepoch].val[0])*86400.0L;
 
         dt1 = tp-tgl;
 
-        if (psr[ipsr].param[param_gltd].val[k]!=0.0)
-            expf = exp(-dt1/86400.0L/psr[ipsr].param[param_gltd].val[k]);
+        if (psr[ipsr].param[our_gltd].val[k]!=0.0)
+            expf = exp(-dt1/86400.0L/psr[ipsr].param[our_gltd].val[k]);
         else
             expf = 1.0;
 
         if (psr[ipsr].obsn[ipos].bbat >= psr[ipsr].param[param_glep].val[k])
-            return  psr[ipsr].param[param_glf0d].val[k]*
-                (1.0-(1.0+dt1/SECDAY/(psr[ipsr].param[param_gltd].val[k]))*expf)/psr[ipsr].param[param_f].val[0]*SECDAY;
+            return  psr[ipsr].param[our_glf0d].val[k]*
+                (1.0-(1.0+dt1/SECDAY/(psr[ipsr].param[our_gltd].val[k]))*expf)/psr[ipsr].param[param_f].val[0]*SECDAY;
         else
             return  0.0;
     }

@@ -1413,7 +1413,11 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_glf0:
         case param_glf1:
         case param_glf0d:
+        case param_glf0d2:
+        case param_glf0d3:
         case param_gltd:
+        case param_gltd2:
+        case param_gltd3:
         case param_glf2:
             if (forceAlwaysFitForGlitches ||
                     (psr->param[param_glep].val[k] > psr->param[param_start].val[0]
