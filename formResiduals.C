@@ -567,19 +567,36 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     /* Only has effect after the glitch epoch */
                     if (tp >= tgl) 
                     {
+                        double expf2,expf3;
                         dt1 = tp-tgl;
                         if (psr[p].param[param_gltd].val[k]!=0.0)
                             expf = exp(-dt1/86400.0/psr[p].param[param_gltd].val[k]);
                         else
                             expf = 1.0;
 
+                        if (psr[p].param[param_gltd2].val[k]!=0.0)
+                            expf2 = exp(-dt1/86400.0/psr[p].param[param_gltd2].val[k]);
+                        else
+                            expf2 = 1.0;
+
+                        if (psr[p].param[param_gltd3].val[k]!=0.0)
+                            expf3 = exp(-dt1/86400.0/psr[p].param[param_gltd3].val[k]);
+                        else
+                            expf3 = 1.0;
+
+
+
                         // What happens if GLF2 (or GLF1) is not set?
                         phase4+=psr[p].param[param_glph].val[k]+
                             psr[p].param[param_glf0].val[k]*dt1 + 
                             0.5*psr[p].param[param_glf1].val[k]*dt1*dt1 +
                             1.0/6.0*psr[p].param[param_glf2].val[k]*dt1*dt1*dt1 +
-                            psr[p].param[param_glf0d].val[k]*
-                            psr[p].param[param_gltd].val[k]*86400.0*(1.0-expf);
+                            psr[p].param[param_glf0d].val[k]*  // first exponential
+                            psr[p].param[param_gltd].val[k]*86400.0*(1.0-expf) + 
+                            psr[p].param[param_glf0d2].val[k]*  // second exponential
+                            psr[p].param[param_gltd2].val[k]*86400.0*(1.0-expf2)+
+                            psr[p].param[param_glf0d3].val[k]* // third exponential
+                            psr[p].param[param_gltd3].val[k]*86400.0*(1.0-expf3);
                         //		       printf("Glitch phase = %10f\n",(double)(psr[p].param[param_glph].val[k]+
                         //			 psr[p].param[param_glf0].val[k]*dt1 + 
                         //			 0.5*psr[p].param[param_glf1].val[k]*dt1*dt1 +

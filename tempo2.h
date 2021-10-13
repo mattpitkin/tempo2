@@ -193,6 +193,7 @@ enum label {
     param_ne_sw,
     param_shapevent,
     param_orbifunc,
+    param_gltd2,param_gltd3, param_glf0d2, param_glf0d3,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
