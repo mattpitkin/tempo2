@@ -618,6 +618,14 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
     bool finishSet = psr->param[param_finish].paramSet[0]==1 
         && psr->param[param_finish].fitFlag[0]==1;
 
+    bool bat_startSet = psr->param[param_start].paramSet[0]==1 
+        && psr->param[param_start].fitFlag[0]==2;
+    bool bat_finishSet = psr->param[param_finish].paramSet[0]==1 
+        && psr->param[param_finish].fitFlag[0]==2;
+
+    bool update_start = !(bat_startSet || startSet);
+    bool update_finish = !(bat_finishSet || finishSet);
+
     /*
      * Variables for the start/finish. Initialise to some crazy values.
      * 1e10 in MJD is about 27 million years in the future, so not likey to
@@ -627,8 +635,9 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
     longdouble finish = 0;
 
     // if we are fixing start/finish then use the specified values.
-    if (startSet) start = psr->param[param_start].val[0];
-    if (finishSet) finish = psr->param[param_finish].val[0];
+    if (startSet||bat_startSet) start = psr->param[param_start].val[0];
+    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
+    logmsg("ss/fs %d %d",startSet,finishSet);
     for (iobs=0; iobs < psr->nobs; ++iobs){
         // a convinience pointer for the current observation.
         observation *o = psr->obsn+iobs;
@@ -642,9 +651,12 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
         if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
         if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
 
+        if (bat_startSet && o->bat < (start-START_FINISH_DELTA)) continue;
+        if (bat_finishSet && o->bat > (finish+START_FINISH_DELTA)) continue;
+
         // update start/finish if it isn't set.
-        if (!startSet && o->sat < start) start=o->sat;
-        if (!finishSet && o->sat > finish) finish=o->sat;
+        if (update_start && o->sat < start) start=o->sat;
+        if (update_finish && o->sat > finish) finish=o->sat;
 
         x[ndata] = (double)(o->bbat - psr->param[param_pepoch].val[0]);
         y[ndata] = o->residual;
@@ -654,7 +666,7 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
     }
 
     // save the start/finish values.
-    logdbg("START=%lg FINISH = %lg",(double)start,(double)finish);
+    logmsg("START=%.18lg FINISH = %.18lg",(double)start,(double)finish);
     psr->param[param_start].val[0] = start;
     psr->param[param_finish].val[0] = finish;
     psr->param[param_start].paramSet[0] = 1;

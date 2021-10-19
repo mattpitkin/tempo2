@@ -845,11 +845,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     // Get initial zoom position from start/finish flags.
     if (centre==-1)     centreEpoch = psr[0].param[param_pepoch].val[0];
     else if (centre==1)	centreEpoch = (min1+max1)/2.0;
-    if (psr[0].param[param_start].paramSet[0]==1 && psr[0].param[param_start].fitFlag[0]==1) {
+    if (psr[0].param[param_start].paramSet[0]==1 && psr[0].param[param_start].fitFlag[0]!=0) {
         setZoomX1=1;
         zoomX1=psr[0].param[param_start].val[0]-centreEpoch;
     }
-    if (psr[0].param[param_finish].paramSet[0]==1 && psr[0].param[param_finish].fitFlag[0]==1) {
+    if (psr[0].param[param_finish].paramSet[0]==1 && psr[0].param[param_finish].fitFlag[0]!=0) {
         setZoomX2=1;
         zoomX2=psr[0].param[param_finish].val[0]-centreEpoch;
     }
@@ -4141,7 +4141,7 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,
         if (plotX==3 || plotX==12) {
             if (setZoomX1 == 1) {
                 psr[0].param[param_start].paramSet[0]=1;
-                psr[0].param[param_start].fitFlag[0]=1;
+                psr[0].param[param_start].fitFlag[0]=2;
                 if (plotX==12)
                     psr[0].param[param_start].val[0] = zoomX1;
                 else
@@ -4157,7 +4157,7 @@ void reFit(int fitFlag,int setZoomX1,int setZoomX2,float zoomX1,float zoomX2,
         if (plotX==3 || plotX==12) {
             if (setZoomX2 == 1) {
                 psr[0].param[param_finish].paramSet[0]=1; 
-                psr[0].param[param_finish].fitFlag[0]=1;
+                psr[0].param[param_finish].fitFlag[0]=2;
                 if (plotX==12)
                     psr[0].param[param_finish].val[0] = zoomX2;
                 else

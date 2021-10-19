@@ -91,20 +91,39 @@ int bootstrap(pulsar *psr,int p,int npsr)
     /* Determine number of TOAs */
     npts=0;
     okay=0;
+
+    bool startSet = psr[p].param[param_start].paramSet[0]==1
+        && psr[p].param[param_start].fitFlag[0]==1;
+    bool finishSet = psr[p].param[param_finish].paramSet[0]==1
+        && psr[p].param[param_finish].fitFlag[0]==1;
+
+    bool bat_startSet = psr[p].param[param_start].paramSet[0]==1
+        && psr[p].param[param_start].fitFlag[0]==2;
+    bool bat_finishSet = psr[p].param[param_finish].paramSet[0]==1
+        && psr[p].param[param_finish].fitFlag[0]==2;
+
+    longdouble start = 1e10;
+    longdouble finish = 0;
+
+    // if we are fixing start/finish then use the specified values.
+    if (startSet||bat_startSet) start = psr->param[param_start].val[0];
+    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
+
     for (i=0;i<psr[p].nobs;i++)
     {
-        if (psr[p].obsn[i].deleted==0)
-            okay=1;
-        /* Check for START and FINISH flags */
-        if (psr[p].param[param_start].paramSet[0]==1 && psr[p].param[param_start].fitFlag[0]==1 &&
-                (psr[p].param[param_start].val[0]-START_FINISH_DELTA) > psr[p].obsn[i].sat)
-            okay=0;
-        if (psr[p].param[param_finish].paramSet[0]==1 && psr[p].param[param_finish].fitFlag[0]==1 &&
-                (psr[p].param[param_finish].val[0]+START_FINISH_DELTA) < psr[p].obsn[i].sat)
-            okay=0;
 
-        if (okay==1)
-            npts++;
+        /* MJK 2021 - update to use same logic for start/finish as t2Fit */
+        observation *o = psr[p].obsn+i;
+        // skip deleted points
+        if (o->deleted) continue;
+
+        // if start/finish is set, skip points outside of the range
+        if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
+        if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
+
+        if (bat_startSet && o->bat < (start-START_FINISH_DELTA)) continue;
+        if (bat_finishSet && o->bat > (finish+START_FINISH_DELTA)) continue;
+        npts++;
     }
 
 
