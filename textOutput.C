@@ -206,7 +206,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     {
                         if (psr[p].param[i].prefit[k]==2)
                             printf("%-25.25s ","TEMPO1");
-                        if (psr[p].param[i].prefit[k]==5)
+                        else if (psr[p].param[i].prefit[k]==5)
                             printf("%-25.25s ","TEMPO2");
                         else
                             printf("%-25.25g ",(double)psr[p].param[i].prefit[k]);
@@ -232,10 +232,12 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     {
                         if (psr[p].param[i].val[k]==2)
                             printf("%-25.25s ","TEMPO1");
-                        if (psr[p].param[i].val[k]==5)
+                        else if (psr[p].param[i].val[k]==5)
                             printf("%-25.25s ","TEMPO2");
                         else
                             printf("%-25.25g ",(double)psr[p].param[i].val[k]);
+                        printf("\n");
+                        continue;
                     }
                     else printf("%-25.15g ",(double)getParameterValue(&psr[p],i,k));
 
@@ -250,9 +252,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         printf("%-13.5g ", (double)getParameterValue(&psr[p],i,k)-(double)psr[p].param[i].prefit[k]);
                     }
 
-                    if (psr[p].param[i].fitFlag[k]==1) printf("Y");
-                    else if (psr[p].param[i].fitFlag[k]==2) printf("G");
-                    else printf("N");
+                    if (i==param_start || i==param_finish ){
+                        if (psr[p].param[i].fitFlag[k]==1) printf("S");
+                        else if (psr[p].param[i].fitFlag[k]==2) printf("B");
+                        else printf("N");
+                    } else {
+                        if (psr[p].param[i].fitFlag[k]==1) printf("Y");
+                        else if (psr[p].param[i].fitFlag[k]==2) printf("G");
+                        else printf("N");
+                    }
 
 
                     printf("\n");
@@ -1280,6 +1288,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                             }
                             else
                             {
+                                if ((i==param_start || i==param_finish)&&psr[p].param[i].fitFlag[k]==2) fprintf(fout2," 2 ");
                                 fprintf(fout2,"   ");
                                 if (i==param_raj)
                                 {
@@ -1666,34 +1675,57 @@ double calcRMS(pulsar *psr,int p)
     int i,count=0;
     double sum_tn=0.,sumsq_tn=0.0,rms_tn=0.0;
     
+    bool startSet = psr[p].param[param_start].paramSet[0]==1
+        && psr[p].param[param_start].fitFlag[0]==1;
+    bool finishSet = psr[p].param[param_finish].paramSet[0]==1
+        && psr[p].param[param_finish].fitFlag[0]==1;
+
+    bool bat_startSet = psr[p].param[param_start].paramSet[0]==1
+        && psr[p].param[param_start].fitFlag[0]==2;
+    bool bat_finishSet = psr[p].param[param_finish].paramSet[0]==1
+        && psr[p].param[param_finish].fitFlag[0]==2;
+
+    longdouble start = 1e10;
+    longdouble finish = 0;
+
+    // if we are fixing start/finish then use the specified values.
+    if (startSet||bat_startSet) start = psr->param[param_start].val[0];
+    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
 
     for (i=0;i<psr[p].nobs;i++)
     {
-        if (psr[p].obsn[i].deleted==0 &&
-                (psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]!=1 ||	  
-                 psr[p].param[param_start].val[0] < psr[p].obsn[i].bat) &&
-                (psr[p].param[param_finish].paramSet[0]!=1 || psr[p].param[param_finish].fitFlag[0]!=1 ||
-                 psr[p].param[param_finish].val[0] > psr[p].obsn[i].bat))
-        {
-            mean_pre += (double)psr[p].obsn[i].prefitResidual;	  
-            if (psr[p].fitMode==1) 
-                wgt = 1.0 /
-                    (1.0e-6*psr[p].obsn[i].toaErr*psr[p].param[param_f].val[0]*
-                     1.0e-6*psr[p].obsn[i].toaErr*psr[p].param[param_f].val[0]);
-            else wgt=1.0/(1.0e-6*psr[p].param[param_f].val[0]*1.0e-6*psr[p].param[param_f].val[0]);
-            sumsq_pre += (double)(wgt*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]);
-            sum_pre   += (double)(wgt*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]);
 
-            sumsq_post += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
-            sum_post   += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
+        /* MJK 2021 - update to use same logic for start/finish as t2Fit */
+        observation *o = psr[p].obsn+i;
+        // skip deleted points
+        if (o->deleted) continue;
 
-	    sumsq_tn += (double)(wgt*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]);
-	    sum_tn += (double)(wgt*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]);
-	    
-	    sumwt += wgt;
-            mean_post += (double)psr[p].obsn[i].residual;
-            count++;
-        }
+        // if start/finish is set, skip points outside of the range
+        if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
+        if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
+
+        if (bat_startSet && o->bat < (start-START_FINISH_DELTA)) continue;
+        if (bat_finishSet && o->bat > (finish+START_FINISH_DELTA)) continue;
+
+
+        mean_pre += (double)psr[p].obsn[i].prefitResidual;	  
+        if (psr[p].fitMode==1) 
+            wgt = 1.0 /
+                (1.0e-6*psr[p].obsn[i].toaErr*psr[p].param[param_f].val[0]*
+                 1.0e-6*psr[p].obsn[i].toaErr*psr[p].param[param_f].val[0]);
+        else wgt=1.0/(1.0e-6*psr[p].param[param_f].val[0]*1.0e-6*psr[p].param[param_f].val[0]);
+        sumsq_pre += (double)(wgt*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]);
+        sum_pre   += (double)(wgt*psr[p].obsn[i].prefitResidual*psr[p].param[param_f].val[0]);
+
+        sumsq_post += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
+        sum_post   += (double)(wgt*psr[p].obsn[i].residual*psr[p].param[param_f].val[0]);
+
+        sumsq_tn += (double)(wgt*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]);
+        sum_tn += (double)(wgt*psr[p].obsn[i].residualtn*psr[p].param[param_f].val[0]);
+
+        sumwt += wgt;
+        mean_post += (double)psr[p].obsn[i].residual;
+        count++;
     }
     logdbg("textOutput %g %g %d",mean_pre,mean_post,count);
     mean_pre/=count;

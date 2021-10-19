@@ -7,30 +7,48 @@ void updateEpoch_str(pulsar* psr, int p, const char* newEpoch)
     longdouble nMJD;
     longdouble earliest=-1;
     longdouble latest=-1;
-    int okay=1;
+
+        bool startSet = psr->param[param_start].paramSet[0]==1
+        && psr->param[param_start].fitFlag[0]==1;
+    bool finishSet = psr->param[param_finish].paramSet[0]==1
+        && psr->param[param_finish].fitFlag[0]==1;
+
+    bool bat_startSet = psr->param[param_start].paramSet[0]==1
+        && psr->param[param_start].fitFlag[0]==2;
+    bool bat_finishSet = psr->param[param_finish].paramSet[0]==1
+        && psr->param[param_finish].fitFlag[0]==2;
+
+    longdouble start = 1e10;
+    longdouble finish = 0;
+
+    // if we are fixing start/finish then use the specified values.
+    if (startSet||bat_startSet) start = psr->param[param_start].val[0];
+    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
 
     //=psr[p].obsn[0].sat,latest=psr[p].obsn[0].sat;
     for (i=0;i<psr[p].nobs;i++)
     {
-        okay=1;
-        if (psr[p].obsn[i].deleted==1) okay=0;
-        if (psr[p].param[param_start].paramSet[0]==1 && psr[p].param[param_start].fitFlag[0]==1 &&
-                (psr[p].param[param_start].val[0] > psr[p].obsn[i].sat))
-            okay=0;
-        if (psr[p].param[param_finish].paramSet[0]==1 && psr[p].param[param_finish].fitFlag[0]==1 &&
-                psr[p].param[param_finish].val[0] < psr[p].obsn[i].sat)
-            okay=0;
 
-        if (okay==1)
+        /* MJK 2021 - update to use same logic for start/finish as t2Fit */
+        observation *o = psr[p].obsn+i;
+        // skip deleted points
+        if (o->deleted) continue;
+
+        // if start/finish is set, skip points outside of the range
+        if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
+        if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
+
+        if (bat_startSet && o->bat < (start-START_FINISH_DELTA)) continue;
+        if (bat_finishSet && o->bat > (finish+START_FINISH_DELTA)) continue;
+
+
+        if (earliest==-1)
         {
-            if (earliest==-1)
-            {
-                earliest = psr[p].obsn[i].sat;
-                latest   = psr[p].obsn[i].sat;
-            }
-            if (earliest > psr[p].obsn[i].sat) earliest = psr[p].obsn[i].sat;
-            if (latest < psr[p].obsn[i].sat) latest = psr[p].obsn[i].sat;
+            earliest = psr[p].obsn[i].sat;
+            latest   = psr[p].obsn[i].sat;
         }
+        if (earliest > psr[p].obsn[i].sat) earliest = psr[p].obsn[i].sat;
+        if (latest < psr[p].obsn[i].sat) latest = psr[p].obsn[i].sat;
     }
 
 

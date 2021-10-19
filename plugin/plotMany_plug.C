@@ -270,25 +270,47 @@ void doPlot(pulsar *psr,int npsr,float *scale,int nScale,char *grDev,int plotUs,
       
       count[p]=0;
       printf("points = %d\n",psr[p].nobs);
-      for (i=0;i<psr[p].nobs;i++)
-	{	  
-	  if (psr[p].obsn[i].deleted == 0 &&
-	      (psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]!=1 ||
-	       psr[p].param[param_start].val[0] < psr[p].obsn[i].bat) &&
-	      (psr[p].param[param_finish].paramSet[0]!=1 || psr[p].param[param_finish].fitFlag[0]!=1 ||
-	       psr[p].param[param_finish].val[0] > psr[p].obsn[i].bat))
-	    {
-	      /* x[p][count[p]] = (double)(psr[p].obsn[i].bat-psr[0].param[param_pepoch].val[0]);	     	       */
-	      if (centreMJD == -1)
-		x[p][count[p]] = calcYr(psr[p].obsn[i].bat);
-	      else
-		x[p][count[p]] = (double)(psr[p].obsn[i].bat-centreMJD); 
-	      y[p][count[p]] = (double)psr[p].obsn[i].residual*1.0e6;
-	      if (nScale>0)
-		y[p][count[p]] *= scale[p];
-	      count[p]++;
-	    }
-	}
+
+    bool startSet = psr[p].param[param_start].paramSet[0]==1
+        && psr[p].param[param_start].fitFlag[0]==1;
+    bool finishSet = psr[p].param[param_finish].paramSet[0]==1
+        && psr[p].param[param_finish].fitFlag[0]==1;
+
+    bool bat_startSet = psr[p].param[param_start].paramSet[0]==1
+        && psr[p].param[param_start].fitFlag[0]==2;
+    bool bat_finishSet = psr[p].param[param_finish].paramSet[0]==1
+        && psr[p].param[param_finish].fitFlag[0]==2;
+
+    longdouble start = 1e10;
+    longdouble finish = 0;
+
+    // if we are fixing start/finish then use the specified values.
+    if (startSet||bat_startSet) start = psr->param[param_start].val[0];
+    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
+
+    for (i=0;i<psr[p].nobs;i++)
+    {	  
+        /* MJK 2021 - update to use same logic for start/finish as t2Fit */
+        observation *o = psr[p].obsn+i;
+        // skip deleted points
+        if (o->deleted) continue;
+
+        // if start/finish is set, skip points outside of the range
+        if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
+        if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
+
+        if (bat_startSet && o->bat < (start-START_FINISH_DELTA)) continue;
+        if (bat_finishSet && o->bat > (finish+START_FINISH_DELTA)) continue;
+
+        if (centreMJD == -1)
+            x[p][count[p]] = calcYr(psr[p].obsn[i].bat);
+        else
+            x[p][count[p]] = (double)(psr[p].obsn[i].bat-centreMJD); 
+        y[p][count[p]] = (double)psr[p].obsn[i].residual*1.0e6;
+        if (nScale>0)
+            y[p][count[p]] *= scale[p];
+        count[p]++;
+    }
       /* Remove mean from the residuals and calculate error bars */
       mean = findMean(y[p],psr,p,scale1,count[p]);
       count[p]=0;
