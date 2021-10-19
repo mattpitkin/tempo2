@@ -183,7 +183,7 @@ void doPlot(pulsar *psr,int npsr,int overlay)
 	    for (i=0;i<psr[p].nobs;i++)
 	      {
 		if (psr[p].obsn[i].deleted == 0  &&
-	    (psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]!=1 ||
+	    (psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]==0 ||
 	      psr[p].param[param_start].val[0] < psr[p].obsn[i].bat) &&
 	    (psr[p].param[param_finish].paramSet[0]!=1 || psr[p].param[param_finish].fitFlag[0]!=1 ||
 	     psr[p].param[param_finish].val[0] > psr[p].obsn[i].bat))
@@ -206,7 +206,7 @@ void doPlot(pulsar *psr,int npsr,int overlay)
 	    for (i=0;i<psr[p].nobs;i++)
 	      {
 		if (psr[p].obsn[i].deleted==0   &&
-	    (psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]!=1 ||
+	    (psr[p].param[param_start].paramSet[0]!=1 || psr[p].param[param_start].fitFlag[0]==0 ||
 	      psr[p].param[param_start].val[0] < psr[p].obsn[i].bat) &&
 	    (psr[p].param[param_finish].paramSet[0]!=1 || psr[p].param[param_finish].fitFlag[0]!=1 ||
 	     psr[p].param[param_finish].val[0] > psr[p].obsn[i].bat))
@@ -414,9 +414,9 @@ void doPlot(pulsar *psr,int npsr,int overlay)
 		    for (i=0;i<psr[k].nobs;i++)
 		      {
 			if (psr[k].obsn[i].deleted==0   &&
-			    (psr[k].param[param_start].paramSet[0]!=1 || psr[k].param[param_start].fitFlag[0]!=1 ||
+			    (psr[k].param[param_start].paramSet[0]!=1 || psr[k].param[param_start].fitFlag[0]==0 ||
 			     psr[k].param[param_start].val[0] < psr[k].obsn[i].bat) &&
-			    (psr[k].param[param_finish].paramSet[0]!=1 || psr[k].param[param_finish].fitFlag[0]!=1 ||
+			    (psr[k].param[param_finish].paramSet[0]!=1 || psr[k].param[param_finish].fitFlag[0]==0 ||
 			     psr[k].param[param_finish].val[0] > psr[k].obsn[i].bat))
 
 			  {x[count] = (double)(psr[k].obsn[i].bat-psr[0].param[param_pepoch].val[0]); count++;}
@@ -450,9 +450,9 @@ void doPlot(pulsar *psr,int npsr,int overlay)
 		    for (i=0;i<psr[k].nobs;i++)
 		      {
 			if (psr[k].obsn[i].deleted==0   &&
-			    (psr[k].param[param_start].paramSet[0]!=1 || psr[k].param[param_start].fitFlag[0]!=1 ||
+			    (psr[k].param[param_start].paramSet[0]!=1 || psr[k].param[param_start].fitFlag[0]==0 ||
 			     psr[k].param[param_start].val[0] < psr[k].obsn[i].bat) &&
-			    (psr[k].param[param_finish].paramSet[0]!=1 || psr[k].param[param_finish].fitFlag[0]!=1 ||
+			    (psr[k].param[param_finish].paramSet[0]!=1 || psr[k].param[param_finish].fitFlag[0]==0 ||
 			     psr[k].param[param_finish].val[0] > psr[k].obsn[i].bat))			  
 			  {y[count] = (double)psr[k].obsn[i].prefitResidual*1e6; count++;}
 		      }
@@ -473,9 +473,9 @@ void doPlot(pulsar *psr,int npsr,int overlay)
 		    for (i=0;i<psr[k].nobs;i++)
 		      {
 			if (psr[k].obsn[i].deleted==0   &&
-			    (psr[k].param[param_start].paramSet[0]!=1 || psr[k].param[param_start].fitFlag[0]!=1 ||
+			    (psr[k].param[param_start].paramSet[0]!=1 || psr[k].param[param_start].fitFlag[0]==0 ||
 			     psr[k].param[param_start].val[0] < psr[k].obsn[i].bat) &&
-			    (psr[k].param[param_finish].paramSet[0]!=1 || psr[k].param[param_finish].fitFlag[0]!=1 ||
+			    (psr[k].param[param_finish].paramSet[0]!=1 || psr[k].param[param_finish].fitFlag[0]==0 ||
 			     psr[k].param[param_finish].val[0] > psr[k].obsn[i].bat))
 			  {y[count] = (double)psr[k].obsn[i].residual*1e6; count++;}
 		      }
