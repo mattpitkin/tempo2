@@ -196,7 +196,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->TNRedGam = 0;
     psr->TNRedC = 0;
     psr->TNRedFLow=0;
-    psr->TNRedCorner=0.01;
+    psr->TNRedCorner=0.0;
     psr->TNDMAmp = 0;
     psr->TNDMGam = 0;
     psr->TNDMC = 0;
@@ -212,6 +212,10 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->TNsubtractDM=0;
     psr->TNsubtractRed=0;
     psr->TNsubtractChrom=0;
+    psr->TN_QpRatio=0;
+    psr->TN_QpPeriod=0;
+    psr->TN_QpSig=0;
+    psr->TN_QpLam=0;
     psr->AverageResiduals=0;
     psr->useTNOrth = 0;
     psr->nDMEvents=0;

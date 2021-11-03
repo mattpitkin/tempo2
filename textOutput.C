@@ -1469,6 +1469,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
                 }
 
+                if (psr[p].TN_QpPeriod > 0) {
+                    fprintf(fout2,"TN_QpPeriod %g\n", psr[p].TN_QpPeriod);
+                    fprintf(fout2,"TN_QpRatio %g\n", psr[p].TN_QpRatio);
+                    fprintf(fout2,"TN_QpLam %g\n", psr[p].TN_QpLam);
+                    fprintf(fout2,"TN_QpSig %g\n", psr[p].TN_QpSig);
+                }
+
 		if (psr[p].TNRedFLow !=0 )
 		  {
 		    fprintf(fout2, "TNRedFLow %g\n", psr[p].TNRedFLow);
