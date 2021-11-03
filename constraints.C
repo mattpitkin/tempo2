@@ -133,64 +133,76 @@ void matrixDMConstraintWeights(pulsar *psr){
     if (psr->param[param_dmmodel].fitFlag[0]==1)
     {
         logdbg("Getting DM constraints for %s",psr->name);
+
         // find out how many obs we have.
-        for(i=0; i < psr->nobs; i++){
-            if (psr->obsn[i].deleted==0)
-            {
-                char okay=1;
-                /* Check for START and FINISH flags */
-                if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
-                        (psr->param[param_start].val[0] > psr->obsn[i].sat))
-                    okay=0;
-                if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
-                        psr->param[param_finish].val[0] < psr->obsn[i].sat)
-                    okay=0;
-                if (okay==1)
-                {
-                    nobs++;
-                }
-            }
+
+
+        bool startSet = psr->param[param_start].paramSet[0]==1
+            && psr->param[param_start].fitFlag[0]==1;
+        bool finishSet = psr->param[param_finish].paramSet[0]==1
+            && psr->param[param_finish].fitFlag[0]==1;
+
+        bool bat_startSet = psr->param[param_start].paramSet[0]==1
+            && psr->param[param_start].fitFlag[0]==2;
+        bool bat_finishSet = psr->param[param_finish].paramSet[0]==1
+            && psr->param[param_finish].fitFlag[0]==2;
+
+        longdouble start = 1e10;
+        longdouble finish = 0;
+
+        // if we are fixing start/finish then use the specified values.
+        if (startSet||bat_startSet) start = psr->param[param_start].val[0];
+        if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
+
+        for (i=0;i<psr->nobs;i++)
+        {
+
+            /* MJK 2021 - update to use same logic for start/finish as t2Fit */
+            observation *o = psr->obsn+i;
+            // skip deleted points
+            if (o->deleted) continue;
+
+            // if start/finish is set, skip points outside of the range
+            if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
+            if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
+
+            if (bat_startSet && o->bat < (start-START_FINISH_DELTA)) continue;
+            if (bat_finishSet && o->bat > (finish+START_FINISH_DELTA)) continue;
+
+            ++nobs;
+
         }
         // originally was sizeof(double*)*nobs.
         double ** designMatrix=(double**)malloc_uinv(nobs);
         double *e=(double*)malloc(sizeof(double)*nobs);
 
         nobs=0;
-        //		printf("c0: %d %s\n",psr->nobs,psr->name);
         for(i=0; i < psr->nobs; i++){
-            // Check for "ok" and start/finish coppied from dofit.
-            // Needs to be the same so that the weighting is the same as the fit,
-            // but in practice probably doesn't matter.
-            //		  printf("c1 checking: %d %d %s\n",psr->obsn[i].deleted,psr->nobs,psr->name);
-            if (psr->obsn[i].deleted==0)
-            {
-                char okay=1;
+            /* MJK 2021 - update to use same logic for start/finish as t2Fit */
+            observation *o = psr->obsn+i;
+            // skip deleted points
+            if (o->deleted) continue;
 
-                /* Check for START and FINISH flags */
-                if (psr->param[param_start].paramSet[0]==1 && psr->param[param_start].fitFlag[0]==1 &&
-                        (psr->param[param_start].val[0] > psr->obsn[i].sat))
-                    okay=0;
-                if (psr->param[param_finish].paramSet[0]==1 && psr->param[param_finish].fitFlag[0]==1 &&
-                        psr->param[param_finish].val[0] < psr->obsn[i].sat)
-                    okay=0;
+            // if start/finish is set, skip points outside of the range
+            if (startSet && o->sat < (start-START_FINISH_DELTA)) continue;
+            if (finishSet && o->sat > (finish+START_FINISH_DELTA)) continue;
 
-                //		  printf("c2 checking: %d\n",okay);
-                if (okay==1)
-                {
-                    x   = (double)(psr->obsn[i].bbat-psr->param[param_pepoch].val[0]);
-                    double sig=psr->obsn[i].toaErr*1e-6;
-                    double dmf = 1.0/(DM_CONST*powl(psr->obsn[i].freqSSB/1.0e6,2));
-                    for (k=0; k < nfit;k++){
+            if (bat_startSet && o->bat < (start-START_FINISH_DELTA)) continue;
+            if (bat_finishSet && o->bat > (finish+START_FINISH_DELTA)) continue;
 
-                        if(k<nDM)
-                            designMatrix[nobs][k]=dmf*getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
-                        else
-                            designMatrix[nobs][k]=getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
-                    }
-                    nobs++;
 
-                }
+            x   = (double)(psr->obsn[i].bbat-psr->param[param_pepoch].val[0]);
+            double sig=psr->obsn[i].toaErr*1e-6;
+            double dmf = 1.0/(DM_CONST*powl(psr->obsn[i].freqSSB/1.0e6,2));
+            for (k=0; k < nfit;k++){
+
+                if(k<nDM)
+                    designMatrix[nobs][k]=dmf*getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
+                else
+                    designMatrix[nobs][k]=getParamDeriv(psr,i,x,param_dmmodel,k)/sig;
             }
+            nobs++;
+
         } 
         printf("Calling TKleastSquares %d %d\n",nobs,nfit); fflush(stdout);
         TKleastSquares(NULL,NULL,designMatrix,designMatrix,nobs,nfit,1e-20,0,NULL,e,NULL);
