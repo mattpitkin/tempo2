@@ -1644,6 +1644,15 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%d",&(psr->TNDMC));
     else if(strcasecmp(str,"TNsubtractDM")==0)
         fscanf(fin,"%d",&(psr->TNsubtractDM));
+    else if (strcasecmp(str,"TN_QpPeriod")==0) /* Quasi-periodic Timing Noise*/
+        fscanf(fin,"%lf",&(psr->TN_QpPeriod));
+    else if (strcasecmp(str,"TN_QpLam")==0) /* Quasi-periodic Timing Noise*/
+        fscanf(fin,"%lf",&(psr->TN_QpLam));
+    else if (strcasecmp(str,"TN_QpSig")==0) /* Quasi-periodic Timing Noise*/
+        fscanf(fin,"%lf",&(psr->TN_QpSig));
+    else if (strcasecmp(str,"TN_QpRatio")==0) /* Quasi-periodic Timing Noise*/
+        fscanf(fin,"%lf",&(psr->TN_QpRatio));
+
     else if (strcasecmp(str,"TNChromAmp")==0) /* TempoNest Red noise power law amplitude */
       {
 	fscanf(fin,"%lf",&(psr->TNChromAmp));

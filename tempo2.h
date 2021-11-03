@@ -883,6 +883,12 @@ typedef struct pulsar {
     double posPulsarEquatorial[3];            /*!< 3-vector pointing at pulsar, in equatorial coordinates (even if using ecliptic)*/
 
     enum series_type dm_series_type;
+
+    /* Quasi-periodic timing noise components */
+    double TN_QpPeriod;
+    double TN_QpSig;
+    double TN_QpLam;
+    double TN_QpRatio;
 } pulsar;
 
 
