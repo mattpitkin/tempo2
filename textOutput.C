@@ -1697,7 +1697,7 @@ double calcRMS(pulsar *psr,int p)
 
     // if we are fixing start/finish then use the specified values.
     if (startSet||bat_startSet) start = psr->param[param_start].val[0];
-    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
+    if (finishSet||bat_finishSet) finish = psr->param[param_finish].val[0];
 
     for (i=0;i<psr[p].nobs;i++)
     {
