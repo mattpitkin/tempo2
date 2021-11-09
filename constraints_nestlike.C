@@ -4,6 +4,22 @@
 #include <string.h>
 #define f1yr (1.0/3.16e7)
 
+double qp_term_cutoff(double freq_days, double logP, double f0, double sig, double lam, double df) {
+    double A = pow(10.0,logP);
+    double sigf0 = fmax(f0*sig, 0.5*df);
+    double ret=0;
+    if (freq_days > 0.5*(f0-sqrt(f0*f0 - 16*sigf0*sigf0))) {
+       // cut off low freq_daysuencies as they come back up in an unpleasent way.
+        for (int ih = 1 ; ih <=10 ; ++ih) {
+            ret += A * exp(-(ih-1)/lam)*exp(-pow(freq_days-f0*ih,2)/(2*pow(ih*sigf0,2)))/ih;
+        }
+    }
+    return ret;
+}
+
+
+
+
 double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_red_sin || iconstraint == constraint_red_cos);
 
@@ -22,17 +38,34 @@ double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam
         double RedAmp = pow(10.,psr[ipsr].TNRedAmp);
         double freq = RedFLow*((double)(k+1.0))/(maxtspan);
         double RedIndex = psr[ipsr].TNRedGam;
-        double RedCorner = psr[ipsr].TNRedCorner/maxtspan;
 
-        /***
-         * No idea what this equation represents! Copied from LL's code MJK2016
-         */
-        double rho = pow((1+(pow((1.0/365.25)/RedCorner,RedIndex/2))),2)*(RedAmp*RedAmp/12.0/(M_PI*M_PI))/pow((1+(pow(freq/RedCorner,RedIndex/2))),2)/(maxtspan*24*60*60)*pow(f1yr,-3.0);
+        double df = RedFLow/(maxtspan*86400.0); // in per second
+
+        double rho;
+        if (psr[ipsr].TNRedCorner > 0) {
+            // we have a model with a corner frequency.
+            double RedCorner = psr[ipsr].TNRedCorner/maxtspan;
+            rho = pow((1+(pow((1.0/365.25)/RedCorner,RedIndex/2))),2)*(RedAmp*RedAmp/12.0/(M_PI*M_PI))/pow((1+(pow(freq/RedCorner,RedIndex/2))),2)*df*pow(f1yr,-3.0);
+        } else {
+            // pure power-law
+            rho = (RedAmp*RedAmp/12.0/(M_PI*M_PI))*pow(f1yr,-3.0) * pow(freq*365.25,(-RedIndex))*df;
+        }
+
+        if (psr[ipsr].TN_QpPeriod > 0) {
+            // Add a QP term
+            double qp_f0 = 1.0/psr[ipsr].TN_QpPeriod;
+            double logPqp = psr[ipsr].TN_QpRatio + log10((RedAmp*RedAmp/12.0/(M_PI*M_PI))*pow(f1yr,-3.0) * pow(qp_f0*365.25,(-RedIndex))*df);
+            double qp = pow(freq/qp_f0,-4)*qp_term_cutoff(freq, logPqp, qp_f0, psr[ipsr].TN_QpSig, psr[ipsr].TN_QpLam, df);
+            rho += qp;
+        }
 
         return 1.0/sqrt(rho);
     } else return 0;
 
 }
+
+
+
 
 double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* special){
     assert(iconstraint == constraint_red_dm_sin || iconstraint == constraint_red_dm_cos);

@@ -1469,6 +1469,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
                 }
 
+                if (psr[p].TN_QpPeriod > 0) {
+                    fprintf(fout2,"TN_QpPeriod %g\n", psr[p].TN_QpPeriod);
+                    fprintf(fout2,"TN_QpRatio %g\n", psr[p].TN_QpRatio);
+                    fprintf(fout2,"TN_QpLam %g\n", psr[p].TN_QpLam);
+                    fprintf(fout2,"TN_QpSig %g\n", psr[p].TN_QpSig);
+                }
+
 		if (psr[p].TNRedFLow !=0 )
 		  {
 		    fprintf(fout2, "TNRedFLow %g\n", psr[p].TNRedFLow);
@@ -1690,7 +1697,7 @@ double calcRMS(pulsar *psr,int p)
 
     // if we are fixing start/finish then use the specified values.
     if (startSet||bat_startSet) start = psr->param[param_start].val[0];
-    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
+    if (finishSet||bat_finishSet) finish = psr->param[param_finish].val[0];
 
     for (i=0;i<psr[p].nobs;i++)
     {
