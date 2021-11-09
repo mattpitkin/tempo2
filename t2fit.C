@@ -636,7 +636,7 @@ unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
 
     // if we are fixing start/finish then use the specified values.
     if (startSet||bat_startSet) start = psr->param[param_start].val[0];
-    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
+    if (finishSet||bat_finishSet) finish = psr->param[param_finish].val[0];
     logmsg("ss/fs %d %d",startSet,finishSet);
     for (iobs=0; iobs < psr->nobs; ++iobs){
         // a convinience pointer for the current observation.

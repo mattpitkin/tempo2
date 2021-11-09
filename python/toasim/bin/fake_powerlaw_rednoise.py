@@ -62,11 +62,11 @@ with open(header.timfile_name+".addRedNoise","wb") as outfile:
 
     freq = np.arange(1,nharm)*fmin
     P = args.P*(freq/args.fref)**-args.a
-    phases = np.random.uniform(0,2*np.pi,size=len(freq))
-    white = np.random.normal(0,1,size=len(freq))
 
     for ireal in range(nreal):
         print("ireal={}/{}".format(ireal,nreal))
+        phases = np.random.uniform(0,2*np.pi,size=len(freq))
+        white = np.random.normal(0,1,size=len(freq))
         offsets = np.zeros_like(toas)
         for i,f in enumerate(freq):
             if i%100 == 0:

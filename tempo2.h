@@ -50,8 +50,8 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2021.07.1"
-#define TEMPO2_h_MAJOR_VER 2021.07
+#define TEMPO2_h_VER "2021.11.1"
+#define TEMPO2_h_MAJOR_VER 2021.11
 #define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
@@ -883,6 +883,12 @@ typedef struct pulsar {
     double posPulsarEquatorial[3];            /*!< 3-vector pointing at pulsar, in equatorial coordinates (even if using ecliptic)*/
 
     enum series_type dm_series_type;
+
+    /* Quasi-periodic timing noise components */
+    double TN_QpPeriod;
+    double TN_QpSig;
+    double TN_QpLam;
+    double TN_QpRatio;
 } pulsar;
 
 

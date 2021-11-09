@@ -23,7 +23,7 @@ void updateEpoch_str(pulsar* psr, int p, const char* newEpoch)
 
     // if we are fixing start/finish then use the specified values.
     if (startSet||bat_startSet) start = psr->param[param_start].val[0];
-    if (finishSet||bat_startSet) finish = psr->param[param_finish].val[0];
+    if (finishSet||bat_finishSet) finish = psr->param[param_finish].val[0];
 
     //=psr[p].obsn[0].sat,latest=psr[p].obsn[0].sat;
     for (i=0;i<psr[p].nobs;i++)
