@@ -110,7 +110,10 @@ std::string get_constraint_name(unsigned c){
             return "QIFUNC_c_YEAR C.sin(2t) = 0";
         case constraint_qifunc_c_year_cos2:
             return "QIFUNC_c_YEAR C.cos(2t) = 0";
-
+        case constraint_param:
+            return "PARAMETER CONSTRAINT";
+        case constraint_ne_sw_ifunc_sin:
+            return "NE_SW IFUNC SIN CONSTRAINT";
         default:
             return "UNKNOWN!";
     }

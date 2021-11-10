@@ -855,6 +855,24 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 ++OUT.nConstraints;
                 break;
                 }
+            case constraint_ne_sw_ifunc_sin:
+                {
+                double* err = (double*)malloc(sizeof(double));
+                char pval[128];
+                double mean,amp,t0,p;
+                sscanf(psr->constraint_special[i],"%lg %lg %lg %lg %lg",&mean,&amp,&t0,&p,err);
+
+                for (int ii =0 ; ii < psr->ne_sw_ifuncN; ++ii) {
+                    double pval = mean-amp*cos(2*M_PI*(psr->ne_sw_ifuncT[ii] - t0)/p) - psr->ne_sw_ifuncV[ii];
+                    pval /= *err;
+                    OUT.constraintValue[OUT.nConstraints] = pval;
+                    OUT.constraintSpecial[OUT.nConstraints] = (void*)err;
+                    OUT.constraintDerivs[OUT.nConstraints] = constraint_ne_sw_ifunc_sin_function;
+                    OUT.constraintCounters[OUT.nConstraints]=ii;
+                    ++OUT.nConstraints;
+                }
+                break;
+                }
             default:
                 // this is a quick fix to avoid re-writing code.
                 OUT.constraintDerivs[OUT.nConstraints] = standardConstraintFunctions;
