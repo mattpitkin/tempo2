@@ -1650,6 +1650,17 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             ++OUT.nParams;
             break;
 
+        case param_ne_sw_ifunc:
+            for (int i = 0; i < psr->ne_sw_ifuncN; ++i){
+                OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ne_sw_ifunc;
+                OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ne_sw_ifunc;
+                OUT.paramCounters[OUT.nParams]=i;
+                OUT.paramIndex[OUT.nParams]=fit_param;
+                ++OUT.nParams;
+            }
+
+            break;
+
 
 
         case param_gwecc:

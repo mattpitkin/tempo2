@@ -194,7 +194,7 @@ enum label {
     param_shapevent,
     param_orbifunc,
     param_gltd2,param_gltd3, param_glf0d2, param_glf0d3,
-    param_ne_sw_sin,
+    param_ne_sw_sin,param_ne_sw_ifunc,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -891,6 +891,12 @@ typedef struct pulsar {
     double TN_QpSig;
     double TN_QpLam;
     double TN_QpRatio;
+
+    double ne_sw_ifuncT[MAX_IFUNC];
+    double ne_sw_ifuncV[MAX_IFUNC];
+    double ne_sw_ifuncE[MAX_IFUNC];
+    int ne_sw_ifuncN;
+
 } pulsar;
 
 

@@ -539,6 +539,16 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             if(dmfile)fclose(dmfile);
 
         }
+        if (psr[p].param[param_ne_sw_ifunc].paramSet[0]==1) {
+            printf("\n");
+            printf("NE_SW values:\n");
+            for (i=0; i < psr[p].ne_sw_ifuncN ; ++i) {
+                printf("_NE_SW \t % 7.1f % 8.6g % 8.6g\n",
+                        psr[p].ne_sw_ifuncT[i],
+                        psr[p].ne_sw_ifuncV[i],
+                        psr[p].ne_sw_ifuncE[i]);
+            }
+        }
         if (psr[p].param[param_clk_offs].paramSet[0]==1)
         {
             FILE *fout;
@@ -1589,6 +1599,15 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                             fprintf(fout2,"_DM\t %.15g %.15g %.15g\n",psr[p].dmoffsDM_mjd[i],psr[p].dmoffsDM[i],psr[p].dmoffsDM_error[i]);
                         for (i=0;i<psr[p].dmoffsCMnum;i++)
                             fprintf(fout2,"_CM\t %.15g %.15g %.15g\n",psr[p].dmoffsCM_mjd[i],psr[p].dmoffsCM[i],psr[p].dmoffsCM_error[i]);
+                    }
+                }
+
+                if (psr[p].param[param_ne_sw_ifunc].paramSet[0]==1) { 
+                    for (i=0; i < psr[p].ne_sw_ifuncN ; ++i) {
+                        fprintf(fout2,"_NE_SW \t %.15g %.15g %.15g\n",
+                                psr[p].ne_sw_ifuncT[i],
+                                psr[p].ne_sw_ifuncV[i],
+                                psr[p].ne_sw_ifuncE[i]);
                     }
                 }
 

@@ -7,7 +7,11 @@
 
 double t2FitFunc_ne_sw(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
 double t2FitFunc_ne_sw_sin(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
+double t2FitFunc_ne_sw_ifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k);
+
+
 
 void t2UpdateFunc_ne_sw(pulsar *psr, int ipsr ,param_label label,int k, double val, double error);
+void t2UpdateFunc_ne_sw_ifunc(pulsar *psr, int ipsr ,param_label label,int k, double val, double error);
 
 

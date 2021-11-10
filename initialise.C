@@ -620,6 +620,9 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     strcpy( psr->param[param_ne_sw_sin].label[0], "NE_SW_SIN (cm^-3)" );
     strcpy( psr->param[param_ne_sw_sin].shortlabel[0], "NE_SW_SIN" );
 
+    strcpy( psr->param[param_ne_sw_ifunc].label[0], "NE_SW_IFUNC" );
+    strcpy( psr->param[param_ne_sw_ifunc].shortlabel[0], "NE_SW_IFUNC" );
+
     for (k=0;k<psr->param[param_bpjep].aSize;k++)
     {
         sprintf(temp,"BPJEP_%d",k+1);
