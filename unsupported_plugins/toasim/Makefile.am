@@ -1,6 +1,6 @@
 plugindir=$(DESTDIR)@TEMPO2_PLUG_INSTALL@
 
-plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian_@T2ARCH@_plug.la add2state_@T2ARCH@_plug.la formIdeal_@T2ARCH@_plug.la createRealisation_@T2ARCH@_plug.la addRedNoise_@T2ARCH@_plug.la addCGW_@T2ARCH@_plug.la addInstrumentalIssues_@T2ARCH@_plug.la
+plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian_@T2ARCH@_plug.la add2state_@T2ARCH@_plug.la formIdeal_@T2ARCH@_plug.la createRealisation_@T2ARCH@_plug.la addRedNoise_@T2ARCH@_plug.la addCGW_@T2ARCH@_plug.la addInstrumentalIssues_@T2ARCH@_plug.la addArbitraryDM_@T2ARCH@_plug.la
 
 bin_PROGRAMS=read_toasim
 lib_LTLIBRARIES=libtoasim.la
@@ -29,9 +29,16 @@ plugin_LDFLAGS= -shared -module -avoid-version -shrext .t2 -lfftw3f
 addDmVar_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addDmVar_plug.C $(TOASIM_src)
 addDmVar_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
 addDmVar_@T2ARCH@_plug_la_LDFLAGS=$(plugin_LDFLAGS)
-
 addDmVar-install: addDmVar_@T2ARCH@_plug.la
 	$(INSTALL) .libs/addDmVar_@T2ARCH@_plug.t2 $(plugindir)
+
+addArbitraryDM_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addArbitraryDM_plug.C $(TOASIM_src)
+addArbitraryDM_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
+addArbitraryDM_@T2ARCH@_plug_la_LDFLAGS=$(plugin_LDFLAGS)
+addArbitraryDM-install: addArbitraryDM_@T2ARCH@_plug.la
+	$(INSTALL) .libs/addArbitraryDM_@T2ARCH@_plug.t2 $(plugindir)
+
+
 
 addRedNoise_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addRedNoise_plug.C $(TOASIM_src)
 addRedNoise_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
