@@ -272,6 +272,7 @@ enum constraint {
     constraint_group_red_cos,
     constraint_jitter,
     constraint_param,
+    constraint_ne_sw_ifunc_sin,
     constraint_LAST /*!< marker for the last constraint */
 };
 

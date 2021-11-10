@@ -32,3 +32,14 @@ void t2UpdateFunc_ne_sw(pulsar *psr, int ipsr ,param_label label,int k, double v
     psr[ipsr].param[label].err[k] = error;
     psr[ipsr].ne_sw = psr[ipsr].param[label].val[k];
 }
+
+
+double constraint_ne_sw_ifunc_sin_function(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* extra) {
+    if(iparam == param_ne_sw_ifunc && k==constraintk){
+        double err = *((double*)extra);
+        return 1.0/err;
+    } else {
+        return 0;
+    }
+}
+

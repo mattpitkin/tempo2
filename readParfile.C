@@ -1136,6 +1136,14 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             strcpy(psr->constraint_special[psr->nconstraints],txt);
             psr->nconstraints++;
         }
+        if((strcasecmp(cname,"NE_SW_IFUNC_SIN")==0)){
+            char* txt = fgets(cname, 1024,fin);
+            psr->constraints[psr->nconstraints] = constraint_ne_sw_ifunc_sin;
+            psr->constraint_special[psr->nconstraints] = (char*)malloc(strlen(txt)+2);
+            strcpy(psr->constraint_special[psr->nconstraints],txt);
+            psr->nconstraints++;
+        }
+
         if((strcasecmp(cname,"IFUNC_COV")==0)){
             // read the line into the special constraint
             char* txt = fgets(cname, 1024,fin);

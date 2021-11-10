@@ -15,3 +15,6 @@ void t2UpdateFunc_ne_sw(pulsar *psr, int ipsr ,param_label label,int k, double v
 void t2UpdateFunc_ne_sw_ifunc(pulsar *psr, int ipsr ,param_label label,int k, double val, double error);
 
 
+double constraint_ne_sw_ifunc_sin_function(pulsar *psr,int ipsr, int iconstraint,int iparam,int constraintk,int k,void* extra);
+
+
