@@ -298,6 +298,14 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
                 double ne_sw_sin = -cos(2*M_PI*(psr[p].obsn[i].sat - SOLAR_CYCLE_EPOCH)/SOLAR_CYCLE_PERIOD) * psr[p].param[param_ne_sw_sin].val[0];
                 psr[p].obsn[i].tdis2 += ne_sw_sin * psr[p].obsn[i].spherical_solar_wind; 
             }
+
+            if (psr[p].ne_sw_ifuncN > 0) {
+                // we have an 'ifunc-like' solar wind model
+                //
+                double ne_sw_ifunc = ifunc(psr[p].ne_sw_ifuncT,psr[p].ne_sw_ifuncV,static_cast<double>(psr[p].obsn[i].sat),psr[p].ne_sw_ifuncN);
+                psr[p].obsn[i].tdis2 += ne_sw_ifunc * psr[p].obsn[i].spherical_solar_wind;
+
+            }
         }
         else if (psr[p].swm==1) // More complex solar wind model introduced by Xiaopeng You and William Coles
         {

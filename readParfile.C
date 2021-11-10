@@ -1098,6 +1098,23 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             exit(1);
         }
     }
+    else if (strcasecmp(str,"NE_SW_IFUNC")==0) {
+        readValue(psr,str,fin,&(psr->param[param_ne_sw_ifunc]),0);
+    }
+    else if (strcasecmp(str,"_NE_SW")==0) {
+        int ni = psr->ne_sw_ifuncN;
+        double mjd, val, err;
+        err=0;
+        fscanf(fin,"%lf %lf %lf",&mjd,&val,&err);
+        psr->ne_sw_ifuncT[ni] = mjd;
+        psr->ne_sw_ifuncV[ni] = val;
+        psr->ne_sw_ifuncE[ni] = err;
+        (psr->ne_sw_ifuncN)++;
+        if (psr->ne_sw_ifuncN > MAX_IFUNC){
+            logerr("Too many NE_SW_IFUNC entries!");
+            exit(1);
+        }
+    }
 
     else if (strcasecmp(str,"CONSTRAINT_EFACTOR")==0){
         fscanf(fin, "%lg",&psr->constraint_efactor);

@@ -1,6 +1,7 @@
 #include <t2fit_solarwind.h>
 #include <assert.h>
 
+#include "ifunc.h"
 
 double t2FitFunc_ne_sw_sin(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
     assert(label==param_ne_sw_sin);
@@ -12,6 +13,18 @@ double t2FitFunc_ne_sw(pulsar *psr, int ipsr ,double x ,int ipos ,param_label la
     return psr[ipsr].obsn[ipos].spherical_solar_wind;
 }
 
+double t2FitFunc_ne_sw_ifunc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
+    assert(k < psr[ipsr].ne_sw_ifuncN);
+    assert(label==param_ne_sw_ifunc);
+    return psr[ipsr].obsn[ipos].spherical_solar_wind * ifunc(psr[ipsr].ne_sw_ifuncT,static_cast<double>(psr[ipsr].obsn[ipos].sat),psr[ipsr].ne_sw_ifuncN,k);
+}
+
+
+void t2UpdateFunc_ne_sw_ifunc(pulsar *psr, int ipsr ,param_label label,int k, double val, double error) {
+    assert(k < psr[ipsr].ne_sw_ifuncN);
+    psr[ipsr].ne_sw_ifuncV[k] += val;
+    psr[ipsr].ne_sw_ifuncE[k] = error;
+}
 
 void t2UpdateFunc_ne_sw(pulsar *psr, int ipsr ,param_label label,int k, double val, double error) {
     assert(label==param_ne_sw);
