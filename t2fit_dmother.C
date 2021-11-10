@@ -45,15 +45,3 @@ double t2FitFunc_dmsinusoids(pulsar *psr, int ipsr ,double x ,int ipos ,param_la
 
 
 
-double t2FitFunc_ne_sw(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
-    assert(label==param_ne_sw);
-    return psr[ipsr].obsn[ipos].tdis2 / psr[ipsr].ne_sw;
-}
-
-
-void t2UpdateFunc_ne_sw(pulsar *psr, int ipsr ,param_label label,int k, double val, double error) {
-    assert(label==param_ne_sw);
-    psr[ipsr].param[label].val[k] += val;
-    psr[ipsr].param[label].err[k] = error;
-    psr[ipsr].ne_sw = psr[ipsr].param[label].val[k];
-}
