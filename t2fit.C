@@ -840,7 +840,7 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 }
 
                 logdbg("Constraining Param '%s'",psr->constraint_special[i]);
-                logdbg("Initial values: %lg %lg factor: %lg %lg",info->val,info->err,factor);
+                logdbg("Initial values: %lg %lg factor: %lg",info->val,info->err,factor);
                 info->val /= factor;
                 info->err /= factor;
 
@@ -1642,6 +1642,15 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_ne_sw;
             ++OUT.nParams;
             break;
+
+        case param_ne_sw_sin:
+            // solar wind sinusoidal model
+            OUT.paramDerivs[OUT.nParams]     =t2FitFunc_ne_sw_sin;
+            OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
+            ++OUT.nParams;
+            break;
+
+
 
         case param_gwecc:
             // gw ECC amplitude

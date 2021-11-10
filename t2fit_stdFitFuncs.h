@@ -5,6 +5,7 @@
 #include "t2fit_ifunc.h"
 #include "t2fit_dmmodel.h"
 #include "t2fit_dmother.h"
+#include "t2fit_solarwind.h"
 #include "t2fit_gw.h"
 
 void t2UpdateFunc_simpleAdd(pulsar *psr, int ipsr ,param_label label,int k, double val, double error);

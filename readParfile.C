@@ -241,8 +241,9 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             strcasecmp(str,"SOLARN0")==0){
             readValue( psr, str, fin, &( psr->param[param_ne_sw] ), 0 );
             psr->ne_sw = psr->param[param_ne_sw].val[0];
-            // fitting for NE_SW breaks if it is zero, so set to negligable value
-            if (psr->ne_sw < 1e-20)psr->ne_sw = 1e-20;
+    }
+    else if (strcasecmp(str,"NE_SW_SIN")==0) {
+            readValue( psr, str, fin, &( psr->param[param_ne_sw_sin] ), 0 );
     }
     else if (strcasecmp(str, "TIMEEPH")==0)
     {

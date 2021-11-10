@@ -194,6 +194,7 @@ enum label {
     param_shapevent,
     param_orbifunc,
     param_gltd2,param_gltd3, param_glf0d2, param_glf0d3,
+    param_ne_sw_sin,
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -496,6 +497,7 @@ typedef struct observation {
     double tobs;
     double chisq;
     double bline;
+    double spherical_solar_wind;   /* The conversion from ne to residual for a spherical solar wind model */
 } observation;
 
 

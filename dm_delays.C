@@ -34,6 +34,7 @@
 #include <string.h>
 #include "tempo2.h"
 #include "ifunc.h"
+#include "t2fit_solarwind.h"
 
 
 void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
@@ -279,6 +280,7 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         }
         if (freqf<=1.0 || psr[p].ipm==0){
             psr[p].obsn[i].tdis2 = 0.0;
+            psr[p].obsn[i].spherical_solar_wind = 0.0; // there is no effect of the solar wind
         }
         else if (psr[p].swm==0) // Simple tempo2 solar wind model
         {
@@ -286,8 +288,16 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
             /* psr[p].obsn[i].tdis2 = 2.0e14*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/2.0/freqf/freqf; 
                printf("tdis %f %f %f %f %f %g %g\n",1.0e6,AU_DIST,SPEED_LIGHT,DM_CONST_SI,psr[p].ne_sw,1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr[p].ne_sw*
                acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/freqf/freqf,psr[p].obsn[i].tdis2); */
-            psr[p].obsn[i].tdis2 = 1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*psr[p].ne_sw*
-                acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/freqf/freqf; 
+
+            // this is the conversion from ne_sw to solar wind contribution to the residual.
+            psr[p].obsn[i].spherical_solar_wind = 1.0e6*AU_DIST*AU_DIST/SPEED_LIGHT/DM_CONST_SI*acos(ctheta)/r/sqrt(1.0-ctheta*ctheta)/freqf/freqf;
+
+            psr[p].obsn[i].tdis2 = psr[p].ne_sw * psr[p].obsn[i].spherical_solar_wind; 
+
+            if (psr[p].param[param_ne_sw_sin].paramSet[0]) {
+                double ne_sw_sin = -cos(2*M_PI*(psr[p].obsn[i].sat - SOLAR_CYCLE_EPOCH)/SOLAR_CYCLE_PERIOD) * psr[p].param[param_ne_sw_sin].val[0];
+                psr[p].obsn[i].tdis2 += ne_sw_sin * psr[p].obsn[i].spherical_solar_wind; 
+            }
         }
         else if (psr[p].swm==1) // More complex solar wind model introduced by Xiaopeng You and William Coles
         {
