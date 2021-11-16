@@ -15,7 +15,7 @@ AM_CPPFLAGS=-I@top_srcdir@/
 
 CFLAGS+=@FFTW_CFLAGS@
 
-pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install add2state-install addInstrumentalIssues-install formIdeal-install createRealisation-install addRedNoise-install addCGW-install
+pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install add2state-install addInstrumentalIssues-install formIdeal-install createRealisation-install addRedNoise-install addCGW-install addArbitraryDM-install
 
 
 TOASIM_src=toasim.h toasim.c toasim_compute.c toasim_io.c makeRedNoise.C makeRedNoise.h
