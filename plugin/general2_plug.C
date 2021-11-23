@@ -336,6 +336,13 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
+                        else if(strcasecmp(var,"spherical_sw_dm")==0) {
+                            double freqf = psr[0].obsn[varN].freqSSB;
+                            sprintf(disp,dformat,psr[0].obsn[varN].spherical_solar_wind*freqf*freqf*DM_CONST*1e-12);
+                            fprintf(fout,"%s",disp);
+                            pos+=strlen(disp);
+                        }
+
                         else if (strcasecmp(var,"shapiro")==0) /* Solar shapiro delay */
                         {
                             sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelaySun); 
