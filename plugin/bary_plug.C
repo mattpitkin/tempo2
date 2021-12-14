@@ -183,7 +183,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 			utc,
 			psr[0].obsn[0].observatory_earth,
 			psr[0].obsn[0].zenith,
-			psr[0].obsn[0].siteVel);
+			psr[0].obsn[0].siteVel,psr[0].eopc04_file);
   printf("obs eqrth = %g %g %g\n",psr[0].obsn[0].observatory_earth[0],psr[0].obsn[0].observatory_earth[1],
 	 psr[0].obsn[0].observatory_earth[2]);
 
