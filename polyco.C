@@ -306,7 +306,7 @@ void tzFit(pulsar *psr,int npsr,longdouble *tmin,double *doppler,double *rms,dou
     int nb;
     int j,i,k,iref;
     longdouble fac,sum,rphase,dm;
-    longdouble c[31],d[31],ph[31],t[31],phase[800];
+    longdouble c[32],d[32],ph[32],t[32],phase[800];
     longdouble b,a,rtime,sq,phtst,ct,ct2,phifac,phi0;
     struct tm *timePtr;
     time_t tm;
