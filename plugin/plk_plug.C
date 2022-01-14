@@ -633,6 +633,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
     int jumpOffset=0;
     int okay;
 
+    bool showDeleted=false;
 
 
 
@@ -951,8 +952,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
         {
             okay=1;
 
-            if (psr[0].obsn[i].deleted!=0)
+            if (psr[0].obsn[i].deleted!=0 && (!showDeleted)){
                 okay=0;
+            }
 
             // MJK April 2020
             // Removing this might break some use cases with command line options.
@@ -1336,6 +1338,19 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                                 cpgpt(1,&x[i],&y[i],flagStyle[j]);
                             }
                         }
+                    }
+                }
+            }
+            if (showDeleted) {
+
+                for (i=0;i<count;i++){
+                    if(psr[0].obsn[id[i]].deleted){
+                        cpgsci(13);
+                        float ch;
+                        cpgqch(&ch);
+                        cpgsch(1.5*ch);
+                        cpgpt(1,&x[i],&y[i],5);
+                        cpgsch(ch);
                     }
                 }
             }
@@ -2277,6 +2292,22 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
                     setZoomY1 = 1;
                     setZoomY2 = 1;
+                }
+                else if (key==';')
+                {
+                    if(showDeleted){
+                        printf("Hide Deleted points\n");
+                        showDeleted=false;
+                    } else {
+                        printf("Show Deleted points\n");
+                        showDeleted=true;
+                    }
+                }
+                else if (key==':'){
+                    printf("Undelete all\n");
+                    for (i=0;i<psr[0].nobs;i++) {
+                        psr[0].obsn[i].deleted=0;
+                    }
                 }
                 else if (key=='B') { /* Place periodic marks on the x-axis */
                     placeMarks*=-1;
