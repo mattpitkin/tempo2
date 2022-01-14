@@ -139,6 +139,7 @@ void help() /* Display help */
     printf("ctrl-=     add period to residuals above cursor\n");
     printf("/          re-read .par file\n");
     printf("Ctrl-g     add an amount to each jump being fit.\n");
+    printf(":          undelete all deleted points\n");
 
     printf("\nPlot Selection\n"); /* Determines WHAT (X and Y axes) will be displayed */
     printf("==============\n");
@@ -221,6 +222,7 @@ void help() /* Display help */
     printf("]          toggle plotting y-axis on log scale\n");	     
     printf("{          scroll left\n");	     
     printf("}          scroll right\n");	     
+    printf(";          show deleted points\n");	     
 
     printf("\nOutput Options\n");
     printf("==============\n");
@@ -3064,7 +3066,11 @@ float deletePoint(pulsar *psr,float *x,float *y,int *id,int count,float mouseX,f
             closest = pow(xpos-mouseX,2)+pow(ypos-mouseY,2);
         }
     }
+    if ( psr[0].obsn[iclosest].deleted==0){
     psr[0].obsn[iclosest].deleted=1;
+    } else {
+    psr[0].obsn[iclosest].deleted=0;
+    }
     if (recordStrokes==1)
     {
         char recordStr[1024];
