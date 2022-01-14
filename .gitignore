@@ -52,3 +52,5 @@ ltmain.sh
 python/*/build
 python/t2pred/t2pred.c
 *~
+t2help.h
+convertxt
