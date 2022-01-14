@@ -96,8 +96,12 @@ chebyModelFunc(long double *x, long double *y,
     psr->obsn[0].sat = psr->param[param_tzrmjd].val[0];
     psr->obsn[0].freq = psr->param[param_tzrfrq].val[0];
     psr->obsn[0].efac = 1;
-    strcpy(psr->obsn[0].fname,"reference");  
-    strcpy(psr->obsn[0].telID,  info->model->sitename);//XXX!!!
+    strcpy(psr->obsn[0].fname,"reference");
+    // Notice (MJK 2022-01-12): This used to be info->model->sitename instead of tzrsite
+    // GH and I agree that this is wrong and means archives from different sites
+    // cannot be phase aligned using the same parfile.
+    // Fixed so that it uses tzrsite instead in the same way as the tempo1 polyco mode.
+    strcpy(psr->obsn[0].telID,  psr->tzrsite);
     psr->obsn[0].deleted = 0;
     psr->obsn[0].nFlags = 0;
     psr->obsn[0].delayCorr = 1;
