@@ -1,0 +1,13 @@
+Depricated/mystery options
+==================
+-pre              Don't produce post-fit residuals
+-model            DEPRICATED... doesn't do anything
+-newfit           DEPRICATED... doesn't do anything
+-trimonly         ?? Additional option for -setdm
+-veryfast         Do not iterate SSB/dm computations (seems bad)
+-last             ?? Something to do with fitwaves
+-oldfit           DEPRICATED... doesn't do anything
+-simuilate        ?? Injects a sinusoid into all pulsars
+-setdm            ?? Some complicated way of setting DM for each ToA
+
+
