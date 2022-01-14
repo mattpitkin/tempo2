@@ -1,0 +1,77 @@
+General Options
+===============
+-f parFile        Selects parameter file
+-npsr             Set max number of pulsars that can be loaded
+-nobs             Set max number of observations per pulsar
+-tempo1           Run in 'tempo1 emulation mode' (i.e. default to tempo1)
+-allParTim        grab all par and tim files from the current directory.
+-clkdir {dir}     Add {dir} to the start of the clock search path.
+
+Help, verbosity, debugging
+==========================
+-h                This help
+-H                Print more help, including list of plugins 
+-v                Print verson number.
+-debug            Print debuging information and files (very verbose!).
+-tcheck           Print execution time information for the fit
+-displayVersion   Display detailed CVS version number of every file used.
+
+Set parameters
+==============
+-set {parm} {val} Set a par file parameter to a value
+-clock {clk}      Set CLK parameter for all input par files
+-epoch centre     Centres the PEPOCH in the fit
+-name             Set JNAME for each par file
+-modify {file}    Modify flags. Input is file with lines like 
+     "flag oldflagval start_mjd end_mjd newflagval"
+-nojump           Disable all jumps in par files
+
+
+Filtering ToAs
+==============
+-pass "{flags}"   Delete all ToAs without given flags
+-filter "{flags}" Delete points that match given flag
+-select {file}    Use a 'select file' to pass and reject based on ToA properties.
+-del              Load delete file -- list of SATs to delete
+-splug {plugin}   Loads a special plugin that selects/deletes ToAs
+
+Fit options
+===========
+-nofit            Disable all fit parameters (note will still fit for mean)
+-fit {param}      Enable fitting for this parameter
+-global           Specify a global par file to use across all pulsars
+-qrfit            Use QR decomposition instead of SVD (faster, more reliable)
+-svdfit           Use SVD decomposition instead of QR (tried and true)
+-dcf model        Enable Generalised Least Squares using given model file
+-noaccel          Disable LAPACK/BLAS acceleration.
+-allglitch        Fit for glitches even outside of START/FINISH.
+-norescale        Do not rescale parameter uncertainties by the sqrt(red. chisq)
+
+Output and plugin options
+=========================
+-gr name          Uses 'name' plugin for graphical interface
+-output name      Uses 'name' plugin for output format
+-outpar {name}    Write post-fit par file to '{name}'
+-newpar           Write post-fit par file to 'new.par'
+-writeres         Write out prefit/postfit and design matrix in fit.
+-writetim         Save ToAs to out.tim after fitting
+-allInfo          Prints out clock, Earth orientation and similar information
+-list             Provides listing of clock corrections and residuals etc.
+-residuals        Outputs the residuals to a file
+-reminder         Saves the command line to T2command.input for future reference.
+
+Predictors and polycos
+======================
+-polyco "args"    Creates a TEMPO1-style polyco file.
+     args = "mjd1 mjd2 nspan ncoeff maxha sitename freq"
+-polyco_file      Specify a leading string for file outputs.
+-pred "args"      Creates a predictive 2D Chebyshev polynomial.
+     args = "sitename mjd1 mjd2 freq1 freq2 ntimecoeff nfreqcoeff seg_length (s)"
+
+Environment Variables
+=====================
+$TEMPO2            Path to T2Runtime directory for clocks, observatories, EOPs etc.
+$TEMPO2_CLOCK_DIR  OPTIONAL Path to search for extra clock files
+$TEMPO2_PLUG_PATH  OPTIONAL Path to search for extra plugins
+$TEMPO2_ALIAS      OPTIONAL Set to 'tempo' to use tempo1 aliases for observatories.
+

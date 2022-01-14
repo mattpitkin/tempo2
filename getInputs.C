@@ -32,6 +32,7 @@
 #include <string.h>
 #include <dirent.h>
 #include "tempo2.h"
+#include "t2help.h"
 
 
 void printplugs(bool full);
@@ -76,54 +77,36 @@ void getInputs(pulsar *psr,int argc, char *argv[],char timFile[][MAX_FILELEN],
             printf("          %s -f mypar.par mytim.tim\n",argv[0]);
             printf("          %s -gr plk -f mypar.par mytim.tim\n",argv[0]);
             printf("\n");
-            printf("Options: \n\n");
+            printf("%s\n",help_txt);
+            printf("Current Environment:\n");
+            if (getenv("TEMPO2")!=NULL){
+                printf("   $TEMPO2='%s'\n",getenv("TEMPO2"));
+            } else {
+                printf("   $TEMPO2 is UNSET (this is BAD!)\n");
+            }
 
-            printf("-f parFile        Selects parameter file\n");
-            printf("-epoch centre     Centres the PEPOCH in the fit\n");
-            printf("-dcf model        Enable Generalised Least Squares using given model file\n");
-            printf("-gr name          Uses 'name' plugin for graphical interface\n");
-            printf("-h                This help\n");
-            printf("-list             Provides listing of clock corrections and residuals etc.\n");
-            printf("-output name      Uses 'name' plugin for output format\n");
-            printf("-pred \"args\"    Creates a predictive 2D Chebyshev polynomial.\n");
-            printf("      args = \"sitename mjd1 mjd2 freq1 freq2 ntimecoeff nfreqcoeff seg_length (s)\"\n"); 
-            printf("-polyco \"args\"  Creates a TEMPO1-style polyco file.\n");
-            printf("                   args = \"mjd1 mjd2 nspan ncoeff maxha sitename freq\"\n");
-            printf("-polyco_file      Specify a leading string for file outputs.\n");
-            printf("-residuals        Outputs the residuals\n");
-            printf("-allInfo          Prints out clock, Earth orientation and similar information\n");
-            printf("-reminder         Saves the command line to T2command.input for future reference.\n");
-            printf("-norescale        Do not rescale parameter uncertainties by the sqrt(red. chisq)\n");
-            printf("-displayVersion   Display detailed CVS version number of every file used.\n");
-            printf("-noaccel          Disable LAPACK/BLAS acceleration.\n");
-            printf("-qrfit            Use QR decomposition instead of SVD (faster, more reliable)\n");
-            printf("-svdfit           Use SVD decomposition instead of QR (tried and true)\n");
-            printf("-writeres         Write out prefit/postfit and design matrix in fit.\n");
-            printf("-debug            Print debuging information and files (very verbose!).\n");
-            printf("-clkdir {dir}     Add {dir} to the start of the clock search path.\n");
-            printf("-newpar           Write post-fit par file to 'new.par'\n");
-            printf("-outpar {name}    Write post-fit par file to '{name}'\n");
-            printf("-allglitch        Fit for glitches even outside of START/FINISH.\n");
-            printf("-v                Print verson number.\n");
-            printf("-H                Print more help, including list of plugins \n");
+            if (getenv("TEMPO2_CLOCK_DIR")!=NULL){
+                printf("   $TEMPO2_CLOCK_DIR='%s'\n",getenv("TEMPO2_CLOCK_DIR"));
+            } else {
+                printf("   $TEMPO2_CLOCK_DIR is unset (this is normal)\n");
+            }
 
-            printf("                    \n");
-            printf("Environment Variables\n");
-            printf("$TEMPO2            Path to search for clocks, observatories, EOPs etc.\n");
-            printf("$TEMPO2_CLOCK_DIR  Path to search for extra clock files\n");
-            printf("$TEMPO2_PLUG_PATH  Path to search for extra plugins\n");
-            printf("$TEMPO2_ALIAS      Set to 'tempo' to use tempo1 aliases for observatories.\n");
+            if (getenv("TEMPO2_PLUG_PATH")!=NULL){
+                printf("   $TEMPO2_PLUG_PATH='%s'\n",getenv("TEMPO2_PLUG_PATH"));
+            } else {
+                printf("   $TEMPO2_PLUG_PATH is unset (this is normal)\n");
+            }
 
-            printf("\n");
             if (strcmp(argv[1],"-H")==0){
+
+                printf("%s\n",help_extra_txt);
                 printf("\n\n");
                 printf("Available plugins\n");
                 printplugs(false);
-                //	  system("ls $TEMPO2/plugins/ | grep plug | sed s/\"_\"/\" \"/ | awk '{print \"  - \" $1}' | sort | uniq");
                 printf("-----------------\n");
             }
             exit(1);
-        }	    
+        }
         strcpy(timFile[timfile_num],argv[1]);
         strcpy(parFile[parfile_num],argv[1]);
         strcpy(parFile[parfile_num]+strlen(parFile[parfile_num])-3,"par");
