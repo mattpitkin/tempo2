@@ -17,4 +17,5 @@ int main(int argc, char** argv) {
     }
     fclose(f);
     printf("};\n");
+    return 0;
 }
