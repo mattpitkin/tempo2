@@ -219,7 +219,18 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
     {
         char val[100];
         fscanf(fin,"%s",val);
-        psr->planetShapiro=(val[0]=='1'||val[0]=='y'||val[0]=='Y');
+        if ( (strcasecmp(val, "Y") ==0) || (strcasecmp(val, "y")  == 0) || (strcasecmp(val, "1") ==0))
+        {   
+            psr->planetShapiro=-1;//
+        }
+        else if (strcasecmp(val, "-1")==0)
+        {   
+            psr->planetShapiro=-1;
+        }
+        if ( (strcasecmp(val, "N") ==0) || (strcasecmp(val, "n")  == 0) || (strcasecmp(val, "0") ==0))
+        {
+            psr->planetShapiro=0;
+        }
     }
     else if (strcasecmp(str,"CORRECT_TROPOSPHERE")==0)
     {
@@ -1692,16 +1703,27 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 
     else if (strcasecmp(str,"TNGroupNoise")==0){ /* TempoNest Group Noise */
         int nTNGroupNoiseFlag = psr->nTNGroupNoise;
-        fscanf( fin, "%s %s %lf %lf %d", psr->TNGroupNoiseFlagID[nTNGroupNoiseFlag],
+	
+	fscanf( fin, "%s %s %lf %lf %d", psr->TNGroupNoiseFlagID[nTNGroupNoiseFlag],
                 psr->TNGroupNoiseFlagVal[nTNGroupNoiseFlag],
                 &psr->TNGroupNoiseAmp[nTNGroupNoiseFlag],
                 &psr->TNGroupNoiseGam[nTNGroupNoiseFlag],
                 &psr->TNGroupNoiseC[nTNGroupNoiseFlag]);
+	
+	if(psr->TNGroupSetSpan ==1)
+	  {
+	    fscanf(fin, "%lf", &psr->TNGroupNoiseT[nTNGroupNoiseFlag]);
+	  }
         ( psr->nTNGroupNoise )++;
-    }
+   
+ }
 
-
-
+    else if (strcasecmp(str, "TNGroupSetSpan") ==0)
+      {
+	fscanf(fin, "%d", &psr->TNGroupSetSpan);
+	//fprintf(stderr, "here\n");
+	//exit(0);
+      }
     /* /---------\
        | TNDMEvents |
        \---------/ */
