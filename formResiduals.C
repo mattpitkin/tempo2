@@ -137,11 +137,15 @@ void averageDMResiduals(pulsar *psr, int npsr){
 
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
                 double adjustedErr = pow(psr[0].obsn[o].toaErr*pow(10.0, -6), 2);
-                AverageWeight[flagindex][bin] += 1.0/adjustedErr;
-                AverageRes[flagindex][bin] += (double)resid*powf(freq/1400.,2.)/adjustedErr;
-                AverageBat[flagindex][bin] += (double)psr[0].obsn[o].bat/adjustedErr;
-		AverageFreq[flagindex][bin] += freq/adjustedErr;
-	    }
+           
+                if (psr[0].obsn[o].deleted ==0 )
+                {
+                    AverageWeight[flagindex][bin] += 1.0/adjustedErr;
+                    AverageRes[flagindex][bin] += (double)resid*powf(freq/1400.,2.)/adjustedErr;
+                    AverageBat[flagindex][bin] += (double)psr[0].obsn[o].bat/adjustedErr;
+		    AverageFreq[flagindex][bin] += freq/adjustedErr;
+	        }
+            }
         }
 
         }
