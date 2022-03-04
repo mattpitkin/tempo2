@@ -1333,11 +1333,12 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 else
                     fprintf(fout2, "%-15.15s%s\n", "DILATEFREQ", "Y");
 
-                if (!psr[p].planetShapiro)
+                if ( psr[p].planetShapiro ==0)
                     fprintf(fout2, "%-15.15s%s\n", "PLANET_SHAPIRO", "N");
-                else
+                else if (psr[p].planetShapiro ==1)
                     fprintf(fout2, "%-15.15s%s\n", "PLANET_SHAPIRO", "Y");
-
+                else if (psr[p].planetShapiro ==-1)
+                    fprintf(fout2, "%-15.15s%s\n", "PLANET_SHAPIRO", "-1");
                 if (psr[p].t2cMethod != T2C_IAU2000B)
                     fprintf(fout2, "%-15.15s%s\n", "T2CMETHOD", "TEMPO");
                 else
@@ -1385,11 +1386,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }	
                 for (i=1;i<=psr[p].nfdJumps;i++)
                 {
-                    sscanf(psr[p].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
+                    sscanf(psr[p].fdjumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
                     if (strcasecmp(str1,"FREQ")==0 || strcasecmp(str1,"MJD")==0)
-                        fprintf(fout2,"FDJUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
+                        fprintf(fout2,"FDJUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitfdJump[i]);
                     else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
-                        fprintf(fout2,"FDJUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
+                        fprintf(fout2,"FDJUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitfdJump[i]);
                 }	  
                 /* Add T2EFAC / T2EQUAD */
                 for (i=0;i<psr[p].nT2efac;i++)
@@ -1471,11 +1472,25 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
 		//   fprintf(fout2, "TNRedFMid %g\n", psr[p].TNRedFMid);
 		// }
 		
-		
+
+
+		if(psr[p].TNGroupSetSpan ==1)
+                {
+                    fprintf(fout2, "TNGroupSetSpan %i\n", psr[p].TNGroupSetSpan);
+                }            
+
+
                 for(i =0; i < psr[p].nTNGroupNoise; i++){
+                    if(psr[p].TNGroupSetSpan ==1)
+                    {
 
-                    fprintf(fout2,"TNGroupNoise %s %s %g %g %i\n", psr[p].TNGroupNoiseFlagID[i], psr[p].TNGroupNoiseFlagVal[i], psr[p].TNGroupNoiseAmp[i], psr[p].TNGroupNoiseGam[i], psr[p].TNGroupNoiseC[i]);
+                        fprintf(fout2,"TNGroupNoise %s %s %g %g %i %g\n", psr[p].TNGroupNoiseFlagID[i], psr[p].TNGroupNoiseFlagVal[i], psr[p].TNGroupNoiseAmp[i], psr[p].TNGroupNoiseGam[i], psr[p].TNGroupNoiseC[i], psr[p].TNGroupNoiseT[i]);
+                    }
+                    else
+                    {
 
+                        fprintf(fout2,"TNGroupNoise %s %s %g %g %i\n", psr[p].TNGroupNoiseFlagID[i], psr[p].TNGroupNoiseFlagVal[i], psr[p].TNGroupNoiseAmp[i], psr[p].TNGroupNoiseGam[i], psr[p].TNGroupNoiseC[i]);
+                    }
                 }
                 for(i =0; i < psr[p].nTNBandNoise; i++){
 
