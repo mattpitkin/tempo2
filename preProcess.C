@@ -173,6 +173,10 @@ void preProcess(pulsar *psr,int npsr,int argc,char **argv)
             // Turn off fitting for jumps
             for (i=0;i<=psr[p].nJumps;i++)
                 psr[p].fitJump[i]=0;
+	    for (i=0;i<=psr[p].nfdJumps;i++)
+	      {
+		psr[p].fitfdJump[i]=0;
+	      }
         }
         /* Select command line fitting */
         for (i=0;i<fitN;i++)
