@@ -820,9 +820,11 @@ typedef struct pulsar {
     int    nTNGroupNoise;
     char   TNGroupNoiseFlagID[MAX_TNGN][MAX_FLAG_LEN],TNGroupNoiseFlagVal[MAX_TNGN][MAX_FLAG_LEN];
     double TNGroupNoiseAmp[MAX_TNGN];
+  
     double TNGroupNoiseGam[MAX_TNGN];
     int TNGroupNoiseC[MAX_TNGN];
-
+  int TNGroupSetSpan;
+  double TNGroupNoiseT[MAX_TNGN];
 
 
     //DMEvent Power Spectrum Parameters
