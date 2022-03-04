@@ -266,9 +266,21 @@ double t2FitFunc_nestlike_group(pulsar *psr, int ipsr ,double x ,int ipos ,param
     //double GroupAmp=pow(10.0, psr[ipsr].TNGroupNoiseAmp[igroup]);
     //double GroupSpec=psr[ipsr].TNGroupNoiseGam[igroup];
     //int GroupC=psr[ipsr].TNGroupNoiseC[igroup];
-
-    double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
-    double freq = ((double)(ichan+1.0))/(maxtspan);
+    
+    double maxtspan;
+    
+        if (psr[ipsr].TNGroupSetSpan ==1)
+        {
+            maxtspan = psr[ipsr].TNGroupNoiseT[igroup];
+            //fprintf(stderr, "%g\n", psr[ipsr].TNGroupNoiseT[igroup]);
+            //exit(0);
+        }
+        else
+        {
+            maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
+        }
+     
+     double freq = ((double)(ichan+1.0))/(maxtspan);
 
     bool ingrp=false;
 
