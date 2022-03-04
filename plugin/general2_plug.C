@@ -732,13 +732,49 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 	   
 			if (strcasecmp(var, "tndm") ==0) /*temponest dm max-like signal*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNDMSignal)); 
+			    
+                            double DMKappa=2.410*pow(10.0,-16);
+                            double freq=(double)psr[0].obsn[varN].freqSSB;
+                            longdouble yrs = (psr[0].obsn[varN].sat - psr[0].param[param_dmepoch].val[0])/365.25;
+                            longdouble arg = 1.0;
+                            double dmDot=0;
+                            double dmDotErr=0;
+                            double series_fac=1.0;
+                            for (int d=1;d<9;d++){
+                                arg *= yrs;
+                                if (psr[0].dm_series_type == series_taylor_pn) {
+                                    series_fac *= d;
+                                }
+                                if (psr[0].param[param_dm].paramSet[d]==1){
+                                    dmDot+=(double)(psr[0].param[param_dm].val[d]*arg/series_fac);
+                                }
+                            }
+
+                            double tndmval;
+                            
+
+                            
+                            tndmval=(double)(psr[0].obsn[varN].TNDMSignal*(DMKappa*pow(freq,2)) + dmDot);
+                            
+
+                            fprintf(stderr, "%.3le %.3le %.3le\n", dmDot, tndmval,freq);
+
+
+                            sprintf(disp,format,(longdouble)(tndmval)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
 		   	if (strcasecmp(var, "tndmerr") ==0) /*temponest dm max-like signal*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNDMErr)); 
+			 
+
+                            double DMKappa=2.410*pow(10.0,-16);
+                            double freq=(double)psr[0].obsn[varN].freqSSB;
+
+                            double tndmerr;
+                            tndmerr=(double) (psr[0].obsn[varN].TNDMErr)*DMKappa*pow(freq,2);
+                            
+                            sprintf(disp,format,(longdouble)tndmerr); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
