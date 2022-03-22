@@ -11,6 +11,7 @@ parser.add_argument("-P",type=float, help="Power at fref")
 parser.add_argument("-a",type=float, help="index")
 parser.add_argument("--fref",type=float, help="fref")
 parser.add_argument("--nreal",default=1,type=int)
+parser.add_argument("--tn-like",action='store_true')
 parser.add_argument("--plot",action='store_true')
 parser.add_argument("parfile")
 parser.add_argument("timfile")
@@ -60,8 +61,13 @@ with open(header.timfile_name+".addRedNoise","wb") as outfile:
     nharm = int(fmax/fmin)+1
     print("nharm={}".format(nharm))
 
+    if args.tn_like:
+        pref = ((10**args.Pref)**2) / 12.0/np.pi/np.pi
+    else:
+        Pref=args.P
+
     freq = np.arange(1,nharm)*fmin
-    P = args.P*(freq/args.fref)**-args.a
+    P = Pref*(freq/args.fref)**-args.a
 
     for ireal in range(nreal):
         print("ireal={}/{}".format(ireal,nreal))

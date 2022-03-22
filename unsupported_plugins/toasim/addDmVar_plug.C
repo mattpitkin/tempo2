@@ -52,7 +52,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     // my parameters
     double alpha= -8.0/3.0;
     int npts=1024;
-    float D_d=1; // us
+    float D_d=0; // us
+    float TNDMAmp=0;
     float ref_freq=1400; // MHz
     float d=1000;
     char writeTextFiles=0;
@@ -102,7 +103,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         }
 
         if (strcmp(argv[i],"-D")==0){
-            D_d=atof(argv[++i]);
+           D_d=atof(argv[++i]);
         }
         if (strcmp(argv[i],"-t")==0){
             d=atof(argv[++i]);
@@ -117,8 +118,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         if (strcmp(argv[i],"-debug")==0){
             writeTextFiles=1;
         }
+        if (strcmp(argv[i],"-a")==0){
+            alpha=atof(argv[++i]);
+            if(alpha > 0){
+                logmsg("Warning: alpha should normally be negative!!");
+            }
 
-
+        }
+        if (strcmp(argv[i],"-TNDMAmp")==0){
+            TNDMAmp=atof(argv[++i]);
+        }
         else if (strcmp(argv[i],"-seed")==0){
             sscanf(argv[++i],"%ld",&seed);
             if (seed > 0)seed=-seed;
@@ -126,6 +135,16 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
     }
 
+
+    if (TNDMAmp == 0 && D_d == 0){
+        printf("Must set either -TNDMAmp or -D option\n");
+        printf("Try -D 1 for a reasonable DM variation!\n");
+        exit(1);
+    }
+
+    if (D_d != 0 && alpha != -8.0/3.0) {
+        printf("WARNING: -D option only works for -8/3 kolmogorov turbulance");
+    }
 
     readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
     // Now read in all the .tim files
@@ -163,21 +182,30 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         printf("start    = %f (mjd)\n",mjd_start);
         printf("end      = %f (mjd)\n",mjd_end  );
         printf("npts     = %d (days)\n",npts     );
-        printf("D_d(%f)  = %f (us^2)\n",d,D_d    );
+        if (TNDMAmp == 0) {
+            printf("D_d(%f)  = %f (us^2)\n",d,D_d    );
+        } else {
+            printf("alpha  = %f\n",alpha    );
+            printf("TNDMAmp  = %f\n",TNDMAmp    );
+        }
+//        printf("DM_CONST  = %f\n",DM_CONST    );
+
+
         printf("ref_freq = %f (MHz)\n",ref_freq    );
 
         printf("seed     = %ld\n",seed);
 
 
-        D_d *=1e-12; // convert us to seconds
         d*=86400.0;  // convert days to seconds.
 
-
-        double pism = 0.0112 * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
-
+        double pism=0;
+        if (TNDMAmp == 0) {
+            D_d *=1e-12; // convert us to seconds
+            pism = 0.0112 * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
+        } else {
+            pism = 0.5 * pow(10.0,(2.0*TNDMAmp)) / (pow(DM_CONST,2.0) * pow(ref_freq,4.0));
+        }
         printf("pism(1yr)  = %g (yr^3) \n",pism );
-
-
 
         double yr2dm = secperyear * DM_CONST*pow(ref_freq,2.0);
         printf("yr2dm   = %f \n",yr2dm    );
