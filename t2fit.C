@@ -858,7 +858,6 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
             case constraint_ne_sw_ifunc_sin:
                 {
                 double* err = (double*)malloc(sizeof(double));
-                char pval[128];
                 double mean,amp,t0,p;
                 sscanf(psr->constraint_special[i],"%lg %lg %lg %lg %lg",&mean,&amp,&t0,&p,err);
 
@@ -867,12 +866,26 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                     pval /= *err;
                     OUT.constraintValue[OUT.nConstraints] = pval;
                     OUT.constraintSpecial[OUT.nConstraints] = (void*)err;
-                    OUT.constraintDerivs[OUT.nConstraints] = constraint_ne_sw_ifunc_sin_function;
+                    OUT.constraintDerivs[OUT.nConstraints] = constraint_ne_sw_ifunc_function;
                     OUT.constraintCounters[OUT.nConstraints]=ii;
                     ++OUT.nConstraints;
                 }
                 break;
                 }
+            case constraint_ne_sw_ifunc_sigma:
+                {
+                double* err = (double*)malloc(sizeof(double));
+                sscanf(psr->constraint_special[i],"%lg",err);
+                for (int ii =0 ; ii < psr->ne_sw_ifuncN; ++ii) {
+                    OUT.constraintValue[OUT.nConstraints] = 0;
+                    OUT.constraintSpecial[OUT.nConstraints] = (void*)err;
+                    OUT.constraintDerivs[OUT.nConstraints] = constraint_ne_sw_ifunc_function;
+                    OUT.constraintCounters[OUT.nConstraints]=ii;
+                    ++OUT.nConstraints;
+                }
+                break;
+                }
+
             default:
                 // this is a quick fix to avoid re-writing code.
                 OUT.constraintDerivs[OUT.nConstraints] = standardConstraintFunctions;
@@ -1667,6 +1680,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_simpleAdd;
             ++OUT.nParams;
             break;
+
 
         case param_ne_sw_ifunc:
             for (int i = 0; i < psr->ne_sw_ifuncN; ++i){
