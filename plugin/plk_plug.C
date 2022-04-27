@@ -3340,44 +3340,46 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,
         }
         else if (menu==3)
         {
-            int count=0;
-            int xpos,ypos;
-            int i,j;
-            xpos=0;
-            ypos=0;
-            //	  if (*paramOffset > 0)
-            {
-                if (mouseX == 9 && mouseY == 0 && *paramOffset > 0)		
-                    (*paramOffset)--;
-                else if (mouseX == 9 && mouseY == 2)
-                    (*paramOffset)++;
-                printf("Setting offset in menu to be %d\n",*paramOffset);
-            }
-            for (i=0;i<MAX_PARAMS;i++)
-            {
-                for (j=0;j<psr[0].param[i].aSize;j++)
+            if (mouseY < 3){
+                int count=0;
+                int xpos,ypos;
+                int i,j;
+                xpos=0;
+                ypos=0;
+                //	  if (*paramOffset > 0)
                 {
-                    if (psr[0].param[i].paramSet[j]==1)
+                    if (mouseX == 9 && mouseY == 0 && *paramOffset > 0)		
+                        (*paramOffset)--;
+                    else if (mouseX == 9 && mouseY == 2)
+                        (*paramOffset)++;
+                    printf("Setting offset in menu to be %d\n",*paramOffset);
+                }
+                for (i=0;i<MAX_PARAMS;i++)
+                {
+                    for (j=0;j<psr[0].param[i].aSize;j++)
                     {
-                        if (strcmp(psr[0].param[i].shortlabel[j],"DMEPOCH")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"PEPOCH")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"START")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"FINISH")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"TRACK")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"IPERHARM")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"TZRMJD")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"TZRFRQ")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"TRES")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"EPHVER")!=0 &&
-                                strcmp(psr[0].param[i].shortlabel[j],"POSEPOCH")!=0)
+                        if (psr[0].param[i].paramSet[j]==1)
                         {
-                            if (mouseX==xpos && mouseY==ypos-(*paramOffset))
-                                swapFit(psr,i,j,button);
-                            xpos++;
-                            if (xpos > 8)
+                            if (strcmp(psr[0].param[i].shortlabel[j],"DMEPOCH")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"PEPOCH")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"START")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"FINISH")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"TRACK")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"IPERHARM")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"TZRMJD")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"TZRFRQ")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"TRES")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"EPHVER")!=0 &&
+                                    strcmp(psr[0].param[i].shortlabel[j],"POSEPOCH")!=0)
                             {
-                                xpos=0;
-                                ypos++;
+                                if (mouseX==xpos && mouseY==ypos-(*paramOffset))
+                                    swapFit(psr,i,j,button);
+                                xpos++;
+                                if (xpos > 8)
+                                {
+                                    xpos=0;
+                                    ypos++;
+                                }
                             }
                         }
                     }
