@@ -1629,6 +1629,17 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                             fprintf(fout2,"CONSTRAIN PARAM %s\n",psr[p].constraint_special[i]);
                         }
                     }
+                    for (int i = 0; i < psr[p].nconstraints; i++){
+                        if (psr[p].constraints[i]==constraint_ne_sw_ifunc_sin){
+                            fprintf(fout2,"CONSTRAIN NE_SW_IFUNC_SIN %s\n",psr[p].constraint_special[i]);
+                        }
+                    }
+                    for (int i = 0; i < psr[p].nconstraints; i++){
+                        if (psr[p].constraints[i]==constraint_ne_sw_ifunc_sigma){
+                            fprintf(fout2,"CONSTRAIN NE_SW_IFUNC_SIGMA %s\n",psr[p].constraint_special[i]);
+                        }
+                    }
+
                 }
 
 

@@ -114,6 +114,8 @@ std::string get_constraint_name(unsigned c){
             return "PARAMETER CONSTRAINT";
         case constraint_ne_sw_ifunc_sin:
             return "NE_SW IFUNC SIN CONSTRAINT";
+        case constraint_ne_sw_ifunc_sigma:
+            return "NE_SW IFUNC SIGMA CONSTRAINT";
         default:
             return "UNKNOWN!";
     }
