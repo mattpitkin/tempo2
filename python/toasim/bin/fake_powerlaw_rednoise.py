@@ -13,6 +13,7 @@ parser.add_argument("--fref",type=float, help="fref")
 parser.add_argument("--nreal",default=1,type=int)
 parser.add_argument("--tn-like",action='store_true')
 parser.add_argument("--plot",action='store_true')
+parser.add_argument("--seed",type=int)
 parser.add_argument("parfile")
 parser.add_argument("timfile")
 
@@ -23,6 +24,11 @@ print(args)
 
 if args.plot:
     from matplotlib import pyplot as plt
+
+if args.seed is None:
+    seed = np.random.randint(low=0,high=np.iinfo(np.uint32).max,dtype=np.uint32)
+else:
+    seed = args.seed
 
 nreal = args.nreal
 header = toasim.header()
@@ -48,6 +54,9 @@ with open(header.timfile_name+".addRedNoise","wb") as outfile:
     header.ntoa=ntoa
     header.nrealisations=nreal
     header.invocation=" ".join(sys.argv)
+
+    header.seed = seed
+
     print("\nWriting....")
     header.write(outfile)
 
@@ -62,17 +71,18 @@ with open(header.timfile_name+".addRedNoise","wb") as outfile:
     print("nharm={}".format(nharm))
 
     if args.tn_like:
-        pref = ((10**args.Pref)**2) / 12.0/np.pi/np.pi
+        Pref = ((10**args.P)**2) / 12.0/np.pi/np.pi
     else:
         Pref=args.P
 
     freq = np.arange(1,nharm)*fmin
     P = Pref*(freq/args.fref)**-args.a
 
+    rand = np.random.RandomState(seed)
     for ireal in range(nreal):
         print("ireal={}/{}".format(ireal,nreal))
-        phases = np.random.uniform(0,2*np.pi,size=len(freq))
-        white = np.random.normal(0,1,size=len(freq))
+        phases = rand.uniform(0,2*np.pi,size=len(freq))
+        white = rand.normal(0,1,size=len(freq))
         offsets = np.zeros_like(toas)
         for i,f in enumerate(freq):
             if i%100 == 0:
