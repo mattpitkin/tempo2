@@ -92,6 +92,21 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
     // convert to the FFT code. Iuliana Nitu is working on a document that 
     // ties all this together.
     // M. Keith & I. Nitu May 2022
+    // Neglecting factor converting power to density for the minute.
+    // Some logic...
+    // FFT(data) -> A+Bi
+    // two-sided-PSD = (A^2 + B^2)
+    // one-sided-PSD = 2*(A^2 + B^2)
+    // two-sided-PSD = one-sided-PSD / 2
+    // a*cos(wt) - b*sin(wt) ==> FFT(data)
+    // only over positive w. means a=2A, b=2B
+    // <A^2> = two-sided-PSD/2 = one-sided-PSD/4
+    // var(A) = <A^2> = two-sided-PSD/2 = one-sided-PSD/4
+    // var(a) = 4*var(A) = one-sided-PSD
+    // If we input one-sided-PSD; for the FFT we need to divide power by 4 and square-root to get sigma of A,B
+    // If we input one-sided-PSD; we get sigma a,b from just square-root the one-sided PSD.
+    //
+    // In this code we use the FFT and therefore divide by 4
 
 
     // we are forming "amplitudes" not powers
