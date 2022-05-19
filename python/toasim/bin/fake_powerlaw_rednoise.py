@@ -87,7 +87,9 @@ with open(header.timfile_name+".addRedNoise","wb") as outfile:
         for i,f in enumerate(freq):
             if i%100 == 0:
                 print("{:>10d}\r".format(i),end="")
-            A = np.sqrt(P[i]*fmin * (86400.0 * 365.25) ** 2)
+            # The factor of 2 here is because we are doing A.sin(wt+phi)
+            # rather than A.sin(wt) + B.cos(wt)
+            A = np.sqrt(2*P[i]*fmin * (86400.0 * 365.25) ** 2)
             omega = 2*np.pi*f/365.25
             dat = A*white[i]*np.sin(omega*toas+phases[i])
             pp = np.poly1d(np.polyfit(toas,dat,2))
