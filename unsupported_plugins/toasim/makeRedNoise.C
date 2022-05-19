@@ -82,11 +82,16 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
     //
     // I am now 99% sure this is correct. George looked at it too!
     // M. Keith 2013.
-    //A=model->pwr_1yr /(4*t_span*model->nreal);
+    A=model->pwr_1yr /(4*t_span*model->nreal);
 
     // The above is right, but I think we probably are inputting a 2-sided PSD
     // M. Keith 2021
-    A=model->pwr_1yr /(t_span*model->nreal);
+    // No... this is not a correct understanding... keep the factor of 4 to be
+    // consistant with other pulsar code.
+    // We input cholSpec/TN style (which we suspect is one-sided) and need to
+    // convert to the FFT code. Iuliana Nitu is working on a document that 
+    // ties all this together.
+    // M. Keith & I. Nitu May 2022
 
 
     // we are forming "amplitudes" not powers
