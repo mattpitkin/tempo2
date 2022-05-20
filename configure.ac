@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([Tempo2],[2022.01.1],[mkeith@pulsarastronomy.net],[],[http://www.bitbucket.org/psrsoft/tempo2])
+AC_INIT([Tempo2],[2022.05.1],[mkeith@pulsarastronomy.net],[],[http://www.bitbucket.org/psrsoft/tempo2])
 
 AC_ARG_VAR([TEMPO2], [Default TEMPO2 installation directory])
 AC_PREFIX_DEFAULT([${TEMPO2:-"/usr/local"}])
