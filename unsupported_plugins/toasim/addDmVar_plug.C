@@ -203,7 +203,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             D_d *=1e-12; // convert us to seconds
             pism = 0.0112 * D_d * pow(d,(-5.0/3.0)) * pow(secperyear,-1.0/3.0);
         } else {
-            pism = 0.5 * pow(10.0,(2.0*TNDMAmp)) / (pow(DM_CONST,2.0) * pow(ref_freq,4.0));
+            pism = pow(10.0,(2.0*TNDMAmp)) / (pow(DM_CONST,2.0) * pow(ref_freq,4.0));
         }
         printf("pism(1yr)  = %g (yr^3) \n",pism );
 
