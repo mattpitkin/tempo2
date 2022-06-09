@@ -175,6 +175,7 @@ readAliases(char *fname)
                 //DynamicArray_init(&list.aliases, 128);      
                 while (sscanf(line+ichar, "%s %n", alias, &nread)==1)
                 {
+                    if (alias[0]=='#') break; // detect comments
                     //DynamicArray_push_back(&list.aliases, alias);
                     list.aliases.push_back(alias);
                     ichar += nread;
