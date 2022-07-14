@@ -1402,11 +1402,11 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }	
                 for (i=1;i<=psr[p].nfdJumps;i++)
                 {
-                    sscanf(psr[p].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
+                    sscanf(psr[p].fdjumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
                     if (strcasecmp(str1,"FREQ")==0 || strcasecmp(str1,"MJD")==0)
-                        fprintf(fout2,"FDJUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
+		      fprintf(fout2,"FDJUMP%d %s %s %s %.14g %d\n",i,str1,str2,str3,psr[p].fdjumpVal[i],psr[p].fitfdJump[i]);
                     else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
-                        fprintf(fout2,"FDJUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
+		      fprintf(fout2,"FDJUMP%d %s %s %.14g %d\n",i,str1,str2,psr[p].fdjumpVal[i],psr[p].fitfdJump[i]);
                 }	  
                 /* Add T2EFAC / T2EQUAD */
                 for (i=0;i<psr[p].nT2efac;i++)
