@@ -183,10 +183,10 @@ CLEANFILES=$(BUILT_SOURCES) documentation/doxygen
    core core-install core-clean test doc python
 
 t2help.h: convertxt help.txt help_extra.txt
-	$(builddir)/convertxt help.txt help_txt > t2help.h
-	$(builddir)/convertxt help_extra.txt help_extra_txt >> t2help.h
-#	xxd -i help.txt > t2help.h
-#	xxd -i help_extra.txt >> t2help.h
+	$(builddir)/convertxt $(srcdir)/help.txt help_txt > t2help.h
+	$(builddir)/convertxt $(srcdir)/help_extra.txt help_extra_txt >> t2help.h
+#	xxd -i $(srcdir)/help.txt > t2help.h
+#	xxd -i $(srcdir)/help_extra.txt >> t2help.h
 
 python:
 	cd $(srcdir)/python/t2pred && python setup.py install
