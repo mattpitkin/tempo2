@@ -1,6 +1,6 @@
 plugindir=$(DESTDIR)@TEMPO2_PLUG_INSTALL@
 
-plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian_@T2ARCH@_plug.la add2state_@T2ARCH@_plug.la formIdeal_@T2ARCH@_plug.la createRealisation_@T2ARCH@_plug.la addRedNoise_@T2ARCH@_plug.la addCGW_@T2ARCH@_plug.la addInstrumentalIssues_@T2ARCH@_plug.la addArbitraryDM_@T2ARCH@_plug.la
+plugin_LTLIBRARIES=addDmVar_@T2ARCH@_plug.la addGWB_@T2ARCH@_plug.la addGaussian_@T2ARCH@_plug.la add2state_@T2ARCH@_plug.la formIdeal_@T2ARCH@_plug.la createRealisation_@T2ARCH@_plug.la addRedNoise_@T2ARCH@_plug.la addCGW_@T2ARCH@_plug.la addInstrumentalIssues_@T2ARCH@_plug.la addArbitraryDM_@T2ARCH@_plug.la addChromVar_@T2ARCH@_plug.la
 
 bin_PROGRAMS=read_toasim
 lib_LTLIBRARIES=libtoasim.la
@@ -15,7 +15,7 @@ AM_CPPFLAGS=-I@top_srcdir@/
 
 CFLAGS+=@FFTW_CFLAGS@
 
-pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install add2state-install addInstrumentalIssues-install formIdeal-install createRealisation-install addRedNoise-install addCGW-install addArbitraryDM-install
+pluginINSTALLS=addDmVar-install addGWB-install addGaussian-install add2state-install addInstrumentalIssues-install formIdeal-install createRealisation-install addRedNoise-install addCGW-install addArbitraryDM-install addChromVar-install
 
 
 TOASIM_src=toasim.h toasim.c toasim_compute.c toasim_io.c makeRedNoise.C makeRedNoise.h
@@ -31,6 +31,14 @@ addDmVar_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
 addDmVar_@T2ARCH@_plug_la_LDFLAGS=$(plugin_LDFLAGS)
 addDmVar-install: addDmVar_@T2ARCH@_plug.la
 	$(INSTALL) .libs/addDmVar_@T2ARCH@_plug.t2 $(plugindir)
+
+addChromVar_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addChromVar_plug.C $(TOASIM_src)
+addChromVar_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
+addChromVar_@T2ARCH@_plug_la_LDFLAGS=$(plugin_LDFLAGS)
+addChromVar-install: addChromVar_@T2ARCH@_plug.la
+	$(INSTALL) .libs/addChromVar_@T2ARCH@_plug.t2 $(plugindir)
+
+
 
 addArbitraryDM_@T2ARCH@_plug_la_SOURCES=@top_srcdir@/tempo2.h addArbitraryDM_plug.C $(TOASIM_src)
 addArbitraryDM_@T2ARCH@_plug_la_LIBADD=../../libtempo2.la ../../sofa/libsofa.la
