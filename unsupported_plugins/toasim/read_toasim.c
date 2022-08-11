@@ -74,9 +74,9 @@ int main(int argc, char** argv){
         if (dumpit){
             int j;
             for(j=0;j<header->ntoa; j++){
-                fprintf(dump,"%d %lg\n",i,read_corr->offsets[j]);
+                fprintf(dump,"%d %d %lg\n",i,j,read_corr->offsets[j]);
             }
-            fprintf(dump,"%lg\n",read_corr->offsets[j]);
+            //fprintf(dump,"%lg\n",read_corr->offsets[j]);
         }
         if (read_corr == NULL){
             printf("Failed to parse corrections %d\n",i);
