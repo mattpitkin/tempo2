@@ -108,6 +108,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             p_1yr=atof(argv[++i]) * secperyear*secperyear; // convert to s^2yr
         }
 
+        if (strcmp(argv[i],"-TNRedAmp")==0){
+            double TNRedAmp = atof(argv[++i]); // convert from temponest red noise
+            p_1yr = secperyear*secperyear * pow(10.0,2*TNRedAmp)/(12.0*M_PI*M_PI); // in s^2yr
+        }
+
         if (strcmp(argv[i],"-fc")==0){
             old_fc=atof(argv[++i]);
             cnr_flat=old_fc;
