@@ -1811,6 +1811,17 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 &psr->TNShapeletEvPos[nTNEv],
                 &psr->TNShapeletEvWidth[nTNEv],
                 &psr->TNShapeletEvFScale[nTNEv]);
+        if (psr->TNShapeletEvN[nTNEv] > MAX_TNShapeCoef) {
+            logerr("Max number of Shapelet coefs is %d",MAX_TNShapeCoef);
+            psr->TNShapeletEvN[nTNEv]=MAX_TNShapeCoef;
+        }
+        for (int icoef=0 ; icoef < psr->TNShapeletEvN[nTNEv]; ++icoef) {
+            int read = fscanf(fin, "%lf", &psr->TNShapeletEvCoef[nTNEv][icoef]);
+            if (read != 1) {
+                logwarn("Couldn't read Shape coef for shape %d coef=%d; setting coefs to zero.",nTNEv,icoef);
+                break;
+            }
+        }
 
         ( psr->nTNShapeletEvents )++;
     }

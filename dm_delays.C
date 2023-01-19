@@ -134,20 +134,44 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         }
         //      logdbg("calculated dmDot %Lg",psr[p].param[param_dm].val[0]);
         dmval = psr[p].param[param_dm].val[0]; //+dmDot;
-	
-	long double cmval=0;
-	//long double cmDot;
-	arg=1.0;
-	for (k=1;k<9;k++)
+
+        long double cmval=0;
+        //long double cmDot;
+        arg=1.0;
+        for (k=1;k<9;k++)
         {
             arg *= yrs;
             if (psr[p].param[param_cm].paramSet[k]==1)
                 cmval+=(double)(psr[p].param[param_cm].val[k]*arg); 
         }
-	
+
 
         //      logdbg("calculating dmval");      
         // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
+
+       // IS there a TN Shapelet parameter to deal with?
+       /*
+        *         int nTNEv = psr->nTNShapeletEvents;
+        fscanf( fin, "%d %lf %lf %lf",
+                &psr->TNShapeletEvN[nTNEv],
+                &psr->TNShapeletEvPos[nTNEv],
+                &psr->TNShapeletEvWidth[nTNEv],
+                &psr->TNShapeletEvFScale[nTNEv]);
+
+                &psr->TNShapeletEvCoef[nTNEv][icoef]
+                */
+        for (int iTNShape=0; iTNShape < psr[p].nTNShapeletEvents; ++iTNShape) {
+            // We only want to do ones with a spectral index not equal to zero
+            // Ones equal to zero will be handled in formresiduals
+            if (psr[p].TNShapeletEvFScale[iTNShape] != 0.0) {
+
+                double shape = evaluateShapelet(psr->TNShapeletEvN[nTNEv],
+                        psr->TNShapeletEvPos[nTNEv],
+                        psr->TNShapeletEvWidth[nTNEv],
+                        psr->TNShapeletEvCoef[nTNEv],
+                        (double)psr[p].obsn[i].sat);
+            }
+        }
 
 
         /* Are we using DM values using DMMODEL parameter? */
