@@ -1823,6 +1823,14 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             }
         }
 
+        if (!(psr->TNShapeletEvFScale[nTNEv] == 0 || psr->TNShapeletEvFScale[nTNEv] == 2)) {
+            // If we don't have Red or DM, currently unsupported since temponest doesn't support
+            // it so we don't really know how to interpret the parameters...
+            // Not really a clear way to guess either since it is different for Red and DM
+            logerr("Currently only can handle shapelets with freq scale 2.0 (DM) or 0.0 (red)");
+            exit(1);
+        }
+
         ( psr->nTNShapeletEvents )++;
     }
 
