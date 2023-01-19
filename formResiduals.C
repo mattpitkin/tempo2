@@ -34,6 +34,7 @@
 #include "tempo2.h"
 #include "GWsim.h"
 #include "ifunc.h"
+#include "shapelet.h"
 #include <vector>
 #include <algorithm>
 /* Form the timing residuals from the timing model and the barycentric arrival times */
@@ -390,7 +391,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
     longdouble nphase,phase2,phase3,phase4,phase2state,lastResidual=0,priorResidual=0;
     longdouble *phase5 = new longdouble[MAX_OBSN];
     longdouble lastBat=0.0,priorBat=0.0;
-    longdouble phaseJ,phaseW;
+    longdouble phaseJ,phaseW,phaseShape;
     longdouble ftpd,fct,ff0,phaseint;
     longdouble torb,deltaT,dt00=0.0,phas1=0.0;
     longdouble mean,tnmean, ct00=0.0;
@@ -705,6 +706,23 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     }
                 }
             }
+
+            /* Red Shapelet Events (M. Keith 2023) */
+            phaseShape=0;
+            for (int iTNShape=0; iTNShape < psr[p].nTNShapeletEvents; ++iTNShape) {
+                // We only want to do ones with a spectral index equal to zero here
+                if (psr[p].TNShapeletEvFScale[iTNShape] == 0.0) {
+                    // I think that the red shape is a time term...
+                    phaseShape += evaluateShapelet(psr->TNShapeletEvN[iTNShape],
+                            psr->TNShapeletEvPos[iTNShape],
+                            psr->TNShapeletEvWidth[iTNShape],
+                            psr->TNShapeletEvCoef[iTNShape],
+                            (double)psr[p].obsn[i].bat)*psr[p].param[param_f].val[0];
+                }
+            }
+
+
+
 
 
             /* Add in extra phase due to whitening procedures */
@@ -1993,7 +2011,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
 
 
 
-            phase5[i] = phase2+phase3+phase4+phaseJ+phaseW+phase2state;
+            phase5[i] = phase2+phase3+phase4+phaseJ+phaseW+phase2state + phaseShape;
             //	   printf("Point 1: %.5f %.5f %.5f %.5f %.5f %.5f\n",(double)phase5[i],(double)phase2,(double)phase3,(double)phase4,(double)phaseJ,(double)phaseW);
             if (psr[p].obsn[i].nFlags>0) /* Look for extra factor to add to residuals */
             {

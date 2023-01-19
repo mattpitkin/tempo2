@@ -34,6 +34,7 @@
 #include <string.h>
 #include "tempo2.h"
 #include "ifunc.h"
+#include "shapelet.h"
 #include "t2fit_solarwind.h"
 
 
@@ -149,29 +150,6 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         //      logdbg("calculating dmval");      
         // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
 
-       // IS there a TN Shapelet parameter to deal with?
-       /*
-        *         int nTNEv = psr->nTNShapeletEvents;
-        fscanf( fin, "%d %lf %lf %lf",
-                &psr->TNShapeletEvN[nTNEv],
-                &psr->TNShapeletEvPos[nTNEv],
-                &psr->TNShapeletEvWidth[nTNEv],
-                &psr->TNShapeletEvFScale[nTNEv]);
-
-                &psr->TNShapeletEvCoef[nTNEv][icoef]
-                */
-        for (int iTNShape=0; iTNShape < psr[p].nTNShapeletEvents; ++iTNShape) {
-            // We only want to do ones with a spectral index not equal to zero
-            // Ones equal to zero will be handled in formresiduals
-            if (psr[p].TNShapeletEvFScale[iTNShape] != 0.0) {
-
-                double shape = evaluateShapelet(psr->TNShapeletEvN[nTNEv],
-                        psr->TNShapeletEvPos[nTNEv],
-                        psr->TNShapeletEvWidth[nTNEv],
-                        psr->TNShapeletEvCoef[nTNEv],
-                        (double)psr[p].obsn[i].sat);
-            }
-        }
 
 
         /* Are we using DM values using DMMODEL parameter? */
@@ -250,6 +228,23 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
             //	  logdbg("Looked for flags");      
         }
 
+
+
+        // IS there a TN DM Shapelet parameter to deal with?
+        for (int iTNShape=0; iTNShape < psr[p].nTNShapeletEvents; ++iTNShape) {
+            // We only want to do DM for ones with a spectral index is equal to 2
+            if (psr[p].TNShapeletEvFScale[iTNShape] == 2) {
+                double t = (double)psr[p].obsn[i].bat;
+                if (t==0) t = (double)psr[p].obsn[i].sat; // I guess we approximate it?
+                double shapedm = evaluateShapelet(psr->TNShapeletEvN[iTNShape],
+                        psr->TNShapeletEvPos[iTNShape],
+                        psr->TNShapeletEvWidth[iTNShape],
+                        psr->TNShapeletEvCoef[iTNShape],
+                        t);
+                dmval += shapedm;
+            }
+        }
+
         // Add in derivative term
         dmval += dmDot;
 
@@ -273,25 +268,25 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
             //	psr[p].obsn[i].tdis1 = psr[p].param[param_dm].val[0]/DM_CONST/1.0e-12/freqf/freqf; 
             //	psr[p].obsn[i].tdis1 += dmval/pow(freqf/1e6,4.4); 
         }
-	// add in chromatic noise derivatives
-	
-	double gam;
+        // add in chromatic noise derivatives
 
-	if (psr[p].TNChromIdx != 0)
-	  {
-	    if (freqf>=1)
-	      {
-	    
-		
-		gam=-psr[p].TNChromIdx;
-		//fprintf(stderr, "TNChrom %.3e\n", psr[p].TNChromIdx);
-		//exit(0);
+        double gam;
 
-		//psr[p].obsn[i].tdis1 += cmval/DM_CONST/1e-12/freqf/freqf;//*powl(freqf/1e6,gam);
-		psr[p].obsn[i].tdis1 += cmval/DM_CONST*powl(freqf/1e6,gam);
-		
-	      }
-	  }
+        if (psr[p].TNChromIdx != 0)
+        {
+            if (freqf>=1)
+            {
+
+
+                gam=-psr[p].TNChromIdx;
+                //fprintf(stderr, "TNChrom %.3e\n", psr[p].TNChromIdx);
+                //exit(0);
+
+                //psr[p].obsn[i].tdis1 += cmval/DM_CONST/1e-12/freqf/freqf;//*powl(freqf/1e6,gam);
+                psr[p].obsn[i].tdis1 += cmval/DM_CONST*powl(freqf/1e6,gam);
+
+            }
+        }
 
         //      logdbg("calculate tdis1");      
         /* Add frequency dependent delay term */
