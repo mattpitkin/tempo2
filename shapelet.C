@@ -65,7 +65,6 @@ double iterative_TNothpl(int n, double x, double &y0, double &y1) {
 }
 
 
-
 double evaluateShapelet(int ncoeff, double pos, double width, double* coef, double bat) {
 
     double result = 0;
@@ -77,6 +76,5 @@ double evaluateShapelet(int ncoeff, double pos, double width, double* coef, doub
         double shapeNorm=1.0/sqrt(sqrt(2.0*M_PI)*pow(2.0,c)*iter_factorial(c));
         result += shapeNorm * coef[c] * iterative_TNothpl(c, H, y0,y1);
     }
-
     return result * exp(-0.5*pow((bat-pos)/width, 2));
 }
