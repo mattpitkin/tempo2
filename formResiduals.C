@@ -713,7 +713,7 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 // We only want to do ones with a spectral index equal to zero here
                 if (psr[p].TNShapeletEvFScale[iTNShape] == 0.0) {
                     // I think that the red shape is a time term...
-                    phaseShape += evaluateShapelet(psr->TNShapeletEvN[iTNShape],
+                    phaseShape -= evaluateShapelet(psr->TNShapeletEvN[iTNShape],
                             psr->TNShapeletEvPos[iTNShape],
                             psr->TNShapeletEvWidth[iTNShape],
                             psr->TNShapeletEvCoef[iTNShape],

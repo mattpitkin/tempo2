@@ -1822,6 +1822,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 break;
             }
         }
+        int shapefitflag=0;
+        int read = fscanf(fin, "%d", &shapefitflag);
+        if (read == 1) {
+            psr->TNShapeletEvFitFlag[nTNEv]=shapefitflag;
+        }
 
         if (!(psr->TNShapeletEvFScale[nTNEv] == 0 || psr->TNShapeletEvFScale[nTNEv] == 2)) {
             // If we don't have Red or DM, currently unsupported since temponest doesn't support
@@ -1831,7 +1836,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             exit(1);
         }
 
-        ( psr->nTNShapeletEvents )++;
+        ++(psr->nTNShapeletEvents);
     }
 
     /* ----------------- */

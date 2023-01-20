@@ -851,6 +851,8 @@ typedef struct pulsar {
     double TNShapeletEvWidth[MAX_TNDMEv];  //Overall Width 
     double TNShapeletEvFScale[MAX_TNDMEv];  //Scaling dependence with observational frequency
     double TNShapeletEvCoef[MAX_TNDMEv][MAX_TNShapeCoef];  // TN Shapelet Coeficient values
+    double TNShapeletEvCoefErr[MAX_TNDMEv][MAX_TNShapeCoef];  // TN Shapelet Coeficient errors if fitted
+    int TNShapeletEvFitFlag[MAX_TNDMEv];
 
 
   

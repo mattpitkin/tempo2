@@ -3,6 +3,7 @@
 #include <string.h>
 #include <cstdio>
 #include "t2fit_nestlike.h"
+#include "shapelet.h"
 #include "enum_str.h"
 
 
@@ -347,4 +348,37 @@ void t2UpdateFunc_nestlike_group(pulsar *psr, int ipsr ,param_label label,int k,
 }
 
 
+double t2FitFunc_nestlike_shape_red(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
+    int ishape = k/MAX_TNShapeCoef;
+    int icoef = k%MAX_TNShapeCoef;
+    double pos = psr[ipsr].TNShapeletEvPos[ishape];
+    double width = psr[ipsr].TNShapeletEvWidth[ishape];
+    double t = psr[ipsr].obsn[ipos].bat;
+    int N=icoef+1;
+    double shapecoef[N];
+    for (int ic=0; ic < N ;++ic)shapecoef[ic]=0;
+    shapecoef[icoef]=1.0;
+    double shape = evaluateShapelet(N,pos,width,shapecoef,t);
+    return shape;
+}
 
+double t2FitFunc_nestlike_shape_dm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
+    int ishape = k/MAX_TNShapeCoef;
+    int icoef = k%MAX_TNShapeCoef;
+    double pos = psr[ipsr].TNShapeletEvPos[ishape];
+    double width = psr[ipsr].TNShapeletEvWidth[ishape];
+    double t = psr[ipsr].obsn[ipos].bat;
+    int N=icoef+1;
+    double shapecoef[N];
+    for (int ic=0; ic < N ;++ic)shapecoef[ic]=0;
+    shapecoef[icoef]=1.0;
+    double shape = evaluateShapelet(N,pos,width,shapecoef,t);
+    return shape *pow((double)psr[ipsr].obsn[ipos].freqSSB,-2)*1e12/DM_CONST;
+}
+
+void t2UpdateFunc_nestlike_shape(pulsar *psr, int ipsr ,param_label label,int k, double val, double err) {
+    int ishape = k/MAX_TNShapeCoef;
+    int icoef = k%MAX_TNShapeCoef;
+    psr[ipsr].TNShapeletEvCoef[ishape][icoef] += val;
+    psr[ipsr].TNShapeletEvCoefErr[ishape][icoef] = err;
+}
