@@ -91,7 +91,11 @@ transform_units(struct pulsar *psr, int from, int to)
     // or 3x10^-8 in DM delay, which could become significant
     // XXX Check this! My new code gives ~1.5x10^-8 for TDB itself!
 
-    val=f*f*f;
+    // MJK2023-02-13. As pointed out by Abhimanyu Susobhanan on the IPTA slack
+    // The argument above makes no sense. The dimensions of DM are frequency
+    // (since it scales as time times frequency squared).
+
+    val=1/f;
     for (k=0;k<psr->param[param_dm].aSize;k++)
     {
         scale_param(&psr->param[param_dm],k,  val);
@@ -106,7 +110,12 @@ transform_units(struct pulsar *psr, int from, int to)
                 scale_param(&psr->param[param_dm],k, one/(f*f*f*f*f*f));
                 scale_param(&psr->param[param_dm],k, one/(f*f*f*f*f*f*f)); */
     }
-    val=f*f*f;
+
+    // MJK2023-02-13 .. this just copied the DM code, which surely is wrong since
+    // it's dependence on time depends on the chromatic index. I will assume it should
+    // go as time times freq to the power of psr[ipsr].TNChromIdx similarly to DM which
+    // is time times freq^2 -- so this is our factor to the power of 1-chromindex
+    val=pow(f,1-psr->TNChromIdx);
     for (k=0;k<psr->param[param_cm].aSize;k++)
       {
         scale_param(&psr->param[param_cm],k,  val);
