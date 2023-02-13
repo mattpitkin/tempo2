@@ -1184,8 +1184,14 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
             }
             logmsg("Generated %d TNepochs from %d TNSECORRs",nepochs,psr->nTNSECORR);
         }
-
-
+        for (unsigned ishape=0; ishape < psr->nTNShapeletEvents; ++ishape){
+            if (psr->TNShapeletEvFitFlag[ishape]==1) {
+                    // fit for the amplitudes of this shapelet
+                    psr->param[param_shapevent].fitFlag[0]=1;
+                    psr->param[param_shapevent].paramSet[0]=1;
+            }
+        }
+        // end of TN stuff
     }
 
 
@@ -1301,6 +1307,10 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
         psr->param[param_red_chrom_cos].fitFlag[0]=0;
         psr->param[param_red_chrom_sin].paramSet[0]=0;
         psr->param[param_red_chrom_cos].paramSet[0]=0;
+    }
+    if (psr->param[param_shapevent].fitFlag[0]) {
+        psr->param[param_shapevent].fitFlag[0]=0;
+        psr->param[param_shapevent].paramSet[0]=0;
     }
 }
 
@@ -1646,25 +1656,25 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
             }
             break;
 
-            /*
-               case param_shapevent:
-               {
-               int l;
-               l=0;
-               for (int i=0;i < psr->nTNShapeletEvents;i++)
-               {
-               for (int k=0;k<psr->TNShapeletEvN[i];k++)
-               {
-               OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_shapeevent;
-               OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_shapevent;
-               OUT.paramCounters[OUT.nParams]=l;
-               OUT.paramIndex[OUT.nParams]=fit_param;
-               l++;
-               ++OUT.nParams;
-               }
-               }
-               }*/
-
+        case param_shapevent:
+            for (unsigned ishape=0;ishape < psr->nTNShapeletEvents; ++ishape){
+                if (psr->TNShapeletEvFitFlag[ishape]==1){
+                    for (unsigned icoef = 0; icoef < psr->TNShapeletEvN[ishape]; ++icoef) {
+                        OUT.paramIndex[OUT.nParams]=param_shapevent;
+                        // we use the counter to specify specific event
+                        // indexing into the right shape event and coef
+                        OUT.paramCounters[OUT.nParams]   = ishape*MAX_TNShapeCoef + icoef;
+                        if (psr->TNShapeletEvFScale[ishape] == 0.0){
+                            OUT.paramDerivs[OUT.nParams]     = t2FitFunc_nestlike_shape_red;
+                        } else if (psr->TNShapeletEvFScale[ishape] == 2.0){
+                            OUT.paramDerivs[OUT.nParams]     = t2FitFunc_nestlike_shape_dm;
+                        }
+                        OUT.updateFunctions[OUT.nParams] = t2UpdateFunc_nestlike_shape;
+                        ++OUT.nParams;
+                    }
+                }
+            }
+            break;
 
 
         case param_ne_sw:

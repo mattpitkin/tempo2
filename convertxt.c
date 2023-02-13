@@ -16,6 +16,6 @@ int main(int argc, char** argv) {
         if(n % 10 == 0) printf("\n");
     }
     fclose(f);
-    printf("};\n");
+    printf("0x00};\n");
     return 0;
 }
