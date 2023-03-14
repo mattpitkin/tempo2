@@ -57,6 +57,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     char writeTextFiles=0;
     double lastMJD=1e99;
 
+    int force_nreal=0;
 
     //
     // For the output file
@@ -127,6 +128,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             sscanf(argv[++i],"%ld",&seed);
             if (seed > 0)seed=-seed;
         }
+        if (strcmp(argv[i],"-forceperiodic")==0){
+            ++i;
+            force_nreal=1;
+        }
+
 
     }
 
@@ -190,6 +196,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         printf("Generating red noise...\n");
 
         rednoisemodel_t* model = setupRedNoiseModel(mjd_start,mjd_end,npts,nit,pism,-TNChromGam);
+        if (force_nreal){
+            model->nreal = nit;
+        }
+
+
         populateRedNoiseModel(model,seed);
 
         if (writeTextFiles){
