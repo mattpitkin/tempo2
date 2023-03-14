@@ -58,7 +58,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     float cnr_flat=0;
     float cnr_cut=0;
     float old_fc=-1;
-
+    int force_nreal=0;
 
     //
     // For the output file
@@ -124,6 +124,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         if (strcmp(argv[i],"-cnr_cut")==0){
             cnr_cut=atof(argv[++i]);
+        }
+
+        if (strcmp(argv[i],"-forceperiodic")==0){
+            ++i;
+            force_nreal=1;
         }
 
         if (strcmp(argv[i],"-a")==0){
@@ -208,6 +213,9 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         printf("Generating red noise...\n");
 
         rednoisemodel_t* model = setupRedNoiseModel(mjd_start,mjd_end,npts,nit,p_1yr,alpha);
+        if (force_nreal){
+            model->nreal = nit;
+        }
 
         model->cutoff=cnr_cut;
         model->flatten=cnr_flat;
@@ -231,6 +239,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             }
 
             fclose(log_ts2);
+            //FILE *log_tsraw = fopen("red.rawts","w");
+            //for (j=0;j<(model->npt*model->nreal);j++){
+            //    fprintf(log_ts2,"%10.10g %10.10g\n",model->start+model->tres*j,model->data[j]);
+            //}
+            //fclose(log_tsraw);
         }
 
         int itjmp=nit/50;
