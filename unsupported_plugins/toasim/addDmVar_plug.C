@@ -226,6 +226,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         rednoisemodel_t* model = setupRedNoiseModel(mjd_start,mjd_end,npts,nit,pism,alpha);
         if (force_nreal){
+            printf("WARNING: FORCING PERIODIC\n");
             model->nreal = nit;
         }
 
