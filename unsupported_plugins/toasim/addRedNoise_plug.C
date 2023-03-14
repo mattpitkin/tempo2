@@ -273,8 +273,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
                 if (writeTextFiles)
                     fprintf(log_ts,"%lg %lg\n",(double)psr[p].obsn[j].bat,offsets[j]);
             }
-            TKremovePoly_d(mjds,offsets,psr[p].nobs,2); // remove a quadratic to reduce the chances of phase wraps
+            // remove a quadratic to reduce the chances of phase wraps
             // The above is ok because it's linear with F0/F1
+            // Note n=3 is a quadratic for TKremovePoly
+            TKremovePoly_d(mjds,offsets,psr[p].nobs,3);
             toasim_write_corrections(corr,header,file);
             if (writeTextFiles)
                 fclose(log_ts);
