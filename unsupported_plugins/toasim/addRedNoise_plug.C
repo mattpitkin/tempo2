@@ -214,6 +214,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         rednoisemodel_t* model = setupRedNoiseModel(mjd_start,mjd_end,npts,nit,p_1yr,alpha);
         if (force_nreal){
+            printf("WARNING: FORCING PERIODIC\n");
             model->nreal = nit;
         }
 
@@ -239,11 +240,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
             }
 
             fclose(log_ts2);
-            //FILE *log_tsraw = fopen("red.rawts","w");
-            //for (j=0;j<(model->npt*model->nreal);j++){
-            //    fprintf(log_ts2,"%10.10g %10.10g\n",model->start+model->tres*j,model->data[j]);
-            //}
-            //fclose(log_tsraw);
+            FILE *log_tsraw = fopen("red.rawts","w");
+            for (j=0;j<(model->npt*model->nreal);j++){
+                fprintf(log_ts2,"%10.10g %10.10g\n",model->start+model->tres*j,model->data[j]);
+            }
+            fclose(log_tsraw);
         }
 
         int itjmp=nit/50;
