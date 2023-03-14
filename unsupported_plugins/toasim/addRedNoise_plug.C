@@ -127,7 +127,6 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
         }
 
         if (strcmp(argv[i],"-forceperiodic")==0){
-            ++i;
             force_nreal=1;
         }
 
