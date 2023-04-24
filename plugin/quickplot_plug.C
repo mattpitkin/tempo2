@@ -56,7 +56,7 @@ void replayLine(FILE *recordFile,int argc,char *argv[],pulsar *psr,int fitFlag,i
 //
 void overPlotN(int overN,float overX[], float overY[],float overYe[]);
 
-void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
+int doPlot(pulsar *psr,int npsr,char *gr,double unitFlag,char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float lockx1,float lockx2,float locky1,
 	    float locky2,int xplot,int yplot,int publish,int argc,char *argv[],
 	    int menu,char *setupFile,
@@ -279,7 +279,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     int replayRecord=0;
 
 
-    if (displayCVSversion == 1) CVSdisplayVersion("plk_plug.C","plugin",CVS_verNum);
+    if (displayCVSversion == 1) CVSdisplayVersion("quickplot_plug.C","plugin",CVS_verNum);
 
     strcpy(flagColour,"");
     strcpy(saveonquit,"");
@@ -293,218 +293,50 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     printf("Authors:             George Hobbs, J. Verbiest (v4. 3 Aug 2007)\n");
     printf("CVS Version:         $Revision: 1.61 $\n");
     printf(" --- type 'h' for help information\n");
-    /* Obtain the .par and the .tim file from the command line */
 
-    if (argc==4) /* Only provided .tim name */
-    {
-        strcpy(timFile[0],argv[3]);
-        strcpy(parFile[0],argv[3]);
-        parFile[0][strlen(parFile[0])-3] = '\0';
-        strcat(parFile[0],"par");
+    cpgbeg(0,gr,1,1);
+
+
+    const char* listfilename = argv[3];
+    FILE* listfile = fopen(listfilename,"r");
+    while (!feof(listfile)){
+        fscanf(listfile,"%s %s",parFile,timFile);
+        logmsg("par:%s tim:%s",parFile,timFile);
+
+        if (debugFlag==1) printf("plk: calling readParfile\n");
+        readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
+        if (debugFlag==1) printf("plk: calling readTimfile\n");
+        readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
+
+
+        if (unitFlag==-1) unitFlag = 1.0/psr[0].param[param_f].val[0]; /* Units of pulse period */
+        if (debugFlag==1) printf("plk: calling preProcess %d\n",psr[0].nobs);
+        preProcess(psr,*npsr,argc,argv);
+        if (debugFlag==1) printf("plk: calling callFit %d\n",psr[0].nobs);
+        callFit(psr,*npsr);             /* Do all the fitting routines */
+        for(int i = 0; i < psr->nobs; i++){
+            psr->obsn[i].averagebat = (double)psr->obsn[i].bat;
+            psr->obsn[i].averageres = (double)psr->obsn[i].residual;
+            psr->obsn[i].averageerr = (double)psr->obsn[i].toaErr*pow(10.0, -6);
+        }
+
+        for(int i = 0; i < psr->nobs; i++){
+            psr->obsn[i].averagedmbat = (double)psr->obsn[i].bat;
+            psr->obsn[i].averagedmres = (double)psr->obsn[i].residual;
+            psr->obsn[i].averagedmerr = (double)psr->obsn[i].toaErr*pow(10.0, -6);
+        }
+
+        if (debugFlag==1) printf("plk: calling doPlot\n");
+        int ret = doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,lockx1,lockx2,locky1,locky2,xplot,yplot,
+           publish,argc,argv,menu,setupFile,showChisq,nohead,flagColour,bandsFile,
+           displayPP,recordStrokes,recordFile);  /* Do plot */
+        if (ret > 1) break;
+
+        ++psr; // go to the next pulsar
     }
-    for (i=1;i<argc;i++)
-    {
-        if (strcmp(argv[i],"-grdev")==0)
-            strcpy(gr,argv[++i]);
-	else if (strcmp(argv[i],"-record")==0)
-	  {
-	    recordStrokes=1;
-	    strcpy(recordFileStr,argv[++i]);
-	  }
-	else if (strcmp(argv[i],"-replay")==0)
-	  {
-	    replayRecord=1;
-	    strcpy(recordFileStr,argv[++i]);
-	  }
-        else if (strcmp(argv[i],"-menu")==0)
-            sscanf(argv[i+1],"%d",&menu);
-        else if (strcmp(argv[i],"-nophase")==0)
-            displayPP=0;
-        else if (strcmp(argv[i],"-locky")==0)
-        {
-            sscanf(argv[++i],"%f",&locky1);
-            sscanf(argv[++i],"%f",&locky2);
-        }
-        else if (strcmp(argv[i],"-lockx")==0)
-        {
-            sscanf(argv[++i],"%f",&lockx1);
-            sscanf(argv[++i],"%f",&lockx2);
-        }
-        else if (strcmp(argv[i],"-setup")==0)
-            strcpy(setupFile,argv[++i]);
-        else if (strcmp(argv[i],"-xplot")==0)
-            sscanf(argv[++i],"%d",&xplot);
-        else if (strcmp(argv[i],"-yplot")==0)
-            sscanf(argv[++i],"%d",&yplot);
-        else if (strcmp(argv[i],"-publish")==0)
-            publish=1;
-        else if (strcmp(argv[i],"-image")==0)
-            publish=2;
-        else if (strcmp(argv[i],"-ms")==0)
-            unitFlag=1.0e-3;
-        else if (strcmp(argv[i],"-us")==0)
-            unitFlag=1.0e-6;
-        else if (strcmp(argv[i],"-ns")==0)
-            unitFlag=1.0e-9;
-        else if (strcmp(argv[i],"-min")==0)
-            unitFlag=60.0;
-        else if (strcmp(argv[i],"-bands")==0)
-            strcpy(bandsFile,argv[++i]);
-        else if (strcmp(argv[i],"-nohead")==0)
-            nohead=1;
-        else if (strcmp(argv[i],"-dcm")==0)
-            strcpy(dcmFile,argv[++i]);
-        else if (strcmp(argv[i],"-dcf")==0){
-            cholmode=true;
-            strcpy(covarFuncFile,argv[++i]);
-        }
-        else if (strcmp(argv[i],"-newparS")==0)//this is just for use with calcDMe
-        {
-            newpar = 1;
-            strcpy(newParFile,argv[++i]);
-        }
-        else if (strcmp(argv[i],"-period")==0)
-            unitFlag=-1; /* In units of pulse period */
-        else if (strcmp(argv[i],"-f")==0)
-        {
-            strcpy(parFile[0],argv[++i]); 
-            if (argv[i+1][0]!='-')
-            {
-                strcpy(timFile[0],argv[++i]);
-                gotTim=1;
-            }
-        }
-        else if (strcmp(argv[i],"-showchisq") == 0)
-        {
-            showChisq = 1;
-        }
-        else if (strcmp(argv[i],"-colour") == 0)
-        {
-            strcpy(flagColour,argv[++i]);
-        }
-        else if (strcmp(argv[i],"-saveonquit") == 0)
-        {
-            strcpy(saveonquit,argv[++i]);
-        }
+    fclose(listfile);
 
-        else if (strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0){
-            printf("\n TEMPO2 plk plugin\n");
-            printf("===================\n");
-            printf("\nUSAGE: \n\t tempo2 -gr plk -f par.par tim.tim\n");
-            printf("\n Command line options:\n");
-            printf("\t -grdev, followed by the graphics device of choise (e.g. 3/xs; TOAs.ps/cps)\n");
-            printf("\t -locky -1e-6 1e-6: lock the y axis to this range\n");
-            printf("\t -showchisq: show the chisq of the fit\n");
-            printf("\t -xplot 3 or -yplot 5: Determine the x and y axes\n");
-            printf("\t\t The arguments for this command are as follows:\n");
-            printf("\t\t  1\t prefit residuals\n");
-            printf("\t\t  2\t postfit residuals\n");
-            printf("\t\t  3\t Modified Julian Date\n");
-            printf("\t\t  4\t Orbital phase\n");
-            printf("\t\t  5\t TOA number\n");
-            printf("\t\t  6\t Day of year\n");
-            printf("\t\t  7\t Frequency\n");
-            printf("\t\t  8\t TOA error\n");
-            printf("\t\t  9\t DPA (derived parallactic angle)\n");
-            printf("\t\t 10\t Year\n");
-            printf("\t\t 11\t Elevation\n");
-            printf("\t\t 12\t Round MJD values\n\n");
-            printf("\t -publish: publication style graphics (larger fontsize, no menu,...)\n");
-            printf("\t -image: graphics suitable for presentations (larger fontsize, no menu,...)\n");
-            printf("\t -ms or -us or -ns: specifies residual units (default is seconds)\n");
-            printf("\t -period: calculates residuals in pulse periods, instead of seconds.\n");
-            printf("\t -h or --help: this help. More help is available by pressing 'h' while running plk.\n");
-            printf("\t -epoch centre : automatically puts epochs such as:\n");
-            printf("\t\t PEPOCH (period determination epoch), \n");
-            printf("\t\t POSEPOCH (position determination epoch) and \n");
-            printf("\t\t DMEPOCH (DM determination epoch) \n");
-            printf("\t                 equal to the central MJD of the dataset.\n");
-            printf("\n\n===============================================");
-            printf("===============================================\n");
-            exit(0);
-        }
-        else if (i==argc-1 && gotTim == 0)
-        {
-            strcpy(timFile[0],argv[i]);
-            gotTim=1;
-        }
-    }
-
-    // Consider recording or replaying strokes
-      if (recordStrokes==1)
-    {
-      if (!(recordFile = fopen(recordFileStr,"w")))
-	{
-	  printf("Unable to open >%s< for writing\n",recordFileStr);
-	  exit(1);
-	}
-      else
-	recordHeaderInfo(recordFile,argc,argv);
-    }
-
-  if (replayRecord==1)
-    {
-      if (!(recordFile = fopen(recordFileStr,"r")))
-	{
-	  printf("Unable to read >%s< for reading\n",recordFileStr);
-	  exit(1);
-	}
-      checkReadRecordHead(recordFile,argc,argv);
-    }
-
-    if (debugFlag==1) printf("plk: calling readParfile\n");
-    readParfile(psr,parFile,timFile,*npsr); /* Load the parameters       */
-
-    if (debugFlag==1) printf("plk: calling readTimfile\n");
-    readTimfile(psr,timFile,*npsr); /* Load the arrival times    */
-    if (psr[0].nobs==0)
-    {
-        printf("Error: no arrival times loaded\n");
-        exit(1);
-    }
-    if (unitFlag==-1) unitFlag = 1.0/psr[0].param[param_f].val[0]; /* Units of pulse period */
-    if (debugFlag==1) printf("plk: calling preProcess %d\n",psr[0].nobs);
-
-    preProcess(psr,*npsr,argc,argv);
-    if (debugFlag==1) printf("plk: calling callFit %d\n",psr[0].nobs);
-    callFit(psr,*npsr);             /* Do all the fitting routines */
-
-
-    
-    for(int i = 0; i < psr->nobs; i++){
-        psr->obsn[i].averagebat = (double)psr->obsn[i].bat;
-        psr->obsn[i].averageres = (double)psr->obsn[i].residual;
-        psr->obsn[i].averageerr = (double)psr->obsn[i].toaErr*pow(10.0, -6);
-    }
-
-    for(int i = 0; i < psr->nobs; i++){
-        psr->obsn[i].averagedmbat = (double)psr->obsn[i].bat;
-        psr->obsn[i].averagedmres = (double)psr->obsn[i].residual;
-        psr->obsn[i].averagedmerr = (double)psr->obsn[i].toaErr*pow(10.0, -6);
-    }
-    
-
-    if (newpar==1)
-        textOutput(psr,*npsr,0,0,0,1,newParFile);
-    if (debugFlag==1) printf("plk: calling doPlot\n");
-    doPlot(psr,*npsr,gr,unitFlag,parFile,timFile,lockx1,lockx2,locky1,locky2,xplot,yplot,
-	   publish,argc,argv,menu,setupFile,showChisq,nohead,flagColour,bandsFile,
-	   displayPP,recordStrokes,recordFile);  /* Do plot */
-
-    if (recordStrokes==1)
-      fclose(recordFile);
-    
-    if (strlen(saveonquit)){
-        char str[1024];
-        snprintf(str,1024,"%s.tim",saveonquit);
-        writeTim(str,psr,"tempo2");
-
-        snprintf(str,1024,"%s.par",saveonquit);
-        textOutput(psr,*npsr,0,0,0,1,str);
-
-    }
-
-    if (debugFlag==1) printf("plk: End\n");
+    cpgend();
     return 0;
 }  
 
@@ -558,7 +390,7 @@ void callFit(pulsar *psr,int npsr)
 }
 
 
-void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FILELEN],
+int doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FILELEN],
 	    char timFile[][MAX_FILELEN],float lockx1, float lockx2, float locky1, 
 	    float locky2,int xplot,int yplot,
 	    int publish,int argc,char *argv[],int menu,char *setupFile, 
@@ -787,7 +619,6 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
         origFinish = psr[0].param[param_finish].val[0];
 
     /* Obtain a graphical PGPLOT window */
-    cpgbeg(0,gr,1,1);
     cpgpap(0,aspect);
     cpgscf(fontType);
     cpgslw(lineWidth);
@@ -1875,18 +1706,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     plotPoints*=-1;
                 else if (key=='Q') /* Output deleted files for MySQL query */
                 {
-                    FILE *foutSQL;
-                    foutSQL = fopen("sql_delete","w");
-                    printf("Deleted\n");
-                    for (i=0;i<psr[0].nobs;i++)
-                    {
-                        if (psr[0].obsn[i].deleted==1)
-                        {
-                            printf("%s\n",psr[0].obsn[i].fname);
-                            fprintf(foutSQL,"%s\n",psr[0].obsn[i].fname);
-                        }
-                    }
-                    fclose(foutSQL);
+                    exitFlag=2;
                 }
                 else if (key=='m') /* Measure */
                 {
@@ -1941,7 +1761,45 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
                 }
                 else if (key=='S') /* Save new .tim file */
-                    newTim(psr);
+                {
+                    char outname[1024];
+
+                    snprintf(outname,1024,"%s.tim",psr);
+                    writeTim(outname,psr,"tempo2");
+                    snprintf(outname,1024,"%s_pn.tim",psr);
+                    for (i=0;i<psr[0].nobs;i++)
+                    {
+                        int flagid=psr[0].obsn[i].nFlags;
+                        for(int k=0; k < flagid ; k++){
+                            if(strcmp(psr[0].obsn[i].flagID[k],"-pnadd")==0){
+                                printf("Removing -pnadd flag\n");
+                                for (int kk=k; kk < flagid-1; kk++){
+                                    strcpy(psr[0].obsn[i].flagID[kk],psr[0].obsn[i].flagID[kk+1]);
+                                    strcpy(psr[0].obsn[i].flagVal[kk],psr[0].obsn[i].flagVal[kk+1]);
+                                }
+                                flagid-=1;
+                                k-=1;
+                            }
+                        }
+                        psr[0].obsn[i].nFlags = flagid;
+                        for(int k=0; k < flagid ; k++){
+                            if(strcmp(psr[0].obsn[i].flagID[k],"-pn")==0){
+                                flagid=k;
+                                break;
+                            }
+                        }
+                        //printf("%g %lld\n",(double)psr[0].obsn[i].sat,(psr[0].obsn[i].pulseN - psr[0].obsn[0].pulseN));
+                        strcpy(psr[0].obsn[i].flagID[flagid],"-pn");
+                        sprintf(psr[0].obsn[i].flagVal[flagid],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
+                        if (flagid==psr[0].obsn[i].nFlags)
+                            psr[0].obsn[i].nFlags++;
+                    }
+
+                    writeTim(outname,psr,"tempo2");
+                    snprintf(outname,1024,"%s.par",psr);
+                    textOutput(psr,npsr,0,0,0,1,outname);
+
+                }
                 else if (key=='n') /* Save new .tim file with pulse numbers */
                 {
                     logmsg("Writing pulse numbers to withpn.tim");
@@ -2081,17 +1939,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                             strcpy(psr[0].obsn[id[i]].flagVal[psr[0].obsn[id[i]].nFlags-1],"off");
                     }
                 }
-                else if (key=='N') /* Highlight point with a given filename */
+                else if (key=='N')
                 {	    
-                    char filen[100];
-                    printf("Please enter filename (or part of filename) ");
-                    scanf("%s",filen);
-                    getchar(); // Apparently gcc doesn't flush stdin with fflush(stdin)
-                    for (i=0;i<count;i++)
-                    {
-                        if (strstr(psr[0].obsn[id[i]].fname,filen)!=NULL)
-                            strcpy(psr[0].obsn[id[i]].flagVal[psr[0].obsn[id[i]].nFlags-1],"on");
-                    }
+                    FILE* outf = fopen("quickplot.notes","a+");
+                    fprintf(outf,"%s %s\n",parFile,timFile);
+                    fclose(outf);
                 }
                 else if (key==21)  /* Overplot Shapiro delay */
                 {     // Ctrl+u
@@ -2555,11 +2407,11 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     fclose(fout);
                 }
                 else if (key=='r') {  /* RESET */
-		  initialise(psr,1);
-		  readParfile(psr,parFile,timFile,1); /* Load the parameters       */
+                    initialise(psr,1);
+                    readParfile(psr,parFile,timFile,1); /* Load the parameters       */
                     readTimfile(psr,timFile,1); /* Load the arrival times    */
-		    
-               preProcess(psr,1,argc,argv);
+
+                    preProcess(psr,1,argc,argv);
                     callFit(psr,npsr);
                 }
                 else if (key=='I') /* indicate individual observations */
@@ -2776,8 +2628,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
     } while (exitFlag==0);
 
-    cpgend();
     delete[] id;
+    return exitFlag;
 }
 
 
