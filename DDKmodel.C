@@ -56,6 +56,8 @@ double DDKmodel(pulsar *psr,int p,int ipos,int param)
     double pmra,pmdec;
     double ki_dot,sini,cosi,tani,delta_i0,delta_j0,asi;
     double cos_alpha,sin_alpha,cos_delta,sin_delta,xpr,ypr,dpara;
+    double Qu, Ru, ap, aopxvar,aopx, rp[3], drp_di[3], drp_dO[3], mu[3];
+    double dmurp_di, dmurp_dO, dmurp_dx, daopx_di, daopx_dpx, daopx_dO, daopx_dx, dtdpx;
     double pxConv = 1.74532925199432958E-2/3600.0e3;
     const char *CVS_verNum = "$Id$";
 
@@ -77,6 +79,10 @@ double DDKmodel(pulsar *psr,int p,int ipos,int param)
     /* Obtain proper motion in radians/sec */
     pmra  = psr[p].param[param_pmra].val[0]*M_PI/(180.0*3600.0e3)/(365.25*86400.0);
     pmdec = psr[p].param[param_pmdec].val[0]*M_PI/(180.0*3600.0e3)/(365.25*86400.0);
+
+    mu[0] = pmra;
+    mu[1] = pmdec;
+    mu[2] = 0.;
 
     /* Obtain parallax */
     if (psr[p].param[param_px].paramSet[0]==1)
@@ -220,12 +226,59 @@ double DDKmodel(pulsar *psr,int p,int ipos,int param)
     cgamma=su;
     //cdth=-ecc*ecc*asi*cw*su/sqr1me2;
     cm2=-2*dlogbr;
-    csi=2*m2*(sw*cume+sqr1me2*cw*su)/brace; 
+    csi=2*m2*(sw*cume+sqr1me2*cw*su)/brace;
+
+    /*  Additions by IHS 2023 April to actually compute and use the Kopeikin-related derivatives.  Translated from tempo bnryddk.f. */
+    /*  Equations 6 and 7 in Kopeikin 1995 */
+    Qu = (cw * cae - sw * sae)*onemecu;
+    Ru = (sw * cae + cw * sae)*onemecu;
+
+    /* Equation 5 in Kopeikin 1995, divided by a_p */
+    rp[0] = Qu*cos_omega - Ru*sin_omega*ci;
+    rp[1] = Qu*sin_omega + Ru*cos_omega*ci;
+    rp[2] = Ru*si;
+
+    /*  Partial derivative of rp with respect to i */
+    drp_di[0] = Ru*sin_omega*si;
+    drp_di[1] = -Ru*cos_omega*si;
+    drp_di[2] = Ru*ci;
+
+    /* Partial derivative of rp with respect to Omega */
+    drp_dO[0] = -rp[1];
+    drp_dO[1] = rp[0];
+    drp_dO[2] = 0;
+
+    ap = asi/si;
+
+    /*  Equation 17 in Kopeikin 1995   */
+    /*  IHS 20160127 aopxvar is (the bracketed term in eq 17) * sini  */
+    aopxvar = xpr*Ru*ci - ypr*Qu;
+    /* IHS 20160127 effectively asi/si*si so this is OK */
+    aopx = ap * dpara * aopxvar;
+
+    /*  partial derivatives:  */
+    daopx_di = -asi * dpara * xpr*Ru;
+    daopx_dpx = ap * aopxvar / ((180.00/M_PI)*3600.0e3*AULTSC);
+    daopx_dx  = aopx/asi;
+    daopx_dO = ap * dpara * ( ypr*Ru*ci + xpr*Qu );
+
+    /* px contribution from aopx  */
+    /*  'dtdpx' - partial derivative with respect to parallax */
+    dtdpx = dtdpx - daopx_dpx;
+
+    /*       contributions to proper motion on x and omega  */
+    /*       dmurp_di=-asi*orbi_dot*onemecu*sin(omega+u)*tt0 */
+    /* IHS 20160302 These should only be computed if using K96  */
+    /*        if(k96) then */
+    dmurp_di=ap*(mu[0]*drp_di[0]+mu[1]*drp_di[1]+mu[2]*drp_di[2])*tt0;
+    dmurp_dO=ap*(mu[0]*drp_dO[0]+mu[1]*drp_dO[1]+mu[2]*drp_dO[2])*tt0;
+    dmurp_dx=(mu[0]*rp[0]+mu[1]*rp[1]+mu[2]*rp[2])*tt0/si;
+
 
     if (param==param_pb)
         return -csigma*an*SECDAY*tt0/(pb*SECDAY); 
     else if (param==param_a1)
-        return cx;
+        return cx+daopx_dx+dmurp_dx;
     else if (param==param_ecc)
         return ce;
     else if (param==param_om)
@@ -236,14 +289,18 @@ double DDKmodel(pulsar *psr,int p,int ipos,int param)
         return -csigma*an*SECDAY;
     else if (param==param_pbdot)
         return 0.5*tt0*(-csigma*an*SECDAY*tt0/(pb*SECDAY));
-    else if (param==param_sini)
-        return csi;
+    /*    else if (param==param_sini)
+          return csi; */
+    else if (param==param_kin)
+        return (ci*csi+daopx_di+dmurp_di);
+    else if (param==param_kom)
+        return (daopx_dO+dmurp_dO);
     else if (param==param_gamma)
         return cgamma;
     else if (param==param_m2)
         return cm2*SUNMASS;
-    else if (param==param_a1dot) /* Also known as xdot */
-        return cx*tt0;
+    /*    else if (param==param_a1dot)  Also known as xdot */
+    /*    return cx*tt0; */
 
     /* Should calculate and return Kopeikin parameters */
     return 0;
@@ -277,6 +334,16 @@ void updateDDK(pulsar *psr,double val,double err,int pos)
     {
         psr->param[pos].val[0] += val;
         psr->param[pos].err[0]  = err;
+    }
+    else if (pos==param_kin)
+    {
+        psr->param[pos].val[0] += val*180.0/M_PI;
+        psr->param[pos].err[0]  = err*180.0/M_PI;
+    }
+    else if (pos==param_kom)
+    {
+        psr->param[pos].val[0] += val*180.0/M_PI;
+        psr->param[pos].err[0]  = err*180.0/M_PI;
     }
     else if (pos==param_omdot)
     {
