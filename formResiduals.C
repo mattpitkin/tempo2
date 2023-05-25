@@ -115,25 +115,26 @@ void averageDMResiduals(pulsar *psr, int npsr){
                 }
 
                 double freq=psr[0].obsn[o].freq;
-		
-		double resid=(double)psr[0].obsn[o].residual;
-		//double residDM=0;
-		//double residTN=0;
 
-		if (psr[0].TNsubtractRed ==1)
-		  {
-		    resid  -= psr[0].obsn[o].TNRedSignal;
-		  }
-		
-		if (psr[0].TNsubtractDM ==1)
-		  {
-		    resid -= psr[0].obsn[o].TNDMSignal;
-		  }
-		if (psr[0].TNsubtractChrom ==1)
-		  {
-		    resid -= psr[0].obsn[o].TNChromSignal;
-		  }
-			
+                double resid=(double)psr[0].obsn[o].residual;
+                //double residDM=0;
+                //double residTN=0;
+
+                if (psr[0].TNsubtractRed ==1)
+                {
+                    resid  -= psr[0].obsn[o].TNRedSignal;
+
+                }
+
+                if (psr[0].TNsubtractDM ==1)
+                {
+                    resid -= psr[0].obsn[o].TNDMSignal;
+                }
+                if (psr[0].TNsubtractChrom ==1)
+                {
+                    resid -= psr[0].obsn[o].TNChromSignal;
+                }
+
 
 
                 int bin = floor(((double)psr[0].obsn[o].bat-mintime)/timestep);
@@ -141,11 +142,11 @@ void averageDMResiduals(pulsar *psr, int npsr){
                 AverageWeight[flagindex][bin] += 1.0/adjustedErr;
                 AverageRes[flagindex][bin] += (double)resid*powf(freq/1400.,2.)/adjustedErr;
                 AverageBat[flagindex][bin] += (double)psr[0].obsn[o].bat/adjustedErr;
-		AverageFreq[flagindex][bin] += freq/adjustedErr;
-	    }
+                AverageFreq[flagindex][bin] += freq/adjustedErr;
+            }
         }
 
-        }
+    }
 
     for(int o=0;o<psr[0].nobs;o++){
 
@@ -2330,6 +2331,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                 if (psr[p].TNsubtractRed ==1)
                 {
                     psr[p].obsn[i].residualtn-=psr[p].obsn[i].TNRedSignal;
+                    // Also subtract Common Mode signal if present
+                    if (psr[p].dmoffsCMnum > 0) {
+                        psr[p].obsn[i].residualtn -= ifunc(psr[p].dmoffsCM_mjd,psr[p].dmoffsCM,(double)psr[p].obsn[i].sat,psr[p].dmoffsCMnum);
+                    }
                 }
 
                 if (psr[p].TNsubtractDM ==1)
