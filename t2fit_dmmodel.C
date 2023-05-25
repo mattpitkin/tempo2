@@ -24,6 +24,6 @@ double t2FitFunc_dmmodelCM(pulsar *psr, int ipsr ,double x ,int ipos ,param_labe
 void t2UpdateFunc_dmmodelCM(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
     int idx=k-psr[ipsr].dmoffsDMnum;
     assert(idx < psr[ipsr].dmoffsCMnum);
-    psr[ipsr].dmoffsCM[idx] += val;
+    psr[ipsr].dmoffsCM[idx] = val; // residuals do not have it presubtracted so always zero initially
     psr[ipsr].dmoffsCM_error[idx] = err;
 }
