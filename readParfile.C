@@ -439,7 +439,11 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         if (strcasecmp(str,"PMLAMBDA")==0 || strcasecmp(str,"PMELONG")==0) {
             if ( (psr->param[param_raj].paramSet[0] || psr->param[param_decj].paramSet[0] ) 
                     || (psr->eclCoord==0 && (psr->param[param_pmra].paramSet[0] || psr->param[param_pmdec].paramSet[0])) ) {
+                logmsg("ra_set=%d dec_set=%d ecl=%d pmra_set=%d pmdec_set=%d",
+                        psr->param[param_raj].paramSet[0], psr->param[param_decj].paramSet[0], psr->eclCoord==0,
+                        psr->param[param_pmra].paramSet[0], psr->param[param_pmdec].paramSet[0]);
                 logerr("Cannot mix ecliptic and equatorial coordinates %s",psr->name);
+
                 exit(1);
             }
             psr->eclCoord = 1;

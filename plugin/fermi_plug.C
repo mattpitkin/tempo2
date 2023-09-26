@@ -860,6 +860,18 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         fclose(temp_tim);
 
+        // declare parameters unset before reloading par file...
+        for(int jj=0;jj<MAX_PARAMS;jj++){
+            psr[0].param[jj].nLinkTo = 0;
+            psr[0].param[jj].nLinkFrom = 0;
+            for (int kk=0; kk < psr[0].param[jj].aSize; kk++) {
+                psr[0].param[jj].paramSet[kk] = 0;
+            }
+        }
+        psr[0].nconstraints = 0;
+        psr[0].nobs = 0;
+        psr[0].eclCoord=0;
+
         // Load the arrival times
         readParfile(psr,parFile,timFile,*npsr); 
 		
