@@ -23,7 +23,7 @@ double t2FitFunc_dmx(pulsar *psr, int ipsr ,double x ,int ipos ,param_label labe
 
 double t2FitFunc_fddc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     assert(label==param_fddc);
-    return 1.0/(pow(psr[ipsr].obsn[ipos].freqSSB/1.0e6,psr[ipsr].param[param_fddi].val[0]));
+    return 1.0/(pow(psr[ipsr].obsn[ipos].freqSSB/1.0e6,(double)(psr[ipsr].param[param_fddi].val[0])));
 }
 
 double t2FitFunc_fd(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){

@@ -100,7 +100,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   double globalParameter;
   int setgwAmp=0,setAlpha=0;
   int plotIt=0;
-  longdouble gwAmp,alpha;
+  longdouble gwAmp;
+  double alpha;
   longdouble timeOffset;
   longdouble ra_p,dec_p;
   double flo=0.0,fhi=0.0;
@@ -471,8 +472,8 @@ void plotSpectrum(gwSrc *gw,int ngw,longdouble tspan,longdouble alpha,longdouble
   
   fx[0] = minx-1;
   fx[1] = maxx+1;
-  fy[0] = log10(gwAmp*gwAmp/12.0/M_PI/M_PI*pow(pow(10,fx[0]),2*alpha));
-  fy[1] = log10(gwAmp*gwAmp/12.0/M_PI/M_PI*pow(pow(10,fx[1]),2*alpha));
+  fy[0] = log10(gwAmp*gwAmp/12.0/M_PI/M_PI*pow(pow(10,fx[0]),2*(double)alpha));
+  fy[1] = log10(gwAmp*gwAmp/12.0/M_PI/M_PI*pow(pow(10,fx[1]),2*(double)alpha));
   printf("line from %g %g to %g %g\n",fx[0],fy[0],fx[1],fy[1]);
   cpgsci(3); cpgsls(3); cpgline(2,fx,fy); cpgsci(1); cpgsls(1);
 }

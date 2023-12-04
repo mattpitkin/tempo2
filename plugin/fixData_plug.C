@@ -51,7 +51,7 @@ void doSummary(pulsar *psr,float errStep);
 
 int nit = 1;
 longdouble gwamp = 0;
-longdouble alpha = 1;
+double alpha = 1;
 char plotout[20]="/xs";
 int plotoutSet = 0;
 int script = 0;

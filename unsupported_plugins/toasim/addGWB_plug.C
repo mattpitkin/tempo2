@@ -53,7 +53,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
   gwSrc *gw;
   longdouble timeOffset; 
   longdouble scale;
-  longdouble alpha = -2.0/3.0;
+  double alpha = -2.0/3.0;
   longdouble gwAmp = 1e-14;
   longdouble ra_p,dec_p;
   double flo=0.0,fhi=0.0;

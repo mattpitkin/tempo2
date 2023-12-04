@@ -78,7 +78,7 @@ transform_units(struct pulsar *psr, int from, int to)
     scale_param(&psr->param[param_f],7, one/(f*f*f*f*f*f*f*f));
     scale_param(&psr->param[param_f],8, one/(f*f*f*f*f*f*f*f*f));
     scale_param(&psr->param[param_f],9, one/(f*f*f*f*f*f*f*f*f*f));
-    scale_param(&psr->param[param_fddc],0, pow(f, one+(longdouble)psr->param[param_fddi].val[0]));
+    scale_param(&psr->param[param_fddc],0, pow(f, (double)(one+(longdouble)psr->param[param_fddi].val[0])));
 
     // DM is physically Length^-2 . However, it is actually defined in terms of
     // a published constant, not physical constants. If this constant is left 
