@@ -153,6 +153,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf("Read name,freq,mjd\n");
     }
 
+    if (strcmp(argv[i],"-freq")==0){
+      freq=parse_longdouble(argv[i+1]);
+      printf("Central frequency: %lD\n", freq);
+    }
+
     if (strcmp(argv[i],"-withpn")==0){
       withpn=true;
       printf("write with pulse numbers\n");
@@ -181,6 +186,7 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
       printf(" \t -start xxxxx: specify start MJD.\n");
       printf(" \t -end xxxxx: specify final MJD.\n");
       printf(" \t -rms xxx: specify Gaussian noise rms (in ms).\n");
+      printf(" \t -freq xxx: specify central frequency of the TOA (in MHz).\n");
       printf(" \t -times xxx: read observation times from specified file\n");
       printf(" \t           suppresses questions for red noise characteristics.\n");
       printf(" \t -format parkes : sets the tim-file format to tempo. (Default: tempo2).\n");
