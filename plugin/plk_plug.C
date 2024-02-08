@@ -104,6 +104,8 @@ void viewModels(pulsar *psr,float x1,float x2,longdouble centreEpoch,int removeM
         int fitFlag,float *x,float *y);
 double lmst2(double mjd,double olong,double *tsid,double *tsid_der);
 
+void update_pulse_number_flag(pulsar *psr, int i);
+
 bool cholmode=false;
 
 /* GLOBAL VARIABLES FOR FITWAVES */
@@ -253,6 +255,8 @@ void help(int plk_mode) /* Display help */
     printf("h          this help file\n");
     printf("q          quit\n");
 }
+
+
 
 /* The main function called from the TEMPO2 package is 'graphicalInterface' */
 /* Therefore this function is required in all plugins                       */
@@ -1977,33 +1981,8 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 else if (key=='n') /* Save new .tim file with pulse numbers */
                 {
                     logmsg("Writing pulse numbers to withpn.tim");
-                    for (i=0;i<psr[0].nobs;i++)
-                    {
-                        int flagid=psr[0].obsn[i].nFlags;
-                        for(int k=0; k < flagid ; k++){
-                            if(strcmp(psr[0].obsn[i].flagID[k],"-pnadd")==0){
-                                printf("Removing -pnadd flag\n");
-                                for (int kk=k; kk < flagid-1; kk++){
-                                    strcpy(psr[0].obsn[i].flagID[kk],psr[0].obsn[i].flagID[kk+1]);
-                                    strcpy(psr[0].obsn[i].flagVal[kk],psr[0].obsn[i].flagVal[kk+1]);
-                                }
-                                flagid-=1;
-                                k-=1;
-                            }
-                        }
-                        psr[0].obsn[i].nFlags = flagid;
-                        for(int k=0; k < flagid ; k++){
-                            if(strcmp(psr[0].obsn[i].flagID[k],"-pn")==0){
-                                flagid=k;
-                                break;
-                            }
-                        }
-                        //printf("%g %lld\n",(double)psr[0].obsn[i].sat,(psr[0].obsn[i].pulseN - psr[0].obsn[0].pulseN));
-                        strcpy(psr[0].obsn[i].flagID[flagid],"-pn");
-                        sprintf(psr[0].obsn[i].flagVal[flagid],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
-                        if (flagid==psr[0].obsn[i].nFlags)
-                            psr[0].obsn[i].nFlags++;
-                    }
+                    // updating the zeroth one automatically updates them all by reference.
+                    update_pulse_number_flag(psr,0);
                     writeTim("withpn.tim",psr,"tempo2");
                 }
                 else if (key==19) /* over-write .tim file */
@@ -2025,38 +2004,15 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                     }
 
                     if (key == '-' || key == '=' ) { // just this ToA
-
-                        int flagid = psr[0].obsn[i].nFlags;
-                        for(int k=0; k < flagid ; k++){
-                            if(strcmp(psr[0].obsn[i].flagID[k],"-pn")==0){
-                                flagid=k;
-                                break;
-                            }
-                        }
-
                         psr[0].obsn[i].pulseN += dpn;
-                        strcpy(psr[0].obsn[i].flagID[flagid],"-pn");
-                        sprintf(psr[0].obsn[i].flagVal[flagid],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
-                        if (flagid==psr[0].obsn[i].nFlags)
-                            psr[0].obsn[i].nFlags++;
+                        update_pulse_number_flag(psr,i);
                     } else {
                         // All ToAs after this one
                         longdouble pn_epoch = psr[0].obsn[i].sat;
                         for (i=0;i<psr[0].nobs;i++){
                             if (psr[0].obsn[i].sat >= pn_epoch) {
-                                int flagid = psr[0].obsn[i].nFlags;
-                                for(int k=0; k < flagid ; k++){
-                                    if(strcmp(psr[0].obsn[i].flagID[k],"-pn")==0){
-                                        flagid=k;
-                                        break;
-                                    }
-                                }
                                 psr[0].obsn[i].pulseN += dpn;
-                                strcpy(psr[0].obsn[i].flagID[flagid],"-pn");
-                                sprintf(psr[0].obsn[i].flagVal[flagid],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
-                                if (flagid==psr[0].obsn[i].nFlags)
-                                    psr[0].obsn[i].nFlags++;
-
+                                update_pulse_number_flag(psr,i);
                             }
                         }
                     }
@@ -5157,5 +5113,40 @@ void replayLine(FILE *recordFile,int argc,char *argv[],pulsar *psr,int fitFlag,i
         printf("---------------------\n");
     }
 }
+
+
+void update_pulse_number_flag(pulsar *psr, int i) {
+    int flagid=psr[0].obsn[i].nFlags;
+    for(int k=0; k < flagid ; k++){
+        if(strcmp(psr[0].obsn[i].flagID[k],"-pnadd")==0){
+            printf("Removing -pnadd flag\n");
+            for (int kk=k; kk < flagid-1; kk++){
+                strcpy(psr[0].obsn[i].flagID[kk],psr[0].obsn[i].flagID[kk+1]);
+                strcpy(psr[0].obsn[i].flagVal[kk],psr[0].obsn[i].flagVal[kk+1]);
+            }
+            flagid-=1;
+            k-=1;
+        }
+    }
+    psr[0].obsn[i].nFlags = flagid;
+    for(int k=0; k < flagid ; k++){
+        if(strcmp(psr[0].obsn[i].flagID[k],"-pn")==0){
+            flagid=k;
+            break;
+        }
+    }
+    strcpy(psr[0].obsn[i].flagID[flagid],"-pn");
+    sprintf(psr[0].obsn[i].flagVal[flagid],"%lld",psr[0].obsn[i].pulseN-psr[0].obsn[0].pulseN);
+    if (flagid==psr[0].obsn[i].nFlags)
+        psr[0].obsn[i].nFlags++;
+
+    if (i==0) { // if we updated the first one... all the rest need to change because they reference the first one
+        for (i=1;i<psr[0].nobs;i++)
+        {
+            update_pulse_number_flag(psr,i);
+        }
+    }
+}
+
 
 const char * plugVersionCheck = TEMPO2_h_VER;
