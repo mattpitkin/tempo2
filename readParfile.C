@@ -338,15 +338,13 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             }
         } else {
             int idx=0;
-            if (strncasecmp(str, "FDJUMPDM",8)==0) {
+            if (strncasecmp(str, "FDJUMPDM",8)==0) { // Is DMJUMP
                 idx = -2;
-            } else {
+            } else { // Index of regular FDJUMP
                 sscanf(str+6,"%d", &idx);
             }
 
             if (idx != 0) {
-
-
                 char rest[1024];
                 char str1[100],str2[100],str3[100],str4[100],str5[100];
                 int v5,nread;

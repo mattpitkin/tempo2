@@ -327,11 +327,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             }
         }
 
-
         /* FDJUMPS */
         for (i=1;i<=psr[p].nfdJumps;i++){
             {
-                printf("FDJUMP%d %d (%s): %.14g %.14g ",psr[p].fdjumpIdx[i],i,psr[p].fdjumpStr[i],psr[p].fdjumpVal[i],psr[p].fdjumpValErr[i]);
+	      if(psr[p].fdjumpIdx[i] == -2)
+                printf("FDJUMPDM %d (%s): %.14g %.14g ",i,psr[p].fdjumpStr[i],psr[p].fdjumpVal[i],psr[p].fdjumpValErr[i]);
+	      else
+		printf("FDJUMP%d %d (%s): %.14g %.14g ",psr[p].fdjumpIdx[i],i,psr[p].fdjumpStr[i],psr[p].fdjumpVal[i],psr[p].fdjumpValErr[i]);
                 
                 if (psr[p].fitfdJump[i]==1) printf("Y\n");
                 else printf("N\n");

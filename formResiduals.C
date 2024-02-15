@@ -703,15 +703,13 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         //fprintf(stderr, "%d %d %.5le  %.5le  %.5le\n",idx,k, psr[p].fdjumpVal[k],pow(psr[p].obsn[i].freqSSB/1e9,idx),psr[p].param[param_f].val[0]);
                         if (idx == -2) { // this is a DM jump
                             phaseJ-=psr[p].fdjumpVal[k]*pow(psr[p].obsn[i].freqSSB/1e9,-2)*psr[p].param[param_f].val[0];
-                        } else {
-                            if (psr[p].fdjump_log) {
+                        } else { // this is a regular FD jump
+			  if (psr[p].fdjump_log) { // Is in log scale of frequency
                                 phaseJ-=psr[p].fdjumpVal[k]*pow(log( psr[p].obsn[i].freqSSB/1e9),idx)*psr[p].param[param_f].val[0];
-                            } else {
+			  } else { // Is in linear scale of frequency
                                 phaseJ-=psr[p].fdjumpVal[k]*pow(psr[p].obsn[i].freqSSB/1e9,idx)*psr[p].param[param_f].val[0];
                             }
                         }
-
-                        //phaseJ-=psr[p].fdjumpVal[k]*pow( psr[p].obsn[i].freqSSB/1e9,idx)*psr[p].param[param_f].val[0];
                     }
                 }
             }

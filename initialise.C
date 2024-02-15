@@ -179,7 +179,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         psr->fdjumpIdx[i] = 0;
         psr->fdjumpValErr[i] = 0.0;
     }
-    psr->fdjump_log=1; // log by default
+    psr->fdjump_log=1; // FDJUMP scale in frequency, log by default
 
     psr->nT2efac  = 0; // Number of T2EFACs
     psr->nT2equad = 0; // Number of T2EQUADs
