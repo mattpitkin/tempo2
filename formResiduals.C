@@ -701,11 +701,16 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                         int idx;
                         idx=psr[p].fdjumpIdx[k];
                         //fprintf(stderr, "%d %d %.5le  %.5le  %.5le\n",idx,k, psr[p].fdjumpVal[k],pow(psr[p].obsn[i].freqSSB/1e9,idx),psr[p].param[param_f].val[0]);
-			if (idx==psr[p].nfdJumps)
-			  phaseJ-=psr[p].fdjumpVal[k]*pow(psr[p].obsn[i].freqSSB/1e9,-2)*psr[p].param[param_f].val[0];
-			else
-			  phaseJ-=psr[p].fdjumpVal[k]*pow(log( psr[p].obsn[i].freqSSB/1e9),idx)*psr[p].param[param_f].val[0];
-                   
+                        if (idx == -2) { // this is a DM jump
+                            phaseJ-=psr[p].fdjumpVal[k]*pow(psr[p].obsn[i].freqSSB/1e9,-2)*psr[p].param[param_f].val[0];
+                        } else {
+                            if (psr[p].fdjump_log) {
+                                phaseJ-=psr[p].fdjumpVal[k]*pow(log( psr[p].obsn[i].freqSSB/1e9),idx)*psr[p].param[param_f].val[0];
+                            } else {
+                                phaseJ-=psr[p].fdjumpVal[k]*pow(psr[p].obsn[i].freqSSB/1e9,idx)*psr[p].param[param_f].val[0];
+                            }
+                        }
+
                         //phaseJ-=psr[p].fdjumpVal[k]*pow( psr[p].obsn[i].freqSSB/1e9,idx)*psr[p].param[param_f].val[0];
                     }
                 }

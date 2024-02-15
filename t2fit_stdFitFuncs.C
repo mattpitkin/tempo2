@@ -376,15 +376,21 @@ double t2FitFunc_fdjump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
         //fprintf(stderr, "%d %d\n", psr[ipsr].obsn[ipos].fdjump[l],k);
         if (psr[ipsr].obsn[ipos].fdjump[l]==k) {
             int idx=psr[ipsr].fdjumpIdx[k];    
-            
+
             //return pow(psr[ipsr].obsn[ipos].freqSSB/1e9,idx);
             //return pow(log(psr[ipsr].obsn[ipos].freqSSB/1e9),idx);
-	    printf ("%i %i %i \n", idx,k,psr[ipsr].nfdJumps);
-	    if (idx==psr[ipsr].nfdJumps)
-	      return pow(psr[ipsr].obsn[ipos].freqSSB/1e9, -2);
-	    else
-	      return pow(log(psr[ipsr].obsn[ipos].freqSSB/1e9),idx);
-             }
+            printf ("%i %i %i \n", idx,k,psr[ipsr].nfdJumps);
+            if (idx==-2) {
+                return pow(psr[ipsr].obsn[ipos].freqSSB/1e9, -2);
+            }
+            else {
+                if (psr[ipsr].fdjump_log) {
+                    return pow(log(psr[ipsr].obsn[ipos].freqSSB/1e9),idx);
+                } else {
+                    return pow(psr[ipsr].obsn[ipos].freqSSB/1e9,idx);
+                }
+            }
+        }
     }
     return 0;
 }

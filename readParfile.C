@@ -325,56 +325,71 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
 
     }
 
-    else if (strncasecmp(str, "FDJUMP",6)==0)
-    {
-
-        int idx=0;
-        if( sscanf(str+6,"%d", &idx) ==1)
-        {
-                   
-
+    else if (strncasecmp(str, "FDJUMP",6)==0) {
+        if (strncasecmp(str, "FDJUMP_SCALE",12)==0) {
             char rest[1024];
-            char str1[100],str2[100],str3[100],str4[100],str5[100];
-            int v5,nread;
-
+            char scale[80];
             fgets(rest, 1024, fin);
-            removeCR(rest);
-            psr->nfdJumps++;
-            strcpy(psr->fdjumpStr[psr->nfdJumps],rest);
-            // get the index of the FD parameter
-            psr->fdjumpIdx[psr->nfdJumps]=idx;
-
-
-        
-
-            psr->fitfdJump[psr->nfdJumps]=1; /* Default: fit for fdjump */
-            v5 = -1;
-            nread = sscanf(psr->fdjumpStr[psr->nfdJumps],"%s %s %s %s %s",str1,str2,str3,str4,str5);
-
-            if (strcasecmp(str1,"MJD")==0 || strcasecmp(str1,"FREQ")==0)
-            {
-                if (nread>3)
-                {
-                    sscanf(str4,"%lf",&(psr->fdjumpVal[psr->nfdJumps]));
-                    if (sscanf(str5,"%d",&v5)==1)
-                    {
-                     if (v5!=1) psr->fitfdJump[psr->nfdJumps]=0;
-                    }   
-                    else
-                        psr->fitfdJump[psr->nfdJumps]=0;
-                }
+            sscanf(rest, "%s", scale);
+            if (strncasecmp(scale, "LINEAR",10)==0) {
+                psr->fdjump_log=0; // not log scale
+            } else {
+                psr->fdjump_log=1; // log scale
             }
-            else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
-            {
-                if (nread>2)
+        } else {
+            int idx=0;
+            if (strncasecmp(str, "FDJUMPDM",8)==0) {
+                idx = -2;
+            } else {
+                sscanf(str+6,"%d", &idx);
+            }
+
+            if (idx != 0) {
+
+
+                char rest[1024];
+                char str1[100],str2[100],str3[100],str4[100],str5[100];
+                int v5,nread;
+
+                fgets(rest, 1024, fin);
+                removeCR(rest);
+                psr->nfdJumps++;
+                strcpy(psr->fdjumpStr[psr->nfdJumps],rest);
+                // get the index of the FD parameter
+                psr->fdjumpIdx[psr->nfdJumps]=idx;
+
+
+
+
+                psr->fitfdJump[psr->nfdJumps]=1; /* Default: fit for fdjump */
+                v5 = -1;
+                nread = sscanf(psr->fdjumpStr[psr->nfdJumps],"%s %s %s %s %s",str1,str2,str3,str4,str5);
+
+                if (strcasecmp(str1,"MJD")==0 || strcasecmp(str1,"FREQ")==0)
                 {
-                    sscanf(str3,"%lf",&(psr->fdjumpVal[psr->nfdJumps]));
-                    if (sscanf(str4,"%d",&v5)==1)
+                    if (nread>3)
                     {
-                        if (v5!=1) psr->fitfdJump[psr->nfdJumps]=0;
+                        sscanf(str4,"%lf",&(psr->fdjumpVal[psr->nfdJumps]));
+                        if (sscanf(str5,"%d",&v5)==1)
+                        {
+                            if (v5!=1) psr->fitfdJump[psr->nfdJumps]=0;
+                        }   
+                        else
+                            psr->fitfdJump[psr->nfdJumps]=0;
                     }
-                    else
-                        psr->fitfdJump[psr->nfdJumps]=0;
+                }
+                else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
+                {
+                    if (nread>2)
+                    {
+                        sscanf(str3,"%lf",&(psr->fdjumpVal[psr->nfdJumps]));
+                        if (sscanf(str4,"%d",&v5)==1)
+                        {
+                            if (v5!=1) psr->fitfdJump[psr->nfdJumps]=0;
+                        }
+                        else
+                            psr->fitfdJump[psr->nfdJumps]=0;
+                    }
                 }
             }
 

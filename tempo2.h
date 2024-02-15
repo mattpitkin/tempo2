@@ -626,6 +626,7 @@ typedef struct pulsar {
     int    fitfdJump[MAX_JUMPS];      /*!< = 1 if fit for jump                                        */
     double fdjumpValErr[MAX_JUMPS];   /*!< Error on jump                                              */
     char   fdjumpStr[MAX_JUMPS][MAX_STRLEN]; /*!< String describing jump                              */
+    char fdjump_log;                /* Is the fdjumps log scale */
     
     
     
