@@ -377,7 +377,8 @@ double t2FitFunc_fdjump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
         if (psr[ipsr].obsn[ipos].fdjump[l]==k) {
             int idx=psr[ipsr].fdjumpIdx[k];    
             if (idx==-2) { // Is DM jump
-                return pow(psr[ipsr].obsn[ipos].freqSSB/1e9, -2);
+	      //return pow(psr[ipsr].obsn[ipos].freqSSB/1e9, -2);
+	      return pow(psr[ipsr].obsn[ipos].freqSSB/1e6, -2) / DM_CONST;
             }
             else {
 	      if (psr[ipsr].fdjump_log) { // Is a regular FD jump
