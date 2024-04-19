@@ -1303,7 +1303,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                         cpgsci(7);
                     cpgline(2,px,py);
                     sprintf(tstr,"%+d",psr[0].phaseJumpDir[i]);
-		    printf("%+d\n",psr[0].phaseJumpDir[i]);
+                    printf("%+d\n",psr[0].phaseJumpDir[i]);
                     cpgtext(px[0]-xch/2.0,py[1]+ych/2.0,tstr);
                 }
                 cpgsls(1); cpgsci(1);
@@ -3616,26 +3616,26 @@ void checkMenu3(pulsar *psr,float mx,float my,int button,int fitFlag,int setZoom
         {
             xj = (int)(mouseX/2);
             yj = (int)(mouseY-2);
-	    if(xj+(yj*5)+1+(*jumpOffset) <= psr[0].nJumps)
-	      {
-		//printf("%s\n",psr[0].jumpStr[xj+(yj*5)+1+(*jumpOffset)]);
-		if (psr[0].fitJump[xj+(yj*5)+1+(*jumpOffset)]==1)
-		  {
-		    psr[0].fitJump[xj+(yj*5)+1+(*jumpOffset)]=0;
-		    psr[0].jumpValErr[xj+(yj*5)+1+(*jumpOffset)] = 0.0;
-		  }
-		else psr[0].fitJump[xj+(yj*5)+1+(*jumpOffset)]=1;
-	      }
-	    else
-	      {
-		//printf("%s\n",psr[0].fdjumpStr[xj+(yj*5)+1+(*jumpOffset)-psr[0].nJumps]);
+            if(xj+(yj*5)+1+(*jumpOffset) <= psr[0].nJumps)
+            {
+                //printf("%s\n",psr[0].jumpStr[xj+(yj*5)+1+(*jumpOffset)]);
+                if (psr[0].fitJump[xj+(yj*5)+1+(*jumpOffset)]==1)
+                {
+                    psr[0].fitJump[xj+(yj*5)+1+(*jumpOffset)]=0;
+                    psr[0].jumpValErr[xj+(yj*5)+1+(*jumpOffset)] = 0.0;
+                }
+                else psr[0].fitJump[xj+(yj*5)+1+(*jumpOffset)]=1;
+            }
+            else
+            {
+                //printf("%s\n",psr[0].fdjumpStr[xj+(yj*5)+1+(*jumpOffset)-psr[0].nJumps]);
                 if (psr[0].fitfdJump[xj+(yj*5)+1+(*jumpOffset)-psr[0].nJumps]==1)
-                  {
+                {
                     psr[0].fitfdJump[xj+(yj*5)+1+(*jumpOffset)-psr[0].nJumps]=0;
                     psr[0].fdjumpValErr[xj+(yj*5)+1+(*jumpOffset)-psr[0].nJumps] = 0.0;
-                  }
+                }
                 else psr[0].fitfdJump[xj+(yj*5)+1+(*jumpOffset)-psr[0].nJumps]=1;
-	      }
+            }
         }
     }
 }
@@ -3881,39 +3881,38 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
         ypos=0.45;
         for (i=jumpOffset+1;i<=psr[0].nJumps;i++)
         {
-	  //printf("%s\n",psr[0].jumpStr[i]);
-	    sscanf(psr[0].jumpStr[i],"%s %s",dummy,jumps);
-	    // if jump name is -1 don't plot
+            sscanf(psr[0].jumpStr[i],"%s %s",dummy,jumps);
+            // if jump name is -1 don't plot
             if (strcmp(jumps, "-1") != 0)	
-	    {         
-		if (iFlagColour == 1)
-           	 {
-                	for (j=0;j<nFlags; j++)
-                    	if (strcmp(jumps,flagStore[j])==0)
-                    	{
-                        	cpgsci(j+1);
-                       	 	if (j>=14)
-                            	cpgsci(j-12);
-                        	break;
-                   	 }
-                	cpgmove(xpos,ypos-0.03);
-                	cpgdraw(xpos+0.18,ypos-0.03);
-                	cpgdraw(xpos+0.18,ypos+0.15);
-                	cpgdraw(xpos,ypos+0.15);
-               	 	cpgdraw(xpos,ypos-0.03);
-           	 }
-            	if (psr[0].fitJump[i]==1) cpgsci(3);
-            	else cpgsci(2);
-		//printf("%f %f\n",xpos,ypos);
-            	cpgtext(xpos,ypos,jumps);
-            	xpos+=0.2;
-            	if (xpos==1)
-            	 {
-                	xpos=0.0;
-                	ypos-=0.2;
-            	 }
+            {         
+                if (iFlagColour == 1)
+                {
+                    for (j=0;j<nFlags; j++)
+                        if (strcmp(jumps,flagStore[j])==0)
+                        {
+                            cpgsci(j+1);
+                            if (j>=14)
+                                cpgsci(j-12);
+                            break;
+                        }
+                    cpgmove(xpos,ypos-0.03);
+                    cpgdraw(xpos+0.18,ypos-0.03);
+                    cpgdraw(xpos+0.18,ypos+0.15);
+                    cpgdraw(xpos,ypos+0.15);
+                    cpgdraw(xpos,ypos-0.03);
+                }
+                if (psr[0].fitJump[i]==1) cpgsci(3);
+                else cpgsci(2);
+                //printf("%f %f\n",xpos,ypos);
+                cpgtext(xpos,ypos,jumps);
+                xpos+=0.2;
+                if (xpos==1)
+                {
+                    xpos=0.0;
+                    ypos-=0.2;
+                }
             }
-	}	
+        }	
         cpgsci(1);
     }
 
@@ -3926,38 +3925,38 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
             if (strcmp(jumps, "-1") != 0)
             {
                 if (iFlagColour == 1)
-                 {
-                        for (j=0;j<nFlags; j++)
+                {
+                    for (j=0;j<nFlags; j++)
                         if (strcmp(jumps,flagStore[j])==0)
                         {
-                                cpgsci(j+1);
-                                if (j>=14)
+                            cpgsci(j+1);
+                            if (j>=14)
                                 cpgsci(j-12);
-                                break;
-                         }
-                        cpgmove(xpos,ypos-0.03);
-                        cpgdraw(xpos+0.18,ypos-0.03);
-                        cpgdraw(xpos+0.18,ypos+0.15);
-                        cpgdraw(xpos,ypos+0.15);
-                        cpgdraw(xpos,ypos-0.03);
-                 }
+                            break;
+                        }
+                    cpgmove(xpos,ypos-0.03);
+                    cpgdraw(xpos+0.18,ypos-0.03);
+                    cpgdraw(xpos+0.18,ypos+0.15);
+                    cpgdraw(xpos,ypos+0.15);
+                    cpgdraw(xpos,ypos-0.03);
+                }
                 if (psr[0].fitfdJump[i]==1)
-		  cpgsci(3);
-		else
-		  cpgsci(2);
-		//printf("%f %f %s\n",xpos,ypos,jumps);
-		if(psr[0].fdjumpIdx[i]==-2)
-		  sprintf(fdjumps, "FDJUMPDM_%s",jumps);
-		else
-		  sprintf(fdjumps,"FDJUMP%i_%s",psr[0].fdjumpIdx[i],jumps);
-		
-	        cpgtext(xpos,ypos,fdjumps);
-	        xpos+=0.2;
+                    cpgsci(3);
+                else
+                    cpgsci(2);
+                //printf("%f %f %s\n",xpos,ypos,jumps);
+                if(psr[0].fdjumpIdx[i]==-2)
+                    sprintf(fdjumps, "FDJUMPDM_%s",jumps);
+                else
+                    sprintf(fdjumps,"FDJUMP%i_%s",psr[0].fdjumpIdx[i],jumps);
+
+                cpgtext(xpos,ypos,fdjumps);
+                xpos+=0.2;
                 if (xpos==1)
-                 {
-			xpos=0.0;
-                        ypos-=0.2;
-                 }
+                {
+                    xpos=0.0;
+                    ypos-=0.2;
+                }
             }
         }
         cpgsci(1);
@@ -3972,8 +3971,8 @@ void drawMenu3_2(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty
         if (psr[0].nfdJumps + psr[0].nJumps - jumpOffset > 15) {
             xpos = 0.985; ypos = 0.15;
             cpgpt(1,&xpos,&ypos,31);
-	}
-    }    
+        }
+    }
 }
 
 void drawAxisSel(float x,float y,const char *str,int sel1,int sel2)
