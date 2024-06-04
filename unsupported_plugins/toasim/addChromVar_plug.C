@@ -50,10 +50,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     double secperyear=365*86400.0;
     // my parameters
     int npts=1024;
-    float TNChromAmp = 0;
-    float TNChromIdx = 4.0;
-    float TNChromGam = 3.0;
-    float ref_freq=1400; // MHz
+    double TNChromAmp = 0;
+    double TNChromIdx = 4.0;
+    double TNChromGam = 3.0;
+    double ref_freq=1400; // MHz
     char writeTextFiles=0;
     double lastMJD=1e99;
 
@@ -205,8 +205,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         if (writeTextFiles){
             FILE *log_spec = fopen("chromvar.spec","w");
-            float* pwr_spec=getPowerSpectrum(model);
-            float ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
+            double* pwr_spec=getPowerSpectrum(model);
+            double ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
             for (j=0;j<(model->npt/2+1);j++){
                 fprintf(log_spec,"%10.10g %10.10g\n",ps_fres*j,pwr_spec[j]);
             }
