@@ -53,11 +53,11 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     // my parameters
     double alpha= 1e99;
     int npts=1024;
-    float p_1yr=-1; // s^2 yr
+    double p_1yr=-1; // s^2 yr
     char writeTextFiles=0;
-    float cnr_flat=0;
-    float cnr_cut=0;
-    float old_fc=-1;
+    double cnr_flat=0;
+    double cnr_cut=0;
+    double old_fc=-1;
     int force_nreal=0;
 
     //
@@ -226,8 +226,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         if (writeTextFiles){
             FILE *log_spec = fopen("red.spec","w");
-            float* pwr_spec=getPowerSpectrum(model);
-            float ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
+            double* pwr_spec=getPowerSpectrum(model);
+            double ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
             for (j=0;j<(model->npt/2+1);j++){
                 fprintf(log_spec,"%10.10g %10.10g\n",ps_fres*j,pwr_spec[j]);
             }
