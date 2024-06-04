@@ -52,10 +52,10 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
     // my parameters
     double alpha= -8.0/3.0;
     int npts=1024;
-    float D_d=0; // us
-    float TNDMAmp=0;
-    float ref_freq=1400; // MHz
-    float d=1000;
+    double D_d=0; // us
+    double TNDMAmp=0;
+    double ref_freq=1400; // MHz
+    double d=1000;
     char writeTextFiles=0;
     double lastMJD=1e99;
 
@@ -234,8 +234,8 @@ extern "C" int graphicalInterface(int argc,char *argv[],pulsar *psr,int *npsr)
 
         if (writeTextFiles){
             FILE *log_spec = fopen("dmvar.spec","w");
-            float* pwr_spec=getPowerSpectrum(model);
-            float ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
+            double* pwr_spec=getPowerSpectrum(model);
+            double ps_fres=1.0/((model->end-model->start)/365.25); //yr^-1
             for (j=0;j<(model->npt/2+1);j++){
                 fprintf(log_spec,"%10.10g %10.10g\n",ps_fres*j,pwr_spec[j]);
             }

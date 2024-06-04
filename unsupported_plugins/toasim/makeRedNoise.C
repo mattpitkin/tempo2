@@ -13,12 +13,12 @@
 #include "tempo2.h"
 #include "makeRedNoise.h"
 
-float CubicInterpolate( float y0,float y1, float y2,float y3, float mu);
-float CatmullRomInterpolate( float y0,float y1, float y2,float y3, float mu);
+double CubicInterpolate( double y0,double y1, double y2,double y3, double mu);
+double CatmullRomInterpolate( double y0,double y1, double y2,double y3, double mu);
 
 
 
-rednoisemodel_t* setupRedNoiseModel(float start,float end, int npt, int nreal, float pwr_1yr, float index){
+rednoisemodel_t* setupRedNoiseModel(double start,double end, int npt, int nreal, double pwr_1yr, double index){
     if (nreal < 100)nreal=100;
 
     rednoisemodel_t* model = (rednoisemodel_t*) malloc(sizeof(rednoisemodel_t));
@@ -46,12 +46,12 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
     int i;
     double freq,A,index;
     double t_samp,f_bin,t_span;
-    float *data;
-    fftwf_plan plan;
-    fftwf_complex *spectrum;
+    double *data;
+    fftw_plan plan;
+    fftw_complex *spectrum;
     double secperyear=365*86400.0;
 
-    t_samp=(model->end - model->start)/(float)model->npt;
+    t_samp=(model->end - model->start)/(double)model->npt;
 
     model->start-=t_samp;
     model->end+=t_samp*2.0;
@@ -64,12 +64,12 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
 
     t_npts=model->npt*model->nreal;
 
-    spectrum = (fftwf_complex*) fftwf_malloc((t_npts/2+1)*sizeof(fftwf_complex));
-    data = (float*) fftwf_malloc(t_npts*sizeof(float));
+    spectrum = (fftw_complex*) fftw_malloc((t_npts/2+1)*sizeof(fftw_complex));
+    data = (double*) fftw_malloc(t_npts*sizeof(double));
 
     t_span=(model->end - model->start)/365.25; // years
 
-    t_samp=t_span/(float)model->npt;
+    t_samp=t_span/(double)model->npt;
     model->tres=t_samp*365.25;
     f_bin=1.0/(t_span*model->nreal); // frequency in yr^-1
 
@@ -134,19 +134,19 @@ void populateRedNoiseModel(rednoisemodel_t* model,long seed){
         spectrum[i]=(scale*TKgaussDev(&seed) + I*scale*TKgaussDev(&seed));
     }
 
-    plan=fftwf_plan_dft_c2r_1d(t_npts,spectrum,data,FFTW_ESTIMATE);
-    fftwf_execute(plan);
-    fftwf_destroy_plan(plan);
-    fftwf_free(spectrum);
+    plan=fftw_plan_dft_c2r_1d(t_npts,spectrum,data,FFTW_ESTIMATE);
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+    fftw_free(spectrum);
 
     model->data=data;
 }
 
 
 
-float getRedNoiseValue(rednoisemodel_t* model, float mjd,int real){
+double getRedNoiseValue(rednoisemodel_t* model, double mjd,int real){
     int i = (int)((mjd-model->start)/model->tres);
-    float mu = ((mjd-model->start)/model->tres) - (float)i;
+    double mu = ((mjd-model->start)/model->tres) - (double)i;
 
     i+=real*model->npt;
     return CatmullRomInterpolate(model->data[i-1],model->data[i],model->data[i+1],model->data[i+2],mu);
@@ -154,9 +154,9 @@ float getRedNoiseValue(rednoisemodel_t* model, float mjd,int real){
 
 
 
-float CubicInterpolate( float y0,float y1, float y2,float y3, float mu)
+double CubicInterpolate( double y0,double y1, double y2,double y3, double mu)
 {
-    float a0,a1,a2,a3,mu2;
+    double a0,a1,a2,a3,mu2;
 
     mu2 = mu*mu;
     a0 = y3 - y2 - y0 + y1;
@@ -168,9 +168,9 @@ float CubicInterpolate( float y0,float y1, float y2,float y3, float mu)
 }
 
 
-float CatmullRomInterpolate( float y0,float y1, float y2,float y3, float mu)
+double CatmullRomInterpolate( double y0,double y1, double y2,double y3, double mu)
 {
-    float a0,a1,a2,a3,mu2;
+    double a0,a1,a2,a3,mu2;
 
     mu2 = mu*mu;
     a0 = -0.5*y0 + 1.5*y1 - 1.5*y2 + 0.5*y3;
@@ -180,48 +180,48 @@ float CatmullRomInterpolate( float y0,float y1, float y2,float y3, float mu)
     return(a0*mu*mu2+a1*mu2+a2*mu+a3);
 }
 
-float* getPowerSpectrum(rednoisemodel_t* model){
-    fftwf_complex *spectrum;
-    fftwf_plan plan;
-    float *data;
-    float *power_spectrum;
-    spectrum = (fftwf_complex*) fftwf_malloc((model->npt/2+1)*sizeof(fftwf_complex));
-    data = (float*) fftwf_malloc((model->npt)*sizeof(fftwf_complex));
-    power_spectrum = (float*) malloc((model->npt/2+1)*sizeof(float));
+double* getPowerSpectrum(rednoisemodel_t* model){
+    fftw_complex *spectrum;
+    fftw_plan plan;
+    double *data;
+    double *power_spectrum;
+    spectrum = (fftw_complex*) fftw_malloc((model->npt/2+1)*sizeof(fftw_complex));
+    data = (double*) fftw_malloc((model->npt)*sizeof(fftw_complex));
+    power_spectrum = (double*) malloc((model->npt/2+1)*sizeof(double));
 
-    float t_span=(model->end - model->start)/365.25; // years
-    float f_bin=1.0/(t_span); // frequency in yr^-1
+    double t_span=(model->end - model->start)/365.25; // years
+    double f_bin=1.0/(t_span); // frequency in yr^-1
     for (int p =0 ; p < (model->npt/2+1); p++){
         power_spectrum[p]=0;
     }
-    plan=fftwf_plan_dft_r2c_1d(model->npt,data,spectrum,FFTW_ESTIMATE);
+    plan=fftw_plan_dft_r2c_1d(model->npt,data,spectrum,FFTW_ESTIMATE);
     for (int r =0 ; r < model->nreal; r++){
         int off=r*model->npt;
         for (int p =0 ; p < model->npt; p++){
             data[p]=model->data[p+off];
         }
 
-        float dx=t_span/(float)(model->npt); // yr
+        double dx=t_span/(double)(model->npt); // yr
         int p;
         for (p =0 ; p < model->npt-1; p++){
-            float dy=data[p+1]-data[p];
+            double dy=data[p+1]-data[p];
             data[p] = dy/dx;
         }
-        float dy=data[0]-data[p];
+        double dy=data[0]-data[p];
         data[p] = 0;
-        fftwf_execute(plan);
+        fftw_execute(plan);
         for (int p =1 ; p < (model->npt/2+1); p++){
-            float factor=1.0/((float)p*f_bin);
-            spectrum[p]/=(float)(model->npt/2);
+            double factor=1.0/((double)p*f_bin);
+            spectrum[p]/=(double)(model->npt/2);
             spectrum[p]*=factor;
             power_spectrum[p]+=crealf(spectrum[p]*conjf(spectrum[p]));
         }
     }
-    fftwf_destroy_plan(plan);
-    fftwf_free(spectrum);
-    fftwf_free(data);
+    fftw_destroy_plan(plan);
+    fftw_free(spectrum);
+    fftw_free(data);
     for (int p =0 ; p < (model->npt/2+1); p++){
-        power_spectrum[p]/=(float)(model->nreal);
+        power_spectrum[p]/=(double)(model->nreal);
     }
 
     return power_spectrum;
