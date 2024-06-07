@@ -37,10 +37,16 @@ double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam
         double RedFLow = pow(10., psr[ipsr].TNRedFLow);
         double RedAmp = pow(10.,psr[ipsr].TNRedAmp);
         double freq = RedFLow*((double)(k+1.0))/(maxtspan);
+        double df = RedFLow/(maxtspan*86400.0); // in per second
         double RedIndex = psr[ipsr].TNRedGam;
 
-        double df = RedFLow/(maxtspan*86400.0); // in per second
-
+        if (k >= psr[ipsr].TNRedC){ // This is in the log freq zone!
+            int subharm = k - psr[ipsr].TNRedC + 1;
+            double freq0 = RedFLow*(1.0/maxtspan);
+            freq = freq0 * pow(psr[ipsr].TNRed_log_factor,-subharm);
+            df = (freq0 * pow(psr[ipsr].TNRed_log_factor,-subharm+1) - freq)/86400.0; // in per second
+        }
+        logmsg("freq %e df %e\n",freq,df);
         double rho;
         if (psr[ipsr].TNRedCorner > 0) {
             // we have a model with a corner frequency.

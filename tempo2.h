@@ -899,6 +899,9 @@ typedef struct pulsar {
     double TN_QpLam;
     double TN_QpRatio;
 
+    int TNRed_log_freqs;
+    double TNRed_log_factor;
+
     double ne_sw_ifuncT[MAX_IFUNC];
     double ne_sw_ifuncV[MAX_IFUNC];
     double ne_sw_ifuncE[MAX_IFUNC];

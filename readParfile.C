@@ -1684,6 +1684,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%d",&(psr->TNRedC));
     else if (strcasecmp(str,"TNRedFLow")==0) /* TempoNest Red noise power law amplitude */
         fscanf(fin,"%lf",&(psr->TNRedFLow));
+    else if (strcasecmp(str,"TNRedFLog")==0)
+        fscanf(fin,"%d",&(psr->TNRed_log_freqs));
+    else if (strcasecmp(str,"TNRedFLog_factor")==0)
+        fscanf(fin,"%lf",&(psr->TNRed_log_factor));
     else if (strcasecmp(str,"TNRedCorner")==0) /* TempoNest Red noise spectral index */
         fscanf(fin,"%lf",&(psr->TNRedCorner));
     else if(strcasecmp(str,"TNsubtractRed")==0)

@@ -198,6 +198,8 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->TNRedC = 0;
     psr->TNRedFLow=0;
     psr->TNRedCorner=0.0;
+    psr->TNRed_log_freqs = 0;
+    psr->TNRed_log_factor = 2.0;
     psr->TNDMAmp = 0;
     psr->TNDMGam = 0;
     psr->TNDMC = 0;

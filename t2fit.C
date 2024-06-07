@@ -926,6 +926,19 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 OUT.constraintValue[OUT.nConstraints] = 0;
                 ++OUT.nConstraints;
             }
+
+            for (int i=0;i<psr->TNRed_log_freqs;++i) {
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_sin;
+                OUT.constraintCounters[OUT.nConstraints]=i + psr->TNRedC;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red;
+                OUT.constraintValue[OUT.nConstraints] = 0;
+                ++OUT.nConstraints;
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_cos;
+                OUT.constraintCounters[OUT.nConstraints]=i + psr->TNRedC;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red;
+                OUT.constraintValue[OUT.nConstraints] = 0;
+                ++OUT.nConstraints;
+            }
         }
         if (psr->nTNBandNoise > 0){
             int counter=0;
@@ -1583,7 +1596,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
 
         case param_red_sin:
         case param_red_cos:
-            for (int i=0; i < psr->TNRedC ; ++i){
+            for (int i=0; i < psr->TNRedC + psr->TNRed_log_freqs ; ++i){
                 OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red;
                 OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red;
                 OUT.paramCounters[OUT.nParams]=i;
