@@ -10,12 +10,14 @@
 double t2FitFunc_nestlike_red(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
     double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
     double RedFLow = pow(10., psr[ipsr].TNRedFLow);
-    double freq = RedFLow*((double)(k+1.0))/(maxtspan);
-        if (k >= psr[ipsr].TNRedC){ // This is in the log freq zone!
-            int subharm = k - psr[ipsr].TNRedC + 1;
-            double freq0 = RedFLow*(1.0/maxtspan);
-            freq = freq0 * pow(psr[ipsr].TNRed_log_factor,-subharm);
-        }
+    double freq; 
+    if (k >= psr[ipsr].TNRedC){ // This is in the log freq zone!
+        int subharm = k - psr[ipsr].TNRedC + 1;
+        double freq0 = RedFLow*(1.0/maxtspan);
+        freq = freq0 * pow(psr[ipsr].TNRed_log_factor,-subharm);
+    } else {
+        freq = RedFLow*((double)(k+1.0))/(maxtspan);
+    }
     double ret=0;
     switch (label){
         case param_red_cos:

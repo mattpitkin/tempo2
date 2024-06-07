@@ -1511,6 +1511,10 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNRedAmp %g\n", psr[p].TNRedAmp);
                     fprintf(fout2,"TNRedGam %g\n", psr[p].TNRedGam);
                     fprintf(fout2,"TNRedC %i\n", psr[p].TNRedC);
+                    if (psr[p].TNRed_log_freqs > 0){
+                        fprintf(fout2,"TNRedFLog %i\n", psr[p].TNRed_log_freqs);
+                        fprintf(fout2,"TNRedFLog_factor %lf\n", psr[p].TNRed_log_factor);
+                    }
                 }
 
 
