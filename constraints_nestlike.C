@@ -46,7 +46,6 @@ double constraints_nestlike_red(pulsar *psr,int ipsr, int iconstraint,int iparam
             freq = freq0 * pow(psr[ipsr].TNRed_log_factor,-subharm);
             df = (freq0 * pow(psr[ipsr].TNRed_log_factor,-subharm+1) - freq)/86400.0; // in per second
         }
-        logmsg("freq %e df %e\n",freq,df);
         double rho;
         if (psr[ipsr].TNRedCorner > 0) {
             // we have a model with a corner frequency.
