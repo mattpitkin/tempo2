@@ -32,6 +32,7 @@
 #include "ifteph.h"
 
 #include <math.h>
+#include <string.h>
 
 /* redwards function to transform units of paramaters */
 
@@ -161,8 +162,22 @@ transform_units(struct pulsar *psr, int from, int to)
     scale_param(&psr->param[param_omdot],0, one/f);
     xform_mjd(&psr->param[param_tasc],0, f);
 
-    xform_mjd(&psr->param[param_tzrmjd],0, f); // XXX barycentric (TB) MJD?
-    scale_param(&psr->param[param_tzrfrq],0, one/f); // XXX Barycentric freq??
+    /** MJK 2024-08-29
+     * The transform plugin used to convert the TZR parameters
+     * as if they were barycentric MJD and freq. But they are
+     * actually defined at TZRSITE, which is usually not the
+     * barycentre. In any case, when converting a .par file the
+     * TZR parameter seemed wrong until you re-fit the parfile
+     * 
+     * I am not totally certain, but I suspect that if TZRSITE is
+     * the barycentre then it may indeed need correction, so I have
+     * left it in for cases where the TZRSITE is @
+     */
+    if (strcmp(psr->tzrsite,"@")==0) {
+        xform_mjd(&psr->param[param_tzrmjd],0, f);
+        scale_param(&psr->param[param_tzrfrq],0, one/f);
+    }
+
 
     for (k=0;k<psr->param[param_bpjep].aSize;k++)
     {
