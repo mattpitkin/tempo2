@@ -3396,6 +3396,8 @@ void checkMenu(pulsar *psr,float mx,float my,int button,int fitFlag,
                     {
                         if (psr[0].param[i].paramSet[j]==1)
                         {
+                            if (i==param_chromxr1 || i==param_chromxr2) continue;
+                            if (i==param_dmxr1 || i==param_dmxr2) continue;
                             if (strcmp(psr[0].param[i].shortlabel[j],"DMEPOCH")!=0 &&
                                     strcmp(psr[0].param[i].shortlabel[j],"PEPOCH")!=0 &&
                                     strcmp(psr[0].param[i].shortlabel[j],"START")!=0 &&
@@ -3774,6 +3776,9 @@ void drawMenu(pulsar *psr, float plotx1,float plotx2,float ploty1,float ploty2,i
             {
                 if (psr[0].param[i].paramSet[j]==1)
                 {
+                    if (i==param_chromxr1 || i==param_chromxr2) continue;
+                    if (i==param_dmxr1 || i==param_dmxr2) continue;
+
                     if (strcmp(psr[0].param[i].shortlabel[j],"DMEPOCH")!=0 &&
                             strcmp(psr[0].param[i].shortlabel[j],"PEPOCH")!=0 &&
                             strcmp(psr[0].param[i].shortlabel[j],"START")!=0 &&

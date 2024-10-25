@@ -137,18 +137,20 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         dmval = psr[p].param[param_dm].val[0]; //+dmDot;
 
         long double cmval=0;
-        //long double cmDot;
+
+        // 2024-10 MJK: Now does the same series as the DM, otherwise I think it's too confusing.
+        series_fac=1.0;
         arg=1.0;
+        cmval = psr[p].param[param_cm].val[0];
         for (k=1;k<9;k++)
         {
             arg *= yrs;
+            if (psr->dm_series_type == series_taylor_pn) {
+                series_fac *= k;
+            }
             if (psr[p].param[param_cm].paramSet[k]==1)
-                cmval+=(double)(psr[p].param[param_cm].val[k]*arg); 
+                cmval+=(double)(psr[p].param[param_cm].val[k]*arg/series_fac); 
         }
-
-
-        //      logdbg("calculating dmval");      
-        // NOT DONE ANYMORE:      dmval += psr[p].obsn[i].phaseOffset;  /* In completely the wrong place - phaseoffset is actually DM offset */
 
 
 
@@ -276,17 +278,22 @@ void dm_delays(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
         {
             if (freqf>=1)
             {
-
+                // Chromatic alternative to DMX, i..e. chromx
+                for (k=0; k<psr[p].nchromx; k++) 
+                {
+                    if ((psr[p].obsn[i].sat > psr[p].param[param_chromxr1].val[k])
+                            && (psr[p].obsn[i].sat < psr[p].param[param_chromxr2].val[k]))
+                        cmval += psr[p].param[param_chromx].val[k];
+                }
 
                 gam=-psr[p].TNChromIdx;
-                //fprintf(stderr, "TNChrom %.3e\n", psr[p].TNChromIdx);
-                //exit(0);
-
-                //psr[p].obsn[i].tdis1 += cmval/DM_CONST/1e-12/freqf/freqf;//*powl(freqf/1e6,gam);
-                psr[p].obsn[i].tdis1 += cmval/DM_CONST*powl(freqf/1e6,gam);
+                // Chromatic alternative to DM (i.e. CM, CM1, etc)
+                psr[p].obsn[i].tdis1 += cmval*powl(freqf/1.4e9,gam);
 
             }
         }
+
+
 
         //      logdbg("calculate tdis1");      
         /* Add frequency dependent delay term */
