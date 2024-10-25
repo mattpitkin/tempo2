@@ -26,7 +26,7 @@ double t2FitFunc_chromx(pulsar *psr, int ipsr ,double x ,int ipos ,param_label l
 
     if ((psr[ipsr].obsn[ipos].sat > psr[ipsr].param[param_chromxr1].val[k])
             && (psr[ipsr].obsn[ipos].sat < psr[ipsr].param[param_chromxr2].val[k])) {
-        return 1.0/(DM_CONST*powl(psr[ipsr].obsn[ipos].freqSSB/1.0e6,psr[ipsr].TNChromIdx));
+        return 1.0/(powl(psr[ipsr].obsn[ipos].freqSSB/1.4e9,psr[ipsr].TNChromIdx));
     } else {
         return 0.0;
     }
