@@ -679,6 +679,23 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"DMXR2_%04d",k+1);
         strcpy(psr->param[param_dmxr2].shortlabel[k],temp);
     }
+    for (k=0;k<psr->param[param_chromx].aSize;k++) 
+    {
+        sprintf(temp,"CHROMX_%04d",k+1);
+        strcpy(psr->param[param_chromx].label[k],temp);
+        sprintf(temp,"CHROMX_%04d",k+1);
+        strcpy(psr->param[param_chromx].shortlabel[k],temp);
+
+        sprintf(temp,"CHROMXR1_%04d (MJD)",k+1);
+        strcpy(psr->param[param_chromxr1].label[k],temp);
+        sprintf(temp,"CHROMXR1_%04d",k+1);
+        strcpy(psr->param[param_chromxr1].shortlabel[k],temp);
+
+        sprintf(temp,"CHROMXR2_%04d (MJD)",k+1);
+        strcpy(psr->param[param_chromxr2].label[k],temp);
+        sprintf(temp,"CHROMXR2_%04d",k+1);
+        strcpy(psr->param[param_chromxr2].shortlabel[k],temp);
+    }
 
         for (k=0;k<psr->param[param_sx].aSize;k++)
     {
@@ -737,7 +754,7 @@ void allocateMemory(pulsar *psr, int realloc)
             psr->param[i].aSize = 9;
         else if (i==param_dphaseplanet)
             psr->param[i].aSize = 9;
-        else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2)
+        else if (i==param_dmx || i==param_dmxr1 || i==param_dmxr2 || i==param_chromx || i==param_chromxr1 || i==param_chromxr2)
             psr->param[i].aSize = MAX_DMX;
 	else if (i==param_sx || i==param_sxr1 || i==param_sxr2 || i==param_sxer)
 		psr->param[i].aSize = MAX_SX;

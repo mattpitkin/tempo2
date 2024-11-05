@@ -50,8 +50,8 @@
 
 
 #define TEMPO2_h_HASH "$Id$"
-#define TEMPO2_h_VER "2024.04.1"
-#define TEMPO2_h_MAJOR_VER 2024.04
+#define TEMPO2_h_VER "2024.10.1"
+#define TEMPO2_h_MAJOR_VER 2024.10
 #define TEMPO2_h_MINOR_VER 1
 #define TSUN longdouble(4.925490947e-6) /*!< Solar constant for mass calculations. */
 #define MAX_FREQ_DERIVATIVES 13    /*!< F0 -> Fn   where n=10                            */
@@ -196,6 +196,7 @@ enum label {
     param_orbifunc,
     param_gltd2,param_gltd3, param_glf0d2, param_glf0d3,
     param_ne_sw_sin,param_ne_sw_ifunc,
+    param_chromx, param_chromxr1, param_chromxr2, // chromatic version of DMX.
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */
@@ -639,6 +640,7 @@ typedef struct pulsar {
     int    nToffset;
     int    ndmx;                    /*!< Number of DM steps */
     int    nSx;                     /*!< Number of Scatter steps */
+    int    nchromx;                 /*!< Number of Chromatic steps */
     double fitChisq;                /*!< Chisq value from the fit */
     int    fitNfree;                /*!< Number of degrees of freedom in fit */
     int    globalNfit;              /*!< Total number of parameters in the fit */

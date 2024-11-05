@@ -21,6 +21,18 @@ double t2FitFunc_dmx(pulsar *psr, int ipsr ,double x ,int ipos ,param_label labe
     }
 }
 
+double t2FitFunc_chromx(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
+    assert(label==param_chromx);
+
+    if ((psr[ipsr].obsn[ipos].sat > psr[ipsr].param[param_chromxr1].val[k])
+            && (psr[ipsr].obsn[ipos].sat < psr[ipsr].param[param_chromxr2].val[k])) {
+        return 1.0/(powl(psr[ipsr].obsn[ipos].freqSSB/1.4e9,psr[ipsr].TNChromIdx));
+    } else {
+        return 0.0;
+    }
+}
+
+
 double t2FitFunc_fddc(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k){
     assert(label==param_fddc);
     return 1.0/(pow(psr[ipsr].obsn[ipos].freqSSB/1.0e6,(double)(psr[ipsr].param[param_fddi].val[0])));
@@ -41,7 +53,6 @@ double t2FitFunc_dmsinusoids(pulsar *psr, int ipsr ,double x ,int ipos ,param_la
         return 0;
     }
 }
-
 
 
 

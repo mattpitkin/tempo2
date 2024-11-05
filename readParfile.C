@@ -884,9 +884,9 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 readValue(psr,str,fin,&(psr->param[param_dm]),dval);
         }
     }
-    else if (strcasecmp(str,"CM")==0) /* Chromatic noise measure */
+    else if (strcasecmp(str,"CM")==0) /* Constant Chromatic offset */
         readValue(psr,str,fin,&(psr->param[param_cm]),0);
-    else if ((str[0]=='C' || str[0]=='c') &&  /* Higher DM derivatives */
+    else if ((str[0]=='C' || str[0]=='c') &&  /* Higher Chromatic derivatives */
             (str[1]=='M' || str[1]=='m') && isdigit(str[2]))
     {
         int dval;
@@ -896,7 +896,39 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 readValue(psr,str,fin,&(psr->param[param_cm]),dval);
         }
     }
-
+    // Chromatic alternative to DMX; it uses the TNChromIdx for the index.
+    else if (strncasecmp(str,"CHROMX_",7)==0)
+    {
+        int chromxidx;
+        if (sscanf(str+7,"%d",&chromxidx)==1)
+        {
+            //printf("got dmxidx=%d\n", dmxidx);
+            chromxidx--;
+            if (chromxidx<psr->param[param_chromx].aSize)
+                readValue(psr,str,fin,&(psr->param[param_chromx]),chromxidx);
+            if (psr->ndmx < chromxidx+1) psr->nchromx = chromxidx + 1;
+        }
+    }
+    else if (strncasecmp(str,"CHROMXR1_",9)==0)
+    {
+        int chromxidx;
+        if (sscanf(str+9,"%d",&chromxidx)==1)
+        {
+            chromxidx--;
+            if (chromxidx<psr->param[param_chromxr1].aSize)
+                readValue(psr,str,fin,&(psr->param[param_chromxr1]),chromxidx);
+        }
+    }
+    else if (strncasecmp(str,"CHROMXR2_",9)==0)
+    {
+        int chromxidx;
+        if (sscanf(str+9,"%d",&chromxidx)==1)
+        {
+            chromxidx--;
+            if (chromxidx<psr->param[param_chromxr2].aSize)
+                readValue(psr,str,fin,&(psr->param[param_chromxr2]),chromxidx);
+        }
+    }
 
     else if (strcasecmp(str,"TELX")==0)
         readValue(psr,str,fin,&(psr->param[param_telx]),0);
@@ -1726,7 +1758,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
       //fprintf(stderr, "here\n");
 	//exit(0);
       }
-    else if (strcasecmp(str,"TNChromIdx")==0) /* TempoNest chromatic Red noise chromatic index */
+    else if (strcasecmp(str,"TNChromIdx")==0 || strcasecmp(str,"CHROM_INDEX")==0) /* TempoNest chromatic Red noise chromatic index */
         fscanf(fin,"%lf",&(psr->TNChromIdx));
     else if(strcasecmp(str,"TNsubtractChrom")==0)
     {
