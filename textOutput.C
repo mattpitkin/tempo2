@@ -181,6 +181,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
             {
                 if (psr[p].param[i].paramSet[k]==1)
                 {
+                    if (i==param_chromxr1 || i==param_chromxr2 || i==param_dmxr1 || i==param_dmxr2) continue;
                     /* PARAMETER (name) */
                     if (i == param_raj && psr[p].eclCoord==1)
                         printf("%-15.15s ","ELONG");
@@ -1499,11 +1500,13 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNDMGam %g\n", psr[p].TNDMGam);
                     fprintf(fout2,"TNDMC %i\n", psr[p].TNDMC);
                 }
-		if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
+		        if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
                     fprintf(fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);	
                     fprintf(fout2,"TNChromGam %g\n", psr[p].TNChromGam);
                     fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
                     fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
+                } else if (psr[p].TNChromIdx != 0){
+                    fprintf(fout2,"CHROM_INDEX %g\n", psr[p].TNChromIdx);
                 }
 
 		
@@ -1518,12 +1521,6 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                 }
 
 
-                if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
-                    fprintf(fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);
-                    fprintf(fout2,"TNChromGam %g\n", psr[p].TNChromGam);
-                   fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
-                    fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
-                }
 
                 if (psr[p].TN_QpPeriod > 0) {
                     fprintf(fout2,"TN_QpPeriod %g\n", psr[p].TN_QpPeriod);

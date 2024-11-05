@@ -906,7 +906,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
             chromxidx--;
             if (chromxidx<psr->param[param_chromx].aSize)
                 readValue(psr,str,fin,&(psr->param[param_chromx]),chromxidx);
-            if (psr->ndmx < chromxidx+1) psr->nchromx = chromxidx + 1;
+            if (psr->nchromx < chromxidx+1) psr->nchromx = chromxidx + 1;
         }
     }
     else if (strncasecmp(str,"CHROMXR1_",9)==0)
