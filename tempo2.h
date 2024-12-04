@@ -79,8 +79,8 @@
 #define MAX_FIT              10000  /*!< Maximum number of parameters to fit for */
 #define MAX_T2EFAC           100    /*!< Maximum number of T2EFACs allowed                */
 #define MAX_T2EQUAD          100    /*!< Maximum number of T2EQUADs allowed               */
-#define MAX_TNEF           50    /*!< Maximum number of TNEFACs allowed                */
-#define MAX_TNEQ          50    /*!< Maximum number of TNEQUADs allowed               */
+#define MAX_TNEF           100    /*!< Maximum number of TNEFACs allowed                */
+#define MAX_TNEQ          100    /*!< Maximum number of TNEQUADs allowed               */
 #define MAX_TNGN	50 /*!< maximum number of TNGroupNoise parameters allowed*/
 #define MAX_TNBN        50 /*maximum number of TNBandNoise parameters allowd*/
 #define MAX_TNECORR       50    /*!< Maximum number of TNECORRss allowed               */
