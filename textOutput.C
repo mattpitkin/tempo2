@@ -1716,6 +1716,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
            } */
 
         bool notwarned=true;
+        int count_bad_covariances=0;
         for (unsigned int i=0; i < psr[p].fitinfo.nParams;++i) {
             for (unsigned int j=0; j < i;++j) {
                 double corr = psr[p].covar[i][j]/sqrt(psr[p].covar[i][i]*psr[p].covar[j][j]);
@@ -1725,27 +1726,34 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                         logwarn("There are output parameters with very high covariance");
                         notwarned=false;
                     }
-                    param_label p1 = psr[p].fitinfo.paramIndex[i];
-                    param_label p2 = psr[p].fitinfo.paramIndex[j];
-                    int c1= psr[p].fitinfo.paramCounters[i];
-                    int c2= psr[p].fitinfo.paramCounters[j];
-                    char n1[80];
-                    char n2[80];
-                    if (c1 < psr[p].param[p1].aSize && strlen(psr[p].param[p1].shortlabel[c1])>0) {
-                        strncpy(n1,psr[p].param[p1].shortlabel[c1],80);
-                    } else {
-                        snprintf(n1,80,"%s(%d)",label_str[p1],c1);
+
+                    if (count_bad_covariances < 20) {
+                        param_label p1 = psr[p].fitinfo.paramIndex[i];
+                        param_label p2 = psr[p].fitinfo.paramIndex[j];
+                        int c1= psr[p].fitinfo.paramCounters[i];
+                        int c2= psr[p].fitinfo.paramCounters[j];
+                        char n1[80];
+                        char n2[80];
+                        if (c1 < psr[p].param[p1].aSize && strlen(psr[p].param[p1].shortlabel[c1])>0) {
+                            strncpy(n1,psr[p].param[p1].shortlabel[c1],80);
+                        } else {
+                            snprintf(n1,80,"%s(%d)",label_str[p1],c1);
+                        }
+                        if (c2 < psr[p].param[p2].aSize && strlen(psr[p].param[p2].shortlabel[c2])>0) {
+                            strncpy(n2,psr[p].param[p2].shortlabel[c2],80);
+                        } else {
+                            snprintf(n2,80,"%s(%d)",label_str[p2],c2);
+                        }
+                        printf("% 20s % 20s %+.5f\n",n1,n2,corr);
                     }
-                    if (c2 < psr[p].param[p2].aSize && strlen(psr[p].param[p2].shortlabel[c2])>0) {
-                        strncpy(n2,psr[p].param[p2].shortlabel[c2],80);
-                    } else {
-                        snprintf(n2,80,"%s(%d)",label_str[p2],c2);
-                    }
-                    printf("% 20s % 20s %+.5f\n",n1,n2,corr);
+                    count_bad_covariances++;
                 }
             }
         }
-    }
+        if (count_bad_covariances>20){
+            printf(" ... There were %d more covariances not shown\n",count_bad_covariances-20);
+        }
+    } // end loop over pulsars
 
     if (nGlobal > 0)
     { 
