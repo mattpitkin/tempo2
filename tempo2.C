@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
 
     // set the extra clock path if
     if (getenv("TEMPO2_CLOCK_DIR")!=NULL){
-        strncpy(tempo2_clock_path,getenv("TEMPO2_CLOCK_DIR"), MAX_STRLEN);
+        strncpy(tempo2_clock_path,getenv("TEMPO2_CLOCK_DIR"), MAX_FILELEN);
     }
     /* Obtain command line arguments */
     logdbg("Running getInputs %d",psr[0].nits);
@@ -305,6 +305,7 @@ int main(int argc, char *argv[])
         {      
             char *(*entry)(int,char **,pulsar *,int *);
             void * module;
+            logdbg("tempo2_plug_path_len=%d",tempo2_plug_path_len);
 
             if (strcmp(commandLine[i],"-gr2")==0){
                 snprintf(str,MAX_FILELEN,"./%s_%s_plug.t2",commandLine[i+1],tempo2MachineType);
