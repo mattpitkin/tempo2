@@ -35,7 +35,14 @@ double t2FitFunc_nestlike_red(pulsar *psr, int ipsr ,double x ,int ipos ,param_l
 
 double t2FitFunc_nestlike_red_dm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
     double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
-    double freq = ((double)(k+1.0))/(maxtspan);
+    double freq;
+    if (k >= psr[ipsr].TNDMC){ // This is in the log freq zone!
+        int subharm = k - psr[ipsr].TNDMC + 1;
+        double freq0 = (1.0/maxtspan);
+        freq = freq0 * pow(psr[ipsr].TNDM_log_factor,-subharm);
+    } else {
+        freq = ((double)(k+1.0))/(maxtspan);
+    }
     double kappa = DM_CONST*1e-12;
     double ret=0;
     switch (label){
@@ -54,8 +61,14 @@ double t2FitFunc_nestlike_red_dm(pulsar *psr, int ipsr ,double x ,int ipos ,para
 
 double t2FitFunc_nestlike_red_chrom(pulsar *psr, int ipsr ,double x ,int ipos ,param_label label,int k) {
     double maxtspan = psr[ipsr].param[param_finish].val[0] - psr[ipsr].param[param_start].val[0];
-    double freq = ((double)(k+1.0))/(maxtspan);
-
+    double freq;
+    if (k >= psr[ipsr].TNChromC){ // This is in the log freq zone!
+        int subharm = k - psr[ipsr].TNChromC + 1;
+        double freq0 = (1.0/maxtspan);
+        freq = freq0 * pow(psr[ipsr].TNChrom_log_factor,-subharm);
+    } else {
+        freq = ((double)(k+1.0))/(maxtspan);
+    }
     double ret=0;
    
     double index=psr[ipsr].TNChromIdx;

@@ -89,11 +89,18 @@ double constraints_nestlike_red_dm(pulsar *psr,int ipsr, int iconstraint,int ipa
         double DMAmp = pow(10.,psr[ipsr].TNDMAmp);
         double freq = ((double)(k+1.0))/(maxtspan);
         double DMIndex = psr[ipsr].TNDMGam;
-
+        double DMFLow=1.0;
+        double df = DMFLow/(maxtspan*86400.0); // in per second
+        if (k >= psr[ipsr].TNDMC){ // This is in the log freq zone!
+            int subharm = k - psr[ipsr].TNDMC + 1;
+            double freq0 = DMFLow*(1.0/maxtspan);
+            freq = freq0 * pow(psr[ipsr].TNDM_log_factor,-subharm);
+            df = (freq0 * pow(psr[ipsr].TNDM_log_factor,-subharm+1) - freq)/86400.0; // in per second
+        }
         /***
          * Still no idea what this equation represents! Copied from LL's code MJK2016
          */
-        double rho = (DMAmp*DMAmp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMIndex))/(maxtspan*24*60*60);
+        double rho = (DMAmp*DMAmp)*pow(f1yr,(-3)) * pow(freq*365.25,(-DMIndex))*df;
 
         return 1.0/sqrt(rho);
     } else return 0;
@@ -118,14 +125,21 @@ double constraints_nestlike_red_chrom(pulsar *psr,int ipsr, int iconstraint,int 
         double ChromAmp = pow(10.,psr[ipsr].TNChromAmp);
         double freq = ((double)(k+1.0))/(maxtspan);
         double ChromIndex = psr[ipsr].TNChromGam;
-	
+	    double ChromFLow=1.0;
+        double df = ChromFLow/(maxtspan*86400.0); // in per second
+        if (k >= psr[ipsr].TNChromC){ // This is in the log freq zone!
+            int subharm = k - psr[ipsr].TNChromC + 1;
+            double freq0 = ChromFLow*(1.0/maxtspan);
+            freq = freq0 * pow(psr[ipsr].TNChrom_log_factor,-subharm);
+            df = (freq0 * pow(psr[ipsr].TNChrom_log_factor,-subharm+1) - freq)/86400.0; // in per second
+        }
 
         /***
          * Still no idea what this equation represents! Copied from LL's code MJK2016
          */
 
 
-        double rho = (ChromAmp*ChromAmp)/12./M_PI/M_PI*pow(f1yr,(-3)) * pow(freq*365.25,(-ChromIndex))/(maxtspan*24*60*60);
+        double rho = (ChromAmp*ChromAmp)/12./M_PI/M_PI*pow(f1yr,(-3)) * pow(freq*365.25,(-ChromIndex))*df;
 
         return 1.0/sqrt(rho);
     } else return 0;

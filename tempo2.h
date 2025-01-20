@@ -909,6 +909,11 @@ typedef struct pulsar {
     double ne_sw_ifuncE[MAX_IFUNC];
     int ne_sw_ifuncN;
 
+    int TNDM_log_freqs;
+    double TNDM_log_factor;
+        int TNChrom_log_freqs;
+    double TNChrom_log_factor;
+
 } pulsar;
 
 

@@ -1193,7 +1193,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
             if (yplot==2)
 	      {
-		if ((psr[0].TNsubtractDM==1) || (psr[0].TNsubtractRed ==1))
+		if ((psr[0].TNsubtractDM==1) || (psr[0].TNsubtractRed ==1)|| (psr[0].TNsubtractChrom ==1))
 		  {
 		    sprintf(title,"%s (%s = %.3f \\gms) %s",psr[0].name,rmsStr,psr[0].rmstn,fitType);
 		  }
@@ -1605,14 +1605,16 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
             }
             else if(key=='F'){
                 if(psr[0].TNsubtractDM==0){
-                    printf("will substract PL DM Variations on next Fit \n");
+                    printf("will substract PL DM/Chrom Variations on next Fit \n");
                     psr[0].TNsubtractDM=1;
+                    psr[0].TNsubtractChrom=1;
 		    formResiduals(psr,npsr,1);
 		     textOutput(psr,npsr,0,0,0,0,"");
 		}
                 else if(psr[0].TNsubtractDM==1){
-                    printf("will Re-add PL DM Variations on next Fit \n");
+                    printf("will Re-add PL DM/Chrom Variations on next Fit \n");
                     psr[0].TNsubtractDM=0;
+                    psr[0].TNsubtractChrom=1;
 		    formResiduals(psr,npsr,1);
 		     textOutput(psr,npsr,0,0,0,0,"");
 		}
@@ -4414,7 +4416,7 @@ int setPlot(float *x,int count,pulsar *psr,int iobs,double unitFlag,int plotPhas
             if(psr[0].AverageResiduals == 1){x[count] = (float)(psr[0].obsn[iobs].averageres/unitFlag);}
             else if (psr[0].AverageDMResiduals ==1){x[count] = (float)(psr[0].obsn[iobs].averagedmres);}
 	    else if (psr[0].TNsubtractRed ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
-	    else if  (psr[0].TNsubtractDM ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
+	    else if  (psr[0].TNsubtractDM ==1 || psr[0].TNsubtractChrom ==1) {x[count] = (float)(psr[0].obsn[iobs].residualtn/unitFlag);}
 
         }
         else
