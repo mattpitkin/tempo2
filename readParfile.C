@@ -1730,6 +1730,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf",&(psr->TNDMGam));
     else if (strcasecmp(str,"TNDMC")==0) /* TempoNest Red noise spectral index */
         fscanf(fin,"%d",&(psr->TNDMC));
+    else if (strcasecmp(str,"TNDMFLog")==0)
+        fscanf(fin,"%d",&(psr->TNDM_log_freqs));
+    else if (strcasecmp(str,"TNDMFLog_factor")==0)
+        fscanf(fin,"%lf",&(psr->TNDM_log_factor));
     else if(strcasecmp(str,"TNsubtractDM")==0)
         fscanf(fin,"%d",&(psr->TNsubtractDM));
     else if (strcasecmp(str,"TN_QpPeriod")==0) /* Quasi-periodic Timing Noise*/
@@ -1765,7 +1769,10 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
            fscanf(fin,"%d",&(psr->TNsubtractChrom));
             //fprintf(stderr, "here\n");
         //exit(0);
-    }
+    } else if (strcasecmp(str,"TNChromFLog")==0)
+        fscanf(fin,"%d",&(psr->TNChrom_log_freqs));
+    else if (strcasecmp(str,"TNChromFLog_factor")==0)
+        fscanf(fin,"%lf",&(psr->TNChrom_log_factor));
 
     else if(strcasecmp(str,"RNAMP")==0){ /* compatibility with tempo RN notation */
         printf("\nWARNING: Using tempo RNAMP parameter: setting TNRedC to 100!\n");

@@ -203,10 +203,14 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->TNDMAmp = 0;
     psr->TNDMGam = 0;
     psr->TNDMC = 0;
-     psr->TNChromAmp = 0;
+    psr->TNDM_log_freqs = 0;
+    psr->TNDM_log_factor = 2.0;
+    psr->TNChromAmp = 0;
     psr->TNChromGam = 0;
     psr->TNChromC = 0;
     psr->TNChromIdx =0;
+    psr->TNChrom_log_freqs = 0;
+    psr->TNChrom_log_factor = 2.0;
     psr->TNBandDMAmp = 0;
     psr->TNBandDMGam = 0;
     psr->TNBandDMC = 0;

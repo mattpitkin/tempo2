@@ -1031,6 +1031,18 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 OUT.constraintValue[OUT.nConstraints] = 0;
                 ++OUT.nConstraints;
             }
+            for (int i=0;i<psr->TNChrom_log_freqs;++i) {
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_chrom_sin;
+                OUT.constraintCounters[OUT.nConstraints]=i + psr->TNChromC;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_chrom;
+                OUT.constraintValue[OUT.nConstraints] = 0;
+                ++OUT.nConstraints;
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_chrom_sin;
+                OUT.constraintCounters[OUT.nConstraints]=i + psr->TNChromC;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_chrom;
+                OUT.constraintValue[OUT.nConstraints] = 0;
+                ++OUT.nConstraints;
+            }
         }
 
 
@@ -1055,6 +1067,18 @@ void t2Fit_fillFitInfo(pulsar* psr, FitInfo &OUT, const FitInfo &globals, const 
                 ++OUT.nConstraints;
                 OUT.constraintIndex[OUT.nConstraints]=constraint_red_dm_cos;
                 OUT.constraintCounters[OUT.nConstraints]=i;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_dm;
+                OUT.constraintValue[OUT.nConstraints] = 0;
+                ++OUT.nConstraints;
+            }
+            for (int i=0;i<psr->TNDM_log_freqs;++i) {
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_dm_sin;
+                OUT.constraintCounters[OUT.nConstraints]=i + psr->TNDMC;
+                OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_dm;
+                OUT.constraintValue[OUT.nConstraints] = 0;
+                ++OUT.nConstraints;
+                OUT.constraintIndex[OUT.nConstraints]=constraint_red_dm_sin;
+                OUT.constraintCounters[OUT.nConstraints]=i + psr->TNDMC;
                 OUT.constraintDerivs[OUT.nConstraints] = constraints_nestlike_red_dm;
                 OUT.constraintValue[OUT.nConstraints] = 0;
                 ++OUT.nConstraints;
@@ -1649,7 +1673,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_red_dm_sin:
         case param_red_dm_cos:
             {
-                for (int i=0; i < psr->TNDMC ; ++i){
+                for (int i=0; i < psr->TNDMC  + psr->TNDM_log_freqs; ++i){
                     OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red_dm;
                     OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red_dm;
                     OUT.paramCounters[OUT.nParams]=i;
@@ -1663,7 +1687,7 @@ void t2fit_fillOneParameterFitInfo(pulsar* psr, param_label fit_param, const int
         case param_red_chrom_sin:
         case param_red_chrom_cos:
             {
-                for (int i=0; i < psr->TNChromC ; ++i){
+                for (int i=0; i < psr->TNChromC  + psr->TNChrom_log_freqs; ++i){
                     OUT.paramDerivs[OUT.nParams]     =t2FitFunc_nestlike_red_chrom;
                     OUT.updateFunctions[OUT.nParams] =t2UpdateFunc_nestlike_red_chrom;
                     OUT.paramCounters[OUT.nParams]=i;

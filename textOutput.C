@@ -1499,12 +1499,20 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     fprintf(fout2,"TNDMAmp %g\n", psr[p].TNDMAmp);	
                     fprintf(fout2,"TNDMGam %g\n", psr[p].TNDMGam);
                     fprintf(fout2,"TNDMC %i\n", psr[p].TNDMC);
+                    if (psr[p].TNChrom_log_freqs > 0){
+                        fprintf(fout2,"TNDMFLog %i\n", psr[p].TNDM_log_freqs);
+                        fprintf(fout2,"TNDMFLog_factor %lf\n", psr[p].TNDM_log_factor);
+                    }
                 }
 		        if(psr[p].TNChromAmp != 0 && psr[p].TNChromGam != 0){
                     fprintf(fout2,"TNChromAmp %g\n", psr[p].TNChromAmp);	
                     fprintf(fout2,"TNChromGam %g\n", psr[p].TNChromGam);
                     fprintf(fout2,"TNChromIdx %g\n", psr[p].TNChromIdx);
                     fprintf(fout2,"TNChromC %i\n", psr[p].TNChromC);
+                    if (psr[p].TNChrom_log_freqs > 0){
+                        fprintf(fout2,"TNChromFLog %i\n", psr[p].TNChrom_log_freqs);
+                        fprintf(fout2,"TNChromFLog_factor %lf\n", psr[p].TNChrom_log_factor);
+                    }
                 } else if (psr[p].TNChromIdx != 0){
                     fprintf(fout2,"CHROM_INDEX %g\n", psr[p].TNChromIdx);
                 }
