@@ -1736,6 +1736,8 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         fscanf(fin,"%lf",&(psr->TNDM_log_factor));
     else if(strcasecmp(str,"TNsubtractDM")==0)
         fscanf(fin,"%d",&(psr->TNsubtractDM));
+    else if(strcasecmp(str, "TNsubtractPoly")==0)
+        fscanf(fin,"%d",&(psr->TNsubtractPoly));
     else if (strcasecmp(str,"TN_QpPeriod")==0) /* Quasi-periodic Timing Noise*/
         fscanf(fin,"%lf",&(psr->TN_QpPeriod));
     else if (strcasecmp(str,"TN_QpLam")==0) /* Quasi-periodic Timing Noise*/

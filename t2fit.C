@@ -49,7 +49,8 @@
 
 void callFitFuncPlugin(pulsar *psr,int npsr, const char *covarFuncFile); // currently in doFit.C
 
-void t2fit_postfit(pulsar* psr, int npsr);
+void t2fit_postfit(pulsar *psr, int npsr);
+void subtractTNPoly(pulsar *psr, int ipsr, label param);
 void t2fit_prefit(pulsar* psr, int npsr);
 
 // Remove elements from SVD sigma matrix below this value.
@@ -580,69 +581,145 @@ void t2fit_postfit(pulsar* psr, int npsr){
      */
     for (int ipsr = 0; ipsr < npsr; ++ipsr){
         
-        double* psr_x=(double*)malloc(sizeof(double)*psr[ipsr].nobs);
-        double* psr_y=(double*)malloc(sizeof(double)*psr[ipsr].nobs);
-        double* psr_e=(double*)malloc(sizeof(double)*psr[ipsr].nobs);
-        double* white_y=(double*)malloc(sizeof(double)*psr[ipsr].nobs);
-        int* psr_toaidx = (int*)malloc(sizeof(int)*psr[ipsr].nobs); // mapping from fit data to observation number
-        unsigned int psr_ndata = 0;
+        
 
         if (psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNRedErr = sqrt(psr[ipsr].obsn[iobs].TNRedErr);
             }
+            subtractTNPoly(psr, ipsr,param_f);
         }
         if (psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) {
-
-
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNDMErr = sqrt(psr[ipsr].obsn[iobs].TNDMErr);
             }
 
-            if (psr_ndata==0)psr_ndata=t2Fit_getFitData(psr+ipsr,psr_x,psr_y,psr_e,psr_toaidx);
-            int nParams=0;
-            for (int k = 0; k < psr[ipsr].param[param_dm].aSize; ++k){
-                if(psr[ipsr].param[param_dm].fitFlag[k]==1) {
-                    ++nParams;
-                }
-            }
-            if (nParams==0)continue;
-
-            double** designMatrix = malloc_blas(psr_ndata,nParams);
-            double** white_designMatrix = malloc_blas(psr_ndata,nParams);
-            for (int k = 0; k < psr[ipsr].param[param_dm].aSize; ++k){
-                int iparam=0;
-                if(psr[ipsr].param[param_dm].fitFlag[k]==1) {
-                    for (int ifit=0; ifit < psr_ndata; ++ifit){
-                        designMatrix[ifit][iparam] = t2FitFunc_stdDm(psr,ipsr,psr_x[ifit],psr_toaidx[ifit],param_dm,k);
-                        white_designMatrix[ifit][iparam] = designMatrix[ifit][iparam]/psr[ipsr].obsn[psr_toaidx[ifit]].toaErr;
-                        psr_y[ifit] = psr[ipsr].obsn[psr_toaidx[ifit]].TNDMSignal/(DM_CONST*pow(psr[ipsr].obsn[psr_toaidx[ifit]].freqSSB/1.0e6,2));
-                        white_y[ifit] = psr_y[ifit]/psr[ipsr].obsn[psr_toaidx[ifit]].toaErr;
-                    }
-                    ++iparam;
-                }
-            }
-            // now we have the design matrix, we can do the fit.
-            
-            double* outP = (double*)malloc(sizeof(double)*nParams);
-            double* outE = (double*)malloc(sizeof(double)*nParams);
-
-            printf("\n\n\n*******\n%d %d\n*******\n\n\n",psr_ndata,nParams);
-            TKleastSquares(psr_y,white_y,designMatrix,white_designMatrix,psr_ndata,
-                    nParams,T2_SVD_TOL,0,outP,outE,NULL);
-
+            subtractTNPoly(psr, ipsr,param_dm);
         }
 	    if (psr[ipsr].TNChromAmp && psr[ipsr].TNChromGam && psr[ipsr].TNChromIdx) {
 
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNChromErr = sqrt(psr[ipsr].obsn[iobs].TNChromErr);
             }
+            subtractTNPoly(psr, ipsr,param_cm);
         }
     }
-
 }
 
+void subtractTNPoly(pulsar *psr, int ipsr, label param)
+{
+    if (psr[ipsr].TNsubtractPoly)
+    {
+        double *psr_x = (double *)malloc(sizeof(double) * psr[ipsr].nobs);
+        double *psr_y = (double *)malloc(sizeof(double) * psr[ipsr].nobs);
+        double *psr_e = (double *)malloc(sizeof(double) * psr[ipsr].nobs);
+        double *white_y = (double *)malloc(sizeof(double) * psr[ipsr].nobs);
+        int *psr_toaidx = (int *)malloc(sizeof(int) * psr[ipsr].nobs); // mapping from fit data to observation number
+        unsigned int psr_ndata = t2Fit_getFitData(psr + ipsr, psr_x, psr_y, psr_e, psr_toaidx);
+        int nParams = 0;
 
+
+        for (int k = 0; k < psr[ipsr].param[param].aSize; ++k)
+        {
+            if (psr[ipsr].param[param].fitFlag[k] == 1)
+            {
+                ++nParams;
+            }
+        }
+
+        paramDerivFunc fitfunc;
+        paramUpdateFunc updatefunc;
+        switch(param){
+            case param_dm:
+                fitfunc=t2FitFunc_stdDm;
+                updatefunc=t2UpdateFunc_simpleAdd;
+                break;
+            case param_f:
+                fitfunc=t2FitFunc_stdFreq;
+                updatefunc=t2UpdateFunc_stdFreq;
+                nParams += 1; // we need to fit for the constant term as well.
+                break;
+            case param_cm:
+                fitfunc=t2FitFunc_stdCm;
+                updatefunc=t2UpdateFunc_simpleAdd;
+                break;
+        }
+
+        
+        
+        if (nParams > 0 || param==param_f)
+        {
+            double **designMatrix = malloc_blas(psr_ndata, nParams);
+            double **white_designMatrix = malloc_blas(psr_ndata, nParams);
+            int iparam = 0;
+            for (int k = 0; k < psr[ipsr].param[param].aSize; ++k)
+            {
+                if (psr[ipsr].param[param].fitFlag[k] == 1)
+                {
+                    for (int ifit = 0; ifit < psr_ndata; ++ifit)
+                    {
+                        designMatrix[ifit][iparam] = fitfunc(psr, ipsr, psr_x[ifit], psr_toaidx[ifit], param, k);
+                        white_designMatrix[ifit][iparam] = designMatrix[ifit][iparam] / psr[ipsr].obsn[psr_toaidx[ifit]].toaErr;
+                        switch(param) {
+                            case param_f:
+                                psr_y[ifit] = psr[ipsr].obsn[psr_toaidx[ifit]].TNRedSignal;
+                                break;
+                            case param_dm:
+                                psr_y[ifit] = psr[ipsr].obsn[psr_toaidx[ifit]].TNDMSignal;
+                                break;
+                            case param_cm:
+                                psr_y[ifit] = psr[ipsr].obsn[psr_toaidx[ifit]].TNChromSignal;
+                                break;
+
+                        }
+                        
+                        white_y[ifit] = psr_y[ifit] / psr[ipsr].obsn[psr_toaidx[ifit]].toaErr;
+                    }
+                    ++iparam;
+                }
+            }
+            // need the constant term.
+            if (param==param_f){
+                for (int ifit = 0; ifit < psr_ndata; ++ifit)
+                {
+                    designMatrix[ifit][iparam] = 1.0;
+                    white_designMatrix[ifit][iparam] = designMatrix[ifit][iparam] / psr[ipsr].obsn[psr_toaidx[ifit]].toaErr;
+                }
+            }
+            // now we have the design matrix, we can do the fit.
+
+            double *outP = (double *)malloc(sizeof(double) * nParams);
+            double *outE = (double *)malloc(sizeof(double) * nParams);
+
+            TKleastSquares(psr_y, white_y, designMatrix, white_designMatrix, psr_ndata,
+                           nParams, T2_SVD_TOL, 0, outP, outE, NULL);
+            iparam = 0;
+            for (int k = 0; k < psr[ipsr].param[param].aSize; ++k)
+            {
+                if (psr[ipsr].param[param].fitFlag[k] == 1)
+                {
+                    logmsg("TNsubtractPoly -- Updating %s k=%d : %lg +/- %lg", label_str[param], k, outP[iparam], outE[iparam]);
+                    updatefunc(psr, ipsr, param, k, outP[iparam], -1);
+                    for (int ifit = 0; ifit < psr_ndata; ++ifit)
+                    {
+                        switch(param) {
+                            case param_f:
+                                psr[ipsr].obsn[psr_toaidx[ifit]].TNRedSignal -= designMatrix[ifit][iparam] * outP[iparam];
+                                break;
+                            case param_dm:
+                                psr[ipsr].obsn[psr_toaidx[ifit]].TNDMSignal -= designMatrix[ifit][iparam] * outP[iparam];
+                                break;
+                            case param_cm:
+                                psr[ipsr].obsn[psr_toaidx[ifit]].TNChromSignal -= designMatrix[ifit][iparam] * outP[iparam];
+                                break;
+                        }
+                    }
+                    ++iparam;
+                }
+            }
+        }
+    }
+}
 
 unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
         double* e, int* ip){

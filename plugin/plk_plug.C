@@ -1022,9 +1022,9 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
 
 		  
 		}
-                if(yplot==2 && psr[0].AverageDMResiduals == 1){errBar[count] = psr[0].obsn[i].averagedmerr/1e-6;}
-                if(yplot==16){errBar[count] = (float) psr[0].obsn[i].TNRedErr/1e-6;}
-                if(yplot==17){
+        if(yplot==2 && psr[0].AverageDMResiduals == 1){errBar[count] = psr[0].obsn[i].averagedmerr/1e-6;}
+        if(yplot==16){errBar[count] = (float) psr[0].obsn[i].TNRedErr/1e-6;}
+        if(yplot==17){
 		  double DMKappa=2.410*pow(10.0,-16);
 		  double freq=(double)psr[0].obsn[i].freqSSB;
 		  longdouble yrs = (psr[0].obsn[i].sat - psr[0].param[param_dmepoch].val[0])/365.25;
@@ -1614,7 +1614,7 @@ void doPlot(pulsar *psr,int npsr,char *gr,double unitFlag, char parFile[][MAX_FI
                 else if(psr[0].TNsubtractDM==1){
                     printf("will Re-add PL DM/Chrom Variations on next Fit \n");
                     psr[0].TNsubtractDM=0;
-                    psr[0].TNsubtractChrom=1;
+                    psr[0].TNsubtractChrom=0;
 		    formResiduals(psr,npsr,1);
 		     textOutput(psr,npsr,0,0,0,0,"");
 		}
