@@ -573,21 +573,67 @@ void t2fit_prefit(pulsar* psr, int npsr){
  */
 void t2fit_postfit(pulsar* psr, int npsr){
 
+
+    
     /**
      * Need to squareroot the TN error bars.
      */
     for (int ipsr = 0; ipsr < npsr; ++ipsr){
+        
+        double* psr_x=(double*)malloc(sizeof(double)*psr[ipsr].nobs);
+        double* psr_y=(double*)malloc(sizeof(double)*psr[ipsr].nobs);
+        double* psr_e=(double*)malloc(sizeof(double)*psr[ipsr].nobs);
+        double* white_y=(double*)malloc(sizeof(double)*psr[ipsr].nobs);
+        int* psr_toaidx = (int*)malloc(sizeof(int)*psr[ipsr].nobs); // mapping from fit data to observation number
+        unsigned int psr_ndata = 0;
+
         if (psr[ipsr].TNRedAmp && psr[ipsr].TNRedGam) {
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNRedErr = sqrt(psr[ipsr].obsn[iobs].TNRedErr);
             }
         }
         if (psr[ipsr].TNDMAmp && psr[ipsr].TNDMGam) {
+
+
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNDMErr = sqrt(psr[ipsr].obsn[iobs].TNDMErr);
             }
+
+            if (psr_ndata==0)psr_ndata=t2Fit_getFitData(psr+ipsr,psr_x,psr_y,psr_e,psr_toaidx);
+            int nParams=0;
+            for (int k = 0; k < psr[ipsr].param[param_dm].aSize; ++k){
+                if(psr[ipsr].param[param_dm].fitFlag[k]==1) {
+                    ++nParams;
+                }
+            }
+            if (nParams==0)continue;
+
+            double** designMatrix = malloc_blas(psr_ndata,nParams);
+            double** white_designMatrix = malloc_blas(psr_ndata,nParams);
+            for (int k = 0; k < psr[ipsr].param[param_dm].aSize; ++k){
+                int iparam=0;
+                if(psr[ipsr].param[param_dm].fitFlag[k]==1) {
+                    for (int ifit=0; ifit < psr_ndata; ++ifit){
+                        designMatrix[ifit][iparam] = t2FitFunc_stdDm(psr,ipsr,psr_x[ifit],psr_toaidx[ifit],param_dm,k);
+                        white_designMatrix[ifit][iparam] = designMatrix[ifit][iparam]/psr[ipsr].obsn[psr_toaidx[ifit]].toaErr;
+                        psr_y[ifit] = psr[ipsr].obsn[psr_toaidx[ifit]].TNDMSignal/(DM_CONST*pow(psr[ipsr].obsn[psr_toaidx[ifit]].freqSSB/1.0e6,2));
+                        white_y[ifit] = psr_y[ifit]/psr[ipsr].obsn[psr_toaidx[ifit]].toaErr;
+                    }
+                    ++iparam;
+                }
+            }
+            // now we have the design matrix, we can do the fit.
+            
+            double* outP = (double*)malloc(sizeof(double)*nParams);
+            double* outE = (double*)malloc(sizeof(double)*nParams);
+
+            printf("\n\n\n*******\n%d %d\n*******\n\n\n",psr_ndata,nParams);
+            TKleastSquares(psr_y,white_y,designMatrix,white_designMatrix,psr_ndata,
+                    nParams,T2_SVD_TOL,0,outP,outE,NULL);
+
         }
-	if (psr[ipsr].TNChromAmp && psr[ipsr].TNChromGam && psr[ipsr].TNChromIdx) {
+	    if (psr[ipsr].TNChromAmp && psr[ipsr].TNChromGam && psr[ipsr].TNChromIdx) {
+
             for (int iobs = 0; iobs < psr[ipsr].nobs; ++iobs){
                 psr[ipsr].obsn[iobs].TNChromErr = sqrt(psr[ipsr].obsn[iobs].TNChromErr);
             }
