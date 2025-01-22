@@ -16,7 +16,7 @@ double t2FitFunc_zero(pulsar *psr, int ipsr ,double x ,int ipos ,param_label lab
 }
 void t2UpdateFunc_zero(pulsar *psr, int ipsr ,param_label label,int k, double val, double err){
     psr[ipsr].offset = val;
-    psr[ipsr].offset_e = err;
+    if(err >= 0) psr[ipsr].offset_e = err;
 }
 
 /**
@@ -96,7 +96,7 @@ void t2UpdateFunc_stdFreq(pulsar *psr, int ipsr ,param_label label,int k, double
     if (k==0)
     {
         psr[ipsr].param[param_f].val[k] *= (1.0-val/psr[ipsr].param[param_f].val[0]);
-        psr[ipsr].param[param_f].err[k]  = error;
+        if(error >= 0) psr[ipsr].param[param_f].err[k]  = error;
     }
     else
     {
@@ -110,7 +110,7 @@ void t2UpdateFunc_stdFreq(pulsar *psr, int ipsr ,param_label label,int k, double
 
         psr[ipsr].param[param_f].val[k] = psr[ipsr].param[param_f].val[k] -
             (psr[ipsr].param[param_f].val[0]*(val/pow(24.0*3600.0,k+1))/scale);
-        psr[ipsr].param[param_f].err[k] = error/(pow(24.0*3600.0,k+1))/scale*
+        if(error >= 0) psr[ipsr].param[param_f].err[k] = error/(pow(24.0*3600.0,k+1))/scale*
             psr[ipsr].param[param_f].val[0];
     }
 }
@@ -237,12 +237,12 @@ double t2FitFunc_stdCm(pulsar *psr, int ipsr ,double x ,int ipos ,param_label la
 
 void t2UpdateFunc_simpleAdd(pulsar *psr, int ipsr ,param_label label,int k, double val, double error){
     psr[ipsr].param[label].val[k] += val;
-    psr[ipsr].param[label].err[k]  = error;
+    if (error >= 0) psr[ipsr].param[label].err[k]  = error;
 }
 
 void t2UpdateFunc_simpleMinus(pulsar *psr, int ipsr ,param_label label,int k, double val, double error){
     psr[ipsr].param[label].val[k] -= val;
-    psr[ipsr].param[label].err[k]  = error;
+    if (error >= 0) psr[ipsr].param[label].err[k]  = error;
 }
 
 

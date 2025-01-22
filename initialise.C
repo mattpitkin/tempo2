@@ -219,6 +219,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     psr->TNsubtractDM=0;
     psr->TNsubtractRed=0;
     psr->TNsubtractChrom=0;
+    psr->TNsubtractPoly=1;
     psr->TN_QpRatio=0;
     psr->TN_QpPeriod=0;
     psr->TN_QpSig=0;

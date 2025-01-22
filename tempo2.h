@@ -913,6 +913,7 @@ typedef struct pulsar {
     double TNDM_log_factor;
         int TNChrom_log_freqs;
     double TNChrom_log_factor;
+    char TNsubtractPoly;
 
 } pulsar;
 
