@@ -608,6 +608,8 @@ void t2fit_postfit(pulsar* psr, int npsr){
 
 void subtractTNPoly(pulsar *psr, int ipsr, label param)
 {
+    int _writeResiduals=writeResiduals; // store and disable writeResiduals so that we don't clobber the output
+    writeResiduals=0;
     if (psr[ipsr].TNsubtractPoly)
     {
         double *psr_x = (double *)malloc(sizeof(double) * psr[ipsr].nobs);
@@ -694,11 +696,31 @@ void subtractTNPoly(pulsar *psr, int ipsr, label param)
             TKleastSquares(psr_y, white_y, designMatrix, white_designMatrix, psr_ndata,
                            nParams, T2_SVD_TOL, 0, outP, outE, NULL);
             iparam = 0;
+            FILE *metafile;
+            if (_writeResiduals&4 ) {
+                switch(param) {
+                    case param_f:
+                        metafile=fopen("tnred_subtract.meta","w");
+                        break;
+                    case param_dm:
+                        metafile=fopen("tnreddm_subtract.meta","w");
+                        break;
+                    case param_cm:
+                        metafile=fopen("tnredcm_subtract.meta","w");
+                        break;
+                    default:
+                        metafile=fopen("tnred_subtract.meta","w");
+                        break;
+                }
+            }
             for (int k = 0; k < psr[ipsr].param[param].aSize; ++k)
             {
                 if (psr[ipsr].param[param].fitFlag[k] == 1)
                 {
                     logmsg("TNsubtractPoly -- Updating %s k=%d : %lg +/- %lg", label_str[param], k, outP[iparam], outE[iparam]);
+                    if (_writeResiduals&4 ) {
+                        fprintf(metafile,"%s %d %lg %lg\n",label_str[param],k,outP[iparam],outE[iparam]);
+                    }
                     updatefunc(psr, ipsr, param, k, outP[iparam], -1);
                     for (int ifit = 0; ifit < psr_ndata; ++ifit)
                     {
@@ -717,8 +739,12 @@ void subtractTNPoly(pulsar *psr, int ipsr, label param)
                     ++iparam;
                 }
             }
+            if (_writeResiduals&4 ) {
+                fclose(metafile);
+            }
         }
     }
+    writeResiduals=_writeResiduals;
 }
 
 unsigned int t2Fit_getFitData(pulsar *psr, double* x, double* y,
