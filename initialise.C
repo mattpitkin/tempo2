@@ -171,6 +171,7 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
     {
         psr->jumpVal[i] = 0.0;
         psr->jumpSAT[i] = 0;
+        psr->jumpScaled[i] = 0;
         psr->jumpValErr[i] = 0.0;
     }
     for (i=0;i<MAX_JUMPS;i++)

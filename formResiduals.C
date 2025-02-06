@@ -686,8 +686,10 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
             {
                 for (l=0;l<psr[p].obsn[i].obsNjump;l++)
                 {		
-                    if (psr[p].obsn[i].jump[l]==k && psr[p].jumpSAT[l]==0)
-                        phaseJ+=psr[p].jumpVal[k]*psr[p].param[param_f].val[0];
+                    if (psr[p].obsn[i].jump[l]==k && psr[p].jumpSAT[l]==0){
+                        // Jumps now can have a per-ToA scale.
+                        phaseJ+=psr[p].jumpVal[k]*psr[p].obsn[i].jumpScale[l]*psr[p].param[param_f].val[0];
+                    }
                 }
             }
     
