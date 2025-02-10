@@ -87,7 +87,7 @@ void tai2ut1(pulsar *psr,int npsr)
                     /* redwards, changed ut1red to return UT1-TAI. So now we have
                        UT1-TOA = UT1-TAI + (TAI-TOA) */
 
-
+                    
                     psr[p].obsn[i].correctionUT1 =  
                         ut1red((double)(psr[p].obsn[i].sat),
                                 psr[p].noWarnings)
