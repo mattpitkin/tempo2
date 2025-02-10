@@ -502,23 +502,46 @@ DynamicArray *getClockCorrectionSequence(const char *clockFrom, const char *cloc
     for (iseq=0; iseq < clockCorrectionSequences.nelem; iseq++)
     {
         seq = ((DynamicArray *)clockCorrectionSequences.data) + iseq;
+
+        for (int ifunc=0; ifunc < seq->nelem; ++ifunc){
+            ClockCorrectionFunction* func = ((ClockCorrectionFunction **)seq->data)[ifunc];
+        }
+
+        /**
+         * The old code here would fail if we had a chain like
+         * A->B->C->D->E->F
+         * and we asked to go from B to E. It would think we had a reversed chain and apply the correction from F back to A erroniously!
+         */
         firstFunc = ((ClockCorrectionFunction **)seq->data)[0];
         lastFunc  = ((ClockCorrectionFunction **)seq->data)[seq->nelem - 1];
 
-
+        char* seqFrom = firstFunc->clockFrom;
+        char* seqTo = lastFunc->clockTo;
+        if (seq->nelem > 1){
+            ClockCorrectionFunction* nextFunc= ((ClockCorrectionFunction **)seq->data)[1];
+            if((strcasecmp(seqFrom, nextFunc->clockFrom)==0) || (strcasecmp(seqFrom, nextFunc->clockTo)==0)) {
+                // seqFrom cannot really be the end point, so the first correction must be reversed.
+                seqFrom = firstFunc->clockTo;
+            }
+            nextFunc= ((ClockCorrectionFunction **)seq->data)[seq->nelem - 2];
+            if((strcasecmp(seqTo, nextFunc->clockFrom)==0) || (strcasecmp(seqTo, nextFunc->clockTo)==0)) {
+                // seqTo cannot really be the end point, so the last correction must be reversed.
+                seqFrom = lastFunc->clockFrom;
+            }
+        }
 
         if (
                 (
                 // we can go from From to To in one direction
                 (
-                 !strcasecmp(firstFunc->clockFrom, clockFrom)
+                 !strcasecmp(seqFrom, clockFrom)
                  && 
-                 !strcasecmp(lastFunc->clockTo, clockTo)
+                 !strcasecmp(seqTo, clockTo)
                 ) || (
                     // or we can to from To to From in the other direction
-                    !strcasecmp(firstFunc->clockTo, clockFrom) 
+                    !strcasecmp(seqTo, clockFrom) 
                     &&
-                    !strcasecmp(lastFunc->clockFrom, clockTo)
+                    !strcasecmp(seqFrom, clockTo)
                     )
                 ) && (
                 // date is within possible range
@@ -706,6 +729,8 @@ getCorrection(observation *obs, const char *clockFrom_c, const char *clockTo, in
 
     if (clockFrom[0]=='\0')
         strcpy(clockFrom,site->clock_name);
+    
+
     strcpy(currClock,clockFrom);
 
     if (!strcasecmp(clockTo, clockFrom))
@@ -741,6 +766,7 @@ getCorrection(observation *obs, const char *clockFrom_c, const char *clockTo, in
     {
         func = ((ClockCorrectionFunction **)sequence->data)[ifunc];
         bool backwards = strcasecmp(currClock, func->clockFrom);
+
         /* add correction using sign based on direction of correction */
         correction += 
             ClockCorrectionFunction_getCorrection(func, obs->sat+correction/SECDAY)

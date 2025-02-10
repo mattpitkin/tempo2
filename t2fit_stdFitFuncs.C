@@ -355,7 +355,7 @@ double t2FitFunc_jump(pulsar *psr, int ipsr ,double x ,int ipos ,param_label lab
     for (int l=0;l<psr[ipsr].obsn[ipos].obsNjump;l++){
         if (psr[ipsr].obsn[ipos].jump[l]==k) {
             if (psr[ipsr].jumpSAT[l]==0) {
-                return -1.0;
+                return -psr[ipsr].obsn[ipos].jumpScale[l];
             } else {
                 //logmsg("SATJUMP  %s %d",label_str[label],k);
                 return -1.0 * ((psr[ipsr].obsn[ipos].freq * 1e6) / psr[ipsr].obsn[ipos].freqSSB);

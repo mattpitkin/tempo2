@@ -491,6 +491,7 @@ typedef struct observation {
     char flagVal[MAX_FLAGS][MAX_FLAG_LEN];
     int  nFlags;                   
     int  jump[MAX_FLAGS];           /*!< Jump region */
+    double jumpScale[MAX_FLAGS];    /*!< Scale of jump */
     int  obsNjump;                  /*!< Number of jumps for this observation */
     int fdjump[MAX_FLAGS];
     int obsNfdjump;
@@ -616,7 +617,7 @@ typedef struct pulsar {
     int    fitJump[MAX_JUMPS];      /*!< = 1 if fit for jump                                        */
     double jumpValErr[MAX_JUMPS];   /*!< Error on jump                                              */
     char   jumpStr[MAX_JUMPS][MAX_STRLEN]; /*!< String describing jump                              */
-    
+    char   jumpScaled[MAX_JUMPS];   /*!< = 1 if jump is scaled by the flag val                   */
 
     // new parameters for fdjumps
     int    nfdJumps;                  /*!< Number of jumps                                        */
@@ -914,6 +915,8 @@ typedef struct pulsar {
         int TNChrom_log_freqs;
     double TNChrom_log_factor;
     char TNsubtractPoly;
+
+    
 
 } pulsar;
 

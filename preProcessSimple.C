@@ -261,6 +261,7 @@ void preProcessSimple2 (pulsar *psr,
         for (k=1;k<=psr->nJumps;k++)
         {
             int yes=0;
+            double jumpScale=1.0;
 
             char str1[100],str2[100],str3[100];
             double val1, val2;
@@ -295,7 +296,16 @@ void preProcessSimple2 (pulsar *psr,
                 if (strcasecmp(selectedSite, obsSite)!=0)
                     yes=1;	    
             }
-            else if (str1[0]=='-')
+            if (strcasecmp(str1,"SCALED")==0) {
+                int jj;
+                for (jj=0;jj<psr->obsn[i].nFlags;jj++) {
+                    if (strcmp(psr->obsn[i].flagID[jj],str2)==0){
+                        yes=1;
+                        sscanf(psr->obsn[i].flagVal[jj],"%lf",&jumpScale);
+                    }
+                }
+            }
+            if (str1[0]=='-')
             {
                 int jj;
                 for (jj=0;jj<psr->obsn[i].nFlags;jj++)
@@ -306,7 +316,12 @@ void preProcessSimple2 (pulsar *psr,
                 }
             }
 
-            if (yes==1) {psr->obsn[i].jump[psr->obsn[i].obsNjump]=k; (psr->obsn[i].obsNjump)++;}
+
+            if (yes==1) {
+                psr->obsn[i].jump[psr->obsn[i].obsNjump]=k;
+                psr->obsn[i].jumpScale[psr->obsn[i].obsNjump]=jumpScale;
+                (psr->obsn[i].obsNjump)++;
+            }
         }
         // check for fdjumps
         for (k=1;k<=psr->nfdJumps;k++)

@@ -319,6 +319,18 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                     psr->fitJump[psr->nJumps]=0;
             }
         }
+        if(strcasecmp(str1, "SCALED")==0){
+            if (nread>2)
+            {
+                sscanf(str3,"%lf",&(psr->jumpVal[psr->nJumps]));
+                if (sscanf(str4,"%d",&v5)==1)
+                {
+                    if (v5!=1) psr->fitJump[psr->nJumps]=0;
+                }
+                else
+                    psr->fitJump[psr->nJumps]=0;
+            }
+        }
         if(strcasecmp(str, "SATJUMP")==0){
             psr->jumpSAT[psr->nJumps]=1; // this is a SAT jump
         }

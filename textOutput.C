@@ -1424,7 +1424,7 @@ void textOutput(pulsar *psr,int npsr,double globalParameter,int nGlobal,int outR
                     sscanf(psr[p].jumpStr[i],"%s %s %s %s %s",str1,str2,str3,str4,str5);
                     if (strcasecmp(str1,"FREQ")==0 || strcasecmp(str1,"MJD")==0)
                         fprintf(fout2,"JUMP %s %s %s %.14g %d\n",str1,str2,str3,psr[p].jumpVal[i],psr[p].fitJump[i]);
-                    else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || str1[0]=='-')
+                    else if (strcasecmp(str1,"NAME")==0 || strcasecmp(str1,"TEL")==0 || strcasecmp(str1,"SCALED")==0 || str1[0]=='-')
                         fprintf(fout2,"JUMP %s %s %.14g %d\n",str1,str2,psr[p].jumpVal[i],psr[p].fitJump[i]);
                 }	
                 for (i=1;i<=psr[p].nfdJumps;i++)
