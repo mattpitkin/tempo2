@@ -673,7 +673,27 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
                 readValue(psr,str,fin,&(psr->param[param_gltd3]),gval-1);
         }
     }
-
+    else if (strstr(str,"NUDOT_AMP_")!=NULL){
+        if (sscanf(str+10,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_nudot_amp].aSize)
+                readValue(psr,str,fin,&(psr->param[param_nudot_amp]),gval-1);
+        }
+    }
+    else if (strstr(str,"NUDOT_TIME_")!=NULL){
+        if (sscanf(str+11,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_nudot_transition_time].aSize)
+                readValue(psr,str,fin,&(psr->param[param_nudot_transition_time]),gval-1);
+        }
+    }
+    else if (strstr(str,"NUDOT_EPOCH_")!=NULL){
+        if (sscanf(str+12,"%d",&gval)==1)
+        {
+            if (gval<psr->param[param_nudot_epoch].aSize)
+                readValue(psr,str,fin,&(psr->param[param_nudot_epoch]),gval-1);
+        }
+    }
     else if  (strstr(str,"EXPEP_")!=NULL || strstr(str,"expep_")!=NULL)
     {
         if (sscanf(str+6,"%d",&gval)==1)
@@ -1715,7 +1735,7 @@ void checkLine(pulsar *psr,char *str,FILE *fin,parameter *elong, parameter *elat
         ( psr->nTNSECORR )++;
     }
 
-
+    
     /* /---------\
        | TN Noise |
        \---------/ */

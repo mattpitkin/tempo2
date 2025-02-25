@@ -197,6 +197,7 @@ enum label {
     param_gltd2,param_gltd3, param_glf0d2, param_glf0d3,
     param_ne_sw_sin,param_ne_sw_ifunc,
     param_chromx, param_chromxr1, param_chromxr2, // chromatic version of DMX.
+    param_nudot_epoch, param_nudot_amp, param_nudot_transition_time, 
     // ** ADD NEW PARAMETERS ABOVE HERE **
     // THE BELOW LINE MUST BE THE LAST LINE IN THIS ENUM
     param_LAST, /*!< Marker for the last param to be used in for loops  */

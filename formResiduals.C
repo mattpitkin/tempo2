@@ -608,8 +608,26 @@ void formResiduals(pulsar *psr,int npsr,int removeMean)
                     }
                 }
             }
-	    
-
+	//nudot switches
+    for (k=0; k <psr[p].param[param_nudot_epoch].aSize;++k){
+        if (psr[p].param[param_nudot_epoch].paramSet[k]==1)
+        {
+            double w = 0;
+            if (psr[p].param[param_nudot_transition_time].paramSet[k]){
+                w=psr[p].param[param_nudot_transition_time].val[k]*86400.0;
+            }
+            double tp = (ntpd+ftpd)*86400.0;
+            double tgl = (psr[p].param[param_nudot_epoch].val[k] - psr[p].param[param_pepoch].val[0])*86400.0;
+            double tgl2 = tgl+w;
+            double delta_nudot = psr[p].param[param_nudot_amp].val[k];
+            if (tp > tgl && tp < tgl2) {
+                phase4 += delta_nudot * pow(tp-tgl,3)/6.0/w; // maybe minus?
+            } else if (tp >= tgl2) {
+                double c =  delta_nudot * w*w / 6.0;
+                phase4 += delta_nudot*pow(tp-tgl2,2)/2.0 + delta_nudot*w*(tp-tgl2)/2.0 + c;
+            }
+        }
+    }
     for (k=0;k<psr[p].param[param_expep].aSize;k++)
             {
                 if (psr[p].param[param_expep].paramSet[k]==1)

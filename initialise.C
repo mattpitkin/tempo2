@@ -727,6 +727,27 @@ void initialiseOne (pulsar *psr, int noWarnings, int fullSetup)
         sprintf(temp,"SXER_%04d",k+1);
         strcpy(psr->param[param_sxer].shortlabel[k],temp);
       }
+      for (k=0;k<psr->param[param_nudot_epoch].aSize;k++) 
+        {
+            sprintf(temp,"NUDOT_EPOCH_%d (MJD)",k+1);
+            strcpy(psr->param[param_nudot_epoch].label[k],temp);
+            sprintf(temp,"NUDOT_EPOCH_%d",k+1);
+            strcpy(psr->param[param_nudot_epoch].shortlabel[k],temp);
+        }
+        for (k=0;k<psr->param[param_nudot_amp].aSize;k++) 
+        {
+            sprintf(temp,"NUDOT_AMP_%d (Hz^2)",k+1);
+            strcpy(psr->param[param_nudot_amp].label[k],temp);
+            sprintf(temp,"NUDOT_AMP_%d",k+1);
+            strcpy(psr->param[param_nudot_amp].shortlabel[k],temp);
+        }
+        for (k=0;k<psr->param[param_nudot_transition_time].aSize;k++) 
+        {
+            sprintf(temp,"NUDOT_TIME_%d (days)",k+1);
+            strcpy(psr->param[param_nudot_transition_time].label[k],temp);
+            sprintf(temp,"NUDOT_TIME_%d",k+1);
+            strcpy(psr->param[param_nudot_transition_time].shortlabel[k],temp);
+        }
         for (k=0; k < MAX_PARAMS; ++k){
             psr->constraint_special[k]=0;
         }
@@ -777,7 +798,10 @@ void allocateMemory(pulsar *psr, int realloc)
 	else if (i==param_gwcs_amp) psr->param[i].aSize = 2; 
         else if (i==param_gwb_amp) psr->param[i].aSize =2;
 	else if (i==param_gwecc) psr->param[i].aSize =2;
-        else psr->param[i].aSize = 1;
+    //param_nudot_epoch, param_nudot_amp, param_nudot_transition_time,
+    else if(i==param_nudot_epoch || i==param_nudot_amp || i==param_nudot_transition_time)
+        psr->param[i].aSize = 32;
+    else psr->param[i].aSize = 1;
 
         psr->param[i].val       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));
         psr->param[i].err       = (longdouble *)malloc(psr->param[i].aSize*sizeof(longdouble));
