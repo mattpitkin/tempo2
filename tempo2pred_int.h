@@ -28,21 +28,8 @@
  * need to be available (i.e. declared) to callers from external programs;
  Note, some of these will need *linkage* into the tempo2pred library. */
 
-#include "tempo2.h"
 #include "tempo2pred.h"
 
-void ChebyModel_Construct(ChebyModel *cm, const pulsar *psr);
-void ChebyModel_Test(ChebyModel *cm, const pulsar *psr, int nmjd, int nfreq,
-        long double *residualRMS, long double *residualMAV);
-void ChebyModelSet_Construct(ChebyModelSet *cms, const pulsar *psr,
-        const char *sitename,
-        long double mjd_start, long double mjd_end,
-        long double segment_length, long double overlap,
-        long double freq_start,long double freq_end,
-        int nmjdcoeff, int nfreqcoeff);
-void ChebyModelSet_Test(ChebyModelSet *cms, const pulsar *psr,
-        int nmjd, int nfreq,
-        long double *residualRMS, long double *residualMAV);
 
 #ifdef __cplusplus
 extern "C" {

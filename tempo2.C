@@ -37,7 +37,7 @@
 #include "tempo2.h"
 #include "tempo2Util.h"
 #include "tempo2pred.h"
-#include "tempo2pred_int.h"
+#include "tempo2pred_cpp.h"
 #include "T2accel.h"
 #include "t2fit.h"
 #include <dlfcn.h>

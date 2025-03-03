@@ -31,6 +31,7 @@ cdef extern from "t2pred_loops.h":
 
     void T2Predictor_GetPhase_array(const T2Predictor *t2p, double refmjd, double *mjd, const int nmjd, double freq, double* out)
     void T2Predictor_GetFrequency_array(const T2Predictor *t2p, double refmjd, double *mjd, const int nmjd, double freq, double* out)
+    long double get_FractionalPhase(const T2Predictor *t2p, int intmjd, double fracmjd, double freq)
 
 cdef class phase_predictor:
     cdef T2Predictor *thisptr
@@ -71,9 +72,13 @@ cdef class phase_predictor:
         return out.reshape(mjd.shape)
 
 
+    def getPrecisePhase(self,intmjd,fracmjd,freq):
+        return get_FractionalPhase(self.thisptr,intmjd,fracmjd,freq)
 
     def getPhase(self,mjd,freq):
         return T2Predictor_GetPhase(self.thisptr,mjd,freq)
+
+        
 
     def getFrequency(self,mjd,freq):
         return T2Predictor_GetFrequency(self.thisptr,mjd,freq)

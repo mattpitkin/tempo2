@@ -349,7 +349,7 @@ void testCheby2D()
     Cheby2D_Construct(&cheby, testFunc, NULL);
     printf("\nTesting..."); fflush(stdout);
     Cheby2D_Test(&cheby, nx*3, ny*3,testFunc, NULL, &rms, &mav);
-    ld_printf("\nRMS= %Lg MAV= %Lg\n", rms, mav);
+    printf("\nRMS= %Lg MAV= %Lg\n", rms, mav);
     Cheby2D_Destroy(&cheby);
 }
 
@@ -427,9 +427,9 @@ void ChebyModel_Write(const ChebyModel *cm, FILE *f)
     fprintf(f, "ChebyModel BEGIN\n");
     fprintf(f, "PSRNAME %s\n", cm->psrname);
     fprintf(f, "SITENAME %s\n", cm->sitename);
-    ld_fprintf(f, "TIME_RANGE %.34Lg %.34Lg\n", cm->mjd_start, cm->mjd_end);
-    ld_fprintf(f, "FREQ_RANGE %.34Lg %.34Lg\n", cm->freq_start, cm->freq_end);
-    ld_fprintf(f, "DISPERSION_CONSTANT %.34Lg\n", cm->dispersion_constant);
+    fprintf(f, "TIME_RANGE %.34Lg %.34Lg\n", cm->mjd_start, cm->mjd_end);
+    fprintf(f, "FREQ_RANGE %.34Lg %.34Lg\n", cm->freq_start, cm->freq_end);
+    fprintf(f, "DISPERSION_CONSTANT %.34Lg\n", cm->dispersion_constant);
     fprintf(f, "NCOEFF_TIME %d\n", cm->cheby.nx);
     fprintf(f, "NCOEFF_FREQ %d\n", cm->cheby.ny);
 
@@ -439,7 +439,7 @@ void ChebyModel_Write(const ChebyModel *cm, FILE *f)
         for (iy=0; iy < cm->cheby.ny; iy++)
         {
             //	fprintf(f, " %.34Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
-            ld_fprintf(f, " %.25Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
+            fprintf(f, " %.25Lg", cm->cheby.coeff[iy*cm->cheby.nx+ix]);
 
             
             if ((iy+1)%3==0) fprintf(f, "\n");  // Every 3 coefficients put a new line

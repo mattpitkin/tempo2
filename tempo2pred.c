@@ -24,9 +24,11 @@
  *    timing model.
  */
 
-
+// external code should only use tempo2pred.h
 #include "tempo2pred.h"
 #include "tempo2pred_int.h"
+
+
 
 #include <stdio.h>
 #include <stdlib.h>

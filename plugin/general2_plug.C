@@ -167,7 +167,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                 else if (line[i]=='\\' && line[i+1]=='t')
                 {
                     i++;
-                    sprintf(disp,"\t");
+                    ld_sprintf(disp,"\t");
                     fprintf(fout,"%s",disp);
                     pos+=strlen(disp);
                 } 
@@ -219,85 +219,85 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                     {
                         if (strcasecmp(var,"bat")==0) /* barycentric arrival time */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].bat);
+                            ld_sprintf(disp,format,psr[0].obsn[varN].bat);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"bbat")==0) /* binary barycentric arrival time */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].bbat);
+                            ld_sprintf(disp,format,psr[0].obsn[varN].bbat);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"pet")==0) /* pulsar time */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].pet);
+                            ld_sprintf(disp,format,psr[0].obsn[varN].pet);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"torb")==0) /* orbital phase */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].torb);
+                            ld_sprintf(disp,format,psr[0].obsn[varN].torb);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"clock4")==0) /* 4th clock correction */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[4].correction); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[4].correction); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"ut1")==0) /* UT1 correction */
                         {
-                            sprintf(disp,dformat,(double)psr[0].obsn[varN].correctionUT1);
+                            ld_sprintf(disp,dformat,(double)psr[0].obsn[varN].correctionUT1);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"clock3")==0) /* 3th clock correction */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[3].correction);  
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[3].correction);  
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp); 
                         }
                         if (strcasecmp(var,"clock2")==0) /* 2th clock correction */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[2].correction); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[2].correction); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"clock1")==0) /* 1th clock correction */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[1].correction); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[1].correction); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"del")==0) 
                         {
-                            sprintf(disp,dformat,(double)psr[0].obsn[varN].deleted); 
+                            ld_sprintf(disp,dformat,(double)psr[0].obsn[varN].deleted); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"einstein")==0) 
                         {
-                            sprintf(disp,dformat,(double)psr[0].obsn[varN].einsteinRate); 
+                            ld_sprintf(disp,dformat,(double)psr[0].obsn[varN].einsteinRate); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"file")==0)
                         {
-                            sprintf(disp,"%s",psr[0].obsn[varN].fname); 
+                            ld_sprintf(disp,"%s",psr[0].obsn[varN].fname); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"clock0")==0) /* 0th clock correction */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[0].correction); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[0].correction); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"sat")==0) /* site arrival time */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].sat); 
+                            ld_sprintf(disp,format,psr[0].obsn[varN].sat); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
@@ -326,62 +326,62 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 
                             r = sqrt(dotproduct(rsa,rsa));
                             ctheta = dotproduct(ppos,rsa)/r;
-                            sprintf(disp,dformat,acos(ctheta)*180/M_PI);
+                            ld_sprintf(disp,dformat,acos(ctheta)*180/M_PI);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
 
                         }
                         else if(strcasecmp(var,"spherical_sw")==0) {
-                            sprintf(disp,dformat,psr[0].obsn[varN].spherical_solar_wind);
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].spherical_solar_wind);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         else if(strcasecmp(var,"spherical_sw_dm")==0) {
                             double freqf = psr[0].obsn[varN].freqSSB;
-                            sprintf(disp,dformat,psr[0].obsn[varN].spherical_solar_wind*freqf*freqf*DM_CONST*1e-12);
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].spherical_solar_wind*freqf*freqf*DM_CONST*1e-12);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
 
                         else if (strcasecmp(var,"shapiro")==0) /* Solar shapiro delay */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelaySun); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelaySun); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"shapiroJ")==0) /* Solar shapiro delay */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelayJupiter); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelayJupiter); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"shapiroS")==0) /* Solar shapiro delay */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelaySaturn); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelaySaturn); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"shapiroV")==0) /* Solar shapiro delay */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelayVenus); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelayVenus); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"shapiroU")==0) /* Solar shapiro delay */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelayUranus); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelayUranus); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"shapiroN")==0) /* Solar shapiro delay */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelayNeptune); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].shapiroDelayNeptune); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"roemer")==0) /* Roemer delay */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].roemer); 
+                            ld_sprintf(disp,format,psr[0].obsn[varN].roemer); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
@@ -390,44 +390,44 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             int l;
                             for (l=0;l<psr[0].obsn[varN].nFlags;l++)
                             {
-                                sprintf(disp,"%s %s ",psr[0].obsn[varN].flagID[l],psr[0].obsn[varN].flagVal[l]); 
+                                ld_sprintf(disp,"%s %s ",psr[0].obsn[varN].flagID[l],psr[0].obsn[varN].flagVal[l]); 
                                 fprintf(fout,"%s",disp);
                                 pos+=strlen(disp);			
                             }
                         }
                         else if (strcasecmp(var,"tropo")==0)
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].troposphericDelay); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].troposphericDelay); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"tt")==0) /* Correction to TT */
                         {
-                            sprintf(disp,dformat,getCorrectionTT(psr[0].obsn+varN)); 
+                            ld_sprintf(disp,dformat,getCorrectionTT(psr[0].obsn+varN)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"Ttt")==0) /* TOA corrected to TT */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].sat+getCorrectionTT(psr[0].obsn+varN)/SECDAY); 
+                            ld_sprintf(disp,format,psr[0].obsn[varN].sat+getCorrectionTT(psr[0].obsn+varN)/SECDAY); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"t2tb")==0) // Correction including TT and tt2tb
                         {
-                            sprintf(disp,format,getCorrectionTT(psr[0].obsn+varN)+psr[0].obsn[varN].correctionTT_TB); 
+                            ld_sprintf(disp,format,getCorrectionTT(psr[0].obsn+varN)+psr[0].obsn[varN].correctionTT_TB); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"tt2tb")==0) /* Correction from TT to tb */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].correctionTT_TB); 
+                            ld_sprintf(disp,format,psr[0].obsn[varN].correctionTT_TB); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"earth_ssb")==0) /* Vector from Earth to SSB */
                         {
-                            sprintf(disp,dformat,sqrt(pow(psr[0].obsn[varN].earth_ssb[0],2)+
+                            ld_sprintf(disp,dformat,sqrt(pow(psr[0].obsn[varN].earth_ssb[0],2)+
                                         pow(psr[0].obsn[varN].earth_ssb[1],2)+
                                         pow(psr[0].obsn[varN].earth_ssb[2],2))); 
                             fprintf(fout,"%s",disp);
@@ -435,73 +435,73 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                         }
                         else if (strcasecmp(var,"earth_ssb1")==0) /* x from Earth to SSB */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[0]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[0]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"earth_ssb2")==0) /* y from Earth to SSB */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[1]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[1]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"earth_ssb3")==0) /* z from Earth to SSB */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[2]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"earth_ssb4")==0) /* vx from Earth to SSB //added by Emily */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[3]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[3]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"earth_ssb5")==0) /* vy from Earth to SSB //added by Emily */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[4]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[4]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"earth_ssb6")==0) /* vz from Earth to SSB //added by Emily */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[5]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].earth_ssb[5]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"sun_ssb1")==0) 
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[0]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[0]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"sun_ssb2")==0) 
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[1]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[1]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"sun_ssb3")==0) 
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[2]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].sun_ssb[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"sun_earth1")==0) 
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].sun_earth[0]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].sun_earth[0]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"sun_earth2")==0)
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].sun_earth[1]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].sun_earth[1]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"sun_earth3")==0) 
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].sun_earth[2]); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].sun_earth[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
@@ -525,7 +525,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                                 exit(1);
                             }
 
-                            sprintf(disp,dformat, 
+                            ld_sprintf(disp,dformat, 
                                     getParamDeriv(psr,varN,psr[0].obsn[varN].bbat-psr[0].param[param_pepoch].val[0], iparam, iindex)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
@@ -533,7 +533,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                         }
                         else if (strcasecmp(var,"ism")==0) /* ISM delay */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].tdis1); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].tdis1); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
@@ -547,79 +547,79 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             source_elevation = asin(dotproduct(psr[0].obsn[varN].zenith,
                                         psr[0].posPulsar)
                                     / obs->height_grs80);
-                            sprintf(disp,dformat,source_elevation*180.0/M_PI); 
+                            ld_sprintf(disp,dformat,source_elevation*180.0/M_PI); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"posPulsar")==0)
                         {
-                            sprintf(disp,"%f %f %f",psr[0].posPulsar[0],psr[0].posPulsar[1],psr[0].posPulsar[2]); 
+                            ld_sprintf(disp,"%f %f %f",psr[0].posPulsar[0],psr[0].posPulsar[1],psr[0].posPulsar[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"velPulsar")==0) //added by Emily
                         {
-                            sprintf(disp,"%f %f %f",psr[0].velPulsar[0],psr[0].velPulsar[1],psr[0].velPulsar[2]); 
+                            ld_sprintf(disp,"%f %f %f",psr[0].velPulsar[0],psr[0].velPulsar[1],psr[0].velPulsar[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"siteVel0")==0)
                         {
-                            sprintf(disp,"%f",psr[0].obsn[varN].siteVel[0]);
+                            ld_sprintf(disp,"%f",psr[0].obsn[varN].siteVel[0]);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"siteVel1")==0)
                         {
-                            sprintf(disp,"%f",psr[0].obsn[varN].siteVel[1]);
+                            ld_sprintf(disp,"%f",psr[0].obsn[varN].siteVel[1]);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"siteVel2")==0)
                         {
-                            sprintf(disp,"%f",psr[0].obsn[varN].siteVel[2]);
+                            ld_sprintf(disp,"%f",psr[0].obsn[varN].siteVel[2]);
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"posTel")==0)
                         {
-                            sprintf(disp,"%f %f %f",psr[0].obsn[varN].observatory_earth[0],psr[0].obsn[varN].observatory_earth[1],psr[0].obsn[varN].observatory_earth[2]); 
+                            ld_sprintf(disp,"%f %f %f",psr[0].obsn[varN].observatory_earth[0],psr[0].obsn[varN].observatory_earth[1],psr[0].obsn[varN].observatory_earth[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"dtCOE")==0) // Time to centre of Earth
                         {
-                            sprintf(disp,"%f",dotproduct(psr[0].posPulsar,psr[0].obsn[varN].observatory_earth));
+                            ld_sprintf(disp,"%f",dotproduct(psr[0].posPulsar,psr[0].obsn[varN].observatory_earth));
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"telEpos")==0) // Telescope wrt Earth geocenter
                         {
-                            sprintf(disp,"%.8f %.8f %.8f",psr[0].obsn[varN].observatory_earth[0], psr[0].obsn[varN].observatory_earth[1], psr[0].obsn[varN].observatory_earth[2]); 
+                            ld_sprintf(disp,"%.8f %.8f %.8f",psr[0].obsn[varN].observatory_earth[0], psr[0].obsn[varN].observatory_earth[1], psr[0].obsn[varN].observatory_earth[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"telEVel")==0) // Telescope wrt Earth geocenter
                         {
-                            sprintf(disp,"%.8g %.8g %.8g",psr[0].obsn[varN].siteVel[0], psr[0].obsn[varN].siteVel[1], psr[0].obsn[varN].siteVel[2]); 
+                            ld_sprintf(disp,"%.8g %.8g %.8g",psr[0].obsn[varN].siteVel[0], psr[0].obsn[varN].siteVel[1], psr[0].obsn[varN].siteVel[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"telSSB")==0) // Telescope wrt SSB
                         {
-                            sprintf(disp,"%.8f %.8f %.8f",psr[0].obsn[varN].observatory_earth[0]+psr[0].obsn[varN].earth_ssb[0],psr[0].obsn[varN].observatory_earth[1]+psr[0].obsn[varN].earth_ssb[1],psr[0].obsn[varN].observatory_earth[2]+psr[0].obsn[varN].earth_ssb[2]); 
+                            ld_sprintf(disp,"%.8f %.8f %.8f",psr[0].obsn[varN].observatory_earth[0]+psr[0].obsn[varN].earth_ssb[0],psr[0].obsn[varN].observatory_earth[1]+psr[0].obsn[varN].earth_ssb[1],psr[0].obsn[varN].observatory_earth[2]+psr[0].obsn[varN].earth_ssb[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"telVel")==0) // Telescope wrt SSB
                         {
-                            sprintf(disp,"%.8g %.8g %.8g",psr[0].obsn[varN].siteVel[0]+psr[0].obsn[varN].earth_ssb[3],psr[0].obsn[varN].siteVel[1]+psr[0].obsn[varN].earth_ssb[4],psr[0].obsn[varN].siteVel[2]+psr[0].obsn[varN].earth_ssb[5]); 
+                            ld_sprintf(disp,"%.8g %.8g %.8g",psr[0].obsn[varN].siteVel[0]+psr[0].obsn[varN].earth_ssb[3],psr[0].obsn[varN].siteVel[1]+psr[0].obsn[varN].earth_ssb[4],psr[0].obsn[varN].siteVel[2]+psr[0].obsn[varN].earth_ssb[5]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"zenith")==0)
                         {
-                            sprintf(disp,"%f %f %f",psr[0].obsn[varN].zenith[0],psr[0].obsn[varN].zenith[1],
+                            ld_sprintf(disp,"%f %f %f",psr[0].obsn[varN].zenith[0],psr[0].obsn[varN].zenith[1],
                                     psr[0].obsn[varN].zenith[2]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
@@ -648,25 +648,25 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 
                         else if (strcasecmp(var,"clock_corr")==0)
                         {
-                            sprintf(disp,dformat,getCorrectionTT(psr[0].obsn+varN));
+                            ld_sprintf(disp,dformat,getCorrectionTT(psr[0].obsn+varN));
                             fprintf(fout,"%s",disp);
 
                         }
                         else if (strcasecmp(var,"clock")==0)
                         {
-                            sprintf(disp,format,getCorrectionTT(psr[0].obsn+varN)+psr[0].obsn[varN].correctionTT_TB-psr[0].obsn[varN].correctionsTT[0].correction-psr[0].obsn[varN].correctionsTT[1].correction-psr[0].obsn[varN].correctionsTT[2].correction); 
+                            ld_sprintf(disp,format,getCorrectionTT(psr[0].obsn+varN)+psr[0].obsn[varN].correctionTT_TB-psr[0].obsn[varN].correctionsTT[0].correction-psr[0].obsn[varN].correctionsTT[1].correction-psr[0].obsn[varN].correctionsTT[2].correction); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"clk_corr1")==0)
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[0].correction); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[0].correction); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"clk_corr2")==0)
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[1].correction); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].correctionsTT[1].correction); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
@@ -678,7 +678,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             for (l=0;l<psr[0].obsn[varN].nclock_correction;l++) {
 
                                 if (l!=0)strcat(disp,",");
-                                sprintf(tmpstr,dformat,psr[0].obsn[varN].correctionsTT[l].correction);
+                                ld_sprintf(tmpstr,dformat,psr[0].obsn[varN].correctionsTT[l].correction);
                                 strcat(disp,tmpstr);
                             }
                             fprintf(fout,"%s",disp);
@@ -686,7 +686,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                         }
                         else if (strcasecmp(var,"clk2")==0)
                         {
-                            sprintf(disp,dformat,(psr[0].obsn[varN].correctionsTT[0].correction+psr[0].obsn[varN].correctionsTT[1].correction+psr[0].obsn[varN].correctionsTT[2].correction)/SECDAY); 
+                            ld_sprintf(disp,dformat,(psr[0].obsn[varN].correctionsTT[0].correction+psr[0].obsn[varN].correctionsTT[1].correction+psr[0].obsn[varN].correctionsTT[2].correction)/SECDAY); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }		    
@@ -706,31 +706,31 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                         }		
                         else if (strcasecmp(var,"ipm")==0) /* Interplanetary medium delay */
                         {
-                            sprintf(disp,dformat,psr[0].obsn[varN].tdis2); 
+                            ld_sprintf(disp,dformat,psr[0].obsn[varN].tdis2); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"fmjdu")==0) 
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].sat+(psr[0].obsn[varN].correctionsTT[0].correction+psr[0].obsn[varN].correctionsTT[1].correction+psr[0].obsn[varN].correctionsTT[2].correction)/SECDAY); 
+                            ld_sprintf(disp,format,psr[0].obsn[varN].sat+(psr[0].obsn[varN].correctionsTT[0].correction+psr[0].obsn[varN].correctionsTT[1].correction+psr[0].obsn[varN].correctionsTT[2].correction)/SECDAY); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);			
                         }
                         else if (strcasecmp(var,"x")==0) /* BAT - epoch */
                         {
-                            sprintf(disp,format,psr[0].obsn[varN].bat - psr[0].param[param_pepoch].val[0]); 
+                            ld_sprintf(disp,format,psr[0].obsn[varN].bat - psr[0].param[param_pepoch].val[0]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"freq")==0) /* observing frequency */
                         {
-                            sprintf(disp,format,(longdouble)psr[0].obsn[varN].freq); 
+                            ld_sprintf(disp,format,(longdouble)psr[0].obsn[varN].freq); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"freqSSB")==0) /* observing frequency at SSB */
                         {
-                            sprintf(disp,format,(longdouble)psr[0].obsn[varN].freqSSB); 
+                            ld_sprintf(disp,format,(longdouble)psr[0].obsn[varN].freqSSB); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
@@ -746,65 +746,65 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             }
                             voverc = dotproduct(p,vobs);
                             ff = psr[0].obsn[varN].freq*(1.0-voverc);
-                            sprintf(disp,format,(longdouble)ff); 
+                            ld_sprintf(disp,format,(longdouble)ff); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }		    
                         if (strcasecmp(var,"pre")==0) /* prefit residual */
                         {
-                            sprintf(disp,format,(longdouble)(psr[0].obsn[varN].prefitResidual-sub1*psr[0].obsn[first].prefitResidual)); 
+                            ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].prefitResidual-sub1*psr[0].obsn[first].prefitResidual)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
 			if (strcasecmp(var, "posttn") ==0) /*temponest red noise subtracted residuals*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].residualtn-sub1*psr[0].obsn[first].residualtn)); 
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].residualtn-sub1*psr[0].obsn[first].residualtn)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
 	   
 			if (strcasecmp(var, "tndm") ==0) /*temponest dm max-like signal*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNDMSignal)); 
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNDMSignal)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
 		   	if (strcasecmp(var, "tndmerr") ==0) /*temponest dm max-like signal*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNDMErr)); 
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNDMErr)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
 		   
 			if (strcasecmp(var, "tnrn") ==0) /*temponest red noise max-like signal*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNRedSignal)); 
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNRedSignal)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
 			if (strcasecmp(var, "tnrnerr") ==0) /*temponest red noise make-like signal*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNRedErr)); 
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNRedErr)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
 			
 			if (strcasecmp(var, "tnchrom") ==0) /*temponest chromatic noise max-like signal*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNChromSignal)); 
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNChromSignal)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
 			if (strcasecmp(var, "tnchromerr") ==0) /*temponest red noise make-like signal*/
 			{
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNChromErr)); 
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].TNChromErr)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
 			}
 
 			if  (strcasecmp(var, "avgres") ==0)
 			  {
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].averageres));
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].averageres));
 			    fprintf(fout,"%s",disp);
 							
 			    //fprintf(stderr, "here\n");
@@ -813,31 +813,31 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
 			if  (strcasecmp(var, "avgerr") ==0)
 			  {
 			    
-			    sprintf(disp,format,(longdouble)(psr[0].obsn[varN].averageerr));
+			    ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].averageerr));
 			    fprintf(fout,"%s",disp);
 			   
 			  }
                         if (strcasecmp(var,"pre_phase")==0) /* prefit residual in phase */
                         {
-                            sprintf(disp,format,(longdouble)(psr[0].obsn[varN].prefitResidual-sub1*psr[0].obsn[first].prefitResidual)*psr[0].param[param_f].val[0]); 
+                            ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].prefitResidual-sub1*psr[0].obsn[first].prefitResidual)*psr[0].param[param_f].val[0]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"post_phase")==0) /* postfit residual in phase */
                         {
-                            sprintf(disp,format,(longdouble)(psr[0].obsn[varN].residual-sub1*psr[0].obsn[first].residual)*psr[0].param[param_f].val[0]); 
+                            ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].residual-sub1*psr[0].obsn[first].residual)*psr[0].param[param_f].val[0]); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"post")==0) /* postfit residual */
                         {
-                            sprintf(disp,format,(longdouble)(psr[0].obsn[varN].residual-sub1*psr[0].obsn[first].residual)); 
+                            ld_sprintf(disp,format,(longdouble)(psr[0].obsn[varN].residual-sub1*psr[0].obsn[first].residual)); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
                         if (strcasecmp(var,"err")==0) /* toaErr */
                         {
-                            sprintf(disp,format,(longdouble)psr[0].obsn[varN].toaErr); 
+                            ld_sprintf(disp,format,(longdouble)psr[0].obsn[varN].toaErr); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
@@ -877,7 +877,7 @@ void parseLine(pulsar *psr,char *line,double *errMult,char *null,char *format,ch
                             phase = fortranMod(tpb-0.5*pbdot*tpb*tpb + 0.5*omdot*tpb  +1000000.0 ,1.0);
                             if (phase < 0.0) phase+=1.0; 
 
-                            sprintf(disp,format,(longdouble)phase); 
+                            ld_sprintf(disp,format,(longdouble)phase); 
                             fprintf(fout,"%s",disp);
                             pos+=strlen(disp);
                         }
@@ -942,8 +942,8 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
             ret_lv=(int)(log10((double)ivv+1.0e-10)+2.0);
 
         if (rval<0.0) ivv=-ivv;
-        sprintf(fmt,"%%%dd",ret_lv);
-        sprintf(cval,fmt,ivv);
+        ld_sprintf(fmt,"%%%dd",ret_lv);
+        ld_sprintf(cval,fmt,ivv);
     }
     else /* Encode as real */
     {
@@ -957,7 +957,7 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
                 ise=1; 
             }
             strcpy(cexp," ");
-            sprintf(cexp,"%d",-ixv); 
+            ld_sprintf(cexp,"%d",-ixv); 
             j=0; /* Strip off leading blanks */
             do
             {
@@ -966,10 +966,10 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
             }
             while (j==0);
             if (vv<0) /* allow space for - sign */
-                sprintf(fmt,"%%%d.%df",ise+4,ise);
+                ld_sprintf(fmt,"%%%d.%df",ise+4,ise);
             else
-                sprintf(fmt,"%%%d.%df",ise+3,ise);
-            sprintf(cval,fmt,vv);
+                ld_sprintf(fmt,"%%%d.%df",ise+3,ise);
+            ld_sprintf(cval,fmt,vv);
             if (cval[0]==' ') strcpy(cval,cval+1);
             ret_lv = strlen(cval)-1;
             strcat(cval,"E");
@@ -984,16 +984,16 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
                     ixv=1;
                     ise=ise-1;
                 }
-                sprintf(fmt,"%%%d.%df",3+ixv,ixv);
+                ld_sprintf(fmt,"%%%d.%df",3+ixv,ixv);
                 ee=ee*pow(10.0,-ise);
             }
             else
             {
                 if (ixv<0)ixv=0;
                 if (ixe<1)ixe=1;
-                sprintf(fmt,"%%%d.%df",3+ixv+ise,ixe);
+                ld_sprintf(fmt,"%%%d.%df",3+ixv+ise,ixe);
             }
-            sprintf(cval,fmt,rval);
+            ld_sprintf(cval,fmt,rval);
         }
     }
     if (cval[0]==' ') strcpy(cval,cval+1);  /* For positive numbers */
@@ -1010,8 +1010,8 @@ int rnd8(double rval,double rerr,int ifac,char *cval,int *lv,char *cerr,int *le,
 
     ee=iee;
     ret_le = (int)(log10(ee+0.999)+1.0);
-    sprintf(fmt,"%%%dd",ret_le);
-    sprintf(cerr,fmt,iee);
+    ld_sprintf(fmt,"%%%dd",ret_le);
+    ld_sprintf(cerr,fmt,iee);
 
 
     *le = ret_le;
