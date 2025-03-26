@@ -43,6 +43,15 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
 
     if (displayCVSversion == 1) CVSdisplayVersion("shapiro_delay.C","shapiro_delay()",CVS_verNum);
 
+    for (k=0;k<3;k++)
+        psr[p].obsn[i].psrPos[k] = psr[p].posPulsar[k]+delt*psr[p].velPulsar[k];      
+
+    pospos = sqrt(psr[p].obsn[i].psrPos[0]*psr[p].obsn[i].psrPos[0]+
+        psr[p].obsn[i].psrPos[1]*psr[p].obsn[i].psrPos[1]+
+        psr[p].obsn[i].psrPos[2]*psr[p].obsn[i].psrPos[2]);
+    for (k=0;k<3;k++)
+        psr[p].obsn[i].psrPos[k] /= pospos;
+
     if ((strcmp(psr[p].obsn[i].telID,"STL_BAT")==0) || psr[p].obsn[i].delayCorr==0) /* No correction */
         //if ( psr[p].obsn[i].delayCorr==0) /* No correction */
     {
@@ -51,14 +60,7 @@ void shapiro_delay(pulsar *psr,int npsr,int p,int i,double delt,double dt_SSB)
     }
     else
     {
-        for (k=0;k<3;k++)
-            psr[p].obsn[i].psrPos[k] = psr[p].posPulsar[k]+delt*psr[p].velPulsar[k];      
-
-        pospos = sqrt(psr[p].obsn[i].psrPos[0]*psr[p].obsn[i].psrPos[0]+
-                psr[p].obsn[i].psrPos[1]*psr[p].obsn[i].psrPos[1]+
-                psr[p].obsn[i].psrPos[2]*psr[p].obsn[i].psrPos[2]);
-        for (k=0;k<3;k++)
-            psr[p].obsn[i].psrPos[k] /= pospos;
+        
 
         /* Note rsa = vector from observatory to centre of Sun */
         for (j=0;j<3;j++)

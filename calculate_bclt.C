@@ -81,6 +81,18 @@ void calculate_bclt(pulsar *psr,int npsr)
 
                 psr[p].obsn[i].freqSSB = psr[p].obsn[i].freq;
                 psr[p].obsn[i].roemer = 0.0;
+
+                /* These are needed for binary models... so we need to compute it anyway */
+                double delt = (psr[p].obsn[i].sat-psr[p].param[param_posepoch].val[0])/36525.0;
+
+                for (int k=0;k<3;k++)
+                    psr[p].obsn[i].psrPos[k] = psr[p].posPulsar[k]+delt*psr[p].velPulsar[k];      
+
+                double pospos = sqrt(psr[p].obsn[i].psrPos[0]*psr[p].obsn[i].psrPos[0]+
+                    psr[p].obsn[i].psrPos[1]*psr[p].obsn[i].psrPos[1]+
+                    psr[p].obsn[i].psrPos[2]*psr[p].obsn[i].psrPos[2]);
+                for (int k=0;k<3;k++)
+                    psr[p].obsn[i].psrPos[k] /= pospos;
             }
             else{
 
