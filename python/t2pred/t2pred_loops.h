@@ -5,3 +5,6 @@ void T2Predictor_GetFrequency_array_ld(const T2Predictor *t2p, long double *mjd,
 
 void T2Predictor_GetPhase_array(const T2Predictor *t2p, double refmjd, double *mjd, const int nmjd, double freq, double* out);
 void T2Predictor_GetFrequency_array(const T2Predictor *t2p, double refmjd, double *mjd, const int nmjd, double freq, double* out);
+
+
+double get_FractionalPhase(const T2Predictor *t2p, int intmjd, double fracmjd,long double freq);
